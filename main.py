@@ -4,6 +4,7 @@ import preProcess
 from sklearn.feature_extraction.text import CountVectorizer
 import loadData
 import tokenVec
+import weighting
 
 #from sklearn.feature_extraction import DictVextorzier
 
@@ -26,12 +27,15 @@ pathFile = 'DataSet'
 # # to feature vector
 # scount_vect = CountVectorizer() 
 # #training = count_vect.fit()
-print ('#####################1################################')
+print ('######################################################')
 train_dataSet = loadData.loadData(pathFile)
 print ('DataSet : '+str(len(train_dataSet.data)) + ' Report')
 
-print('#####################2################################')
-tokenVec.countVector(train_dataSet)
+#print('#####################2################################')
+vecContent = tokenVec.countVector(train_dataSet)
+vecWeighted = weighting.tf_idf_Weigth(vecContent)
+# x = vecWeighted.toarray()
+# print(x)
 # x = []
 # X = tokenVec.countVector(train_dataSet).get_feature_name()
 # print (x)
