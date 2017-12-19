@@ -1,0 +1,200 @@
+Crash in mozilla::intl::OSPreferences::ReadDateTimePattern when trying to view recent downloads (arrow button)
+The first bad is mozilla-central changeset 773bb4c632f6.
+
+$ c++ -v
+FreeBSD clang version 4.0.0 (tags/RELEASE_400/final 297347) (based on LLVM 4.0.0)
+Target: x86_64-unknown-freebsd12.0
+Thread model: posix
+InstalledDir: /usr/bin
+
+$ pkg info -x '^(gtk|glib)'
+glib-2.50.2,1
+gtk2-2.24.31
+gtk3-3.18.9
+
+$ ./mach bootstrap
+$ ./mach build
+$ env -i DISPLAY=:0 SHELL=/bin/sh TERM=screen-256color \
+         HOME=/home/foo PATH=/sbin:/bin:/usr/sbin:/usr/bin \
+  ./mach run
+<Context Menu>
+<Save Page As>
+<Downloads button>
+(firefox:28236): GLib-GIO-ERROR **: Settings schema 'org.gnome.desktop.interface' is not installed
+<SIGTRAP>
+(lldb) bt
+* thread #1, name = 'firefox', stop reason = signal SIGTRAP
+  * frame #0: libglib-2.0.so.0`_g_log_abort(breakpoint=1) at gmessages.c:484
+    frame #1: libglib-2.0.so.0`g_log_structured_array(log_level=G_LOG_LEVEL_ERROR, fields=0x00007fffffff4c00, n_fields=4) at gmessages.c:1776
+    frame #2: libglib-2.0.so.0`g_log_default_handler(log_domain="", log_level=6, message="Settings schema 'org.gnome.desktop.interface' is not installed\n", unused_data=0x0000000000000000) at gmessages.c:2816
+    frame #3: libglib-2.0.so.0`g_logv(log_domain="", log_level=G_LOG_LEVEL_ERROR, format="", args=0x00007fffffff5320) at gmessages.c:1275
+    frame #4: libglib-2.0.so.0`g_log(log_domain="", log_level=G_LOG_LEVEL_ERROR, format="") at gmessages.c:1337
+    frame #5: libgio-2.0.so.0`g_settings_set_property(object=0x000000082ac828a0, prop_id=2, value=0x00007fffffff5438, pspec=0x000000081911cf00) at gsettings.c:590
+    frame #6: libgobject-2.0.so.0`object_set_property(object=0x000000082ac828a0, pspec=0x000000081911cf00, value=0x00007fffffff54e0, nqueue=0x000000082bf6a3f0) at gobject.c:1423
+    frame #7: libgobject-2.0.so.0`g_object_new_internal(class=0x000000082a955b00, params=0x00007fffffff5660, n_params=1) at gobject.c:1817
+    frame #8: libgobject-2.0.so.0`g_object_new_valist(object_type=35074244032, first_property_name="", var_args=0x00007fffffff5920) at gobject.c:2042
+    frame #9: libgobject-2.0.so.0`g_object_new(object_type=35074244032, first_property_name="") at gobject.c:1626
+    frame #10: libgio-2.0.so.0`g_settings_new(schema_id="") at gsettings.c:965
+    frame #11: libxul.so`mozilla::intl::OSPreferences::ReadDateTimePattern(mozilla::intl::OSPreferences::DateTimeFormatStyle, mozilla::intl::OSPreferences::ReadDateTimePattern, nsACString const&, nsAString&) [inlined] HourCycle(void) at OSPreferences_gtk.cpp:64
+    frame #12: libxul.so`mozilla::intl::OSPreferences::ReadDateTimePattern(this=0x0000000817a46a80, aDateStyle=<unavailable>, aTimeStyle=<unavailable>, aLocale=0x000000080186ba30, aRetVal=0x000000080186ba00) at OSPreferences_gtk.cpp:119
+    frame #13: libxul.so`mozilla::intl::OSPreferences::GetDateTimePattern(this=<unavailable>, aDateFormatStyle=0, aTimeFormatStyle=1, aLocale=0x000000080186ba30, aRetVal=0x000000080186ba00) at OSPreferences.cpp:382
+    frame #14: libxul.so`NS_InvokeByIndex at xptcinvoke_asm_x86_64_unix.S:129
+    frame #15: libxul.so`XPCWrappedNative::CallMethod(XPCCallContext&, XPCWrappedNative::CallMode) [inlined] CallMethodHelper::Invoke(void) at XPCWrappedNative.cpp:2010
+    frame #16: libxul.so`XPCWrappedNative::CallMethod(XPCCallContext&, XPCWrappedNative::CallMode) [inlined] CallMethodHelper::Call(void) at XPCWrappedNative.cpp:1329
+    frame #17: libxul.so`XPCWrappedNative::CallMethod(ccx=<unavailable>, mode=<unavailable>) at XPCWrappedNative.cpp:1296
+    frame #18: libxul.so`XPC_WN_CallMethod(cx=<unavailable>, argc=3, vp=0x0000000814f61a80) at XPCWrappedNativeJSOps.cpp:983
+    frame #19: libxul.so`js::InternalCallOrConstruct(JSContext*, JS::CallArgs const&, js::MaybeConstruct) [inlined] js::CallJSNative(native=(libxul.so`XPC_WN_CallMethod(JSContext*, unsigned int, JS::Value*) at XPCWrappedNativeJSOps.cpp:962))(JSContextunsigned intJS::Value*), JSContext*::CallArgs const&) at jscntxtinlines.h:291
+    frame #20: libxul.so`js::InternalCallOrConstruct(cx=0x0000000812c99000, args=0x00007fffffff60b8,construct=<unavailable>) at Interpreter.cpp:455
+    frame #21: libxul.so`Interpret(JSContext*, js::RunState&) [inlined] js::CallFromStack(cx=0x0000000812c99000) at Interpreter.cpp:506
+    frame #22: libxul.so`Interpret(cx=<unavailable>, state=<unavailable>) at Interpreter.cpp:3010
+    frame #23: libxul.so`js::RunScript(cx=0x0000000812c99000, state=0x00007fffffff6470) at Interpreter.cpp:395
+    frame #24: libxul.so`js::InternalCallOrConstruct(cx=0x0000000812c99000, args=0x00007fffffff6518,construct=NO_CONSTRUCT) at Interpreter.cpp:473
+    frame #25: libxul.so`JS::Handle<JSContext*::Value> js::Call(cx=<unavailable>, fval=<unavailable>, thisv=<unavailable>, args=0x00007fffffff6518, rval=<unavailable>) at Interpreter.cpp:519
+    frame #26: libxul.so`JSObject<JS::Handle::Value> JS_CallFunctionValue(cx=<unavailable>, obj=<unavailable>, fval=<unavailable>, args=0x00007fffffff6950, rval=<unavailable>) at jsapi.cpp:2826
+    frame #27: libxul.so`nsXPCWrappedJSClass::CallMethod(this=<unavailable>, wrapper=<unavailable>, methodIndex=<unavailable>, info_=<unavailable>, nativeParams=0x00007fffffff69e0) at XPCWrappedJSClass.cpp:1214
+    frame #28: libxul.so`::PrepareAndDispatch(self=<unavailable>, methodIndex=<unavailable>, args=<unavailable>, gpregs=0x00007fffffff6ac0, fpregs=0x00007fffffff6af0) at xptcstubs_x86_64_linux.cpp:120
+    frame #29: 0x000000080b0ea7fb libxul.so`SharedStub + 91
+    frame #30: libxul.so`NS_InvokeByIndex at xptcinvoke_asm_x86_64_unix.S:129
+    frame #31: libxul.so`XPCWrappedNative::CallMethod(XPCCallContext&, XPCWrappedNative::CallMode) [inlined] CallMethodHelper::Invoke(void) at XPCWrappedNative.cpp:2010
+    frame #32: libxul.so`XPCWrappedNative::CallMethod(XPCCallContext&, XPCWrappedNative::CallMode) [inlined] CallMethodHelper::Call(void) at XPCWrappedNative.cpp:1329
+    frame #33: libxul.so`XPCWrappedNative::CallMethod(ccx=<unavailable>, mode=<unavailable>) at XPCWrappedNative.cpp:1296
+    frame #34: libxul.so`XPC_WN_CallMethod(cx=<unavailable>, argc=2, vp=0x0000000814f619a8) at XPCWrappedNativeJSOps.cpp:983
+    frame #35: libxul.so`js::InternalCallOrConstruct(JSContext*, JS::CallArgs const&, js::MaybeConstruct) [inlined] js::CallJSNative(native=(libxul.so`XPC_WN_CallMethod(JSContext*, unsigned int, JS::Value*) at XPCWrappedNativeJSOps.cpp:962))(JSContextunsigned intJS::Value*), JSContext*::CallArgs const&) at jscntxtinlines.h:291
+    frame #36: libxul.so`js::InternalCallOrConstruct(cx=0x0000000812c99000, args=0x00007fffffff7158,construct=<unavailable>) at Interpreter.cpp:455
+    frame #37: libxul.so`Interpret(JSContext*, js::RunState&) [inlined] js::CallFromStack(cx=0x0000000812c99000) at Interpreter.cpp:506
+    frame #38: libxul.so`Interpret(cx=<unavailable>, state=<unavailable>) at Interpreter.cpp:3010
+    frame #39: libxul.so`js::RunScript(cx=0x0000000812c99000, state=0x00007fffffff7510) at Interpreter.cpp:395
+    frame #40: libxul.so`js::InternalCallOrConstruct(cx=0x0000000812c99000, args=0x00007fffffff75b0,construct=NO_CONSTRUCT) at Interpreter.cpp:473
+    frame #41: libxul.so`JS::Handle<JSContext*::Value> js::Call(cx=<unavailable>, fval=<unavailable>, thisv=<unavailable>, args=0x00007fffffff75b0, rval=<unavailable>) at Interpreter.cpp:519
+    frame #42: libxul.so`JSContext*::CallArgs const& js::Wrapper::call(this=<unavailable>, cx=0x0000000812c99000, proxy=<unavailable>, args=0x00007fffffff7738) const at Wrapper.cpp:165
+    frame #43: libxul.so`JSContext*::CallArgs const& js::CrossCompartmentWrapper::call(this=0x00000008103f5158, cx=0x0000000812c99000, wrapper=<unavailable>, args=0x00007fffffff7738) const at CrossCompartmentWrapper.cpp:353
+    frame #44: libxul.so`JSContext*::CallArgs const& js::Proxy::call(cx=0x0000000812c99000, proxy=<unavailable>, args=0x00007fffffff7738) at Proxy.cpp:464
+    frame #45: libxul.so`js::proxy_Call(cx=<unavailable>, argc=<unavailable>, vp=<unavailable>) at Proxy.cpp:716
+    frame #46: libxul.so`js::InternalCallOrConstruct(JSContext*, JS::CallArgs const&, js::MaybeConstruct) [inlined] js::CallJSNative(native=<unavailable>)(JSContextunsigned intJS::Value*), JSContext*::CallArgs const&) at jscntxtinlines.h:291
+    frame #47: libxul.so`js::InternalCallOrConstruct(cx=0x0000000812c99000, args=0x00007fffffff7a28,construct=<unavailable>) at Interpreter.cpp:437
+    frame #48: libxul.so`Interpret(JSContext*, js::RunState&) [inlined] js::CallFromStack(cx=0x0000000812c99000) at Interpreter.cpp:506
+    frame #49: libxul.so`Interpret(cx=<unavailable>, state=<unavailable>) at Interpreter.cpp:3010
+    frame #50: libxul.so`js::RunScript(cx=0x0000000812c99000, state=0x00007fffffff7de0) at Interpreter.cpp:395
+    frame #51: libxul.so`js::InternalCallOrConstruct(cx=0x0000000812c99000, args=0x00007fffffff7e68,construct=NO_CONSTRUCT) at Interpreter.cpp:473
+    frame #52: libxul.so`JS::Handle<JSContext*::Value> js::CallGetter(JSContext*, JS::Handle<JSContext*::Value>(JSContext*::MutableHandle<JSContext*::Value>) [inlined] InternalCall(cx=0x0000000812c99000) at Interpreter.cpp:500
+    frame #53: libxul.so`JS::Handle<JSContext*::Value> js::CallGetter(JSContext*, JS::Handle<JSContext*::Value>(JSContext*::MutableHandle<JSContext*::Value>) [inlined] JS::Handle<JSContext*::Value> js::Call(JSContext*, JS::Handle<JSContext*::Value>(js::AnyInvokeArgs const&, JSContext*::MutableHandle<JSContext*::Value>) at Interpreter.cpp:519
+    frame #54: libxul.so`JS::Handle<JSContext*::Value> js::CallGetter(cx=0x0000000812c99000, thisv=JS::HandleValue @ r15, getter=JS::HandleValue @ r12, rval=JS::MutableHandleValue @ r14) at Interpreter.cpp:634
+    frame #55: libxul.so`JSContext*::MutableHandle<JSContext*::Value> JS::Handle<JSContext*::Value> js::NativeGetProperty(JSContext*, JS::Handle<js::NativeObject*>(JS::Handle<jsid>() at NativeObject.cpp:1788
+    frame #56: libxul.so`JSContext*::MutableHandle<JSContext*::Value> JS::Handle<JSContext*::Value> js::NativeGetProperty(JSContext*, JS::Handle<js::NativeObject*>(JS::Handle<jsid>() [inlined] _ZL19GetExistingPropertyILN2js7AllowGCE1EEbP9JSContextNS0_11MaybeRootedIN2JS5ValueEXT_EE10HandleTypeENS4_IPNS0_12NativeObjectEXT_EE10HandleTypeENS4_IPNS0_5ShapeEXT_EE10HandleTypeENS7_17MutableHandleTypeE at NativeObject.cpp:1836
+    frame #57: libxul.so`JSContext*::MutableHandle<JSContext*::Value> JS::Handle<JSContext*::Value> js::NativeGetProperty(JSContext*, JS::Handle<js::NativeObject*>(JS::Handle<jsid>() at NativeObject.cpp:2067
+    frame #58: libxul.so`JSContext*::MutableHandle<JSContext*::Value> JS::Handle<JSContext*::Value> js::NativeGetProperty(cx=0x0000000812c99000, obj=js::HandleNativeObject @ 0x00007fffffff7f00, receiver=JS::HandleValue @ 0x00007fffffff7f08, id=<unavailable>, vp=JS::MutableHandleValue @ 0x00007fffffff7f90) at NativeObject.cpp:2101
+    frame #59: libxul.so`JSContext*::MutableHandle<JSContext*::Value> JS::Handle<JSContext*::Value> js::Wrapper::get(JSContext*, JS::Handle<JSObject*>(JS::Handle<jsid>() const [inlined] JSContext*::MutableHandle<JSContext*::Value> JS::Handle<JSContext*::Value> js::GetProperty(cx=<unavailable>) at NativeObject.h:1440
+    frame #60: libxul.so`JSContext*::MutableHandle<JSContext*::Value> JS::Handle<JSContext*::Value> js::Wrapper::get(this=<unavailable>, cx=<unavailable>, proxy=<unavailable>, receiver=<unavailable>, id=<unavailable>, vp=<unavailable>) const at Wrapper.cpp:143
+    frame #61: libxul.so`JSContext*::MutableHandle<JSContext*::Value> JS::Handle<JSContext*::Value> js::CrossCompartmentWrapper::get(this=0x00000008103f5158, cx=0x0000000812c99000, wrapper=<unavailable>, receiver=<unavailable>, id=<unavailable>, vp=JS::MutableHandleValue @ 0x00007fffffff8000) const atCrossCompartmentWrapper.cpp:226
+    frame #62: libxul.so`JSContext*::MutableHandle<JSContext*::Value> JS::Handle<JSContext*::Value> js::Proxy::get(cx=0x0000000812c99000, proxy=<unavailable>, receiver_=<unavailable>, id=JS::HandleId @0x00007fffffff80b8, vp=<unavailable>) at Proxy.cpp:325
+    frame #63: libxul.so`JSContext*::MutableHandle<JSContext*::Value> JS::Handle<JSContext*::Value> js::NativeGetProperty(JSContext*, JS::Handle<js::NativeObject*>(JS::Handle<jsid>() at NativeObject.h:1439
+    frame #64: libxul.so`JSContext*::MutableHandle<JSContext*::Value> JS::Handle<JSContext*::Value> js::NativeGetProperty(JSContext*, JS::Handle<js::NativeObject*>(JS::Handle<jsid>() [inlined] IsNameLookup JSObject<jsid> GeneralizedGetProperty(obj=<unavailable>, nameLookup=NotNameLookup) at NativeObject.cpp:2024
+    frame #65: libxul.so`JSContext*::MutableHandle<JSContext*::Value> JS::Handle<JSContext*::Value> js::NativeGetProperty(JSContext*, JS::Handle<js::NativeObject*>(JS::Handle<jsid>() at NativeObject.cpp:2091
+    frame #66: libxul.so`JSContext*::MutableHandle<JSContext*::Value> JS::Handle<JSContext*::Value> js::NativeGetProperty(cx=0x0000000812c99000, obj=js::HandleNativeObject @ 0x00007fffffff8120, receiver=JS::HandleValue @ 0x00007fffffff8128, id=JS::HandleId @ rbx, vp=JS::MutableHandleValue @ 0x00007fffffff81b0) at NativeObject.cpp:2101
+    frame #67: libxul.so`JSContext*::MutableHandle<JSContext*::Value> JS::Handle<JSContext*::Value> js::Wrapper::get(JSContext*, JS::Handle<JSObject*>(JS::Handle<jsid>() const [inlined] JSContext*::MutableHandle<JSContext*::Value> JS::Handle<JSContext*::Value> js::GetProperty(cx=<unavailable>) at NativeObject.h:1440
+    frame #68: libxul.so`JSContext*::MutableHandle<JSContext*::Value> JS::Handle<JSContext*::Value> js::Wrapper::get(this=<unavailable>, cx=<unavailable>, proxy=<unavailable>, receiver=<unavailable>, id=<unavailable>, vp=<unavailable>) const at Wrapper.cpp:143
+    frame #69: libxul.so`JSContext*::MutableHandle<JSContext*::Value> JS::Handle<JSContext*::Value> js::CrossCompartmentWrapper::get(this=0x00000008103f5158, cx=0x0000000812c99000, wrapper=<unavailable>, receiver=<unavailable>, id=<unavailable>, vp=JS::MutableHandleValue @ 0x00007fffffff8220) const atCrossCompartmentWrapper.cpp:226
+    frame #70: libxul.so`JSContext*::MutableHandle<JSContext*::Value> JS::Handle<JSContext*::Value> js::Proxy::get(cx=0x0000000812c99000, proxy=<unavailable>, receiver_=<unavailable>, id=JS::HandleId @0x00007fffffff82d8, vp=<unavailable>) at Proxy.cpp:325
+    frame #71: libxul.so`JS::Handle<js::PropertyName*> js::GetProperty(JSContext*, JS::Handle<JSContext*::Value>(JSContext*::MutableHandle<JSContext*::Value>) at NativeObject.h:1439
+    frame #72: libxul.so`JS::Handle<js::PropertyName*> js::GetProperty(JSContext*, JS::Handle<JSContext*::Value>(JSContext*::MutableHandle<JSContext*::Value>) [inlined] JS::Handle<JSContext*::Value> js::GetProperty(cx=0x0000000812c99000, obj=<unavailable>, receiver=<unavailable>) at jsobj.h:845
+    frame #73: libxul.so`JS::Handle<js::PropertyName*> js::GetProperty(cx=0x0000000812c99000, v=<unavailable>, name=<unavailable>, vp=<unavailable>) at Interpreter.cpp:4386
+    frame #74: libxul.so`Interpret(JSContext*, js::RunState&) [inlined] _ZL20GetPropertyOperationP9JSContextPN2js16InterpreterFrameEN2JS6HandleIP8JSScriptEEPhNS4_13MutableHandleINS4_5ValueEEESC_(cx=0x0000000812c99000, fp=<unavailable>, pc=<unavailable>) at Interpreter.cpp:193
+    frame #75: libxul.so`Interpret(cx=<unavailable>, state=<unavailable>) at Interpreter.cpp:2725
+    frame #76: libxul.so`js::RunScript(cx=0x0000000812c99000, state=0x00007fffffff8980) at Interpreter.cpp:395
+    frame #77: libxul.so`js::InternalCallOrConstruct(cx=0x0000000812c99000, args=0x00007fffffff8c18,construct=NO_CONSTRUCT) at Interpreter.cpp:473
+    frame #78: libxul.so`Interpret(JSContext*, js::RunState&) [inlined] js::CallFromStack(cx=0x0000000812c99000) at Interpreter.cpp:506
+    frame #79: libxul.so`Interpret(cx=<unavailable>, state=<unavailable>) at Interpreter.cpp:3010
+    frame #80: libxul.so`js::RunScript(cx=0x0000000812c99000, state=0x00007fffffff8fd0) at Interpreter.cpp:395
+    frame #81: libxul.so`js::InternalCallOrConstruct(cx=0x0000000812c99000, args=0x00007fffffff9070,construct=NO_CONSTRUCT) at Interpreter.cpp:473
+    frame #82: libxul.so`JS::Handle<JSContext*::Value> js::Call(cx=<unavailable>, fval=<unavailable>, thisv=<unavailable>, args=0x00007fffffff9070, rval=<unavailable>) at Interpreter.cpp:519
+    frame #83: libxul.so`JSContext*::CallArgs const& js::Wrapper::call(this=<unavailable>, cx=0x0000000812c99000, proxy=<unavailable>, args=0x00007fffffff91f8) const at Wrapper.cpp:165
+    frame #84: libxul.so`JSContext*::CallArgs const& js::CrossCompartmentWrapper::call(this=0x00000008103f5158, cx=0x0000000812c99000, wrapper=<unavailable>, args=0x00007fffffff91f8) const at CrossCompartmentWrapper.cpp:353
+    frame #85: libxul.so`JSContext*::CallArgs const& js::Proxy::call(cx=0x0000000812c99000, proxy=<unavailable>, args=0x00007fffffff91f8) at Proxy.cpp:464
+    frame #86: libxul.so`js::proxy_Call(cx=<unavailable>, argc=<unavailable>, vp=<unavailable>) at Proxy.cpp:716
+    frame #87: libxul.so`js::InternalCallOrConstruct(JSContext*, JS::CallArgs const&, js::MaybeConstruct) [inlined] js::CallJSNative(native=<unavailable>)(JSContextunsigned intJS::Value*), JSContext*::CallArgs const&) at jscntxtinlines.h:291
+    frame #88: libxul.so`js::InternalCallOrConstruct(cx=0x0000000812c99000, args=0x00007fffffff94e8,construct=<unavailable>) at Interpreter.cpp:437
+    frame #89: libxul.so`Interpret(JSContext*, js::RunState&) [inlined] js::CallFromStack(cx=0x0000000812c99000) at Interpreter.cpp:506
+    frame #90: libxul.so`Interpret(cx=<unavailable>, state=<unavailable>) at Interpreter.cpp:3010
+    frame #91: libxul.so`js::RunScript(cx=0x0000000812c99000, state=0x00007fffffff98a0) at Interpreter.cpp:395
+    frame #92: libxul.so`js::InternalCallOrConstruct(cx=0x0000000812c99000, args=0x00007fffffff9b38,construct=NO_CONSTRUCT) at Interpreter.cpp:473
+    frame #93: libxul.so`Interpret(JSContext*, js::RunState&) [inlined] js::CallFromStack(cx=0x0000000812c99000) at Interpreter.cpp:506
+    frame #94: libxul.so`Interpret(cx=<unavailable>, state=<unavailable>) at Interpreter.cpp:3010
+    frame #95: libxul.so`js::RunScript(cx=0x0000000812c99000, state=0x00007fffffff9ef0) at Interpreter.cpp:395
+    frame #96: libxul.so`js::InternalCallOrConstruct(cx=0x0000000812c99000, args=0x00007fffffff9f90,construct=NO_CONSTRUCT) at Interpreter.cpp:473
+    frame #97: libxul.so`JS::Handle<JSContext*::Value> js::Call(cx=<unavailable>, fval=<unavailable>, thisv=<unavailable>, args=0x00007fffffff9f90, rval=<unavailable>) at Interpreter.cpp:519
+    frame #98: libxul.so`JSContext*::CallArgs const& js::Wrapper::call(this=<unavailable>, cx=0x0000000812c99000, proxy=<unavailable>, args=0x00007fffffffa118) const at Wrapper.cpp:165
+    frame #99: libxul.so`JSContext*::CallArgs const& js::CrossCompartmentWrapper::call(this=0x00000008103f5158, cx=0x0000000812c99000, wrapper=<unavailable>, args=0x00007fffffffa118) const at CrossCompartmentWrapper.cpp:353
+    frame #100: libxul.so`JSContext*::CallArgs const& js::Proxy::call(cx=0x0000000812c99000, proxy=<unavailable>, args=0x00007fffffffa118) at Proxy.cpp:464
+    frame #101: libxul.so`js::proxy_Call(cx=<unavailable>, argc=<unavailable>, vp=<unavailable>) at Proxy.cpp:716
+    frame #102: libxul.so`js::InternalCallOrConstruct(JSContext*, JS::CallArgs const&, js::MaybeConstruct) [inlined] js::CallJSNative(native=<unavailable>)(JSContextunsigned intJS::Value*), JSContext*::CallArgs const&) at jscntxtinlines.h:291
+    frame #103: libxul.so`js::InternalCallOrConstruct(cx=0x0000000812c99000, args=0x00007fffffffa408, construct=<unavailable>) at Interpreter.cpp:437
+    frame #104: libxul.so`Interpret(JSContext*, js::RunState&) [inlined] js::CallFromStack(cx=0x0000000812c99000) at Interpreter.cpp:506
+    frame #105: libxul.so`Interpret(cx=<unavailable>, state=<unavailable>) at Interpreter.cpp:3010
+    frame #106: libxul.so`js::RunScript(cx=0x0000000812c99000, state=0x00007fffffffa7c0) at Interpreter.cpp:395
+    frame #107: libxul.so`js::InternalCallOrConstruct(cx=0x0000000812c99000, args=0x00007fffffffaa58, construct=NO_CONSTRUCT) at Interpreter.cpp:473
+    frame #108: libxul.so`Interpret(JSContext*, js::RunState&) [inlined] js::CallFromStack(cx=0x0000000812c99000) at Interpreter.cpp:506
+    frame #109: libxul.so`Interpret(cx=<unavailable>, state=<unavailable>) at Interpreter.cpp:3010
+    frame #110: libxul.so`js::RunScript(cx=0x0000000812c99000, state=0x00007fffffffae10) at Interpreter.cpp:395
+    frame #111: libxul.so`js::InternalCallOrConstruct(cx=0x0000000812c99000, args=0x00007fffffffb0a8, construct=NO_CONSTRUCT) at Interpreter.cpp:473
+    frame #112: libxul.so`Interpret(JSContext*, js::RunState&) [inlined] js::CallFromStack(cx=0x0000000812c99000) at Interpreter.cpp:506
+    frame #113: libxul.so`Interpret(cx=<unavailable>, state=<unavailable>) at Interpreter.cpp:3010
+    frame #114: libxul.so`js::RunScript(cx=0x0000000812c99000, state=0x00007fffffffb460) at Interpreter.cpp:395
+    frame #115: libxul.so`js::InternalCallOrConstruct(cx=0x0000000812c99000, args=0x00007fffffffb6f8, construct=NO_CONSTRUCT) at Interpreter.cpp:473
+    frame #116: libxul.so`Interpret(JSContext*, js::RunState&) [inlined] js::CallFromStack(cx=0x0000000812c99000) at Interpreter.cpp:506
+    frame #117: libxul.so`Interpret(cx=<unavailable>, state=<unavailable>) at Interpreter.cpp:3010
+    frame #118: libxul.so`js::RunScript(cx=0x0000000812c99000, state=0x00007fffffffbab0) at Interpreter.cpp:395
+    frame #119: libxul.so`js::InternalCallOrConstruct(cx=0x0000000812c99000, args=0x00007fffffffbb50, construct=NO_CONSTRUCT) at Interpreter.cpp:473
+    frame #120: libxul.so`JS::Handle<JSContext*::Value> js::Call(cx=<unavailable>, fval=<unavailable>, thisv=<unavailable>, args=0x00007fffffffbb50, rval=<unavailable>) at Interpreter.cpp:519
+    frame #121: libxul.so`JSContext*::CallArgs const& js::Wrapper::call(this=<unavailable>, cx=0x0000000812c99000, proxy=<unavailable>, args=0x00007fffffffbcd8) const at Wrapper.cpp:165
+    frame #122: libxul.so`JSContext*::CallArgs const& js::CrossCompartmentWrapper::call(this=0x00000008103f5158, cx=0x0000000812c99000, wrapper=<unavailable>, args=0x00007fffffffbcd8) const at CrossCompartmentWrapper.cpp:353
+    frame #123: libxul.so`JSContext*::CallArgs const& js::Proxy::call(cx=0x0000000812c99000, proxy=<unavailable>, args=0x00007fffffffbcd8) at Proxy.cpp:464
+    frame #124: libxul.so`js::proxy_Call(cx=<unavailable>, argc=<unavailable>, vp=<unavailable>) at Proxy.cpp:716
+    frame #125: libxul.so`js::InternalCallOrConstruct(JSContext*, JS::CallArgs const&, js::MaybeConstruct) [inlined] js::CallJSNative(native=<unavailable>)(JSContextunsigned intJS::Value*), JSContext*::CallArgs const&) at jscntxtinlines.h:291
+    frame #126: libxul.so`js::InternalCallOrConstruct(cx=0x0000000812c99000, args=0x00007fffffffbfc8, construct=<unavailable>) at Interpreter.cpp:437
+    frame #127: libxul.so`Interpret(JSContext*, js::RunState&) [inlined] js::CallFromStack(cx=0x0000000812c99000) at Interpreter.cpp:506
+    frame #128: libxul.so`Interpret(cx=<unavailable>, state=<unavailable>) at Interpreter.cpp:3010
+    frame #129: libxul.so`js::RunScript(cx=0x0000000812c99000, state=0x00007fffffffc380) at Interpreter.cpp:395
+    frame #130: libxul.so`js::InternalCallOrConstruct(cx=0x0000000812c99000, args=0x00007fffffffc618, construct=NO_CONSTRUCT) at Interpreter.cpp:473
+    frame #131: libxul.so`Interpret(JSContext*, js::RunState&) [inlined] js::CallFromStack(cx=0x0000000812c99000) at Interpreter.cpp:506
+    frame #132: libxul.so`Interpret(cx=<unavailable>, state=<unavailable>) at Interpreter.cpp:3010
+    frame #133: libxul.so`js::RunScript(cx=0x0000000812c99000, state=0x00007fffffffc9d0) at Interpreter.cpp:395
+    frame #134: libxul.so`js::InternalCallOrConstruct(cx=0x0000000812c99000, args=0x00007fffffffcc68, construct=NO_CONSTRUCT) at Interpreter.cpp:473
+    frame #135: libxul.so`Interpret(JSContext*, js::RunState&) [inlined] js::CallFromStack(cx=0x0000000812c99000) at Interpreter.cpp:506
+    frame #136: libxul.so`Interpret(cx=<unavailable>, state=<unavailable>) at Interpreter.cpp:3010
+    frame #137: libxul.so`js::RunScript(cx=0x0000000812c99000, state=0x00007fffffffd020) at Interpreter.cpp:395
+    frame #138: libxul.so`js::InternalCallOrConstruct(cx=0x0000000812c99000, args=0x00007fffffffd2b8, construct=NO_CONSTRUCT) at Interpreter.cpp:473
+    frame #139: libxul.so`Interpret(JSContext*, js::RunState&) [inlined] js::CallFromStack(cx=0x0000000812c99000) at Interpreter.cpp:506
+    frame #140: libxul.so`Interpret(cx=<unavailable>, state=<unavailable>) at Interpreter.cpp:3010
+    frame #141: libxul.so`js::RunScript(cx=0x0000000812c99000, state=0x00007fffffffd670) at Interpreter.cpp:395
+    frame #142: libxul.so`js::InternalCallOrConstruct(cx=0x0000000812c99000, args=0x00007fffffffd718, construct=NO_CONSTRUCT) at Interpreter.cpp:473
+    frame #143: libxul.so`JS::Handle<JSContext*::Value> js::Call(cx=<unavailable>, fval=<unavailable>, thisv=<unavailable>, args=0x00007fffffffd718, rval=<unavailable>) at Interpreter.cpp:519
+    frame #144: libxul.so`JSObject<JS::Handle::Value> JS_CallFunctionValue(cx=<unavailable>, obj=<unavailable>, fval=<unavailable>, args=0x00007fffffffdb50, rval=<unavailable>) at jsapi.cpp:2826
+    frame #145: libxul.so`nsXPCWrappedJSClass::CallMethod(this=<unavailable>, wrapper=<unavailable>,methodIndex=<unavailable>, info_=<unavailable>, nativeParams=0x00007fffffffdbe0) at XPCWrappedJSClass.cpp:1214
+    frame #146: libxul.so`::PrepareAndDispatch(self=<unavailable>, methodIndex=<unavailable>, args=<unavailable>, gpregs=0x00007fffffffdcc0, fpregs=0x00007fffffffdcf0) at xptcstubs_x86_64_linux.cpp:120
+    frame #147: 0x000000080b0ea7fb libxul.so`SharedStub + 91
+    frame #148: libxul.so`mozilla::dom::XULDocument::DoneWalking(this=0x000000081e26f400) at XULDocument.cpp:3075
+    frame #149: libxul.so`virtual function non-virtual override offset : -2008 mozilla::dom::XULDocument::StyleSheetLoaded(mozilla::StyleSheet*, bool, nsresult) [inlined] mozilla::dom::XULDocument::StyleSheetLoaded(mozilla::StyleSheet*, bool, nsresult) at XULDocument.cpp:3128
+    frame #150: libxul.so`virtual function non-virtual override offset : -2008 mozilla::dom::XULDocument::StyleSheetLoaded(this=<unavailable>, aSheet=<unavailable>, aWasAlternate=<unavailable>, aStatus=<unavailable>) at XULDocument.cpp:0
+    frame #151: libxul.so`mozilla::css::Loader::SheetComplete(this=0x000000081e2ae840, aLoadData=<unavailable>, aStatus=NS_OK) at Loader.cpp:1842
+    frame #152: libxul.so`mozilla::css::Loader::ParseSheet(this=0x000000081e2ae840, aInput=0x000000082ac56370, aLoadData=<unavailable>, aCompleted=<unavailable>) at Loader.cpp:0
+    frame #153: libxul.so`mozilla::css::SheetLoadData::OnStreamComplete(this=0x000000082be18500, aLoader=<unavailable>, aContext=<unavailable>, aStatus=<unavailable>, aBuffer=<unavailable>) at Loader.cpp:998
+    frame #154: libxul.so`nsUnicharStreamLoader::OnStopRequest(this=0x000000082ac56310, aRequest=<unavailable>, aContext=<unavailable>, aStatus=NS_OK) at nsUnicharStreamLoader.cpp:97
+    frame #155: libxul.so`nsBaseChannel::OnStopRequest(this=0x000000082ac5e500, request=<unavailable>, ctxt=<unavailable>, status=<unavailable>) at nsBaseChannel.cpp:853
+    frame #156: libxul.so`virtual function non-virtual override offset : -120 nsBaseChannel::OnStopRequest(this=<unavailable>, request=<unavailable>, ctxt=<unavailable>, status=<unavailable>) at nsBaseChannel.cpp:0
+    frame #157: libxul.so`nsInputStreamPump::OnStateStop(this=0x000000082bf385e0) at nsInputStreamPump.cpp:718
+    frame #158: libxul.so`nsInputStreamPump::OnInputStreamReady(this=0x000000082bf385e0, stream=<unavailable>) at nsInputStreamPump.cpp:436
+    frame #159: libxul.so`nsInputStreamReadyEvent::Run(this=0x000000081df97810) at nsStreamUtils.cpp:96
+    frame #160: libxul.so`nsThread::ProcessNextEvent(this=0x000000080187f8c0, aMayWait=<unavailable>, aResult=0x00007fffffffe357) at nsThread.cpp:1269
+    frame #161: libxul.so`NS_ProcessNextEvent(aThread=<unavailable>, aMayWait=false) at nsThreadUtils.cpp:389
+    frame #162: libxul.so`mozilla::ipc::MessagePump::Run(this=0x00000008018dcb40, aDelegate=0x000000080187f780) at MessagePump.cpp:96
+    frame #163: libxul.so`MessageLoop::Run(void) [inlined] MessageLoop::RunInternal(this=<unavailable>) at message_loop.cc:238
+    frame #164: libxul.so`MessageLoop::Run(void) [inlined] MessageLoop::RunHandler(void) at message_loop.cc:231
+    frame #165: libxul.so`MessageLoop::Run(this=<unavailable>) at message_loop.cc:211
+    frame #166: libxul.so`nsBaseAppShell::Run(this=0x0000000812df6760) at nsBaseAppShell.cpp:156
+    frame #167: libxul.so`nsAppStartup::Run(this=0x00000008018d4800) at nsAppStartup.cpp:283
+    frame #168: libxul.so`XREMain::XRE_mainRun(this=<unavailable>) at nsAppRunner.cpp:4538
+    frame #169: libxul.so`XREMain::XRE_main(this=0x00007fffffffe5c0, argc=<unavailable>, argv=<unavailable>, aConfig=<unavailable>) at nsAppRunner.cpp:4718
+    frame #170: libxul.so`XRE_main(argc=<unavailable>, argv=<unavailable>, aConfig=<unavailable>) atnsAppRunner.cpp:4811
+    frame #171: firefox`main [inlined] do_main(argc=<unavailable>, argv=<unavailable>, envp=<unavailable>) at nsBrowserApp.cpp:236
+    frame #172: firefox`main(argc=<unavailable>, argv=<unavailable>, envp=<unavailable>) at nsBrowserApp.cpp:307
+    frame #173: firefox`_start(ap=<unavailable>, cleanup=<unavailable>) at crt1.c:72

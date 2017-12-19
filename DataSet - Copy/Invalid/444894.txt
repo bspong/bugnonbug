@@ -1,0 +1,63 @@
+Crashes when zooming on some pages under linux [@ nsRuleNode::GetStyleBackground]
+When going at the given url and modifying zoom level, a crash occurs.
+Interestingly, this doesn't happen in iceweasel/firefox, but in gtkmozembed clients, such as galeon and epiphany. I couldn't reproduce with a specially crafted version of TestGtkEmbed, though.
+
+FWIW, I could reproduce the crash with the Ubuntu 8.04.1 i386 livecd.
+
+Here is the stacktrace with an optimized build:
+#0  0x00007fa3e57c6ccc in nsRuleNode::GetStyleBackground (this=0x4267cb8, aContext=<value optimized out>, aComputeData=<value optimized out>) at nsRuleNode.h:215
+#1  0x00007fa3e57ca0e4 in nsStyleContext::CalcStyleDifference (this=0x4006810, aOther=0x426b278) at nsStyleStructList.h:79
+#2  0x00007fa3e5706863 in CaptureChange (aOldContext=0x7fa3eaca19e0, aNewContext=0x7fa3eaa6f870, aFrame=0x41, aContent=0x0, aChangeList=0x41dcae0, aMinChange=nsChangeHint_RepaintFrame, aChangeToAssume=0)
+    at nsFrameManager.cpp:1058
+#3  0x00007fa3e57075b5 in nsFrameManager::ReResolveStyleContext (this=0x3eede08, aPresContext=0x35a6240, aFrame=0x40068d0, aParentContent=0x3fac8d0, aChangeList=0x7ffffb501160, aMinChange=7)
+    at nsFrameManager.cpp:1196
+#4  0x00007fa3e5707961 in nsFrameManager::ReResolveStyleContext (this=0x3eede08, aPresContext=0x35a6240, aFrame=0x4006700, aParentContent=<value optimized out>, aChangeList=0x7ffffb501160, aMinChange=7)
+    at nsFrameManager.cpp:1404
+#5  0x00007fa3e5707961 in nsFrameManager::ReResolveStyleContext (this=0x3eede08, aPresContext=0x35a6240, aFrame=0x40065f0, aParentContent=<value optimized out>, aChangeList=0x7ffffb501160, aMinChange=7)
+    at nsFrameManager.cpp:1404
+#6  0x00007fa3e5707961 in nsFrameManager::ReResolveStyleContext (this=0x3eede08, aPresContext=0x35a6240, aFrame=0x4006460, aParentContent=<value optimized out>, aChangeList=0x7ffffb501160, aMinChange=7)
+    at nsFrameManager.cpp:1404
+#7  0x00007fa3e57078d9 in nsFrameManager::ReResolveStyleContext (this=0x3eede08, aPresContext=0x35a6240, aFrame=0x40063e8, aParentContent=0x3fac6c0, aChangeList=0x7ffffb501160, aMinChange=7)
+    at nsFrameManager.cpp:1125
+#8  0x00007fa3e5707961 in nsFrameManager::ReResolveStyleContext (this=0x3eede08, aPresContext=0x35a6240, aFrame=0x4006188, aParentContent=<value optimized out>, aChangeList=0x7ffffb501160, aMinChange=7)
+    at nsFrameManager.cpp:1404
+#9  0x00007fa3e5707961 in nsFrameManager::ReResolveStyleContext (this=0x3eede08, aPresContext=0x35a6240, aFrame=0x4006078, aParentContent=<value optimized out>, aChangeList=0x7ffffb501160, aMinChange=7)
+    at nsFrameManager.cpp:1404
+#10 0x00007fa3e5707961 in nsFrameManager::ReResolveStyleContext (this=0x3eede08, aPresContext=0x35a6240, aFrame=0x4011970, aParentContent=<value optimized out>, aChangeList=0x7ffffb501160, aMinChange=7)
+    at nsFrameManager.cpp:1404
+#11 0x00007fa3e5707961 in nsFrameManager::ReResolveStyleContext (this=0x3eede08, aPresContext=0x35a6240, aFrame=0x40117f0, aParentContent=<value optimized out>, aChangeList=0x7ffffb501160, aMinChange=7)
+    at nsFrameManager.cpp:1404
+#12 0x00007fa3e5707961 in nsFrameManager::ReResolveStyleContext (this=0x3eede08, aPresContext=0x35a6240, aFrame=0x40115f0, aParentContent=<value optimized out>, aChangeList=0x7ffffb501160, aMinChange=7)
+    at nsFrameManager.cpp:1404
+#13 0x00007fa3e57078d9 in nsFrameManager::ReResolveStyleContext (this=0x3eede08, aPresContext=0x35a6240, aFrame=0x4011578, aParentContent=0x3f97da0, aChangeList=0x7ffffb501160, aMinChange=7)
+    at nsFrameManager.cpp:1125
+#14 0x00007fa3e5707961 in nsFrameManager::ReResolveStyleContext (this=0x3eede08, aPresContext=0x35a6240, aFrame=0x4067f28, aParentContent=<value optimized out>, aChangeList=0x7ffffb501160, aMinChange=7)
+    at nsFrameManager.cpp:1404
+#15 0x00007fa3e5707961 in nsFrameManager::ReResolveStyleContext (this=0x3eede08, aPresContext=0x35a6240, aFrame=0x403d8b0, aParentContent=<value optimized out>, aChangeList=0x7ffffb501160, aMinChange=7)
+    at nsFrameManager.cpp:1404
+#16 0x00007fa3e5707961 in nsFrameManager::ReResolveStyleContext (this=0x3eede08, aPresContext=0x35a6240, aFrame=0x403d7a0, aParentContent=<value optimized out>, aChangeList=0x7ffffb501160, aMinChange=7)
+    at nsFrameManager.cpp:1404
+#17 0x00007fa3e5707961 in nsFrameManager::ReResolveStyleContext (this=0x3eede08, aPresContext=0x35a6240, aFrame=0x403d5c0, aParentContent=<value optimized out>, aChangeList=0x7ffffb501160, aMinChange=7)
+    at nsFrameManager.cpp:1404
+#18 0x00007fa3e5707961 in nsFrameManager::ReResolveStyleContext (this=0x3eede08, aPresContext=0x35a6240, aFrame=0x403cd08, aParentContent=<value optimized out>, aChangeList=0x7ffffb501160, aMinChange=7)
+    at nsFrameManager.cpp:1404
+#19 0x00007fa3e5707961 in nsFrameManager::ReResolveStyleContext (this=0x3eede08, aPresContext=0x35a6240, aFrame=0x3f94038, aParentContent=<value optimized out>, aChangeList=0x7ffffb501160, aMinChange=7)
+    at nsFrameManager.cpp:1404
+#20 0x00007fa3e57078d9 in nsFrameManager::ReResolveStyleContext (this=0x3eede08, aPresContext=0x35a6240, aFrame=0x3f93fc0, aParentContent=0x3f90a90, aChangeList=0x7ffffb501160, aMinChange=7)
+    at nsFrameManager.cpp:1125
+#21 0x00007fa3e5707961 in nsFrameManager::ReResolveStyleContext (this=0x3eede08, aPresContext=0x35a6240, aFrame=0x3f93440, aParentContent=<value optimized out>, aChangeList=0x7ffffb501160, aMinChange=7)
+    at nsFrameManager.cpp:1404
+#22 0x00007fa3e5707961 in nsFrameManager::ReResolveStyleContext (this=0x3eede08, aPresContext=0x35a6240, aFrame=0x3f8de50, aParentContent=<value optimized out>, aChangeList=0x7ffffb501160, aMinChange=7)
+    at nsFrameManager.cpp:1404
+#23 0x00007fa3e5707961 in nsFrameManager::ReResolveStyleContext (this=0x3eede08, aPresContext=0x35a6240, aFrame=0x3f8d7e8, aParentContent=<value optimized out>, aChangeList=0x7ffffb501160, aMinChange=7)
+    at nsFrameManager.cpp:1404
+#24 0x00007fa3e5707961 in nsFrameManager::ReResolveStyleContext (this=0x3eede08, aPresContext=0x35a6240, aFrame=0x3db6228, aParentContent=<value optimized out>, aChangeList=0x7ffffb501160, aMinChange=7)
+    at nsFrameManager.cpp:1404
+#25 0x00007fa3e5707961 in nsFrameManager::ReResolveStyleContext (this=0x3eede08, aPresContext=0x35a6240, aFrame=0x3db6460, aParentContent=<value optimized out>, aChangeList=0x7ffffb501160, aMinChange=7)
+    at nsFrameManager.cpp:1404
+#26 0x00007fa3e5707961 in nsFrameManager::ReResolveStyleContext (this=0x3eede08, aPresContext=0x35a6240, aFrame=0x3db6130, aParentContent=<value optimized out>, aChangeList=0x7ffffb501160, aMinChange=7)
+    at nsFrameManager.cpp:1404
+#27 0x00007fa3e5707cdf in nsFrameManager::ComputeStyleChangeFor (this=0x3eede08, aFrame=0x3db6130, aChangeList=0x7ffffb501160, aMinChange=<value optimized out>) at nsFrameManager.cpp:1470
+#28 0x00007fa3e56ef7c6 in nsCSSFrameConstructor::RebuildAllStyleData (this=0x3dfa6f0, aExtraHint=7) at nsCSSFrameConstructor.cpp:13422
+#29 0x00007fa3e5704c3e in DocumentViewerImpl::SetTextZoom (this=0x3c08f40, aTextZoom=1.18920708) at nsPresContext.h:475
+#30 0x0000000000485755 in EphyBrowser::SetZoom ()

@@ -1,0 +1,104 @@
+M094 N620 Printing crash [@ PrintData::OnEndPrinting]
+Very little help from users about how they produced this crash. It has shown up
+in the M094 build and these three N620 branch builds:
+2001092605
+2001100105
+2001100305
+
+Here is the most common stack trace:
+
+PrintData::OnEndPrinting      
+[d:\builds\seamonkey\mozilla\content\base\src\nsDocumentViewer.cpp  line 736] 
+         0x80004005  
+         GlobalWindowImpl::Print       
+[d:\builds\seamonkey\mozilla\dom\src\base\nsGlobalWindow.cpp  line 1873] 
+         XPTC_InvokeByIndex    
+[d:\builds\seamonkey\mozilla\xpcom\reflect\xptcall\src\md\win32\xptcinvoke.cpp 
+line 139] 
+         XPCWrappedNative::CallMethod  
+[d:\builds\seamonkey\mozilla\js\src\xpconnect\src\xpcwrappednative.cpp  line 1954] 
+         XPC_WN_CallMethod     
+[d:\builds\seamonkey\mozilla\js\src\xpconnect\src\xpcwrappednativejsops.cpp 
+line 1263] 
+         js_Invoke      [d:\builds\seamonkey\mozilla\js\src\jsinterp.c  line 809] 
+         js_Interpret   [d:\builds\seamonkey\mozilla\js\src\jsinterp.c  line 2720] 
+         js_Invoke      [d:\builds\seamonkey\mozilla\js\src\jsinterp.c  line 825] 
+         js_InternalInvoke      [d:\builds\seamonkey\mozilla\js\src\jsinterp.c 
+line 900] 
+         JS_CallFunctionValue   [d:\builds\seamonkey\mozilla\js\src\jsapi.c 
+line 3364] 
+         nsJSContext::CallEventHandler 
+[d:\builds\seamonkey\mozilla\dom\src\base\nsJSEnvironment.cpp  line 959] 
+         nsJSEventListener::HandleEvent
+[d:\builds\seamonkey\mozilla\dom\src\events\nsJSEventListener.cpp  line 140] 
+         nsEventListenerManager::HandleEventSubType    
+[d:\builds\seamonkey\mozilla\content\events\src\nsEventListenerManager.cpp  line
+1197] 
+         nsEventListenerManager::HandleEvent   
+[d:\builds\seamonkey\mozilla\content\events\src\nsEventListenerManager.cpp  line
+2189] 
+         nsXULElement::HandleDOMEvent  
+[d:\builds\seamonkey\mozilla\content\xul\content\src\nsXULElement.cpp  line 3711] 
+         PresShell::HandleDOMEventWithTarget   
+[d:\builds\seamonkey\mozilla\layout\html\base\src\nsPresShell.cpp  line 5758] 
+         nsButtonBoxFrame::MouseClicked
+[d:\builds\seamonkey\mozilla\layout\xul\base\src\nsButtonBoxFrame.cpp  line 181] 
+         nsButtonBoxFrame::HandleEvent 
+[d:\builds\seamonkey\mozilla\layout\xul\base\src\nsButtonBoxFrame.cpp  line 128] 
+         PresShell::HandleEventInternal
+[d:\builds\seamonkey\mozilla\layout\html\base\src\nsPresShell.cpp  line 5727] 
+         PresShell::HandleEventWithTarget      
+[d:\builds\seamonkey\mozilla\layout\html\base\src\nsPresShell.cpp  line 5680] 
+         nsEventStateManager::CheckForAndDispatchClick 
+[d:\builds\seamonkey\mozilla\content\events\src\nsEventStateManager.cpp  line 2487] 
+         nsEventStateManager::PostHandleEvent  
+[d:\builds\seamonkey\mozilla\content\events\src\nsEventStateManager.cpp  line 1573] 
+         PresShell::HandleEventInternal
+[d:\builds\seamonkey\mozilla\layout\html\base\src\nsPresShell.cpp  line 5731] 
+         PresShell::HandleEvent
+[d:\builds\seamonkey\mozilla\layout\html\base\src\nsPresShell.cpp  line 5635] 
+         nsView::HandleEvent    [d:\builds\seamonkey\mozilla\view\src\nsView.cpp
+ line 377] 
+         nsViewManager::DispatchEvent  
+[d:\builds\seamonkey\mozilla\view\src\nsViewManager.cpp  line 2062] 
+         HandleEvent    [d:\builds\seamonkey\mozilla\view\src\nsView.cpp  line 68] 
+         nsWindow::DispatchEvent       
+[d:\builds\seamonkey\mozilla\widget\src\windows\nsWindow.cpp  line 732] 
+         nsWindow::DispatchWindowEvent 
+[d:\builds\seamonkey\mozilla\widget\src\windows\nsWindow.cpp  line 749] 
+         nsWindow::DispatchMouseEvent  
+[d:\builds\seamonkey\mozilla\widget\src\windows\nsWindow.cpp  line 4264] 
+         ChildWindow::DispatchMouseEvent       
+[d:\builds\seamonkey\mozilla\widget\src\windows\nsWindow.cpp  line 4514] 
+         nsWindow::ProcessMessage      
+[d:\builds\seamonkey\mozilla\widget\src\windows\nsWindow.cpp  line 3251] 
+         nsWindow::WindowProc  
+[d:\builds\seamonkey\mozilla\widget\src\windows\nsWindow.cpp  line 997] 
+         USER32.dll + 0x124c (0x77e7124c)
+
+
+----------------
+Incident Breakdown: (Talkback ID) Build - Platform  Comment
+
+N620 :        3
+(35934332) 2001092605 - Windows NT  4.0 build 1381       
+(36129419) 2001100105 - Windows 98  4.10 build 67766446  
+(36245489) 2001100305 - Windows 98  4.10 build 67766446  trying to print
+
+M094 :       14
+(35804291) 2001091311 - Windows NT  5.0 build 2195       Started up Mozilla
+browser after using Mozilla mail.  Boom.
+(35813376) 2001091311 - Windows 98  4.10 build 67766446  Just installed 0.9.4
+(35865073) 2001091311 - Windows NT  5.0 build 2195       
+(36020130) 2001091311 - Windows 98  4.10 build 67766222  closing browser
+(36063317) 2001091311 - Windows 98  4.90 build 73010104  
+(36064179) 2001091311 - Windows NT  5.1 build 2526       
+(36071402) 2001091311 - Windows NT  4.0 build 1381       
+(36119173) 2001091311 - Windows 98  4.10 build 67766446  
+(36119654) 2001091311 - Windows NT  5.0 build 2195       
+(36150063) 2001091311 - Windows NT  4.0 build 1381       Accidentally pushing
+the print button while Mozilla was loading  then cancelling the print dialog.
+(36249020) 2001091311 - Windows NT  5.0 build 2195       Cancel a print dialog
+(36287303) 2001091311 - Windows NT  5.1 build 2600       
+(35944315) 2001091311 - Linux 2.4.10     
+(36161956) 2001091311 - Linux 2.2.19-0vl0.20

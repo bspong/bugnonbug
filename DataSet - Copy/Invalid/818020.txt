@@ -1,0 +1,123 @@
+crash in js::mjit::Compiler::performCompilation
+This bug was filed from the Socorro interface and is 
+report bp-4afc8ffa-4123-4d8d-8842-4855e2121204 .
+============================================================= 
+
+Seen while looking at 17.0.1 crash stats - did not have a bug asssociated with it and it . This crash is present in beta and in the advanced query shows at #60.
+
+Here are correlations - the user in this crash report had BrotherSoft Extreme Toolbar installed, so this is most likely an extension causing the crash.
+
+js::mjit::Compiler::performCompilation()|EXCEPTION_ACCESS_VIOLATION_READ (14 crashes)
+     14% (2/14) vs.   3% (676/26794) mozilla_cc@internetdownloadmanager.com (IDM CC, https://addons.mozilla.org/addon/6973)
+      7% (1/14) vs.   0% (11/26794) 3kffxtbr@CrazyForCricket_3k.com
+      7% (1/14) vs.   0% (28/26794) {bff6b2ca-366c-4a90-b685-d87776deb0d2}
+      7% (1/14) vs.   0% (31/26794) 60ffxtbr@RobotBoom_60.com
+      7% (1/14) vs.   0% (39/26794) {87F8774F-B485-47E2-A755-A40A8A5E886D}
+      7% (1/14) vs.   0% (42/26794) {ef62e1ce-d2a4-4cdd-b7ec-92b120366b66} (FoxLingo, https://addons.mozilla.org/addon/2444)
+      7% (1/14) vs.   0% (46/26794) {800b5000-a755-47e1-992b-48a1c1357f07}
+      7% (1/14) vs.   0% (49/26794) nasanightlaunch@example.com (NASA Night Launch, https://addons.mozilla.org/addon/4908)
+      7% (1/14) vs.   0% (69/26794) {ef4e370e-d9f0-4e00-b93e-a4f274cfdd5a} (FoxTab, https://addons.mozilla.org/addon/8879)
+      7% (1/14) vs.   0% (73/26794) youtube2mp3@mondayx.de (YouTube to MP3, https://addons.mozilla.org/addon/11047)
+      7% (1/14) vs.   0% (94/26794) 4wffxtbr@Retrogamer_4w.com
+      7% (1/14) vs.   1% (159/26794) {73a6fe31-595d-460b-a920-fcc0f8843232} (NoScript, https://addons.mozilla.org/addon/722)
+      7% (1/14) vs.   1% (172/26794) ytd@mybrowserbar.com
+      7% (1/14) vs.   1% (190/26794) {872b5b88-9db5-4310-bdd0-ac189557e5f5}
+      7% (1/14) vs.   1% (225/26794) {336D0C35-8A85-403a-B9D2-65C292C39087}
+      7% (1/14) vs.   1% (235/26794) ffxtlbra@softonic.com
+      7% (1/14) vs.   1% (240/26794) wtxpcom@mybrowserbar.com
+      7% (1/14) vs.   1% (306/26794) {ACAA314B-EEBA-48e4-AD47-84E31C44796C}
+      7% (1/14) vs.   1% (347/26794) OneClickDownload@OneClickDownload.com
+      7% (1/14) vs.   2% (428/26794) {e4a8a97b-f2ed-450b-b12d-ee082ba24781} (Greasemonkey, https://addons.mozilla.org/addon/748)
+      7% (1/14) vs.   2% (500/26794) jqs@sun.com (Java Quick Starter, http://java.sun.com/javase/downloads/)
+
+More reports: https://crash-stats.mozilla.com/report/list?signature=js::mjit::Compiler::performCompilation%28%29
+
+Frame 	Module 	Signature 	Source
+0 		@0x40244c6 	
+1 	mozjs.dll 	js::mjit::Compiler::performCompilation 	js/src/methodjit/Compiler.cpp:531
+2 	mozjs.dll 	js::Interpret 	js/src/jsinterp.cpp:2454
+3 	mozjs.dll 	UncachedInlineCall 	js/src/methodjit/InvokeHelpers.cpp:263
+4 	mozjs.dll 	js::mjit::stubs::UncachedCallHelper 	js/src/methodjit/InvokeHelpers.cpp:410
+5 	mozjs.dll 	js::mjit::CallCompiler::update 	js/src/methodjit/MonoIC.cpp:933
+6 	mozjs.dll 	js::mjit::ic::Call 	js/src/methodjit/MonoIC.cpp:995
+7 	mozjs.dll 	js::SetPropertyOperation 	js/src/jsinterpinlines.h:327
+8 	mozjs.dll 	js::Interpret 	js/src/jsinterp.cpp:2454
+9 	mozjs.dll 	UncachedInlineCall 	js/src/methodjit/InvokeHelpers.cpp:263
+10 	mozjs.dll 	js::mjit::stubs::UncachedCallHelper 	js/src/methodjit/InvokeHelpers.cpp:410
+11 	mozjs.dll 	js::mjit::CallCompiler::update 	js/src/methodjit/MonoIC.cpp:933
+12 	mozjs.dll 	js::mjit::ic::Call 	js/src/methodjit/MonoIC.cpp:995
+13 	mozjs.dll 	js::SetPropertyOperation 	js/src/jsinterpinlines.h:327
+14 	mozjs.dll 	js::Interpret 	js/src/jsinterp.cpp:2454
+15 	mozjs.dll 	UncachedInlineCall 	js/src/methodjit/InvokeHelpers.cpp:263
+16 	mozjs.dll 	js::mjit::stubs::UncachedCallHelper 	js/src/methodjit/InvokeHelpers.cpp:410
+17 	mozjs.dll 	js::mjit::CallCompiler::update 	js/src/methodjit/MonoIC.cpp:933
+18 	mozjs.dll 	js::mjit::ic::Call 	js/src/methodjit/MonoIC.cpp:995
+19 	mozjs.dll 	js::SetPropertyOperation 	js/src/jsinterpinlines.h:327
+20 	mozjs.dll 	js::Interpret 	js/src/jsinterp.cpp:2454
+21 	mozjs.dll 	js::InvokeKernel 	js/src/jsinterp.cpp:363
+22 	mozjs.dll 	js::Invoke 	js/src/jsinterp.h:119
+23 	mozjs.dll 	js::CallOrConstructBoundFunction 	js/src/jsfun.cpp:1039
+24 	mozjs.dll 	js::InvokeKernel 	js/src/jsinterp.cpp:352
+25 	mozjs.dll 	js::Invoke 	js/src/jsinterp.h:119
+26 	mozjs.dll 	js_fun_call 	js/src/jsfun.cpp:830
+27 	mozjs.dll 	js::InvokeKernel 	js/src/jsinterp.cpp:352
+28 	mozjs.dll 	js::Interpret 	js/src/jsinterp.cpp:2414
+29 	mozjs.dll 	js::InvokeKernel 	js/src/jsinterp.cpp:363
+30 	mozjs.dll 	js::Invoke 	js/src/jsinterp.h:119
+31 	mozjs.dll 	js::CallOrConstructBoundFunction 	js/src/jsfun.cpp:1039
+32 	mozjs.dll 	js::InvokeKernel 	js/src/jsinterp.cpp:352
+33 	mozjs.dll 	js::Interpret 	js/src/jsinterp.cpp:2414
+34 	mozjs.dll 	js::InvokeKernel 	js/src/jsinterp.cpp:363
+35 	mozjs.dll 	js::Invoke 	js/src/jsinterp.h:119
+36 	mozjs.dll 	js::CallOrConstructBoundFunction 	js/src/jsfun.cpp:1039
+37 	mozjs.dll 	js::InvokeKernel 	js/src/jsinterp.cpp:352
+38 	mozjs.dll 	js::Interpret 	js/src/jsinterp.cpp:2414
+39 	mozjs.dll 	js::InvokeKernel 	js/src/jsinterp.cpp:363
+40 	mozjs.dll 	js::Invoke 	js/src/jsinterp.h:119
+41 	mozjs.dll 	js::CallOrConstructBoundFunction 	js/src/jsfun.cpp:1039
+42 	mozjs.dll 	js::InvokeKernel 	js/src/jsinterp.cpp:352
+43 	mozjs.dll 	js::Interpret 	js/src/jsinterp.cpp:2414
+44 	mozjs.dll 	UncachedInlineCall 	js/src/methodjit/InvokeHelpers.cpp:263
+45 	mozjs.dll 	ExecuteRegExp 	js/src/builtin/RegExp.cpp:624
+46 	mozjs.dll 	js::mjit::stubs::UncachedLoweredCall 	js/src/methodjit/InvokeHelpers.cpp:375
+47 	mozjs.dll 	js::Interpret 	js/src/jsinterp.cpp:2454
+48 	mozjs.dll 	js::InvokeKernel 	js/src/jsinterp.cpp:363
+49 	mozjs.dll 	js::Invoke 	js/src/jsinterp.h:119
+50 	mozjs.dll 	js::CallOrConstructBoundFunction 	js/src/jsfun.cpp:1039
+51 	mozjs.dll 	js::InvokeKernel 	js/src/jsinterp.cpp:352
+52 	mozjs.dll 	js::Interpret 	js/src/jsinterp.cpp:2414
+53 	mozjs.dll 	js::InvokeKernel 	js/src/jsinterp.cpp:363
+54 	mozjs.dll 	js::Invoke 	js/src/jsinterp.h:119
+55 	mozjs.dll 	js::CallOrConstructBoundFunction 	js/src/jsfun.cpp:1039
+56 	mozjs.dll 	js::InvokeKernel 	js/src/jsinterp.cpp:352
+57 	mozjs.dll 	js::Interpret 	js/src/jsinterp.cpp:2414
+58 	mozjs.dll 	UncachedInlineCall 	js/src/methodjit/InvokeHelpers.cpp:263
+59 	mozjs.dll 	ExecuteRegExp 	js/src/builtin/RegExp.cpp:624
+60 	mozjs.dll 	js::mjit::stubs::UncachedLoweredCall 	js/src/methodjit/InvokeHelpers.cpp:375
+61 	mozjs.dll 	js::Interpret 	js/src/jsinterp.cpp:2454
+62 	mozjs.dll 	js::InvokeKernel 	js/src/jsinterp.cpp:363
+63 	mozjs.dll 	js::Invoke 	js/src/jsinterp.h:119
+64 	mozjs.dll 	js::CallOrConstructBoundFunction 	js/src/jsfun.cpp:1039
+65 	mozjs.dll 	js::InvokeKernel 	js/src/jsinterp.cpp:352
+66 	mozjs.dll 	js::Interpret 	js/src/jsinterp.cpp:2414
+67 	mozglue.dll 	je_free 	memory/mozjemalloc/jemalloc.c:6565
+68 	mozjs.dll 	js::InvokeKernel 	js/src/jsinterp.cpp:363
+69 	mozjs.dll 	js::Invoke 	js/src/jsinterp.h:119
+70 	mozjs.dll 	js::CallOrConstructBoundFunction 	js/src/jsfun.cpp:1039
+71 	mozjs.dll 	js::mjit::CallCompiler::generateNativeStub 	js/src/methodjit/MonoIC.cpp:776
+72 	mozjs.dll 	js::mjit::ic::NativeCall 	js/src/methodjit/MonoIC.cpp:1009
+73 	mozjs.dll 	js::Interpret 	js/src/jsinterp.cpp:2454
+74 	mozjs.dll 	js::InvokeKernel 	js/src/jsinterp.cpp:363
+75 	mozjs.dll 	js::Invoke 	js/src/jsinterp.h:119
+76 	mozjs.dll 	js::CallOrConstructBoundFunction 	js/src/jsfun.cpp:1039
+77 	mozjs.dll 	js::InvokeKernel 	js/src/jsinterp.cpp:352
+78 	mozjs.dll 	js::Interpret 	js/src/jsinterp.cpp:2414
+79 	mozjs.dll 	UncachedInlineCall 	js/src/methodjit/InvokeHelpers.cpp:263
+80 	mozjs.dll 	ExecuteRegExp 	js/src/builtin/RegExp.cpp:624
+81 	mozjs.dll 	js::mjit::stubs::UncachedLoweredCall 	js/src/methodjit/InvokeHelpers.cpp:375
+82 	mozjs.dll 	js::Interpret 	js/src/jsinterp.cpp:2454
+83 	mozjs.dll 	js::InvokeKernel 	js/src/jsinterp.cpp:363
+84 	mozjs.dll 	js::Invoke 	js/src/jsinterp.h:119
+85 	mozjs.dll 	js::CallOrConstructBoundFunction 	js/src/jsfun.cpp:1039
+86 	mozjs.dll 	array_defineGeneric 	js/src/jsarray.cpp:962
+87

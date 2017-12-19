@@ -1,0 +1,69 @@
+firefox / xulrunner hangs in SetUserTimeAndStartupIDForActivatedWindow
+User Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.17 (KHTML, like Gecko) Chrome/24.0.1312.70 Safari/537.17
+
+Steps to reproduce:
+
+I surfed the web. Starting with Firefox 17/18 (I cant specify the exact version) firefox starts to hang randomly (once a day or so!) on my Fedora 18 x86_64 system.
+
+
+Actual results:
+
+Back trace is:
+#0  0x00000031bdc0b5e5 in pthread_cond_wait@@GLIBC_2.3.2 () from /lib64/libpthread.so.0
+#1  0x000000361368501f in g_cond_wait () from /lib64/libglib-2.0.so.0
+#2  0x000000361366b75b in g_once_init_enter () from /lib64/libglib-2.0.so.0
+#3  0x00007f9716f71df0 in gdk_window_get_type () at gdkwindow.c:246
+#4  0x00007f9716f9e679 in _gdk_x11_window_get_toplevel (window=0x7f972cc9fb80) at gdkwindow-x11.c:165
+#5  0x00007f9716fa06e4 in gdk_x11_window_set_user_time (window=window@entry=0x7f972cc9fb80, timestamp=<optimized out>) at gdkwindow-x11.c:3069
+#6  0x000000379a20824d in SetUserTimeAndStartupIDForActivatedWindow (aWindow=<optimized out>) at /usr/src/debug/xulrunner-18.0.2/mozilla-release/widget/gtk2/nsWindow.cpp:1328
+#7  nsWindow::NativeShow (this=this@entry=0x7f972a242b80, aAction=aAction@entry=true) at /usr/src/debug/xulrunner-18.0.2/mozilla-release/widget/gtk2/nsWindow.cpp:3900
+#8  0x000000379a20d187 in Show (aState=<optimized out>, this=0x7f972a242b80) at /usr/src/debug/xulrunner-18.0.2/mozilla-release/widget/gtk2/nsWindow.cpp:997
+#9  nsWindow::Show (this=0x7f972a242b80, aState=true) at /usr/src/debug/xulrunner-18.0.2/mozilla-release/widget/gtk2/nsWindow.cpp:948
+#10 0x0000003799d7fead in nsView::NotifyEffectiveVisibilityChanged (this=this@entry=0x7f9731946480, aEffectivelyVisible=true)
+    at /usr/src/debug/xulrunner-18.0.2/mozilla-release/view/src/nsView.cpp:319
+#11 0x0000003799d7fee9 in nsView::SetVisibility (this=0x7f9731946480, aVisibility=<optimized out>) at /usr/src/debug/xulrunner-18.0.2/mozilla-release/view/src/nsView.cpp:335
+#12 0x0000003799d813b7 in nsViewManager::SetViewVisibility (this=0x7f973fadc0c0, aView=0x7f9731946480, aVisible=nsViewVisibility_kShow)
+    at /usr/src/debug/xulrunner-18.0.2/mozilla-release/view/src/nsViewManager.cpp:1075
+#13 0x0000003799b9f2a1 in nsMenuPopupFrame::LayoutPopup (this=0x7f97399ab1f8, aState=..., aParentMenu=<optimized out>, aSizedToPopup=<optimized out>)
+    at /usr/src/debug/xulrunner-18.0.2/mozilla-release/layout/xul/base/src/nsMenuPopupFrame.cpp:465
+#14 0x0000003799ba3af0 in nsPopupSetFrame::DoLayout (this=<optimized out>, aState=...) at /usr/src/debug/xulrunner-18.0.2/mozilla-release/layout/xul/base/src/nsPopupSetFrame.cpp:122
+#15 0x0000003799b89771 in nsIFrame::Layout (this=0x7f9739977ad0, aState=...) at /usr/src/debug/xulrunner-18.0.2/mozilla-release/layout/xul/base/src/nsBox.cpp:510
+#16 0x0000003799b8df53 in nsSprocketLayout::Layout (this=this@entry=0x7f972b1bfbc0, aBox=0x7f9731944730, aState=...)
+    at /usr/src/debug/xulrunner-18.0.2/mozilla-release/layout/xul/base/src/nsSprocketLayout.cpp:488
+#17 0x0000003799b8e54f in nsSprocketLayout::Layout (this=0x7f972b1bfbc0, aBox=<optimized out>, aState=...)
+    at /usr/src/debug/xulrunner-18.0.2/mozilla-release/layout/xul/base/src/nsSprocketLayout.cpp:175
+#18 0x0000003799b8a76d in nsBoxFrame::DoLayout (this=0x7f9731944730, aState=...) at /usr/src/debug/xulrunner-18.0.2/mozilla-release/layout/xul/base/src/nsBoxFrame.cpp:900
+#19 0x0000003799b89771 in nsIFrame::Layout (this=0x7f9731944730, aState=...) at /usr/src/debug/xulrunner-18.0.2/mozilla-release/layout/xul/base/src/nsBox.cpp:510
+#20 0x0000003799b8f09a in nsStackLayout::Layout (this=<optimized out>, aBox=0x7f9731944438, aState=...)
+    at /usr/src/debug/xulrunner-18.0.2/mozilla-release/layout/xul/base/src/nsStackLayout.cpp:340
+#21 0x0000003799b8a76d in nsBoxFrame::DoLayout (this=0x7f9731944438, aState=...) at /usr/src/debug/xulrunner-18.0.2/mozilla-release/layout/xul/base/src/nsBoxFrame.cpp:900
+#22 0x0000003799b89771 in nsIFrame::Layout (this=0x7f9731944438, aState=...) at /usr/src/debug/xulrunner-18.0.2/mozilla-release/layout/xul/base/src/nsBox.cpp:510
+#23 0x0000003799b8b556 in nsBoxFrame::Reflow (this=0x7f9731944438, aPresContext=0x7f973180ec00, aDesiredSize=..., aReflowState=..., aStatus=@0x7fffb730ecd4: 0)
+    at /usr/src/debug/xulrunner-18.0.2/mozilla-release/layout/xul/base/src/nsBoxFrame.cpp:695
+#24 0x0000003799abf522 in nsContainerFrame::ReflowChild (this=<optimized out>, aKidFrame=0x7f9731944438, aPresContext=0x7f973180ec00, aDesiredSize=..., aReflowState=..., 
+    aX=<optimized out>, aY=0, aFlags=0, aStatus=@0x7fffb730ecd4: 0, aTracker=0x0) at /usr/src/debug/xulrunner-18.0.2/mozilla-release/layout/generic/nsContainerFrame.cpp:942
+#25 0x0000003799b0b168 in ViewportFrame::Reflow (this=0x7f9731943c18, aPresContext=0x7f973180ec00, aDesiredSize=..., aReflowState=..., aStatus=@0x7fffb730ecd4: 0)
+    at /usr/src/debug/xulrunner-18.0.2/mozilla-release/layout/generic/nsViewportFrame.cpp:210
+#26 0x0000003799a954af in PresShell::DoReflow (this=this@entry=0x7f9739ef68c0, target=target@entry=0x7f9731943c18, aInterruptible=aInterruptible@entry=false)
+    at /usr/src/debug/xulrunner-18.0.2/mozilla-release/layout/base/nsPresShell.cpp:7533
+#27 0x0000003799a95738 in PresShell::ProcessReflowCommands (this=this@entry=0x7f9739ef68c0, aInterruptible=false)
+    at /usr/src/debug/xulrunner-18.0.2/mozilla-release/layout/base/nsPresShell.cpp:7674
+#28 0x0000003799a98f7d in PresShell::FlushPendingNotifications (this=0x7f9739ef68c0, aType=Flush_Layout) at /usr/src/debug/xulrunner-18.0.2/mozilla-release/layout/base/nsPresShell.cpp:3878
+#29 0x0000003799bf5842 in nsDocument::FlushPendingNotifications (this=0x7f9739f6a800, aType=Flush_Layout)
+    at /usr/src/debug/xulrunner-18.0.2/mozilla-release/content/base/src/nsDocument.cpp:6526
+#30 0x0000003799c0c73c in nsGenericElement::GetPrimaryFrame (this=0x7f9739cadb80, aType=aType@entry=Flush_Layout)
+    at /usr/src/debug/xulrunner-18.0.2/mozilla-release/content/base/src/nsGenericElement.cpp:1816
+#31 0x0000003799c0c7d1 in nsGenericElement::GetStyledFrame (this=<optimized out>) at /usr/src/debug/xulrunner-18.0.2/mozilla-release/content/base/src/nsGenericElement.cpp:519
+#32 0x0000003799c0c8e2 in GetScrollFrame (aStyledFrame=0x0, this=0x7f9739cadb80) at /usr/src/debug/xulrunner-18.0.2/mozilla-release/content/base/src/nsGenericElement.cpp:573
+#33 nsGenericElement::GetScrollFrame (this=0x7f9739cadb80, aStyledFrame=0x0) at /usr/src/debug/xulrunner-18.0.2/mozilla-release/content/base/src/nsGenericElement.cpp:563
+#34 0x0000003799c0ccf7 in nsGenericElement::GetScrollLeft (this=<optimized out>) at /usr/src/debug/xulrunner-18.0.2/mozilla-release/content/base/src/nsGenericElement.cpp:634
+#35 0x000000379a02217d in nsIDOMElement_GetScrollLeft (cx=<optimized out>, obj=..., id=..., vp_=...)
+    at /usr/src/debug/xulrunner-18.0.2/mozilla-release/objdir/js/xpconnect/src/dom_quickstubs.cpp:4494
+
+
+
+Expected results:
+
+Firefox should not hang so often, as it did in the previous versions.
+
+It looks like some threading/synchronisation problem of a condition which is never signaled.

@@ -1,0 +1,101 @@
+ASSERTION: trouble: no buffer!: 'buffer', file /home/timeless/mozilla/string/src/nsASingleFragmentString.cpp, line 61
+freebsd cvs build from now with 1 unregisteredpatch (patch available upon request)
+
+
+Page load messages [Warning comes from unregistered patch]:
+WARNING: Dropping overly large image.
+, file /home/timeless/mozilla/modules/libpr0n/src/imgContainer.cpp, line 74
+Document http://nihonto.brinkster.net/main/KoGassanW.htm loaded successfully
+
+load page, scroll to end [ignore Evang issues], drag [where] image [would be] onto itself
+
+###!!! ASSERTION: trouble: no buffer!: 'buffer', file /home/timeless/mozilla/string/src/nsASingleFragmentString.cpp, line 61
+###!!! Break: at file /home/timeless/mozilla/string/src/nsASingleFragmentString.cpp, line 61
+Suspending process; attach with the debugger.
+
+#0  nsBufferHandle<unsigned short>::DataEnd (this=0x0) at ../../dist/include/string/nsBufferHandle.h:102
+#1  0x28307918 in nsASingleFragmentString::GetWritableFragment (this=0xbfbfca44, aFragment=@0xbfbfc874,
+    aRequest=kFirstFragment, aOffset=0) at /home/timeless/mozilla/string/src/nsASingleFragmentString.cpp:63
+#2  0x283433d1 in nsAString::BeginWriting (this=0xbfbfca44, aResult=@0xbfbfc874)
+    at ../../dist/include/string/nsAString.h:713
+#3  0x28308761 in nsAString::do_AssignFromReadable (this=0xbfbfca44, aReadable=@0xbfbfca48)
+    at /home/timeless/mozilla/string/src/nsAString.cpp:296
+#4  0x28308503 in nsAString::AssignFromReadable (this=0xbfbfca44, rhs=@0xbfbfca48)
+    at /home/timeless/mozilla/string/src/nsAString.cpp:237
+#5  0x28342521 in nsAString::Assign (this=0xbfbfca44, aReadable=@0xbfbfca48)
+    at ../../dist/include/string/nsAString.h:263
+#6  0x2834266d in nsAString::operator= (this=0xbfbfca44, aReadable=@0xbfbfca48)
+    at ../../dist/include/string/nsAString.h:270
+#7  0x29324709 in nsASingleFragmentString::operator= (this=0xbfbfca44, _ctor_arg=@0xbfbfca48)
+    at /home/timeless/mozilla/content/base/src/nsContentAreaDragDrop.cpp:806
+#8  0x29323b65 in nsAFlatString::operator= (this=0xbfbfca44, _ctor_arg=@0xbfbfca48)
+    at /home/timeless/mozilla/content/base/src/nsContentAreaDragDrop.cpp:806
+#9  0x2924a7b8 in nsContentAreaDragDrop::CreateTransferable (this=0x88b8bc0, inURLString=@0xbfbfcd3c,
+    inTitleString=@0xbfbfccac, inHTMLString=@0xbfbfcc1c, inIsAnchor=1, outTrans=0xbfbfcdcc)
+    at /home/timeless/mozilla/content/base/src/nsContentAreaDragDrop.cpp:806
+#10 0x2924ab5d in nsContentAreaDragDrop::DragGesture (this=0x88b8bc0, inMouseEvent=0x87bbd08)
+    at /home/timeless/mozilla/content/base/src/nsContentAreaDragDrop.cpp:843
+(gdb) l
+801       if ( !textPrimitive )
+802         return NS_ERROR_FAILURE;
+803
+804       nsAFlatString data;
+805       if (inIsAnchor)
+806         data = PromiseFlatString(inURLString); /*call goes through here*/
+807       else
+808         data = PromiseFlatString(inTitleString);
+809       textPrimitive->SetData(data.get());
+810       trans->SetTransferData(kUnicodeMime, textPrimitive, data.Length() * 2);
+(gdb) p urlString
+$2 = {<nsString> = {<nsAFlatString> = {<nsASingleFragmentString> = {<nsAString> = {
+          _vptr$ = 0x28396f40}, <No data fields>}, <No data fields>}, <nsStr> = {{mStr = 0xbfbfcd4c "h",
+        mUStr = 0xbfbfcd4c}, mLength = 43, mCapacityAndFlags = 2147483711}, <No data fields>},
+  mBuffer = "h\000t\000t\000p\000:\000/\000/\000n\000i\000h\000o\000n\000t\000o\000.\000b\000r\000i\000n\000k\000s\000t\000e\000r\000.\000n\000e\000t\000/\000m\000a\000i\000n\000/\000K\000o\000G\000a\000s\000.\000J\000P\000G\000\000\000\\¼F)OI¿¿yo')O¿¿\024o')O¿¿1o')\\¼F)\000}^\t\\¼F)"}
+(gdb) p titleString
+$3 = {<nsString> = {<nsAFlatString> = {<nsASingleFragmentString> = {<nsAString> = {
+          _vptr$ = 0x28396f40}, <No data fields>}, <No data fields>}, <nsStr> = {{mStr = 0xbfbfccbc "h",
+        mUStr = 0xbfbfccbc}, mLength = 43, mCapacityAndFlags = 2147483711}, <No data fields>},
+  mBuffer = "h\000t\000t\000p\000:\000/\000/\000n\000i\000h\000o\000n\000t\000o\000.\000b\000r\000i\000n\000k\000s\000t\000e\000r\000.\000n\000e\000t\000/\000m\000a\000i\000n\000/\000K\000o\000G\000a\000s\000.\000J\000P\000G\000\000\0005z')\231T\017(à\227\020(PI¿¿pW$)\000\000\000\000A\213\213\bpI¿¿t-')O¿¿"}
+(gdb) p htmlString
+$4 = {<nsString> = {<nsAFlatString> = {<nsASingleFragmentString> = {<nsAString> = {
+          _vptr$ = 0x28396f40}, <No data fields>}, <No data fields>}, <nsStr> = {{mStr = 0xbfbfcc2c "<",
+        mUStr = 0xbfbfcc2c}, mLength = 54, mCapacityAndFlags = 2147483711}, <No data fields>},
+  mBuffer = "<\000i\000m\000g\000\000s\000r\000c\000=\000\"\000h\000t\000t\000p\000:\000/\000/\000n\000i\000h\000o\000n\000t\000o\000.\000b\000r\000i\000n\000k\000s\000t\000e\000r\000.\000n\000e\000t\000/\000m\000a\000i\000n\000/\000K\000o\000G\000a\000s\000.\000J\000P\000G\000\"\000\000\000F)A\213\213\bAI¿¿q·1(\\¼F)"}
+(gdb) p isAnchor
+$5 = 1
+
+#11 0x28f4d77d in nsEventListenerManager::HandleEvent (this=0x9561300, aPresContext=0x9826800,
+    aEvent=0xbfbfe520, aDOMEvent=0xbfbfe42c, aCurrentTarget=0x95e7d08, aFlags=2, aEventStatus=0xbfbfe568)
+    at /home/timeless/mozilla/content/events/src/nsEventListenerManager.cpp:1990
+#12 0x290d15fc in nsXULElement::HandleDOMEvent (this=0x95e7d00, aPresContext=0x9826800, aEvent=0xbfbfe520,
+    aDOMEvent=0xbfbfe42c, aFlags=2, aEventStatus=0xbfbfe568)
+    at /home/timeless/mozilla/content/xul/content/src/nsXULElement.cpp:3452
+#13 0x290d7da4 in nsXULElement::HandleChromeEvent (this=0x95e7d00, aPresContext=0x9826800, aEvent=0xbfbfe520,
+    aDOMEvent=0xbfbfe42c, aFlags=2, aEventStatus=0xbfbfe568)
+    at /home/timeless/mozilla/content/xul/content/src/nsXULElement.cpp:4675
+#14 0x297f8ce2 in GlobalWindowImpl::HandleDOMEvent (this=0x94db000, aPresContext=0x9826800,
+    aEvent=0xbfbfe520, aDOMEvent=0xbfbfe42c, aFlags=2, aEventStatus=0xbfbfe568)
+    at /home/timeless/mozilla/dom/src/base/nsGlobalWindow.cpp:703
+#15 0x29199cfb in nsDocument::HandleDOMEvent (this=0x96ec800, aPresContext=0x9826800, aEvent=0xbfbfe520,
+    aDOMEvent=0xbfbfe42c, aFlags=2, aEventStatus=0xbfbfe568)
+    at /home/timeless/mozilla/content/base/src/nsDocument.cpp:3215
+#16 0x291dd596 in nsGenericElement::HandleDOMEvent (this=0x97f3d40, aPresContext=0x9826800,
+    aEvent=0xbfbfe520, aDOMEvent=0xbfbfe42c, aFlags=2, aEventStatus=0xbfbfe568)
+    at /home/timeless/mozilla/content/base/src/nsGenericElement.cpp:1668
+#17 0x291dd53a in nsGenericElement::HandleDOMEvent (this=0x9845380, aPresContext=0x9826800,
+    aEvent=0xbfbfe520, aDOMEvent=0xbfbfe42c, aFlags=2, aEventStatus=0xbfbfe568)
+    at /home/timeless/mozilla/content/base/src/nsGenericElement.cpp:1661
+#18 0x291dd53a in nsGenericElement::HandleDOMEvent (this=0x9871080, aPresContext=0x9826800,
+    aEvent=0xbfbfe520, aDOMEvent=0xbfbfe42c, aFlags=2, aEventStatus=0xbfbfe568)
+    at /home/timeless/mozilla/content/base/src/nsGenericElement.cpp:1661
+#19 0x291dd53a in nsGenericElement::HandleDOMEvent (this=0x9871780, aPresContext=0x9826800,
+    aEvent=0xbfbfe520, aDOMEvent=0xbfbfe42c, aFlags=1, aEventStatus=0xbfbfe568)
+    at /home/timeless/mozilla/content/base/src/nsGenericElement.cpp:1661
+#20 0x28fa639a in nsHTMLImageElement::HandleDOMEvent (this=0x9871780, aPresContext=0x9826800,
+    aEvent=0xbfbfe520, aDOMEvent=0x0, aFlags=1, aEventStatus=0xbfbfe568)
+    at /home/timeless/mozilla/content/html/content/src/nsHTMLImageElement.cpp:671
+#21 0x28f54f68 in nsEventStateManager::GenerateDragGesture (this=0x9812d00, aPresContext=0x9826800,
+    aEvent=0xbfbff1b8) at /home/timeless/mozilla/content/events/src/nsEventStateManager.cpp:1245
+#22 0x28f5102c in nsEventStateManager::PreHandleEvent (this=0x9812d00, aPresContext=0x9826800,
+    aEvent=0xbfbff1b8, aTargetFrame=0x9886770, aStatus=0xbfbfee90, aView=0x985cd80)
+    at /home/timeless/mozilla/content/events/src/nsEventStateManager.cpp:363

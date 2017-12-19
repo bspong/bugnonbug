@@ -1,0 +1,158 @@
+PNG: heap-buffer-overflow crash [@MOZ_PNG_read_filt_row_a]
+Looks like a regression/unfixed issue of bug 1288588.
+
+The following testcase crashes on en-us.linux-x86_64-asan.tar.bz2 revision a9b2065fa983504a628646c742a913ec3a1a3b71
+
+See attachment.
+
+Backtrace:
+
+==21224==ERROR: AddressSanitizer: heap-buffer-overflow on address 0x610000789703 at pc 0x7f9f6e7c001e bp 0x7f9f48987730 sp 0x7f9f48987728
+READ of size 16 at 0x610000789703 thread T32 (ImgDecoder #5)
+    #0 0x7f9f6e7c001d in MOZ_PNG_read_filt_row_a /builds/slave/m-in-l64-asan-0000000000000000/build/src/media/libpng/pngrutil.c:4017:31
+    #1 0x7f9f6e7a0512 in MOZ_PNG_read_filt_row /builds/slave/m-in-l64-asan-0000000000000000/build/src/media/libpng/pngrutil.c:4170:7
+    #2 0x7f9f6e7a0512 in MOZ_PNG_push_proc_row /builds/slave/m-in-l64-asan-0000000000000000/build/src/media/libpng/pngpread.c:905
+    #3 0x7f9f6e79fc06 in MOZ_PNG_proc_IDAT_data /builds/slave/m-in-l64-asan-0000000000000000/build/src/media/libpng/pngpread.c:873:13
+    #4 0x7f9f6e79800e in MOZ_PNG_push_read_IDAT /builds/slave/m-in-l64-asan-0000000000000000/build/src/media/libpng/pngpread.c:754:7
+    #5 0x7f9f6e793b47 in MOZ_PNG_proc_some_data /builds/slave/m-in-l64-asan-0000000000000000/build/src/media/libpng/pngpread.c:115:10
+    #6 0x7f9f6e793b47 in MOZ_PNG_process_data /builds/slave/m-in-l64-asan-0000000000000000/build/src/media/libpng/pngpread.c:46
+    #7 0x7f9f681a7559 in mozilla::image::nsPNGDecoder::ReadPNGData(char const*, unsigned long) /builds/slave/m-in-l64-asan-0000000000000000/build/src/image/decoders/nsPNGDecoder.cpp:396:3
+    #8 0x7f9f681d35ea in operator() /builds/slave/m-in-l64-asan-0000000000000000/build/src/image/decoders/nsPNGDecoder.cpp:366:16
+    #9 0x7f9f681d35ea in mozilla::Maybe<mozilla::Variant<mozilla::image::TerminalState, mozilla::image::Yield> > mozilla::image::StreamingLexer<mozilla::image::nsPNGDecoder::State, 16ul>::ContinueUnbufferedRead<mozilla::image::nsPNGDecoder::DoDecode(mozilla::image::SourceBufferIterator&, mozilla::image::IResumable*)::$_8>(char const*, unsigned long, unsigned long, mozilla::image::nsPNGDecoder::DoDecode(mozilla::image::SourceBufferIterator&, mozilla::image::IResumable*)::$_8) /builds/slave/m-in-l64-asan-0000000000000000/build/src/image/StreamingLexer.h:541
+    #10 0x7f9f6819f535 in UnbufferedReadAfterYield<(lambda at /builds/slave/m-in-l64-asan-0000000000000000/build/src/image/decoders/nsPNGDecoder.cpp:363:21)> /builds/slave/m-in-l64-asan-0000000000000000/build/src/image/StreamingLexer.h:527:12
+    #11 0x7f9f6819f535 in Lex<(lambda at /builds/slave/m-in-l64-asan-0000000000000000/build/src/image/decoders/nsPNGDecoder.cpp:363:21)> /builds/slave/m-in-l64-asan-0000000000000000/build/src/image/StreamingLexer.h:417
+    #12 0x7f9f6819f535 in mozilla::image::nsPNGDecoder::DoDecode(mozilla::image::SourceBufferIterator&, mozilla::image::IResumable*) /builds/slave/m-in-l64-asan-0000000000000000/build/src/image/decoders/nsPNGDecoder.cpp:362
+    #13 0x7f9f680f1789 in mozilla::image::Decoder::Decode(mozilla::image::IResumable*) /builds/slave/m-in-l64-asan-0000000000000000/build/src/image/Decoder.cpp:131:20
+    #14 0x7f9f68107c75 in mozilla::image::AnimationDecodingTask::Run() /builds/slave/m-in-l64-asan-0000000000000000/build/src/image/IDecodingTask.cpp:123:26
+    #15 0x7f9f68112b32 in mozilla::image::DecodePoolWorker::Run() /builds/slave/m-in-l64-asan-0000000000000000/build/src/image/DecodePool.cpp:177:11
+    #16 0x7f9f65940736 in nsThread::ProcessNextEvent(bool, bool*) /builds/slave/m-in-l64-asan-0000000000000000/build/src/xpcom/threads/nsThread.cpp:1058:7
+    #17 0x7f9f659be6cc in NS_ProcessNextEvent(nsIThread*, bool) /builds/slave/m-in-l64-asan-0000000000000000/build/src/xpcom/glue/nsThreadUtils.cpp:290:10
+    #18 0x7f9f666de2dc in mozilla::ipc::MessagePumpForNonMainThreads::Run(base::MessagePump::Delegate*) /builds/slave/m-in-l64-asan-0000000000000000/build/src/ipc/glue/MessagePump.cpp:338:20
+    #19 0x7f9f66651dc8 in RunInternal /builds/slave/m-in-l64-asan-0000000000000000/build/src/ipc/chromium/src/base/message_loop.cc:232:3
+    #20 0x7f9f66651dc8 in RunHandler /builds/slave/m-in-l64-asan-0000000000000000/build/src/ipc/chromium/src/base/message_loop.cc:225
+    #21 0x7f9f66651dc8 in MessageLoop::Run() /builds/slave/m-in-l64-asan-0000000000000000/build/src/ipc/chromium/src/base/message_loop.cc:205
+    #22 0x7f9f6593ba51 in nsThread::ThreadFunc(void*) /builds/slave/m-in-l64-asan-0000000000000000/build/src/xpcom/threads/nsThread.cpp:459:5
+    #23 0x7f9f7cbf2378 in _pt_root /builds/slave/m-in-l64-asan-0000000000000000/build/src/nsprpub/pr/src/pthreads/ptthread.c:216:5
+    #24 0x7f9f80164181 in start_thread (/lib/x86_64-linux-gnu/libpthread.so.0+0x8181)
+
+0x610000789703 is located 10 bytes to the right of 185-byte region [0x610000789640,0x6100007896f9)
+allocated by thread T32 (ImgDecoder #5) here:
+    #0 0x4b247b in malloc /builds/slave/moz-toolchain/src/llvm/projects/compiler-rt/lib/asan/asan_malloc_linux.cc:52:3
+    #1 0x7f9f6e7a9e62 in MOZ_PNG_malloc_base /builds/slave/m-in-l64-asan-0000000000000000/build/src/media/libpng/pngmem.c:95:17
+    #2 0x7f9f6e7a9e62 in MOZ_PNG_malloc /builds/slave/m-in-l64-asan-0000000000000000/build/src/media/libpng/pngmem.c:179
+    #3 0x7f9f6e7a9e62 in MOZ_PNG_read_start_row /builds/slave/m-in-l64-asan-0000000000000000/build/src/media/libpng/pngrutil.c:4673
+    #4 0x7f9f6e7a9897 in MOZ_PNG_read_update_info /builds/slave/m-in-l64-asan-0000000000000000/build/src/media/libpng/pngread.c:350:10
+    #5 0x7f9f6819d111 in mozilla::image::nsPNGDecoder::info_callback(png_struct_def*, png_info_def*) /builds/slave/m-in-l64-asan-0000000000000000/build/src/image/decoders/nsPNGDecoder.cpp:658:3
+    #6 0x7f9f6e795f2f in MOZ_PNG_push_have_info /builds/slave/m-in-l64-asan-0000000000000000/build/src/media/libpng/pngpread.c:1189:7
+    #7 0x7f9f6e795f2f in MOZ_PNG_push_read_chunk /builds/slave/m-in-l64-asan-0000000000000000/build/src/media/libpng/pngpread.c:351
+    #8 0x7f9f6e793b3b in MOZ_PNG_proc_some_data /builds/slave/m-in-l64-asan-0000000000000000/build/src/media/libpng/pngpread.c:109:10
+    #9 0x7f9f6e793b3b in MOZ_PNG_process_data /builds/slave/m-in-l64-asan-0000000000000000/build/src/media/libpng/pngpread.c:46
+    #10 0x7f9f681a7559 in mozilla::image::nsPNGDecoder::ReadPNGData(char const*, unsigned long) /builds/slave/m-in-l64-asan-0000000000000000/build/src/image/decoders/nsPNGDecoder.cpp:396:3
+    #11 0x7f9f681d35ea in operator() /builds/slave/m-in-l64-asan-0000000000000000/build/src/image/decoders/nsPNGDecoder.cpp:366:16
+    #12 0x7f9f681d35ea in mozilla::Maybe<mozilla::Variant<mozilla::image::TerminalState, mozilla::image::Yield> > mozilla::image::StreamingLexer<mozilla::image::nsPNGDecoder::State, 16ul>::ContinueUnbufferedRead<mozilla::image::nsPNGDecoder::DoDecode(mozilla::image::SourceBufferIterator&, mozilla::image::IResumable*)::$_8>(char const*, unsigned long, unsigned long, mozilla::image::nsPNGDecoder::DoDecode(mozilla::image::SourceBufferIterator&, mozilla::image::IResumable*)::$_8) /builds/slave/m-in-l64-asan-0000000000000000/build/src/image/StreamingLexer.h:541
+    #13 0x7f9f681a0943 in UnbufferedRead<(lambda at /builds/slave/m-in-l64-asan-0000000000000000/build/src/image/decoders/nsPNGDecoder.cpp:363:21)> /builds/slave/m-in-l64-asan-0000000000000000/build/src/image/StreamingLexer.h:485:12
+    #14 0x7f9f681a0943 in Lex<(lambda at /builds/slave/m-in-l64-asan-0000000000000000/build/src/image/decoders/nsPNGDecoder.cpp:363:21)> /builds/slave/m-in-l64-asan-0000000000000000/build/src/image/StreamingLexer.h:453
+    #15 0x7f9f681a0943 in mozilla::image::nsPNGDecoder::DoDecode(mozilla::image::SourceBufferIterator&, mozilla::image::IResumable*) /builds/slave/m-in-l64-asan-0000000000000000/build/src/image/decoders/nsPNGDecoder.cpp:362
+    #16 0x7f9f680f1789 in mozilla::image::Decoder::Decode(mozilla::image::IResumable*) /builds/slave/m-in-l64-asan-0000000000000000/build/src/image/Decoder.cpp:131:20
+    #17 0x7f9f68107af3 in mozilla::image::AnimationDecodingTask::Run() /builds/slave/m-in-l64-asan-0000000000000000/build/src/image/IDecodingTask.cpp:123:26
+    #18 0x7f9f68112b32 in mozilla::image::DecodePoolWorker::Run() /builds/slave/m-in-l64-asan-0000000000000000/build/src/image/DecodePool.cpp:177:11
+    #19 0x7f9f65940736 in nsThread::ProcessNextEvent(bool, bool*) /builds/slave/m-in-l64-asan-0000000000000000/build/src/xpcom/threads/nsThread.cpp:1058:7
+    #20 0x7f9f659be6cc in NS_ProcessNextEvent(nsIThread*, bool) /builds/slave/m-in-l64-asan-0000000000000000/build/src/xpcom/glue/nsThreadUtils.cpp:290:10
+    #21 0x7f9f666de2dc in mozilla::ipc::MessagePumpForNonMainThreads::Run(base::MessagePump::Delegate*) /builds/slave/m-in-l64-asan-0000000000000000/build/src/ipc/glue/MessagePump.cpp:338:20
+    #22 0x7f9f66651dc8 in RunInternal /builds/slave/m-in-l64-asan-0000000000000000/build/src/ipc/chromium/src/base/message_loop.cc:232:3
+    #23 0x7f9f66651dc8 in RunHandler /builds/slave/m-in-l64-asan-0000000000000000/build/src/ipc/chromium/src/base/message_loop.cc:225
+    #24 0x7f9f66651dc8 in MessageLoop::Run() /builds/slave/m-in-l64-asan-0000000000000000/build/src/ipc/chromium/src/base/message_loop.cc:205
+    #25 0x7f9f6593ba51 in nsThread::ThreadFunc(void*) /builds/slave/m-in-l64-asan-0000000000000000/build/src/xpcom/threads/nsThread.cpp:459:5
+    #26 0x7f9f7cbf2378 in _pt_root /builds/slave/m-in-l64-asan-0000000000000000/build/src/nsprpub/pr/src/pthreads/ptthread.c:216:5
+    #27 0x7f9f80164181 in start_thread (/lib/x86_64-linux-gnu/libpthread.so.0+0x8181)
+
+Thread T32 (ImgDecoder #5) created by T0 here:
+    #0 0x49a839 in __interceptor_pthread_create /builds/slave/moz-toolchain/src/llvm/projects/compiler-rt/lib/asan/asan_interceptors.cc:238:3
+    #1 0x7f9f7cbeef3f in _PR_CreateThread /builds/slave/m-in-l64-asan-0000000000000000/build/src/nsprpub/pr/src/pthreads/ptthread.c:457:14
+    #2 0x7f9f7cbeeb4a in PR_CreateThread /builds/slave/m-in-l64-asan-0000000000000000/build/src/nsprpub/pr/src/pthreads/ptthread.c:548:12
+    #3 0x7f9f6593d1db in nsThread::Init() /builds/slave/m-in-l64-asan-0000000000000000/build/src/xpcom/threads/nsThread.cpp:630:8
+    #4 0x7f9f659448ff in nsThreadManager::NewThread(unsigned int, unsigned int, nsIThread**) /builds/slave/m-in-l64-asan-0000000000000000/build/src/xpcom/threads/nsThreadManager.cpp:253:17
+    #5 0x7f9f659bd6be in NS_NewThread(nsIThread**, nsIRunnable*, unsigned int) /builds/slave/m-in-l64-asan-0000000000000000/build/src/xpcom/glue/nsThreadUtils.cpp:64:5
+    #6 0x7f9f680ee448 in mozilla::image::DecodePool::DecodePool() /builds/slave/m-in-l64-asan-0000000000000000/build/src/image/DecodePool.cpp:253:19
+    #7 0x7f9f680ed9c0 in Singleton /builds/slave/m-in-l64-asan-0000000000000000/build/src/image/DecodePool.cpp:210:22
+    #8 0x7f9f680ed9c0 in mozilla::image::DecodePool::Initialize() /builds/slave/m-in-l64-asan-0000000000000000/build/src/image/DecodePool.cpp:202
+    #9 0x7f9f6814bf45 in mozilla::image::EnsureModuleInitialized() /builds/slave/m-in-l64-asan-0000000000000000/build/src/image/build/nsImageModule.cpp:103:3
+    #10 0x7f9f680a9031 in imgLoader::CreateImageLoader() /builds/slave/m-in-l64-asan-0000000000000000/build/src/image/imgLoader.cpp:1132:3
+    #11 0x7f9f680a9308 in imgLoader::NormalLoader() /builds/slave/m-in-l64-asan-0000000000000000/build/src/image/imgLoader.cpp:1144:21
+    #12 0x7f9f68262876 in GetImgLoaderForDocument /builds/slave/m-in-l64-asan-0000000000000000/build/src/dom/base/nsContentUtils.cpp:3140:22
+    #13 0x7f9f68262876 in nsContentUtils::LoadImage(nsIURI*, nsINode*, nsIDocument*, nsIPrincipal*, nsIURI*, mozilla::net::ReferrerPolicy, imgINotificationObserver*, int, nsAString_internal const&, imgRequestProxy**, unsigned int) /builds/slave/m-in-l64-asan-0000000000000000/build/src/dom/base/nsContentUtils.cpp:3192
+    #14 0x7f9f6c541d1a in mozilla::css::ImageLoader::LoadImage(nsIURI*, nsIPrincipal*, nsIURI*, mozilla::css::ImageValue*) /builds/slave/m-in-l64-asan-0000000000000000/build/src/layout/style/ImageLoader.cpp:262:17
+    #15 0x7f9f6c5fe249 in mozilla::css::ImageValue::ImageValue(nsIURI*, nsStringBuffer*, nsIURI*, nsIPrincipal*, nsIDocument*) /builds/slave/m-in-l64-asan-0000000000000000/build/src/layout/style/nsCSSValue.cpp:2739:3
+    #16 0x7f9f6c5f7985 in nsCSSValue::StartImageLoad(nsIDocument*) const /builds/slave/m-in-l64-asan-0000000000000000/build/src/layout/style/nsCSSValue.cpp:762:9
+    #17 0x7f9f6c659bd9 in TryToStartImageLoadOnValue(nsCSSValue const&, nsIDocument*, nsStyleContext*, nsCSSProperty, bool) /builds/slave/m-in-l64-asan-0000000000000000/build/src/layout/style/nsCSSDataBlock.cpp:98:5
+    #18 0x7f9f6c659a53 in TryToStartImageLoad(nsCSSValue const&, nsIDocument*, nsStyleContext*, nsCSSProperty, bool) /builds/slave/m-in-l64-asan-0000000000000000/build/src/layout/style/nsCSSDataBlock.cpp:133:7
+    #19 0x7f9f6c5aeb6d in MapSinglePropertyInto(nsCSSProperty, nsCSSValue const*, nsCSSValue*, nsRuleData*) /builds/slave/m-in-l64-asan-0000000000000000/build/src/layout/style/nsCSSDataBlock.cpp:186:5
+    #20 0x7f9f6c5adcd0 in nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData*) const /builds/slave/m-in-l64-asan-0000000000000000/build/src/layout/style/nsCSSDataBlock.cpp:333:9
+    #21 0x7f9f6c5129bc in mozilla::css::Declaration::MapRuleInfoInto(nsRuleData*) /builds/slave/m-in-l64-asan-0000000000000000/build/src/layout/style/Declaration.cpp:98:3
+    #22 0x7f9f6c716654 in nsRuleNode::WalkRuleTree(nsStyleStructID, nsStyleContext*) /builds/slave/m-in-l64-asan-0000000000000000/build/src/layout/style/nsRuleNode.cpp:2372:7
+    #23 0x7f9f6c1d5f23 in nsStyleBackground const* nsRuleNode::GetStyleBackground<true>(nsStyleContext*) /builds/slave/m-in-l64-asan-0000000000000000/build/src/obj-firefox/dist/include/nsStyleStructList.h:81:1
+    #24 0x7f9f6c9478b3 in DoGetStyleBackground<true> /builds/slave/m-in-l64-asan-0000000000000000/build/src/obj-firefox/dist/include/nsStyleStructList.h:81:1
+    #25 0x7f9f6c9478b3 in StyleBackground /builds/slave/m-in-l64-asan-0000000000000000/build/src/obj-firefox/dist/include/nsStyleStructList.h:81
+    #26 0x7f9f6c9478b3 in StartBackgroundImageLoads /builds/slave/m-in-l64-asan-0000000000000000/build/src/layout/style/nsStyleContext.h:446
+    #27 0x7f9f6c9478b3 in nsCSSFrameConstructor::ConstructFramesFromItem(nsFrameConstructorState&, nsCSSFrameConstructor::FrameConstructionItemList::Iterator&, nsContainerFrame*, nsFrameItems&) /builds/slave/m-in-l64-asan-0000000000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:6078
+    #28 0x7f9f6c9357b2 in ConstructFramesFromItemList /builds/slave/m-in-l64-asan-0000000000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:10516:5
+    #29 0x7f9f6c9357b2 in nsCSSFrameConstructor::CreateAnonymousFrames(nsFrameConstructorState&, nsIContent*, nsContainerFrame*, PendingBinding*, nsFrameItems&) /builds/slave/m-in-l64-asan-0000000000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:4146
+    #30 0x7f9f6c931fc4 in nsCSSFrameConstructor::BeginBuildingScrollFrame(nsFrameConstructorState&, nsIContent*, nsStyleContext*, nsContainerFrame*, nsIAtom*, bool, nsContainerFrame*&) /builds/slave/m-in-l64-asan-0000000000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:4560:3
+    #31 0x7f9f6c92efb5 in nsCSSFrameConstructor::SetUpDocElementContainingBlock(nsIContent*) /builds/slave/m-in-l64-asan-0000000000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:2887:25
+    #32 0x7f9f6c92af82 in nsCSSFrameConstructor::ConstructDocElementFrame(mozilla::dom::Element*, nsILayoutHistoryState*) /builds/slave/m-in-l64-asan-0000000000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:2407:3
+    #33 0x7f9f6c94e017 in nsCSSFrameConstructor::ContentRangeInserted(nsIContent*, nsIContent*, nsIContent*, nsILayoutHistoryState*, bool) /builds/slave/m-in-l64-asan-0000000000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:7649:7
+    #34 0x7f9f6caedf77 in PresShell::Initialize(int, int) /builds/slave/m-in-l64-asan-0000000000000000/build/src/layout/base/nsPresShell.cpp:1746:7
+    #35 0x7f9f6858a5f1 in nsContentSink::StartLayout(bool) /builds/slave/m-in-l64-asan-0000000000000000/build/src/dom/base/nsContentSink.cpp:1210:19
+    #36 0x7f9f678f6496 in nsHtml5TreeOpExecutor::StartLayout() /builds/slave/m-in-l64-asan-0000000000000000/build/src/parser/html/nsHtml5TreeOpExecutor.cpp:612:3
+    #37 0x7f9f67902bee in nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor*, nsIContent**) /builds/slave/m-in-l64-asan-0000000000000000/build/src/parser/html/nsHtml5TreeOperation.cpp:990:7
+    #38 0x7f9f678f3de7 in nsHtml5TreeOpExecutor::RunFlushLoop() /builds/slave/m-in-l64-asan-0000000000000000/build/src/parser/html/nsHtml5TreeOpExecutor.cpp:448:21
+    #39 0x7f9f678f887b in nsHtml5ExecutorFlusher::Run() /builds/slave/m-in-l64-asan-0000000000000000/build/src/parser/html/nsHtml5StreamParser.cpp:128:9
+    #40 0x7f9f65940736 in nsThread::ProcessNextEvent(bool, bool*) /builds/slave/m-in-l64-asan-0000000000000000/build/src/xpcom/threads/nsThread.cpp:1058:7
+    #41 0x7f9f659be6cc in NS_ProcessNextEvent(nsIThread*, bool) /builds/slave/m-in-l64-asan-0000000000000000/build/src/xpcom/glue/nsThreadUtils.cpp:290:10
+    #42 0x7f9f666dcebf in mozilla::ipc::MessagePump::Run(base::MessagePump::Delegate*) /builds/slave/m-in-l64-asan-0000000000000000/build/src/ipc/glue/MessagePump.cpp:96:21
+    #43 0x7f9f66651dc8 in RunInternal /builds/slave/m-in-l64-asan-0000000000000000/build/src/ipc/chromium/src/base/message_loop.cc:232:3
+    #44 0x7f9f66651dc8 in RunHandler /builds/slave/m-in-l64-asan-0000000000000000/build/src/ipc/chromium/src/base/message_loop.cc:225
+    #45 0x7f9f66651dc8 in MessageLoop::Run() /builds/slave/m-in-l64-asan-0000000000000000/build/src/ipc/chromium/src/base/message_loop.cc:205
+    #46 0x7f9f6c19ce0f in nsBaseAppShell::Run() /builds/slave/m-in-l64-asan-0000000000000000/build/src/widget/nsBaseAppShell.cpp:156:3
+    #47 0x7f9f6e0f1811 in nsAppStartup::Run() /builds/slave/m-in-l64-asan-0000000000000000/build/src/toolkit/components/startup/nsAppStartup.cpp:284:19
+    #48 0x7f9f6e243b0e in XREMain::XRE_mainRun() /builds/slave/m-in-l64-asan-0000000000000000/build/src/toolkit/xre/nsAppRunner.cpp:4279:10
+    #49 0x7f9f6e24509e in XREMain::XRE_main(int, char**, nsXREAppData const*) /builds/slave/m-in-l64-asan-0000000000000000/build/src/toolkit/xre/nsAppRunner.cpp:4406:8
+    #50 0x7f9f6e245f6a in XRE_main /builds/slave/m-in-l64-asan-0000000000000000/build/src/toolkit/xre/nsAppRunner.cpp:4497:16
+    #51 0x4df89a in do_main /builds/slave/m-in-l64-asan-0000000000000000/build/src/browser/app/nsBrowserApp.cpp:247:10
+    #52 0x4df89a in main /builds/slave/m-in-l64-asan-0000000000000000/build/src/browser/app/nsBrowserApp.cpp:380
+    #53 0x7f9f7f18cec4 in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x21ec4)
+
+SUMMARY: AddressSanitizer: heap-buffer-overflow /builds/slave/m-in-l64-asan-0000000000000000/build/src/media/libpng/pngrutil.c:4017:31 in MOZ_PNG_read_filt_row_a
+Shadow bytes around the buggy address:
+  0x0c20800e9290: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x0c20800e92a0: fa fa fa fa fa fa fa fa fd fd fd fd fd fd fd fd
+  0x0c20800e92b0: fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd
+  0x0c20800e92c0: fa fa fa fa fa fa fa fa 00 00 00 00 00 00 00 00
+  0x0c20800e92d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 01
+=>0x0c20800e92e0:[fa]fa fa fa fa fa fa fa fd fd fd fd fd fd fd fd
+  0x0c20800e92f0: fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd
+  0x0c20800e9300: fa fa fa fa fa fa fa fa fd fd fd fd fd fd fd fd
+  0x0c20800e9310: fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd
+  0x0c20800e9320: fa fa fa fa fa fa fa fa fd fd fd fd fd fd fd fd
+  0x0c20800e9330: fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd
+Shadow byte legend (one shadow byte represents 8 application bytes):
+  Addressable:           00
+  Partially addressable: 01 02 03 04 05 06 07 
+  Heap left redzone:       fa
+  Heap right redzone:      fb
+  Freed heap region:       fd
+  Stack left redzone:      f1
+  Stack mid redzone:       f2
+  Stack right redzone:     f3
+  Stack partial redzone:   f4
+  Stack after return:      f5
+  Stack use after scope:   f8
+  Global redzone:          f9
+  Global init order:       f6
+  Poisoned by user:        f7
+  Container overflow:      fc
+  Array cookie:            ac
+  Intra object redzone:    bb
+  ASan internal:           fe
+  Left alloca redzone:     ca
+  Right alloca redzone:    cb

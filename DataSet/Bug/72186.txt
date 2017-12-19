@@ -1,0 +1,749 @@
+M081 & Trunk crash [@ PlaceFrameView] in Password Manager dialog (auto fill-in form for login) [@ gklayout.dll]
+Go to bugzilla.mozilla.org, hit the Logout link. Wait for the Password Manager
+dialog to activate. If you have had two email addresses in bugzilla before, and
+PM remembers both, it'll give a dialog to choose which email key to use. I can
+crash on this dialog popping up, and on hitting cancel on it.
+
+Stack trace of crash when pulling the dialog box up:
+
+OK, someone else is gonna have to get a complete stack trace, my box (256MB RAM
++ 128 swap) is nearly completely out of mem. Here's what I have so far:
+
+(gdb) bt
+#0  0x41bb168e in PlaceFrameView (aPresContext=0x8777ba8, aFrame=0x0) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsBlockFrame.cpp:3489
+#1  0x41bb46ab in nsBlockFrame::PostPlaceLine (this=0x87c7884,
+aState=@0xbfff19d0, aLine=0x888f1b8, aMaxElementSize=@0xbfff107c) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsBlockFrame.cpp:5051
+#2  0x41bb43e6 in nsBlockFrame::PlaceLine (this=0x87c7884, aState=@0xbfff19d0,
+aLineLayout=@0xbfff1170, aLine=0x888f1b8, aKeepReflowGoing=0xbfff1764,
+aUpdateMaximumWidth=0) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsBlockFrame.cpp:4910
+#3  0x41bb35a1 in nsBlockFrame::DoReflowInlineFrames (this=0x87c7884,
+aState=@0xbfff19d0, aLineLayout=@0xbfff1170, aLine=0x888f1b8,
+aKeepReflowGoing=0xbfff1764, aLineReflowStatus=0xbfff1603 "\002",
+aUpdateMaximumWidth=0, aDamageDirtyArea=0) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsBlockFrame.cpp:4378
+#4  0x41bb30bc in nsBlockFrame::DoReflowInlineFramesAuto (this=0x87c7884,
+aState=@0xbfff19d0, aLine=0x888f1b8, aKeepReflowGoing=0xbfff1764,
+aLineReflowStatus=0xbfff1603 "\002", aUpdateMaximumWidth=0, aDamageDirtyArea=0)
+at /usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsBlockFrame.cpp:4229
+#5  0x41bb2e91 in nsBlockFrame::ReflowInlineFrames (this=0x87c7884,
+aState=@0xbfff19d0, aLine=0x888f1b8, aKeepReflowGoing=0xbfff1764,
+aDamageDirtyArea=0, aUpdateMaximumWidth=0) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsBlockFrame.cpp:4176
+#6  0x41bb1145 in nsBlockFrame::ReflowLine (this=0x87c7884, aState=@0xbfff19d0,
+aLine=0x888f1b8, aKeepReflowGoing=0xbfff1764, aDamageDirtyArea=0) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsBlockFrame.cpp:3310
+#7  0x41bb055e in nsBlockFrame::ReflowDirtyLines (this=0x87c7884,
+aState=@0xbfff19d0) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsBlockFrame.cpp:2999
+#8  0x41badb83 in nsBlockFrame::Reflow (this=0x87c7884, aPresContext=0x8777ba8,
+aMetrics=@0xbfff1f3c, aReflowState=@0xbfff1d44, aStatus=@0xbfff1f70) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsBlockFrame.cpp:1771
+#9  0x41cefd83 in nsBoxToBlockAdaptor::Reflow (this=0x87c7a28,
+aState=@0xbfff25c4, aPresContext=0x8777ba8, aDesiredSize=@0xbfff1f3c,
+aReflowState=@0xbfff278c, aStatus=@0xbfff1f70, aX=0, aY=0, aWidth=3720,
+aHeight=225, aMoveFrame=1) at
+/usr/src/cvs/mozilla/mozilla/layout/xul/base/src/nsBoxToBlockAdaptor.cpp:864
+#10 0x41cef437 in nsBoxToBlockAdaptor::DoLayout (this=0x87c7a28,
+aState=@0xbfff25c4) at
+/usr/src/cvs/mozilla/mozilla/layout/xul/base/src/nsBoxToBlockAdaptor.cpp:523
+#11 0x41cec2dd in nsBox::Layout (this=0x87c7a28, aState=@0xbfff25c4) at
+/usr/src/cvs/mozilla/mozilla/layout/xul/base/src/nsBox.cpp:987
+#12 0x41cce93e in nsScrollBoxFrame::DoLayout (this=0x87c7978,
+aState=@0xbfff25c4) at
+/usr/src/cvs/mozilla/mozilla/layout/xul/base/src/nsScrollBoxFrame.cpp:375
+#13 0x41cec2dd in nsBox::Layout (this=0x87c79b0, aState=@0xbfff25c4) at
+/usr/src/cvs/mozilla/mozilla/layout/xul/base/src/nsBox.cpp:987
+#14 0x41cf24d7 in nsContainerBox::LayoutChildAt (aState=@0xbfff25c4,
+aBox=0x87c79b0, aRect=@0xbfff234c) at
+/usr/src/cvs/mozilla/mozilla/layout/xul/base/src/nsContainerBox.cpp:591
+#15 0x41c293db in nsGfxScrollFrameInner::LayoutBox (this=0x87c0d28,
+aState=@0xbfff25c4, aBox=0x87c79b0, aRect=@0xbfff234c) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsGfxScrollFrame.cpp:1023
+#16 0x41c2962f in nsGfxScrollFrameInner::Layout (this=0x87c0d28,
+aState=@0xbfff25c4) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsGfxScrollFrame.cpp:1103
+#17 0x41c29439 in nsGfxScrollFrame::DoLayout (this=0x87c78d0,
+aState=@0xbfff25c4) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsGfxScrollFrame.cpp:1031
+#18 0x41cec2dd in nsBox::Layout (this=0x87c7908, aState=@0xbfff25c4) at
+/usr/src/cvs/mozilla/mozilla/layout/xul/base/src/nsBox.cpp:987
+#19 0x41cf6bc8 in nsStackLayout::Layout (this=0x85bcc50, aBox=0x87c77e8,
+aState=@0xbfff25c4) at
+/usr/src/cvs/mozilla/mozilla/layout/xul/base/src/nsStackLayout.cpp:255
+#20 0x41cf22ff in nsContainerBox::DoLayout (this=0x87c77e8, aState=@0xbfff25c4)
+at /usr/src/cvs/mozilla/mozilla/layout/xul/base/src/nsContainerBox.cpp:551
+#21 0x41d01d6b in nsBoxFrame::DoLayout (this=0x87c77b0, aState=@0xbfff25c4) at
+/usr/src/cvs/mozilla/mozilla/layout/xul/base/src/nsBoxFrame.cpp:978
+#22 0x41cec2dd in nsBox::Layout (this=0x87c77e8, aState=@0xbfff25c4) at
+/usr/src/cvs/mozilla/mozilla/layout/xul/base/src/nsBox.cpp:987
+#23 0x41d017d1 in nsBoxFrame::Reflow (this=0x87c77b0, aPresContext=0x8777ba8,
+aDesiredSize=@0xbfff2750, aReflowState=@0xbfff278c, aStatus=@0xbfff28d4) at
+/usr/src/cvs/mozilla/mozilla/layout/xul/base/src/nsBoxFrame.cpp:778
+#24 0x41c7000e in nsGfxTextControlFrame2::Reflow (this=0x87c77b0,
+aPresContext=0x8777ba8, aDesiredSize=@0xbfff2750, aReflowState=@0xbfff278c,
+aStatus=@0xbfff28d4) at
+/usr/src/cvs/mozilla/mozilla/layout/html/forms/src/nsGfxTextControlFrame2.cpp:2003
+#25 0x41bed050 in nsLineLayout::ReflowFrame (this=0xbfff2990, aFrame=0x87c77b0,
+aNextRCFrame=0xbfff3268, aReflowStatus=@0xbfff28d4, aMetrics=0x0,
+aPushedFrame=@0xbfff28d0) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsLineLayout.cpp:919
+#26 0x41bb3639 in nsBlockFrame::ReflowInlineFrame (this=0x87c7764,
+aState=@0xbfff31f0, aLineLayout=@0xbfff2990, aLine=0x87c7ae8, aFrame=0x87c77b0,
+aLineReflowStatus=0xbfff2933 "") at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsBlockFrame.cpp:4421
+#27 0x41bb32ed in nsBlockFrame::DoReflowInlineFrames (this=0x87c7764,
+aState=@0xbfff31f0, aLineLayout=@0xbfff2990, aLine=0x87c7ae8,
+aKeepReflowGoing=0xbfff2f84, aLineReflowStatus=0xbfff2e23 "\002",
+aUpdateMaximumWidth=1, aDamageDirtyArea=0) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsBlockFrame.cpp:4306
+#28 0x41bb30bc in nsBlockFrame::DoReflowInlineFramesAuto (this=0x87c7764,
+aState=@0xbfff31f0, aLine=0x87c7ae8, aKeepReflowGoing=0xbfff2f84,
+aLineReflowStatus=0xbfff2e23 "\002", aUpdateMaximumWidth=1, aDamageDirtyArea=0)
+at /usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsBlockFrame.cpp:4229
+#29 0x41bb2e91 in nsBlockFrame::ReflowInlineFrames (this=0x87c7764,
+aState=@0xbfff31f0, aLine=0x87c7ae8, aKeepReflowGoing=0xbfff2f84,
+aDamageDirtyArea=0, aUpdateMaximumWidth=1) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsBlockFrame.cpp:4176
+#30 0x41bb0ffe in nsBlockFrame::ReflowLine (this=0x87c7764, aState=@0xbfff31f0,
+aLine=0x87c7ae8, aKeepReflowGoing=0xbfff2f84, aDamageDirtyArea=0) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsBlockFrame.cpp:3278
+#31 0x41bb055e in nsBlockFrame::ReflowDirtyLines (this=0x87c7764,
+aState=@0xbfff31f0) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsBlockFrame.cpp:2999
+#32 0x41bad8a4 in nsBlockFrame::Reflow (this=0x87c7764, aPresContext=0x8777ba8,
+aMetrics=@0xbfff35e8, aReflowState=@0xbfff3538, aStatus=@0xbfff4640) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsBlockFrame.cpp:1722
+#33 0x41bbf161 in nsContainerFrame::ReflowChild (this=0x87c7708,
+aKidFrame=0x87c7764, aPresContext=0x8777ba8, aDesiredSize=@0xbfff35e8,
+aReflowState=@0xbfff3538, aX=15, aY=15, aFlags=0, aStatus=@0xbfff4640) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsContainerFrame.cpp:695
+#34 0x41cb22cd in nsTableCellFrame::Reflow (this=0x87c7708,
+aPresContext=0x8777ba8, aDesiredSize=@0xbfff3820, aReflowState=@0xbfff3770,
+aStatus=@0xbfff4640) at
+/usr/src/cvs/mozilla/mozilla/layout/html/table/src/nsTableCellFrame.cpp:686
+#35 0x41bbf161 in nsContainerFrame::ReflowChild (this=0x87c757c,
+aKidFrame=0x87c7708, aPresContext=0x8777ba8, aDesiredSize=@0xbfff3820,
+aReflowState=@0xbfff3770, aX=1515, aY=0, aFlags=0, aStatus=@0xbfff4640) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsContainerFrame.cpp:695
+#36 0x41cc76cb in nsTableRowFrame::IR_TargetIsChild (this=0x87c757c,
+aPresContext=0x8777ba8, aDesiredSize=@0xbfff39f4, aReflowState=@0xbfff3a30,
+aTableFrame=@0x87c74d8, aStatus=@0xbfff4640, aNextFrame=0x87c7708) at
+/usr/src/cvs/mozilla/mozilla/layout/html/table/src/nsTableRowFrame.cpp:1081
+#37 0x41cc72f0 in nsTableRowFrame::IncrementalReflow (this=0x87c757c,
+aPresContext=0x8777ba8, aDesiredSize=@0xbfff39f4, aReflowState=@0xbfff3a30,
+aTableFrame=@0x87c74d8, aStatus=@0xbfff4640) at
+/usr/src/cvs/mozilla/mozilla/layout/html/table/src/nsTableRowFrame.cpp:975
+#38 0x41cc7c3a in nsTableRowFrame::Reflow (this=0x87c757c,
+aPresContext=0x8777ba8, aDesiredSize=@0xbfff39f4, aReflowState=@0xbfff3a30,
+aStatus=@0xbfff4640) at
+/usr/src/cvs/mozilla/mozilla/layout/html/table/src/nsTableRowFrame.cpp:1247
+#39 0x41bbf161 in nsContainerFrame::ReflowChild (this=0x87c7540,
+aKidFrame=0x87c757c, aPresContext=0x8777ba8, aDesiredSize=@0xbfff39f4,
+aReflowState=@0xbfff3a30, aX=0, aY=0, aFlags=0, aStatus=@0xbfff4640) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsContainerFrame.cpp:695
+#40 0x41ccb7c4 in nsTableRowGroupFrame::IR_TargetIsChild (this=0x87c7540,
+aPresContext=0x8777ba8, aDesiredSize=@0xbfff3d94, aReflowState=@0xbfff3bcc,
+aStatus=@0xbfff4640, aNextFrame=0x87c757c) at
+/usr/src/cvs/mozilla/mozilla/layout/html/table/src/nsTableRowGroupFrame.cpp:1355
+#41 0x41ccab39 in nsTableRowGroupFrame::IncrementalReflow (this=0x87c7540,
+aPresContext=0x8777ba8, aDesiredSize=@0xbfff3d94, aReflowState=@0xbfff3bcc,
+aStatus=@0xbfff4640) at
+/usr/src/cvs/mozilla/mozilla/layout/html/table/src/nsTableRowGroupFrame.cpp:1069
+#42 0x41cca7ec in nsTableRowGroupFrame::Reflow (this=0x87c7540,
+aPresContext=0x8777ba8, aDesiredSize=@0xbfff3d94, aReflowState=@0xbfff3ce4,
+aStatus=@0xbfff4640) at
+/usr/src/cvs/mozilla/mozilla/layout/html/table/src/nsTableRowGroupFrame.cpp:979
+#43 0x41bbf161 in nsContainerFrame::ReflowChild (this=0x87c74d8,
+aKidFrame=0x87c7540, aPresContext=0x8777ba8, aDesiredSize=@0xbfff3d94,
+aReflowState=@0xbfff3ce4, aX=0, aY=30, aFlags=0, aStatus=@0xbfff4640) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsContainerFrame.cpp:695
+#44 0x41cbc192 in nsTableFrame::IR_TargetIsChild (this=0x87c74d8,
+aPresContext=0x8777ba8, aReflowState=@0xbfff3e40, aStatus=@0xbfff4640,
+aNextFrame=0x87c7540) at
+/usr/src/cvs/mozilla/mozilla/layout/html/table/src/nsTableFrame.cpp:2629
+#45 0x41cbbc8b in nsTableFrame::IncrementalReflow (this=0x87c74d8,
+aPresContext=0x8777ba8, aReflowState=@0xbfff3f88, aStatus=@0xbfff4640) at
+/usr/src/cvs/mozilla/mozilla/layout/html/table/src/nsTableFrame.cpp:2475
+#46 0x41cba0a2 in nsTableFrame::Reflow (this=0x87c74d8, aPresContext=0x8777ba8,
+aDesiredSize=@0xbfff413c, aReflowState=@0xbfff3f88, aStatus=@0xbfff4640) at
+/usr/src/cvs/mozilla/mozilla/layout/html/table/src/nsTableFrame.cpp:1800
+#47 0x41bbf161 in nsContainerFrame::ReflowChild (this=0x87c748c,
+aKidFrame=0x87c74d8, aPresContext=0x8777ba8, aDesiredSize=@0xbfff413c,
+aReflowState=@0xbfff3f88, aX=0, aY=0, aFlags=3, aStatus=@0xbfff4640) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsContainerFrame.cpp:695
+#48 0x41cc2aa1 in nsTableOuterFrame::OuterReflowChild (this=0x87c748c,
+aPresContext=0x8777ba8, aChildFrame=0x87c74d8, aOuterRS=@0xbfff44bc,
+aMetrics=@0xbfff413c, aAvailWidth=0x0, aDesiredSize=@0xbfff41a0,
+aMargin=@0xbfff4190, aMarginNoAuto=@0xbfff4180, aPadding=@0xbfff4170,
+aReflowReason=eReflowReason_Incremental, aStatus=@0xbfff4640) at
+/usr/src/cvs/mozilla/mozilla/layout/html/table/src/nsTableOuterFrame.cpp:893
+#49 0x41cc390b in nsTableOuterFrame::IR_InnerTableReflow (this=0x87c748c,
+aPresContext=0x8777ba8, aOuterMet=@0xbfff475c, aOuterRS=@0xbfff44bc,
+aStatus=@0xbfff4640) at
+/usr/src/cvs/mozilla/mozilla/layout/html/table/src/nsTableOuterFrame.cpp:1195
+#50 0x41cc2ec7 in nsTableOuterFrame::IR_TargetIsInnerTableFrame (this=0x87c748c,
+aPresContext=0x8777ba8, aDesiredSize=@0xbfff475c, aReflowState=@0xbfff44bc,
+aStatus=@0xbfff4640) at
+/usr/src/cvs/mozilla/mozilla/layout/html/table/src/nsTableOuterFrame.cpp:999
+#51 0x41cc2d97 in nsTableOuterFrame::IR_TargetIsChild (this=0x87c748c,
+aPresContext=0x8777ba8, aDesiredSize=@0xbfff475c, aReflowState=@0xbfff44bc,
+aStatus=@0xbfff4640, aNextFrame=0x87c74d8) at
+/usr/src/cvs/mozilla/mozilla/layout/html/table/src/nsTableOuterFrame.cpp:971
+#52 0x41cc2d26 in nsTableOuterFrame::IncrementalReflow (this=0x87c748c,
+aPresContext=0x8777ba8, aDesiredSize=@0xbfff475c, aReflowState=@0xbfff44bc,
+aStatus=@0xbfff4640) at
+/usr/src/cvs/mozilla/mozilla/layout/html/table/src/nsTableOuterFrame.cpp:950
+#53 0x41cc4418 in nsTableOuterFrame::Reflow (this=0x87c748c,
+aPresContext=0x8777ba8, aDesiredSize=@0xbfff475c, aOuterRS=@0xbfff44bc,
+aStatus=@0xbfff4640) at
+/usr/src/cvs/mozilla/mozilla/layout/html/table/src/nsTableOuterFrame.cpp:1406
+#54 0x41bbac54 in nsBlockReflowContext::DoReflowBlock (this=0xbfff4714,
+aReflowState=@0xbfff44bc, aReason=eReflowReason_Incremental, aFrame=0x87c748c,
+aSpace=@0xbfff464c, aApplyTopMargin=0, aPrevBottomMargin=0,
+aIsAdjacentWithTop=1, aComputedOffsets=@0xbfff465c,
+aFrameReflowStatus=@0xbfff4640) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsBlockReflowContext.cpp:568
+#55 0x41bba63a in nsBlockReflowContext::ReflowBlock (this=0xbfff4714,
+aFrame=0x87c748c, aSpace=@0xbfff464c, aApplyTopMargin=0, aPrevBottomMargin=0,
+aIsAdjacentWithTop=1, aComputedOffsets=@0xbfff465c,
+aFrameReflowStatus=@0xbfff4640) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsBlockReflowContext.cpp:336
+#56 0x41bb25dd in nsBlockFrame::ReflowBlockFrame (this=0x87c73e8,
+aState=@0xbfff4b60, aLine=0x87b1680, aKeepReflowGoing=0xbfff48f4) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsBlockFrame.cpp:3929
+#57 0x41bb0c9d in nsBlockFrame::ReflowLine (this=0x87c73e8, aState=@0xbfff4b60,
+aLine=0x87b1680, aKeepReflowGoing=0xbfff48f4, aDamageDirtyArea=0) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsBlockFrame.cpp:3192
+#58 0x41bb055e in nsBlockFrame::ReflowDirtyLines (this=0x87c73e8,
+aState=@0xbfff4b60) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsBlockFrame.cpp:2999
+#59 0x41badb83 in nsBlockFrame::Reflow (this=0x87c73e8, aPresContext=0x8777ba8,
+aMetrics=@0xbfff514c, aReflowState=@0xbfff4eac, aStatus=@0xbfff5030) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsBlockFrame.cpp:1771
+#60 0x41bbac54 in nsBlockReflowContext::DoReflowBlock (this=0xbfff5104,
+aReflowState=@0xbfff4eac, aReason=eReflowReason_Incremental, aFrame=0x87c73e8,
+aSpace=@0xbfff503c, aApplyTopMargin=1, aPrevBottomMargin=0,
+aIsAdjacentWithTop=0, aComputedOffsets=@0xbfff504c,
+aFrameReflowStatus=@0xbfff5030) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsBlockReflowContext.cpp:568
+#61 0x41bba63a in nsBlockReflowContext::ReflowBlock (this=0xbfff5104,
+aFrame=0x87c73e8, aSpace=@0xbfff503c, aApplyTopMargin=1, aPrevBottomMargin=0,
+aIsAdjacentWithTop=0, aComputedOffsets=@0xbfff504c,
+aFrameReflowStatus=@0xbfff5030) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsBlockReflowContext.cpp:336
+#62 0x41bb25dd in nsBlockFrame::ReflowBlockFrame (this=0x87dbf24,
+aState=@0xbfff5550, aLine=0x87b1748, aKeepReflowGoing=0xbfff52e4) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsBlockFrame.cpp:3929
+#63 0x41bb0c9d in nsBlockFrame::ReflowLine (this=0x87dbf24, aState=@0xbfff5550,
+aLine=0x87b1748, aKeepReflowGoing=0xbfff52e4, aDamageDirtyArea=0) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsBlockFrame.cpp:3192
+#64 0x41bb055e in nsBlockFrame::ReflowDirtyLines (this=0x87dbf24,
+aState=@0xbfff5550) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsBlockFrame.cpp:2999
+#65 0x41badb83 in nsBlockFrame::Reflow (this=0x87dbf24, aPresContext=0x8777ba8,
+aMetrics=@0xbfff5b3c, aReflowState=@0xbfff589c, aStatus=@0xbfff5a20) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsBlockFrame.cpp:1771
+#66 0x41bbac54 in nsBlockReflowContext::DoReflowBlock (this=0xbfff5af4,
+aReflowState=@0xbfff589c, aReason=eReflowReason_Incremental, aFrame=0x87dbf24,
+aSpace=@0xbfff5a2c, aApplyTopMargin=1, aPrevBottomMargin=180,
+aIsAdjacentWithTop=0, aComputedOffsets=@0xbfff5a3c,
+aFrameReflowStatus=@0xbfff5a20) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsBlockReflowContext.cpp:568
+#67 0x41bba63a in nsBlockReflowContext::ReflowBlock (this=0xbfff5af4,
+aFrame=0x87dbf24, aSpace=@0xbfff5a2c, aApplyTopMargin=1, aPrevBottomMargin=180,
+aIsAdjacentWithTop=0, aComputedOffsets=@0xbfff5a3c,
+aFrameReflowStatus=@0xbfff5a20) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsBlockReflowContext.cpp:336
+#68 0x41bb25dd in nsBlockFrame::ReflowBlockFrame (this=0x88bda2c,
+aState=@0xbfff5f40, aLine=0x87b1b5c, aKeepReflowGoing=0xbfff5cd4) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsBlockFrame.cpp:3929
+#69 0x41bb0c9d in nsBlockFrame::ReflowLine (this=0x88bda2c, aState=@0xbfff5f40,
+aLine=0x87b1b5c, aKeepReflowGoing=0xbfff5cd4, aDamageDirtyArea=0) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsBlockFrame.cpp:3192
+#70 0x41bb055e in nsBlockFrame::ReflowDirtyLines (this=0x88bda2c,
+aState=@0xbfff5f40) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsBlockFrame.cpp:2999
+#71 0x41badb83 in nsBlockFrame::Reflow (this=0x88bda2c, aPresContext=0x8777ba8,
+aMetrics=@0xbfff652c, aReflowState=@0xbfff628c, aStatus=@0xbfff6410) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsBlockFrame.cpp:1771
+#72 0x41bbac54 in nsBlockReflowContext::DoReflowBlock (this=0xbfff64e4,
+aReflowState=@0xbfff628c, aReason=eReflowReason_Incremental, aFrame=0x88bda2c,
+aSpace=@0xbfff641c, aApplyTopMargin=1, aPrevBottomMargin=0,
+aIsAdjacentWithTop=1, aComputedOffsets=@0xbfff642c,
+aFrameReflowStatus=@0xbfff6410) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsBlockReflowContext.cpp:568
+#73 0x41bba63a in nsBlockReflowContext::ReflowBlock (this=0xbfff64e4,
+aFrame=0x88bda2c, aSpace=@0xbfff641c, aApplyTopMargin=1, aPrevBottomMargin=0,
+aIsAdjacentWithTop=1, aComputedOffsets=@0xbfff642c,
+aFrameReflowStatus=@0xbfff6410) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsBlockReflowContext.cpp:336
+#74 0x41bb25dd in nsBlockFrame::ReflowBlockFrame (this=0x88bd9e0,
+aState=@0xbfff6930, aLine=0x88bda78, aKeepReflowGoing=0xbfff66c4) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsBlockFrame.cpp:3929
+#75 0x41bb0c9d in nsBlockFrame::ReflowLine (this=0x88bd9e0, aState=@0xbfff6930,
+aLine=0x88bda78, aKeepReflowGoing=0xbfff66c4, aDamageDirtyArea=0) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsBlockFrame.cpp:3192
+#76 0x41bb055e in nsBlockFrame::ReflowDirtyLines (this=0x88bd9e0,
+aState=@0xbfff6930) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsBlockFrame.cpp:2999
+#77 0x41badb83 in nsBlockFrame::Reflow (this=0x88bd9e0, aPresContext=0x8777ba8,
+aMetrics=@0xbfff6d28, aReflowState=@0xbfff6c78, aStatus=@0xbfff7090) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsBlockFrame.cpp:1771
+#78 0x41bbf161 in nsContainerFrame::ReflowChild (this=0x88bcb5c,
+aKidFrame=0x88bd9e0, aPresContext=0x8777ba8, aDesiredSize=@0xbfff6d28,
+aReflowState=@0xbfff6c78, aX=0, aY=0, aFlags=0, aStatus=@0xbfff7090) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsContainerFrame.cpp:695
+#79 0x41bd863a in CanvasFrame::Reflow (this=0x88bcb5c, aPresContext=0x8777ba8,
+aDesiredSize=@0xbfff705c, aReflowState=@0xbfff6e64, aStatus=@0xbfff7090) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsHTMLFrame.cpp:299
+#80 0x41cefd83 in nsBoxToBlockAdaptor::Reflow (this=0x88bd974,
+aState=@0xbfff75a4, aPresContext=0x8777ba8, aDesiredSize=@0xbfff705c,
+aReflowState=@0xbfff770c, aStatus=@0xbfff7090, aX=0, aY=0, aWidth=13515,
+aHeight=8520, aMoveFrame=1) at
+/usr/src/cvs/mozilla/mozilla/layout/xul/base/src/nsBoxToBlockAdaptor.cpp:864
+#81 0x41cef437 in nsBoxToBlockAdaptor::DoLayout (this=0x88bd974,
+aState=@0xbfff75a4) at
+/usr/src/cvs/mozilla/mozilla/layout/xul/base/src/nsBoxToBlockAdaptor.cpp:523
+#82 0x41cec2dd in nsBox::Layout (this=0x88bd974, aState=@0xbfff75a4) at
+/usr/src/cvs/mozilla/mozilla/layout/xul/base/src/nsBox.cpp:987
+#83 0x41cce93e in nsScrollBoxFrame::DoLayout (this=0x88bcc3c,
+aState=@0xbfff75a4) at
+/usr/src/cvs/mozilla/mozilla/layout/xul/base/src/nsScrollBoxFrame.cpp:375
+#84 0x41cec2dd in nsBox::Layout (this=0x88bcc74, aState=@0xbfff75a4) at
+/usr/src/cvs/mozilla/mozilla/layout/xul/base/src/nsBox.cpp:987
+#85 0x41cf24d7 in nsContainerBox::LayoutChildAt (aState=@0xbfff75a4,
+aBox=0x88bcc74, aRect=@0xbfff746c) at
+/usr/src/cvs/mozilla/mozilla/layout/xul/base/src/nsContainerBox.cpp:591
+#86 0x41c293db in nsGfxScrollFrameInner::LayoutBox (this=0x86cad88,
+aState=@0xbfff75a4, aBox=0x88bcc74, aRect=@0xbfff746c) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsGfxScrollFrame.cpp:1023
+#87 0x41c2962f in nsGfxScrollFrameInner::Layout (this=0x86cad88,
+aState=@0xbfff75a4) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsGfxScrollFrame.cpp:1103
+#88 0x41c29439 in nsGfxScrollFrame::DoLayout (this=0x88bcb94,
+aState=@0xbfff75a4) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsGfxScrollFrame.cpp:1031
+#89 0x41cec2dd in nsBox::Layout (this=0x88bcbcc, aState=@0xbfff75a4) at
+/usr/src/cvs/mozilla/mozilla/layout/xul/base/src/nsBox.cpp:987
+#90 0x41d017d1 in nsBoxFrame::Reflow (this=0x88bcb94, aPresContext=0x8777ba8,
+aDesiredSize=@0xbfff77c4, aReflowState=@0xbfff770c, aStatus=@0xbfff793c) at
+/usr/src/cvs/mozilla/mozilla/layout/xul/base/src/nsBoxFrame.cpp:778
+#91 0x41c286fd in nsGfxScrollFrame::Reflow (this=0x88bcb94,
+aPresContext=0x8777ba8, aDesiredSize=@0xbfff77c4, aReflowState=@0xbfff770c,
+aStatus=@0xbfff793c) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsGfxScrollFrame.cpp:735
+#92 0x41bbf161 in nsContainerFrame::ReflowChild (this=0x88bcb20,
+aKidFrame=0x88bcb94, aPresContext=0x8777ba8, aDesiredSize=@0xbfff77c4,
+aReflowState=@0xbfff770c, aX=0, aY=0, aFlags=0, aStatus=@0xbfff793c) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsContainerFrame.cpp:695
+#93 0x41c26654 in ViewportFrame::Reflow (this=0x88bcb20, aPresContext=0x8777ba8,
+aDesiredSize=@0xbfff7a18, aReflowState=@0xbfff788c, aStatus=@0xbfff793c) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsViewportFrame.cpp:543
+#94 0x41bda147 in nsHTMLReflowCommand::Dispatch (this=0x8866508,
+aPresContext=0x8777ba8, aDesiredSize=@0xbfff7a18, aMaxSize=@0xbfff7a08,
+aRendContext=@0x872baf8) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsHTMLReflowCommand.cpp:144
+#95 0x41c0aa7b in PresShell::ProcessReflowCommand (this=0x882a9d8,
+aQueue=@0x882aa24, aAccumulateTime=0, aDesiredSize=@0xbfff7a18,
+aMaxSize=@0xbfff7a08, aRenderingContext=@0x872baf8) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsPresShell.cpp:5259
+#96 0x41c0aced in PresShell::ProcessReflowCommands (this=0x882a9d8,
+aInterruptible=0) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsPresShell.cpp:5314
+#97 0x41c0863f in PresShell::FlushPendingNotifications (this=0x882a9d8) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsPresShell.cpp:4316
+#98 0x415e8d21 in nsDocument::FlushPendingNotifications (this=0x87a9480,
+aFlushReflows=1) at
+/usr/src/cvs/mozilla/mozilla/content/base/src/nsDocument.cpp:3143
+#99 0x414b840a in nsHTMLDocument::FlushPendingNotifications (this=0x87a9480,
+aFlushReflows=1) at
+/usr/src/cvs/mozilla/mozilla/content/html/document/src/nsHTMLDocument.cpp:1393
+#100 0x406e03cd in nsDOMWindowList::GetLength (this=0x8615ef8,
+aLength=0xbfff7c48) at
+/usr/src/cvs/mozilla/mozilla/dom/src/base/nsDOMWindowList.cpp:86
+#101 0x406c0ef0 in GetWindowCollectionProperty (cx=0x81df830, obj=0x86e38f8,
+id=-1, vp=0xbfff8480) at
+/usr/src/cvs/mozilla/mozilla/dom/src/base/nsJSWindowCollection.cpp:81
+#102 0x4023114d in js_GetProperty (cx=0x81df830, obj=0x86e38f8, id=135396984,
+vp=0xbfff8480) at /usr/src/cvs/mozilla/mozilla/js/src/jsobj.c:2179
+#103 0x4021ccd3 in js_Interpret (cx=0x81df830, result=0xbfff8570) at
+/usr/src/cvs/mozilla/mozilla/js/src/jsinterp.c:2504
+#104 0x40210de0 in js_Invoke (cx=0x81df830, argc=1, flags=2) at
+/usr/src/cvs/mozilla/mozilla/js/src/jsinterp.c:794
+#105 0x4021110f in js_InternalInvoke (cx=0x81df830, obj=0x836a850,
+fval=137799024, flags=0, argc=1, argv=0xbfff8794, rval=0xbfff8728) at
+/usr/src/cvs/mozilla/mozilla/js/src/jsinterp.c:866
+#106 0x401e5591 in JS_CallFunctionValue (cx=0x81df830, obj=0x836a850,
+fval=137799024, argc=1, argv=0xbfff8794, rval=0xbfff8728) at
+/usr/src/cvs/mozilla/mozilla/js/src/jsapi.c:3269
+#107 0x406ad445 in nsJSContext::CallEventHandler (this=0x81df7f0,
+aTarget=0x836a850, aHandler=0x836a570, argc=1, argv=0xbfff8794,
+aBoolResult=0xbfff8790, aReverseReturnResult=0) at
+/usr/src/cvs/mozilla/mozilla/dom/src/base/nsJSEnvironment.cpp:939
+#108 0x4070a8e4 in nsJSDOMEventListener::HandleEvent (this=0x837a9c8,
+aEvent=0x87bd994) at
+/usr/src/cvs/mozilla/mozilla/dom/src/events/nsJSDOMEventListener.cpp:93
+#109 0x41428341 in nsEventListenerManager::HandleEventSubType (this=0x83619b8,
+aListenerStruct=0x8623cb8, aDOMEvent=0x87bd994, aCurrentTarget=0x8361968,
+aSubType=1, aPhaseFlags=4) at
+/usr/src/cvs/mozilla/mozilla/content/events/src/nsEventListenerManager.cpp:906
+#110 0x414297d8 in nsEventListenerManager::HandleEvent (this=0x83619b8,
+aPresContext=0x8777ba8, aEvent=0xbfffa480, aDOMEvent=0xbfffa064,
+aCurrentTarget=0x8361968, aFlags=4, aEventStatus=0xbfffa4a4) at
+/usr/src/cvs/mozilla/mozilla/content/events/src/nsEventListenerManager.cpp:1325
+#111 0x41544ec3 in nsXULElement::HandleDOMEvent (this=0x8361960,
+aPresContext=0x8777ba8, aEvent=0xbfffa480, aDOMEvent=0xbfffa064, aFlags=4,
+aEventStatus=0xbfffa4a4) at
+/usr/src/cvs/mozilla/mozilla/content/xul/content/src/nsXULElement.cpp:3628
+#112 0x41544cf8 in nsXULElement::HandleDOMEvent (this=0x8385520,
+aPresContext=0x8777ba8, aEvent=0xbfffa480, aDOMEvent=0xbfffa064, aFlags=4,
+aEventStatus=0xbfffa4a4) at
+/usr/src/cvs/mozilla/mozilla/content/xul/content/src/nsXULElement.cpp:3608
+#113 0x41544cf8 in nsXULElement::HandleDOMEvent (this=0x8361b08,
+aPresContext=0x8777ba8, aEvent=0xbfffa480, aDOMEvent=0xbfffa064, aFlags=4,
+aEventStatus=0xbfffa4a4) at
+/usr/src/cvs/mozilla/mozilla/content/xul/content/src/nsXULElement.cpp:3608
+#114 0x41549206 in nsXULElement::HandleChromeEvent (this=0x8361b08,
+aPresContext=0x8777ba8, aEvent=0xbfffa480, aDOMEvent=0xbfffa064, aFlags=4,
+aEventStatus=0xbfffa4a4) at
+/usr/src/cvs/mozilla/mozilla/content/xul/content/src/nsXULElement.cpp:4552
+#115 0x406c5ced in GlobalWindowImpl::HandleDOMEvent (this=0x85f4c30,
+aPresContext=0x8777ba8, aEvent=0xbfffa480, aDOMEvent=0xbfffa064, aFlags=4,
+aEventStatus=0xbfffa4a4) at
+/usr/src/cvs/mozilla/mozilla/dom/src/base/nsGlobalWindow.cpp:556
+#116 0x415e733b in nsDocument::HandleDOMEvent (this=0x87a9480,
+aPresContext=0x8777ba8, aEvent=0xbfffa480, aDOMEvent=0xbfffa064, aFlags=1,
+aEventStatus=0xbfffa4a4) at
+/usr/src/cvs/mozilla/mozilla/content/base/src/nsDocument.cpp:2782
+#117 0x4142dfb2 in nsEventStateManager::PreHandleEvent (this=0x87b0828,
+aPresContext=0x8777ba8, aEvent=0xbfffa940, aTargetFrame=0x88bd9e0,
+aStatus=0xbfffa818, aView=0x8850f60) at
+/usr/src/cvs/mozilla/mozilla/content/events/src/nsEventStateManager.cpp:387
+#118 0x41c0a303 in PresShell::HandleEventInternal (this=0x882a9d8,
+aEvent=0xbfffa940, aView=0x8850f60, aFlags=1, aStatus=0xbfffa818) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsPresShell.cpp:5054
+#119 0x41c09f2d in PresShell::HandleEvent (this=0x882a9d8, aView=0x8850f60,
+aEvent=0xbfffa940, aEventStatus=0xbfffa818, aForceHandle=0,
+aHandled=@0xbfffa7a0) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsPresShell.cpp:4995
+#120 0x41e8694e in nsView::HandleEvent (this=0x8850f60, event=0xbfffa940,
+aEventFlags=8, aStatus=0xbfffa818, aForceHandle=0, aHandled=@0xbfffa7a0) at
+/usr/src/cvs/mozilla/mozilla/view/src/nsView.cpp:359
+#121 0x41e868de in nsView::HandleEvent (this=0x87b0660, event=0xbfffa940,
+aEventFlags=8, aStatus=0xbfffa818, aForceHandle=0, aHandled=@0xbfffa7a0) at
+/usr/src/cvs/mozilla/mozilla/view/src/nsView.cpp:343
+#122 0x41e868de in nsView::HandleEvent (this=0x86169b0, event=0xbfffa940,
+aEventFlags=28, aStatus=0xbfffa818, aForceHandle=1, aHandled=@0xbfffa7a0) at
+/usr/src/cvs/mozilla/mozilla/view/src/nsView.cpp:343
+#123 0x41e9ade5 in nsViewManager2::DispatchEvent (this=0x87d4f68,
+aEvent=0xbfffa940, aStatus=0xbfffa818) at
+/usr/src/cvs/mozilla/mozilla/view/src/nsViewManager2.cpp:1422
+#124 0x41e85f5d in HandleEvent (aEvent=0xbfffa940) at
+/usr/src/cvs/mozilla/mozilla/view/src/nsView.cpp:67
+#125 0x40856fab in nsWidget::DispatchEvent (this=0x8614e00, aEvent=0xbfffa940,
+aStatus=@0xbfffa8d8) at
+/usr/src/cvs/mozilla/mozilla/widget/src/gtk/nsWidget.cpp:1471
+#126 0x40856b9f in nsWidget::DispatchWindowEvent (this=0x8614e00,
+event=0xbfffa940) at
+/usr/src/cvs/mozilla/mozilla/widget/src/gtk/nsWidget.cpp:1362
+#127 0x40856c52 in nsWidget::DispatchFocus (this=0x8614e00, aEvent=@0xbfffa940)
+at /usr/src/cvs/mozilla/mozilla/widget/src/gtk/nsWidget.cpp:1384
+#128 0x4085e6c3 in nsWindow::DispatchSetFocusEvent (this=0x8614e00) at
+/usr/src/cvs/mozilla/mozilla/widget/src/gtk/nsWindow.cpp:1152
+#129 0x4085e62f in nsWindow::SetFocus (this=0x8614e00) at
+/usr/src/cvs/mozilla/mozilla/widget/src/gtk/nsWindow.cpp:1123
+#130 0x406cbb92 in GlobalWindowImpl::Focus (this=0x85f4c30) at
+/usr/src/cvs/mozilla/mozilla/dom/src/base/nsGlobalWindow.cpp:1650
+#131 0x4142e78a in nsEventStateManager::PreHandleEvent (this=0x84496a8,
+aPresContext=0x81721e8, aEvent=0xbfffb230, aTargetFrame=0x85e035c,
+aStatus=0xbfffb108, aView=0x82786f8) at
+/usr/src/cvs/mozilla/mozilla/content/events/src/nsEventStateManager.cpp:460
+#132 0x41c0a303 in PresShell::HandleEventInternal (this=0x8294218,
+aEvent=0xbfffb230, aView=0x82786f8, aFlags=1, aStatus=0xbfffb108) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsPresShell.cpp:5054
+#133 0x41c09f2d in PresShell::HandleEvent (this=0x8294218, aView=0x82786f8,
+aEvent=0xbfffb230, aEventStatus=0xbfffb108, aForceHandle=1,
+aHandled=@0xbfffb090) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsPresShell.cpp:4995
+#134 0x41e8694e in nsView::HandleEvent (this=0x82786f8, event=0xbfffb230,
+aEventFlags=28, aStatus=0xbfffb108, aForceHandle=1, aHandled=@0xbfffb090) at
+/usr/src/cvs/mozilla/mozilla/view/src/nsView.cpp:359
+#135 0x41e9ade5 in nsViewManager2::DispatchEvent (this=0x82785e8,
+aEvent=0xbfffb230, aStatus=0xbfffb108) at
+/usr/src/cvs/mozilla/mozilla/view/src/nsViewManager2.cpp:1422
+#136 0x41e85f5d in HandleEvent (aEvent=0xbfffb230) at
+/usr/src/cvs/mozilla/mozilla/view/src/nsView.cpp:67
+#137 0x40856fab in nsWidget::DispatchEvent (this=0x8293888, aEvent=0xbfffb230,
+aStatus=@0xbfffb1c8) at
+/usr/src/cvs/mozilla/mozilla/widget/src/gtk/nsWidget.cpp:1471
+#138 0x40856b9f in nsWidget::DispatchWindowEvent (this=0x8293888,
+event=0xbfffb230) at
+/usr/src/cvs/mozilla/mozilla/widget/src/gtk/nsWidget.cpp:1362
+#139 0x40856c52 in nsWidget::DispatchFocus (this=0x8293888, aEvent=@0xbfffb230)
+at /usr/src/cvs/mozilla/mozilla/widget/src/gtk/nsWidget.cpp:1384
+#140 0x4085e7f1 in nsWindow::DispatchActivateEvent (this=0x8293888) at
+/usr/src/cvs/mozilla/mozilla/widget/src/gtk/nsWindow.cpp:1203
+#141 0x4085e647 in nsWindow::SetFocus (this=0x8293888) at
+/usr/src/cvs/mozilla/mozilla/widget/src/gtk/nsWindow.cpp:1125
+#142 0x406cbb92 in GlobalWindowImpl::Focus (this=0x81df670) at
+/usr/src/cvs/mozilla/mozilla/dom/src/base/nsGlobalWindow.cpp:1650
+#143 0x40606694 in nsWebShellWindow::HandleEvent (aEvent=0xbfffb570) at
+/usr/src/cvs/mozilla/mozilla/xpfe/appshell/src/nsWebShellWindow.cpp:515
+#144 0x40856fab in nsWidget::DispatchEvent (this=0x81dea80, aEvent=0xbfffb570,
+aStatus=@0xbfffb508) at
+/usr/src/cvs/mozilla/mozilla/widget/src/gtk/nsWidget.cpp:1471
+#145 0x40856b9f in nsWidget::DispatchWindowEvent (this=0x81dea80,
+event=0xbfffb570) at
+/usr/src/cvs/mozilla/mozilla/widget/src/gtk/nsWidget.cpp:1362
+#146 0x40856c52 in nsWidget::DispatchFocus (this=0x81dea80, aEvent=@0xbfffb570)
+at /usr/src/cvs/mozilla/mozilla/widget/src/gtk/nsWidget.cpp:1384
+#147 0x4085e6c3 in nsWindow::DispatchSetFocusEvent (this=0x81dea80) at
+/usr/src/cvs/mozilla/mozilla/widget/src/gtk/nsWindow.cpp:1152
+#148 0x4085e90b in nsWindow::HandleMozAreaFocusIn (this=0x81dea80) at
+/usr/src/cvs/mozilla/mozilla/widget/src/gtk/nsWindow.cpp:1255
+#149 0x40862881 in handle_mozarea_focus_in (aWidget=0x81dee60,
+aGdkFocusEvent=0xbfffb9f0, aData=0x81dea80) at
+/usr/src/cvs/mozilla/mozilla/widget/src/gtk/nsWindow.cpp:2699
+#150 0x4094022f in gtk_marshal_BOOL__POINTER () from /usr/lib/libgtk-1.2.so.0
+#151 0x4096fec7 in gtk_signal_remove_emission_hook () from
+/usr/lib/libgtk-1.2.so.0
+#152 0x4096f325 in gtk_signal_set_funcs () from /usr/lib/libgtk-1.2.so.0
+#153 0x4096d403 in gtk_signal_emit () from /usr/lib/libgtk-1.2.so.0
+#154 0x409a400b in gtk_widget_event () from /usr/lib/libgtk-1.2.so.0
+#155 0x409ac34b in gtk_window_set_default_size () from /usr/lib/libgtk-1.2.so.0
+#156 0x4094022f in gtk_marshal_BOOL__POINTER () from /usr/lib/libgtk-1.2.so.0
+#157 0x4096f363 in gtk_signal_set_funcs () from /usr/lib/libgtk-1.2.so.0
+#158 0x4096d403 in gtk_signal_emit () from /usr/lib/libgtk-1.2.so.0
+#159 0x409a400b in gtk_widget_event () from /usr/lib/libgtk-1.2.so.0
+#160 0x4093f37b in gtk_main_do_event () from /usr/lib/libgtk-1.2.so.0
+#161 0x4084dac2 in handle_gdk_event (event=0x81dce50, data=0x0) at
+/usr/src/cvs/mozilla/mozilla/widget/src/gtk/nsGtkEventHandler.cpp:970
+#162 0x409ee4d7 in ?? () from /usr/lib/libgdk-1.2.so.0
+#163 0x40a1b2b9 in g_get_current_time () from /usr/lib/libglib-1.2.so.0
+#164 0x40a1b8c3 in g_get_current_time () from /usr/lib/libglib-1.2.so.0
+#165 0x40a1b975 in g_main_iteration () from /usr/lib/libglib-1.2.so.0
+#166 0x40841a8a in nsAppShell::DispatchNativeEvent (this=0x8781ce8,
+aRealEvent=0, aEvent=0x0) at
+/usr/src/cvs/mozilla/mozilla/widget/src/gtk/nsAppShell.cpp:397
+#167 0x405faa35 in nsXULWindow::ShowModal (this=0x87c5400) at
+/usr/src/cvs/mozilla/mozilla/xpfe/appshell/src/nsXULWindow.cpp:247
+#168 0x406078b0 in nsWebShellWindow::ShowModal (this=0x87c5400) at
+/usr/src/cvs/mozilla/mozilla/xpfe/appshell/src/nsWebShellWindow.cpp:1087
+#169 0x405f8c03 in nsContentTreeOwner::ShowAsModal (this=0x882b110) at
+/usr/src/cvs/mozilla/mozilla/xpfe/appshell/src/nsContentTreeOwner.cpp:393
+#170 0x40cd4107 in ?? () from
+/usr/src/cvs/mozilla/obj-debug/dist/bin/components/libembedcomponents.so
+#171 0x406d3a99 in GlobalWindowImpl::OpenInternal (this=0x81df670, cx=0x81df830,
+argv=0x88f5040, argc=4, aDialog=1, aReturn=0xbfffc58c) at
+/usr/src/cvs/mozilla/mozilla/dom/src/base/nsGlobalWindow.cpp:2984
+#172 0x406ceecf in GlobalWindowImpl::OpenDialog (this=0x81df670, cx=0x81df830,
+argv=0x88f5040, argc=4, aReturn=0xbfffc58c) at
+/usr/src/cvs/mozilla/mozilla/dom/src/base/nsGlobalWindow.cpp:2092
+#173 0x40614c48 in nsCommonDialogs::DoDialog (this=0x87662c0,
+inParent=0x81df674, ioParamBlock=0x88bf4c8, inChromeURL=0x40641c00
+"chrome://global/content/selectDialog.xul") at
+/usr/src/cvs/mozilla/mozilla/xpfe/appshell/src/nsCommonDialogs.cpp:453
+#174 0x4061495e in nsCommonDialogs::Select (this=0x87662c0, inParent=0x81df674,
+inDialogTitle=0x88bf4a8, inMsg=0x88bf448, inCount=2, inList=0x891baa0,
+outSelection=0xbfffc844, _retval=0xbfffc840) at
+/usr/src/cvs/mozilla/mozilla/xpfe/appshell/src/nsCommonDialogs.cpp:413
+#175 0x4060aa31 in nsDOMWindowPrompter::Select (this=0x87663c8,
+dialogTitle=0x88bf4a8, inMsg=0x88bf448, inCount=2, inList=0x891baa0,
+outSelection=0xbfffc844, _retval=0xbfffc840) at
+/usr/src/cvs/mozilla/mozilla/xpfe/appshell/src/nsWebShellWindow.cpp:2030
+#176 0x41a592c2 in nsSingleSignOnPrompt::Select (this=0x87693c8,
+dialogTitle=0x88bf4a8, text=0x88bf448, count=2, selectList=0x891baa0,
+outSelection=0xbfffc844, _retval=0xbfffc840) at
+/usr/src/cvs/mozilla/mozilla/extensions/wallet/src/nsWalletService.cpp:565
+#177 0x41a670fb in si_SelectDialog (szMessage=0x88bf448, dialog=0x87693c8,
+pList=0x891baa0, pCount=0xbfffc92c) at
+/usr/src/cvs/mozilla/mozilla/extensions/wallet/src/singsign.cpp:384
+#178 0x41a68065 in si_GetUser (dialog=0x87693c8, passwordRealm=0x88bf408
+"bugzilla.mozilla.org", pickFirstUser=0, userText=@0xbfffca0c) at
+/usr/src/cvs/mozilla/mozilla/extensions/wallet/src/singsign.cpp:992
+#179 0x41a6aab6 in si_RestoreSignonData (dialog=0x87693c8,
+passwordRealm=0x88bf408 "bugzilla.mozilla.org", name=0x87d0c10,
+value=0xbfffccac, elementNumber=0) at
+/usr/src/cvs/mozilla/mozilla/extensions/wallet/src/singsign.cpp:2113
+#180 0x41a6ae50 in SINGSIGN_RestoreSignonData (dialog=0x87693c8,
+passwordRealm=0x88bf3a8
+"http://bugzilla.mozilla.org/query.cgi?GoAheadAndLogIn=1", name=0x87d0c10,
+value=0xbfffccac, elementNumber=0) at
+/usr/src/cvs/mozilla/mozilla/extensions/wallet/src/singsign.cpp:2199
+#181 0x41a586bb in nsWalletlibService::OnEndDocumentLoad (this=0x8167350,
+aLoader=0x85ea220, request=0x8504168, aStatus=0) at
+/usr/src/cvs/mozilla/mozilla/extensions/wallet/src/nsWalletService.cpp:387
+#182 0x4105428c in nsDocLoaderImpl::FireOnEndDocumentLoad (this=0x816e358,
+aLoadInitiator=0x85ea220, aDocRequest=0x8504168, aStatus=0) at
+/usr/src/cvs/mozilla/mozilla/uriloader/base/nsDocLoader.cpp:837
+#183 0x410542ac in nsDocLoaderImpl::FireOnEndDocumentLoad (this=0x81df330,
+aLoadInitiator=0x85ea220, aDocRequest=0x8504168, aStatus=0) at
+/usr/src/cvs/mozilla/mozilla/uriloader/base/nsDocLoader.cpp:844
+#184 0x410542ac in nsDocLoaderImpl::FireOnEndDocumentLoad (this=0x85ea220,
+aLoadInitiator=0x85ea220, aDocRequest=0x8504168, aStatus=0) at
+/usr/src/cvs/mozilla/mozilla/uriloader/base/nsDocLoader.cpp:844
+#185 0x41053b8e in nsDocLoaderImpl::DocLoaderIsEmpty (this=0x85ea220, aStatus=0)
+at /usr/src/cvs/mozilla/mozilla/uriloader/base/nsDocLoader.cpp:632
+#186 0x410538a3 in nsDocLoaderImpl::OnStopRequest (this=0x85ea220,
+request=0x8916f18, aCtxt=0x0, aStatus=0, aMsg=0x0) at
+/usr/src/cvs/mozilla/mozilla/uriloader/base/nsDocLoader.cpp:561
+#187 0x40dce608 in nsLoadGroup::RemoveRequest (this=0x85ea2b0,
+request=0x8916f18, ctxt=0x0, aStatus=0, aStatusArg=0x0) at
+/usr/src/cvs/mozilla/mozilla/netwerk/base/src/nsLoadGroup.cpp:518
+#188 0x41c0ba2f in PresShell::RemoveDummyLayoutRequest (this=0x882a9d8) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsPresShell.cpp:5572
+#189 0x41c0b59b in PresShell::DoneRemovingReflowCommands (this=0x882a9d8) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsPresShell.cpp:5525
+#190 0x41c04641 in PresShell::CancelReflowCommandInternal (this=0x882a9d8,
+aTargetFrame=0x87c7a94, aCmdType=0x0, aQueue=@0x882aa24) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsPresShell.cpp:3308
+#191 0x41c022be in PresShell::NotifyDestroyingFrame (this=0x882a9d8,
+aFrame=0x87c7a94) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsPresShell.cpp:2641
+#192 0x41bc2fd9 in nsFrame::Destroy (this=0x87c7a94, aPresContext=0x8777ba8) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsFrame.cpp:401
+#193 0x41bb5a2d in nsBlockFrame::DoRemoveFrame (this=0x87c7884,
+aPresContext=0x8777ba8, aDeletedFrame=0x87c7a94) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsBlockFrame.cpp:5638
+#194 0x41bb5682 in nsBlockFrame::RemoveFrame (this=0x87c7884,
+aPresContext=0x8777ba8, aPresShell=@0x882a9d8, aListName=0x0,
+aOldFrame=0x87c7a94) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsBlockFrame.cpp:5534
+#195 0x41bd0aa3 in FrameManager::RemoveFrame (this=0x879f850,
+aPresContext=0x8777ba8, aPresShell=@0x882a9d8, aParentFrame=0x87c7884,
+aListName=0x0, aOldFrame=0x87c7a94) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsFrameManager.cpp:849
+#196 0x41c8f5a7 in nsCSSFrameConstructor::ContentRemoved (this=0x882ad00,
+aPresContext=0x8777ba8, aContainer=0x8819a40, aChild=0x86c0218,
+aIndexInContainer=0) at
+/usr/src/cvs/mozilla/mozilla/layout/html/style/src/nsCSSFrameConstructor.cpp:9155
+#197 0x4164cc9b in StyleSetImpl::ContentRemoved (this=0x879ec78,
+aPresContext=0x8777ba8, aContainer=0x8819a40, aChild=0x86c0218,
+aIndexInContainer=0) at
+/usr/src/cvs/mozilla/mozilla/content/base/src/nsStyleSet.cpp:1242
+#198 0x41c08c78 in PresShell::ContentRemoved (this=0x882a9d8,
+aDocument=0x87a9480, aContainer=0x8819a40, aChild=0x86c0218,
+aIndexInContainer=0) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsPresShell.cpp:4460
+#199 0x415e2699 in nsDocument::ContentRemoved (this=0x87a9480,
+aContainer=0x8819a40, aChild=0x86c0218, aIndexInContainer=0) at
+/usr/src/cvs/mozilla/mozilla/content/base/src/nsDocument.cpp:1656
+#200 0x414b8292 in nsHTMLDocument::ContentRemoved (this=0x87a9480,
+aContainer=0x8819a40, aChild=0x86c0218, aIndexInContainer=0) at
+/usr/src/cvs/mozilla/mozilla/content/html/document/src/nsHTMLDocument.cpp:1364
+#201 0x4144f630 in nsGenericHTMLContainerElement::RemoveChildAt (this=0x8819a40,
+aIndex=0, aNotify=1) at
+/usr/src/cvs/mozilla/mozilla/content/html/content/src/nsGenericHTMLElement.cpp:3535
+#202 0x41617d98 in nsGenericElement::doRemoveChild (this=0x8819a40,
+aOldChild=0x86c0240, aReturn=0xbfffdc18) at
+/usr/src/cvs/mozilla/mozilla/content/base/src/nsGenericElement.cpp:2482
+#203 0x41687f7d in nsGenericHTMLContainerElement::RemoveChild (this=0x8819a40,
+aOldChild=0x86c0240, aReturn=0xbfffdc18) at
+/usr/src/cvs/mozilla/mozilla/content/html/content/src/nsGenericHTMLElement.h:458
+#204 0x416a082d in nsHTMLDivElement::RemoveChild (this=0x8819a40,
+aOldChild=0x86c0240, aReturn=0xbfffdc18) at
+/usr/src/cvs/mozilla/mozilla/content/html/content/src/nsHTMLDivElement.cpp:49
+#205 0x423b3499 in DeleteElementTxn::DoTransaction (this=0x878bf20) at
+/usr/src/cvs/mozilla/mozilla/editor/base/DeleteElementTxn.cpp:93
+#206 0x4250272a in nsTransactionItem::DoTransaction (this=0x86c2980) at
+/usr/src/cvs/mozilla/mozilla/editor/txmgr/src/nsTransactionItem.cpp:165
+#207 0x42505d34 in nsTransactionManager::BeginTransaction (this=0x88a08c8,
+aTransaction=0x878bf20) at
+/usr/src/cvs/mozilla/mozilla/editor/txmgr/src/nsTransactionManager.cpp:1060
+#208 0x42503f93 in nsTransactionManager::DoTransaction (this=0x88a08c8,
+aTransaction=0x878bf20) at
+/usr/src/cvs/mozilla/mozilla/editor/txmgr/src/nsTransactionManager.cpp:121
+#209 0x423c7309 in nsEditor::Do (this=0x87c3af8, aTxn=0x878bf20) at
+/usr/src/cvs/mozilla/mozilla/editor/base/nsEditor.cpp:447
+#210 0x423cac1d in nsEditor::DeleteNode (this=0x87c3af8, aElement=0x86c0240) at
+/usr/src/cvs/mozilla/mozilla/editor/base/nsEditor.cpp:1310
+#211 0x423faa09 in nsTextEditRules::WillInsert (this=0x86c01a8,
+aSelection=0x8762ce0, aCancel=0xbfffe2c4) at
+/usr/src/cvs/mozilla/mozilla/editor/base/nsTextEditRules.cpp:333
+#212 0x423fb685 in nsTextEditRules::WillInsertText (this=0x86c01a8,
+aAction=2000, aSelection=0x8762ce0, aCancel=0xbfffe2c4, aHandled=0xbfffe2c0,
+inString=0xbfffe174, outString=0xbfffe20c, aMaxLength=-1) at
+/usr/src/cvs/mozilla/mozilla/editor/base/nsTextEditRules.cpp:479
+#213 0x423fa582 in nsTextEditRules::WillDoAction (this=0x86c01a8,
+aSelection=0x8762ce0, aInfo=0xbfffe144, aCancel=0xbfffe2c4, aHandled=0xbfffe2c0)
+at /usr/src/cvs/mozilla/mozilla/editor/base/nsTextEditRules.cpp:241
+#214 0x423f1e3a in nsPlaintextEditor::InsertText (this=0x87c3af8,
+aStringToInsert=0xbfffe34c) at
+/usr/src/cvs/mozilla/mozilla/editor/base/nsPlaintextEditor.cpp:1007
+#215 0x423ef0be in nsPlaintextEditor::TypedText (this=0x87c3af8,
+aString=0xbfffe34c, aAction=0) at
+/usr/src/cvs/mozilla/mozilla/editor/base/nsPlaintextEditor.cpp:572
+#216 0x423ef032 in nsPlaintextEditor::HandleKeyPress (this=0x87c3af8,
+aKeyEvent=0x87c54f0) at
+/usr/src/cvs/mozilla/mozilla/editor/base/nsPlaintextEditor.cpp:551
+#217 0x423dff06 in nsTextEditorKeyListener::KeyPress (this=0x85eb1d8,
+aKeyEvent=0x87c54f4) at
+/usr/src/cvs/mozilla/mozilla/editor/base/nsEditorEventListeners.cpp:271
+#218 0x4142940f in nsEventListenerManager::HandleEvent (this=0x88b86c8,
+aPresContext=0x8777ba8, aEvent=0xbfffeeb4, aDOMEvent=0xbfffe7fc,
+aCurrentTarget=0x88b86cc, aFlags=7, aEventStatus=0xbfffed48) at
+/usr/src/cvs/mozilla/mozilla/content/events/src/nsEventListenerManager.cpp:1236
+#219 0x4161472a in nsGenericElement::HandleDOMEvent (this=0x85f6840,
+aPresContext=0x8777ba8, aEvent=0xbfffeeb4, aDOMEvent=0xbfffe7fc, aFlags=1,
+aEventStatus=0xbfffed48) at
+/usr/src/cvs/mozilla/mozilla/content/base/src/nsGenericElement.cpp:1420
+#220 0x41474002 in nsHTMLInputElement::HandleDOMEvent (this=0x85f6840,
+aPresContext=0x8777ba8, aEvent=0xbfffeeb4, aDOMEvent=0x0, aFlags=1,
+aEventStatus=0xbfffed48) at
+/usr/src/cvs/mozilla/mozilla/content/html/content/src/nsHTMLInputElement.cpp:1138
+#221 0x41c0a373 in PresShell::HandleEventInternal (this=0x882a9d8,
+aEvent=0xbfffeeb4, aView=0x8850f60, aFlags=1, aStatus=0xbfffed48) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsPresShell.cpp:5060
+#222 0x41c09f2d in PresShell::HandleEvent (this=0x882a9d8, aView=0x8850f60,
+aEvent=0xbfffeeb4, aEventStatus=0xbfffed48, aForceHandle=0,
+aHandled=@0xbfffecd0) at
+/usr/src/cvs/mozilla/mozilla/layout/html/base/src/nsPresShell.cpp:4995
+#223 0x41e8694e in nsView::HandleEvent (this=0x8850f60, event=0xbfffeeb4,
+aEventFlags=8, aStatus=0xbfffed48, aForceHandle=0, aHandled=@0xbfffecd0) at
+/usr/src/cvs/mozilla/mozilla/view/src/nsView.cpp:359
+#224 0x41e868de in nsView::HandleEvent (this=0x87b0660, event=0xbfffeeb4,
+aEventFlags=8, aStatus=0xbfffed48, aForceHandle=0, aHandled=@0xbfffecd0) at
+/usr/src/cvs/mozilla/mozilla/view/src/nsView.cpp:343
+#225 0x41e868de in nsView::HandleEvent (this=0x86169b0, event=0xbfffeeb4,
+aEventFlags=28, aStatus=0xbfffed48, aForceHandle=1, aHandled=@0xbfffecd0) at
+/usr/src/cvs/mozilla/mozilla/view/src/nsView.cpp:343
+#226 0x41e9ade5 in nsViewManager2::DispatchEvent (this=0x87d4f68,
+aEvent=0xbfffeeb4, aStatus=0xbfffed48) at
+/usr/src/cvs/mozilla/mozilla/view/src/nsViewManager2.cpp:1422
+#227 0x41e85f5d in HandleEvent (aEvent=0xbfffeeb4) at
+/usr/src/cvs/mozilla/mozilla/view/src/nsView.cpp:67
+#228 0x40856fab in nsWidget::DispatchEvent (this=0x86ef500, aEvent=0xbfffeeb4,
+aStatus=@0xbfffee08) at
+/usr/src/cvs/mozilla/mozilla/widget/src/gtk/nsWidget.cpp:1471
+#229 0x40856b9f in nsWidget::DispatchWindowEvent (this=0x86ef500,
+event=0xbfffeeb4) at
+/usr/src/cvs/mozilla/mozilla/widget/src/gtk/nsWidget.cpp:1362
+#230 0x40853ef1 in nsWidget::OnInput (this=0x86ef500, aEvent=@0xbfffeeb4) at
+/usr/src/cvs/mozilla/mozilla/widget/src/gtk/nsWidget.cpp:101
+#231 0x408813fd in nsWidget::OnKey (this=0x86ef500, aEvent=@0xbfffeeb4) at
+/usr/src/cvs/mozilla/mozilla/widget/src/gtk/nsWidget.h:200
+#232 0x4084d39d in handle_key_press_event (w=0x0, event=0x81dcc28, p=0x86ef500)
+at /usr/src/cvs/mozilla/mozilla/widget/src/gtk/nsGtkEventHandler.cpp:688
+#233 0x4084dbe3 in dispatch_superwin_event (event=0x81dcc28, window=0x86ef500)
+at /usr/src/cvs/mozilla/mozilla/widget/src/gtk/nsGtkEventHandler.cpp:1001
+#234 0x4084d76a in handle_gdk_event (event=0x81dcc28, data=0x0) at
+/usr/src/cvs/mozilla/mozilla/widget/src/gtk/nsGtkEventHandler.cpp:837
+#235 0x409ee4d7 in ?? () from /usr/lib/libgdk-1.2.so.0
+#236 0x40a1b2b9 in g_get_current_time () from /usr/lib/libglib-1.2.so.0
+#237 0x40a1b8c3 in g_get_current_time () from /usr/lib/libglib-1.2.so.0
+#238 0x40a1ba5c in g_main_run () from /usr/lib/libglib-1.2.so.0
+#239 0x4093ebd7 in gtk_main () from /usr/lib/libgtk-1.2.so.0
+#240 0x408419e5 in nsAppShell::Run (this=0x80b8e10) at
+/usr/src/cvs/mozilla/mozilla/widget/src/gtk/nsAppShell.cpp:360
+#241 0x40602f1e in nsAppShellService::Run (this=0x80b6800) at
+/usr/src/cvs/mozilla/mozilla/xpfe/appshell/src/nsAppShellService.cpp:407
+#242 0x080572c6 in main1 (argc=1, argv=0xbffff40c, nativeApp=0x0) at
+/usr/src/cvs/mozilla/mozilla/xpfe/bootstrap/nsAppRunner.cpp:1004
+#243 0x080580e1 in main (argc=1, argv=0xbffff40c) at
+/usr/src/cvs/mozilla/mozilla/xpfe/bootstrap/nsAppRunner.cpp:1298
+#244 0x40389f5c in __libc_start_main () from /lib/libc.so.6
+
+Apparently this is layout.

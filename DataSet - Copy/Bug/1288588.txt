@@ -1,0 +1,169 @@
+PNG: heap-buffer-overflow crash [@MOZ_PNG_read_filt_row_a]
+The following testcase crashes on en-us.linux-x86_64-asan.tar.bz2 revision 0684715b032f06273416fdc554c071ee61a889db
+
+See attachment.
+
+Backtrace:
+
+==5608==ERROR: AddressSanitizer: heap-buffer-overflow on address 0x610000321503 at pc 0x7f5a6880760e bp 0x7f5a47afdaf0 sp 0x7f5a47afdae8
+READ of size 16 at 0x610000321503 thread T32 (ImgDecoder #1)
+Crash Annotation GraphicsCriticalError: |[0][GFX1]: Unknown image format 16 (t=3.91881) |[6481][GFX1]: Unknown image format 16 (t=286.938) |[6467][GFX1]: Unknown image format 16 (t=286.437) |[6468][GFX1]: Unknown image format 16 (t=286.471) |[6469][GFX1]: Unknown image format 16 (t=286.504) |[6470][GFX1]: Unknown image format 16 (t=286.537) |[6471][GFX1]: Unknown image format 16 (t=286.588) |[6472][GFX1]: Unknown image format 16 (t=286.604) |[6473][GFX1]: Unknown image format 16 (t=286.637) |[6474][GFX1]: Unknown image format 16 (t=286.671) |[6475][GFX1]: Unknown image format 16 (t=286.704) |[6476][GFX1]: Unknown image format 16 (t=286.737) |[6477][GFX1]: Unknown image format 16 (t=286.771) |[6478][GFX1]: Unknown image format 16 (t=286.804) |[6479][GFX1]: Unknown image format 16 (t=286.854) |[6480][GFX1]: Unknown image format 16 (t=286.888) [GFX1]: Unknown image format 16
+Crash Annotation GraphicsCriticalError: |[0][GFX1]: Unknown image format 16 (t=3.91881) |[6481][GFX1]: Unknown image format 16 (t=286.938) |[6482][GFX1]: Unknown image format 16 (t=286.971) |[6468][GFX1]: Unknown image format 16 (t=286.471) |[6469][GFX1]: 
+[...]
+Unknown image format 16 (t=290.904) |[6610][GFX1]: Unknown image format 16 (t=290.937) |[6611][GFX1]: Unknown image format 16 (t=290.954) |[6612][GFX1]: Unknown image format 16 (t=290.988) |[6613][GFX1]: Unknown image format 16 (t=291.021) |[6614][GFX1]: Unknown image format 16 (t=291.037) |[6615][GFX1]: Unknown image format 16 (t=291.071) [GFX1]: Unknown image format 16
+    #0 0x7f5a6880760d in MOZ_PNG_read_filt_row_a /builds/slave/m-in-l64-asan-0000000000000000/build/src/media/libpng/pngrutil.c:4017:31
+    #1 0x7f5a687e7b02 in MOZ_PNG_read_filt_row /builds/slave/m-in-l64-asan-0000000000000000/build/src/media/libpng/pngrutil.c:4170:7
+    #2 0x7f5a687e7b02 in MOZ_PNG_push_proc_row /builds/slave/m-in-l64-asan-0000000000000000/build/src/media/libpng/pngpread.c:905
+    #3 0x7f5a687e71f6 in MOZ_PNG_proc_IDAT_data /builds/slave/m-in-l64-asan-0000000000000000/build/src/media/libpng/pngpread.c:873:13
+    #4 0x7f5a687df5fe in MOZ_PNG_push_read_IDAT /builds/slave/m-in-l64-asan-0000000000000000/build/src/media/libpng/pngpread.c:754:7
+    #5 0x7f5a687db137 in MOZ_PNG_proc_some_data /builds/slave/m-in-l64-asan-0000000000000000/build/src/media/libpng/pngpread.c:115:10
+    #6 0x7f5a687db137 in MOZ_PNG_process_data /builds/slave/m-in-l64-asan-0000000000000000/build/src/media/libpng/pngpread.c:46
+    #7 0x7f5a622b7e69 in mozilla::image::nsPNGDecoder::ReadPNGData(char const*, unsigned long) /builds/slave/m-in-l64-asan-0000000000000000/build/src/image/decoders/nsPNGDecoder.cpp:379:3
+    #8 0x7f5a622b588f in operator() /builds/slave/m-in-l64-asan-0000000000000000/build/src/image/decoders/nsPNGDecoder.cpp:362:16
+    #9 0x7f5a622b588f in Lex<(lambda at /builds/slave/m-in-l64-asan-0000000000000000/build/src/image/decoders/nsPNGDecoder.cpp:359:21)> /builds/slave/m-in-l64-asan-0000000000000000/build/src/image/StreamingLexer.h:382
+    #10 0x7f5a622b588f in mozilla::image::nsPNGDecoder::DoDecode(mozilla::image::SourceBufferIterator&) /builds/slave/m-in-l64-asan-0000000000000000/build/src/image/decoders/nsPNGDecoder.cpp:358
+    #11 0x7f5a6221d4ca in mozilla::image::Decoder::Decode(mozilla::NotNull<mozilla::image::IResumable*>) /builds/slave/m-in-l64-asan-0000000000000000/build/src/image/Decoder.cpp:155:44
+    #12 0x7f5a6222f996 in mozilla::image::DecodingTask::Run() /builds/slave/m-in-l64-asan-0000000000000000/build/src/image/IDecodingTask.cpp:88:17
+    #13 0x7f5a6223d332 in mozilla::image::DecodePoolWorker::Run() /builds/slave/m-in-l64-asan-0000000000000000/build/src/image/DecodePool.cpp:187:11
+    #14 0x7f5a5fa74b86 in nsThread::ProcessNextEvent(bool, bool*) /builds/slave/m-in-l64-asan-0000000000000000/build/src/xpcom/threads/nsThread.cpp:1068:7
+    #15 0x7f5a5faf2f6c in NS_ProcessNextEvent(nsIThread*, bool) /builds/slave/m-in-l64-asan-0000000000000000/build/src/xpcom/glue/nsThreadUtils.cpp:290:10
+Crash Annotation GraphicsCriticalError: |[0][GFX1]: Unknown image format 16 (t=3.91881) |[6616][GFX1]: Unknown image format 16 (t=291.104) |[6617][GFX1]: Unknown image format 16 (t=291.171) |[6603][GFX1]: Unknown image format 16 (t=290.705) |[6604][GFX1]: Unknown image format 16 (t=290.738) |[6605][GFX1]: Unknown image format 16 (t=290.771) |[6606][GFX1]: Unknown image format 16 (t=290.805) |[6607][GFX1]: Unknown image format 16 (t=290.854) |[6608][GFX1]: Unknown image format 16 (t=290.871) |[6609][GFX1]: Unknown image format 16 (t=290.904) |[6610][GFX1]: Unknown image format 16 (t=290.937) |[6611][GFX1]: Unknown image format 16 (t=290.954) |[6612][GFX1]: Unknown image format 16 (t=290.988) |[6613][GFX1]: Unknown image format 16 (t=291.021) |[6614][GFX1]: Unknown image format 16 (t=291.037) |[6615][GFX1]: Unknown image format 16 (t=291.071) [GFX1]: Unknown image format 16
+    #16 0x7f5a6084090c in mozilla::ipc::MessagePumpForNonMainThreads::Run(base::MessagePump::Delegate*) /builds/slave/m-in-l64-asan-0000000000000000/build/src/ipc/glue/MessagePump.cpp:354:20
+    #17 0x7f5a607b3d28 in RunInternal /builds/slave/m-in-l64-asan-0000000000000000/build/src/ipc/chromium/src/base/message_loop.cc:232:3
+    #18 0x7f5a607b3d28 in RunHandler /builds/slave/m-in-l64-asan-0000000000000000/build/src/ipc/chromium/src/base/message_loop.cc:225
+    #19 0x7f5a607b3d28 in MessageLoop::Run() /builds/slave/m-in-l64-asan-0000000000000000/build/src/ipc/chromium/src/base/message_loop.cc:205
+    #20 0x7f5a5fa6fea1 in nsThread::ThreadFunc(void*) /builds/slave/m-in-l64-asan-0000000000000000/build/src/xpcom/threads/nsThread.cpp:463:5
+Crash Annotation GraphicsCriticalError: |[0][GFX1]: Unknown image format 16 (t=3.91881) |[6616][GFX1]: Unknown image format 16 (t=291.104) |[6617][GFX1]: Unknown image format 16 (t=291.171) |[6618][GFX1]: Unknown image format 16 (t=291.204) |[6604][GFX1]: Unknown image format 16 (t=290.738) |[6605][GFX1]: Unknown image format 16 (t=290.771) |[6606][GFX1]: Unknown image format 16 (t=290.805) |[6607][GFX1]: Unknown image format 16 (t=290.854) |[6608][GFX1]: Unknown image format 16 (t=290.871) |[6609][GFX1]: Unknown image format 16 (t=290.904) |[6610][GFX1]: Unknown image format 16 (t=290.937) |[6611][GFX1]: Unknown image format 16 (t=290.954) |[6612][GFX1]: Unknown image format 16 (t=290.988) |[6613][GFX1]: Unknown image format 16 (t=291.021) |[6614][GFX1]: Unknown image format 16 (t=291.037) |[6615][GFX1]: Unknown image format 16 (t=291.071) [GFX1]: Unknown image format 16
+    #21 0x7f5a76ba3378 in _pt_root /builds/slave/m-in-l64-asan-0000000000000000/build/src/nsprpub/pr/src/pthreads/ptthread.c:216:5
+    #22 0x7f5a7a115181 in start_thread (/lib/x86_64-linux-gnu/libpthread.so.0+0x8181)
+
+0x610000321503 is located 10 bytes to the right of 185-byte region [0x610000321440,0x6100003214f9)
+allocated by thread T32 (ImgDecoder #1) here:
+    #0 0x4b247b in malloc /builds/slave/moz-toolchain/src/llvm/projects/compiler-rt/lib/asan/asan_malloc_linux.cc:52:3
+    #1 0x7f5a687f1452 in MOZ_PNG_malloc_base /builds/slave/m-in-l64-asan-0000000000000000/build/src/media/libpng/pngmem.c:95:17
+    #2 0x7f5a687f1452 in MOZ_PNG_malloc /builds/slave/m-in-l64-asan-0000000000000000/build/src/media/libpng/pngmem.c:179
+    #3 0x7f5a687f1452 in MOZ_PNG_read_start_row /builds/slave/m-in-l64-asan-0000000000000000/build/src/media/libpng/pngrutil.c:4673
+    #4 0x7f5a687f0e87 in MOZ_PNG_read_update_info /builds/slave/m-in-l64-asan-0000000000000000/build/src/media/libpng/pngread.c:350:10
+    #5 0x7f5a622b1aa3 in mozilla::image::nsPNGDecoder::info_callback(png_struct_def*, png_info_def*) /builds/slave/m-in-l64-asan-0000000000000000/build/src/image/decoders/nsPNGDecoder.cpp:648:3
+    #6 0x7f5a687dd51f in MOZ_PNG_push_have_info /builds/slave/m-in-l64-asan-0000000000000000/build/src/media/libpng/pngpread.c:1189:7
+    #7 0x7f5a687dd51f in MOZ_PNG_push_read_chunk /builds/slave/m-in-l64-asan-0000000000000000/build/src/media/libpng/pngpread.c:351
+    #8 0x7f5a687db12b in MOZ_PNG_proc_some_data /builds/slave/m-in-l64-asan-0000000000000000/build/src/media/libpng/pngpread.c:109:10
+    #9 0x7f5a687db12b in MOZ_PNG_process_data /builds/slave/m-in-l64-asan-0000000000000000/build/src/media/libpng/pngpread.c:46
+    #10 0x7f5a622b7e69 in mozilla::image::nsPNGDecoder::ReadPNGData(char const*, unsigned long) /builds/slave/m-in-l64-asan-0000000000000000/build/src/image/decoders/nsPNGDecoder.cpp:379:3
+    #11 0x7f5a622b588f in operator() /builds/slave/m-in-l64-asan-0000000000000000/build/src/image/decoders/nsPNGDecoder.cpp:362:16
+    #12 0x7f5a622b588f in Lex<(lambda at /builds/slave/m-in-l64-asan-0000000000000000/build/src/image/decoders/nsPNGDecoder.cpp:359:21)> /builds/slave/m-in-l64-asan-0000000000000000/build/src/image/StreamingLexer.h:382
+    #13 0x7f5a622b588f in mozilla::image::nsPNGDecoder::DoDecode(mozilla::image::SourceBufferIterator&) /builds/slave/m-in-l64-asan-0000000000000000/build/src/image/decoders/nsPNGDecoder.cpp:358
+    #14 0x7f5a6221d4ca in mozilla::image::Decoder::Decode(mozilla::NotNull<mozilla::image::IResumable*>) /builds/slave/m-in-l64-asan-0000000000000000/build/src/image/Decoder.cpp:155:44
+    #15 0x7f5a6222f996 in mozilla::image::DecodingTask::Run() /builds/slave/m-in-l64-asan-0000000000000000/build/src/image/IDecodingTask.cpp:88:17
+    #16 0x7f5a6223d332 in mozilla::image::DecodePoolWorker::Run() /builds/slave/m-in-l64-asan-0000000000000000/build/src/image/DecodePool.cpp:187:11
+    #17 0x7f5a5fa74b86 in nsThread::ProcessNextEvent(bool, bool*) /builds/slave/m-in-l64-asan-0000000000000000/build/src/xpcom/threads/nsThread.cpp:1068:7
+    #18 0x7f5a5faf2f6c in NS_ProcessNextEvent(nsIThread*, bool) /builds/slave/m-in-l64-asan-0000000000000000/build/src/xpcom/glue/nsThreadUtils.cpp:290:10
+    #19 0x7f5a6084090c in mozilla::ipc::MessagePumpForNonMainThreads::Run(base::MessagePump::Delegate*) /builds/slave/m-in-l64-asan-0000000000000000/build/src/ipc/glue/MessagePump.cpp:354:20
+    #20 0x7f5a607b3d28 in RunInternal /builds/slave/m-in-l64-asan-0000000000000000/build/src/ipc/chromium/src/base/message_loop.cc:232:3
+    #21 0x7f5a607b3d28 in RunHandler /builds/slave/m-in-l64-asan-0000000000000000/build/src/ipc/chromium/src/base/message_loop.cc:225
+    #22 0x7f5a607b3d28 in MessageLoop::Run() /builds/slave/m-in-l64-asan-0000000000000000/build/src/ipc/chromium/src/base/message_loop.cc:205
+    #23 0x7f5a5fa6fea1 in nsThread::ThreadFunc(void*) /builds/slave/m-in-l64-asan-0000000000000000/build/src/xpcom/threads/nsThread.cpp:463:5
+    #24 0x7f5a76ba3378 in _pt_root /builds/slave/m-in-l64-asan-0000000000000000/build/src/nsprpub/pr/src/pthreads/ptthread.c:216:5
+    #25 0x7f5a7a115181 in start_thread (/lib/x86_64-linux-gnu/libpthread.so.0+0x8181)
+
+Thread T32 (ImgDecoder #1) created by T0 here:
+Crash Annotation GraphicsCriticalError: |[0][GFX1]: Unknown image format 16 (t=3.91881) |[6616][GFX1]: Unknown image format 16 (t=291.104) |[6617][GFX1]: Unknown image format 16 (t=291.171) |[6618][GFX1]: Unknown image format 16 (t=291.204) |[6619][GFX1]: Unknown image format 16 (t=291.255) |[6605][GFX1]: Unknown image format 16 (t=290.771) |[6606][GFX1]: Unknown image format 16 (t=290.805) |[6607][GFX1]: Unknown image format 16 (t=290.854) |[6608][GFX1]: Unknown image format 16 (t=290.871) |[6609][GFX1]: Unknown image format 16 (t=290.904) |[6610][GFX1]: Unknown image format 16 (t=290.937) |[6611][GFX1]: Unknown image format 16 (t=290.954) |[6612][GFX1]: Unknown image format 16 (t=290.988) |[6613][GFX1]: Unknown image format 16 (t=291.021) |[6614][GFX1]: Unknown image format 16 (t=291.037) |[6615][GFX1]: Unknown image format 16 (t=291.071) [GFX1]: Unknown image format 16
+    #0 0x49a839 in __interceptor_pthread_create /builds/slave/moz-toolchain/src/llvm/projects/compiler-rt/lib/asan/asan_interceptors.cc:238:3
+    #1 0x7f5a76b9ff3f in _PR_CreateThread /builds/slave/m-in-l64-asan-0000000000000000/build/src/nsprpub/pr/src/pthreads/ptthread.c:457:14
+    #2 0x7f5a76b9fb4a in PR_CreateThread /builds/slave/m-in-l64-asan-0000000000000000/build/src/nsprpub/pr/src/pthreads/ptthread.c:548:12
+    #3 0x7f5a5fa7162b in nsThread::Init() /builds/slave/m-in-l64-asan-0000000000000000/build/src/xpcom/threads/nsThread.cpp:634:8
+    #4 0x7f5a5fa78d4f in nsThreadManager::NewThread(unsigned int, unsigned int, nsIThread**) /builds/slave/m-in-l64-asan-0000000000000000/build/src/xpcom/threads/nsThreadManager.cpp:253:17
+    #5 0x7f5a5faf1f5e in NS_NewThread(nsIThread**, nsIRunnable*, unsigned int) /builds/slave/m-in-l64-asan-0000000000000000/build/src/xpcom/glue/nsThreadUtils.cpp:64:5
+    #6 0x7f5a6221ad98 in mozilla::image::DecodePool::DecodePool() /builds/slave/m-in-l64-asan-0000000000000000/build/src/image/DecodePool.cpp:263:19
+    #7 0x7f5a6221a310 in Singleton /builds/slave/m-in-l64-asan-0000000000000000/build/src/image/DecodePool.cpp:220:22
+    #8 0x7f5a6221a310 in mozilla::image::DecodePool::Initialize() /builds/slave/m-in-l64-asan-0000000000000000/build/src/image/DecodePool.cpp:212
+    #9 0x7f5a62273ce5 in mozilla::image::EnsureModuleInitialized() /builds/slave/m-in-l64-asan-0000000000000000/build/src/image/build/nsImageModule.cpp:103:3
+    #10 0x7f5a621d5b01 in imgLoader::CreateImageLoader() /builds/slave/m-in-l64-asan-0000000000000000/build/src/image/imgLoader.cpp:1147:3
+    #11 0x7f5a621d5dd8 in imgLoader::NormalLoader() /builds/slave/m-in-l64-asan-0000000000000000/build/src/image/imgLoader.cpp:1159:21
+    #12 0x7f5a6236dc76 in GetImgLoaderForDocument /builds/slave/m-in-l64-asan-0000000000000000/build/src/dom/base/nsContentUtils.cpp:3136:22
+    #13 0x7f5a6236dc76 in nsContentUtils::LoadImage(nsIURI*, nsINode*, nsIDocument*, nsIPrincipal*, nsIURI*, mozilla::net::ReferrerPolicy, imgINotificationObserver*, int, nsAString_internal const&, imgRequestProxy**, unsigned int) /builds/slave/m-in-l64-asan-0000000000000000/build/src/dom/base/nsContentUtils.cpp:3188
+Crash Annotation GraphicsCriticalError: |[0][GFX1]: Unknown image format 16 (t=3.91881) |[6616][GFX1]: Unknown image format 16 (t=291.104) |[6617][GFX1]: Unknown image format 16 (t=291.171) |[6618][GFX1]: Unknown image format 16 (t=291.204) |[6619][GFX1]: Unknown image format 16 (t=291.255) |[6620][GFX1]: Unknown image format 16 (t=291.288) |[6606][GFX1]: Unknown image format 16 (t=290.805) |[6607][GFX1]: Unknown image format 16 (t=290.854) |[6608][GFX1]: Unknown image format 16 (t=290.871) |[6609][GFX1]: Unknown image format 16 (t=290.904) |[6610][GFX1]: Unknown image format 16 (t=290.937) |[6611][GFX1]: Unknown image format 16 (t=290.954) |[6612][GFX1]: Unknown image format 16 (t=290.988) |[6613][GFX1]: Unknown image format 16 (t=291.021) |[6614][GFX1]: Unknown image format 16 (t=291.037) |[6615][GFX1]: Unknown image format 16 (t=291.071) [GFX1]: Unknown image format 16
+    #14 0x7f5a665abe33 in mozilla::css::ImageLoader::LoadImage(nsIURI*, nsIPrincipal*, nsIURI*, mozilla::css::ImageValue*) /builds/slave/m-in-l64-asan-0000000000000000/build/src/layout/style/ImageLoader.cpp:262:17
+Crash Annotation GraphicsCriticalError: |[0][GFX1]: Unknown image format 16 (t=3.91881) |[6616][GFX1]: Unknown image format 16 (t=291.104) |[6617][GFX1]: Unknown image format 16 (t=291.171) |[6618][GFX1]: Unknown image format 16 (t=291.204) |[6619][GFX1]: Unknown image format 16 (t=291.255) |[6620][GFX1]: Unknown image format 16 (t=291.288) |[6621][GFX1]: Unknown image format 16 (t=291.338) |[6607][GFX1]: Unknown image format 16 (t=290.854) |[6608][GFX1]: Unknown image format 16 (t=290.871) |[6609][GFX1]: Unknown image format 16 (t=290.904) |[6610][GFX1]: Unknown image format 16 (t=290.937) |[6611][GFX1]: Unknown image format 16 (t=290.954) |[6612][GFX1]: Unknown image format 16 (t=290.988) |[6613][GFX1]: Unknown image format 16 (t=291.021) |[6614][GFX1]: Unknown image format 16 (t=291.037) |[6615][GFX1]: Unknown image format 16 (t=291.071) [GFX1]: Unknown image format 16
+    #15 0x7f5a66669696 in mozilla::css::ImageValue::ImageValue(nsIURI*, nsStringBuffer*, nsIURI*, nsIPrincipal*, nsIDocument*) /builds/slave/m-in-l64-asan-0000000000000000/build/src/layout/style/nsCSSValue.cpp:2655:3
+    #16 0x7f5a66663365 in nsCSSValue::StartImageLoad(nsIDocument*) const /builds/slave/m-in-l64-asan-0000000000000000/build/src/layout/style/nsCSSValue.cpp:746:9
+    #17 0x7f5a666c1ea9 in TryToStartImageLoadOnValue(nsCSSValue const&, nsIDocument*, nsStyleContext*, nsCSSProperty, bool) /builds/slave/m-in-l64-asan-0000000000000000/build/src/layout/style/nsCSSDataBlock.cpp:83:5
+    #18 0x7f5a666c1d23 in TryToStartImageLoad(nsCSSValue const&, nsIDocument*, nsStyleContext*, nsCSSProperty, bool) /builds/slave/m-in-l64-asan-0000000000000000/build/src/layout/style/nsCSSDataBlock.cpp:118:7
+    #19 0x7f5a66619e0d in MapSinglePropertyInto(nsCSSProperty, nsCSSValue const*, nsCSSValue*, nsRuleData*) /builds/slave/m-in-l64-asan-0000000000000000/build/src/layout/style/nsCSSDataBlock.cpp:171:5
+    #20 0x7f5a66618f70 in nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData*) const /builds/slave/m-in-l64-asan-0000000000000000/build/src/layout/style/nsCSSDataBlock.cpp:318:9
+    #21 0x7f5a6657cb3c in mozilla::css::Declaration::MapRuleInfoInto(nsRuleData*) /builds/slave/m-in-l64-asan-0000000000000000/build/src/layout/style/Declaration.cpp:98:3
+Crash Annotation GraphicsCriticalError: |[0][GFX1]: Unknown image format 16 (t=3.91881) |[6616][GFX1]: Unknown image format 16 (t=291.104) |[6617][GFX1]: Unknown image format 16 (t=291.171) |[6618][GFX1]: Unknown image format 16 (t=291.204) |[6619][GFX1]: Unknown image format 16 (t=291.255) |[6620][GFX1]: Unknown image format 16 (t=291.288) |[6621][GFX1]: Unknown image format 16 (t=291.338) |[6622][GFX1]: Unknown image format 16 (t=291.371) |[6608][GFX1]: Unknown image format 16 (t=290.871) |[6609][GFX1]: Unknown image format 16 (t=290.904) |[6610][GFX1]: Unknown image format 16 (t=290.937) |[6611][GFX1]: Unknown image format 16 (t=290.954) |[6612][GFX1]: Unknown image format 16 (t=290.988) |[6613][GFX1]: Unknown image format 16 (t=291.021) |[6614][GFX1]: Unknown image format 16 (t=291.037) |[6615][GFX1]: Unknown image format 16 (t=291.071) [GFX1]: Unknown image format 16
+    #22 0x7f5a6677817b in nsRuleNode::WalkRuleTree(nsStyleStructID, nsStyleContext*) /builds/slave/m-in-l64-asan-0000000000000000/build/src/layout/style/nsRuleNode.cpp:2354:7
+Crash Annotation GraphicsCriticalError: |[0][GFX1]: Unknown image format 16 (t=3.91881) |[6616][GFX1]: Unknown image format 16 (t=291.104) |[6617][GFX1]: Unknown image format 16 (t=291.171) |[6618][GFX1]: Unknown image format 16 (t=291.204) |[6619][GFX1]: Unknown image format 16 (t=291.255) |[6620][GFX1]: Unknown image format 16 (t=291.288) |[6621][GFX1]: Unknown image format 16 (t=291.338) |[6622][GFX1]: Unknown image format 16 (t=291.371) |[6623][GFX1]: Unknown image format 16 (t=291.404) |[6609][GFX1]: Unknown image format 16 (t=290.904) |[6610][GFX1]: Unknown image format 16 (t=290.937) |[6611][GFX1]: Unknown image format 16 (t=290.954) |[6612][GFX1]: Unknown image format 16 (t=290.988) |[6613][GFX1]: Unknown image format 16 (t=291.021) |[6614][GFX1]: Unknown image format 16 (t=291.037) |[6615][GFX1]: Unknown image format 16 (t=291.071) [GFX1]: Unknown image format 16
+    #23 0x7f5a669a4b41 in GetStyleBackground<true> /builds/slave/m-in-l64-asan-0000000000000000/build/src/obj-firefox/dist/include/nsStyleStructList.h:81:1
+    #24 0x7f5a669a4b41 in DoGetStyleBackground<true> /builds/slave/m-in-l64-asan-0000000000000000/build/src/obj-firefox/dist/include/nsStyleStructList.h:81
+    #25 0x7f5a669a4b41 in StyleBackground /builds/slave/m-in-l64-asan-0000000000000000/build/src/obj-firefox/dist/include/nsStyleStructList.h:81
+    #26 0x7f5a669a4b41 in StartBackgroundImageLoads /builds/slave/m-in-l64-asan-0000000000000000/build/src/layout/style/nsStyleContext.h:429
+    #27 0x7f5a669a4b41 in nsCSSFrameConstructor::ConstructFramesFromItem(nsFrameConstructorState&, nsCSSFrameConstructor::FrameConstructionItemList::Iterator&, nsContainerFrame*, nsFrameItems&) /builds/slave/m-in-l64-asan-0000000000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:6082
+    #28 0x7f5a66992112 in ConstructFramesFromItemList /builds/slave/m-in-l64-asan-0000000000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:10520:5
+    #29 0x7f5a66992112 in nsCSSFrameConstructor::CreateAnonymousFrames(nsFrameConstructorState&, nsIContent*, nsContainerFrame*, PendingBinding*, nsFrameItems&) /builds/slave/m-in-l64-asan-0000000000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:4150
+    #30 0x7f5a6698e7f4 in nsCSSFrameConstructor::BeginBuildingScrollFrame(nsFrameConstructorState&, nsIContent*, nsStyleContext*, nsContainerFrame*, nsIAtom*, bool, nsContainerFrame*&) /builds/slave/m-in-l64-asan-0000000000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:4564:3
+    #31 0x7f5a6698b4b5 in nsCSSFrameConstructor::SetUpDocElementContainingBlock(nsIContent*) /builds/slave/m-in-l64-asan-0000000000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:2891:25
+    #32 0x7f5a669870ca in nsCSSFrameConstructor::ConstructDocElementFrame(mozilla::dom::Element*, nsILayoutHistoryState*) /builds/slave/m-in-l64-asan-0000000000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:2411:3
+    #33 0x7f5a669aaf97 in nsCSSFrameConstructor::ContentRangeInserted(nsIContent*, nsIContent*, nsIContent*, nsILayoutHistoryState*, bool) /builds/slave/m-in-l64-asan-0000000000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:7653:7
+Crash Annotation GraphicsCriticalError: |[0][GFX1]: Unknown image format 16 (t=3.91881) |[6616][GFX1]: Unknown image format 16 (t=291.104) |[6617][GFX1]: Unknown image format 16 (t=291.171) |[6618][GFX1]: Unknown image format 16 (t=291.204) |[6619][GFX1]: Unknown image format 16 (t=291.255) |[6620][GFX1]: Unknown image format 16 (t=291.288) |[6621][GFX1]: Unknown image format 16 (t=291.338) |[6622][GFX1]: Unknown image format 16 (t=291.371) |[6623][GFX1]: Unknown image format 16 (t=291.404) |[6624][GFX1]: Unknown image format 16 (t=291.421) |[6610][GFX1]: Unknown image format 16 (t=290.937) |[6611][GFX1]: Unknown image format 16 (t=290.954) |[6612][GFX1]: Unknown image format 16 (t=290.988) |[6613][GFX1]: Unknown image format 16 (t=291.021) |[6614][GFX1]: Unknown image format 16 (t=291.037) |[6615][GFX1]: Unknown image format 16 (t=291.071) [GFX1]: Unknown image format 16
+Crash Annotation GraphicsCriticalError: |[0][GFX1]: Unknown image format 16 (t=3.91881) |[6616][GFX1]: Unknown image format 16 (t=291.104) |[6617][GFX1]: Unknown image format 16 (t=291.171) |[6618][GFX1]: Unknown image format 16 (t=291.204) |[6619][GFX1]: Unknown image format 16 (t=291.255) |[6620][GFX1]: Unknown image format 16 (t=291.288) |[6621][GFX1]: Unknown image format 16 (t=291.338) |[6622][GFX1]: Unknown image format 16 (t=291.371) |[6623][GFX1]: Unknown image format 16 (t=291.404) |[6624][GFX1]: Unknown image format 16 (t=291.421) |[6625][GFX1]: Unknown image format 16 (t=291.438) |[6611][GFX1]: Unknown image format 16 (t=290.954) |[6612][GFX1]: Unknown image format 16 (t=290.988) |[6613][GFX1]: Unknown image format 16 (t=291.021) |[6614][GFX1]: Unknown image format 16 (t=291.037) |[6615][GFX1]: Unknown image format 16 (t=291.071) [GFX1]: Unknown image format 16
+Crash Annotation GraphicsCriticalError: |[0][GFX1]: Unknown image format 16 (t=3.91881) |[6616][GFX1]: Unknown image format 16 (t=291.104) |[6617][GFX1]: Unknown image format 16 (t=291.171) |[6618][GFX1]: Unknown image format 16 (t=291.204) |[6619][GFX1]: Unknown image format 16 (t=291.255) |[6620][GFX1]: Unknown image format 16 (t=291.288) |[6621][GFX1]: Unknown image format 16 (t=291.338) |[6622][GFX1]: Unknown image format 16 (t=291.371) |[6623][GFX1]: Unknown image format 16 (t=291.404) |[6624][GFX1]: Unknown image format 16 (t=291.421) |[6625][GFX1]: Unknown image format 16 (t=291.438) |[6626][GFX1]: Unknown image format 16 (t=291.455) |[6612][GFX1]: Unknown image format 16 (t=290.988) |[6613][GFX1]: Unknown image format 16 (t=291.021) |[6614][GFX1]: Unknown image format 16 (t=291.037) |[6615][GFX1]: Unknown image format 16 (t=291.071) [GFX1]: Unknown image format 16
+    #34 0x7f5a66b489d7 in PresShell::Initialize(int, int) /builds/slave/m-in-l64-asan-0000000000000000/build/src/layout/base/nsPresShell.cpp:1726:7
+Crash Annotation GraphicsCriticalError: |[0][GFX1]: Unknown image format 16 (t=3.91881) |[6616][GFX1]: Unknown image format 16 (t=291.104) |[6617][GFX1]: Unknown image format 16 (t=291.171) |[6618][GFX1]: Unknown image format 16 (t=291.204) |[6619][GFX1]: Unknown image format 16 (t=291.255) |[6620][GFX1]: Unknown image format 16 (t=291.288) |[6621][GFX1]: Unknown image format 16 (t=291.338) |[6622][GFX1]: Unknown image format 16 (t=291.371) |[6623][GFX1]: Unknown image format 16 (t=291.404) |[6624][GFX1]: Unknown image format 16 (t=291.421) |[6625][GFX1]: Unknown image format 16 (t=291.438) |[6626][GFX1]: Unknown image format 16 (t=291.455) |[6627][GFX1]: Unknown image format 16 (t=291.488) |[6613][GFX1]: Unknown image format 16 (t=291.021) |[6614][GFX1]: Unknown image format 16 (t=291.037) |[6615][GFX1]: Unknown image format 16 (t=291.071) [GFX1]: Unknown image format 16
+    #35 0x7f5a6268fbc1 in nsContentSink::StartLayout(bool) /builds/slave/m-in-l64-asan-0000000000000000/build/src/dom/base/nsContentSink.cpp:1210:19
+Crash Annotation GraphicsCriticalError: |[0][GFX1]: Unknown image format 16 (t=3.91881) |[6616][GFX1]: Unknown image format 16 (t=291.104) |[6617][GFX1]: Unknown image format 16 (t=291.171) |[6618][GFX1]: Unknown image format 16 (t=291.204) |[6619][GFX1]: Unknown image format 16 (t=291.255) |[6620][GFX1]: Unknown image format 16 (t=291.288) |[6621][GFX1]: Unknown image format 16 (t=291.338) |[6622][GFX1]: Unknown image format 16 (t=291.371) |[6623][GFX1]: Unknown image format 16 (t=291.404) |[6624][GFX1]: Unknown image format 16 (t=291.421) |[6625][GFX1]: Unknown image format 16 (t=291.438) |[6626][GFX1]: Unknown image format 16 (t=291.455) |[6627][GFX1]: Unknown image format 16 (t=291.488) |[6628][GFX1]: Unknown image format 16 (t=291.522) |[6614][GFX1]: Unknown image format 16 (t=291.037) |[6615][GFX1]: Unknown image format 16 (t=291.071) [GFX1]: Unknown image format 16
+    #36 0x7f5a61a2a426 in nsHtml5TreeOpExecutor::StartLayout() /builds/slave/m-in-l64-asan-0000000000000000/build/src/parser/html/nsHtml5TreeOpExecutor.cpp:612:3
+    #37 0x7f5a61a36b7e in nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor*, nsIContent**) /builds/slave/m-in-l64-asan-0000000000000000/build/src/parser/html/nsHtml5TreeOperation.cpp:990:7
+    #38 0x7f5a61a27d77 in nsHtml5TreeOpExecutor::RunFlushLoop() /builds/slave/m-in-l64-asan-0000000000000000/build/src/parser/html/nsHtml5TreeOpExecutor.cpp:448:21
+    #39 0x7f5a61a2c80b in nsHtml5ExecutorFlusher::Run() /builds/slave/m-in-l64-asan-0000000000000000/build/src/parser/html/nsHtml5StreamParser.cpp:128:9
+    #40 0x7f5a5fa74b86 in nsThread::ProcessNextEvent(bool, bool*) /builds/slave/m-in-l64-asan-0000000000000000/build/src/xpcom/threads/nsThread.cpp:1068:7
+    #41 0x7f5a5faf2f6c in NS_ProcessNextEvent(nsIThread*, bool) /builds/slave/m-in-l64-asan-0000000000000000/build/src/xpcom/glue/nsThreadUtils.cpp:290:10
+    #42 0x7f5a6083f4ef in mozilla::ipc::MessagePump::Run(base::MessagePump::Delegate*) /builds/slave/m-in-l64-asan-0000000000000000/build/src/ipc/glue/MessagePump.cpp:100:21
+    #43 0x7f5a607b3d28 in RunInternal /builds/slave/m-in-l64-asan-0000000000000000/build/src/ipc/chromium/src/base/message_loop.cc:232:3
+    #44 0x7f5a607b3d28 in RunHandler /builds/slave/m-in-l64-asan-0000000000000000/build/src/ipc/chromium/src/base/message_loop.cc:225
+    #45 0x7f5a607b3d28 in MessageLoop::Run() /builds/slave/m-in-l64-asan-0000000000000000/build/src/ipc/chromium/src/base/message_loop.cc:205
+    #46 0x7f5a662060af in nsBaseAppShell::Run() /builds/slave/m-in-l64-asan-0000000000000000/build/src/widget/nsBaseAppShell.cpp:156:3
+    #47 0x7f5a6813ea91 in nsAppStartup::Run() /builds/slave/m-in-l64-asan-0000000000000000/build/src/toolkit/components/startup/nsAppStartup.cpp:284:19
+Crash Annotation GraphicsCriticalError: |[0][GFX1]: Unknown image format 16 (t=3.91881) |[6616][GFX1]: Unknown image format 16 (t=291.104) |[6617][GFX1]: Unknown image format 16 (t=291.171) |[6618][GFX1]: Unknown image format 16 (t=291.204) |[6619][GFX1]: Unknown image format 16 (t=291.255) |[6620][GFX1]: Unknown image format 16 (t=291.288) |[6621][GFX1]: Unknown image format 16 (t=291.338) |[6622][GFX1]: Unknown image format 16 (t=291.371) |[6623][GFX1]: Unknown image format 16 (t=291.404) |[6624][GFX1]: Unknown image format 16 (t=291.421) |[6625][GFX1]: Unknown image format 16 (t=291.438) |[6626][GFX1]: Unknown image format 16 (t=291.455) |[6627][GFX1]: Unknown image format 16 (t=291.488) |[6628][GFX1]: Unknown image format 16 (t=291.522) |[6629][GFX1]: Unknown image format 16 (t=291.554) |[6615][GFX1]: Unknown image format 16 (t=291.071) [GFX1]: Unknown image format 16
+    #48 0x7f5a6828bbd3 in XREMain::XRE_mainRun() /builds/slave/m-in-l64-asan-0000000000000000/build/src/toolkit/xre/nsAppRunner.cpp:4213:10
+    #49 0x7f5a6828d173 in XREMain::XRE_main(int, char**, nsXREAppData const*) /builds/slave/m-in-l64-asan-0000000000000000/build/src/toolkit/xre/nsAppRunner.cpp:4332:8
+    #50 0x7f5a6828e04a in XRE_main /builds/slave/m-in-l64-asan-0000000000000000/build/src/toolkit/xre/nsAppRunner.cpp:4423:16
+    #51 0x4dfb47 in do_main /builds/slave/m-in-l64-asan-0000000000000000/build/src/browser/app/nsBrowserApp.cpp:251:10
+    #52 0x4dfb47 in main /builds/slave/m-in-l64-asan-0000000000000000/build/src/browser/app/nsBrowserApp.cpp:387
+    #53 0x7f5a7913dec4 in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x21ec4)
+
+SUMMARY: AddressSanitizer: heap-buffer-overflow /builds/slave/m-in-l64-asan-0000000000000000/build/src/media/libpng/pngrutil.c:4017:31 in MOZ_PNG_read_filt_row_a
+Shadow bytes around the buggy address:
+  0x0c208005c250: fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd fa
+  0x0c208005c260: fa fa fa fa fa fa fa fa fd fd fd fd fd fd fd fd
+  0x0c208005c270: fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd
+  0x0c208005c280: fa fa fa fa fa fa fa fa 00 00 00 00 00 00 00 00
+  0x0c208005c290: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 01
+=>0x0c208005c2a0:[fa]fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x0c208005c2b0: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x0c208005c2c0: fa fa fa fa fa fa fa fa fd fd fd fd fd fd fd fd
+  0x0c208005c2d0: fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd fa
+  0x0c208005c2e0: fa fa fa fa fa fa fa fa fd fd fd fd fd fd fd fd
+  0x0c208005c2f0: fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd fa
+Shadow byte legend (one shadow byte represents 8 application bytes):
+  Addressable:           00
+  Partially addressable: 01 02 03 04 05 06 07 
+  Heap left redzone:       fa
+  Heap right redzone:      fb
+  Freed heap region:       fd
+  Stack left redzone:      f1
+  Stack mid redzone:       f2
+  Stack right redzone:     f3
+  Stack partial redzone:   f4
+  Stack after return:      f5
+  Stack use after scope:   f8
+  Global redzone:          f9
+  Global init order:       f6
+  Poisoned by user:        f7
+  Container overflow:      fc
+  Array cookie:            ac
+  Intra object redzone:    bb
+  ASan internal:           fe
+  Left alloca redzone:     ca
+  Right alloca redzone:    cb

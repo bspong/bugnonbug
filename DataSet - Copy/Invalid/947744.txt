@@ -1,0 +1,166 @@
+Holly crashes almost instantly when OMTC is enabled and layers.use-deprecated-textures=false
+Created attachment 8344385
+WinDBG Log File
+
+I was playing around with some configuration options in the latest build of Holly, mainly trying to force OpenGL to be used instead of DirectX (not even sure that is possible on Windows these days) and I found a combination that causes Holly to insta-crash on startup. 
+
+I have the following options set in my configuration:
+layers.acceleration.force-enabled=true
+layers.async-video.enabled=true
+layers.offmainthreadcomposition.animate-opacity=true
+layers.offmainthreadcomposition.animate-transform=true
+layers.offmainthreadcomposition.enabled
+layers.use-deprecated-textures=false
+layers.prefer-opengl=true
+
+Setting layers.prefer-opengl back to false has no affect on this issue and once I set layers.use-deprecated-textures=true, the crash is gone and Holly works like normal. If I disable OMTC, setting layers.use-deprecated-textures=false does not cause a crash.
+
+Crash Report: https://crash-stats.mozilla.com/report/index/0cd66343-a6c4-49f1-95c2-e8a112131208
+
+Here is the exception analysis from WinDBG:
+FAULTING_IP: 
+xul!gfxPlatform::GetSourceSurfaceForSurface+d1 [c:\builds\moz2_slave\h-w32-ntly-0000000000000000000\build\gfx\thebes\gfxplatform.cpp @ 761]
+519b48a1 8b03            mov     eax,dword ptr [ebx]
+
+EXCEPTION_RECORD:  ffffffff -- (.exr 0xffffffffffffffff)
+ExceptionAddress: 519b48a1 (xul!gfxPlatform::GetSourceSurfaceForSurface+0x000000d1)
+   ExceptionCode: c0000005 (Access violation)
+  ExceptionFlags: 00000000
+NumberParameters: 2
+   Parameter[0]: 00000000
+   Parameter[1]: 00000000
+Attempt to read from address 00000000
+
+CONTEXT:  00000000 -- (.cxr 0x0;r)
+eax=00000000 ebx=00000000 ecx=22d3dec0 edx=22d3dec0 esi=23042760 edi=00000001
+eip=519b48a1 esp=007be410 ebp=007be45c iopl=0         nv up ei pl nz na pe nc
+cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00010206
+xul!gfxPlatform::GetSourceSurfaceForSurface+0xd1:
+519b48a1 8b03            mov     eax,dword ptr [ebx]  ds:002b:00000000=????????
+
+FAULTING_THREAD:  000feff0
+
+DEFAULT_BUCKET_ID:  NULL_POINTER_READ
+
+PROCESS_NAME:  firefox.exe
+
+ERROR_CODE: (NTSTATUS) 0xc0000005 - The instruction at 0x%08lx referenced memory at 0x%08lx. The memory could not be %s.
+
+EXCEPTION_CODE: (NTSTATUS) 0xc0000005 - The instruction at 0x%08lx referenced memory at 0x%08lx. The memory could not be %s.
+
+EXCEPTION_PARAMETER1:  00000000
+
+EXCEPTION_PARAMETER2:  00000000
+
+READ_ADDRESS:  00000000 
+
+FOLLOWUP_IP: 
+xul!gfxPlatform::GetSourceSurfaceForSurface+d1 [c:\builds\moz2_slave\h-w32-ntly-0000000000000000000\build\gfx\thebes\gfxplatform.cpp @ 761]
+519b48a1 8b03            mov     eax,dword ptr [ebx]
+
+NTGLOBALFLAG:  70
+
+APPLICATION_VERIFIER_FLAGS:  0
+
+FAULTING_LOCAL_VARIABLE_NAME:  aTarget
+
+APP:  firefox.exe
+
+ANALYSIS_VERSION: 6.3.9600.16384 (debuggers(dbg).130821-1623) x86fre
+
+PRIMARY_PROBLEM_CLASS:  NULL_POINTER_READ
+
+BUGCHECK_STR:  APPLICATION_FAULT_NULL_POINTER_READ
+
+LAST_CONTROL_TRANSFER:  from 52694010 to 519b48a1
+
+STACK_TEXT:  
+007be45c 52694010 007be47c 00000000 23042760 xul!gfxPlatform::GetSourceSurfaceForSurface+0xd1
+007be4bc 526933c9 23042760 23feec08 23feec00 xul!mozilla::layers::BufferTextureClient::UpdateSurface+0x87
+007be508 525824a0 0c1f8c90 00000000 1cbbc080 xul!mozilla::layers::ImageClientSingle::UpdateImage+0x471
+007be528 5254806c 00000002 00000010 007bf068 xul!mozilla::layers::ClientImageLayer::RenderLayer+0x10e
+007be5a8 5254806c 1cbbc268 0a14da80 00000000 xul!mozilla::layers::ClientContainerLayer::RenderLayer+0xf7
+007be628 5247edf2 00000002 0a14da80 007be84c xul!mozilla::layers::ClientContainerLayer::RenderLayer+0xf7
+007be684 5277c3e8 0221c000 519dbcf0 007be84c xul!mozilla::layers::ClientLayerManager::EndTransactionInternal+0x68
+007be6a4 519f646b 519dbcf0 007be84c 00000002 xul!mozilla::layers::ClientLayerManager::EndTransaction+0x26
+007be784 51afb3ca 007be7f4 007be84c 0000000d xul!nsDisplayList::PaintForFrame+0x38b
+007be79c 519fc811 007be7f4 00000000 0000000d xul!nsDisplayList::PaintRoot+0x7a
+007beb2c 519cd10e 00000000 18673840 007bec20 xul!nsLayoutUtils::PaintFrame+0x3b1
+007bebd4 51af1273 07e06c40 007bec20 00000001 xul!PresShell::Paint+0x13e
+007bec38 51af1162 07e06c40 00000001 00000001 xul!nsViewManager::ProcessPendingUpdatesForView+0x103
+007bec50 519fbd95 00000000 00000008 eb71fe99 xul!nsViewManager::ProcessPendingUpdates+0x36
+007bed94 51ab5612 06a983a0 eb71fe99 0004ed0b xul!nsRefreshDriver::Tick+0x485
+007bedf0 51a99295 109a96c0 108d47b0 022183a0 xul!mozilla::RefreshDriverTimer::Tick+0x102
+007bee0c 51a54cf4 2245a8c0 00000000 269afee0 xul!nsTimerImpl::Fire+0xc5
+007bee80 51a79efd 012183a0 00000001 007bee9f xul!nsThread::ProcessNextEvent+0x2b4
+007bee94 5199fc9e 012183a0 00000001 00000002 xul!NS_ProcessNextEvent+0x2d
+007beebc 51b6e11b 2245a8c0 007bef40 51a54c53 xul!nsThread::Shutdown+0x10c
+007beec8 51a54c53 261ff530 218fdd40 00000000 xul!nsRunnableMethodImpl<enum tag_nsresult (__stdcall nsIThread::*)(void),void,1>::Run+0x11
+007bef40 51a79efd 012183a0 00000001 007bef5f xul!nsThread::ProcessNextEvent+0x213
+007bef54 5199fc9e 012183a0 00000001 00000002 xul!NS_ProcessNextEvent+0x2d
+007bef7c 51b6e11b 218fdd40 007bf000 51a54c53 xul!nsThread::Shutdown+0x10c
+007bef88 51a54c53 260eedc0 0220e940 02228360 xul!nsRunnableMethodImpl<enum tag_nsresult (__stdcall nsIThread::*)(void),void,1>::Run+0x11
+007bf000 51a79efd 012183a0 00000000 007bf01f xul!nsThread::ProcessNextEvent+0x213
+007bf014 51c89496 012183a0 00000000 02228360 xul!NS_ProcessNextEvent+0x2d
+007bf040 51c7cc0e 01228360 21fcbadf 022183a0 xul!mozilla::ipc::MessagePump::Run+0x46
+007bf078 51c7d0ff 0690e0b0 00000001 51c79c00 xul!MessageLoop::RunHandler+0x51
+007bf098 518b82f2 80000000 06f10d40 007bf0b4 xul!MessageLoop::Run+0x19
+007bf0a8 51b6180a 0690e0b0 007bf0c4 5211cb3a xul!nsBaseAppShell::Run+0x2e
+007bf0b4 5211cb3a 0690e0b0 66a678c0 007bf1a4 xul!nsAppShell::Run+0x16
+007bf0c4 51924b6e 06f10d40 007bf1e8 74ce1199 xul!nsAppStartup::Run+0x20
+007bf1a4 518c601c 007bf1e8 007bf32c 007bf1e8 xul!XREMain::XRE_mainRun+0x4a6
+007bf1c8 51b4b2c3 007bf1e8 00000001 00ac6738 xul!XREMain::XRE_main+0xe2
+007bf2e8 003919c2 00000001 00ac6738 007bf32c xul!XRE_main+0x4e
+007bf9d4 00392079 00000001 02218100 00000001 firefox!do_main+0x4ad
+007bfa64 00392183 00000001 00ac6738 00000000 firefox!NS_internal_main+0x11e
+007bfa98 00392ad3 00000000 00ac3b00 00ac4ed0 firefox!wmain+0xf0
+007bfadc 74f9495d fee4b000 007bfb2c 774f98ee firefox!__tmainCRTStartup+0x122
+007bfae8 774f98ee fee4b000 2347fbcb 00000000 KERNEL32!BaseThreadInitThunk+0xe
+007bfb2c 774f98c4 ffffffff 774ee0d3 00000000 ntdll!__RtlUserThreadStart+0x20
+007bfb3c 00000000 00392bf4 fee4b000 00000000 ntdll!_RtlUserThreadStart+0x1b
+
+
+STACK_COMMAND:  .cxr 0x0 ; kb
+
+FAULTING_SOURCE_LINE:  c:\builds\moz2_slave\h-w32-ntly-0000000000000000000\build\gfx\thebes\gfxplatform.cpp
+
+FAULTING_SOURCE_FILE:  c:\builds\moz2_slave\h-w32-ntly-0000000000000000000\build\gfx\thebes\gfxplatform.cpp
+
+FAULTING_SOURCE_LINE_NUMBER:  761
+
+FAULTING_SOURCE_CODE:  
+   757:     }
+   758:     srcBuffer = aTarget->CreateSourceSurfaceFromNativeSurface(surf);
+   759:   } else
+   760: #endif
+>  761:   if (aSurface->CairoSurface() && aTarget->GetType() == BACKEND_CAIRO) {
+   762:     // If this is an xlib cairo surface we don't want to fetch it into memory
+   763:     // because this is a major slow down.
+   764:     NativeSurface surf;
+   765:     surf.mFormat = format;
+   766:     surf.mType = NATIVE_SURFACE_CAIRO_SURFACE;
+
+
+SYMBOL_STACK_INDEX:  0
+
+SYMBOL_NAME:  xul!gfxPlatform::GetSourceSurfaceForSurface+d1
+
+FOLLOWUP_NAME:  MachineOwner
+
+MODULE_NAME: xul
+
+IMAGE_NAME:  xul.dll
+
+DEBUG_FLR_IMAGE_TIMESTAMP:  52a1dedd
+
+FAILURE_BUCKET_ID:  NULL_POINTER_READ_c0000005_xul.dll!gfxPlatform::GetSourceSurfaceForSurface
+
+BUCKET_ID:  APPLICATION_FAULT_NULL_POINTER_READ_xul!gfxPlatform::GetSourceSurfaceForSurface+d1
+
+ANALYSIS_SOURCE:  UM
+
+FAILURE_ID_HASH_STRING:  um:null_pointer_read_c0000005_xul.dll!gfxplatform::getsourcesurfaceforsurface
+
+FAILURE_ID_HASH:  {3e1e3b00-ab4a-f757-428d-14bcef1a1193}
+
+Followup: MachineOwner

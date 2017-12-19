@@ -1,0 +1,331 @@
+<selects> behave inconsistently on Reload
+User-Agent:       Mozilla/4.76 [en] (X11; U; SunOS 5.8 sun4u)
+Build Identifier: 1.0
+
+I have a page involves javascript code, the page has 3 main cyclic fields:
+category, project and task, category is listed in the HTML body, while project
+value is set when one of the category is selectd, and task value is set when one
+of the project is selected. when everything is done, it will call a cgi code
+....
+the bug is that when the cgi is done, the result page is show and then the Back
+button of the browser is click, this page is shown up again, now only the
+selected category is set, but the project and task field is "none". 
+
+it's either the javascript engine is not dectecting the action or the history
+value is not correct. I've test the behaviou with Netscape 4.76 in both Sun
+Solaris and Windows, and IE in windows, All of those browsers can reset to the
+previous selected value (Category, Project and task) when back botton is click.
+
+now, save the codes below to a html file, select something, fill in dummy
+info....hit enter won't work as no cgi code found, butg you can reproduce it
+with Reload button, as you see, the category is set, while project and task is
+None.
+
+
+
+
+#################  cut here ##########################
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="content-type" CONTENT="text/html; charset=ISO-8859-1">
+<TITLE>Project Time Tracker (Enter Data)</TITLE></HEAD>
+<BODY background=./images/gray_brick_bg.gif BGCOLOR=ghostwhite>
+<SCRIPT language="JavaScript">
+
+    var startFormTimeID;
+    var submitClicked = false;
+
+    function startFormTime() {
+      return window.setInterval(setFormTime, 1000);
+    }
+    function stopFormTime() {
+      window.clearInterval(startFormTimeID);
+    }
+
+    function setFormTime() {
+      var today = new Date();
+      var year, day, month, hour, minute, second;
+      var form = window.document.TimeTrackForm;
+
+      year       = today.getFullYear();
+          day    = today.getDate();
+      month  = today.getMonth()+1;
+      hour   = today.getHours();
+      minute = today.getMinutes();
+      second = today.getSeconds();
+      if( day    < 10 ) day    = "0" + day;
+      if( month  < 10 ) month  = "0" + month;
+      if( hour   < 10 ) hour   = "0" + hour;
+      if( minute < 10 ) minute = "0" + minute;
+      if( second < 10 ) second = "0" + second;
+      form.date.value = month + "/" + day + "/" + year;
+      form.time.value = hour + ":" + minute + ":" + second;
+    }
+    function makeTask(name) {
+      this.name  = name;
+    }
+    function newTask(name) {
+      taskIndex++;
+      cats[categoryIndex][projectIndex][taskIndex] = new makeTask(name);
+      cats[categoryIndex][projectIndex].length++;
+    }
+    function makeProject(name) {
+      this.name = name;
+      this.length = 0;
+    }
+    function newProject(name) {
+      projectIndex++
+      taskIndex = -1;
+      cats[categoryIndex][projectIndex] = new makeProject(name);
+      cats[categoryIndex].length++;
+    }
+    function makeCategory(name) {
+      this.name = name;
+      this.length = 0;
+    }
+    function newCategory(name) {
+      categoryIndex++;
+      projectIndex = -1;
+      taskIndex    = -1;
+      cats[categoryIndex] = new makeCategory(name);
+    }
+    function relateProjects(form, categoryID, projectObject, taskObject) {
+      var categoryID;
+      if (categoryID >= 0) {
+        categoryIndex = categoryID;
+        with (form) {
+          with (taskObject) {
+            for (var i = options.length; i > 0; i--) options[i] = null;
+          }
+          with (projectObject) {
+            for (var i = options.length; i > 0; i--) options[i] = null;
+            for (var i = 0; i < cats[categoryIndex].length; i++) {
+              options[i] = new Option(cats[categoryIndex][i].name);
+              options[i].value = cats[categoryIndex][i].name;
+            }
+            options[0].selected = true;
+          }
+        }
+      }
+      projectIndex = 0;
+      taskIndex = 0;
+    }
+    function relateTasks(form, projectID, taskObject) {
+      if (projectID >= 0) {
+        projectIndex = projectID;
+        with (form) {
+          with (taskObject) {
+            for (var i = options.length; i > 0; i--) options[i] = null;
+            for (var i = 0; i < cats[categoryIndex][projectIndex].length; i++) {
+              options[i] = new
+Option(cats[categoryIndex][projectIndex][i].name);
+              options[i].value = cats[categoryIndex][projectIndex][i].name;
+            }
+            options[0].selected = true;
+          }
+        }
+      }
+      taskIndex = 0;
+    }
+    
+    function isFormReady(form) {
+      var passed = false;
+      var month10 = parseInt(form.date.value.substr(0,1));
+      var month01 = parseInt(form.date.value.substr(1,1));
+      var day10   = parseInt(form.date.value.substr(3,1));
+      var day01   = parseInt(form.date.value.substr(4,1));
+      var year    = parseInt(form.date.value.substr(6,4));
+      var hour10  = parseInt(form.time.value.substr(0,1));
+      var hour01  = parseInt(form.time.value.substr(1,1));
+      var min10   = parseInt(form.time.value.substr(3,1));
+      var min01   = parseInt(form.time.value.substr(4,1));
+      var sec10   = parseInt(form.time.value.substr(6,1));
+      var sec01   = parseInt(form.time.value.substr(7,1));
+      
+      var month   = month10* 10 + month01;
+      var day     = day10  * 10 + day01;
+      var hour    = hour10 * 10 + hour01;
+      var min     = min10  * 10 + min01;
+      var sec     = sec10  * 10 + sec01;
+
+      if( form.date.value == "" ) {
+        alert( "Date is empty." );
+      }
+      else if(
+form.date.value.search(/^[01][0-9]\/[0123][0-9]\/[12][90][0-9][0-9]$/) == -1 )
+      {
+        alert( "Date format must be MM/DD/YYYY" );
+      }
+      else if( form.time.value == "" ) {
+        alert( "Time is empty." );
+      }
+      else if(
+form.time.value.search(/^[012][0-9]:[012345][0-9]:[012345][0-9]$/) == -1 )
+      {
+        alert( "Time format must be HH:MM:SS" );
+      }
+      else if( day<0 || day>31 )
+      {
+        alert( "Day must be in range 1-31 in format MM/DD/YYYY: " + day );
+      }
+      else if( month<1 || month>12 )
+      {
+        alert( "Month must be in range 1-12 in format MM/DD/YYYY: " + month  );
+      }
+      else if( year<1995 || year>2010 )
+      {
+        alert( "Year must be in range 1995-2010 in format MM/DD/YYYY: " + year
+);
+      }
+      else if( hour<0 || hour>23 )
+      {
+        alert( "Hour must be in range 0-23 in format HH:MM:SS: " + hour );
+      }
+      else if( min<0 || min>59 )
+      {
+        alert( "Minutes must be in range 0-59 in format HH:MM:SS: " + min );
+      }
+      else if( sec<0 || sec>59 )
+      {
+        alert( "Seconds must be in range 0-59 in format HH:MM:SS: " + sec );
+      }
+      else if( form.project.options[0].selected == true ||
+          form.task.options[0].selected         == true ) {
+        alert( "Select a project AND task." );
+      }
+      else if( form.description.value == "" ) {
+        alert( "Description is empty." );
+      }
+      else if( form.description.value.indexOf("|") != -1 ) {
+        alert( "Description must not contain a '|'." );
+      }
+      else if( form.description.value.indexOf("#") != -1 ) {
+        alert( "Description must not contain a '#'." );
+      }
+      else if( form.description.value.indexOf("'") != -1 ) {
+        alert( "Description must not contain a '  \' ' (tick)." );
+      }
+      else if( form.charge.value == "" ) {
+        alert( "Charged time empty" );
+      }
+      else if( form.charge.value.search(/^([0-9]+|[0-9]+\.[0-9]*)$/) == -1 ||
+               parseFloat( form.charge.value ) == 0.0 ) {
+        alert( "Charged time should be a float or an integer > 0." );
+      }
+      else {
+        passed = true;
+      }
+      return passed;
+    }
+
+    function loadReport(form,player) {
+      var id, projectName, taskName, xurl;
+      
+      id          = form.project.selectedIndex;
+      projectName = form.project.options[id].text;
+      id          = form.task.selectedIndex;
+      taskName    = form.task.options[id].text;
+      if( projectName != 'None' && taskName != 'None' && 
+          form.user.value == "xx") {
+        xurl = 
+          "/cgi-bin/TimeTrack/timeTrack.cgi?" +
+          "request=userTaskReport" +
+          "&db=" + escape( form.db.value ) +
+          "&user=" + escape(form.user.value) +
+          "&project=" + escape(projectName) +
+          "&task=" + escape(taskName);
+        window.document.report.load( xurl, 300 );
+      }
+    }
+
+    var cats = new Array();
+    var categoryIndex = -1;
+    var projectIndex  = -1;
+    var taskIndex     = -1;
+
+    newCategory('None');
+     newProject('None');
+      newTask('None');
+    newCategory('ABC');
+     newProject('None');
+     newProject('P-ABC');
+      newTask('None');
+      newTask('P-ABC-T-1');
+      newTask('P-ABC-T-2');
+
+    onLoad = setFormTime;
+
+</SCRIPT>
+<STYLE TYPE='text/css'>
+  .enterForm    {position:relative; visibility:show;
+                 background-color:ghostwhite; color:#000088; 
+                 width:400;height:300;}
+  .Report       {position:relative;}
+</STYLE>
+
+<H1>Enter new project time data</H1>
+<FORM Name="TimeTrackForm" Method="POST" Action="xxx.cgi"
+ onSubmit = "return isFormReady(TimeTrackForm);">
+  <INPUT TYPE="hidden" NAME="request" VALUE="enterTime">
+
+  <INPUT TYPE="hidden" NAME="db" VALUE="/home/shengh/public_html/timetracker">
+  <TABLE CELLPADDING=0 CELLSPACING=0>
+  <TR><TH ALIGN=LEFT>User</TH>
+      <TD><INPUT NAME="user" TYPE="TEXT" VALUE="shengh" SIZE=8></TD></TR>
+  <TR><TH ALIGN=LEFT>Date</TH>
+      <TD><INPUT Name="date" TYPE=text VALUE="00/00/0000" SIZE=10
+           onFocus=stopFormTime()></TD>
+      <TH ALIGN=LEFT>Time</TH>
+      <TD><INPUT Name="time" TYPE=text VALUE="00:00:00" SIZE=8
+           onFocus=stopFormTime()></TD></TR>
+  <TR><TH ALIGN=LEFT>Category</TH>
+      <TD COLSPAN=3>
+        <SELECT NAME="category"
+onChange=relateProjects(this.form,this.selectedIndex,project,task)>
+          <OPTION SELECTED VALUE="None"> None
+          <OPTION VALUE="ABC">ABC
+          </SELECT></TD></TR>
+  <TR><TH ALIGN=LEFT>Project</TH>
+      <TD COLSPAN=3>
+        <SELECT NAME=project
+onChange=relateTasks(this.form,this.selectedIndex,task)>
+          <OPTION SELECTED VALUE="None"> None
+        </SELECT></TD></TR>
+  <TR><TH ALIGN=LEFT>Task</TH>
+      <TD COLSPAN=3>
+        <SELECT NAME=task onChange=loadReport(this.form,this.parent)>
+          <OPTION SELECTED VALUE="None"> None
+        </SELECT></TD></TR>
+  <TR><TH ALIGN=LEFT>Description</TH>
+      <TD COLSPAN=3><TEXTAREA Name="description" VALUE="" ROWS=3
+COLS=40></TEXTAREA></TD></TR>
+  <TR><TH ALIGN=LEFT>Charged Time</TH>
+      <TD><INPUT Name="charge" TYPE=TEXT VALUE="" SIZE=5> <B>h</B></TD></TR>
+  </TABLE>
+  <INPUT name=submitButton TYPE="submit" VALUE=" Enter ">
+  <INPUT TYPE="reset" VALUE=" Reset Fields ">
+</FORM>
+<SCRIPT language="JavaScript">
+
+    startFormTimeID = startFormTime()
+    window.document.TimeTrackForm.description.focus()
+        randomColor()
+
+</SCRIPT>
+<HR>
+<DIV ID="report" STYLE="position:absolute;"></DIV>
+</BODY>
+</HTML>
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. see above
+2.
+3.
+
+Actual Results:  
+see above
+
+Expected Results:  
+Back to previous selected value

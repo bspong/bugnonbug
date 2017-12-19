@@ -1,0 +1,119 @@
+Firefox 3.5.4, 3.5.5, 3.6b1 solaris x86 contrib builds crash on pages with font info
+User-Agent:       Mozilla/5.0 (X11; U; SunOS i86pc; en-US; rv:1.9.1) Gecko/20090625 Firefox/3.5
+Build Identifier: ftp://ftp.mozilla.org/pub/firefox/releases/3.5.5/contrib/solaris_tarball/firefox-3.5.5.en-US.solaris-10-fcs-i386.tar.bz2
+
+I have been using Firefox 3.5 and tried to upgrade to 3.5.4. It more or less works unless I try to browse a page with embedded fonts. If I visit any page that tries to download a font for use in the page, firefox crashes with a stack as below. The xterm shows some error messages which are also below. Seems the reason it was not crashing in 3.5 might have been due to bug 505678 which was fixed in 3.5.3.
+
+**
+Pango:ERROR:pangofc-fontmap.c:1592:pango_fc_font_description_from_pattern: assertion failed: (res == FcResultMatch)
+./run-mozilla.sh: line 131: 17440 Abort                   "$prog" ${1+"$@"}
+
+ gmem.c:136: failed to allocate 12 bytes
+
+current thread: t@1
+  [1] __lwp_kill(0x1, 0x6), at 0xfed95f85 
+  [2] _thr_kill(0x1, 0x6), at 0xfed92dfe 
+  [3] raise(0x6), at 0xfed411cb 
+  [4] abort(0xfc28e820, 0xfc1c8b4f, 0x27, 0x670000e6, 0x2e6d656d, 0x33313a63), at 0xfed21580 
+=>[5] g_logv(log_domain = 0xfc273f30 "GLib", log_level = G_LOG_LEVEL_ERROR, format = 0xfc273f38 "%s: failed to allocate %u bytes", args1 = 0x803a5dc), line 497 in "gmessages.c"
+  [6] g_log(log_domain = 0xfc273f30 "GLib", log_level = G_LOG_LEVEL_ERROR, format = 0xfc273f38 "%s: failed to allocate %u bytes", ... = 0xfc29c26c, ...), line 517 in "gmessages.c"
+  [7] g_malloc(n_bytes = 12U), line 136 in "gmem.c"
+  [8] g_slice_alloc(mem_size = 12U), line 824 in "gslice.c"
+  [9] g_string_sized_new(dfl_size = 2U), line 378 in "gstring.c"
+  [10] g_string_new(init = (nil)), line 404 in "gstring.c"
+  [11] g_log_default_handler(log_domain = 0xfc273f30 "GLib", log_level = 6, message = 0xf4587820 "gmem.c:136: failed to allocate 16 bytes", unused_data = (nil)), line 898 in "gmessages.c"
+  [12] g_logv(log_domain = 0xfc273f30 "GLib", log_level = G_LOG_LEVEL_ERROR, format = 0xfc273f38 "%s: failed to allocate %u bytes", args1 = 0x803ab78), line 474 in "gmessages.c"
+  [13] g_log(log_domain = 0xfc273f30 "GLib", log_level = G_LOG_LEVEL_ERROR, format = 0xfc273f38 "%s: failed to allocate %u bytes", ... = 0xfc29c26c, ...), line 517 in "gmessages.c"
+  [14] g_malloc(n_bytes = 16U), line 136 in "gmem.c"
+  [15] g_slice_alloc(mem_size = 16U), line 824 in "gslice.c"
+  [16] g_hash_table_insert_internal(hash_table = 0xf4587790, key = 0x74, value = 0xe464d268, keep_new_key = 0), line 762 in "ghash.c"
+  [17] g_hash_table_insert(hash_table = 0xf4587790, key = 0x74, value = 0xe464d268), line 798 in "ghash.c"
+  [18] shaper_font_cache_insert(0xe8ab7c10, 0x74, 0xf7575890, 0xe6209b00, 0x0, 0x0), at 0xfb6ee286 
+  [19] get_shaper_and_font(0x803acec, 0x74, 0x803acb8, 0x803acb4, 0x0, 0x0), at 0xfb6ef205 
+  [20] itemize_state_process_run(0x803acec, 0x0), at 0xfb6ef89d 
+  [21] pango_itemize_with_base_dir(0xf4587700, 0x0, 0x803eef8, 0x0, 0x1b, 0x0, 0x0, 0xfdb74f78), at 0xfb6efca9 
+  [22] gfxPangoFontGroup::CreateGlyphRunsItemizing(0xe6209630, 0xe8ee2b00, 0x803eef8, 0x1b, 0x3, 0x1300281, 0x803ed5c, 0xfdb7ae15), at 0xfdb7c853 
+  [23] gfxPangoFontGroup::InitTextRun(0xe6209630, 0xe8ee2b00, 0x803eef8, 0x1b, 0x3, 0x1, 0x40, 0x0), at 0xfdb7b10e 
+  [24] gfxPangoFontGroup::MakeTextRun(0xe6209630, 0x803eff0, 0x18, 0x803f544, 0x1300281, 0x2, 0x1, 0x803f538), at 0xfdb7aa68 
+  [25] TextRunWordCache::MakeTextRun(0xf7c82400, 0x8040a50, 0x18, 0xe6209630, 0x80409e4, 0x1300280, 0xfef859b6, 0xfdb6fc8c), at 0xfdb6f091 
+  [26] gfxTextRunWordCache::MakeTextRun(0x8040a50, 0x18, 0xe6209630, 0x80409e4, 0x1300280, 0xfde1593c, 0x803f60c, 0xfcd7680e), at 0xfdb6fcb5 
+  [27] MakeTextRun(0x8040a50, 0x18, 0xe6209630, 0x80409e4, 0x1300280, 0x8040914, 0x4, 0xfcd7953d), at 0xfcd76879 
+  [28] BuildTextRunsScanner::BuildTextRunForFrames(0x8041ab4, 0x8040a50, 0x23, 0xfcd77c1d), at 0xfcd7a3dd 
+  [29] BuildTextRunsScanner::FlushFrames(0x8041ab4, 0x1, 0x0, 0x0), at 0xfcd77d86 
+  [30] BuildTextRuns(0xef644bb0, 0xe6c507cc, 0xe6c50240, 0x8042528), at 0xfcd778fa 
+  [31] nsTextFrame::EnsureTextRun(0x8041f84, 0xe6c507cc, 0xef644bb0, 0xe6c50240, 0x8042528, 0x8041f38, 0x2d, 0x1), at 0xfcd7b624 
+  [32] nsTextFrame::Reflow(0xe6c507cc, 0xe16aac00, 0x80422d4, 0x8042224, 0x804236c, 0xe16aac00, 0xffffffff, 0x1), at 0xfcd8d8fb 
+  [33] nsLineLayout::ReflowFrame(0x80424e4, 0xe6c507cc, 0x804236c, 0x0, 0x8042370, 0xfde1593c, 0x804236c, 0xfccf8286), at 0xfcd4bdd2 
+  [34] nsBlockFrame::ReflowInlineFrame(0xe6c50240, 0x8042804, 0x80424e4, 0xe6c509e8, 0xe6c507cc, 0x80423f0, 0x0, 0xfccf76b1), at 0xfccf82b5 
+  [35] nsBlockFrame::DoReflowInlineFrames(0xe6c50240, 0x8042804, 0x80424e4, 0xe6c509e8, 0x80426f8, 0x80424d0, 0x1, 0xfccf7425), at 0xfccf7959 
+  [36] nsBlockFrame::ReflowInlineFrames(0xe6c50240, 0x8042804, 0xe6c509e8, 0x80426f8), at 0xfccf752a 
+  [37] nsBlockFrame::ReflowLine(0xe6c50240, 0x8042804, 0xe6c509e8, 0x80426f8), at 0xfccf55f1 
+  [38] nsBlockFrame::ReflowDirtyLines(0xe6c50240, 0x8042804, 0x0, 0x0), at 0xfccf4a61 
+  [39] nsBlockFrame::Reflow(0xe6c50240, 0xe16aac00, 0x8042ab8, 0x8042bd4, 0x8042a48, 0xe16aac00, 0x0, 0xfcd00a92), at 0xfccf3409 
+  [40] nsBlockReflowContext::ReflowBlock(0x8042a94, 0x8042bc4, 0x1, 0x8042fe4, 0x0, 0x0, 0xf547efa0, 0x8042bd4, 0x8042a48, 0x8042f64, 0xffffffff, 0x1), at 0xfcd00bb0 
+  [41] nsBlockFrame::ReflowBlockFrame(0xf318ba7c, 0x8042f64, 0xf547efa0, 0x8042e58), at 0xfccf6d7d 
+  [42] nsBlockFrame::ReflowLine(0xf318ba7c, 0x8042f64, 0xf547efa0, 0x8042e58), at 0xfccf53cf 
+  [43] nsBlockFrame::ReflowDirtyLines(0xf318ba7c, 0x8042f64, 0x0, 0x0), at 0xfccf4a61 
+  [44] nsBlockFrame::Reflow(0xf318ba7c, 0xe16aac00, 0x8043218, 0x8043334, 0x80431a8, 0xe16aac00, 0x0, 0xfcd00a92), at 0xfccf3409 
+  [45] nsBlockReflowContext::ReflowBlock(0x80431f4, 0x8043324, 0x0, 0x8043744, 0x0, 0x1, 0xe08389d4, 0x8043334, 0x80431a8, 0x80436c4, 0xffffffff, 0x1), at 0xfcd00bb0 
+  [46] nsBlockFrame::ReflowBlockFrame(0xf318b5ec, 0x80436c4, 0xe08389d4, 0x80435b8), at 0xfccf6d7d 
+  [47] nsBlockFrame::ReflowLine(0xf318b5ec, 0x80436c4, 0xe08389d4, 0x80435b8), at 0xfccf53cf 
+  [48] nsBlockFrame::ReflowDirtyLines(0xf318b5ec, 0x80436c4, 0x0, 0x0), at 0xfccf4a61 
+  [49] nsBlockFrame::Reflow(0xf318b5ec, 0xe16aac00, 0x8043978, 0x8043a94, 0x8043908, 0xe16aac00, 0xe726060c, 0xfcd00a92), at 0xfccf3409 
+  [50] nsBlockReflowContext::ReflowBlock(0x8043954, 0x8043a84, 0x1, 0x8043ea4, 0x0, 0x1, 0xf318b91c, 0x8043a94, 0x8043908, 0x8043e24, 0xffffffff, 0x1), at 0xfcd00bb0 
+  [51] nsBlockFrame::ReflowBlockFrame(0xe6927910, 0x8043e24, 0xf318b91c, 0x8043d18), at 0xfccf6d7d 
+  [52] nsBlockFrame::ReflowLine(0xe6927910, 0x8043e24, 0xf318b91c, 0x8043d18), at 0xfccf53cf 
+  [53] nsBlockFrame::ReflowDirtyLines(0xe6927910, 0x8043e24, 0x1, 0x1), at 0xfccf4a61 
+  [54] nsBlockFrame::Reflow(0xe6927910, 0xe16aac00, 0x8044044, 0x8044084, 0x804425c, 0xe16aac00, 0x8043fdc, 0xfcd0a5be), at 0xfccf3409 
+  [55] nsContainerFrame::ReflowChild(0xe6927658, 0xe6927910, 0xe16aac00, 0x8044044, 0x8044084, 0x0, 0x0, 0x0, 0x804425c, 0x0, 0xffffffff), at 0xfcd0a6bf 
+  [56] CanvasFrame::Reflow(0xe6927658, 0xe16aac00, 0x8044294, 0x80442f4, 0x804425c, 0xe16aac00, 0x804420c, 0xfcd0a5be), at 0xfcd37ff8 
+  [57] nsContainerFrame::ReflowChild(0xe69277cc, 0xe6927658, 0xe16aac00, 0x8044294, 0x80442f4, 0x0, 0x0, 0x3, 0x804425c, 0x0, 0xffffffff, 0x0), at 0xfcd0a6bf 
+  [58] nsHTMLScrollFrame::ReflowContents(0xe69277cc, 0x8044414, 0x80445a4, 0x0), at 0xfcd2c946 
+  [59] nsHTMLScrollFrame::Reflow(0xe69277cc, 0xe16aac00, 0x80445a4, 0x80445e4, 0x80447d0, 0xe46dd7c0, 0x0, 0x0), at 0xfcd2d187 
+  [60] nsContainerFrame::ReflowChild(0xe6927580, 0xe69277cc, 0xe16aac00, 0x80445a4, 0x80445e4, 0x0, 0x0, 0x0, 0x80447d0, 0x0, 0xffffffff, 0x1), at 0xfcd0a6bf 
+  [61] ViewportFrame::Reflow(0xe6927580, 0xe16aac00, 0x80448b4, 0x8044804, 0x80447d0, 0xf528, 0x80447cc, 0xfcce1fbd), at 0xfcd9562b 
+  [62] PresShell::DoReflow(0xe16ab400, 0xe6927580, 0x1, 0xfcce23e6), at 0xfcce21a5 
+  [63] PresShell::ProcessReflowCommands(0xe16ab400, 0x1, 0x80449bc, 0xfccdcb3b), at 0xfcce2447 
+  [64] PresShell::DoFlushPendingNotifications(0xe16ab400, 0x4, 0x1, 0xfcce12c0), at 0xfccdcb81 
+  [65] PresShell::WillPaint(0xe16ab400, 0xe466a340, 0xfebde040, 0xfd1bc19d), at 0xfcce12e0 
+  [66] nsViewManager::DispatchEvent(0xe466a340, 0x8044c24, 0x8044aec, 0xfd1b515a), at 0xfd1bcf1d 
+  [67] HandleEvent(0x8044c24, 0xfe46f834, 0xe181b120, 0xfd8e822a), at 0xfd1b51d8 
+  [68] nsWindow::DispatchEvent(0xe4eb6e00, 0x8044c24, 0x8044b88, 0xfd8ec59f), at 0xfd8e824a 
+  [69] nsWindow::OnExposeEvent(0xe4eb6e00, 0xf7a52a10, 0x8044fd8, 0xfd8f74d2), at 0xfd8ec825 
+  [70] expose_event_cb(0xf7a52a10, 0x8044fd8, 0x0), at 0xfd8f7546 
+  [71] _gtk_marshal_BOOLEAN__BOXED(0xf78640e0, 0x8044dec, 0x2, 0xef61b370, 0x8044e18, 0x0), at 0xfbdbc26f 
+  [72] g_closure_invoke(closure = 0xf78640e0, return_value = 0x8044dec, n_param_values = 2U, param_values = 0xef61b370, invocation_hint = 0x8044e18), line 771 in "gclosure.c"
+  [73] signal_emit_unlocked_R(node = 0xf7eaca30, detail = 0, instance = 0xf7a52a10, emission_return = 0x8044ed0, instance_and_params = 0xef61b370), line 3248 in "gsignal.c"
+  [74] g_signal_emit_valist(instance = 0xf7a52a10, signal_id = 53U, detail = 0, var_args = 0x8044f50), line 2987 in "gsignal.c"
+  [75] g_signal_emit(instance = 0xf7a52a10, signal_id = 53U, detail = 0, ... = 0x8044fd8, ...), line 3034 in "gsignal.c"
+  [76] gtk_widget_event_internal(0xf7a52a10, 0x8044fd8), at 0xfbf27b37 
+  [77] gtk_widget_send_expose(0xf7a52a10, 0x8044fd8), at 0xfbf27721 
+  [78] gtk_main_do_event(0x8044fd8, 0x0), at 0xfbdb8809 
+  [79] gdk_window_process_updates_internal(0xe466a460, 0x0), at 0xfbb75a4a 
+  [80] gdk_window_process_all_updates(0xfbbecfc0, 0xfbb75719, 0x0, 0x80450a4, 0xfbb4f50d, 0x0), at 0xfbb75c2a 
+  [81] gdk_window_update_idle(0x0, 0x0), at 0xfbb75736 
+  [82] gdk_threads_dispatch(0xf0c689a0, 0x0), at 0xfbb4f50d 
+  [83] g_idle_dispatch(source = 0xee260800, callback = 0xfbb4f4a0 = &`libgdk-x11-2.0.so.0.1400.5`gdk.c`gdk_threads_dispatch(), user_data = 0xf0c689a0), line 4235 in "gmain.c"
+  [84] g_main_dispatch(context = 0xfe877080), line 2146 in "gmain.c"
+  [85] g_main_context_dispatch(context = 0xfe877080), line 2697 in "gmain.c"
+  [86] g_main_context_iterate(context = 0xfe877080, block = 0, dispatch = 1, self = 0xfe802220), line 2778 in "gmain.c"
+  [87] g_main_context_iteration(context = 0xfe877080, may_block = 0), line 2841 in "gmain.c"
+  [88] nsAppShell::ProcessNextNativeEvent(0xf7e7e830, 0x0, 0x8045258, 0xfd91f882), at 0xfd8fda44 
+  [89] nsBaseAppShell::OnProcessNextEvent(0xf7e7e830, 0xfe84cf10, 0x1, 0x0), at 0xfd91f86d 
+  [90] nsThread::ProcessNextEvent(0xfe84cf10, 0x1, 0x80452cc, 0xfda8aa65), at 0xfdaec022 
+  [91] NS_ProcessNextEvent_P(0xfe84cf10, 0x1, 0x8045308, 0xfd91f646), at 0xfda8aa9c 
+  [92] nsBaseAppShell::Run(0xf7e7e830, 0xfd696c8c, 0x0, 0xfd698824), at 0xfd91f666 
+  [93] nsAppStartup::Run(0xf7eeecd0, 0xfe8350c8, 0x8045554, 0x0), at 0xfd69884c 
+  [94] XRE_main(0x1, 0x80457a4, 0xfe8010c0, 0x2), at 0xfc9c55fa 
+  [95] main(0x1, 0x80457a4, 0x80457ac, 0x8050d90), at 0x805114b 
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. launch firefox 3.5.4 or later on solaris 10 x86
+2. visit the indicated URL
+3. wonder why firefox is no longer running
+
+Actual Results:  
+crash

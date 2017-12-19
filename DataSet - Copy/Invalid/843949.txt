@@ -1,0 +1,109 @@
+Stack-buffer-overflow in mozilla::dom::SVGSVGElement::GetViewBoxTransform
+Created attachment 716928
+Testcase
+
+==22407== ERROR: AddressSanitizer: stack-buffer-overflow on address 0x7fff2143f0a0 at pc 0x7f8af223323f bp 0x7fff2143f010 sp 0x7fff2143f008
+WRITE of size 4 at 0x7fff2143f0a0 thread T0
+    #0 0x7f8af223323e in mozilla::dom::SVGSVGElement::GetViewBoxTransform() const src/content/svg/content/src/SVGSVGElement.cpp:674
+    #1 0x7f8af22364ab in mozilla::dom::SVGSVGElement::PrependLocalTransformsTo(gfxMatrix const&, nsSVGElement::TransformTypes) const src/content/svg/content/src/SVGSVGElement.cpp:988
+    #2 0x7f8af1f8b10c in nsSVGOuterSVGFrame::GetCanvasTM(unsigned int) src/layout/svg/nsSVGOuterSVGFrame.cpp:851
+    #3 0x7f8af1f8b807 in nsSVGOuterSVGAnonChildFrame::GetCanvasTM(unsigned int) src/layout/svg/nsSVGOuterSVGFrame.h:270
+    #4 0x7f8af1f90d95 in nsSVGPathGeometryFrame::GetCanvasTM(unsigned int) src/layout/svg/nsSVGPathGeometryFrame.cpp:484
+    #5 0x7f8af1f8e7b4 in nsSVGPathGeometryFrame::ReflowSVG() src/layout/svg/nsSVGPathGeometryFrame.cpp:311
+    #6 0x7f8af1f41453 in nsSVGDisplayContainerFrame::ReflowSVG() src/layout/svg/nsSVGContainerFrame.cpp:275
+    #7 0x7f8af1f8860c in nsSVGOuterSVGFrame::Reflow(nsPresContext*, nsHTMLReflowMetrics&, nsHTMLReflowState const&, unsigned int&) src/layout/svg/nsSVGOuterSVGFrame.cpp:464
+    #8 0x7f8af0800db8 in nsContainerFrame::ReflowChild(nsIFrame*, nsPresContext*, nsHTMLReflowMetrics&, nsHTMLReflowState const&, int, int, unsigned int, unsigned int&, nsOverflowContinuationTracker*) src/layout/generic/nsContainerFrame.cpp:968
+    #9 0x7f8af089168c in nsCanvasFrame::Reflow(nsPresContext*, nsHTMLReflowMetrics&, nsHTMLReflowState const&, unsigned int&) src/layout/generic/nsCanvasFrame.cpp:488
+    #10 0x7f8af0800db8 in nsContainerFrame::ReflowChild(nsIFrame*, nsPresContext*, nsHTMLReflowMetrics&, nsHTMLReflowState const&, int, int, unsigned int, unsigned int&, nsOverflowContinuationTracker*) src/layout/generic/nsContainerFrame.cpp:968
+    #11 0x7f8af08663ec in nsHTMLScrollFrame::ReflowScrolledFrame(ScrollReflowState*, bool, bool, nsHTMLReflowMetrics*, bool) src/layout/generic/nsGfxScrollFrame.cpp:428
+    #12 0x7f8af0866e4e in nsHTMLScrollFrame::ReflowContents(ScrollReflowState*, nsHTMLReflowMetrics const&) src/layout/generic/nsGfxScrollFrame.cpp:528
+    #13 0x7f8af0868dd6 in nsHTMLScrollFrame::Reflow(nsPresContext*, nsHTMLReflowMetrics&, nsHTMLReflowState const&, unsigned int&) src/layout/generic/nsGfxScrollFrame.cpp:769
+    #14 0x7f8af0800db8 in nsContainerFrame::ReflowChild(nsIFrame*, nsPresContext*, nsHTMLReflowMetrics&, nsHTMLReflowState const&, int, int, unsigned int, unsigned int&, nsOverflowContinuationTracker*) src/layout/generic/nsContainerFrame.cpp:968
+    #15 0x7f8af0974dd3 in ViewportFrame::Reflow(nsPresContext*, nsHTMLReflowMetrics&, nsHTMLReflowState const&, unsigned int&) src/layout/generic/nsViewportFrame.cpp:202
+    #16 0x7f8af071354c in PresShell::DoReflow(nsIFrame*, bool) src/layout/base/nsPresShell.cpp:7588
+    #17 0x7f8af0711b8d in PresShell::ResizeReflowIgnoreOverride(int, int) src/layout/base/nsPresShell.cpp:1910
+    #18 0x7f8af165209a in DoSetWindowDimensions src/view/src/nsViewManager.cpp:197
+    #19 0x7f8af165209a in nsViewManager::SetWindowDimensions(int, int) src/view/src/nsViewManager.cpp:217
+    #20 0x7f8af06aa1a4 in nsDocumentViewer::SetBounds(nsIntRect const&) src/layout/base/nsDocumentViewer.cpp:1885
+    #21 0x7f8af04e2002 in mozilla::image::SVGDocumentWrapper::UpdateViewportBounds(nsIntSize const&) src/image/src/SVGDocumentWrapper.cpp:130
+    #22 0x7f8af04e761d in mozilla::image::VectorImage::Draw(gfxContext*, gfxPattern::GraphicsFilter, gfxMatrix const&, gfxRect const&, nsIntRect const&, nsIntSize const&, unsigned int) src/image/src/VectorImage.cpp:693
+    #23 0x7f8af06e51c2 in DrawImageInternal(nsRenderingContext*, imgIContainer*, gfxPattern::GraphicsFilter, nsRect const&, nsRect const&, nsPoint const&, nsRect const&, nsIntSize const&, unsigned int) src/layout/base/nsLayoutUtils.cpp:4000
+    #24 0x7f8af06e65e8 in nsLayoutUtils::DrawBackgroundImage(nsRenderingContext*, imgIContainer*, nsIntSize const&, gfxPattern::GraphicsFilter, nsRect const&, nsRect const&, nsPoint const&, nsRect const&, unsigned int) src/layout/base/nsLayoutUtils.cpp:4167
+    #25 0x7f8af062ba19 in nsImageRenderer::Draw(nsPresContext*, nsRenderingContext&, nsRect const&, nsRect const&, nsPoint const&, nsRect const&) src/layout/base/nsCSSRendering.cpp:4665
+    #26 0x7f8af0620c57 in nsCSSRendering::PaintBackgroundWithSC(nsPresContext*, nsRenderingContext&, nsIFrame*, nsRect const&, nsRect const&, nsStyleContext*, nsStyleBorder const&, unsigned int, nsRect*, int) src/layout/base/nsCSSRendering.cpp:2675
+    #27 0x7f8af061ec2e in nsCSSRendering::PaintBackground(nsPresContext*, nsRenderingContext&, nsIFrame*, nsRect const&, nsRect const&, unsigned int, nsRect*, int) src/layout/base/nsCSSRendering.cpp:1571
+    #28 0x7f8af0673fea in nsDisplayBackgroundImage::PaintInternal(nsDisplayListBuilder*, nsRenderingContext*, nsRect const&, nsRect*) src/layout/base/nsDisplayList.cpp:2132
+    #29 0x7f8af05af918 in mozilla::FrameLayerBuilder::DrawThebesLayer(mozilla::layers::ThebesLayer*, gfxContext*, nsIntRegion const&, nsIntRegion const&, void*) src/layout/base/FrameLayerBuilder.cpp:3341
+    #30 0x7f8af3910a6a in PaintBuffer src/gfx/layers/basic/BasicThebesLayer.h:94
+    #31 0x7f8af3910a6a in mozilla::layers::BasicShadowableThebesLayer::PaintBuffer(gfxContext*, nsIntRegion const&, nsIntRegion const&, nsIntRegion const&, bool, void (*)(mozilla::layers::ThebesLayer*, gfxContext*, nsIntRegion const&, nsIntRegion const&, void*), void*) src/gfx/layers/basic/BasicThebesLayer.cpp:404
+    #32 0x7f8af390d757 in mozilla::layers::BasicThebesLayer::PaintThebes(gfxContext*, mozilla::layers::Layer*, void (*)(mozilla::layers::ThebesLayer*, gfxContext*, nsIntRegion const&, nsIntRegion const&, void*), void*, mozilla::layers::ReadbackProcessor*) src/gfx/layers/basic/BasicThebesLayer.cpp:187
+    #33 0x7f8af390fff7 in mozilla::layers::BasicShadowableThebesLayer::PaintThebes(gfxContext*, mozilla::layers::Layer*, void (*)(mozilla::layers::ThebesLayer*, gfxContext*, nsIntRegion const&, nsIntRegion const&, void*), void*, mozilla::layers::ReadbackProcessor*) src/gfx/layers/basic/BasicThebesLayer.cpp:301
+    #34 0x7f8af38f101c in mozilla::layers::BasicLayerManager::PaintSelfOrChildren(mozilla::layers::PaintContext&, gfxContext*) src/gfx/layers/basic/BasicLayerManager.cpp:819
+    #35 0x7f8af38eed11 in mozilla::layers::BasicLayerManager::PaintLayer(gfxContext*, mozilla::layers::Layer*, void (*)(mozilla::layers::ThebesLayer*, gfxContext*, nsIntRegion const&, nsIntRegion const&, void*), void*, mozilla::layers::ReadbackProcessor*) src/gfx/layers/basic/BasicLayerManager.cpp:934
+    #36 0x7f8af38f0db5 in mozilla::layers::BasicLayerManager::PaintSelfOrChildren(mozilla::layers::PaintContext&, gfxContext*) src/gfx/layers/basic/BasicLayerManager.cpp:835
+    #37 0x7f8af38eed11 in mozilla::layers::BasicLayerManager::PaintLayer(gfxContext*, mozilla::layers::Layer*, void (*)(mozilla::layers::ThebesLayer*, gfxContext*, nsIntRegion const&, nsIntRegion const&, void*), void*, mozilla::layers::ReadbackProcessor*) src/gfx/layers/basic/BasicLayerManager.cpp:934
+    #38 0x7f8af38f0db5 in mozilla::layers::BasicLayerManager::PaintSelfOrChildren(mozilla::layers::PaintContext&, gfxContext*) src/gfx/layers/basic/BasicLayerManager.cpp:835
+    #39 0x7f8af38eed11 in mozilla::layers::BasicLayerManager::PaintLayer(gfxContext*, mozilla::layers::Layer*, void (*)(mozilla::layers::ThebesLayer*, gfxContext*, nsIntRegion const&, nsIntRegion const&, void*), void*, mozilla::layers::ReadbackProcessor*) src/gfx/layers/basic/BasicLayerManager.cpp:934
+    #40 0x7f8af38ec16d in mozilla::layers::BasicLayerManager::EndTransactionInternal(void (*)(mozilla::layers::ThebesLayer*, gfxContext*, nsIntRegion const&, nsIntRegion const&, void*), void*, mozilla::layers::LayerManager::EndTransactionFlags) src/gfx/layers/basic/BasicLayerManager.cpp:590
+    #41 0x7f8af38f3ff0 in EndTransaction src/gfx/layers/basic/BasicLayerManager.cpp:509
+    #42 0x7f8af38f3ff0 in mozilla::layers::BasicShadowLayerManager::EndTransaction(void (*)(mozilla::layers::ThebesLayer*, gfxContext*, nsIntRegion const&, nsIntRegion const&, void*), void*, mozilla::layers::LayerManager::EndTransactionFlags) src/gfx/layers/basic/BasicLayerManager.cpp:1144
+    #43 0x7f8af0667125 in nsDisplayList::PaintForFrame(nsDisplayListBuilder*, nsRenderingContext*, nsIFrame*, unsigned int) const src/layout/base/nsDisplayList.cpp:1171
+    #44 0x7f8af0666046 in nsDisplayList::PaintRoot(nsDisplayListBuilder*, nsRenderingContext*, unsigned int) const src/layout/base/nsDisplayList.cpp:1033
+    #45 0x7f8af06d751d in nsLayoutUtils::PaintFrame(nsRenderingContext*, nsIFrame*, nsRegion const&, unsigned int, unsigned int) src/layout/base/nsLayoutUtils.cpp:2037
+    #46 0x7f8af072fcdc in PresShell::Paint(nsView*, nsRegion const&, unsigned int) src/layout/base/nsPresShell.cpp:5414
+    #47 0x7f8af1653ace in nsViewManager::ProcessPendingUpdatesForView(nsView*, bool) src/view/src/nsViewManager.cpp:399
+    #48 0x7f8af074b6fa in nsRefreshDriver::Tick(long, mozilla::TimeStamp) src/layout/base/nsRefreshDriver.cpp:955
+    #49 0x7f8af074d915 in TickDriver src/layout/base/nsRefreshDriver.cpp:164
+    #50 0x7f8af074d915 in mozilla::RefreshDriverTimer::Tick() src/layout/base/nsRefreshDriver.cpp:156
+    #51 0x7f8af375ae15 in nsTimerImpl::Fire() src/xpcom/threads/nsTimerImpl.cpp:482
+    #52 0x7f8af375b380 in nsTimerEvent::Run() src/xpcom/threads/nsTimerImpl.cpp:565
+    #53 0x7f8af3750f83 in nsThread::ProcessNextEvent(bool, bool*) src/xpcom/threads/nsThread.cpp:627
+    #54 0x7f8af3699630 in NS_ProcessNextEvent_P(nsIThread*, bool) src/objdir-ff-asan/xpcom/build/nsThreadUtils.cpp:238
+    #55 0x7f8af2e619ec in mozilla::ipc::MessagePump::Run(base::MessagePump::Delegate*) src/ipc/glue/MessagePump.cpp:82
+    #56 0x7f8af37d6869 in RunInternal src/ipc/chromium/src/base/message_loop.cc:215
+    #57 0x7f8af37d6869 in RunHandler src/ipc/chromium/src/base/message_loop.cc:208
+    #58 0x7f8af37d6869 in MessageLoop::Run() src/ipc/chromium/src/base/message_loop.cc:182
+    #59 0x7f8af2b903dc in nsBaseAppShell::Run() src/widget/xpwidgets/nsBaseAppShell.cpp:163
+    #60 0x7f8af2677dda in nsAppStartup::Run() src/toolkit/components/startup/nsAppStartup.cpp:288
+    #61 0x7f8aefef3085 in XREMain::XRE_mainRun() src/toolkit/xre/nsAppRunner.cpp:3871
+    #62 0x7f8aefef3e8f in XREMain::XRE_main(int, char**, nsXREAppData const*) src/toolkit/xre/nsAppRunner.cpp:3938
+    #63 0x7f8aefef4d29 in XRE_main src/toolkit/xre/nsAppRunner.cpp:4141
+    #64 0x4212b2 in do_main src/browser/app/nsBrowserApp.cpp:224
+    #65 0x4212b2 in main src/browser/app/nsBrowserApp.cpp:521
+    #66 0x7f8af82e176c in
+    #67 0x4205d4 in
+Address 0x7fff2143f0a0 is located at offset 96 in frame <mozilla::dom::SVGSVGElement::GetViewBoxTransform() const> of T0's stack:
+  This frame has 2 object(s):
+    [32, 48) 'viewBox'
+    [96, 99) 'ref.tmp'
+HINT: this may be a false positive if your program uses some custom stack unwind mechanism or swapcontext
+      (longjmp and C++ exceptions *are* supported)
+Shadow bytes around the buggy address:
+  0x10006427fdc0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x10006427fdd0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x10006427fde0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x10006427fdf0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x10006427fe00: 00 00 00 00 00 00 00 00 f1 f1 f1 f1 00 00 f4 f4
+=>0x10006427fe10: f2 f2 f2 f2[03]f4 f4 f4 f3 f3 f3 f3 00 00 00 00
+  0x10006427fe20: 00 00 00 00 00 00 00 00 00 00 00 00 f1 f1 f1 f1
+  0x10006427fe30: 00 00 00 00 00 00 f4 f4 f2 f2 f2 f2 00 00 00 00
+  0x10006427fe40: 00 00 f4 f4 f2 f2 f2 f2 00 00 00 00 00 00 f4 f4
+  0x10006427fe50: f2 f2 f2 f2 00 00 00 00 00 00 f4 f4 f2 f2 f2 f2
+  0x10006427fe60: 00 00 00 00 00 00 f4 f4 f2 f2 f2 f2 00 00 00 00
+Shadow byte legend (one shadow byte represents 8 application bytes):
+  Addressable:           00
+  Partially addressable: 01 02 03 04 05 06 07
+  Heap left redzone:     fa
+  Heap righ redzone:     fb
+  Freed Heap region:     fd
+  Stack left redzone:    f1
+  Stack mid redzone:     f2
+  Stack right redzone:   f3
+  Stack partial redzone: f4
+  Stack after return:    f5
+  Stack use after scope: f8
+  Global redzone:        f9
+  Global init order:     f6
+  Poisoned by user:      f7
+  ASan internal:         fe
+==22407== ABORTING

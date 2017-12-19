@@ -1,0 +1,77 @@
+WebRTC will need non-blocking IPC to talk between the RT code and the JS code/worker
+The realtime code needs to not end up waiting on the non-realtime code, even if none of them get realtime priority from the OS.  As part of this, the IPC mechanisms between the RT thread or process and the webapp JS code/worker will need to avoid blocking.  It's possible we'll need to put the RT code in a separate process; if so then the mechanisms will be different and more dependent on the OS (though inter-thread IPC is OS-dependent as well).
+
+Multiple queues will be needed and/or some way to prioritize messages, so that a backlog doesn't stop prompt handling of realtime response (say to "Answer" or "Hang up").
+
+
+The following is captured from #perf on 8/30/2011.  Note: I don't know who mkedwards is, but probably one of the people from Cisco involved in their Firefox extension for webrtc.
+
+[15:44]	cjones	"The UI pauses are a Big Problem, and will be bigger with webrtc"
+[15:44]	cjones	maybe i misunderstand
+[15:45]	kaelan	hm
+[15:45]	kaelan	maybe because the video and audio processing happens in js on the ui thread?
+[15:45]	kaelan	if so that's right
+[15:45]	jesup	webrtc will be hurt by them more
+[15:45]	cjones	that's supposed to happen on workers
+[15:45]	cjones	i thought
+[15:45]	jesup	largely, but there is a web app running the show
+[15:45]	taras	hey Yoric
+[15:45]	jesup	back i a few
+[15:45]	cjones	if there is more a/v processing happening on the content main thread, then e10s will be the solution
+[15:46]	cjones	that's just omglollerskates bad right now
+[15:46]	cjones	webrtc doesn't make it worse
+[15:56]	|<--	gal has left moznet (Quit: gal)
+[16:00]	jesup	cjones: sessionstore saving is killing us too (I have a bug on that)
+[16:00]	jesup	We might end up having to move webrtc to another process - yet to be decided
+[16:01]	cjones	jesup, yeah, sessionstore is sad
+[16:01]	cjones	what problems do you think content processes won't solve?
+[16:01]	jesup	5+ second pauses every few seconds in some of my real-world testcases
+[16:01]	cjones	with webrtc, that is
+[16:02]	taras	jesup: btw i'm tracking bad io stuff in 572459
+[16:02]	taras	please set io related problems to block that
+[16:02]	taras	Yoric will come around and fix those
+[16:02]	|<--	sfink has left moznet (Ping timeout)
+[16:17]	-->|	gal (gal@moz-BBE3ABD.mv.mozilla.com) has joined #perf
+[16:27]	jesup	cjones: The webapp will be running in normal content space, so anything that causes it to pause may limit response to real-time events in webrtc (incoming call, in-call renegotiations, etc, etc) Correct me if I'm wrong, but it's not 1 content process per tab, so we're still sharing resources with others, just less, and have the UI off in it's own thread
+[16:27]	jesup	is in memshrink meeting
+[16:29]	cjones	jesup, that's true of all web apis. if webrtc is building a system that blocks the content main thread by necessity for long periods of time, then
+[16:29]	cjones	(i) with e10s it's not /too/ bad, since the main FF UI stays reponsive, and other tabs can as well if they're in different processes
+[16:30]	cjones	(ii) it's really best not to do that
+[16:30]	jesup	I'm not referring to webrtc blocking others, but others killing webrtc's need to be responsive in a content thread (as opposed to UI responsiveness)
+[16:31]	cjones	right
+[16:31]	cjones	worker thread is the only "perfect" solution
+[16:32]	cjones	or building primitives that allow content JS to defer processing to gecko
+[16:34]	jesup	Yeah. I don't have a good feel yet to where the pain points will be, but I do know it's a tricky thing to deal with, either by us or the webapp or more likely both
+[16:34]	cjones	yeah
+[16:46]	=-=	cjones is now known as cjones-phone
+[17:06]	-->|	sfink (chatzilla@moz-BBE3ABD.mv.mozilla.com) has joined #perf
+[17:16]	mkedwards	webrtc ought not to involve Javascript on the A/V paths
+[17:17]	mkedwards	session establishment, yes. signaling, yes.
+[17:17]	mkedwards	but once the ICE negotiation and SRTP key exchange are complete and the packets are flowing, JS is out of the loop.
+[17:18]	Yoric	Mmmmhh....
+[17:18]	mkedwards	you do, however, need lock-free message queues between the signaling side and the media side
+[17:18]	Yoric	Might be a bit late to get introduced to #perf.
+[17:18]	Yoric	will return tomorrow.
+[17:19]	Yoric	(it's 11:20pm here)
+[17:19]	mkedwards	so the A/V threads can't block while waiting for JS to release a lock
+[17:19]	kaelan	that sounds like wait-free, not lock-free
+[17:21]	mkedwards	kaelan: needs to be wait-free for the A/V threads, not necessarily for the non-real-time threads
+[17:21]	|<--	gal has left moznet (Quit: gal)
+[17:21]	|<--	nfroyd has left moznet (Ping timeout)
+[17:23]	mkedwards	lock-free doesn't really mean lock-free, when the queue may drain completely; the producer end needs to be able to wake the consumer end on an empty->non-empty transition
+[17:23]	-->|	gal (gal@moz-BBE3ABD.mv.mozilla.com) has joined #perf
+[17:23]	-->|	nfroyd (nfroyd@moz-B77DEAEB.mozilla.org) has joined #perf
+[17:25]	mkedwards	but you can afford to use a condvar with a priority inheritance mutex for that, so that in a contended scenario a high-priority consumer delegates its priority to the producer long enough for the condvar wake + mutex release to complete
+[17:28]	mkedwards	in the other direction — high-priority producer, non-real-time consumer — the producer can delegate its priority to the consumer long enough for the consumer to execute out of the lock-held region preceding a condvar wait, so the producer can take the mutex and schedule a wake of the consumer
+[17:30]	mkedwards	so the point of the lock-free algorithm is not to eliminate the need for a lock, it's to ensure that no data structure is actually manipulated while holding a lock
+[17:30]	mkedwards	(no application data structure)
+[17:33]	mkedwards	the lock exists only to close race conditions in the condvar on which the real-time thread waits when there's nothing to do
+[17:34]	mkedwards	the "upstream" path from non-real-time threads to a real-time thread is "normally empty"
+[17:34]	mkedwards	the "downstream" path from real-time threads to a non-real-time thread is "normally non-empty"
+[17:35]	kaelan	mm, yeah
+[17:35]	mkedwards	the fun part is implementing many-to-one in the downstream direction
+[17:36]	mkedwards	the classic Michael-Scott lock-free queue is not ideal for this case
+[17:38]	mkedwards	I wrote something that I think is better, which my boss at my last job (Cisco) has agreed to open-source as part of the platform test suite that we wrote
+[17:39]	mkedwards	a friend there is helping push through the paperwork; we don't yet know how long it will take
+[17:40]	mkedwards	the code is nothing to write home about, but the test suite has 100% branch coverage on the core classes, so I'd prefer to have it in hand for reference during a new round of implementation
+[17:42]	mkedwards	(I think the algorithm is actually mildly novel, which I find alarming; I am not the sort of person who should be analyzing a novel lock-free algorithm)

@@ -1,0 +1,75 @@
+trunk does not compile, build ends with undefined reference to sqlite-related symbols
+User-Agent:       Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.2a1pre) Gecko/20081220 Firefox/3.2a1pre
+Build Identifier: Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.2a1pre) Gecko/20081220 Firefox/3.2a1pre
+
+apart from bug 471359, which I am also suffering from,
+
+Trunk retrieved on 2009-01-04 23:25:39.346476100 +0100, with
+> hg clone http://hg.mozilla.org/mozilla-central/ tmp
+
+.mozconfig :
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-@CONFIG_GUESS@
+mk_add_options MOZ_MAKE_FLAGS=-j8
+mk_add_options AUTOCONF=autoconf2.13
+mk_add_options MOZ_CO_PROJECT=browser
+. $topsrcdir/browser/config/mozconfig
+ac_add_options --prefix=/opt/firefox
+ac_add_options --enable-optimize='-march=barcelona -O3'
+ac_add_options --enable-system-sqlite
+
+build with
+> export PKG_CONFIG_PATH=/opt/sqlite/lib/pkgconfig
+> export MOZCONFIG=/home/quentin/.mozconfig
+> make -f client.mk build
+
+ends with
+xpcshell.cpp
+c++ -o xpcshell.o -c -I../../../../dist/include/system_wrappers -include /data/tmp/mozilla/config/gcc_hidden.h -DOSTYPE=\"Linux2.6\" -DOSARCH=Linux -DJS_THREADSAFE  -I/data/tmp/mozilla/js/src/xpconnect/shell -I. -I../../../../dist/include/xpconnect -I../../../../dist/include/xpcom -I../../../../dist/include/js -I../../../../dist/include/caps -I../../../../dist/include   -I../../../../dist/include/xpcshell -I/data/tmp/mozilla/obj-x86_64-unknown-linux-gnu/dist/include/nspr     -I/data/tmp/mozilla/obj-x86_64-unknown-linux-gnu/dist/sdk/include    -fPIC   -fno-rtti -fno-exceptions -Wall -Wpointer-arith -Woverloaded-virtual -Wsynth -Wno-ctor-dtor-privacy -Wno-non-virtual-dtor -Wcast-align -Wno-invalid-offsetof -Wno-long-long -pedantic -fno-strict-aliasing -fshort-wchar -pthread -pipe  -DNDEBUG -DTRIMMED -march=barcelona -O3   -DMOZILLA_CLIENT -include ../../../../mozilla-config.h -Wp,-MD,.deps/xpcshell.pp /data/tmp/mozilla/js/src/xpconnect/shell/xpcshell.cpp
+c++ -o xpcshell  -fno-rtti -fno-exceptions -Wall -Wpointer-arith -Woverloaded-virtual -Wsynth -Wno-ctor-dtor-privacy -Wno-non-virtual-dtor -Wcast-align -Wno-invalid-offsetof -Wno-long-long -pedantic -fno-strict-aliasing -fshort-wchar -pthread -pipe  -DNDEBUG -DTRIMMED -march=barcelona -O3  xpcshell.o    -lpthread   -Wl,-rpath-link,/data/tmp/mozilla/obj-x86_64-unknown-linux-gnu/dist/bin -Wl,-rpath-link,/opt/firefox/lib  -L../../../../dist/bin -L../../../../dist/lib ../../../../dist/lib/libxpcomglue_s.a -L/data/tmp/mozilla/obj-x86_64-unknown-linux-gnu/dist/bin -lmozjs -L/data/tmp/mozilla/obj-x86_64-unknown-linux-gnu/dist/bin -lxpcom -lxul  -L/data/tmp/mozilla/obj-x86_64-unknown-linux-gnu/dist/lib -lplds4 -lplc4 -lnspr4 -lpthread -ldl  -lasound -ldl -lm      
+../../../../dist/bin/libxul.so: undefined reference to `sqlite3_shutdown'
+../../../../dist/bin/libxul.so: undefined reference to `sqlite3_config'
+../../../../dist/bin/libxul.so: undefined reference to `sqlite3_initialize'
+collect2: ld returned 1 exit status
+make[5]: *** [xpcshell] Error 1
+make[5]: Leaving directory `/data/tmp/mozilla/obj-x86_64-unknown-linux-gnu/js/src/xpconnect/shell'
+make[4]: *** [tools] Error 2
+make[4]: Leaving directory `/data/tmp/mozilla/obj-x86_64-unknown-linux-gnu/js/src/xpconnect'
+make[3]: *** [tools_tier_gecko] Error 2
+make[3]: Leaving directory `/data/tmp/mozilla/obj-x86_64-unknown-linux-gnu'
+make[2]: *** [tier_toolkit] Error 2
+make[2]: Leaving directory `/data/tmp/mozilla/obj-x86_64-unknown-linux-gnu'
+make[1]: *** [default] Error 2
+make[1]: Leaving directory `/data/tmp/mozilla/obj-x86_64-unknown-linux-gnu'
+make: *** [build] Error 2
+
+Typing by hand the last command, adding -L/opt/sqlite/lib -lsqlite3 solves this problem
+
+Exact same problem later:
+make[5]: Entering directory `/data/tmp/mozilla/obj-x86_64-unknown-linux-gnu/browser/app'
+nsBrowserApp.cpp
+c++ -o nsBrowserApp.o -c -I../../dist/include/system_wrappers -include /data/tmp/mozilla/config/gcc_hidden.h -DAB_CD=en-US -DAPP_VERSION="3.2a1pre" -DAPP_UA_NAME="Firefox" -DGRE_MILESTONE=1.9.2a1pre -DGRE_BUILDID=20090105005844 -DMOZ_SOURCE_STAMP="821fc740d5c9+" -DMOZ_SOURCE_REPO="http://hg.mozilla.org/mozilla-central/" -DOSTYPE=\"Linux2.6\" -DOSARCH=Linux -DFIREFOX_ICO=\"../../dist/branding/firefox.ico\" -DDOCUMENT_ICO=\"../../dist/branding/document.ico\" -I/data/tmp/mozilla/toolkit/xre -I/data/tmp/mozilla/browser/app -I. -I../../dist/include/xpcom -I../../dist/include/string -I../../dist/include   -I../../dist/include -I/data/tmp/mozilla/obj-x86_64-unknown-linux-gnu/dist/include/nspr     -I/data/tmp/mozilla/obj-x86_64-unknown-linux-gnu/dist/sdk/include    -fPIC   -fno-rtti -fno-exceptions -Wall -Wpointer-arith -Woverloaded-virtual -Wsynth -Wno-ctor-dtor-privacy -Wno-non-virtual-dtor -Wcast-align -Wno-invalid-offsetof -Wno-long-long -pedantic -fno-strict-aliasing -fshort-wchar -pthread -pipe  -DNDEBUG -DTRIMMED -march=barcelona -O3   -DMOZILLA_CLIENT -include ../../mozilla-config.h -Wp,-MD,.deps/nsBrowserApp.pp /data/tmp/mozilla/browser/app/nsBrowserApp.cpp
+cat /data/tmp/mozilla/build/unix/mozilla.in | sed -e "s|%MOZAPPDIR%|/opt/firefox/lib/firefox-3.2a1pre|" \
+		-e "s|%MOZ_APP_DISPLAYNAME%|Firefox|" > firefox
+chmod +x firefox
+c++ -o firefox-bin  -fno-rtti -fno-exceptions -Wall -Wpointer-arith -Woverloaded-virtual -Wsynth -Wno-ctor-dtor-privacy -Wno-non-virtual-dtor -Wcast-align -Wno-invalid-offsetof -Wno-long-long -pedantic -fno-strict-aliasing -fshort-wchar -pthread -pipe  -DNDEBUG -DTRIMMED -march=barcelona -O3  nsBrowserApp.o    -lpthread   -Wl,-rpath-link,/data/tmp/mozilla/obj-x86_64-unknown-linux-gnu/dist/bin -Wl,-rpath-link,/opt/firefox/lib  -L../../dist/bin -L../../dist/lib -Wl,--whole-archive -ljemalloc -Wl,--no-whole-archive  -lxul -L/data/tmp/mozilla/obj-x86_64-unknown-linux-gnu/dist/bin -lmozjs /data/tmp/mozilla/obj-x86_64-unknown-linux-gnu/dist/lib/libxpcomglue_s.a -L/data/tmp/mozilla/obj-x86_64-unknown-linux-gnu/dist/bin -lxpcom -L/data/tmp/mozilla/obj-x86_64-unknown-linux-gnu/dist/lib -lplds4 -lplc4 -lnspr4 -lpthread -ldl -lgtk-x11-2.0 -latk-1.0 -lgdk-x11-2.0 -lgdk_pixbuf-2.0 -lm -lpangocairo-1.0 -lpango-1.0 -lcairo -lgobject-2.0 -lgmodule-2.0 -ldl -lglib-2.0   -lstartup-notification-1     -lX11   -lasound -ldl -lm      
+../../dist/bin/libxul.so: undefined reference to `sqlite3_shutdown'
+../../dist/bin/libxul.so: undefined reference to `sqlite3_config'
+../../dist/bin/libxul.so: undefined reference to `sqlite3_initialize'
+collect2: ld returned 1 exit status
+make[5]: *** [firefox-bin] Error 1
+make[5]: Leaving directory `/data/tmp/mozilla/obj-x86_64-unknown-linux-gnu/browser/app'
+make[4]: *** [libs] Error 2
+make[4]: Leaving directory `/data/tmp/mozilla/obj-x86_64-unknown-linux-gnu/browser'
+make[3]: *** [libs_tier_app] Error 2
+make[3]: Leaving directory `/data/tmp/mozilla/obj-x86_64-unknown-linux-gnu'
+make[2]: *** [tier_app] Error 2
+make[2]: Leaving directory `/data/tmp/mozilla/obj-x86_64-unknown-linux-gnu'
+make[1]: *** [default] Error 2
+make[1]: Leaving directory `/data/tmp/mozilla/obj-x86_64-unknown-linux-gnu'
+make: *** [build] Error 2
+
+same solution.
+
+Build then ends correctly
+
+Reproducible: Always

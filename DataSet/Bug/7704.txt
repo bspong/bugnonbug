@@ -1,0 +1,439 @@
+Crash in RDFContentSinkImpl::Init (nsIURL*, nslNameSpaceManager*)
+Whilst visiting mozilla.org after using Mozilla M6/Macintosh to visit a number
+of websites, mozilla attempted to access memory that didn't belong to it. The
+following is the output of "stdlog" from macsbug (which is more than you need).
+I don't have a clue about how to save just the "how" and "sc" output to a file
+on its own.
+
+
+  MacsBug 6.5.4a6, Copyright Apple Computer, Inc. 1981-98
+
+PowerPC unmapped memory exception at 171B3F24 RDFContentSinkImpl::Init(nsIURL*,
+nsINameSpaceM
+anager*)+00058
+
+  6-Jun-1999 10:46:18 PM (since boot = 1 hour, 26 minutes)
+  Current application is “apprunner”
+  Machine = 406 (??), System $0860, sysu = $01008000
+  ROM version $077D, $44B5, $0001 (ROMBase $FFC00000)
+  VM is on; paging is currently safe
+  NIL^ = $FFC10000
+  Stack space used = +127791122
+ Address 171B3F24 is in VM file-mapped logical memory space
+ It is in the CFM fragment “RDFLibrary.shlb” at 17197000
+ It is 0001CF24 bytes from the start of the fragment
+  and 00019E94 bytes into a non-writeable code section at 1719A090
+ PowerPC 740/750 Registers
+                         CR0  CR1  CR2  CR3  CR4  CR5  CR6  CR7
+  PC  = 171B3F24     CR  0100 1000 0000 0000 0000 1000 0010 1000
+  LR  = 171B3F14         <>=O XEVO
+  CTR = 17301580
+  MSR = 00000000         SOC Compare Count
+  Int = 0            XER 001   00     00                     MQ  = 00000000
+
+  R0  = 00000001     R8  = 00000000      R16 = 00000000      R24 = 06C514C0
+  SP  = 075EE070     R9  = 00000000      R17 = 00000000      R25 = 00000000
+  TOC = 0724EE80     R10 = 071E9B54      R18 = 00000000      R26 = 06C58DE8
+  R3  = 0000000F     R11 = 00000968      R19 = 00000000      R27 = 075EE19C
+  R4  = 00000000     R12 = 780034D0      R20 = 075EEE78      R28 = 0000000F
+  R5  = 0000000F     R13 = 00000000      R21 = 00000000      R29 = 00000000
+  R6  = 0000006D     R14 = 00000000      R22 = 06C514D0      R30 = 06ED3660
+  R7  = 075EE1FF     R15 = 00000000      R23 = 06C51510      R31 = 0000000F
+ Disassembling PowerPC code from 171B3EFC
+  RDFContentSinkImpl::Init(nsIURL*, nsINameSpaceManager*)
+     +00030 171B3EFC   b          RDFContentSinkImpl::Init(nsIURL*,
+nsINameSpaceManager*)+000
+70                                                         ; 0x171B3F3C |
+48000040
+     +00034 171B3F00   stw        r4,0x0030(r30)                          |
+909E0030
+     +00038 171B3F04   addi       r3,r4,0x0000                            |
+38640000
+     +0003C 171B3F08   lwz        r12,0x0000(r4)                          |
+81840000
+     +00040 171B3F0C   lwz        r12,0x0008(r12)                         |
+818C0008
+     +00044 171B3F10   bl         $+0x54978                  ; 0x17208888 |
+48054979
+     +00048 171B3F14   lwz        RTOC,0x0014(SP)                         |
+80410014
+     +0004C 171B3F18   stw        r31,0x0018(r30)                         |
+93FE0018
+     +00050 171B3F1C   lwz        r3,0x0018(r30)                          |
+807E0018
+     +00054 171B3F20   lwz        r12,0x0000(r3)                          |
+81830000
+     +00058 171B3F24  *lwz        r12,0x0008(r12)                         |
+818C0008
+     +0005C 171B3F28   bl         $+0x54960                  ; 0x17208888 |
+48054961
+     +00060 171B3F2C   lwz        RTOC,0x0014(SP)                         |
+80410014
+     +00064 171B3F30   li         r0,0x0000                               |
+38000000
+     +00068 171B3F34   stw        r0,0x0028(r30)                          |
+901E0028
+     +0006C 171B3F38   li         r3,0x0000                               |
+38600000
+     +00070 171B3F3C   lwz        r0,0x0048(SP)                           |
+80010048
+     +00074 171B3F40   addi       SP,SP,0x0040                            |
+38210040
+     +00078 171B3F44   mtlr       r0                         ; LR = 0x0008 |
+7C0803A6
+     +0007C 171B3F48   lmw        r30,-0x0008(SP)                         |
+BBC1FFF8
+ Heap zones
+  #1  Mod       12633K  00002800 to 00C58CAF  SysZone^
+  #2  Mod           5K    00017720 to 00018ECF  ROM read-only zone
+  #3  Mod         256K    009499E0 to 009899DF
+  #4  Mod      113722K  00C58CB0 to 07B6781F  Process Manager zone
+  #5  Mod         640K    05ACC890 to 05B6CBEF  “Apple Guide”
+  #6  Mod       12313K    05CCD8B0 to 068D3FAF  “Netscape Navigator™”
+  #7  Mod         725K    069470D0 to 069FC7CF  “Eudora Light”
+  #8  Mod        9801K    06C10900 to 075A2FFF  “apprunner”  ApplZone^  TheZone^
+TargetZone
+  #9  Mod        1929K    075EF110 to 077D180F  “ircle3.0.4 US”
+  #10 Mod         410K    077FD920 to 078642CF  “Stickies”
+  #11 Mod          36K    0786F930 to 07878C3F  “AOL Scheduler”
+  #12 Mod         187K    078E4670 to 0791341F  “File Sharing Extension”
+  #13 Mod          18K    0791E910 to 079231CF
+  #14 Mod         942K    07939690 to 07A2518F  “Finder”
+  #15 Mod          83K    07A39A20 to 07A4E91F  “Time Synchronizer”
+  #16 Mod         361K    07A5D1B0 to 07AB78AF  “Folder Actions”
+  #17 Mod          89K    07B08460 to 07B1EB5F  “Control Strip Extension”
+  #18 Mod         112K    07B313F0 to 07B4D6EF  “Application Switcher”
+  #19 Mod        5119K  08100000 to 085FFFAF
+  #20 Mod         288K    08161370 to 081A936F
+  #21 Mod          94K    0820D450 to 0822502F
+Checking all heaps
+ The System heap at 00002800 is ok
+ The ROM read-only heap at 00017720 is ok
+ The heap at 009499E0 is ok
+ The Process Manager heap at 00C58CB0 is ok
+ The “Apple Guide” heap at 05ACC890 is ok
+ The “Netscape Navigator™” heap at 05CCD8B0 is ok
+ The “Eudora Light” heap at 069470D0 is ok
+ The “apprunner” heap at 06C10900 is ok
+ The “ircle3.0.4 US” heap at 075EF110 is ok
+ The “Stickies” heap at 077FD920 is ok
+ The “AOL Scheduler” heap at 0786F930 is ok
+ The “File Sharing Extension” heap at 078E4670 is ok
+ The heap at 0791E910 is ok
+ The “Finder” heap at 07939690 is ok
+ The “Time Synchronizer” heap at 07A39A20 is ok
+ The “Folder Actions” heap at 07A5D1B0 is ok
+ The “Control Strip Extension” heap at 07B08460 is ok
+ The “Application Switcher” heap at 07B313F0 is ok
+ Totaling the “apprunner” heap at 06C10900
+                                 Total Blocks    Total of Block Sizes
+  Free                           0033      #51   00083D70      #540016
+  Nonrelocatable                 00D3     #211   00717F5C     #7438172
+  Relocatable                    110F    #4367   001F69F0     #2058736
+    Locked                       0005       #5   001C0CC0     #1838272
+    Purgeable and not locked     0000       #0   00000000           #0
+  Heap size                      1215    #4629   009926BC    #10036924
+ The target heap is the System heap at 00002800
+ Totaling the System heap at 00002800
+                                 Total Blocks    Total of Block Sizes
+  Free                           002B      #43   0002DC20      #187424
+  Nonrelocatable                 1058    #4184   006BF7AC     #7075756
+  Relocatable                    0957    #2391   005690A0     #5673120
+    Locked                       0205     #517   003FE280     #4186752
+    Purgeable and not locked     00A5     #165   0008A2C0      #565952
+  Heap size                      19DA    #6618   00C5646C    #12936300
+ The target heap is the “apprunner” heap at 06C10900
+ Displaying File Control Blocks
+  fRef File                   Vol         Type Fl Fork     LEof
+  0002 System                 Macintosh … zsys dW rsrc #6467152
+  0060 **** EXTENTS B-TREE    Macintosh … •••• dw data #4194304
+  00BE **** CATALOG B-TREE    Macintosh … •••• dw data #16777216
+  011C **** VOLUME BITMAP     Macintosh … •••• dw data  #282624
+  017A VM Storage             Macintosh … ZSYS dW data #140509184
+  01D8 System Resources       Macintosh … zsyr dw rsrc  #885137
+  0EB2 System                 Macintosh … zsys dw data #4242836
+  0F10 Platinum Sounds        Macintosh … tsnd dW rsrc #1094612
+  0F6E USB Iomega UT Driver   Macintosh … ndrv dw data    #8084
+  0FCC USBSuperDiskUTDriver   Macintosh … ndrv dw data    #3443
+  102A DV Support             Macintosh … gdfx dw data   #10036
+  1088 Open Tpt AppleTalk Li… Macintosh … libr dw rsrc  #504779
+  10E6 USBHIDUniversalModule  Macintosh … ndrv dw data    #6722
+  1144 Open Transport Library Macintosh … libr dw rsrc  #510791
+  11A2 OpenTransportLib       Macintosh … otsl dw data  #489328
+  1200 Shared Library Manage… Macintosh … INIT dw rsrc  #211694
+  125E Open Transport Library Macintosh … libr dw rsrc  #510791
+  12BC Open Tpt AppleTalk Li… Macintosh … libr dw rsrc  #504779
+  131A Open Tpt Internet Lib… Macintosh … libr dw rsrc  #462069
+  1378 OpenTpt Remote Access  Macintosh … libr dw rsrc #1083183
+  13D6 OpenTptAppleTalkLib    Macintosh … otsl dw data   #48738
+  1434 OpenTpt Modem          Macintosh … libr dw rsrc   #91506
+  1492 OpenTpt Remote Access  Macintosh … libr dw rsrc #1083183
+  14F0 Remote Access Log      Macintosh … lzlg dW data  #143360
+  154E Open Transport Library Macintosh … libr dw rsrc  #510791
+  15AC OpenTpt Serial Arbitr… Macintosh … libr dw rsrc    #7974
+  160A OpenTpt Serial Arbitr… Macintosh … libr dw rsrc    #7974
+  1668 ATI Resource Manager   Macintosh … shlb dw data   #98582
+  16C6 Users & Groups Data F… Macintosh … BTFL dW data  #143360
+  1724 Apple Guide            Macintosh … INIT dw data  #582344
+  1782 AppleScript            Macintosh … INIT dw data   #50902
+  17E0 ColorSync Extension    Macintosh … appe dw data  #301152
+  183E Standard Additions     Macintosh … osax dw data  #146140
+  189C OpenTptInternetLib     Macintosh … otsl dw data  #257726
+  18FA AppleScriptLib         Macintosh … shlb dw data   #22636
+  1958 Contextual Menu Exten… Macintosh … INIT dw data   #66663
+  19B6 SOMobjects™ for Mac OS Macintosh … shlb dw data  #129152
+  1A14 QuickTime™             Macintosh … INIT dw data  #369846
+  1A72 Sound Manager          Macintosh … INIT dw data   #15008
+  1AD0 Speech Recognition     Macintosh … INIT dw data #1118750
+  1B2E Speech Manager         Macintosh … INIT dw data    #4000
+  1B8C ~ATM™                  Macintosh … cdev dw data  #881790
+  1C48 Application Switcher   Macintosh … appe dW rsrc    #6198
+  1CA6 Multiprocessing API L… Macintosh … shlb dw data   #29864
+  1D04 Control Strip Extensi… Macintosh … appe dW rsrc   #67084
+  1D62 Users & Groups Data F… Macintosh … BTFL dW data  #143360
+  1DC0 Find CM Items          Macintosh … cmpi dw data   #25951
+  1E1E Folder Actions         Macintosh … appe dW rsrc    #4969
+  1E7C Time Synchronizer      Macintosh … appe dW rsrc    #7687
+  1EDA Finder                 Macintosh … FNDR dw rsrc  #638604
+  1F38 QuickTime™ PowerPlug   Macintosh … INIT dw data  #219681
+  1F96 Finder                 Macintosh … FNDR dw data #1870938
+  1FF4 Color Picker           Macintosh … INIT dw data    #6400
+  2052 File Sharing Library   Macintosh … shlb dw data   #91214
+  20B0 File Sharing Library   Macintosh … shlb dw rsrc    #3190
+  210E Finder Preferences     Macintosh … pref dW rsrc     #726
+  216C Desktop DB             Macintosh … BTFL dW data  #430080
+  21CA Desktop DF             Macintosh … DTFL dW data #2278850
+  2228 **** EXTENTS B-TREE    Zip 100     •••• dw data  #784896
+  2286 **** CATALOG B-TREE    Zip 100     •••• dw data  #784896
+  22E4 Time Synchronizer      Macintosh … appe dw data   #38491
+  2342 PrintingLib            Macintosh … shlb dw data  #670670
+  23A0 Folder Actions         Macintosh … appe dw data   #20046
+  23FE File Sharing Extension Macintosh … INIT dW rsrc  #194076
+  245C Desktop DB             Zip 100     BTFL dW data    #6144
+  24BA Desktop DF             Zip 100     DTFL dW data   #20706
+  2518 Folder Actions Menus   Macintosh … cmpi dw data   #10031
+  2576 UDFBridgeCMPlugin      Macintosh … cmpi dw data    #5261
+  25D4 Text Encoding Convert… Macintosh … shlb dw data  #153184
+  2632 Control Strip Extensi… Macintosh … appe dw data    #3160
+  2690 Application Switcher   Macintosh … appe dw data   #80825
+  26EE Chinese Encodings      Macintosh … ecpg dw data   #14968
+  274C Japanese Encodings     Macintosh … ecpg dw data   #14952
+  27AA Korean Encodings       Macintosh … ecpg dw data   #10488
+  2808 Unicode Encodings      Macintosh … ecpg dw data   #16872
+  2866 AppleTalk Switch       Macintosh … sdev dw data   #11770
+  28C4 Network Setup Extensi… Macintosh … shlb dw data  #422678
+  2922 Network Setup Extensi… Macintosh … shlb dw rsrc   #26657
+  2980 Network Setup Extensi… Macintosh … shlb dw rsrc   #26657
+  29DE File Sharing Strip     Macintosh … sdev dw data    #8634
+  2A3C File Sharing Library   Macintosh … shlb dw rsrc    #3190
+  2A9A Monitor BitDepth       Macintosh … sdev dw data    #7402
+  2AF8 Monitor Resolution     Macintosh … sdev dw data   #13890
+  2B56 Sound Volume           Macintosh … sdev dw data    #4154
+  2BB4 Video Mirroring        Macintosh … sdev dw data    #4426
+  2C12 Web Sharing CS         Macintosh … sdev dw data   #21334
+  2C70 AOL Scheduler          Macintosh … APPL dW rsrc   #10147
+  2CCE Stickies               Macintosh … APPL dW rsrc  #103586
+  2D2C AppleShare PDS         Macintosh … BTFL dW data  #716800
+  2D8A ircle3.0.4 US          Macintosh … APPL dW rsrc #1086463
+  2DE8 ircle3.0.4 US          Macintosh … APPL dw data  #836886
+  2E46 QuickTime™ MPEG Exten… Macintosh … INIT dw data    #3166
+  2EA4 AppleShare             Macintosh … RDEV dw data  #150592
+  2F02 AppleShare             Macintosh … RDEV dw rsrc  #324038
+  2F60 FaceFile               Macintosh … rsrc dW rsrc   #55348
+  2FBE Open Tpt Internet Lib… Macintosh … libr dw rsrc  #462069
+  301C AppleShare PDS         Zip 100     BTFL dW data    #9216
+  307A apprunner              Macintosh … APPL dW rsrc   #40922
+  30D8 apprunner              Macintosh … APPL dw data   #11263
+  3136 NSRuntime.shlb         Macintosh … shlb dw data   #15350
+  3194 NSStdLib.shlb          Macintosh … shlb dw data  #284171
+  31F2 NSPR20.shlb            Macintosh … shlb dw data  #199931
+  3250 base.shlb              Macintosh … shlb dw data  #237216
+  32AE xpcom.shlb             Macintosh … shlb dw data  #103224
+  330C libreg.shlb            Macintosh … shlb dw data   #36079
+  336A NetworkModular.shlb    Macintosh … shlb dw data  #587279
+  33C8 JavaScript.shlb        Macintosh … shlb dw data  #394207
+  3426 libpref.shlb           Macintosh … shlb dw data   #58145
+  3484 zlib.shlb              Macintosh … shlb dw data   #42061
+  34E2 libimg.shlb            Macintosh … shlb dw data   #52209
+  3540 libutil.shlb           Macintosh … shlb dw data    #2918
+  359E chardet.shlb           Macintosh … shlb dw data   #10276
+  35FC Mozilla Registry       Macintosh … REGS dW data  #137469
+  365A AppShell.shlb          Macintosh … shlb dw data  #118695
+  36B8 dom.shlb               Macintosh … shlb dw data  #540106
+  3716 unicharutil.shlb       Macintosh … shlb dw data   #13086
+  3774 profile.shlb           Macintosh … shlb dw data   #17390
+  37D2 widget.shlb            Macintosh … shlb dw data  #217197
+  3830 gfx.shlb               Macintosh … shlb dw data  #148874
+  388E WASTELib               Macintosh … shlb dw data  #117737
+  38EC htmlparser.shlb        Macintosh … shlb dw data  #357271
+  394A widget.shlb            Macintosh … shlb dw rsrc     #911
+  39A8 xpinstall.shlb         Macintosh … shlb dw data  #149742
+  3A06 libjar.shlb            Macintosh … shlb dw data   #10897
+  3A64 Install.log            Macintosh … TEXT dW data       #0
+  3AC2 FindComponent.shlb     Macintosh … shlb dw data   #23740
+  3B20 ChomeRegistry.shlb     Macintosh … shlb dw data   #15106
+  3B7E mailnews.shlb          Macintosh … shlb dw data  #143598
+  3BDC AppCores.shlb          Macintosh … shlb dw data  #197883
+  3C3A MsgCompose.shlb        Macintosh … shlb dw data  #170446
+  3C98 webshell.shlb          Macintosh … shlb dw data   #74457
+  3CF6 plugin.shlb            Macintosh … shlb dw data   #56246
+  3D54 RDFLibrary.shlb        Macintosh … shlb dw data  #550656
+  3DB2 layout.shlb            Macintosh … shlb dw data #2957392
+  3E10 uconv.shlb             Macintosh … shlb dw data   #37864
+  3E6E history.shlb           Macintosh … shlb dw data   #27317
+  3ECC ucvlatin.shlb          Macintosh … shlb dw data   #78340
+  3F2A ucvja.shlb             Macintosh … shlb dw data   #64216
+  3F88 ucvja2.shlb            Macintosh … shlb dw data  #117653
+  3FE6 ucvcn.shlb             Macintosh … shlb dw data  #249702
+  4044 oji.shlb               Macintosh … shlb dw data   #78790
+  40A2 LiveConnect.shlb       Macintosh … shlb dw data   #93480
+  4100 XPConnect.shlb         Macintosh … shlb dw data  #105128
+  415E libxpt.shlb            Macintosh … shlb dw data   #47136
+  41BC view.shlb              Macintosh … shlb dw data   #68706
+  421A jpgdecoder.shlb        Macintosh … shlb dw data   #11195
+  4278 nslocale.shlb          Macintosh … shlb dw data   #30303
+  42D6 Netscape Navigator™    Macintosh … APPL dw data #5765132
+  4334 Eudora Light           Macintosh … APPL dW rsrc  #528410
+  4392 TrueDocDisplayer.dlm   Macintosh … shlb dw data  #336792
+  43F0 Eudora Light           Macintosh … APPL dw data #1096556
+  444E Eudora Light Help      Macintosh … EuHl dw rsrc  #158265
+  44AC Help Data.LT           Macintosh … rsrc dw rsrc   #26888
+  450A PureVoice™ Help        Macintosh … EuHl dw rsrc    #7133
+  4568 Eudora Settings        Macintosh … PREF dW rsrc    #2173
+  45C6 Netscape Resources     Macintosh … NSPL dW rsrc  #634783
+  4624 Netscape Navigator™    Macintosh … APPL dW rsrc  #772462
+  4682 Global History         Macintosh … DBMG dW data #2633728
+  46E0 CCache log             Macintosh … DBMC dW data   #77824
+  473E Certificates7          Macintosh … CERT dW data   #98304
+  479C Key Database3          Macintosh … TEXT dW data   #16384
+  47FA MRJ_2.1.2.sit.hqx      Macintosh … TEXT dW data #8204288
+  4858 cache135461.hqx        Macintosh … TEXT dW data #8232960
+  48B6 lwbrk.shlb             Macintosh … shlb dw data   #13323
+  4914 JPEG.shlb              Macintosh … shlb dw data   #59697
+  4972 StdLog                 Macintosh … TEXT dW data   #17405
+  4AEA Apple Guide            Macintosh … INIT dW rsrc  #261698
+  4D1E Wallet.shlb            Macintosh … shlb dw data  #108877
+  4DDA gifdecoder.shlb        Macintosh … shlb dw data   #14192
+  #264 FCBs, #204 in use (including #35 fonts not listed), #60 free
+ Displaying Driver Control Entries
+  No drivers are busy.
+ Displaying resource information:
+      Map $06C53A24, flags $0000, file $394A = widget.shlb
+  >   Map $06C10A88, flags $0000, file $307A = apprunner
+   +  Map $00005A2C, flags $801A, file $0003 = •ROM resources that override
+System•
+    S Map $00005A30, flags $200D, file $0002 = System
+      Map $00005880, flags $0014, file $01D8 = System Resources
+      [Skipped $0023 maps belonging to font files]
+ Calling chain using A6/R1 links
+  Back chain  ISA  Caller
+  00000000    PPC  17FEED90
+  075EEE40    PPC  17FEDEA8  main+0076C
+  075EECA0    PPC  1745A548  nsAppShellService::Run()+00018
+  075EEC60    PPC  173AC94C  nsAppShell::Run()+00038
+  075EEBE0    PPC  173AD2C8  nsMacMessagePump::DoMessagePump()+0003C
+  075EEB90    PPC  173AD55C  nsMacMessagePump::DispatchEvent(int, EventRecord*)+
+00158
+  075EEB40    PPC  175CC150  Repeater::DoRepeaters(const EventRecord&)+00030
+  075EEB00    PPC  175C47A8  TimerPeriodical::RepeatAction(const EventRecord&)+
+00048
+  075EEAB0    PPC  175C4304  TimerImpl::Fire()+00024
+  075EEA70    PPC  17533B0C  nsNetlibService::NetPollSocketsCallback(nsITimer*,
+void*)+0001C
+  075EEA30    PPC  1750E9D8  NET_PollSockets+000A4
+  075EE9E0    PPC  1750A294  NET_ProcessNet+003C4
+  075EE650    PPC  1752C454  net_ProcessHTTP+001EC
+  075EE600    PPC  174FFCF4  net_MemCacheComplete+000D0
+  075EE5C0    PPC  175376E4  stub_complete(_NET_StreamClass*)+0008C
+  075EE520    PPC  17306124  nsParser::OnStopBinding(nsIURL*, unsigned int,
+const unsigned sh
+ort*)+0003C
+  075EE4D0    PPC  17305B00  nsParser::ResumeParse(nsIDTD*)+000C4
+  075EE480    PPC  173051B0  nsParser::DidBuildModel(unsigned int)+0004C
+  075EE440    PPC  172F4060  CNavDTD::DidBuildModel(unsigned int, int,
+nsIParser*, nsIContent
+Sink*)+0010C
+  075EE380    PPC  172F8590  CNavDTD::CloseContainersTo(nsHTMLTag, int)+00044
+  075EE320    PPC  172F849C  CNavDTD::CloseContainersTo(int, nsHTMLTag, int)+
+000AC
+  075EE160    PPC  172F82F4  CNavDTD::CloseContainer(const nsIParserNode&,
+nsHTMLTag, int)+00
+124
+  075EE100    PPC  172F7A74  CNavDTD::CloseBody(const nsIParserNode&)+00028
+ Return addresses on the stack
+  Stack Addr  Frame Addr   ISA   Caller
+   075EE46C                68K   06C5B5AA
+   075EE468                68K   17534BEA nsNetlibStream::~nsNetlibStream()+
+0003A
+   075EE464                68K   06C5B5AA
+   075EE454                68K   0721BE1E
+   075EE448                PPC   173051B0 nsParser::DidBuildModel(unsigned int)+
+0004C
+   075EE444                68K   0721BE1E
+   075EE408    075EE400    PPC   171B35B0 RDFContentSinkImpl::WillResume()+00020
+   075EE3E8    075EE3E0    PPC   175FC0BC PR_Free+00014
+   075EE3E4    075EE3E0    68K   0721BE1E
+   075EE3D8    075EE3D0    PPC   172F3ECC CNavDTD::BuildModel(nsIParser*,
+nsITokenizer*, nsIT
+okenObserver*, nsIContentSink*)+000D4
+   075EE3C8    075EE3C0    PPC   17F79DC8 OTAsyncStreamOpenPriv+0027C
+   075EE3AC                68K   06C5B5AA
+   075EE3A8    075EE3A0    PPC   1764C460 free+00030
+   075EE3A4    075EE3A0    68K   0721BE1E
+   075EE398    075EE390    PPC   1731BBD4
+nsHTMLTokenizer::ConsumeToken(nsScanner&)+00020
+   075EE388    075EE380    PPC   172F4060 CNavDTD::DidBuildModel(unsigned int,
+int, nsIParser
+*, nsIContentSink*)+0010C
+   075EE368    075EE360    PPC   1764C460 free+00030
+   075EE348    075EE340    PPC   1731788C nsDTDContext::Last() const+0000C
+   075EE340                68K   075EE37E
+   075EE334                68K   0721BE1E
+   075EE330                PPC   17FB179C OTTerminateModule+003C0
+   075EE328    075EE320    PPC   172F8590 CNavDTD::CloseContainersTo(nsHTMLTag,
+int)+00044
+   075EE320                68K   075EE37E
+   075EE308    075EE300    PPC   17F7CEA0 TNativeProvider::AcquireStream(int,
+int)+00210
+   075EE2F8    075EE2F0    PPC   173029B0 nsScanner::Eof()+0002C
+   075EE2E8    075EE2E0    PPC   172F74E8 CNavDTD::GetTopmostIndexOf(nsHTMLTag)
+const+00010
+   075EE2B0                68K   06C2A042
+   075EE278                PPC   17FF9D8C TrimRect+00FB8
+   075EE260                68K   06C2A042
+   075EE238    075EE230    PPC   FFD1A788 DisposeHandle+00028
+   075EE228    075EE220    PPC   17FB08C4 qrun+01DF0
+   075EE200                68K   06C2A042
+   075EE188    075EE180    PPC   17F9DB48 mps_sqh_release+0015C
+   075EE174                68K   0721BE1E
+   075EE168    075EE160    PPC   172F849C CNavDTD::CloseContainersTo(int,
+nsHTMLTag, int)+000
+AC
+   075EE164    075EE160    68K   0721BE1E
+   075EE128    075EE120    PPC   1731788C nsDTDContext::Last() const+0000C
+   075EE124    075EE120    68K   0721BE1E
+   075EE118    075EE110    PPC   17301440 nsCParserNode::nsCParserNode(CToken*,
+int, nsIToken
+Recycler*)+00068
+   075EE114    075EE110    68K   0721BE1E
+   075EE108    075EE100    PPC   172F82F4 CNavDTD::CloseContainer(const
+nsIParserNode&, nsHTM
+LTag, int)+00124
+   075EE0E8    075EE0E0    PPC   172F9F0C CHTMLToken::CHTMLToken(const nsString&
+, nsHTMLTag)+
+00018
+   075EE0D8    075EE0D0    PPC   175BF304 nsAutoString::nsAutoString(const char*
+)+0004C
+   075EE0D4    075EE0D0    68K   0721BE1E
+   075EE0C8    075EE0C0    PPC   17301A6C nsCParserNode::GetNodeType() const+
+00018
+   075EE0C4    075EE0C0    68K   0721BE1E
+   075EE0B8    075EE0B0    PPC   172F7A74 CNavDTD::CloseBody(const
+nsIParserNode&)+00028
+   075EE0B4    075EE0B0    68K   0721BE1E
+   075EE088    075EE080    PPC   17F70750 OTFindPort+00088
+   075EE080                68K   075EE0CE
+ Displaying memory from 0
+  00000000  FFC1 0000 FFC1 0000  0034 D076 0034 D078  *¡••*¡•••4–v•4–x
+  00000010  0034 D07A 0034 D07C  0091 CCFC 0091 CCFC  •4–z•4–|•ëÃ¸•ëÃ¸
+ Closing log

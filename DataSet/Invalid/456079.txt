@@ -1,0 +1,91 @@
+JavaScript: Cannot access parent's DOM via window.opener.<name> or window.opener.<id>
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.1) Gecko/2008070208 Firefox/3.0.1
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.1) Gecko/2008070208 Firefox/3.0.1
+
+While window.opener.document.getElementById & window.opener.document.getElementsByTagName do work, I am not able to access (even for read only) window.opener.<name> or window.opener.<id>.  Similar errors occur with window.opener.document.<name> and window.opener.document.<id>.  Note that I do recognize that access to the DOM via the element name or ID is not preferred, however there are several internal web-sites (that I have no control over) that use this antiquated method.
+
+For reference, the specific error that is pulled up in the error console (presuming the element name is "theText") is "window.opener.theText is undefined" or "window.opener.document.theText is undefined".
+
+For a (simple) replication following are 2 files that do this:
+
+---------- begin base.xhtml  ----------
+<?xml version="1.0" encoding="US-ASCII" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+<meta http-equiv="Content-type" content="application/xhtml+xml; charset=US-ASCII" />
+<title>window.opener base page</title>
+</head>
+<body>
+
+<form id="theForm" name="theForm" action="" method="post" onsubmit="return false;">
+<div><input type="text" id="theText" name="theText" /></div>
+<div><input type="button" value="Open Child Window" onclick="window.open('child.xhtml', 'http://david.andrew.beckman@gmail.com/window.opener_bug/child.xhtml');" /></div>
+</form>
+
+</body>
+</html>
+----------   end base.xhtml  ----------
+
+---------- begin child.xhtml ----------
+<?xml version="1.0" encoding="US-ASCII" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+<meta http-equiv="Content-type" content="application/xhtml+xml; charset=US-ASCII" />
+<title>window.opener child page</title>
+</head>
+
+<script type="text/javascript">
+//<![CDATA[
+
+function winOprName() {
+	window.opener.theText.value = "window.opener.theText completed successfully";
+}
+
+function winOprDocName() {
+	window.opener.document.theText.value = "window.opener.document.theText completed successfully";
+}
+
+function winOprDocGetByID() {
+	window.opener.document.getElementById("theText").value = "window.opener.document.getElementById(\"theText\") completed successfully";
+}
+
+//]]>
+</script>
+
+<body>
+
+<form id="theForm" name="theForm" action="" method="post" onsubmit="return false;">
+<div><input type="button" value="window.opener.&lt;name&gt; trial" onclick="winOprName();" /></div>
+<div><input type="button" value="window.opener.document.&lt;name&gt; trial" onclick="winOprDocName();" /></div>
+<div><input type="button" value="window.opener.document.getElementById() trial" onclick="winOprDocGetByID();" /></div>
+</form>
+
+</body>
+</html>
+----------   end child.xhtml ----------
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Save the two files listed above in some memorable location (eg the Desktop).  Note that both files need to be stored in the same directory.
+2. Open firefox (if it is not already
+3. Open the Error Console
+4. Open the saved base.xhtml (file-->open or drag & drop)
+5. If no-script (or similar) is installed, temporarily allow scripts for the appropriate domain (if not already enabled).  Refresh the page if necessary.
+6. Click the button titled "Open Child Window"
+7. In the resulting child window, click the first button (window.opener.<name> trial).  This is result (A).
+8. In the resulting child window, click the second button (window.opener.document.<name> trial).  This is result (B).
+9. In the resulting child window, click the third button (window.opener.document..getElementById() trial).  This is result (C).
+Actual Results:  
+(A) The error console will show an error on line 14 of child.xhtml stating that "window.opener.theText is undefined".  On base.xhtml, the text element is not updated.
+(B) The error console will show an error on line 18 of child.xhtml stating that "window.opener.document.theText is undefined".  On base.xhtml, the text element is not updated.
+(C) No error occurs and the text element on base.xhtml is updated to say "window.opener.document.getElementById("theText") completed successfully"
+
+Expected Results:  
+(A) No error occurs and the text element on base.xhtml is updated to say "window.opener.theText completed successfully".
+(B) No error occurs and the text element on base.xhtml is updated to say "window.opener.document.theText completed successfully"
+(C) No error occurs and the text element on base.xhtml is updated to say "window.opener.document.getElementById("theText") completed successfully"

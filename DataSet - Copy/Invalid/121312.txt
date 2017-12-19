@@ -1,0 +1,133 @@
+FTP fails on IRIX
+If I attempt a direct connect to an ftp server (ie not via a proxy), I get a
+status message of "Connected to ftp.site.name", but the spinner is still active
+and eventually the connection times out, all without updating the browser window
+contents (eg the previous site is still visible). As can be seen from the debug 
+statements below, we are giving a page loaded successfully message.
+
+This occurs with Mozilla 0.9.7 compiled with either MipsPro or gcc :(
+
+Adding some debug to the FTP code gives this as a trace of which functions are
+entered:
+DataRequestForwarder::DataRequestForwarder()
+DataRequestForwarder::Init()
+DataRequestForwarder::GetInterface()
+nsFtpState::S_size()
+nsFtpState::SendFTPCommand()
+nsFtpState::MoveToNextState()
+DataRequestForwarder::OnStatus()
+nsFTPChannel::OnStatus()
+DataRequestForwarder::OnStatus()
+nsFTPChannel::OnStatus()
+DataRequestForwarder::OnStartRequest()
+<------- Note: This is where the delay occurs, 5 minutes or so
+nsFtpState::OnDataAvailable()
+nsFtpState::Process()
+nsFtpState::R_size()
+nsFtpState::S_retr()
+nsFtpState::SendFTPCommand()
+nsFtpState::MoveToNextState()
+DataRequestForwarder::OnStopRequest()
+L DataRequestForwarder::OnStopRequest()
+nsFTPChannel::OnStopRequest()
+nsFTPChannel::GetName()
+L nsFTPChannel::GetName()
+nsFTPChannel::GetLoadFlags()
+nsFTPChannel::GetName()
+L nsFTPChannel::GetName()
+nsFTPChannel::GetName()
+L nsFTPChannel::GetName()
+nsFTPChannel::GetName()
+L nsFTPChannel::GetName()
+nsFTPChannel::GetName()
+L nsFTPChannel::GetName()
+nsFTPChannel::GetStatus()
+nsFTPChannel::GetName()
+L nsFTPChannel::GetName()
+nsFTPChannel::GetName()
+L nsFTPChannel::GetName()
+nsFTPChannel::GetURI()
+nsFTPChannel::GetName()
+L nsFTPChannel::GetName()
+nsFTPChannel::GetName()
+L nsFTPChannel::GetName()
+nsFTPChannel::GetName()
+L nsFTPChannel::GetName()
+nsFTPChannel::GetOriginalURI()
+Document ftp://waratah.adacel.com.au/ loaded successfully
+nsFTPChannel::GetURI()
+nsFTPChannel::GetName()
+L nsFTPChannel::GetName()
+nsFTPChannel::GetName()
+L nsFTPChannel::GetName()
+nsFtpState::OnStopRequest()
+L nsFtpState::OnStopRequest()
+
+
+And from nspr.log if logging is enabled:
+65536[100418b8]: nsFTPChannel::AsyncOpen() called
+65536[100418b8]: (1078b7d8) nsFtpState created
+65536[100418b8]: (1078b7d8) Establishing control connection...
+65536[100418b8]: (1078b7d8) trying cached control
+65536[100418b8]: Removing connection for ftp://waratah.adacel.com.au
+65536[100418b8]: (1078b7d8) creating control
+65536[100418b8]: (10833308) nsFtpControlConnection created
+65536[100418b8]: (1078b7d8) SUCCEEDED
+65536[100418b8]: (1078b7d8) Waiting for control data (0)...
+65536[100418b8]: (1078b7d8) nsFtpState::OnStartRequest() (spec
+=ftp://waratah.adacel.com.au/)
+65536[100418b8]: (1078b7d8) reading 96 bytes: "220 waratah.adacel.com.au FTP
+server (Version wu-2.6.0(1) Mon Feb 28 10:30:36 EST 2000) ready.
+"
+65536[100418b8]: (1078b7d8)(dwait=0) Writing "USER anonymous
+"
+65536[100418b8]: (1078b7d8) Waiting for control data (0)...
+65536[100418b8]: (1078b7d8) reading 68 bytes: "331 Guest login ok, send your
+complete e-mail address as password.
+"
+65536[100418b8]: (1078b7d8)(dwait=0) Writing "PASS xxxxx"
+65536[100418b8]: (1078b7d8) Waiting for control data (0)...
+65536[100418b8]: (1078b7d8) reading 48 bytes: "230 Guest login ok, access
+restrictions apply.
+"
+65536[100418b8]: (1078b7d8)(dwait=0) Writing "SYST
+"
+65536[100418b8]: (1078b7d8) Waiting for control data (0)...
+65536[100418b8]: (1078b7d8) reading 19 bytes: "215 UNIX Type: L8
+"
+65536[100418b8]: (1078b7d8)(dwait=0) Writing "PWD
+"
+65536[100418b8]: (1078b7d8) Waiting for control data (0)...
+65536[100418b8]: (1078b7d8) reading 31 bytes: "257 "/" is current directory.
+"
+65536[100418b8]: (1078b7d8)(dwait=0) Writing "TYPE I
+"
+65536[100418b8]: (1078b7d8) Waiting for control data (0)...
+65536[100418b8]: (1078b7d8) reading 20 bytes: "200 Type set to I.
+"
+65536[100418b8]: (1078b7d8)(dwait=0) Writing "PASV
+"
+65536[100418b8]: (1078b7d8) Waiting for control data (0)...
+65536[100418b8]: (1078b7d8) reading 49 bytes: "227 Entering Passive Mode
+(192,168,60,85,63,23)
+"
+65536[100418b8]: (1078b7d8) Created Data Transport (192.168.60.85:3f17)
+65536[100418b8]: (10784e78) DataRequestForwarder CREATED
+65536[100418b8]: (10784e78) DataRequestForwarder Init [request=10753818]
+65536[100418b8]: (1078b7d8)(dwait=1) Writing "SIZE /.
+"
+65536[100418b8]: (1078b7d8) Waiting for control data (0)...
+65536[100418b8]: (10784e78) DataRequestForwarder OnStartRequest 
+[mRetrying=0]
+<-------------- Big pause here  
+65536[100418b8]: (1078b7d8) reading 56 bytes: "421 Timeout (900 seconds):
+closing control connection.
+"
+65536[100418b8]: (1078b7d8)(dwait=1) Writing "RETR /.
+"
+65536[100418b8]: (1078b7d8) Waiting for control data (0)...
+65536[100418b8]: (10784e78) DataRequestForwarder OnStopRequest [status=0,
+mRetrying=0]
+65536[100418b8]: nsFTPChannel::OnStopRequest() called [this=10753818,
+request=10784e78, aStatus=0]
+65536[100418b8]: (1078b7d8) nsFtpState::OnStopRequest() rv=0

@@ -1,0 +1,185 @@
+state of el.style.visibility null on read until written to even when property specified in CSS
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.3b) Gecko/20021213
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.3b) Gecko/20021213
+
+The state of .state.visibility cannot be read until it it written to. Even when
+the style sheet indicates a value for the visibility property it reads null
+until it is explicitly set by a script. This may be the case for other
+properties as well, I have not checked though. It doesn't seem to be a
+javascript problem because once the script writes to it, then it can read back
+what it wrote and the elements will hide or appear as indicated. I came across
+this when I wanted to toggle the state of layers. As is, I have to explicitly
+set the visibility in the style sheet and run a script onLoad to set the state
+that I want so that layers are correctly toggled hidden or unhidden.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Create an element on a page with a style including 'visibility: hidden;'
+2. create a function that reads .style.visibility from the element as returned
+from document.getElementById() and sets it to 'hidden' if it .style.visibility
+== 'visible' or set it to 'visible' if .style.visibility == 'hidden'
+3. create a link, button or picture that executes the function with onClick.
+4. Sit in your chair for hours and hours as you wait in vain for your element to
+toggle from 'hidden' to 'visible'
+
+Actual Results:  
+You can check the URL. There are 2 pages there that demonstrate it.
+
+Expected Results:  
+.state.visibility should have returned whether or not the element was visible,
+hidden or soething else, but should not have returned null.
+
+Here is the HTML from the URL in case that it should disappear.
+-- CUT --
+<html>
+<head>
+<title>toggle style.visibility bug</title>
+<script type="text/javascript" language="JavaScript1.2">
+
+function toggleVis(cl) {
+
+ // This toggles the state of style.visibility
+ // from it's initial state. It is not assumed
+ // that a previous script has set the calue of
+ // it, just that it should have a state specified.
+ 
+ // without the final else clause the state can never
+ // be toggled.
+
+ for(i=0;i<=2;i++) {
+  var sel = document.getElementById(cl + "txt" + i);
+  var txt = document.getElementById("txt" + i);
+  var tmp;
+
+  
+  if(txt) {
+    tmp = txt.style.visibility;
+    if(txt.style.visibility == 'visible')
+      txt.style.visibility = 'hidden';
+    else if(txt.style.visibility == 'hidden')
+      txt.style.visibility = 'visible';
+    else 
+      txt.style.visibility = 'hidden';
+
+    sel.innerHTML = "before: '" + tmp + "'<br>after: '" +  txt.style.visibility
++ "'";
+    
+    }
+ } 
+  
+} 
+
+
+
+</script>
+<style type="text/css">
+
+#txt0,#txt1,#txt2 {
+ 
+ position: absolute;
+ width: 10em;
+ height: 10em;
+ font: sans-serif 12pt;
+ border: 1px solid red;
+ 
+}
+
+#txt0 {
+  background-color: black;
+  color: white;
+  top: 2px; 
+}
+
+#txt1 {
+ background-color: #EEEEEE;
+ visibility: hidden;
+ left: 11em;
+ top: 2px;
+}
+
+#txt2 {
+ background-color: white;
+ visibility: visible;
+ left: 22em; 
+ top: 2px;
+}
+
+#status {
+ position: relative;
+ font: 10pt sans-serif;
+ top: 20em;
+ border: 1px solid black;
+ padding: 5px 5px 5px 5px;
+ width: 35em; 
+}
+
+
+</style>
+</head>
+<body>
+
+<div>
+<div id="txt0">
+The visibility style of this element is not specified and  it is visible as it
+should be.
+</div>
+<div id="txt1">
+The visibility of this element is initially specified as hidden in the style sheet.
+</div>
+<div id="txt2">
+The visibility of this element is initially specified as visible in the style
+sheet sheet.
+</div>
+</div>
+
+<div id="status">
+Each column shows (between single quotes) what is stored in el.style.visibility
+at each event for each element at the top (ordered left to right on the page
+cooresponding to top to bottom in the table). 'before' indicates the state of
+style.visibility before the final 'else' clause in the function toggleVis().
+That clause assumes that there is something other than a 'hidden' or 'visible'
+state. You will see that all of them are null, despite the fact that 2 of the
+elements have hidden or visible specified in the style sheet, and once they are
+explicitly set by a script the state can be read. This means that I can set the
+style information to what I want at any time, but I cannot read what the state
+is until I write to it. I have not checked to see if other style properties have
+the same problem.<p>
+Now, comment out the last 'else' clause in toggleVis(), reload the page and see
+what happens.
+<table cellpadding=3px cellspacing=3px width=100%>
+<tr><th>onload</th><th><a href="javascript://"
+onClick="toggleVis('ss');">onclick</a></th><th><a href="javascript://"
+onClick="toggleVis('sss');">onclick2</a></th></tr>
+<tr><td><div id="stxt0">&nbsp;</div></td><td><div
+id="sstxt0">&nbsp;</div></td><td><div id="ssstxt0">&nbsp;</div></td></tr>
+<tr><td><div id="stxt1">&nbsp;</div></td><td><div
+id="sstxt1">&nbsp;</div></td><td><div id="ssstxt1">&nbsp;</div></td></tr>
+<tr><td><div id="stxt2">&nbsp;</div></td><td><div
+id="sstxt2">&nbsp;</div></td><td><div id="ssstxt2">&nbsp;</div></td></tr>
+</table>
+
+</div>
+
+
+<script language="JavaScript1.2">
+function pageInit() {
+  
+  var el0 = document.getElementById("txt0");
+  var el1 = document.getElementById("txt1");
+  var el2 = document.getElementById("txt1");
+  
+   sela = document.getElementById("stxt0");
+   selb = document.getElementById("stxt1");
+   selc = document.getElementById("stxt2");
+
+  sela.innerHTML = "'" + el0.style.visibility + "'";
+  selb.innerHTML = "'" + el1.style.visibility + "'";
+  selc.innerHTML = "'" + el2.style.visibility + "'";
+
+}
+
+onload=pageInit();
+</script>
+</body>
+</html>

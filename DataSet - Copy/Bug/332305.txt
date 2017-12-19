@@ -1,0 +1,225 @@
+DumpJSStack - there is no JSContext on the nsIThreadJSContextStack!
+So. i'm not quite sure what i want, first, there are 4 slots in the list, 2 are null, the other two point to the same single context which is apparently uninteresting to xpc_DumpJSStack, as they indeed have no frame pointer.
+
+I think that at the very least DumpJSStack needs to consider trying to walk all the jscontexts on the stack...
+
+i'd also like to figure out what it means for null contexts to be on the stack.
+
+0:000> dt js3250!JSContext 0x0364faa8 fp
+   +0x038 fp : (null) 
+0:000> dt js3250!JSContext 0x04507d98 fp
+   +0x038 fp : (null) 
+
+0:000> dv
+           this = 0x00d6cc54
+         result = 0x00000000
+0:000> dt nsDeque 0x00d6cc54
+   +0x000 mSize            : 4
+   +0x004 mCapacity        : 32
+   +0x008 mOrigin          : 0
+   +0x00c mDeallocator     : (null) 
+   +0x010 mBuffer          : [8] 0x0364faa8 
+   +0x030 mData            : 0x04ad22a0  -> 0x04bbb890 
+0:000> dt nsDeque 0x00d6cc54 mBuffer
+   +0x010 mBuffer : [8] 0x0364faa8 
+0:000> dt -b nsDeque 0x00d6cc54 mBuffer
+   +0x010 mBuffer : 
+    [00] 0x0364faa8 
+    [01] 0x0364faa8 
+    [02] (null) 
+    [03] (null) 
+    [04] 0x04507d98 
+    [05] (null) 
+    [06] 0x04532868 
+    [07] 0x04532868 
+
+00 ntdll!DbgBreakPoint+0x1 (FPO: [0,0,0])
+01 xpcom_core!Break(char * aMsg = 0x001285f4 "###!!! ASSERTION: row count changed unexpectedly: 'mRowCount == rowCount', file r:/mozilla/layout/xul/base/src/tree/src/nsTreeBodyFrame.cpp, line 2238")+0x203 (FPO: [Non-Fpo]) (CONV: cdecl) [r:\mozilla\xpcom\base\nsdebugimpl.cpp @ 475]
+02 xpcom_core!NS_DebugBreak_P(unsigned int aSeverity = 1, char * aStr = 0x01e7f068 "row count changed unexpectedly", char * aExpr = 0x01e7f050 "mRowCount == rowCount", char * aFile = 0x01e7f014 "r:/mozilla/layout/xul/base/src/tree/src/nsTreeBodyFrame.cpp", int aLine = 2238)+0x2ec (FPO: [Non-Fpo]) (CONV: cdecl) [r:\mozilla\xpcom\base\nsdebugimpl.cpp @ 358]
+03 gklayout!nsTreeBodyFrame::PaintTreeBody(class nsIRenderingContext * aRenderingContext = 0x05d12e08, struct nsRect * aDirtyRect = 0x00128b70, struct nsPoint aPt = struct nsPoint)+0x12d (FPO: [Non-Fpo]) (CONV: thiscall) [r:\mozilla\layout\xul\base\src\tree\src\nstreebodyframe.cpp @ 2238]
+04 gklayout!PaintTreeBody(class nsIFrame * aFrame = 0x057fe55c, class nsIRenderingContext * aCtx = 0x05d12e08, struct nsRect * aDirtyRect = 0x00128b70, struct nsPoint aPt = struct nsPoint)+0x22 (FPO: [Non-Fpo]) (CONV: cdecl) [r:\mozilla\layout\xul\base\src\tree\src\nstreebodyframe.cpp @ 2197]
+05 gklayout!nsDisplayGeneric::Paint(class nsDisplayListBuilder * aBuilder = 0x00128be0, class nsIRenderingContext * aCtx = 0x05d12e08, struct nsRect * aDirtyRect = 0x00128b70)+0x33 (FPO: [Non-Fpo]) (CONV: thiscall) [r:\mozilla\layout\base\nsdisplaylist.h @ 734]
+06 gklayout!nsDisplayList::Paint(class nsDisplayListBuilder * aBuilder = 0x00128be0, class nsIRenderingContext * aCtx = 0x05d12e08, struct nsRect * aDirtyRect = 0x00128b70)+0x3e (FPO: [Non-Fpo]) (CONV: thiscall) [r:\mozilla\layout\base\nsdisplaylist.cpp @ 162]
+07 gklayout!nsDisplayWrapList::Paint(class nsDisplayListBuilder * aBuilder = 0x00128be0, class nsIRenderingContext * aCtx = 0x05d12e08, struct nsRect * aDirtyRect = 0x00128b70)+0x1e (FPO: [Non-Fpo]) (CONV: thiscall) [r:\mozilla\layout\base\nsdisplaylist.cpp @ 517]
+08 gklayout!nsDisplayClip::Paint(class nsDisplayListBuilder * aBuilder = 0x00128be0, class nsIRenderingContext * aCtx = 0x05d12e08, struct nsRect * aDirtyRect = 0x00128d10)+0x58 (FPO: [Non-Fpo]) (CONV: thiscall) [r:\mozilla\layout\base\nsdisplaylist.cpp @ 724]
+09 gklayout!nsDisplayList::Paint(class nsDisplayListBuilder * aBuilder = 0x00128be0, class nsIRenderingContext * aCtx = 0x05d12e08, struct nsRect * aDirtyRect = 0x00128d10)+0x3e (FPO: [Non-Fpo]) (CONV: thiscall) [r:\mozilla\layout\base\nsdisplaylist.cpp @ 162]
+0a gklayout!nsLayoutUtils::PaintFrame(class nsIRenderingContext * aRenderingContext = 0x05d12e08, class nsIFrame * aFrame = 0x05760100, class nsRegion * aDirtyRegion = 0x00128cf0, unsigned int aBackground = 0xffc0c0c0)+0x1fd (FPO: [Non-Fpo]) (CONV: cdecl) [r:\mozilla\layout\base\nslayoututils.cpp @ 688]
+0b gklayout!PresShell::Paint(class nsIView * aView = 0x0584c6b0, class nsIRenderingContext * aRenderingContext = 0x05d12e08, class nsRegion * aDirtyRegion = 0x00128cf0)+0x17d (FPO: [Non-Fpo]) (CONV: stdcall) [r:\mozilla\layout\base\nspresshell.cpp @ 5536]
+0c gklayout!nsViewManager::RenderViews(class nsView * aView = 0x057f7858, class nsIRenderingContext * aRC = 0x05d12e08, class nsRegion * aRegion = 0x00128e20, class nsIDrawingSurface * aRCSurface = 0x05d10b70)+0x183 (FPO: [Non-Fpo]) (CONV: thiscall) [r:\mozilla\view\src\nsviewmanager.cpp @ 886]
+0d gklayout!nsViewManager::Refresh(class nsView * aView = 0x057f7858, class nsIRenderingContext * aContext = 0x05d12e08, class nsIRegion * aRegion = 0x05d10b28, unsigned int aUpdateFlags = 1)+0x5e9 (FPO: [Non-Fpo]) (CONV: thiscall) [r:\mozilla\view\src\nsviewmanager.cpp @ 726]
+0e gklayout!nsViewManager::DispatchEvent(class nsGUIEvent * aEvent = 0x001290b8, nsEventStatus * aStatus = 0x00128f98)+0x3ad (FPO: [Non-Fpo]) (CONV: stdcall) [r:\mozilla\view\src\nsviewmanager.cpp @ 1482]
+0f gklayout!HandleEvent(class nsGUIEvent * aEvent = 0x001290b8)+0x44 (FPO: [Non-Fpo]) (CONV: cdecl) [r:\mozilla\view\src\nsview.cpp @ 174]
+10 gkwidget!nsWindow::DispatchEvent(class nsGUIEvent * event = 0x001290b8, nsEventStatus * aStatus = 0x00129114)+0xb5 (FPO: [Non-Fpo]) (CONV: stdcall) [r:\mozilla\widget\src\windows\nswindow.cpp @ 1037]
+11 gkwidget!nsWindow::DispatchWindowEvent(class nsGUIEvent * event = 0x001290b8, nsEventStatus * aStatus = 0x00129114)+0x22 (FPO: [Non-Fpo]) (CONV: thiscall) [r:\mozilla\widget\src\windows\nswindow.cpp @ 1063]
+12 gkwidget!nsWindow::OnPaint(struct HDC__ * aDC = 0x00000000)+0x369 (FPO: [Non-Fpo]) (CONV: thiscall) [r:\mozilla\widget\src\windows\nswindow.cpp @ 5672]
+13 gkwidget!nsWindow::ProcessMessage(unsigned int msg = 0xf, unsigned int wParam = 0, long lParam = 0, long * aRetValue = 0x00129598)+0x6b1 (FPO: [Non-Fpo]) (CONV: thiscall) [r:\mozilla\widget\src\windows\nswindow.cpp @ 4153]
+14 gkwidget!nsWindow::WindowProc(struct HWND__ * hWnd = 0x00770be0, unsigned int msg = 0xf, unsigned int wParam = 0, long lParam = 0)+0x136 (FPO: [Non-Fpo]) (CONV: stdcall) [r:\mozilla\widget\src\windows\nswindow.cpp @ 1226]
+15 USER32!InternalCallWinProc+0x28
+16 USER32!UserCallWinProcCheckWow+0x150 (FPO: [Non-Fpo])
+17 USER32!DispatchClientMessage+0xa3 (FPO: [Non-Fpo])
+18 USER32!__fnDWORD+0x24 (FPO: [Non-Fpo])
+19 ntdll!KiUserCallbackDispatcher+0x13 (FPO: [0,0,0])
+1a USER32!NtUserDispatchMessage+0xc
+1b USER32!DispatchMessageW+0xf (FPO: [Non-Fpo])
+1c gkwidget!nsAppShell::DispatchNativeEvent(int aRealEvent = 1, void * aEvent = 0x027ffaf0)+0xd (FPO: [Non-Fpo]) (CONV: stdcall) [r:\mozilla\widget\src\windows\nsappshell.cpp @ 221]
+1d jsd3250!jsdService::EnterNestedEventLoop(class jsdINestCallback * callback = 0x05c2a3d0, unsigned int * _rval = 0x0012993c)+0x275 (FPO: [Non-Fpo]) (CONV: stdcall) [r:\mozilla\js\jsd\jsd_xpc.cpp @ 3210]
+1e xpcom_core!XPTC_InvokeByIndex(class nsISupports * that = 0x00d5da38, unsigned int methodIndex = 0x31, unsigned int paramCount = 2, struct nsXPTCVariant * params = 0x0012992c)+0x27 (CONV: cdecl) [r:\mozilla\xpcom\reflect\xptcall\src\md\win32\xptcinvoke.cpp @ 102]
+1f xpc3250!XPCWrappedNative::CallMethod(class XPCCallContext * ccx = 0x00129ae0, XPCWrappedNative::CallMode mode = CALL_METHOD (0))+0xddf (FPO: [Non-Fpo]) (CONV: cdecl) [r:\mozilla\js\src\xpconnect\src\xpcwrappednative.cpp @ 2155]
+20 xpc3250!XPC_WN_CallMethod(struct JSContext * cx = 0x056e1e48, struct JSObject * obj = 0x03dc45e8, unsigned int argc = 1, long * argv = 0x05bba268, long * vp = 0x00129bf0)+0x1e6 (FPO: [Non-Fpo]) (CONV: cdecl) [r:\mozilla\js\src\xpconnect\src\xpcwrappednativejsops.cpp @ 1471]
+21 js3250!js_Invoke(struct JSContext * cx = 0x056e1e48, unsigned int argc = 1, unsigned int flags = 0)+0xb37 (FPO: [Non-Fpo]) (CONV: cdecl) [r:\mozilla\js\src\jsinterp.c @ 1250]
+22 js3250!js_Interpret(struct JSContext * cx = 0x056e1e48, unsigned char * pc = 0x03b2c5a7 ":", long * result = 0x0012a6f4)+0xe3cf (FPO: [Non-Fpo]) (CONV: cdecl) [r:\mozilla\js\src\jsinterp.c @ 3890]
+23 js3250!js_Invoke(struct JSContext * cx = 0x056e1e48, unsigned int argc = 3, unsigned int flags = 2)+0xba5 (FPO: [Non-Fpo]) (CONV: cdecl) [r:\mozilla\js\src\jsinterp.c @ 1274]
+24 xpc3250!nsXPCWrappedJSClass::CallMethod(class nsXPCWrappedJS * wrapper = 0x03d4dea8, unsigned short methodIndex = 3, class nsXPTMethodInfo * info = 0x03b33928, struct nsXPTCMiniVariant * nativeParams = 0x0012aa14)+0xd39 (FPO: [Non-Fpo]) (CONV: stdcall) [r:\mozilla\js\src\xpconnect\src\xpcwrappedjsclass.cpp @ 1507]
+25 xpc3250!nsXPCWrappedJS::CallMethod(unsigned short methodIndex = 3, class nsXPTMethodInfo * info = 0x03b33928, struct nsXPTCMiniVariant * params = 0x0012aa14)+0x3f (FPO: [Non-Fpo]) (CONV: stdcall) [r:\mozilla\js\src\xpconnect\src\xpcwrappedjs.cpp @ 519]
+26 xpcom_core!PrepareAndDispatch(class nsXPTCStubBase * self = 0x03d4dea8, unsigned int methodIndex = 3, unsigned int * args = 0x0012aadc, unsigned int * stackBytesToPop = 0x0012aacc)+0x350 (FPO: [Non-Fpo]) (CONV: stdcall) [r:\mozilla\xpcom\reflect\xptcall\src\md\win32\xptcstubs.cpp @ 117]
+27 xpcom_core!SharedStub(void)+0x16 (CONV: cdecl) [r:\mozilla\xpcom\reflect\xptcall\src\md\win32\xptcstubs.cpp @ 147]
+28 jsd3250!ExecutionHookWrapper::OnExecute(class jsdIStackFrame * frame = 0x05bbcb88, unsigned int type = 4, class jsdIValue ** val = 0x0012ad38, unsigned int * _retval = 0x0012ad28)+0x155 (FPO: [Non-Fpo]) (CONV: stdcall) [r:\mozilla\js\jsd\jsd_xpc.cpp @ 2483]
+29 xpcom_core!XPTC_InvokeByIndex(class nsISupports * that = 0x05659208, unsigned int methodIndex = 3, unsigned int paramCount = 4, struct nsXPTCVariant * params = 0x05bbcbe0)+0x27 (CONV: cdecl) [r:\mozilla\xpcom\reflect\xptcall\src\md\win32\xptcinvoke.cpp @ 102]
+2a xpcom_core!nsProxyObject::Post(unsigned int methodIndex = 3, class nsXPTMethodInfo * methodInfo = 0x03b33928, struct nsXPTCMiniVariant * params = 0x0012abd8, class nsIInterfaceInfo * interfaceInfo = 0x03b38f80)+0xd6 (FPO: [Non-Fpo]) (CONV: thiscall) [r:\mozilla\xpcom\proxy\src\nsproxyevent.cpp @ 475]
+2b xpcom_core!nsProxyEventObject::CallMethod(unsigned short methodIndex = 3, class nsXPTMethodInfo * info = 0x03b33928, struct nsXPTCMiniVariant * params = 0x0012abd8)+0x45 (FPO: [Non-Fpo]) (CONV: stdcall) [r:\mozilla\xpcom\proxy\src\nsproxyeventobject.cpp @ 559]
+2c xpcom_core!PrepareAndDispatch(class nsXPTCStubBase * self = 0x05659310, unsigned int methodIndex = 3, unsigned int * args = 0x0012aca0, unsigned int * stackBytesToPop = 0x0012ac90)+0x350 (FPO: [Non-Fpo]) (CONV: stdcall) [r:\mozilla\xpcom\reflect\xptcall\src\md\win32\xptcstubs.cpp @ 117]
+2d xpcom_core!SharedStub(void)+0x16 (CONV: cdecl) [r:\mozilla\xpcom\reflect\xptcall\src\md\win32\xptcstubs.cpp @ 147]
+2e jsd3250!ExecutionHookWrapper::OnExecute(class jsdIStackFrame * frame = 0x05bbcb88, unsigned int type = 4, class jsdIValue ** val = 0x0012ad38, unsigned int * _retval = 0x0012ad28)+0x155 (FPO: [Non-Fpo]) (CONV: stdcall) [r:\mozilla\js\jsd\jsd_xpc.cpp @ 2483]
+2f jsd3250!jsds_ExecutionHookProc(struct JSDContext * jsdc = 0x00d835a8, struct JSDThreadState * jsdthreadstate = 0x05bbc0a0, unsigned int type = 4, void * callerdata = 0x00000000, long * rval = 0x0012b6ec)+0x2f3 (FPO: [Non-Fpo]) (CONV: cdecl) [r:\mozilla\js\jsd\jsd_xpc.cpp @ 696]
+30 jsd3250!jsd_CallExecutionHook(struct JSDContext * jsdc = 0x00d835a8, struct JSContext * cx = 0x056e1e48, unsigned int type = 4, <function> * hook = 0x013224a0, void * hookData = 0x00000000, long * rval = 0x0012b6ec)+0x71 (FPO: [Non-Fpo]) (CONV: cdecl) [r:\mozilla\js\jsd\jsd_hook.c @ 177]
+31 jsd3250!jsd_ThrowHandler(struct JSContext * cx = 0x056e1e48, struct JSScript * script = 0x04ece610, unsigned char * pc = 0x04ece64c ":", long * rval = 0x0012b6ec, void * closure = 0x00d835a8)+0x13f (FPO: [Non-Fpo]) (CONV: cdecl) [r:\mozilla\js\jsd\jsd_hook.c @ 149]
+32 js3250!js_Interpret(struct JSContext * cx = 0x056e1e48, unsigned char * pc = 0x04ece64c ":", long * result = 0x0012b81c)+0x1672f (FPO: [Non-Fpo]) (CONV: cdecl) [r:\mozilla\js\src\jsinterp.c @ 5774]
+33 js3250!js_Invoke(struct JSContext * cx = 0x056e1e48, unsigned int argc = 1, unsigned int flags = 2)+0xba5 (FPO: [Non-Fpo]) (CONV: cdecl) [r:\mozilla\js\src\jsinterp.c @ 1274]
+34 js3250!js_InternalInvoke(struct JSContext * cx = 0x056e1e48, struct JSObject * obj = 0x045c42a0, long fval = 79474192, unsigned int flags = 0, unsigned int argc = 1, long * argv = 0x0012bb28, long * rval = 0x0012bb2c)+0x115 (FPO: [Non-Fpo]) (CONV: cdecl) [r:\mozilla\js\src\jsinterp.c @ 1351]
+35 js3250!JS_CallFunctionValue(struct JSContext * cx = 0x056e1e48, struct JSObject * obj = 0x045c42a0, long fval = 79474192, unsigned int argc = 1, long * argv = 0x0012bb28, long * rval = 0x0012bb2c)+0x48 (FPO: [Non-Fpo]) (CONV: cdecl) [r:\mozilla\js\src\jsapi.c @ 4219]
+36 gklayout!nsJSContext::CallEventHandler(struct JSObject * aTarget = 0x045c42a0, struct JSObject * aHandler = 0x04bcae10, unsigned int argc = 1, long * argv = 0x0012bb28, long * rval = 0x0012bb2c)+0x12f (FPO: [Non-Fpo]) (CONV: thiscall) [r:\mozilla\dom\src\base\nsjsenvironment.cpp @ 1439]
+37 gklayout!nsJSEventListener::HandleEvent(class nsIDOMEvent * aEvent = 0x05b975c0)+0x5ad (FPO: [Non-Fpo]) (CONV: stdcall) [r:\mozilla\dom\src\events\nsjseventlistener.cpp @ 223]
+38 gklayout!nsEventListenerManager::HandleEventSubType(struct nsListenerStruct * aListenerStruct = 0x0508b4f0, class nsIDOMEventListener * aListener = 0x056ea198, class nsIDOMEvent * aDOMEvent = 0x05b975c0, class nsIDOMEventTarget * aCurrentTarget = 0x05b95bb0, unsigned int aSubType = 8, unsigned int aPhaseFlags = 7)+0x23a (FPO: [Non-Fpo]) (CONV: thiscall) [r:\mozilla\content\events\src\nseventlistenermanager.cpp @ 1670]
+39 gklayout!nsEventListenerManager::HandleEvent(class nsPresContext * aPresContext = 0x057b9488, class nsEvent * aEvent = 0x0012bef4, class nsIDOMEvent ** aDOMEvent = 0x0012bea4, class nsIDOMEventTarget * aCurrentTarget = 0x05b95bb0, unsigned int aFlags = 7, nsEventStatus * aEventStatus = 0x0012bef0)+0x3ab (FPO: [Non-Fpo]) (CONV: stdcall) [r:\mozilla\content\events\src\nseventlistenermanager.cpp @ 1777]
+3a gklayout!nsXULElement::HandleDOMEvent(class nsPresContext * aPresContext = 0x057b9488, class nsEvent * aEvent = 0x0012bef4, class nsIDOMEvent ** aDOMEvent = 0x0012bea4, unsigned int aFlags = 7, nsEventStatus * aEventStatus = 0x0012bef0)+0xc4f (FPO: [Non-Fpo]) (CONV: thiscall) [r:\mozilla\content\xul\content\src\nsxulelement.cpp @ 1885]
+3b gklayout!nsTreeSelection::FireOnSelectHandler(void)+0x1b1 (FPO: [Non-Fpo]) (CONV: thiscall) [r:\mozilla\layout\xul\base\src\tree\src\nstreeselection.cpp @ 788]
+3c gklayout!nsTreeSelection::AdjustSelection(int aIndex = 1, int aCount = 1)+0x529 (FPO: [Non-Fpo]) (CONV: stdcall) [r:\mozilla\layout\xul\base\src\tree\src\nstreeselection.cpp @ 738]
+3d gklayout!nsTreeBodyFrame::RowCountChanged(int aIndex = 1, int aCount = 1)+0x8f (FPO: [Non-Fpo]) (CONV: stdcall) [r:\mozilla\layout\xul\base\src\tree\src\nstreebodyframe.cpp @ 1516]
+3e gklayout!nsTreeBoxObject::RowCountChanged(int aIndex = 1, int aDelta = 1)+0x2c (FPO: [Non-Fpo]) (CONV: stdcall) [r:\mozilla\layout\xul\base\src\tree\src\nstreeboxobject.cpp @ 441]
+3f inspector!inDOMView::ToggleOpenState(int index = 0)+0xb8 (FPO: [Non-Fpo]) (CONV: stdcall) [r:\mozilla\extensions\inspector\base\src\indomview.cpp @ 536]
+40 xpcom_core!XPTC_InvokeByIndex(class nsISupports * that = 0x057a28ec, unsigned int methodIndex = 0x18, unsigned int paramCount = 1, struct nsXPTCVariant * params = 0x0012c188)+0x27 (CONV: cdecl) [r:\mozilla\xpcom\reflect\xptcall\src\md\win32\xptcinvoke.cpp @ 102]
+41 xpc3250!XPCWrappedNative::CallMethod(class XPCCallContext * ccx = 0x0012c33c, XPCWrappedNative::CallMode mode = CALL_METHOD (0))+0xddf (FPO: [Non-Fpo]) (CONV: cdecl) [r:\mozilla\js\src\xpconnect\src\xpcwrappednative.cpp @ 2155]
+42 xpc3250!XPC_WN_CallMethod(struct JSContext * cx = 0x04bbb890, struct JSObject * obj = 0x04506168, unsigned int argc = 1, long * argv = 0x05b3a3e4, long * vp = 0x0012c44c)+0x1e6 (FPO: [Non-Fpo]) (CONV: cdecl) [r:\mozilla\js\src\xpconnect\src\xpcwrappednativejsops.cpp @ 1471]
+43 js3250!js_Invoke(struct JSContext * cx = 0x04bbb890, unsigned int argc = 1, unsigned int flags = 0)+0xb37 (FPO: [Non-Fpo]) (CONV: cdecl) [r:\mozilla\js\src\jsinterp.c @ 1250]
+44 js3250!js_Interpret(struct JSContext * cx = 0x04bbb890, unsigned char * pc = 0x0564ecef ":", long * result = 0x0012cf50)+0xe3cf (FPO: [Non-Fpo]) (CONV: cdecl) [r:\mozilla\js\src\jsinterp.c @ 3890]
+45 js3250!js_Invoke(struct JSContext * cx = 0x04bbb890, unsigned int argc = 1, unsigned int flags = 2)+0xba5 (FPO: [Non-Fpo]) (CONV: cdecl) [r:\mozilla\js\src\jsinterp.c @ 1274]
+46 js3250!js_InternalInvoke(struct JSContext * cx = 0x04bbb890, struct JSObject * obj = 0x04805bb0, long fval = 72375920, unsigned int flags = 0, unsigned int argc = 1, long * argv = 0x0012da68, long * rval = 0x0012da68)+0x115 (FPO: [Non-Fpo]) (CONV: cdecl) [r:\mozilla\js\src\jsinterp.c @ 1351]
+47 js3250!js_InternalGetOrSet(struct JSContext * cx = 0x04bbb890, struct JSObject * obj = 0x04805bb0, long id = 14650328, long fval = 72375920, JSAccessMode mode = JSACC_WRITE (8), unsigned int argc = 1, long * argv = 0x0012da68, long * rval = 0x0012da68)+0x215 (FPO: [Non-Fpo]) (CONV: cdecl) [r:\mozilla\js\src\jsinterp.c @ 1410]
+48 js3250!js_SetProperty(struct JSContext * cx = 0x04bbb890, struct JSObject * obj = 0x04805bb0, long id = 14650328, long * vp = 0x0012da68)+0x361 (FPO: [Non-Fpo]) (CONV: cdecl) [r:\mozilla\js\src\jsobj.c @ 3114]
+49 js3250!js_Interpret(struct JSContext * cx = 0x04bbb890, unsigned char * pc = 0x056fff30 "6", long * result = 0x0012db98)+0xc662 (FPO: [Non-Fpo]) (CONV: cdecl) [r:\mozilla\js\src\jsinterp.c @ 3647]
+4a js3250!js_Invoke(struct JSContext * cx = 0x04bbb890, unsigned int argc = 1, unsigned int flags = 2)+0xba5 (FPO: [Non-Fpo]) (CONV: cdecl) [r:\mozilla\js\src\jsinterp.c @ 1274]
+4b js3250!js_InternalInvoke(struct JSContext * cx = 0x04bbb890, struct JSObject * obj = 0x0472e858, long fval = 76992856, unsigned int flags = 0, unsigned int argc = 1, long * argv = 0x0012e6b0, long * rval = 0x0012e6b0)+0x115 (FPO: [Non-Fpo]) (CONV: cdecl) [r:\mozilla\js\src\jsinterp.c @ 1351]
+4c js3250!js_InternalGetOrSet(struct JSContext * cx = 0x04bbb890, struct JSObject * obj = 0x0472e858, long id = 14650328, long fval = 76992856, JSAccessMode mode = JSACC_WRITE (8), unsigned int argc = 1, long * argv = 0x0012e6b0, long * rval = 0x0012e6b0)+0x215 (FPO: [Non-Fpo]) (CONV: cdecl) [r:\mozilla\js\src\jsinterp.c @ 1410]
+4d js3250!js_SetProperty(struct JSContext * cx = 0x04bbb890, struct JSObject * obj = 0x0472e858, long id = 14650328, long * vp = 0x0012e6b0)+0x361 (FPO: [Non-Fpo]) (CONV: cdecl) [r:\mozilla\js\src\jsobj.c @ 3114]
+4e js3250!js_Interpret(struct JSContext * cx = 0x04bbb890, unsigned char * pc = 0x04421707 "6", long * result = 0x0012e7e0)+0xc662 (FPO: [Non-Fpo]) (CONV: cdecl) [r:\mozilla\js\src\jsinterp.c @ 3647]
+4f js3250!js_Invoke(struct JSContext * cx = 0x04bbb890, unsigned int argc = 1, unsigned int flags = 2)+0xba5 (FPO: [Non-Fpo]) (CONV: cdecl) [r:\mozilla\js\src\jsinterp.c @ 1274]
+50 xpc3250!nsXPCWrappedJSClass::CallMethod(class nsXPCWrappedJS * wrapper = 0x058199c0, unsigned short methodIndex = 3, class nsXPTMethodInfo * info = 0x00e65580, struct nsXPTCMiniVariant * nativeParams = 0x0012eb00)+0xd39 (FPO: [Non-Fpo]) (CONV: stdcall) [r:\mozilla\js\src\xpconnect\src\xpcwrappedjsclass.cpp @ 1507]
+51 xpc3250!nsXPCWrappedJS::CallMethod(unsigned short methodIndex = 3, class nsXPTMethodInfo * info = 0x00e65580, struct nsXPTCMiniVariant * params = 0x0012eb00)+0x3f (FPO: [Non-Fpo]) (CONV: stdcall) [r:\mozilla\js\src\xpconnect\src\xpcwrappedjs.cpp @ 519]
+52 xpcom_core!PrepareAndDispatch(class nsXPTCStubBase * self = 0x058199c0, unsigned int methodIndex = 3, unsigned int * args = 0x0012ebc8, unsigned int * stackBytesToPop = 0x0012ebb8)+0x350 (FPO: [Non-Fpo]) (CONV: stdcall) [r:\mozilla\xpcom\reflect\xptcall\src\md\win32\xptcstubs.cpp @ 117]
+53 xpcom_core!SharedStub(void)+0x16 (CONV: cdecl) [r:\mozilla\xpcom\reflect\xptcall\src\md\win32\xptcstubs.cpp @ 147]
+54 gklayout!nsEventListenerManager::HandleEventSubType(struct nsListenerStruct * aListenerStruct = 0x05819b60, class nsIDOMEventListener * aListener = 0x058199c0, class nsIDOMEvent * aDOMEvent = 0x05b39d9c, class nsIDOMEventTarget * aCurrentTarget = 0x05a2f1b8, unsigned int aSubType = 1, unsigned int aPhaseFlags = 4)+0x23a (FPO: [Non-Fpo]) (CONV: thiscall) [r:\mozilla\content\events\src\nseventlistenermanager.cpp @ 1670]
+55 gklayout!nsEventListenerManager::HandleEvent(class nsPresContext * aPresContext = 0x00000000, class nsEvent * aEvent = 0x0012f338, class nsIDOMEvent ** aDOMEvent = 0x0012f2f8, class nsIDOMEventTarget * aCurrentTarget = 0x05a2f1b8, unsigned int aFlags = 4, nsEventStatus * aEventStatus = 0x0012f2f4)+0x3ab (FPO: [Non-Fpo]) (CONV: stdcall) [r:\mozilla\content\events\src\nseventlistenermanager.cpp @ 1777]
+56 gklayout!nsXULElement::HandleDOMEvent(class nsPresContext * aPresContext = 0x00000000, class nsEvent * aEvent = 0x0012f338, class nsIDOMEvent ** aDOMEvent = 0x0012f2f8, unsigned int aFlags = 4, nsEventStatus * aEventStatus = 0x0012f2f4)+0xc4f (FPO: [Non-Fpo]) (CONV: thiscall) [r:\mozilla\content\xul\content\src\nsxulelement.cpp @ 1885]
+57 gklayout!nsXULElement::HandleDOMEvent(class nsPresContext * aPresContext = 0x00000000, class nsEvent * aEvent = 0x0012f338, class nsIDOMEvent ** aDOMEvent = 0x0012f2f8, unsigned int aFlags = 4, nsEventStatus * aEventStatus = 0x0012f2f4)+0xb04 (FPO: [Non-Fpo]) (CONV: thiscall) [r:\mozilla\content\xul\content\src\nsxulelement.cpp @ 1864]
+58 gklayout!nsXULElement::HandleChromeEvent(class nsPresContext * aPresContext = 0x00000000, class nsEvent * aEvent = 0x0012f338, class nsIDOMEvent ** aDOMEvent = 0x0012f2f8, unsigned int aFlags = 4, nsEventStatus * aEventStatus = 0x0012f2f4)+0x40 (FPO: [Non-Fpo]) (CONV: stdcall) [r:\mozilla\content\xul\content\src\nsxulelement.cpp @ 2544]
+59 gklayout!nsGlobalWindow::HandleDOMEvent(class nsPresContext * aPresContext = 0x00000000, class nsEvent * aEvent = 0x0012f338, class nsIDOMEvent ** aDOMEvent = 0x0012f2f8, unsigned int aFlags = 7, nsEventStatus * aEventStatus = 0x0012f2f4)+0x335 (FPO: [Non-Fpo]) (CONV: thiscall) [r:\mozilla\dom\src\base\nsglobalwindow.cpp @ 1636]
+5a gklayout!nsGlobalWindow::HandleDOMEvent(class nsPresContext * aPresContext = 0x00000000, class nsEvent * aEvent = 0x0012f338, class nsIDOMEvent ** aDOMEvent = 0x0012f2f8, unsigned int aFlags = 1, nsEventStatus * aEventStatus = 0x0012f2f4)+0x71 (FPO: [Non-Fpo]) (CONV: thiscall) [r:\mozilla\dom\src\base\nsglobalwindow.cpp @ 1541]
+5b gklayout!nsDocument::DispatchEventToWindow(class nsEvent * aEvent = 0x0012f338)+0x19e (FPO: [Non-Fpo]) (CONV: thiscall) [r:\mozilla\content\base\src\nsdocument.cpp @ 5385]
+5c gklayout!nsDocument::OnPageShow(int aPersisted = 0)+0x118 (FPO: [Non-Fpo]) (CONV: thiscall) [r:\mozilla\content\base\src\nsdocument.cpp @ 5414]
+5d gklayout!DocumentViewerImpl::LoadComplete(unsigned int aStatus = 0)+0x255 (FPO: [Non-Fpo]) (CONV: stdcall) [r:\mozilla\layout\base\nsdocumentviewer.cpp @ 1045]
+5e docshell!nsDocShell::EndPageLoad(class nsIWebProgress * aProgress = 0x05769e74, class nsIChannel * aChannel = 0x05a17200, unsigned int aStatus = 0)+0x83 (FPO: [Non-Fpo]) (CONV: thiscall) [r:\mozilla\docshell\base\nsdocshell.cpp @ 4701]
+5f docshell!nsWebShell::EndPageLoad(class nsIWebProgress * aProgress = 0x05769e74, class nsIChannel * channel = 0x05a17200, unsigned int aStatus = 0)+0x11d (FPO: [Non-Fpo]) (CONV: thiscall) [r:\mozilla\docshell\base\nswebshell.cpp @ 920]
+60 docshell!nsDocShell::OnStateChange(class nsIWebProgress * aProgress = 0x05769e74, class nsIRequest * aRequest = 0x05a17200, unsigned int aStateFlags = 0x20010, unsigned int aStatus = 0)+0x3c8 (FPO: [Non-Fpo]) (CONV: stdcall) [r:\mozilla\docshell\base\nsdocshell.cpp @ 4620]
+61 docshell!nsDocLoader::FireOnStateChange(class nsIWebProgress * aProgress = 0x05769e74, class nsIRequest * aRequest = 0x05a17200, int aStateFlags = 131088, unsigned int aStatus = 0)+0x1c0 (FPO: [Non-Fpo]) (CONV: thiscall) [r:\mozilla\uriloader\base\nsdocloader.cpp @ 1215]
+62 docshell!nsDocLoader::doStopDocumentLoad(class nsIRequest * request = 0x05a17200, unsigned int aStatus = 0)+0x81 (FPO: [Non-Fpo]) (CONV: thiscall) [r:\mozilla\uriloader\base\nsdocloader.cpp @ 848]
+63 docshell!nsDocLoader::DocLoaderIsEmpty(void)+0x11b (FPO: [Non-Fpo]) (CONV: thiscall) [r:\mozilla\uriloader\base\nsdocloader.cpp @ 745]
+64 docshell!nsDocLoader::OnStopRequest(class nsIRequest * aRequest = 0x05a8f580, class nsISupports * aCtxt = 0x00000000, unsigned int aStatus = 0)+0x3a6 (FPO: [Non-Fpo]) (CONV: stdcall) [r:\mozilla\uriloader\base\nsdocloader.cpp @ 665]
+65 necko!nsLoadGroup::RemoveRequest(class nsIRequest * request = 0x05a8f580, class nsISupports * ctxt = 0x00000000, unsigned int aStatus = 0)+0x234 (FPO: [Non-Fpo]) (CONV: stdcall) [r:\mozilla\netwerk\base\src\nsloadgroup.cpp @ 686]
+66 gklayout!nsDocument::DoUnblockOnload(void)+0xb8 (FPO: [Non-Fpo]) (CONV: thiscall) [r:\mozilla\content\base\src\nsdocument.cpp @ 5351]
+67 gklayout!nsDocument::HandleOnloadBlockerEvent(struct PLEvent * aEvent = 0x05a93710)+0x15 (FPO: [Non-Fpo]) (CONV: cdecl) [r:\mozilla\content\base\src\nsdocument.cpp @ 5317]
+68 xpcom_core!PL_HandleEvent(struct PLEvent * self = 0x05a93710)+0x3d (FPO: [Non-Fpo]) (CONV: cdecl) [r:\mozilla\xpcom\threads\plevent.c @ 688]
+69 xpcom_core!PL_ProcessPendingEvents(struct PLEventQueue * self = 0x00d1fe48)+0xc7 (FPO: [Non-Fpo]) (CONV: cdecl) [r:\mozilla\xpcom\threads\plevent.c @ 623]
+6a xpcom_core!_md_EventReceiverProc(struct HWND__ * hwnd = 0x02950200, unsigned int uMsg = 0xc205, unsigned int wParam = 0, long lParam = 13762120)+0x27 (FPO: [Non-Fpo]) (CONV: stdcall) [r:\mozilla\xpcom\threads\plevent.c @ 1408]
+6b USER32!InternalCallWinProc+0x28
+6c USER32!UserCallWinProcCheckWow+0x150 (FPO: [Non-Fpo])
+6d USER32!DispatchMessageWorker+0x306 (FPO: [Non-Fpo])
+6e USER32!DispatchMessageW+0xf (FPO: [Non-Fpo])
+6f gkwidget!nsAppShell::Run(void)+0x108 (FPO: [Non-Fpo]) (CONV: stdcall) [r:\mozilla\widget\src\windows\nsappshell.cpp @ 135]
+70 appcomps!nsAppStartup::Run(void)+0x1e (FPO: [Non-Fpo]) (CONV: stdcall) [r:\mozilla\xpfe\components\startup\src\nsappstartup.cpp @ 208]
+71 seamonkey!main1(int argc = 2, char ** argv = 0x00a58518, class nsISupports * nativeApp = 0x00dc7630)+0xc35 (FPO: [Non-Fpo]) (CONV: cdecl) [r:\mozilla\xpfe\bootstrap\nsapprunner.cpp @ 1248]
+72 seamonkey!main(int argc = 2, char ** argv = 0x00a58518)+0x1c7 (FPO: [Non-Fpo]) (CONV: cdecl) [r:\mozilla\xpfe\bootstrap\nsapprunner.cpp @ 1762]
+73 seamonkey!mainCRTStartup(void)+0x12c (FPO: [Non-Fpo]) (CONV: cdecl) [f:\vs70builds\3077\vc\crtbld\crt\src\crtexe.c @ 398]
+74 kernel32!BaseProcessStart+0x23 (FPO: [Non-Fpo])
+
+there is no JSContext on the nsIThreadJSContextStack!
+
+0:000> .call xpc3250!xpc_DumpJSStack((js3250!JSContext*)0x0364faa8 , 1 ,1 ,0 );
+g
+
+JavaScript stack is empty
+
+0:000> .call xpc3250!xpc_DumpJSStack((js3250!JSContext*)0x056e1e48 , 1 ,1 ,0 ); g
+
+0 [native frame]
+1 debugTrap(frames = [xpconnect wrapped jsdIStackFrame @ 0x5bbcc88 (native @ 0x5bbcb88)],[xpconnect wrapped jsdIStackFrame @ 0x5c0a458 (native @ 0x5c0a400)],[xpconnect wrapped jsdIStackFrame @ 0x5c0a6c0 (native @ 0x5c0a668)], type = 4, rv = [object Object]) ["chrome://venkman/content/venkman-debugger.js":1635]
+    tn = "thrown exception"
+    retcode = 5
+    frame = [xpconnect wrapped jsdIStackFrame @ 0x5bbcc88 (native @ 0x5bbcb88)]
+    bpResult = undefined
+    line = undefined
+    this = [object ChromeWindow @ 0x36617d0 (native @ 0x365bb6c)]
+2 jsdExecutionHook(frame = [xpconnect wrapped jsdIStackFrame @ 0x5bbcc88 (native @ 0x5bbcb88)], type = 4, rv = [object Object]) ["chrome://venkman/content/venkman-debugger.js":328]
+    hookReturn = 1
+    frames = [xpconnect wrapped jsdIStackFrame @ 0x5bbcc88 (native @ 0x5bbcb88)],[xpconnect wrapped jsdIStackFrame @ 0x5c0a458 (native @ 0x5c0a400)],[xpconnect wrapped jsdIStackFrame @ 0x5c0a6c0 (native @ 0x5c0a668)]
+    prevFrame = null
+    hasDisabledFrame = false
+    targetWindow = null
+    wasModal = false
+    cx = [xpconnect wrapped jsdIContext @ 0x5c0aac8 (native @ 0x5c0a9f0)]
+    targetWasEnabled = true
+    debuggerWasEnabled = true
+    glob = [xpconnect wrapped jsdIValue @ 0x5c0af08 (native @ 0x5c0aeb0)]
+    this = [object Object]
+3 anonymous(aIndex = 2) ["chrome://inspector/content/viewers/dom/dom.js":802]
+    this = [object Object]
+4 anonymous() ["chrome://inspector/content/viewers/dom/dom.js":267]
+    idx = 2
+    this = [object Object]
+5 onselect(event = [object Event @ 0x5b97628 (native @ 0x5b975c0)]) ["chrome://inspector/content/viewers/dom/dom.xul":1]
+
+    this = [object XULElement @ 0x576ec38 (native @ 0x5845f48)]
+6 [native frame]
+
+0:000> .call xpc3250!xpc_DumpJSStack((js3250!JSContext*)0x4bbb890 , 1 ,1 ,0 ); g
+
+0 [native frame]
+1 anonymous(aEl = [object HTMLDocument @ 0x5ae9130 (native @ 0x5a7ee90)], aExpand = true, aQuickie = undefined) ["chrome://inspector/content/viewers/dom/dom.js":622]
+    bx = [object BoxObject @ 0x5735f60 (native @ 0x4d9602c)]
+    walker = [xpconnect wrapped inIDeepTreeWalker @ 0x5b967d8 (native @ 0x5061ff8)]
+    line = [object HTMLDocument @ 0x5ae9130 (native @ 0x5a7ee90)]
+    parent = [object HTMLDocument @ 0x5ae9130 (native @ 0x5a7ee90)]
+    index = 0
+    view = [xpconnect wrapped nsITreeView @ 0x5b2f0d0 (native @ 0x57a28e8)]
+    lastIndex = undefined
+    i = 0
+    this = [object Object]
+2 anonymous(aObject = [object HTMLDocument @ 0x5ae9130 (native @ 0x5a7ee90)]) ["chrome://inspector/content/viewers/dom/dom.js":283]
+    fireSelected = false
+    this = [object Object]
+3 anonymous(aObject = [object HTMLDocument @ 0x5ae9130 (native @ 0x5a7ee90)]) ["chrome://inspector/content/viewers/dom/dom.js":116]
+    this = [object Object]
+4 setSubject(aObject = [object HTMLDocument @ 0x5ae9130 (native @ 0x5a7ee90)]) ["chrome://inspector/content/inspector.xml":670]
+    entries = 0,1,7
+    this = [object XULElement @ 0x4b25790 (native @ 0x5031650)]
+5 set_subject(val = [object HTMLDocument @ 0x5ae9130 (native @ 0x5a7ee90)]) ["chrome://inspector/content/inspector.xml":0]
+    this = [object XULElement @ 0x4b25790 (native @ 0x5031650)]
+6 anonymous(aDoc = [object HTMLDocument @ 0x5ae9130 (native @ 0x5a7ee90)]) ["chrome://inspector/content/inspector.js":382]
+    this = [object Object]
+7 anonymous(aWindow = [object Window @ 0x57757a8 (native @ 0x576f38c)]) ["chrome://inspector/content/inspector.js":377]
+    this = [object Object]
+8 anonymous() ["chrome://inspector/content/inspector.js":419]
+    url = undefined
+    this = [object Object]
+9 BrowserPageShowListener(aEvent = [object PageTransitionEvent @ 0x5a906f8 (native @ 0x5b39d9c)]) ["chrome://inspector/content/inspector.js":584]
+    this = [object XULElement @ 0x5769aa8 (native @ 0x56db488)]
+10 [native frame]

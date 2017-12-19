@@ -1,0 +1,321 @@
+SortService vs Locales
+Looks like the sort service goes to get some locale data and ends up creating
+and then destroying a bunch of data.  This happens twice in startup.  Can't that
+data be cached or something?
+
+
+****  Purify instrumented ./apprunner.pure (pid 10620)  ****
+FMM: Freeing mismatched memory:
+  * This is occurring while in:
+        __builtin_vec_delete [rtlib.o]
+        nsPosixLocale::GetPlatformLocale(const nsString*,char*,unsigned int)
+[nsPosixLocale.cpp:56]
+        nsCollationUnix::Initialize(nsILocale*) [nsCollationUnix.cpp:109]
+        nsCollationFactory::CreateCollation(nsILocale*,nsICollation**)
+[nsCollation.cpp:50]
+        XULSortServiceImpl::XULSortServiceImpl() [nsXULSortService.cpp:309]
+        NS_NewXULSortService(nsIXULSortService**) [nsXULSortService.cpp:1623]
+        RDFFactoryImpl::CreateInstance(nsISupports*,const nsID&,void**)
+[nsRDFFactory.cpp:171]
+        nsComponentManagerImpl::CreateInstance(const nsID&,nsISupports*,const
+nsID&,void**) [nsComponentManager.cpp:1218]
+        nsComponentManager::CreateInstance(const nsID&,nsISupports*,const
+nsID&,void**) [nsRepository.cpp:77]
+        nsServiceManagerImpl::GetService(const nsID&,const
+nsID&,nsISupports**,nsIShutdownListener*) [nsServiceManager.cpp:237]
+        nsServiceManager::GetService(const nsID&,const
+nsID&,nsISupports**,nsIShutdownListener*) [nsServiceManager.cpp:443]
+        RDFGenericBuilderImpl::Init() [nsRDFGenericBuilder.cpp:552]
+        NS_NewXULTemplateBuilder(nsIRDFContentModelBuilder**)
+[nsRDFGenericBuilder.cpp:386]
+        RDFFactoryImpl::CreateInstance(nsISupports*,const nsID&,void**)
+[nsRDFFactory.cpp:227]
+        nsComponentManagerImpl::CreateInstance(const nsID&,nsISupports*,const
+nsID&,void**) [nsComponentManager.cpp:1218]
+        nsComponentManager::CreateInstance(const nsID&,nsISupports*,const
+nsID&,void**) [nsRepository.cpp:77]
+        RDFXULBuilderImpl::CreateTemplateBuilder(nsIContent*,const
+nsString&,nsIRDFContentModelBuilder**) [nsRDFXULBuilder.cpp:1379]
+
+RDFXULBuilderImpl::CreateChildrenFromGraph(nsINameSpace*,nsIRDFResource*,nsICont
+ent*,int) [nsRDFXULBuilder.cpp:744]
+
+RDFXULBuilderImpl::CreateChildrenFromGraph(nsINameSpace*,nsIRDFResource*,nsICont
+ent*,int) [nsRDFXULBuilder.cpp:717]
+
+RDFXULBuilderImpl::CreateChildrenFromGraph(nsINameSpace*,nsIRDFResource*,nsICont
+ent*,int) [nsRDFXULBuilder.cpp:717]
+        RDFXULBuilderImpl::CreateRootContent(nsIRDFResource*)
+[nsRDFXULBuilder.cpp:548]
+        XULDocumentImpl::EndLoad() [nsXULDocument.cpp:2080]
+        XULContentSinkImpl::DidBuildModel(int) [nsXULContentSink.cpp:539]
+        CWellFormedDTD::DidBuildModel(unsigned
+int,int,nsIParser*,nsIContentSink*) [nsWellFormedDTD.cpp:287]
+        nsParser::DidBuildModel(unsigned int) [nsParser.cpp:526]
+        nsParser::ResumeParse(nsIDTD*,int) [nsParser.cpp:893]
+        nsParser::EnableParser(int) [nsParser.cpp:620]
+        XULContentSinkImpl::UpdateOverlayCounters(int)
+[nsXULContentSink.cpp:1937]
+        XULContentSinkImpl::CloseContainer(const nsIParserNode&)
+[nsXULContentSink.cpp:697]
+        CWellFormedDTD::HandleEndToken(CToken*) [nsWellFormedDTD.cpp:618]
+  * Attempting to free block at 0xe92ad8 in the heap.
+  * Address 0xe92ad8 is at the beginning of a malloc'd block of 33 bytes.
+  * This block was allocated from:
+        malloc         [rtlib.o]
+        PR_Malloc      [prmem.c:38]
+        nsAllocatorImpl::Alloc(unsigned int) [nsAllocator.cpp:77]
+        nsAllocator::Alloc(unsigned int) [nsAllocator.cpp:143]
+        nsMemoryAgent::Alloc(nsStr&,unsigned int) [nsStr.h:444]
+        nsMemoryAgent::Realloc(nsStr&,unsigned int) [nsStr.h:464]
+        nsStr::EnsureCapacity(nsStr&,unsigned int,nsIMemoryAgent*)
+[nsStr.cpp:114]
+        nsStr::GrowCapacity(nsStr&,unsigned int,nsIMemoryAgent*) [nsStr.cpp:132]
+        nsStr::Append(nsStr&,const nsStr&,unsigned int,int,nsIMemoryAgent*)
+[nsStr.cpp:174]
+        nsStr::Assign(nsStr&,const nsStr&,unsigned int,int,nsIMemoryAgent*)
+[nsStr.cpp:156]
+        nsCString::nsCString(const nsStr&,nsIMemoryAgent*) [nsString.cpp:114]
+        nsString::ToNewCString()const [nsString2.cpp:568]
+        nsPosixLocale::GetPlatformLocale(const nsString*,char*,unsigned int)
+[nsPosixLocale.cpp:52]
+        nsCollationUnix::Initialize(nsILocale*) [nsCollationUnix.cpp:109]
+        nsCollationFactory::CreateCollation(nsILocale*,nsICollation**)
+[nsCollation.cpp:50]
+        XULSortServiceImpl::XULSortServiceImpl() [nsXULSortService.cpp:309]
+        NS_NewXULSortService(nsIXULSortService**) [nsXULSortService.cpp:1623]
+        RDFFactoryImpl::CreateInstance(nsISupports*,const nsID&,void**)
+[nsRDFFactory.cpp:171]
+        nsComponentManagerImpl::CreateInstance(const nsID&,nsISupports*,const
+nsID&,void**) [nsComponentManager.cpp:1218]
+        nsComponentManager::CreateInstance(const nsID&,nsISupports*,const
+nsID&,void**) [nsRepository.cpp:77]
+        nsServiceManagerImpl::GetService(const nsID&,const
+nsID&,nsISupports**,nsIShutdownListener*) [nsServiceManager.cpp:237]
+        nsServiceManager::GetService(const nsID&,const
+nsID&,nsISupports**,nsIShutdownListener*) [nsServiceManager.cpp:443]
+        RDFGenericBuilderImpl::Init() [nsRDFGenericBuilder.cpp:552]
+        NS_NewXULTemplateBuilder(nsIRDFContentModelBuilder**)
+[nsRDFGenericBuilder.cpp:386]
+        RDFFactoryImpl::CreateInstance(nsISupports*,const nsID&,void**)
+[nsRDFFactory.cpp:227]
+        nsComponentManagerImpl::CreateInstance(const nsID&,nsISupports*,const
+nsID&,void**) [nsComponentManager.cpp:1218]
+        nsComponentManager::CreateInstance(const nsID&,nsISupports*,const
+nsID&,void**) [nsRepository.cpp:77]
+        RDFXULBuilderImpl::CreateTemplateBuilder(nsIContent*,const
+nsString&,nsIRDFContentModelBuilder**) [nsRDFXULBuilder.cpp:1379]
+
+RDFXULBuilderImpl::CreateChildrenFromGraph(nsINameSpace*,nsIRDFResource*,nsICont
+ent*,int) [nsRDFXULBuilder.cpp:744]
+
+RDFXULBuilderImpl::CreateChildrenFromGraph(nsINameSpace*,nsIRDFResource*,nsICont
+ent*,int) [nsRDFXULBuilder.cpp:717]
+  * This block of memory was obtained using an allocation routine which is
+    not compatible with the routine by which it is being freed.
+
+****  Purify instrumented ./apprunner.pure (pid 10620)  ****
+FMM: Freeing mismatched memory (246 times):
+  * This is occurring while in:
+        __builtin_vec_delete [rtlib.o]
+        FreeHashEntries(PLHashEntry*,int,void*) [nsProperties.cpp:189]
+        PL_HashTableEnumerateEntries [plhash.c:368]
+        nsPersistentProperties::~nsPersistentProperties() [nsProperties.cpp:198]
+        nsPersistentProperties::Release() [nsProperties.cpp:218]
+        nsURLProperties::~nsURLProperties() [nsURLProperties.cpp:93]
+        nsUNIXCharset::nsUNIXCharset() [nsUNIXCharset.cpp:74]
+        nsUNIXCharsetFactory::CreateInstance(nsISupports*,const nsID&,void**)
+[nsUNIXCharset.cpp:170]
+        nsComponentManagerImpl::CreateInstance(const nsID&,nsISupports*,const
+nsID&,void**) [nsComponentManager.cpp:1218]
+        nsComponentManager::CreateInstance(const nsID&,nsISupports*,const
+nsID&,void**) [nsRepository.cpp:77]
+        nsCollationUnix::Initialize(nsILocale*) [nsCollationUnix.cpp:117]
+        nsCollationFactory::CreateCollation(nsILocale*,nsICollation**)
+[nsCollation.cpp:50]
+        XULSortServiceImpl::XULSortServiceImpl() [nsXULSortService.cpp:309]
+        NS_NewXULSortService(nsIXULSortService**) [nsXULSortService.cpp:1623]
+        RDFFactoryImpl::CreateInstance(nsISupports*,const nsID&,void**)
+[nsRDFFactory.cpp:171]
+        nsComponentManagerImpl::CreateInstance(const nsID&,nsISupports*,const
+nsID&,void**) [nsComponentManager.cpp:1218]
+        nsComponentManager::CreateInstance(const nsID&,nsISupports*,const
+nsID&,void**) [nsRepository.cpp:77]
+        nsServiceManagerImpl::GetService(const nsID&,const
+nsID&,nsISupports**,nsIShutdownListener*) [nsServiceManager.cpp:237]
+        nsServiceManager::GetService(const nsID&,const
+nsID&,nsISupports**,nsIShutdownListener*) [nsServiceManager.cpp:443]
+        RDFGenericBuilderImpl::Init() [nsRDFGenericBuilder.cpp:552]
+        NS_NewXULTemplateBuilder(nsIRDFContentModelBuilder**)
+[nsRDFGenericBuilder.cpp:386]
+        RDFFactoryImpl::CreateInstance(nsISupports*,const nsID&,void**)
+[nsRDFFactory.cpp:227]
+        nsComponentManagerImpl::CreateInstance(const nsID&,nsISupports*,const
+nsID&,void**) [nsComponentManager.cpp:1218]
+        nsComponentManager::CreateInstance(const nsID&,nsISupports*,const
+nsID&,void**) [nsRepository.cpp:77]
+        RDFXULBuilderImpl::CreateTemplateBuilder(nsIContent*,const
+nsString&,nsIRDFContentModelBuilder**) [nsRDFXULBuilder.cpp:1379]
+
+RDFXULBuilderImpl::CreateChildrenFromGraph(nsINameSpace*,nsIRDFResource*,nsICont
+ent*,int) [nsRDFXULBuilder.cpp:744]
+
+RDFXULBuilderImpl::CreateChildrenFromGraph(nsINameSpace*,nsIRDFResource*,nsICont
+ent*,int) [nsRDFXULBuilder.cpp:717]
+
+RDFXULBuilderImpl::CreateChildrenFromGraph(nsINameSpace*,nsIRDFResource*,nsICont
+ent*,int) [nsRDFXULBuilder.cpp:717]
+        RDFXULBuilderImpl::CreateRootContent(nsIRDFResource*)
+[nsRDFXULBuilder.cpp:548]
+        XULDocumentImpl::EndLoad() [nsXULDocument.cpp:2080]
+  * Attempting to free block at 0xea3268 in the heap.
+  * Address 0xea3268 is at the beginning of a malloc'd block of 66 bytes.
+  * This block was allocated from:
+        malloc         [rtlib.o]
+        PR_Malloc      [prmem.c:38]
+        nsAllocatorImpl::Alloc(unsigned int) [nsAllocator.cpp:77]
+        nsAllocator::Alloc(unsigned int) [nsAllocator.cpp:143]
+        nsMemoryAgent::Alloc(nsStr&,unsigned int) [nsStr.h:444]
+        nsMemoryAgent::Realloc(nsStr&,unsigned int) [nsStr.h:464]
+        nsStr::EnsureCapacity(nsStr&,unsigned int,nsIMemoryAgent*)
+[nsStr.cpp:114]
+        nsStr::GrowCapacity(nsStr&,unsigned int,nsIMemoryAgent*) [nsStr.cpp:132]
+        nsStr::Append(nsStr&,const nsStr&,unsigned int,int,nsIMemoryAgent*)
+[nsStr.cpp:174]
+        nsString::Append(const unsigned short*,int) [nsString2.cpp:998]
+        nsString::Assign(const unsigned short*,int) [nsString2.cpp:862]
+        nsString::nsString(const unsigned short*,nsIMemoryAgent*)
+[nsString2.cpp:83]
+        nsString::ToNewUnicode()const [nsString2.cpp:598]
+        nsPersistentProperties::SetStringProperty(const
+nsString&,nsString&,nsString&) [nsProperties.cpp:310]
+        nsPersistentProperties::Load(nsIInputStream*) [nsProperties.cpp:272]
+        nsURLProperties::nsURLProperties(nsString&) [nsURLProperties.cpp:72]
+        nsUNIXCharset::nsUNIXCharset() [nsUNIXCharset.cpp:62]
+        nsUNIXCharsetFactory::CreateInstance(nsISupports*,const nsID&,void**)
+[nsUNIXCharset.cpp:170]
+        nsComponentManagerImpl::CreateInstance(const nsID&,nsISupports*,const
+nsID&,void**) [nsComponentManager.cpp:1218]
+        nsComponentManager::CreateInstance(const nsID&,nsISupports*,const
+nsID&,void**) [nsRepository.cpp:77]
+        nsCollationUnix::Initialize(nsILocale*) [nsCollationUnix.cpp:117]
+        nsCollationFactory::CreateCollation(nsILocale*,nsICollation**)
+[nsCollation.cpp:50]
+        XULSortServiceImpl::XULSortServiceImpl() [nsXULSortService.cpp:309]
+        NS_NewXULSortService(nsIXULSortService**) [nsXULSortService.cpp:1623]
+        RDFFactoryImpl::CreateInstance(nsISupports*,const nsID&,void**)
+[nsRDFFactory.cpp:171]
+        nsComponentManagerImpl::CreateInstance(const nsID&,nsISupports*,const
+nsID&,void**) [nsComponentManager.cpp:1218]
+        nsComponentManager::CreateInstance(const nsID&,nsISupports*,const
+nsID&,void**) [nsRepository.cpp:77]
+        nsServiceManagerImpl::GetService(const nsID&,const
+nsID&,nsISupports**,nsIShutdownListener*) [nsServiceManager.cpp:237]
+        nsServiceManager::GetService(const nsID&,const
+nsID&,nsISupports**,nsIShutdownListener*) [nsServiceManager.cpp:443]
+        RDFGenericBuilderImpl::Init() [nsRDFGenericBuilder.cpp:552]
+  * This block of memory was obtained using an allocation routine which is
+    not compatible with the routine by which it is being freed.
+
+****  Purify instrumented ./apprunner.pure (pid 10620)  ****
+FMM: Freeing mismatched memory (246 times):
+  * This is occurring while in:
+        __builtin_vec_delete [rtlib.o]
+        FreeHashEntries(PLHashEntry*,int,void*) [nsProperties.cpp:190]
+        PL_HashTableEnumerateEntries [plhash.c:368]
+        nsPersistentProperties::~nsPersistentProperties() [nsProperties.cpp:198]
+        nsPersistentProperties::Release() [nsProperties.cpp:218]
+        nsURLProperties::~nsURLProperties() [nsURLProperties.cpp:93]
+        nsUNIXCharset::nsUNIXCharset() [nsUNIXCharset.cpp:74]
+        nsUNIXCharsetFactory::CreateInstance(nsISupports*,const nsID&,void**)
+[nsUNIXCharset.cpp:170]
+        nsComponentManagerImpl::CreateInstance(const nsID&,nsISupports*,const
+nsID&,void**) [nsComponentManager.cpp:1218]
+        nsComponentManager::CreateInstance(const nsID&,nsISupports*,const
+nsID&,void**) [nsRepository.cpp:77]
+        nsCollationUnix::Initialize(nsILocale*) [nsCollationUnix.cpp:117]
+        nsCollationFactory::CreateCollation(nsILocale*,nsICollation**)
+[nsCollation.cpp:50]
+        XULSortServiceImpl::XULSortServiceImpl() [nsXULSortService.cpp:309]
+        NS_NewXULSortService(nsIXULSortService**) [nsXULSortService.cpp:1623]
+        RDFFactoryImpl::CreateInstance(nsISupports*,const nsID&,void**)
+[nsRDFFactory.cpp:171]
+        nsComponentManagerImpl::CreateInstance(const nsID&,nsISupports*,const
+nsID&,void**) [nsComponentManager.cpp:1218]
+        nsComponentManager::CreateInstance(const nsID&,nsISupports*,const
+nsID&,void**) [nsRepository.cpp:77]
+        nsServiceManagerImpl::GetService(const nsID&,const
+nsID&,nsISupports**,nsIShutdownListener*) [nsServiceManager.cpp:237]
+        nsServiceManager::GetService(const nsID&,const
+nsID&,nsISupports**,nsIShutdownListener*) [nsServiceManager.cpp:443]
+        RDFGenericBuilderImpl::Init() [nsRDFGenericBuilder.cpp:552]
+        NS_NewXULTemplateBuilder(nsIRDFContentModelBuilder**)
+[nsRDFGenericBuilder.cpp:386]
+        RDFFactoryImpl::CreateInstance(nsISupports*,const nsID&,void**)
+[nsRDFFactory.cpp:227]
+        nsComponentManagerImpl::CreateInstance(const nsID&,nsISupports*,const
+nsID&,void**) [nsComponentManager.cpp:1218]
+        nsComponentManager::CreateInstance(const nsID&,nsISupports*,const
+nsID&,void**) [nsRepository.cpp:77]
+        RDFXULBuilderImpl::CreateTemplateBuilder(nsIContent*,const
+nsString&,nsIRDFContentModelBuilder**) [nsRDFXULBuilder.cpp:1379]
+
+RDFXULBuilderImpl::CreateChildrenFromGraph(nsINameSpace*,nsIRDFResource*,nsICont
+ent*,int) [nsRDFXULBuilder.cpp:744]
+
+RDFXULBuilderImpl::CreateChildrenFromGraph(nsINameSpace*,nsIRDFResource*,nsICont
+ent*,int) [nsRDFXULBuilder.cpp:717]
+
+RDFXULBuilderImpl::CreateChildrenFromGraph(nsINameSpace*,nsIRDFResource*,nsICont
+ent*,int) [nsRDFXULBuilder.cpp:717]
+        RDFXULBuilderImpl::CreateRootContent(nsIRDFResource*)
+[nsRDFXULBuilder.cpp:548]
+        XULDocumentImpl::EndLoad() [nsXULDocument.cpp:2080]
+  * Attempting to free block at 0xec0330 in the heap.
+  * Address 0xec0330 is at the beginning of a malloc'd block of 66 bytes.
+  * This block was allocated from:
+        malloc         [rtlib.o]
+        PR_Malloc      [prmem.c:38]
+        nsAllocatorImpl::Alloc(unsigned int) [nsAllocator.cpp:77]
+        nsAllocator::Alloc(unsigned int) [nsAllocator.cpp:143]
+        nsMemoryAgent::Alloc(nsStr&,unsigned int) [nsStr.h:444]
+        nsMemoryAgent::Realloc(nsStr&,unsigned int) [nsStr.h:464]
+        nsStr::EnsureCapacity(nsStr&,unsigned int,nsIMemoryAgent*)
+[nsStr.cpp:114]
+        nsStr::GrowCapacity(nsStr&,unsigned int,nsIMemoryAgent*) [nsStr.cpp:132]
+        nsStr::Append(nsStr&,const nsStr&,unsigned int,int,nsIMemoryAgent*)
+[nsStr.cpp:174]
+        nsString::Append(const unsigned short*,int) [nsString2.cpp:998]
+        nsString::Assign(const unsigned short*,int) [nsString2.cpp:862]
+        nsString::nsString(const unsigned short*,nsIMemoryAgent*)
+[nsString2.cpp:83]
+        nsString::ToNewUnicode()const [nsString2.cpp:598]
+        nsPersistentProperties::SetStringProperty(const
+nsString&,nsString&,nsString&) [nsProperties.cpp:310]
+        nsPersistentProperties::Load(nsIInputStream*) [nsProperties.cpp:272]
+        nsURLProperties::nsURLProperties(nsString&) [nsURLProperties.cpp:72]
+        nsUNIXCharset::nsUNIXCharset() [nsUNIXCharset.cpp:62]
+        nsUNIXCharsetFactory::CreateInstance(nsISupports*,const nsID&,void**)
+[nsUNIXCharset.cpp:170]
+        nsComponentManagerImpl::CreateInstance(const nsID&,nsISupports*,const
+nsID&,void**) [nsComponentManager.cpp:1218]
+        nsComponentManager::CreateInstance(const nsID&,nsISupports*,const
+nsID&,void**) [nsRepository.cpp:77]
+        nsCollationUnix::Initialize(nsILocale*) [nsCollationUnix.cpp:117]
+        nsCollationFactory::CreateCollation(nsILocale*,nsICollation**)
+[nsCollation.cpp:50]
+        XULSortServiceImpl::XULSortServiceImpl() [nsXULSortService.cpp:309]
+        NS_NewXULSortService(nsIXULSortService**) [nsXULSortService.cpp:1623]
+        RDFFactoryImpl::CreateInstance(nsISupports*,const nsID&,void**)
+[nsRDFFactory.cpp:171]
+        nsComponentManagerImpl::CreateInstance(const nsID&,nsISupports*,const
+nsID&,void**) [nsComponentManager.cpp:1218]
+        nsComponentManager::CreateInstance(const nsID&,nsISupports*,const
+nsID&,void**) [nsRepository.cpp:77]
+        nsServiceManagerImpl::GetService(const nsID&,const
+nsID&,nsISupports**,nsIShutdownListener*) [nsServiceManager.cpp:237]
+        nsServiceManager::GetService(const nsID&,const
+nsID&,nsISupports**,nsIShutdownListener*) [nsServiceManager.cpp:443]
+        RDFGenericBuilderImpl::Init() [nsRDFGenericBuilder.cpp:552]
+  * This block of memory was obtained using an allocation routine which is
+    not compatible with the routine by which it is being freed.

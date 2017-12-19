@@ -1,0 +1,191 @@
+crash in RuleHash_CSMatchEntry
+User Agent: Mozilla/5.0 (X11; FreeBSD amd64; rv:25.0) Gecko/20100101 Firefox/25.0 (Beta/Release)
+Build ID: 20131125213802
+
+Steps to reproduce:
+
+Not sure.
+
+
+Actual results:
+
+Crash:
+
+#0  thr_kill () at thr_kill.S:3
+#1  0x00000008032c8a27 in nsProfileLock::FatalSignalHandler (signo=11, info=<optimized out>, context=0x7fffffff2f10)
+    at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/obj-x86_64-unknown-freebsd11.0/toolkit/profile/nsProfileLock.cpp:180
+#2  0x0000000800f90596 in handle_signal (actp=<optimized out>, sig=11, info=0x7fffffff3280, ucp=0x7fffffff2f10) at /usr/src/lib/libthr/thread/thr_sig.c:237
+#3  0x0000000800f9013f in thr_sighandler (sig=11, info=0x0, _ucp=0x7fffffff2f10) at /usr/src/lib/libthr/thread/thr_sig.c:182
+#4  <signal handler called>
+#5  0x000000080399f032 in ElementAt (i=0, this=<optimized out>) at ../../dist/include/nsTArray.h:876
+#6  operator[] (i=0, this=<optimized out>) at ../../dist/include/nsTArray.h:905
+#7  RuleHash_IdTable_GetKey (table=<optimized out>, hdr=<optimized out>) at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/layout/style/nsCSSRuleProcessor.cpp:338
+#8  0x000000080399e292 in RuleHash_CSMatchEntry (table=table@entry=0x8474de608, hdr=hdr@entry=0x83d5badc0, key=key@entry=0x828bb27c0)
+    at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/layout/style/nsCSSRuleProcessor.cpp:249
+#9  0x000000080555fad6 in SearchTable (table=table@entry=0x8474de608, key=key@entry=0x828bb27c0, keyHash=keyHash@entry=4224867952, op=op@entry=PL_DHASH_LOOKUP)
+    at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/obj-x86_64-unknown-freebsd11.0/xpcom/build/pldhash.cpp:400
+#10 0x00000008055603e1 in PL_DHashTableOperate (table=0x8474de608, key=0x828bb27c0, op=PL_DHASH_LOOKUP) at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/obj-x86_64-unknown-freebsd11.0/xpcom/build/pldhash.cpp:585
+#11 0x00000008039a3f69 in RuleHash::EnumerateAllRules (this=this@entry=0x8474de600, aElement=0x83993b100, aData=aData@entry=0x7fffffff3640, aNodeContext=...)
+    at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/layout/style/nsCSSRuleProcessor.cpp:739
+#12 0x00000008039a946b in nsCSSRuleProcessor::RulesMatching (this=0x860e48ac0, aData=0x7fffffff3640) at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/layout/style/nsCSSRuleProcessor.cpp:2437
+#13 0x0000000803a4408a in EnumRulesMatching<ElementRuleProcessorData> (aProcessor=<optimized out>, aData=<optimized out>) at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/layout/style/nsStyleSet.cpp:658
+#14 0x0000000803a4c974 in nsStyleSet::FileRules (this=this@entry=0x83a3e4d00, aData=aData@entry=0x7fffffff3640, aElement=aElement@entry=0x83993b100, aRuleWalker=aRuleWalker@entry=0x7fffffff3620, 
+    aCollectorFunc=0x803a44080 <EnumRulesMatching<ElementRuleProcessorData>(nsIStyleRuleProcessor*, void*)>) at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/layout/style/nsStyleSet.cpp:982
+#15 0x0000000803a4d16d in nsStyleSet::ResolveStyleFor (this=this@entry=0x83a3e4d00, aElement=0x83993b100, aParentContext=aParentContext@entry=0x84ca54838, aTreeMatchContext=...)
+    at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/layout/style/nsStyleSet.cpp:1176
+#16 0x000000080376bac5 in mozilla::ElementRestyler::RestyleSelf (this=this@entry=0x7fffffff3890, aRestyleHint=aRestyleHint@entry=eRestyle_Subtree)
+    at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/layout/base/RestyleManager.cpp:2264
+#17 0x000000080376aab6 in mozilla::ElementRestyler::Restyle (this=this@entry=0x7fffffff3890, aRestyleHint=aRestyleHint@entry=eRestyle_Subtree)
+    at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/layout/base/RestyleManager.cpp:2066
+#18 0x000000080376b080 in mozilla::ElementRestyler::RestyleContentChildren (this=this@entry=0x7fffffff3a90, aChildRestyleHint=aChildRestyleHint@entry=eRestyle_Subtree)
+    at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/layout/base/RestyleManager.cpp:2619
+#19 0x000000080376a9b0 in mozilla::ElementRestyler::RestyleChildren (this=0x7fffffff3a90, aChildRestyleHint=eRestyle_Subtree) at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/layout/base/RestyleManager.cpp:2375
+#20 0x000000080376aac1 in mozilla::ElementRestyler::Restyle (this=this@entry=0x7fffffff3a90, aRestyleHint=aRestyleHint@entry=eRestyle_Subtree)
+    at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/layout/base/RestyleManager.cpp:2068
+#21 0x000000080376adb7 in mozilla::ElementRestyler::RestyleContentChildren (this=this@entry=0x7fffffff3c90, aChildRestyleHint=aChildRestyleHint@entry=eRestyle_Subtree)
+    at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/layout/base/RestyleManager.cpp:2630
+#22 0x000000080376a9b0 in mozilla::ElementRestyler::RestyleChildren (this=0x7fffffff3c90, aChildRestyleHint=eRestyle_Subtree) at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/layout/base/RestyleManager.cpp:2375
+#23 0x000000080376aac1 in mozilla::ElementRestyler::Restyle (this=this@entry=0x7fffffff3c90, aRestyleHint=aRestyleHint@entry=eRestyle_Subtree)
+    at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/layout/base/RestyleManager.cpp:2068
+#24 0x000000080376adb7 in mozilla::ElementRestyler::RestyleContentChildren (this=this@entry=0x7fffffff3e90, aChildRestyleHint=aChildRestyleHint@entry=eRestyle_Subtree)
+    at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/layout/base/RestyleManager.cpp:2630
+#25 0x000000080376a9b0 in mozilla::ElementRestyler::RestyleChildren (this=0x7fffffff3e90, aChildRestyleHint=eRestyle_Subtree) at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/layout/base/RestyleManager.cpp:2375
+#26 0x000000080376aac1 in mozilla::ElementRestyler::Restyle (this=this@entry=0x7fffffff3e90, aRestyleHint=aRestyleHint@entry=eRestyle_Subtree)
+    at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/layout/base/RestyleManager.cpp:2068
+#27 0x000000080376adb7 in mozilla::ElementRestyler::RestyleContentChildren (this=this@entry=0x7fffffff4090, aChildRestyleHint=aChildRestyleHint@entry=eRestyle_Subtree)
+    at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/layout/base/RestyleManager.cpp:2630
+#28 0x000000080376a9b0 in mozilla::ElementRestyler::RestyleChildren (this=0x7fffffff4090, aChildRestyleHint=eRestyle_Subtree) at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/layout/base/RestyleManager.cpp:2375
+#29 0x000000080376aac1 in mozilla::ElementRestyler::Restyle (this=this@entry=0x7fffffff4090, aRestyleHint=aRestyleHint@entry=eRestyle_Subtree)
+    at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/layout/base/RestyleManager.cpp:2068
+#30 0x000000080376adb7 in mozilla::ElementRestyler::RestyleContentChildren (this=this@entry=0x7fffffff4290, aChildRestyleHint=aChildRestyleHint@entry=eRestyle_Subtree)
+    at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/layout/base/RestyleManager.cpp:2630
+#31 0x000000080376a9b0 in mozilla::ElementRestyler::RestyleChildren (this=0x7fffffff4290, aChildRestyleHint=eRestyle_Subtree) at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/layout/base/RestyleManager.cpp:2375
+#32 0x000000080376aac1 in mozilla::ElementRestyler::Restyle (this=this@entry=0x7fffffff4290, aRestyleHint=aRestyleHint@entry=eRestyle_Subtree)
+    at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/layout/base/RestyleManager.cpp:2068
+#33 0x000000080376adb7 in mozilla::ElementRestyler::RestyleContentChildren (this=this@entry=0x7fffffff4490, aChildRestyleHint=aChildRestyleHint@entry=eRestyle_Subtree)
+    at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/layout/base/RestyleManager.cpp:2630
+#34 0x000000080376a9b0 in mozilla::ElementRestyler::RestyleChildren (this=0x7fffffff4490, aChildRestyleHint=eRestyle_Subtree) at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/layout/base/RestyleManager.cpp:2375
+#35 0x000000080376aac1 in mozilla::ElementRestyler::Restyle (this=this@entry=0x7fffffff4490, aRestyleHint=aRestyleHint@entry=eRestyle_Subtree)
+    at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/layout/base/RestyleManager.cpp:2068
+#36 0x000000080376adb7 in mozilla::ElementRestyler::RestyleContentChildren (this=this@entry=0x7fffffff4690, aChildRestyleHint=aChildRestyleHint@entry=eRestyle_Subtree)
+    at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/layout/base/RestyleManager.cpp:2630
+#37 0x000000080376a9b0 in mozilla::ElementRestyler::RestyleChildren (this=0x7fffffff4690, aChildRestyleHint=eRestyle_Subtree) at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/layout/base/RestyleManager.cpp:2375
+#38 0x000000080376aac1 in mozilla::ElementRestyler::Restyle (this=this@entry=0x7fffffff4690, aRestyleHint=aRestyleHint@entry=eRestyle_Subtree)
+    at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/layout/base/RestyleManager.cpp:2068
+---Type <return> to continue, or q <return> to quit---
+#39 0x000000080376adb7 in mozilla::ElementRestyler::RestyleContentChildren (this=this@entry=0x7fffffff48a0, aChildRestyleHint=aChildRestyleHint@entry=eRestyle_Subtree)
+    at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/layout/base/RestyleManager.cpp:2630
+#40 0x000000080376a9b0 in mozilla::ElementRestyler::RestyleChildren (this=0x7fffffff48a0, aChildRestyleHint=eRestyle_Subtree) at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/layout/base/RestyleManager.cpp:2375
+#41 0x000000080376aac1 in mozilla::ElementRestyler::Restyle (this=this@entry=0x7fffffff48a0, aRestyleHint=aRestyleHint@entry=eRestyle_Subtree)
+    at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/layout/base/RestyleManager.cpp:2068
+#42 0x000000080376c6e0 in mozilla::RestyleManager::ComputeStyleChangeFor (this=this@entry=0x829209a00, aFrame=<optimized out>, aChangeList=aChangeList@entry=0x7fffffff4b10, aMinChange=aMinChange@entry=(unknown: 0), 
+    aRestyleTracker=..., aRestyleDescendants=aRestyleDescendants@entry=true) at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/layout/base/RestyleManager.cpp:2717
+#43 0x000000080376c97e in mozilla::RestyleManager::DoRebuildAllStyleData (this=this@entry=0x829209a00, aRestyleTracker=..., aExtraHint=aExtraHint@entry=(unknown: 0))
+    at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/layout/base/RestyleManager.cpp:1307
+#44 0x000000080376cc47 in mozilla::RestyleManager::RebuildAllStyleData (this=0x829209a00, aExtraHint=(unknown: 0)) at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/layout/base/RestyleManager.cpp:1273
+#45 0x000000080380692b in nsPresContext::MediaFeatureValuesChanged (this=0x82de2f800, aShouldRebuild=<optimized out>, aShouldRebuild@entry=nsPresContext::eRebuildStyleIfNeeded, aChangeHint=aChangeHint@entry=(unknown: 0))
+    at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/layout/base/nsPresContext.cpp:1788
+#46 0x0000000803824e8f in FlushPendingMediaFeatureValuesChanged (this=<optimized out>) at ../../../layout/base/nsPresContext.h:280
+#47 PresShell::FlushPendingNotifications (this=0x82b927980, aFlush=...) at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/layout/base/nsPresShell.cpp:3825
+#48 0x0000000803807f7e in PresShell::FlushPendingNotifications (this=<optimized out>, aType=<optimized out>) at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/layout/base/nsPresShell.cpp:3736
+#49 0x0000000803c23c8f in nsDocument::FlushPendingNotifications (this=0x8260d9600, aType=Flush_Style) at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/content/base/src/nsDocument.cpp:7125
+#50 0x00000008039ddf1d in nsComputedDOMStyle::GetPropertyCSSValue (this=this@entry=0x83d279120, aPropertyName=..., aRv=...) at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/layout/style/nsComputedDOMStyle.cpp:496
+#51 0x00000008039de4bf in nsComputedDOMStyle::GetPropertyValue (this=this@entry=0x83d279120, aPropertyName=..., aReturn=...) at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/layout/style/nsComputedDOMStyle.cpp:249
+#52 0x00000008039de634 in nsComputedDOMStyle::GetPropertyValue (this=0x83d279120, aPropID=<optimized out>, aValue=...) at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/layout/style/nsComputedDOMStyle.cpp:195
+#53 0x00000008055198dd in GetPosition (rv=..., aValue=..., this=<optimized out>) at ../../../layout/style/nsCSSPropList.h:2646
+#54 mozilla::dom::CSS2PropertiesBinding::get_position (cx=0x8268afc00, obj=..., self=<optimized out>, args=...)
+    at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/obj-x86_64-unknown-freebsd11.0/dom/bindings/CSS2PropertiesBinding.cpp:10117
+#55 0x00000008055112a1 in mozilla::dom::CSS2PropertiesBinding::genericGetter (cx=0x8268afc00, argc=<optimized out>, vp=0x7fffffff5708)
+    at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/obj-x86_64-unknown-freebsd11.0/dom/bindings/CSS2PropertiesBinding.cpp:16452
+#56 0x0000000805e1f871 in js::CallJSNative (cx=0x8268afc00, native=<optimized out>, args=...) at ../../../js/src/jscntxtinlines.h:225
+#57 0x0000000805e2e539 in js::Invoke (cx=cx@entry=0x8268afc00, args=..., construct=construct@entry=js::NO_CONSTRUCT) at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/js/src/vm/Interpreter.cpp:486
+#58 0x0000000805e395cd in js::Invoke (cx=cx@entry=0x8268afc00, thisv=..., fval=..., argc=argc@entry=0, argv=argv@entry=0x0, rval=...) at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/js/src/vm/Interpreter.cpp:536
+#59 0x0000000805e39864 in js::InvokeGetterOrSetter (cx=cx@entry=0x8268afc00, obj=<optimized out>, fval=..., argc=argc@entry=0, argv=argv@entry=0x0, rval=..., rval@entry=...)
+    at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/js/src/vm/Interpreter.cpp:607
+#60 0x0000000806047d43 in get (vp=..., pobj=<optimized out>, obj=<optimized out>, receiver=..., cx=0x8268afc00, this=<optimized out>) at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/js/src/vm/Shape-inl.h:263
+#61 NativeGetInline<(js::AllowGC)1> (cx=cx@entry=0x8268afc00, obj=..., receiver=receiver@entry=..., pobj=pobj@entry=..., shape=shape@entry=..., vp=..., getHow=0)
+    at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/js/src/jsobj.cpp:4025
+#62 0x0000000806049258 in GetPropertyHelperInline<(js::AllowGC)1> (cx=0x8268afc00, obj=..., receiver=..., id=..., vp=..., getHow=0) at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/js/src/jsobj.cpp:4200
+#63 0x000000080604972a in js::baseops::GetProperty (cx=<optimized out>, obj=..., receiver=..., id=..., vp=...) at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/js/src/jsobj.cpp:4216
+#64 0x0000000805f5b47a in getGeneric (vp=..., id=..., receiver=..., obj=..., cx=0x8268afc00) at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/js/src/jsobj.h:802
+#65 JS_ForwardGetPropertyTo (cx=cx@entry=0x8268afc00, objArg=<optimized out>, idArg=..., onBehalfOfArg=<optimized out>, vp=..., vp@entry=...) at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/js/src/jsapi.cpp:3801
+#66 0x0000000805543a68 in mozilla::dom::GetPropertyOnPrototype (cx=cx@entry=0x8268afc00, proxy=proxy@entry=..., id=..., id@entry=..., found=found@entry=0x7fffffff5b50, vp=vp@entry=0x818156a10)
+    at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/dom/bindings/BindingUtils.cpp:1365
+#67 0x00000008055128b7 in mozilla::dom::CSS2PropertiesBinding::DOMProxyHandler::get (this=<optimized out>, cx=0x8268afc00, proxy=..., receiver=..., id=..., vp=...)
+    at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/obj-x86_64-unknown-freebsd11.0/dom/bindings/CSS2PropertiesBinding.cpp:17133
+#68 0x0000000806087b1e in js::Proxy::get (cx=0x8268afc00, proxy=..., receiver=..., id=..., vp=...) at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/js/src/jsproxy.cpp:2494
+#69 0x0000000806087c69 in proxy_GetGeneric (cx=<optimized out>, obj=..., receiver=..., id=..., vp=...) at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/js/src/jsproxy.cpp:2838
+#70 0x0000000805de5b7c in getGeneric (vp=..., id=..., receiver=..., obj=..., cx=<optimized out>) at ../../../js/src/jsobj.h:799
+#71 JSObject::getProperty (cx=<optimized out>, obj=..., receiver=..., name=<optimized out>, vp=...) at ../../../js/src/jsobj.h:821
+#72 0x0000000805e2aec1 in GetObjectElementOperation (res=..., rref=..., wasObject=true, objArg=<optimized out>, op=JSOP_GETELEM, cx=0x8268afc00) at ../../../js/src/vm/Interpreter-inl.h:434
+#73 js::GetElementOperation (cx=0x8268afc00, op=JSOP_GETELEM, lref=..., rref=..., res=...) at ../../../js/src/vm/Interpreter-inl.h:501
+#74 0x0000000805e34970 in Interpret (cx=cx@entry=0x8268afc00, state=...) at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/js/src/vm/Interpreter.cpp:2414
+#75 0x0000000805e38595 in js::RunScript (cx=cx@entry=0x8268afc00, state=...) at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/js/src/vm/Interpreter.cpp:443
+#76 0x0000000805e2e685 in js::Invoke (cx=cx@entry=0x8268afc00, args=..., construct=construct@entry=js::NO_CONSTRUCT) at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/js/src/vm/Interpreter.cpp:505
+#77 0x0000000805fdd3fb in js_fun_call (cx=0x8268afc00, argc=1, vp=0x8181565d8) at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/js/src/jsfun.cpp:834
+#78 0x0000000805e1f871 in js::CallJSNative (cx=0x8268afc00, native=<optimized out>, args=...) at ../../../js/src/jscntxtinlines.h:225
+#79 0x0000000805e2e539 in js::Invoke (cx=cx@entry=0x8268afc00, args=..., construct=construct@entry=js::NO_CONSTRUCT) at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/js/src/vm/Interpreter.cpp:486
+#80 0x0000000805e36eb0 in Interpret (cx=cx@entry=0x8268afc00, state=...) at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/js/src/vm/Interpreter.cpp:2514
+#81 0x0000000805e38595 in js::RunScript (cx=cx@entry=0x8268afc00, state=...) at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/js/src/vm/Interpreter.cpp:443
+#82 0x0000000805e2e685 in js::Invoke (cx=cx@entry=0x8268afc00, args=..., construct=construct@entry=js::NO_CONSTRUCT) at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/js/src/vm/Interpreter.cpp:505
+#83 0x0000000805e395cd in js::Invoke (cx=cx@entry=0x8268afc00, thisv=..., fval=..., argc=argc@entry=3, argv=argv@entry=0x7fffffff7d30, rval=...)
+    at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/js/src/vm/Interpreter.cpp:536
+#84 0x00000008061165b9 in js::jit::DoCallFallback (cx=0x8268afc00, frame=<optimized out>, stub=<optimized out>, argc=<optimized out>, vp=0x7fffffff7d20, res=...)
+    at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/js/src/jit/BaselineIC.cpp:7060
+
+(gdb) fr 7
+#7  RuleHash_IdTable_GetKey (table=<optimized out>, hdr=<optimized out>) at /usr/obj/ports/usr/ports/www/firefox/work/mozilla-release/layout/style/nsCSSRuleProcessor.cpp:338
+338       return entry->mRules[0].mSelector->mIDList->mAtom;
+(gdb) list
+333     static nsIAtom*
+334     RuleHash_IdTable_GetKey(PLDHashTable *table, const PLDHashEntryHdr *hdr)
+335     {
+336       const RuleHashTableEntry *entry =
+337         static_cast<const RuleHashTableEntry*>(hdr);
+338       return entry->mRules[0].mSelector->mIDList->mAtom;
+339     }
+340
+341     static PLDHashNumber
+342     RuleHash_NameSpaceTable_HashKey(PLDHashTable *table, const void *key)
+(gdb) p entry->mRules
+value has been optimized out
+(gdb) set $entry=(const RuleHashTableEntry*)&$3
+
+(gdb) p *$entry
+$5 = {
+  <PLDHashEntryHdr> = {
+    keyHash = 4224867952
+  }, 
+  members of RuleHashTableEntry: 
+  mRules = {
+    <nsAutoArrayBase<nsTArray<RuleValue>, 1u>> = {
+      <nsTArray<RuleValue>> = {
+        <nsTArray_Impl<RuleValue, nsTArrayInfallibleAllocator>> = {
+          <nsTArray_base<nsTArrayInfallibleAllocator, nsTArray_CopyElements<RuleValue> >> = {
+            mHdr = 0x84dc1b200
+          }, 
+          <nsTArray_TypedBase<RuleValue, nsTArray_Impl<RuleValue, nsTArrayInfallibleAllocator> >> = {
+            <nsTArray_SafeElementAtHelper<RuleValue, nsTArray_Impl<RuleValue, nsTArrayInfallibleAllocator> >> = {<No data fields>}, <No data fields>}, <No data fields>}, <No data fields>}, 
+      members of nsAutoArrayBase<nsTArray<RuleValue>, 1u>: 
+      {
+        mAutoBuf = "\000\000\000\000\001\000\000\200", '\000' <repeats 39 times>, 
+        mAlign = {
+          elem = 0 '\000'
+        }
+      }
+    }, <No data fields>}
+}
+(gdb) p $5.mRules.mHdr
+$6 = (nsTArray_base<nsTArrayInfallibleAllocator, nsTArray_CopyElements<RuleValue> >::Header *) 0x84dc1b200
+(gdb) p *$5.mRules.mHdr
+$7 = {
+  static sEmptyHdr = {
+    static sEmptyHdr = <same as static member of an already seen type>, 
+    mLength = 0, 
+    mCapacity = 0, 
+    mIsAutoArray = 0
+  }, 
+  mLength = 0, 
+  mCapacity = 0, 
+  mIsAutoArray = 0
+}

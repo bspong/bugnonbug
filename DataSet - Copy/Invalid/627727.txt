@@ -1,0 +1,209 @@
+growing spike in crashes [@ mozalloc_abort(char const* const) ][@ mozalloc_abort(char const* const) | mozalloc_handle_oom() ] (was [@ mozalloc_handle_oom() ][@ mozalloc_handle_oom ]) just after transition to 4.0b10pre
+from Jan 1-12 we were pretty consistently running at 0-10 crashes per day on mozalloc_handle_oom() crashes in latest mozilla-central builds.  From Jan 13-18 we bumped to 15-17 crashes per day with one day at 26 crashes.  The last two days we have seen 24 and 27 crashes.
+
+The signature has moved up near the top ten in recent days.
+
+Need to keep an eye out on this, and we might need skip listing or to try and find some change that might have put increased memory preasure on the overall program to get a better diagnosis of what might be behind the increase.
+
+There is a wide variety of stacks behind the signature:  here is a sample breakdown.
+
+
+....Signature number: 10-mozalloc_handle_oom
+______ distribution of 20 different stacks, looking at top 10 frames
+      3  stacks like
+0|0|mozalloc.dll|mozalloc_abort(char const * const)
+0|1|mozalloc.dll|mozalloc_handle_oom()
+0|2|xul.dll|nsTArray_base&lt;nsTArrayDefaultAllocator&gt;::EnsureCapacity(unsigned int,unsigned int)
+0|3|xul.dll|nsTArray&lt;mozilla::FrameLayerBuilder::ClippedDisplayItem,nsTArrayDefaultAllocator&gt;::AppendElements&lt;mozilla::FrameLayerBuilder::ClippedDisplayItem&gt;(mozilla::FrameLayerBuilder::ClippedDisplayItem const *,unsigned int)
+0|4|xul.dll|mozilla::`anonymous namespace'::ContainerState::ProcessDisplayItems(nsDisplayList const &amp;,mozilla::FrameLayerBuilder::Clip const &amp;)
+0|5|xul.dll|mozilla::`anonymous namespace'::ContainerState::ProcessDisplayItems(nsDisplayList const &amp;,mozilla::FrameLayerBuilder::Clip const &amp;)
+0|6|xul.dll|mozilla::FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder *,mozilla::layers::LayerManager *,nsIFrame *,nsDisplayItem *,nsDisplayList const &amp;)
+0|7|xul.dll|nsDisplayOwnLayer::BuildLayer(nsDisplayListBuilder *,mozilla::layers::LayerManager *)
+0|8|xul.dll|mozilla::`anonymous namespace'::ContainerState::ProcessDisplayItems(nsDisplayList const &amp;,mozilla::FrameLayerBuilder::Clip const &amp;)
+0|9|xul.dll|mozilla::`anonymous namespace'::ContainerState::ProcessDisplayItems(nsDisplayList const &amp;,mozilla::FrameLayerBuilder::Clip const &amp;)
+
+      2  stacks like
+0|0|mozalloc.dll|mozalloc_abort(char const * const)
+0|1|mozalloc.dll|mozalloc_handle_oom()
+0|2|xul.dll|nsCSSRuleProcessor::RefreshRuleCascade(nsPresContext *)
+0|3|xul.dll|nsCSSRuleProcessor::RulesMatching(AnonBoxRuleProcessorData *)
+0|4|xul.dll|EnumRulesMatching&lt;AnonBoxRuleProcessorData&gt;
+0|5|xul.dll|nsStyleSet::FileRules(int (*)(nsIStyleRuleProcessor *,void *),void *,nsIContent *,nsRuleWalker *)
+0|6|xul.dll|nsStyleSet::ResolveAnonymousBoxStyle(nsIAtom *,nsStyleContext *)
+0|7|xul.dll|nsCSSFrameConstructor::ConstructRootFrame(nsIFrame * *)
+0|8|xul.dll|PresShell::InitialReflow(int,int)
+0|9|xul.dll|nsContentSink::StartLayout(int)
+
+      1  stacks like
+7|0|mozalloc.dll|mozalloc_abort(char const * const)
+7|1|mozalloc.dll|mozalloc_handle_oom()
+7|2|xul.dll|nsTArray_base&lt;nsTArrayDefaultAllocator&gt;::EnsureCapacity(unsigned int,unsigned int)
+7|3|xul.dll|nsHttpHeaderArray::SetHeader(nsHttpAtom,nsACString_internal const &amp;,int)
+7|4|xul.dll|nsHttpHeaderArray::ParseHeaderLine(char const *,nsHttpAtom *,char * *)
+7|5|xul.dll|nsHttpResponseHead::ParseHeaderLine(char const *)
+
+      1  stacks like
+3|0|mozalloc.dll|mozalloc_abort(char const * const)
+3|1|mozalloc.dll|mozalloc_handle_oom()
+3|2|xul.dll|GCGraphBuilder::NoteScriptChild(unsigned int,void *)
+3|3|xul.dll|JSContextParticipant::Traverse(void *,nsCycleCollectionTraversalCallback &amp;)
+3|4|xul.dll|nsCycleCollector::MarkRoots(GCGraphBuilder &amp;)
+3|5|xul.dll|nsCycleCollector::BeginCollection(int,nsICycleCollectorListener *)
+3|6|xul.dll|nsCycleCollectorRunner::Run()
+3|7|xul.dll|nsThread::ProcessNextEvent(int,int *)
+3|8|xul.dll|
+3|9|xul.dll|nsThreadStartupEvent::`scalar deleting destructor'(unsigned int)
+
+      1  stacks like
+16|0|mozalloc.dll|mozalloc_abort(char const * const)
+16|1|mozalloc.dll|mozalloc_handle_oom()
+16|2|xul.dll|nsHtml5TreeBuilder::flushCharacters()
+16|3|xul.dll|nsHtml5TreeBuilder::comment(unsigned short *,int,int)
+16|4|xul.dll|nsHtml5Tokenizer::stateLoop(int,unsigned short,int,unsigned short *,int,int,int)
+16|5|xul.dll|nsHtml5Tokenizer::tokenizeBuffer(nsHtml5UTF16Buffer *)
+16|6|xul.dll|nsHtml5StreamParser::ParseAvailableData()
+16|7|xul.dll|nsHtml5StreamParser::DoDataAvailable(unsigned char *,unsigned int)
+16|8|xul.dll|nsHtml5DataAvailable::Run()
+16|9|xul.dll|nsThread::ProcessNextEvent(int,int *)
+
+      1  stacks like
+13|0|mozalloc.dll|mozalloc_abort(char const * const)
+13|1|mozalloc.dll|mozalloc_handle_oom()
+13|2|xul.dll|nsHtml5Tokenizer::stateLoop(int,unsigned short,int,unsigned short *,int,int,int)
+13|3|xul.dll|nsHtml5Tokenizer::tokenizeBuffer(nsHtml5UTF16Buffer *)
+13|4|xul.dll|nsHtml5StreamParser::ParseAvailableData()
+13|5|xul.dll|nsHtml5StreamParser::DoDataAvailable(unsigned char *,unsigned int)
+13|6|xul.dll|nsHtml5DataAvailable::Run()
+13|7|xul.dll|nsThread::ProcessNextEvent(int,int *)
+13|8|xul.dll|nsThreadStartupEvent::`scalar deleting destructor'(unsigned int)
+13|9|xul.dll|nsThread::ThreadFunc(void *)
+
+      1  stacks like
+0|0|mozalloc.dll|mozalloc_abort(char const * const)
+0|1|mozalloc.dll|mozalloc_handle_oom()
+0|2|xul.dll|xptiInterfaceInfoManager::ReadXPTFileFromInputStream(nsIInputStream *)
+0|3|xul.dll|nsComponentManagerImpl::ManifestXPT(nsComponentManagerImpl::ManifestProcessingContext &amp;,int,char * const *)
+0|4|xul.dll|ParseManifestCommon
+0|5|xul.dll|ParseManifest(NSLocationType,nsIZipReader *,char const *,char *,bool)
+0|6|xul.dll|nsComponentManagerImpl::RegisterJarManifest(nsIZipReader *,char const *,bool)
+0|7|xul.dll|nsComponentManagerImpl::ManifestManifest(nsComponentManagerImpl::ManifestProcessingContext &amp;,int,char * const *)
+0|8|xul.dll|ParseManifestCommon
+0|9|xul.dll|ParseManifest(NSLocationType,nsIZipReader *,char const *,char *,bool)
+
+      1  stacks like
+0|0|mozalloc.dll|mozalloc_abort(char const * const)
+0|1|mozalloc.dll|mozalloc_handle_oom()
+0|2|xul.dll|XPC_WN_GetterSetter(JSContext *,unsigned int,unsigned __int64 *)
+0|3|mozjs.dll|js::Invoke(JSContext *,js::CallArgs const &amp;,unsigned int)
+0|4|mozjs.dll|js::ExternalInvoke(JSContext *,js::Value const &amp;,js::Value const &amp;,unsigned int,js::Value *,js::Value *)
+0|5|mozjs.dll|js::ExternalGetOrSet(JSContext *,JSObject *,int,js::Value const &amp;,JSAccessMode,unsigned int,js::Value *,js::Value *)
+0|6|mozjs.dll|js::Shape::get(JSContext *,JSObject *,JSObject *,JSObject *,js::Value *)
+0|7|mozjs.dll|js_GetPropertyHelper(JSContext *,JSObject *,int,unsigned int,js::Value *)
+0|8|mozjs.dll|js::Interpret(JSContext *,JSStackFrame *,unsigned int,JSInterpMode)
+0|9|mozjs.dll|js::RunScript(JSContext *,JSScript *,JSStackFrame *)
+
+      1  stacks like
+0|0|mozalloc.dll|mozalloc_abort(char const * const)
+0|1|mozalloc.dll|mozalloc_handle_oom()
+0|2|xul.dll|nsTArray_base&lt;nsTArrayDefaultAllocator&gt;::EnsureCapacity(unsigned int,unsigned int)
+0|3|xul.dll|nsTArray&lt;nsHtml5TreeOperation,nsTArrayDefaultAllocator&gt;::MoveElementsFrom&lt;nsHtml5TreeOperation,nsTArrayDefaultAllocator&gt;(nsTArray&lt;nsHtml5TreeOperation,nsTArrayDefaultAllocator&gt; &amp;)
+0|4|xul.dll|nsHtml5TreeOpStage::MoveOpsAndSpeculativeLoadsTo(nsTArray&lt;nsHtml5TreeOperation,nsTArrayDefaultAllocator&gt; &amp;,nsTArray&lt;nsHtml5SpeculativeLoad,nsTArrayDefaultAllocator&gt; &amp;)
+0|5|xul.dll|nsHtml5ExecutorReflusher::Run()
+0|6|xul.dll|mozilla::ipc::MessagePump::Run(base::MessagePump::Delegate *)
+0|7|xul.dll|MessageLoop::RunHandler()
+0|8|xul.dll|MessageLoop::Run()
+0|9|xul.dll|nsBaseAppShell::Run()
+
+      1  stacks like
+0|0|mozalloc.dll|mozalloc_abort(char const * const)
+0|1|mozalloc.dll|mozalloc_handle_oom()
+0|2|xul.dll|nsTArray_base&lt;nsTArrayDefaultAllocator&gt;::EnsureCapacity(unsigned int,unsigned int)
+0|3|xul.dll|nsTArray&lt;mozilla::FrameLayerBuilder::DisplayItemData,nsTArrayDefaultAllocator&gt;::AppendElements&lt;mozilla::FrameLayerBuilder::DisplayItemData&gt;(mozilla::FrameLayerBuilder::DisplayItemData const *,unsigned int)
+0|4|xul.dll|mozilla::`anonymous namespace'::ContainerState::ProcessDisplayItems(nsDisplayList const &amp;,mozilla::FrameLayerBuilder::Clip const &amp;)
+0|5|xul.dll|mozilla::`anonymous namespace'::ContainerState::ProcessDisplayItems(nsDisplayList const &amp;,mozilla::FrameLayerBuilder::Clip const &amp;)
+0|6|xul.dll|mozilla::`anonymous namespace'::ContainerState::ProcessDisplayItems(nsDisplayList const &amp;,mozilla::FrameLayerBuilder::Clip const &amp;)
+0|7|xul.dll|mozilla::`anonymous namespace'::ContainerState::ProcessDisplayItems(nsDisplayList const &amp;,mozilla::FrameLayerBuilder::Clip const &amp;)
+0|8|xul.dll|mozilla::FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder *,mozilla::layers::LayerManager *,nsIFrame *,nsDisplayItem *,nsDisplayList const &amp;)
+0|9|xul.dll|nsDisplayOwnLayer::BuildLayer(nsDisplayListBuilder *,mozilla::layers::LayerManager *)
+
+      1  stacks like
+0|0|mozalloc.dll|mozalloc_abort(char const * const)
+0|1|mozalloc.dll|mozalloc_handle_oom()
+0|2|xul.dll|nsTArray_base&lt;nsTArrayDefaultAllocator&gt;::EnsureCapacity(unsigned int,unsigned int)
+0|3|xul.dll|nsTArray&lt;mozilla::FrameLayerBuilder::ClippedDisplayItem,nsTArrayDefaultAllocator&gt;::AppendElements&lt;mozilla::FrameLayerBuilder::ClippedDisplayItem&gt;(mozilla::FrameLayerBuilder::ClippedDisplayItem const *,unsigned int)
+0|4|xul.dll|mozilla::`anonymous namespace'::ContainerState::ProcessDisplayItems(nsDisplayList const &amp;,mozilla::FrameLayerBuilder::Clip const &amp;)
+0|5|xul.dll|mozilla::`anonymous namespace'::ContainerState::ProcessDisplayItems(nsDisplayList const &amp;,mozilla::FrameLayerBuilder::Clip const &amp;)
+0|6|xul.dll|mozilla::`anonymous namespace'::ContainerState::ProcessDisplayItems(nsDisplayList const &amp;,mozilla::FrameLayerBuilder::Clip const &amp;)
+0|7|xul.dll|mozilla::FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder *,mozilla::layers::LayerManager *,nsIFrame *,nsDisplayItem *,nsDisplayList const &amp;)
+0|8|xul.dll|nsDisplayList::PaintForFrame(nsDisplayListBuilder *,nsIRenderingContext *,nsIFrame *,unsigned int)
+0|9|xul.dll|nsLayoutUtils::PaintFrame(nsIRenderingContext *,nsIFrame *,nsRegion const &amp;,unsigned int,unsigned int)
+
+      1  stacks like
+0|0|mozalloc.dll|mozalloc_abort(char const * const)
+0|1|mozalloc.dll|mozalloc_handle_oom()
+0|2|xul.dll|nsTArray_base&lt;nsTArrayDefaultAllocator&gt;::EnsureCapacity(unsigned int,unsigned int)
+0|3|xul.dll|nsDisplayList::HitTest(nsDisplayListBuilder *,nsRect const &amp;,nsDisplayItem::HitTestState *,nsTArray&lt;nsIFrame *,nsTArrayDefaultAllocator&gt; *)
+0|4||
+0|5|xul.dll|nsDisplayList::HitTest(nsDisplayListBuilder *,nsRect const &amp;,nsDisplayItem::HitTestState *,nsTArray&lt;nsIFrame *,nsTArrayDefaultAllocator&gt; *)
+0|6|xul.dll|nsDisplayList::HitTest(nsDisplayListBuilder *,nsRect const &amp;,nsDisplayItem::HitTestState *,nsTArray&lt;nsIFrame *,nsTArrayDefaultAllocator&gt; *)
+0|7|xul.dll|nsDisplayList::HitTest(nsDisplayListBuilder *,nsRect const &amp;,nsDisplayItem::HitTestState *,nsTArray&lt;nsIFrame *,nsTArrayDefaultAllocator&gt; *)
+0|8|xul.dll|nsDisplayList::HitTest(nsDisplayListBuilder *,nsRect const &amp;,nsDisplayItem::HitTestState *,nsTArray&lt;nsIFrame *,nsTArrayDefaultAllocator&gt; *)
+0|9|xul.dll|nsImageBoxFrame::GetPrefSize(nsBoxLayoutState &amp;)
+
+      1  stacks like
+0|0|mozalloc.dll|mozalloc_abort(char const * const)
+0|1|mozalloc.dll|mozalloc_handle_oom()
+0|2|xul.dll|nsTArray_base&lt;nsTArrayDefaultAllocator&gt;::EnsureCapacity(unsigned int,unsigned int)
+0|3|xul.dll|mozilla::imagelib::RasterImage::SetSourceSizeHint(unsigned int)
+0|4|xul.dll|imgRequest::OnDataAvailable(nsIRequest *,nsISupports *,nsIInputStream *,unsigned int,unsigned int)
+0|5|xul.dll|nsCOMPtr&lt;nsICancelable&gt;::operator=(nsICancelable *)
+0|6|xul.dll|nsStreamListenerTee::OnDataAvailable(nsIRequest *,nsISupports *,nsIInputStream *,unsigned int,unsigned int)
+0|7|xul.dll|nsHttpChannel::OnDataAvailable(nsIRequest *,nsISupports *,nsIInputStream *,unsigned int,unsigned int)
+0|8|xul.dll|nsInputStreamPump::OnStateTransfer()
+
+      1  stacks like
+0|0|mozalloc.dll|mozalloc_abort(char const * const)
+0|1|mozalloc.dll|mozalloc_handle_oom()
+0|2|xul.dll|nsStyledElement::ParseStyleAttribute(nsAString_internal const &amp;,nsAttrValue &amp;,int)
+0|3|xul.dll|nsGenericHTMLElement::ParseAttribute(int,nsIAtom *,nsAString_internal const &amp;,nsAttrValue &amp;)
+0|4|xul.dll|nsGenericElement::SetAttr(int,nsIAtom *,nsIAtom *,nsAString_internal const &amp;,int)
+0|5|xul.dll|nsGenericHTMLElement::SetAttr(int,nsIAtom *,nsIAtom *,nsAString_internal const &amp;,int)
+0|6|xul.dll|nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor *,nsIContent * *)
+0|7|xul.dll|nsHtml5TreeOpExecutor::RunFlushLoop()
+0|8|xul.dll|nsHtml5ExecutorReflusher::Run()
+0|9|xul.dll|nsThread::ProcessNextEvent(int,int *)
+
+      1  stacks like
+0|0|mozalloc.dll|mozalloc_abort(char const * const)
+0|1|mozalloc.dll|mozalloc_handle_oom()
+0|2|xul.dll|mozilla::imagelib::RasterImage::InitDecoder(bool)
+0|3|xul.dll|mozilla::imagelib::RasterImage::Init(imgIDecoderObserver *,char const *,char const *,unsigned int)
+0|4|xul.dll|imgRequest::OnDataAvailable(nsIRequest *,nsISupports *,nsIInputStream *,unsigned int,unsigned int)
+0|5|xul.dll|ProxyListener::OnDataAvailable(nsIRequest *,nsISupports *,nsIInputStream *,unsigned int,unsigned int)
+0|6|xul.dll|nsStreamListenerTee::OnDataAvailable(nsIRequest *,nsISupports *,nsIInputStream *,unsigned int,unsigned int)
+0|7|xul.dll|nsHttpChannel::OnDataAvailable(nsIRequest *,nsISupports *,nsIInputStream *,unsigned int,unsigned int)
+0|8|xul.dll|nsInputStreamPump::OnStateTransfer()
+
+      1  stacks like
+0|0|mozalloc.dll|mozalloc_abort(char const * const)
+0|1|mozalloc.dll|mozalloc_handle_oom()
+0|2|xul.dll|gfxSkipChars::TakeFrom(gfxSkipCharsBuilder *)
+0|3|xul.dll|BuildTextRunsScanner::BuildTextRunForFrames(void *)
+0|4|xul.dll|BuildTextRunsScanner::FlushFrames(int,int)
+0|5|xul.dll|BuildTextRunsScanner::ScanFrame(nsIFrame *)
+0|6|xul.dll|BuildTextRunsScanner::ScanFrame(nsIFrame *)
+0|7|xul.dll|BuildTextRuns
+0|8|xul.dll|nsTextFrame::EnsureTextRun(gfxContext *,nsIFrame *,nsLineList_iterator const *,unsigned int *)
+0|9|xul.dll|nsTextFrame::ReflowText(nsLineLayout &amp;,int,nsIRenderingContext *,int,nsHTMLReflowMetrics &amp;,unsigned int &amp;)
+
+      1  stacks like
+0|0|mozalloc.dll|mozalloc_abort(char const * const)
+0|1|mozalloc.dll|mozalloc_handle_oom()
+0|2|xul.dll|
+0|3|xul.dll|
+0|4|xul.dll|
+0|5|mozjs.dll|FinalizeArenaList&lt;JSObject_Slots2&gt;
+0|6|mozjs.dll|MarkAndSweep
+0|7|mozjs.dll|GCUntilDone
+0|8|mozjs.dll|JS_GC
+0|9|xul.dll|

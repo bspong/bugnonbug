@@ -1,0 +1,47 @@
+A window.open() can fire the opened window's load event before the open() returns
+I was debugging a strange problem where test_videoDocumentTitle.html can fail randomly. It does
+  var w = window.open(file, "", "width=500,height=300");
+  w.addEventListener("load", function() {
+...
+    }, false);
+but in some cases, the event handler never gets called.
+
+It turns out that the load event fires during the window.open. Here's the stack:
+
+#0  DocumentViewerImpl::LoadComplete (this=0xb44f2b0, aStatus=0) at /Users/roc/mozilla-trunk/layout/base/nsDocumentViewer.cpp:949
+#1  0x01d888fe in nsDocShell::EndPageLoad (this=0xb4e7dc0, aProgress=0xb4e7dd4, aChannel=0xa8b1bc0, aStatus=0) at /Users/roc/mozilla-trunk/docshell/base/nsDocShell.cpp:5243
+#2  0x01da955f in nsWebShell::EndPageLoad (this=0xb4e7dc0, aProgress=0xb4e7dd4, channel=0xa8b1bc0, aStatus=0) at /Users/roc/mozilla-trunk/docshell/base/nsWebShell.cpp:1013
+#3  0x01d77f14 in nsDocShell::OnStateChange (this=0xb4e7dc0, aProgress=0xb4e7dd4, aRequest=0xa8b1bc0, aStateFlags=131088, aStatus=0) at /Users/roc/mozilla-trunk/docshell/base/nsDocShell.cpp:5139
+#4  0x01dc03d9 in nsDocLoader::FireOnStateChange (this=0xb4e7dc0, aProgress=0xb4e7dd4, aRequest=0xa8b1bc0, aStateFlags=131088, aStatus=0) at /Users/roc/mozilla-trunk/uriloader/base/nsDocLoader.cpp:1254
+#5  0x01dc0611 in nsDocLoader::doStopDocumentLoad (this=0xb4e7dc0, request=0xa8b1bc0, aStatus=0) at /Users/roc/mozilla-trunk/uriloader/base/nsDocLoader.cpp:877
+#6  0x01dc0927 in nsDocLoader::DocLoaderIsEmpty (this=0xb4e7dc0, aFlushLayout=1) at /Users/roc/mozilla-trunk/uriloader/base/nsDocLoader.cpp:782
+#7  0x01dc1419 in nsDocLoader::OnStopRequest (this=0xb4e7dc0, aRequest=0x9533db0, aCtxt=0x0, aStatus=0) at /Users/roc/mozilla-trunk/uriloader/base/nsDocLoader.cpp:678
+#8  0x03f2706d in nsLoadGroup::RemoveRequest (this=0x9547d50, request=0x9533db0, ctxt=0x0, aStatus=0) at /Users/roc/mozilla-trunk/netwerk/base/src/nsLoadGroup.cpp:680
+#9  0x0258eb81 in nsDocument::DoUnblockOnload (this=0x1722e00) at /Users/roc/mozilla-trunk/content/base/src/nsDocument.cpp:7098
+#10 0x0259a647 in nsDocument::UnblockOnload (this=0x1722e00, aFireSync=1) at /Users/roc/mozilla-trunk/content/base/src/nsDocument.cpp:7045
+#11 0x02595e07 in nsDocument::DispatchContentLoadedEvents (this=0x1722e00) at /Users/roc/mozilla-trunk/content/base/src/nsDocument.cpp:3992
+#12 0x025a8a16 in nsRunnableMethod<nsDocument, void>::Run (this=0x94d7280) at nsThreadUtils.h:264
+#13 0x00629c1c in nsThread::ProcessNextEvent (this=0xf17380, mayWait=1, result=0xbfffad3c) at /Users/roc/mozilla-trunk/xpcom/threads/nsThread.cpp:510
+#14 0x005b2ef8 in NS_ProcessNextEvent_P (thread=0xf17380, mayWait=1) at nsThreadUtils.cpp:230
+#15 0x0062a2b3 in nsThread::Shutdown (this=0xa8a5900) at /Users/roc/mozilla-trunk/xpcom/threads/nsThread.cpp:465
+#16 0x0293fb16 in nsDestroyStateMachine::Run (this=0x9d9f7f0) at /Users/roc/mozilla-trunk/content/media/video/src/nsOggDecoder.cpp:1425
+#17 0x00629c1c in nsThread::ProcessNextEvent (this=0xf17380, mayWait=1, result=0xbfffae9c) at /Users/roc/mozilla-trunk/xpcom/threads/nsThread.cpp:510
+#18 0x005b2ef8 in NS_ProcessNextEvent_P (thread=0xf17380, mayWait=1) at nsThreadUtils.cpp:230
+#19 0x0420f6d8 in nsXULWindow::CreateNewContentWindow (this=0x81c4fb0, aChromeFlags=1230, aAppShell=0x5633fa0, _retval=0xbfffaff8) at /Users/roc/mozilla-trunk/xpfe/appshell/src/nsXULWindow.cpp:1856
+#20 0x042085e3 in nsXULWindow::CreateNewWindow (this=0x81c4fb0, aChromeFlags=1230, aAppShell=0x5633fa0, _retval=0xbfffaff8) at /Users/roc/mozilla-trunk/xpfe/appshell/src/nsXULWindow.cpp:1767
+#21 0x04c0492d in nsAppStartup::CreateChromeWindow2 (this=0xf59260, aParent=0xd7e627c, aChromeFlags=1230, aContextFlags=1, aURI=0x9d457d0, aCancel=0xbfffb2c0, _retval=0xbfffb2cc) at /Users/roc/mozilla-trunk/toolkit/components/startup/src/nsAppStartup.cpp:464
+#22 0x01f1940f in nsWindowWatcher::OpenWindowJSInternal (this=0x564ca90, aParent=0xb4e3cd0, aUrl=0x93eb118 "320x240.ogv", aName=0x0, aFeatures=0xbfffb5e4 "width=500,height=300", aDialog=0, argv=0x0, aCalledFromJS=1, _retval=0xbfffb640) at /Users/roc/mozilla-trunk/embedding/components/windowwatcher/src/nsWindowWatcher.cpp:701
+
+What's happening here is that CreateNewContentWindow spins the event loop like this:
+  xulWin->LockUntilChromeLoad();
+...
+    while (xulWin->IsLocked()) {
+      if (!NS_ProcessNextEvent(thread))
+        break;
+    }
+
+While in there, we happen to process an nsDestroyStateMachine event which tears down a media decoder, shutting down its thread, which spawns a subsidiary event loop. *That* loop has no xulWin->IsLocked() check of course. So I think what happens is that we unlock the chrome window but keep processing events while waiting for the thread shutdown, which allows the content load event to happen before the window.open has returned.
+
+I don't know this code so I'm not sure how it can be fixed, but it seems to me that CreateNewContentWindow is fundamentally broken here, because it's relying on events not spawning a nested event loop.
+
+I can modify the test to work around it, but this is a problem that could even affect Web content.

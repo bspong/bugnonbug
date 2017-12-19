@@ -1,0 +1,574 @@
+Refreshing a page with iframes crashes Firefox [@ DocumentViewerImpl::PermitUnload]
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.12) Gecko/20080201 Firefox/2.0.0.12
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.12) Gecko/20080201 Firefox/2.0.0.12
+
+When a page hosts multiple iframes and the "onbeforeunload" event
+handler removes the one of the iframe elements from DOM. I have
+noticed that doing a refresh of the page is crashing firefox.
+
+I ran debug firefox binary in GDB and stepped through the code in the
+process of reproducing the situation. I have attached the log of my
+gdb session to this email.
+
+I noticed that in DocumentViewerImpl::PermitUnload method,
+docShellNode->GetChildCount() indicates it has 4 children. This
+corresponds with the page's 4 iframes. One of which is removed from
+DOM during the onbeforeunload handler. When the code iterates through
+each child of the docShellNode, there is an assertion failure when
+accessing the 4rth child and returns a null child. The following is
+the error seen in gdb.
+
+WARNING: index of child element is out of range!, file
+ffdbg/mozilla/docshell/base/nsDocShell.cpp, line 2485
+WARNING: NS_ENSURE_TRUE(child) failed, file
+ffdbg/mozilla/docshell/base/nsDocShell.cpp, line 2488
+
+Stepping over the next couple of lines seem to cast the null pointer
+to an object and dereference it, thus crashing firefox.
+###!!! ASSERTION: You can't dereference a NULL nsCOMPtr with
+operator->().: 'mRawPtr != 0', file ../../dist/include/xpcom
+/nsCOMPtr.h, line 849
+Break: at file ../../dist/include/xpcom/nsCOMPtr.h, line 849
+
+Program received signal SIGSEGV, Segmentation fault.
+0xf6545c28 in DocumentViewerImpl::PermitUnload (this=0x8e29a58,
+aPermitUnload=0xffff6a98)
+   at ffdbg/mozilla/layout/base/nsDocumentViewer.cpp:1167
+1167          docShell->GetContentViewer(getter_AddRefs(cv));
+(gdb) bt
+#0  0xf6545c28 in DocumentViewerImpl::PermitUnload (this=0x8e29a58,
+aPermitUnload=0xffff6a98)
+
+
+Looks like the docShellNode->GetChildCount() is returning 4 instead of 3.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.
+2.
+3.
+
+
+
+The following is the log of my debug session in GDB.
+++WEBSHELL == 5
+++DOMWINDOW == 11
+++WEBSHELL == 6
+++DOMWINDOW == 12
+++WEBSHELL == 7
+++DOMWINDOW == 13
+++DOMWINDOW == 14
+++DOMWINDOW == 15
+++DOMWINDOW == 16
+js_GC -- START GC: 11 AT: 1206392658 = Mon Mar 24 14:04:18 2008
+
+js_GC -- END GC: 11 AT: 1206392658 = Mon Mar 24 14:04:18 2008
+js_GC -- ELAPSED: 0.000000
+VSIZE=230993920
+js_GC -- DONE
+js_GC -- START GC: 12 AT: 1206392659 = Mon Mar 24 14:04:19 2008
+
+js_GC -- END GC: 12 AT: 1206392659 = Mon Mar 24 14:04:19 2008
+js_GC -- ELAPSED: 0.000000
+VSIZE=234754048
+js_GC -- DONE
+++WEBSHELL == 8
+++DOMWINDOW == 17
+++DOMWINDOW == 18
+*** Warning: nsFontMetricsXft was passed a pixel size of 0.000000
+js_GC -- START GC: 13 AT: 1206392659 = Mon Mar 24 14:04:19 2008
+
+js_GC -- END GC: 13 AT: 1206392660 = Mon Mar 24 14:04:20 2008
+js_GC -- ELAPSED: 1.000000
+VSIZE=237068288
+js_GC -- DONE
+js_GC -- START GC: 14 AT: 1206392663 = Mon Mar 24 14:04:23 2008
+
+js_GC -- END GC: 14 AT: 1206392663 = Mon Mar 24 14:04:23 2008
+js_GC -- ELAPSED: 0.000000
+VSIZE=238411776
+js_GC -- DONE
+js_GC -- START GC: 15 AT: 1206392670 = Mon Mar 24 14:04:30 2008
+
+js_GC -- END GC: 15 AT: 1206392670 = Mon Mar 24 14:04:30 2008
+js_GC -- ELAPSED: 0.000000
+VSIZE=240455680
+js_GC -- DONE
+js_GC -- START GC: 16 AT: 1206392671 = Mon Mar 24 14:04:31 2008
+
+js_GC -- END GC: 16 AT: 1206392671 = Mon Mar 24 14:04:31 2008
+js_GC -- ELAPSED: 0.000000
+VSIZE=240455680
+js_GC -- DONE
+js_GC -- START GC: 17 AT: 1206392685 = Mon Mar 24 14:04:45 2008
+
+js_GC -- END GC: 17 AT: 1206392685 = Mon Mar 24 14:04:45 2008
+js_GC -- ELAPSED: 0.000000
+VSIZE=240455680
+js_GC -- DONE
+
+Program received signal SIGINT, Interrupt.
+0xffffe410 in __kernel_vsyscall ()
+(gdb) break ffdbg/mozilla/layout/base/nsDocumentViewer.cpp:1167
+Breakpoint 1 at 0xf56ffc18: file ffdbg/mozilla/layout/base/nsDocumentViewer.cpp, line 1167.
+(gdb) break ffdbg/mozilla/layout/base/nsDocumentViewer.cpp
+Can't find member of namespace, class, struct, or union named "ffdbg/mozilla/layout/base/nsDocumentViewer.cpp"
+Hint: try 'ffdbg/mozilla/layout/base/nsDocumentViewer.cpp<TAB> or 'ffdbg/mozilla/layout/base/nsDocumentViewer.cpp<ESC-?>
+(Note leading single quote.)
+(gdb) break DocumentViewerImpl::PermitUnload
+Breakpoint 2 at 0xf56ff515: file ffdbg/mozilla/layout/base/nsDocumentViewer.cpp, line 1080.
+(gdb) c
+Continuing.
+[LWP 29025 exited]
+
+Breakpoint 2, DocumentViewerImpl::PermitUnload (this=0x8996b08, aPermitUnload=0xffff9e3c)
+    at ffdbg/mozilla/layout/base/nsDocumentViewer.cpp:1080
+1080      *aPermitUnload = PR_TRUE;
+(gdb) l
+1075    }
+1076
+1077    NS_IMETHODIMP
+1078    DocumentViewerImpl::PermitUnload(PRBool *aPermitUnload)
+1079    {
+1080      *aPermitUnload = PR_TRUE;
+1081
+1082      if (!mDocument || mInPermitUnload) {
+1083        return NS_OK;
+1084      }
+(gdb) n
+1082      if (!mDocument || mInPermitUnload) {
+(gdb) n
+1087      nsIScriptGlobalObject *global = mDocument->GetScriptGlobalObject();
+(gdb) n
+1089      if (!global) {
+(gdb) n
+1097      nsEventStatus status = nsEventStatus_eIgnore;
+(gdb) n
+1098      nsBeforePageUnloadEvent event(PR_TRUE, NS_BEFORE_PAGE_UNLOAD);
+(gdb) n
+1099      nsresult rv = NS_OK;
+(gdb) n
+1103      nsRefPtr<DocumentViewerImpl> kungFuDeathGrip(this);
+(gdb) n
+1108        nsAutoPopupStatePusher popupStatePusher(openAbused, PR_TRUE);
+(gdb) n
+1110        mInPermitUnload = PR_TRUE;
+(gdb) n
+1112                                    NS_EVENT_FLAG_INIT, &status);
+(gdb) n
+1113        mInPermitUnload = PR_FALSE;
+(gdb) n
+1116      nsCOMPtr<nsIDocShellTreeNode> docShellNode(do_QueryReferent(mContainer));
+(gdb) n
+1118      if (NS_SUCCEEDED(rv) && (event.flags & NS_EVENT_FLAG_NO_DEFAULT ||
+(gdb) n
+1156      if (docShellNode) {
+(gdb) n
+1158        docShellNode->GetChildCount(&childCount);
+(gdb) n
+1160        for (PRInt32 i = 0; i < childCount && *aPermitUnload; ++i) {
+(gdb) inspect childCount
+$1 = 4
+(gdb) inspect mContainer
+$2 = {mRawPtr = 0xeee390a8}
+(gdb) inspect mDocument
+$3 = {mRawPtr = 0x8c4b1f0}
+(gdb) inspect &mDocument
+$4 = (nsCOMPtr<nsIDocument> *) 0x8996b34
+(gdb) inspect &mContainer
+$5 = (nsWeakPtr *) 0x8996b2c
+(gdb) l
+1155
+1156      if (docShellNode) {
+1157        PRInt32 childCount;
+1158        docShellNode->GetChildCount(&childCount);
+1159
+1160        for (PRInt32 i = 0; i < childCount && *aPermitUnload; ++i) {
+1161          nsCOMPtr<nsIDocShellTreeItem> item;
+1162          docShellNode->GetChildAt(i, getter_AddRefs(item));
+1163
+1164          nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(item));
+(gdb) inspect docShell
+No symbol "docShell" in current context.
+(gdb) n
+1161          nsCOMPtr<nsIDocShellTreeItem> item;
+(gdb) m
+Ambiguous command "m": macro, maintenance, make, mem, monitor, mt.
+(gdb) n
+1162          docShellNode->GetChildAt(i, getter_AddRefs(item));
+(gdb) n
+1164          nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(item));
+(gdb) n
+1165          nsCOMPtr<nsIContentViewer> cv;
+(gdb) inspect docShell
+$6 = {mRawPtr = 0x8ed16e8}
+(gdb) inspect &docShell
+$7 = (nsCOMPtr<nsIDocShell> *) 0xffff9bf8
+(gdb) l
+1160        for (PRInt32 i = 0; i < childCount && *aPermitUnload; ++i) {
+1161          nsCOMPtr<nsIDocShellTreeItem> item;
+1162          docShellNode->GetChildAt(i, getter_AddRefs(item));
+1163
+1164          nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(item));
+1165          nsCOMPtr<nsIContentViewer> cv;
+1166
+1167          docShell->GetContentViewer(getter_AddRefs(cv));
+1168
+1169          if (cv) {
+(gdb) inspect item
+$8 = {mRawPtr = 0x8ed16f0}
+(gdb) inspect &item
+$9 = (nsCOMPtr<nsIDocShellTreeItem> *) 0xffff9bfc
+(gdb) n
+
+Breakpoint 1, DocumentViewerImpl::PermitUnload (this=0x8996b08, aPermitUnload=0xffff9e3c)
+    at ffdbg/mozilla/layout/base/nsDocumentViewer.cpp:1167
+1167          docShell->GetContentViewer(getter_AddRefs(cv));
+(gdb) n
+1169          if (cv) {
+(gdb) n
+1170            cv->PermitUnload(aPermitUnload);
+(gdb) n
+
+Breakpoint 2, DocumentViewerImpl::PermitUnload (this=0x8c7a0f0, aPermitUnload=0xffff9e3c)
+    at ffdbg/mozilla/layout/base/nsDocumentViewer.cpp:1080
+1080      *aPermitUnload = PR_TRUE;
+(gdb) n
+1082      if (!mDocument || mInPermitUnload) {
+(gdb) n
+1087      nsIScriptGlobalObject *global = mDocument->GetScriptGlobalObject();
+(gdb) n
+1089      if (!global) {
+(gdb) n
+1097      nsEventStatus status = nsEventStatus_eIgnore;
+(gdb) n
+1098      nsBeforePageUnloadEvent event(PR_TRUE, NS_BEFORE_PAGE_UNLOAD);
+(gdb) n
+1099      nsresult rv = NS_OK;
+(gdb) n
+1103      nsRefPtr<DocumentViewerImpl> kungFuDeathGrip(this);
+(gdb) n
+1108        nsAutoPopupStatePusher popupStatePusher(openAbused, PR_TRUE);
+(gdb) n
+1110        mInPermitUnload = PR_TRUE;
+(gdb) n
+1112                                    NS_EVENT_FLAG_INIT, &status);
+(gdb) n
+--WEBSHELL == 7
+1113        mInPermitUnload = PR_FALSE;
+(gdb) n
+1116      nsCOMPtr<nsIDocShellTreeNode> docShellNode(do_QueryReferent(mContainer));
+(gdb) n
+1118      if (NS_SUCCEEDED(rv) && (event.flags & NS_EVENT_FLAG_NO_DEFAULT ||
+(gdb) n
+1156      if (docShellNode) {
+(gdb) n
+1158        docShellNode->GetChildCount(&childCount);
+(gdb) n
+1160        for (PRInt32 i = 0; i < childCount && *aPermitUnload; ++i) {
+(gdb) n
+1175      return NS_OK;
+(gdb) n
+1176    }
+(gdb)
+DocumentViewerImpl::PermitUnload (this=0x8996b08, aPermitUnload=0xffff9e3c)
+    at ffdbg/mozilla/layout/base/nsDocumentViewer.cpp:1160
+1160        for (PRInt32 i = 0; i < childCount && *aPermitUnload; ++i) {
+(gdb) n
+1161          nsCOMPtr<nsIDocShellTreeItem> item;
+(gdb) n
+1162          docShellNode->GetChildAt(i, getter_AddRefs(item));
+(gdb) n
+1164          nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(item));
+(gdb) n
+1165          nsCOMPtr<nsIContentViewer> cv;
+(gdb) n
+
+Breakpoint 1, DocumentViewerImpl::PermitUnload (this=0x8996b08, aPermitUnload=0xffff9e3c)
+    at ffdbg/mozilla/layout/base/nsDocumentViewer.cpp:1167
+1167          docShell->GetContentViewer(getter_AddRefs(cv));
+(gdb) n
+1169          if (cv) {
+(gdb) n
+1170            cv->PermitUnload(aPermitUnload);
+(gdb) n
+
+Breakpoint 2, DocumentViewerImpl::PermitUnload (this=0x8b7fcd8, aPermitUnload=0xffff9e3c)
+    at ffdbg/mozilla/layout/base/nsDocumentViewer.cpp:1080
+1080      *aPermitUnload = PR_TRUE;
+(gdb) n
+1082      if (!mDocument || mInPermitUnload) {
+(gdb) n
+1087      nsIScriptGlobalObject *global = mDocument->GetScriptGlobalObject();
+(gdb) n
+1089      if (!global) {
+(gdb) n
+1097      nsEventStatus status = nsEventStatus_eIgnore;
+(gdb) n
+1098      nsBeforePageUnloadEvent event(PR_TRUE, NS_BEFORE_PAGE_UNLOAD);
+(gdb) n
+1099      nsresult rv = NS_OK;
+(gdb) n
+1103      nsRefPtr<DocumentViewerImpl> kungFuDeathGrip(this);
+(gdb) n
+1108        nsAutoPopupStatePusher popupStatePusher(openAbused, PR_TRUE);
+(gdb) n
+1110        mInPermitUnload = PR_TRUE;
+(gdb) n
+1112                                    NS_EVENT_FLAG_INIT, &status);
+(gdb) n
+1113        mInPermitUnload = PR_FALSE;
+(gdb) n
+1116      nsCOMPtr<nsIDocShellTreeNode> docShellNode(do_QueryReferent(mContainer));
+(gdb) n
+1118      if (NS_SUCCEEDED(rv) && (event.flags & NS_EVENT_FLAG_NO_DEFAULT ||
+(gdb) n
+1156      if (docShellNode) {
+(gdb) n
+1158        docShellNode->GetChildCount(&childCount);
+(gdb) n
+1160        for (PRInt32 i = 0; i < childCount && *aPermitUnload; ++i) {
+(gdb) n
+1175      return NS_OK;
+(gdb) n
+1176    }
+(gdb) n
+DocumentViewerImpl::PermitUnload (this=0x8996b08, aPermitUnload=0xffff9e3c)
+    at ffdbg/mozilla/layout/base/nsDocumentViewer.cpp:1160
+1160        for (PRInt32 i = 0; i < childCount && *aPermitUnload; ++i) {
+(gdb) n
+1161          nsCOMPtr<nsIDocShellTreeItem> item;
+(gdb) n
+1162          docShellNode->GetChildAt(i, getter_AddRefs(item));
+(gdb) n
+1164          nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(item));
+(gdb) n
+1165          nsCOMPtr<nsIContentViewer> cv;
+(gdb) n
+
+Breakpoint 1, DocumentViewerImpl::PermitUnload (this=0x8996b08, aPermitUnload=0xffff9e3c)
+    at ffdbg/mozilla/layout/base/nsDocumentViewer.cpp:1167
+1167          docShell->GetContentViewer(getter_AddRefs(cv));
+(gdb)
+1169          if (cv) {
+(gdb) n
+1170            cv->PermitUnload(aPermitUnload);
+(gdb) n
+
+Breakpoint 2, DocumentViewerImpl::PermitUnload (this=0x85c8528, aPermitUnload=0xffff9e3c)
+    at ffdbg/mozilla/layout/base/nsDocumentViewer.cpp:1080
+1080      *aPermitUnload = PR_TRUE;
+(gdb) n
+1082      if (!mDocument || mInPermitUnload) {
+(gdb) n
+1087      nsIScriptGlobalObject *global = mDocument->GetScriptGlobalObject();
+(gdb) n
+1089      if (!global) {
+(gdb) n
+1097      nsEventStatus status = nsEventStatus_eIgnore;
+(gdb) n
+1098      nsBeforePageUnloadEvent event(PR_TRUE, NS_BEFORE_PAGE_UNLOAD);
+(gdb) n
+1099      nsresult rv = NS_OK;
+(gdb) n
+1103      nsRefPtr<DocumentViewerImpl> kungFuDeathGrip(this);
+(gdb) n
+1108        nsAutoPopupStatePusher popupStatePusher(openAbused, PR_TRUE);
+(gdb) n
+1110        mInPermitUnload = PR_TRUE;
+(gdb) n
+1112                                    NS_EVENT_FLAG_INIT, &status);
+(gdb) n
+1113        mInPermitUnload = PR_FALSE;
+(gdb) n
+1116      nsCOMPtr<nsIDocShellTreeNode> docShellNode(do_QueryReferent(mContainer));
+(gdb) n
+1118      if (NS_SUCCEEDED(rv) && (event.flags & NS_EVENT_FLAG_NO_DEFAULT ||
+(gdb) n
+1156      if (docShellNode) {
+(gdb) n
+1158        docShellNode->GetChildCount(&childCount);
+(gdb) n
+1160        for (PRInt32 i = 0; i < childCount && *aPermitUnload; ++i) {
+(gdb) n
+1175      return NS_OK;
+(gdb) n
+1176    }
+(gdb) n
+DocumentViewerImpl::PermitUnload (this=0x8996b08, aPermitUnload=0xffff9e3c)
+    at ffdbg/mozilla/layout/base/nsDocumentViewer.cpp:1160
+1160        for (PRInt32 i = 0; i < childCount && *aPermitUnload; ++i) {
+(gdb) n
+1161          nsCOMPtr<nsIDocShellTreeItem> item;
+(gdb) n
+1162          docShellNode->GetChildAt(i, getter_AddRefs(item));
+(gdb) n
+WARNING: index of child element is out of range!, file ffdbg/mozilla/docshell/base/nsDocShell.cpp, line 2485
+WARNING: NS_ENSURE_TRUE(child) failed, file ffdbg/mozilla/docshell/base/nsDocShell.cpp, line 2488
+1164          nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(item));
+(gdb) inspect i
+$10 = 3
+(gdb) inspect childCount
+$11 = 4
+(gdb) inspect item
+$12 = {mRawPtr = 0x0}
+(gdb) l
+1159
+1160        for (PRInt32 i = 0; i < childCount && *aPermitUnload; ++i) {
+1161          nsCOMPtr<nsIDocShellTreeItem> item;
+1162          docShellNode->GetChildAt(i, getter_AddRefs(item));
+1163
+1164          nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(item));
+1165          nsCOMPtr<nsIContentViewer> cv;
+1166
+1167          docShell->GetContentViewer(getter_AddRefs(cv));
+1168
+(gdb) bt
+#0  DocumentViewerImpl::PermitUnload (this=0x8996b08, aPermitUnload=0xffff9e3c)
+    at ffdbg/mozilla/layout/base/nsDocumentViewer.cpp:1164
+#1  0xf5e1a5e8 in nsDocShell::InternalLoad (this=0xeee36e10, aURI=0x8b89ac8, aReferrer=0x0, aOwner=0x0, aFlags=0,
+    aWindowTarget=0x0, aTypeHint=0x891e200 "", aPostData=0x0, aHeadersData=0x0, aLoadType=2, aSHEntry=0x8c45748,
+    aFirstParty=1, aDocShell=0x0, aRequest=0x0) at ffdbg/mozilla/docshell/base/nsDocShell.cpp:6600
+#2  0xf5e13424 in nsDocShell::LoadHistoryEntry (this=0xeee36e10, aEntry=0x8c45748, aLoadType=2)
+    at ffdbg/mozilla/docshell/base/nsDocShell.cpp:7761
+#3  0xf5e0e45b in nsDocShell::LoadURI (this=0xeee36e10, aURI=0x8b89ac8, aLoadInfo=0x95c75f0, aLoadFlags=0,
+    aFirstParty=0) at ffdbg/mozilla/docshell/base/nsDocShell.cpp:770
+#4  0xf5e6f30b in nsSHistory::InitiateLoad (this=0x8961fc8, aFrameEntry=0x8c45748, aFrameDS=0xeee36ea8,
+    aLoadType=3) at ffdbg/mozilla/xpfe/components/shistory/src/nsSHistory.cpp:1216
+#5  0xf5e6fd44 in nsSHistory::LoadEntry (this=0x8961fc8, aIndex=2, aLoadType=3, aHistCmd=3)
+    at ffdbg/mozilla/xpfe/components/shistory/src/nsSHistory.cpp:1132
+#6  0xf5e6de34 in nsSHistory::Reload (this=0x8961fc8, aReloadFlags=0)
+    at ffdbg/mozilla/xpfe/components/shistory/src/nsSHistory.cpp:763
+#7  0xf7ea5d35 in XPTC_InvokeByIndex () from ./libxpcom_core.so
+#8  0xf732bcad in XPCWrappedNative::CallMethod (ccx=@0xffffa7a8, mode=XPCWrappedNative::CALL_METHOD)
+    at ffdbg/mozilla/js/src/xpconnect/src/xpcwrappednative.cpp:2169
+#9  0xf7334def in XPC_WN_CallMethod (cx=0x8611a90, obj=0x95d3c70, argc=1, argv=0x97028dc, vp=0xffffa900)
+    at ffdbg/mozilla/js/src/xpconnect/src/xpcwrappednativejsops.cpp:1455
+#10 0xf7f42907 in js_Invoke (cx=0x8611a90, argc=1, flags=0) at ffdbg/mozilla/js/src/jsinterp.c:1396
+#11 0xf7f55bc6 in js_Interpret (cx=0x8611a90, pc=0x8690fc4 ":", result=0xffffb49c)
+    at ffdbg/mozilla/js/src/jsinterp.c:3973
+#12 0xf7f429bd in js_Invoke (cx=0x8611a90, argc=1, flags=2) at ffdbg/mozilla/js/src/jsinterp.c:1415
+#13 0xf7f42d5b in js_InternalInvoke (cx=0x8611a90, obj=0x89aa120, fval=140895680, flags=0, argc=1,
+    argv=0xffffb7fc, rval=0xffffb7ec) at ffdbg/mozilla/js/src/jsinterp.c:1490
+#14 0xf7eff112 in JS_CallFunctionValue (cx=0x8611a90, obj=0x89aa120, fval=140895680, argc=1, argv=0xffffb7fc,
+    rval=0xffffb7ec) at ffdbg/mozilla/js/src/jsapi.c:4356
+#15 0xf5b4efbd in nsJSContext::CallEventHandler (this=0x8611a48, aTarget=0x89aa120, aHandler=0x865e5c0, argc=1,
+    argv=0xffffb7fc, rval=0xffffb7ec) at ffdbg/mozilla/dom/src/base/nsJSEnvironment.cpp:1493
+#16 0xf5bb3e9e in nsJSEventListener::HandleEvent (this=0x87459d8, aEvent=0x974d044)
+    at ffdbg/mozilla/dom/src/events/nsJSEventListener.cpp:186
+#17 0xf59ff2f7 in nsEventListenerManager::HandleEventSubType (this=0x87459a8, aListenerStruct=0x8745a38,
+    aListener=0x87459d8, aDOMEvent=0x974d044, aCurrentTarget=0x96a3d50, aSubType=8, aPhaseFlags=7)
+    at ffdbg/mozilla/content/events/src/nsEventListenerManager.cpp:1655
+#18 0xf5a01acd in nsEventListenerManager::HandleEvent (this=0x87459a8, aPresContext=0x8703370, aEvent=0xffffbdf8,
+    aDOMEvent=0xffffbc34, aCurrentTarget=0x96a3d50, aFlags=7, aEventStatus=0xffffc078)
+    at ffdbg/mozilla/content/events/src/nsEventListenerManager.cpp:1759
+#19 0xf5b042a0 in nsXULElement::HandleDOMEvent (this=0x8745970, aPresContext=0x8703370, aEvent=0xffffbdf8,
+    aDOMEvent=0xffffbc34, aFlags=7, aEventStatus=0xffffc078)
+    at ffdbg/mozilla/content/xul/content/src/nsXULElement.cpp:2229
+#20 0xf5b035a7 in nsXULElement::HandleDOMEvent (this=0x88ebfa0, aPresContext=0x8703370, aEvent=0xffffc034,
+    aDOMEvent=0xffffbe94, aFlags=1, aEventStatus=0xffffc078)
+    at ffdbg/mozilla/content/xul/content/src/nsXULElement.cpp:2036
+#21 0xf5723d09 in PresShell::HandleDOMEventWithTarget (this=0x8703e00, aTargetContent=0x88ebfa0,
+    aEvent=0xffffc034, aStatus=0xffffc078) at ffdbg/mozilla/layout/base/nsPresShell.cpp:6521
+#22 0xf590c0b9 in nsButtonBoxFrame::DoMouseClick (this=0x88ec364, aEvent=0xffffc29c, aTrustEvent=0)
+    at ffdbg/mozilla/layout/xul/base/src/nsButtonBoxFrame.cpp:179
+#23 0xf58fcd8c in nsButtonBoxFrame::MouseClicked (this=0x88ec364, aPresContext=0x8703370, aEvent=0xffffc29c)
+    at ffdbg/mozilla/layout/xul/base/src/nsButtonBoxFrame.h:61
+#24 0xf590c2f4 in nsButtonBoxFrame::HandleEvent (this=0x88ec364, aPresContext=0x8703370, aEvent=0xffffc29c,
+    aEventStatus=0xffffc840) at ffdbg/mozilla/layout/xul/base/src/nsButtonBoxFrame.cpp:149
+#25 0xf572f3fc in PresShell::HandleEventInternal (this=0x8703e00, aEvent=0xffffc29c, aView=0x0, aFlags=1,
+    aStatus=0xffffc840) at ffdbg/mozilla/layout/base/nsPresShell.cpp:6466
+#26 0xf572f6c9 in PresShell::HandleEventWithTarget (this=0x8703e00, aEvent=0xffffc29c, aFrame=0x88ec364,
+    aContent=0x88ebfa0, aFlags=1, aStatus=0xffffc840) at ffdbg/mozilla/layout/base/nsPresShell.cpp:6322
+#27 0xf5a09f05 in nsEventStateManager::CheckForAndDispatchClick (this=0x87035a8, aPresContext=0x8703370,
+    aEvent=0xffffca34, aStatus=0xffffc840)
+    at ffdbg/mozilla/content/events/src/nsEventStateManager.cpp:3206
+#28 0xf5a0c7ba in nsEventStateManager::PostHandleEvent (this=0x87035a8, aPresContext=0x8703370, aEvent=0xffffca34,
+    aTargetFrame=0x88ec364, aStatus=0xffffc840, aView=0x8703bd8)
+    at ffdbg/mozilla/content/events/src/nsEventStateManager.cpp:2169
+#29 0xf572f646 in PresShell::HandleEventInternal (this=0x8703e00, aEvent=0xffffca34, aView=0x8703bd8, aFlags=1,
+    aStatus=0xffffc840) at ffdbg/mozilla/layout/base/nsPresShell.cpp:6497
+#30 0xf5730687 in PresShell::HandleEvent (this=0x8703e00, aView=0x8703bd8, aEvent=0xffffca34,
+    aEventStatus=0xffffc840, aForceHandle=1, aHandled=@0xffffc82c)
+    at ffdbg/mozilla/layout/base/nsPresShell.cpp:6261
+#31 0xf5b45a19 in nsViewManager::HandleEvent (this=0x86fc810, aView=0x8703bd8, aEvent=0xffffca34, aCaptured=0)
+    at ffdbg/mozilla/view/src/nsViewManager.cpp:2557
+#32 0xf5b4696e in nsViewManager::DispatchEvent (this=0x86fc810, aEvent=0xffffca34, aStatus=0xffffc9f0)
+    at ffdbg/mozilla/view/src/nsViewManager.cpp:2246
+#33 0xf5b35bf9 in HandleEvent (aEvent=0xffffca34) at ffdbg/mozilla/view/src/nsView.cpp:171
+#34 0xf67f8c9b in nsCommonWidget::DispatchEvent (this=0x8703c48, aEvent=0xffffca34, aStatus=@0xffffca7c)
+    at ffdbg/mozilla/widget/src/gtk2/nsCommonWidget.cpp:219
+#35 0xf67e7a62 in nsWindow::OnButtonReleaseEvent (this=0x8703c48, aWidget=0x82c1878, aEvent=0x82e9638)
+    at ffdbg/mozilla/widget/src/gtk2/nsWindow.cpp:1718
+#36 0xf67ea652 in button_release_event_cb (widget=0x82c1878, event=0x82e9638)
+    at ffdbg/mozilla/widget/src/gtk2/nsWindow.cpp:3908
+#37 0x4c48f8e0 in _gtk_marshal_BOOLEAN__BOXED () from /usr/lib/libgtk-x11-2.0.so.0
+#38 0x4c1a979f in g_closure_invoke () from /usr/lib/libgobject-2.0.so.0
+#39 0x4c1b82ea in ?? () from /usr/lib/libgobject-2.0.so.0
+#40 0x0860ca28 in ?? ()
+#41 0xffffcc40 in ?? ()
+#42 0x00000002 in ?? ()
+#43 0xffffcd3c in ?? ()
+#44 0xffffcc2c in ?? ()
+---Type <return> to continue, or q <return> to quit---
+#45 0x094e3de0 in ?? ()
+#46 0xffffcb98 in ?? ()
+#47 0xf7dbec5f in PR_GetCurrentThread () at ffdbg/mozilla/nsprpub/pr/src/pthreads/ptthread.c:631
+#48 0x4c1b9886 in g_signal_emit_valist () from /usr/lib/libgobject-2.0.so.0
+#49 0x4c1b9e89 in g_signal_emit () from /usr/lib/libgobject-2.0.so.0
+#50 0x4c571dcf in ?? () from /usr/lib/libgtk-x11-2.0.so.0
+#51 0x082c1878 in ?? ()
+#52 0x0000001c in ?? ()
+#53 0x00000000 in ?? ()
+(gdb)
+(gdb)
+(gdb)
+(gdb)
+(gdb)
+(gdb)
+(gdb)
+(gdb)
+(gdb)
+(gdb)
+(gdb) s
+WARNING: Dropping timer event because thread is dead, file ffdbg/mozilla/xpcom/threads/nsTimerImpl.cpp, line 510
+nsCOMPtr<nsIDocShellTreeItem>::operator nsDerivedSafe<nsIDocShellTreeItem>* (this=0xffff9bfc)
+    at ../../../../dist/include/xpcom/nsCOMPtr.h:843
+843               return get();
+(gdb) n
+DocumentViewerImpl::PermitUnload (this=0x8996b08, aPermitUnload=0xffff9e3c)
+    at ffdbg/mozilla/layout/base/nsDocumentViewer.cpp:1165
+1165          nsCOMPtr<nsIContentViewer> cv;
+(gdb) inspect item
+$13 = {mRawPtr = 0x0}
+(gdb) inspect dosShell
+No symbol "dosShell" in current context.
+(gdb) inspect docShell
+$14 = {mRawPtr = 0x0}
+(gdb) inspect childCount
+$15 = 4
+(gdb) l
+1160        for (PRInt32 i = 0; i < childCount && *aPermitUnload; ++i) {
+1161          nsCOMPtr<nsIDocShellTreeItem> item;
+1162          docShellNode->GetChildAt(i, getter_AddRefs(item));
+1163
+1164          nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(item));
+1165          nsCOMPtr<nsIContentViewer> cv;
+1166
+1167          docShell->GetContentViewer(getter_AddRefs(cv));
+1168
+1169          if (cv) {
+(gdb) n
+
+Breakpoint 1, DocumentViewerImpl::PermitUnload (this=0x8996b08, aPermitUnload=0xffff9e3c)
+    at ffdbg/mozilla/layout/base/nsDocumentViewer.cpp:1167
+1167          docShell->GetContentViewer(getter_AddRefs(cv));
+(gdb) n
+###!!! ASSERTION: You can't dereference a NULL nsCOMPtr with operator->().: 'mRawPtr != 0', file ../../dist/include/xpcom/nsCOMPtr.h, line 849
+Break: at file ../../dist/include/xpcom/nsCOMPtr.h, line 849
+
+Program received signal SIGSEGV, Segmentation fault.
+0xf56ffc28 in DocumentViewerImpl::PermitUnload (this=0x8996b08, aPermitUnload=0xffff9e3c)
+    at ffdbg/mozilla/layout/base/nsDocumentViewer.cpp:1167
+1167          docShell->GetContentViewer(getter_AddRefs(cv));

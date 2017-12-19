@@ -1,0 +1,125 @@
+XPCOM embedded SpiderMonkey cannot access DOM properties - new in Beta 3
+User-Agent:       Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; .NET CLR 1.1.4322; .NET CLR 2.0.50727; InfoPath.1)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9b3) Gecko/2008020514 Firefox/3.0b3
+
+We have a XPCOM extension that has its own internal SpiderMonkey engine that runs scripts on the loaded page Document. We injected some javascript into the page via XUL. A load event in the page then call methods in our XPCOM DLL that then passes the document object to our internal SM engine for other processing on the page. This has been working for a couple of years in FF 1.5, 2.0, and worked fine up to Beta 2, but broke in Beta 3. 
+
+From high-level view, within the load event of the page, we add a 'document' variable to our SM that refers to the same document object in the main page.  We use the nsIDOMHTMLDocument object that we get from the event and add it to our SM variables.  We compile the JS script using the proper 'Principal' method,  JS_CompileScriptForPrincipals.  Other variables are added using JS_EvaluateScriptForPrincipals.
+
+When we execute our script using JS_ExecuteScript, everything runs fine, we are able to access all document elements, properties, etc.  We can access all other DOM elements and their properties in the page with no problem.   If we then call a method in the javascript using JS_CallFunctionName immediately after the JS_ExecuteScript, then we start seeing problems. e.g.
+
+     // this works ok
+     JS_ExecuteScript(m_pJSContext, m_pJSGlobalObject, m_pJSScript, &vRet);
+
+     // this returns FALSE
+     JS_CallFunctionName(m_pJSContext, m_pJSGlobalObject, sName.c_str(), (uintN)argc, argv, &vRet);
+
+The problem occurs if the method in the JS tries to access any properties on any of the DOM elements. The 'document' object is available and a typeof(document) properly returns [object HTMLDocument].  Other elements can be retrieved using document.getElementById('validName').  The element returned is valid and a typeof returns the proper value.  The problem occurs when there is any access to a property on any DOM element. For instance, the following examples cause the JS method to abort with no exception as soon as they are executed, the JS_CallFunctionName method simply returns FALSE.
+
+        temp = document.location;
+	temp = typeof(document.location);
+        temp = elem.innerHTML;   // where elem is a valid value retrieved by getElementById
+        temp = typeof(elem.innerHTML);
+
+This error of accessing any property is very similar to what is seen in JS_ExecuteScript if we do not compile and load variables using the Principal methods.  Therefore, I suspect the the Principals assigned is lost for some reason when we call JS_CallFunctionName.
+
+In other tests, I was able to do reflection on DOM objects in the method and see all the properties, e.g. for (var prop in elem), but it just fails when I try to access one, even just doing a typeof() on an element property.
+
+I started going back to older nightly builds in order to track down when this bug occurred.  I was able track down the problem to a few lines of code added to the NewCompilerFunction() in jsparse.c on 12/19 by Igor Bukanov in version 3.316 of jsparse.c.  The change was related to bug 398219. There were many other changes similar to this, as well as some Principal specific code removed from fun_resolve() method in jsfun.c, but this code change didn't seem to affect the problem.
+
+If I commented out the code in NewCompilerFunction() as shown below in the Beta 3 release source code, our extension then began to work again with no problems.   I copied the new patched js3250.dll to the Beta 3 release and did our tests.
+
+    NewCompilerFunction(...)
+    {
+       // ...
+
+       fun = js_NewFunction(cx, NULL, NULL, 0, JSFUN_INTERPRETED | lambda,
+                         parent, atom);
+
+       // COMMENT OUT THE LINES BELOW
+
+       //if (fun && !(tc->flags & TCF_COMPILE_N_GO)) {
+       //   STOBJ_SET_PARENT(fun->object, NULL);
+       //   STOBJ_SET_PROTO(fun->object, NULL);
+       //}
+
+       return fun;
+    }
+
+Here are more low-level details on our implementation...
+
+1) Take over the TabOpen event on Firefox and When a Tab component is first created, we initialize SM and get principals, e.g.
+
+	nsCOMPtr<nsIJSRuntimeService> rtsvc;
+	m_servMan->GetServiceByContractID("@mozilla.org/js/xpc/RuntimeService;1", 		NS_GET_IID(nsIJSRuntimeService), getter_AddRefs(rtsvc)); 
+	rtsvc->GetRuntime(&m_pJSRuntime);
+	...
+     	nsAXPCNativeCallContext *callContext;
+	m_xpc->GetCurrentNativeCallContext(&callContext);
+	...
+	callContext->GetJSContext(&m_pJSCallContext);
+	...
+	sSecurityManager->GetPrincipalFromContext(m_pJSCallContext, getter_AddRefs(principal));
+	...
+	principal->GetJSPrincipals(m_pJSCallContext, &m_pJSPrincipals);
+	...
+	m_pJSContext = JS_NewContext(m_pJSRuntime, JS_STACK_SIZE);
+	...
+	m_pJSGlobalObject = JS_NewObject(m_pJSContext, &globalClass, nsnull, nsnull);
+	JS_InitStandardClasses(m_pJSContext, m_pJSGlobalObject);
+	...
+	m_xpc->InitClasses(m_pJSContext, m_pJSGlobalObject);
+
+   These value are maintained in a C++ instance attached to the tab document.
+    
+2) On a page load event, take the nsIDOMHTMLDocument of the page and create new JS objects in our SM, add a variable 'document' into our SM for the document so that our scripts can access it as normal. e.g.
+
+	nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
+	m_xpc->WrapNative(m_pJSContext, m_pJSGlobalObject, pDoc, NS_GET_IID(nsIDOMHTMLDocument),
+		getter_AddRefs(wrapper));
+	...
+	JSObject* ourJSObject;
+	wrapper->GetJSObject(&ourJSObject);
+	...
+	JS_DefineProperty(m_pJSContext,
+		m_pJSGlobalObject,
+		"document",
+		OBJECT_TO_JSVAL(ourJSObject),
+		nsnull, nsnull,
+		JSPROP_PERMANENT);
+
+3) Load and compile our script using JS_CompileScriptForPrincipals. e.g.
+
+	m_pJSScript = JS_CompileScriptForPrincipals(m_pJSContext, m_pJSGlobalObject, 
+             m_pJSPrincipals, sProcessedScript.c_str(), sProcessedScript.size(), 
+             scriptName.c_str(), 0);
+
+4) Execute our script using JS_ExecuteScript...
+
+	JSBool bRet = JS_ExecuteScript(m_pJSContext, m_pJSGlobalObject, 
+			m_pJSScript, &vRet);
+
+5) Then try to call a method in the script
+
+	JSBool bRet = JS_CallFunctionName(m_pJSContext, m_pJSGlobalObject, sName.c_str(), 
+		(uintN)argc, argv, &vRet);
+
+Scripts run fine as long as they do not access properties on any of the DOM elements. The script has no problem with other variables, even other of our XPCOM objects that we injected in to the SM engine.
+
+Our Firefox add-on is a very large and complex add-on. It relies heavily on some XPCOM classes, e.g. CIDs, IIDs, etc.  Therefore, we generally have to compile the Firefox source and copy over the SDK directory and some unfrozen in order to properly re-compile our extension.  I can be available to test a patched js3250.dll or assist in any other method.  I can also be open to chat on IRC.
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+Full details in the 'Details' section
+
+
+Actual Results:  
+Full details in the 'Details' section
+
+
+Expected Results:  
+javascript loaded in our SM should be able to access the DOM, properties, etc without error.  This worked until Beta 3.
+
+Bug is CRITICAL to us.  Without the fix, our extension will no longer be able to run under Firefox 3!!!

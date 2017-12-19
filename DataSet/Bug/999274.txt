@@ -1,0 +1,212 @@
+Heap-use-after-free in mozilla::dom::workers::WorkerPrivateParent
+Created attachment 8409988
+test.html
+
+Please testcase in dom/workers/test/ directory. Install fuzzPriv to help in forcing memory pressure. Load testcase, wait a few secs (auto-reloads) and see the crash.
+
+>==15935==ERROR: AddressSanitizer: heap-use-after-free on address 0x61900092d448 at pc 0x7fee96b65ff9 bp 0x7fff3fbfda30 sp 0x7fff3fbfda28
+>READ of size 4 at 0x61900092d448 thread T0
+>    #0 0x7fee96b65ff8 in mozilla::dom::workers::WorkerPrivateParent<mozilla::dom::workers::WorkerPrivate>::WorkerScriptLoaded() dom/workers/WorkerPrivate.h:651
+>    #1 0x7fee96b34117 in (anonymous namespace)::ScriptLoaderRunnable::ExecuteFinishedScripts() dom/workers/ScriptLoader.cpp:560
+>    #2 0x7fee96b353d0 in nsRunnableMethodImpl<void ((anonymous namespace)::ScriptLoaderRunnable::*)(), void, true>::Run() objdir-ff-asan/dom/workers/../../dist/include/nsThreadUtils.h:387
+>    #3 0x7fee937b9020 in nsThread::ProcessNextEvent(bool, bool*) xpcom/threads/nsThread.cpp:699
+>    #4 0x7fee9367dfda in NS_ProcessNextEvent(nsIThread*, bool) xpcom/glue/nsThreadUtils.cpp:263
+>    #5 0x7fee93f8d909 in mozilla::ipc::MessagePump::Run(base::MessagePump::Delegate*) ipc/glue/MessagePump.cpp:95
+>    #6 0x7fee93f363b0 in MessageLoop::Run() ipc/chromium/src/base/message_loop.cc:226
+>    #7 0x7fee961dca07 in nsBaseAppShell::Run() widget/xpwidgets/nsBaseAppShell.cpp:164
+>    #8 0x7fee99044638 in nsAppStartup::Run() toolkit/components/startup/nsAppStartup.cpp:277
+>    #9 0x7fee98eb63b3 in XREMain::XRE_mainRun() toolkit/xre/nsAppRunner.cpp:4019
+>    #10 0x7fee98eb729d in XREMain::XRE_main(int, char**, nsXREAppData const*) toolkit/xre/nsAppRunner.cpp:4088
+>    #11 0x7fee98eb80ed in XRE_main toolkit/xre/nsAppRunner.cpp:4300
+>    #12 0x48c6e7 in main browser/app/nsBrowserApp.cpp:282
+>    #13 0x7feea1f7276c in __libc_start_main /build/buildd/eglibc-2.15/csu/libc-start.c:226
+>    #14 0x48bbbc in _start
+>
+>0x61900092d448 is located 712 bytes inside of 1000-byte region [0x61900092d180,0x61900092d568)
+>freed by thread T78 (DOM Worker) here:
+>    #0 0x473b81 in __interceptor_free _asan_rtl_
+>    #1 0x7fee936cae0a in SnowWhiteKiller::~SnowWhiteKiller() xpcom/base/nsCycleCollector.cpp:2386
+>    #2 0x7fee936caa19 in nsCycleCollector::FreeSnowWhite(bool) xpcom/base/nsCycleCollector.cpp:2552
+>    #3 0x7fee936d07c2 in nsCycleCollector::BeginCollection(ccType, nsICycleCollectorListener*) xpcom/base/nsCycleCollector.cpp:3428
+>    #4 0x7fee936cfee6 in nsCycleCollector::Collect(ccType, js::SliceBudget&, nsICycleCollectorListener*) xpcom/base/nsCycleCollector.cpp:3290
+>    #5 0x7fee936d3a43 in nsCycleCollector_collect(nsICycleCollectorListener*) xpcom/base/nsCycleCollector.cpp:3843
+>    #6 0x7fee936c0fed in mozilla::CycleCollectedJSRuntime::OnGC(JSGCStatus) xpcom/base/CycleCollectedJSRuntime.cpp:1164
+>    #7 0x7fee9a97dae3 in Collect(JSRuntime*, bool, long, js::JSGCInvocationKind, JS::gcreason::Reason) js/src/jsgc.cpp:4960
+>    #8 0x7fee9a898f66 in js::DestroyContext(JSContext*, js::DestroyContextMode) js/src/jscntxt.cpp:264
+>    #9 0x7fee96b2b676 in (anonymous namespace)::WorkerThreadPrimaryRunnable::Run() dom/workers/RuntimeService.cpp:2574
+>    #10 0x7fee937b9020 in nsThread::ProcessNextEvent(bool, bool*) xpcom/threads/nsThread.cpp:699
+>    #11 0x7fee9367dfda in NS_ProcessNextEvent(nsIThread*, bool) xpcom/glue/nsThreadUtils.cpp:263
+>    #12 0x7fee93f8e836 in mozilla::ipc::MessagePumpForNonMainThreads::Run(base::MessagePump::Delegate*) ipc/glue/MessagePump.cpp:336
+>    #13 0x7fee93f363b0 in MessageLoop::Run() ipc/chromium/src/base/message_loop.cc:226
+>    #14 0x7fee937b5e05 in nsThread::ThreadFunc(void*) xpcom/threads/nsThread.cpp:311
+>    #15 0x7fee9fa19d95 in _pt_root nsprpub/pr/src/pthreads/ptthread.c:212
+>    #16 0x7feea2f36e99 in start_thread /build/buildd/eglibc-2.15/nptl/pthread_create.c:308
+>
+>previously allocated by thread T78 (DOM Worker) here:
+>    #0 0x473d81 in malloc _asan_rtl_
+>    #1 0x7fee9e0e9a4d in moz_xmalloc memory/mozalloc/mozalloc.cpp:52
+>    #2 0x7fee96b473d6 in mozilla::dom::workers::WorkerPrivate::Constructor(mozilla::dom::GlobalObject const&, nsAString_internal const&, bool, mozilla::dom::workers::WorkerPrivateParent<mozilla::dom::workers::WorkerPrivate>::WorkerType, nsACString_internal const&, mozilla::dom::workers::WorkerPrivateParent<mozilla::dom::workers::WorkerPrivate>::LoadInfo*, mozilla::ErrorResult&) objdir-ff-asan/dom/workers/../../dist/include/mozilla/mozalloc.h:201
+>    #3 0x7fee96b470a2 in mozilla::dom::workers::WorkerPrivate::Constructor(mozilla::dom::GlobalObject const&, nsAString_internal const&, mozilla::ErrorResult&) dom/workers/WorkerPrivate.cpp:3588
+>    #4 0x7fee95ecb0d0 in mozilla::dom::WorkerBinding::_constructor(JSContext*, unsigned int, JS::Value*) objdir-ff-asan/dom/bindings/./WorkerBinding.cpp:669
+>    #5 0x7fee9ac761ed in js::InvokeConstructor(JSContext*, JS::CallArgs) js/src/jscntxtinlines.h:239
+>    #6 0x7fee9ac67ffe in Interpret(JSContext*, js::RunState&) js/src/vm/Interpreter.cpp:2618
+>    #7 0x7fee9ac4b539 in js::RunScript(JSContext*, js::RunState&) js/src/vm/Interpreter.cpp:421
+>    #8 0x7fee9ac74bc5 in js::Invoke(JSContext*, JS::CallArgs, js::MaybeConstruct) js/src/vm/Interpreter.cpp:493
+>    #9 0x7fee9ac75c6e in js::Invoke(JSContext*, JS::Value const&, JS::Value const&, unsigned int, JS::Value const*, JS::MutableHandle<JS::Value>) js/src/vm/Interpreter.cpp:530
+>    #10 0x7fee9a8c3f2f in JS::Call(JSContext*, JS::Handle<JS::Value>, JS::Handle<JS::Value>, JS::HandleValueArray const&, JS::MutableHandle<JS::Value>) js/src/jsapi.cpp:5056
+>    #11 0x7fee9541f001 in mozilla::dom::EventHandlerNonNull::Call(JSContext*, JS::Handle<JS::Value>, mozilla::dom::Event&, mozilla::ErrorResult&) objdir-ff-asan/dom/bindings/./EventHandlerBinding.cpp:35
+>    #12 0x7fee9686c88f in JS::Value mozilla::dom::EventHandlerNonNull::Call<nsISupports*>(nsISupports* const&, mozilla::dom::Event&, mozilla::ErrorResult&, mozilla::dom::CallbackObject::ExceptionHandling) objdir-ff-asan/dom/events/../../dist/include/mozilla/dom/EventHandlerBinding.h:62
+>    #13 0x7fee9686adaf in mozilla::JSEventHandler::HandleEvent(nsIDOMEvent*) dom/events/JSEventHandler.cpp:205
+>    #14 0x7fee9683ada0 in mozilla::EventListenerManager::HandleEventSubType(mozilla::EventListenerManager::Listener*, nsIDOMEvent*, mozilla::dom::EventTarget*) dom/events/EventListenerManager.cpp:950
+>    #15 0x7fee9683c1e0 in mozilla::EventListenerManager::HandleEventInternal(nsPresContext*, mozilla::WidgetEvent*, nsIDOMEvent**, mozilla::dom::EventTarget*, nsEventStatus*) dom/events/EventListenerManager.cpp:1011
+>    #16 0x7fee9682cbf1 in mozilla::EventTargetChainItem::HandleEventTargetChain(nsTArray<mozilla::EventTargetChainItem>&, mozilla::EventChainPostVisitor&, mozilla::EventDispatchingCallback*, mozilla::ELMCreationDetector&) dom/events/EventDispatcher.cpp:287
+>    #17 0x7fee96830d16 in mozilla::EventDispatcher::Dispatch(nsISupports*, nsPresContext*, mozilla::WidgetEvent*, nsIDOMEvent*, nsEventStatus*, mozilla::EventDispatchingCallback*, nsCOMArray<mozilla::dom::EventTarget>*) dom/events/EventDispatcher.cpp:597
+>    #18 0x7fee967f6fc5 in mozilla::EventDispatcher::DispatchDOMEvent(nsISupports*, mozilla::WidgetEvent*, nsIDOMEvent*, nsPresContext*, nsEventStatus*) dom/events/EventDispatcher.cpp:661
+>    #19 0x7fee96b70fe5 in (anonymous namespace)::MessageEventRunnable::DispatchDOMEvent(JSContext*, mozilla::dom::workers::WorkerPrivate*, mozilla::DOMEventTargetHelper*, bool) dom/workers/WorkerPrivate.cpp:1010
+>    #20 0x7fee96b7089f in (anonymous namespace)::MessageEventRunnable::WorkerRun(JSContext*, mozilla::dom::workers::WorkerPrivate*) dom/workers/WorkerPrivate.cpp:1058
+>    #21 0x7fee96b7393a in mozilla::dom::workers::WorkerRunnable::Run() dom/workers/WorkerRunnable.cpp:312
+>    #22 0x7fee937b9020 in nsThread::ProcessNextEvent(bool, bool*) xpcom/threads/nsThread.cpp:699
+>    #23 0x7fee9367dfda in NS_ProcessNextEvent(nsIThread*, bool) xpcom/glue/nsThreadUtils.cpp:263
+>    #24 0x7fee96b4b4bf in mozilla::dom::workers::WorkerPrivate::DoRunLoop(JSContext*) dom/workers/WorkerPrivate.cpp:4056
+>    #25 0x7fee96b2b644 in (anonymous namespace)::WorkerThreadPrimaryRunnable::Run() dom/workers/RuntimeService.cpp:2559
+>    #26 0x7fee937b9020 in nsThread::ProcessNextEvent(bool, bool*) xpcom/threads/nsThread.cpp:699
+>    #27 0x7fee9367dfda in NS_ProcessNextEvent(nsIThread*, bool) xpcom/glue/nsThreadUtils.cpp:263
+>    #28 0x7fee93f8e836 in mozilla::ipc::MessagePumpForNonMainThreads::Run(base::MessagePump::Delegate*) ipc/glue/MessagePump.cpp:336
+>    #29 0x7fee93f363b0 in MessageLoop::Run() ipc/chromium/src/base/message_loop.cc:226
+>
+>Thread T78 (DOM Worker) created by T77 (DOM Worker) here:
+>    #0 0x4602f5 in __interceptor_pthread_create _asan_rtl_
+>    #1 0x7fee9fa1671d in _PR_CreateThread nsprpub/pr/src/pthreads/ptthread.c:453
+>    #2 0x7fee9fa1629a in PR_CreateThread nsprpub/pr/src/pthreads/ptthread.c:544
+>    #3 0x7fee937b719b in nsThread::Init() xpcom/threads/nsThread.cpp:384
+>    #4 0x7fee96b201be in mozilla::dom::workers::RuntimeService::WorkerThread::Create() dom/workers/RuntimeService.cpp:2362
+>    #5 0x7fee96b1f5f4 in mozilla::dom::workers::RuntimeService::ScheduleWorker(JSContext*, mozilla::dom::workers::WorkerPrivate*) dom/workers/RuntimeService.cpp:1511
+>    #6 0x7fee96b1d14b in mozilla::dom::workers::RuntimeService::RegisterWorker(JSContext*, mozilla::dom::workers::WorkerPrivate*) dom/workers/RuntimeService.cpp:1378
+>    #7 0x7fee96b47454 in mozilla::dom::workers::WorkerPrivate::Constructor(mozilla::dom::GlobalObject const&, nsAString_internal const&, bool, mozilla::dom::workers::WorkerPrivateParent<mozilla::dom::workers::WorkerPrivate>::WorkerType, nsACString_internal const&, mozilla::dom::workers::WorkerPrivateParent<mozilla::dom::workers::WorkerPrivate>::LoadInfo*, mozilla::ErrorResult&) dom/workers/WorkerPrivate.cpp:3694
+>    #8 0x7fee96b470a2 in mozilla::dom::workers::WorkerPrivate::Constructor(mozilla::dom::GlobalObject const&, nsAString_internal const&, mozilla::ErrorResult&) dom/workers/WorkerPrivate.cpp:3588
+>    #9 0x7fee95ecb0d0 in mozilla::dom::WorkerBinding::_constructor(JSContext*, unsigned int, JS::Value*) objdir-ff-asan/dom/bindings/./WorkerBinding.cpp:669
+>    #10 0x7fee9ac761ed in js::InvokeConstructor(JSContext*, JS::CallArgs) js/src/jscntxtinlines.h:239
+>    #11 0x7fee9ac67ffe in Interpret(JSContext*, js::RunState&) js/src/vm/Interpreter.cpp:2618
+>    #12 0x7fee9ac4b539 in js::RunScript(JSContext*, js::RunState&) js/src/vm/Interpreter.cpp:421
+>    #13 0x7fee9ac74bc5 in js::Invoke(JSContext*, JS::CallArgs, js::MaybeConstruct) js/src/vm/Interpreter.cpp:493
+>    #14 0x7fee9ac75c6e in js::Invoke(JSContext*, JS::Value const&, JS::Value const&, unsigned int, JS::Value const*, JS::MutableHandle<JS::Value>) js/src/vm/Interpreter.cpp:530
+>    #15 0x7fee9a8c3f2f in JS::Call(JSContext*, JS::Handle<JS::Value>, JS::Handle<JS::Value>, JS::HandleValueArray const&, JS::MutableHandle<JS::Value>) js/src/jsapi.cpp:5056
+>    #16 0x7fee9541f001 in mozilla::dom::EventHandlerNonNull::Call(JSContext*, JS::Handle<JS::Value>, mozilla::dom::Event&, mozilla::ErrorResult&) objdir-ff-asan/dom/bindings/./EventHandlerBinding.cpp:35
+>    #17 0x7fee9686c88f in JS::Value mozilla::dom::EventHandlerNonNull::Call<nsISupports*>(nsISupports* const&, mozilla::dom::Event&, mozilla::ErrorResult&, mozilla::dom::CallbackObject::ExceptionHandling) objdir-ff-asan/dom/events/../../dist/include/mozilla/dom/EventHandlerBinding.h:62
+>    #18 0x7fee9686adaf in mozilla::JSEventHandler::HandleEvent(nsIDOMEvent*) dom/events/JSEventHandler.cpp:205
+>    #19 0x7fee9683ada0 in mozilla::EventListenerManager::HandleEventSubType(mozilla::EventListenerManager::Listener*, nsIDOMEvent*, mozilla::dom::EventTarget*) dom/events/EventListenerManager.cpp:950
+>    #20 0x7fee9683c1e0 in mozilla::EventListenerManager::HandleEventInternal(nsPresContext*, mozilla::WidgetEvent*, nsIDOMEvent**, mozilla::dom::EventTarget*, nsEventStatus*) dom/events/EventListenerManager.cpp:1011
+>    #21 0x7fee9682cbf1 in mozilla::EventTargetChainItem::HandleEventTargetChain(nsTArray<mozilla::EventTargetChainItem>&, mozilla::EventChainPostVisitor&, mozilla::EventDispatchingCallback*, mozilla::ELMCreationDetector&) dom/events/EventDispatcher.cpp:287
+>    #22 0x7fee96830d16 in mozilla::EventDispatcher::Dispatch(nsISupports*, nsPresContext*, mozilla::WidgetEvent*, nsIDOMEvent*, nsEventStatus*, mozilla::EventDispatchingCallback*, nsCOMArray<mozilla::dom::EventTarget>*) dom/events/EventDispatcher.cpp:597
+>    #23 0x7fee967f6fc5 in mozilla::EventDispatcher::DispatchDOMEvent(nsISupports*, mozilla::WidgetEvent*, nsIDOMEvent*, nsPresContext*, nsEventStatus*) dom/events/EventDispatcher.cpp:661
+>    #24 0x7fee96b70fe5 in (anonymous namespace)::MessageEventRunnable::DispatchDOMEvent(JSContext*, mozilla::dom::workers::WorkerPrivate*, mozilla::DOMEventTargetHelper*, bool) dom/workers/WorkerPrivate.cpp:1010
+>    #25 0x7fee96b7089f in (anonymous namespace)::MessageEventRunnable::WorkerRun(JSContext*, mozilla::dom::workers::WorkerPrivate*) dom/workers/WorkerPrivate.cpp:1058
+>    #26 0x7fee96b7393a in mozilla::dom::workers::WorkerRunnable::Run() dom/workers/WorkerRunnable.cpp:312
+>    #27 0x7fee937b9020 in nsThread::ProcessNextEvent(bool, bool*) xpcom/threads/nsThread.cpp:699
+>    #28 0x7fee9367dfda in NS_ProcessNextEvent(nsIThread*, bool) xpcom/glue/nsThreadUtils.cpp:263
+>    #29 0x7fee96b4b4bf in mozilla::dom::workers::WorkerPrivate::DoRunLoop(JSContext*) dom/workers/WorkerPrivate.cpp:4056
+>    #30 0x7fee96b2b644 in (anonymous namespace)::WorkerThreadPrimaryRunnable::Run() dom/workers/RuntimeService.cpp:2559
+>    #31 0x7fee937b9020 in nsThread::ProcessNextEvent(bool, bool*) xpcom/threads/nsThread.cpp:699
+>    #32 0x7fee9367dfda in NS_ProcessNextEvent(nsIThread*, bool) xpcom/glue/nsThreadUtils.cpp:263
+>    #33 0x7fee93f8e857 in mozilla::ipc::MessagePumpForNonMainThreads::Run(base::MessagePump::Delegate*) ipc/glue/MessagePump.cpp:307
+>    #34 0x7fee93f363b0 in MessageLoop::Run() ipc/chromium/src/base/message_loop.cc:226
+>    #35 0x7fee937b5e05 in nsThread::ThreadFunc(void*) xpcom/threads/nsThread.cpp:311
+>    #36 0x7fee9fa19d95 in _pt_root nsprpub/pr/src/pthreads/ptthread.c:212
+>    #37 0x7feea2f36e99 in start_thread /build/buildd/eglibc-2.15/nptl/pthread_create.c:308
+>
+>Thread T77 (DOM Worker) created by T0 here:
+>    #0 0x4602f5 in __interceptor_pthread_create _asan_rtl_
+>    #1 0x7fee9fa1671d in _PR_CreateThread nsprpub/pr/src/pthreads/ptthread.c:453
+>    #2 0x7fee9fa1629a in PR_CreateThread nsprpub/pr/src/pthreads/ptthread.c:544
+>    #3 0x7fee937b719b in nsThread::Init() xpcom/threads/nsThread.cpp:384
+>    #4 0x7fee96b201be in mozilla::dom::workers::RuntimeService::WorkerThread::Create() dom/workers/RuntimeService.cpp:2362
+>    #5 0x7fee96b1f5f4 in mozilla::dom::workers::RuntimeService::ScheduleWorker(JSContext*, mozilla::dom::workers::WorkerPrivate*) dom/workers/RuntimeService.cpp:1511
+>    #6 0x7fee96b1d14b in mozilla::dom::workers::RuntimeService::RegisterWorker(JSContext*, mozilla::dom::workers::WorkerPrivate*) dom/workers/RuntimeService.cpp:1378
+>    #7 0x7fee96b47454 in mozilla::dom::workers::WorkerPrivate::Constructor(mozilla::dom::GlobalObject const&, nsAString_internal const&, bool, mozilla::dom::workers::WorkerPrivateParent<mozilla::dom::workers::WorkerPrivate>::WorkerType, nsACString_internal const&, mozilla::dom::workers::WorkerPrivateParent<mozilla::dom::workers::WorkerPrivate>::LoadInfo*, mozilla::ErrorResult&) dom/workers/WorkerPrivate.cpp:3694
+>    #8 0x7fee96b470a2 in mozilla::dom::workers::WorkerPrivate::Constructor(mozilla::dom::GlobalObject const&, nsAString_internal const&, mozilla::ErrorResult&) dom/workers/WorkerPrivate.cpp:3588
+>    #9 0x7fee95ecb0d0 in mozilla::dom::WorkerBinding::_constructor(JSContext*, unsigned int, JS::Value*) objdir-ff-asan/dom/bindings/./WorkerBinding.cpp:669
+>    #10 0x7fee9ac761ed in js::InvokeConstructor(JSContext*, JS::CallArgs) js/src/jscntxtinlines.h:239
+>    #11 0x7fee9ac67ffe in Interpret(JSContext*, js::RunState&) js/src/vm/Interpreter.cpp:2618
+>    #12 0x7fee9ac4b539 in js::RunScript(JSContext*, js::RunState&) js/src/vm/Interpreter.cpp:421
+>    #13 0x7fee9ac74bc5 in js::Invoke(JSContext*, JS::CallArgs, js::MaybeConstruct) js/src/vm/Interpreter.cpp:493
+>    #14 0x7fee9ac75c6e in js::Invoke(JSContext*, JS::Value const&, JS::Value const&, unsigned int, JS::Value const*, JS::MutableHandle<JS::Value>) js/src/vm/Interpreter.cpp:530
+>    #15 0x7fee9aa59b24 in js::DirectProxyHandler::call(JSContext*, JS::Handle<JSObject*>, JS::CallArgs const&) js/src/jsproxy.cpp:465
+>    #16 0x7fee9ab7ee36 in js::CrossCompartmentWrapper::call(JSContext*, JS::Handle<JSObject*>, JS::CallArgs const&) js/src/jswrapper.cpp:465
+>    #17 0x7fee9aa7d3a5 in js::Proxy::call(JSContext*, JS::Handle<JSObject*>, JS::CallArgs const&) js/src/jsproxy.cpp:2686
+>    #18 0x7fee9aa828f4 in js::proxy_Call(JSContext*, unsigned int, JS::Value*) js/src/jsproxy.cpp:3089
+>    #19 0x7fee9ac74677 in js::Invoke(JSContext*, JS::CallArgs, js::MaybeConstruct) js/src/jscntxtinlines.h:239
+>    #20 0x7fee9ac6800f in Interpret(JSContext*, js::RunState&) js/src/vm/Interpreter.cpp:2621
+>    #21 0x7fee9ac4b539 in js::RunScript(JSContext*, js::RunState&) js/src/vm/Interpreter.cpp:421
+>    #22 0x7fee9ac74bc5 in js::Invoke(JSContext*, JS::CallArgs, js::MaybeConstruct) js/src/vm/Interpreter.cpp:493
+>    #23 0x7fee9ac75c6e in js::Invoke(JSContext*, JS::Value const&, JS::Value const&, unsigned int, JS::Value const*, JS::MutableHandle<JS::Value>) js/src/vm/Interpreter.cpp:530
+>    #24 0x7fee9a8c3f2f in JS::Call(JSContext*, JS::Handle<JS::Value>, JS::Handle<JS::Value>, JS::HandleValueArray const&, JS::MutableHandle<JS::Value>) js/src/jsapi.cpp:5056
+>    #25 0x7fee9541f001 in mozilla::dom::EventHandlerNonNull::Call(JSContext*, JS::Handle<JS::Value>, mozilla::dom::Event&, mozilla::ErrorResult&) objdir-ff-asan/dom/bindings/./EventHandlerBinding.cpp:35
+>    #26 0x7fee9686c88f in JS::Value mozilla::dom::EventHandlerNonNull::Call<nsISupports*>(nsISupports* const&, mozilla::dom::Event&, mozilla::ErrorResult&, mozilla::dom::CallbackObject::ExceptionHandling) objdir-ff-asan/dom/events/../../dist/include/mozilla/dom/EventHandlerBinding.h:62
+>    #27 0x7fee9686adaf in mozilla::JSEventHandler::HandleEvent(nsIDOMEvent*) dom/events/JSEventHandler.cpp:205
+>    #28 0x7fee9683ada0 in mozilla::EventListenerManager::HandleEventSubType(mozilla::EventListenerManager::Listener*, nsIDOMEvent*, mozilla::dom::EventTarget*) dom/events/EventListenerManager.cpp:950
+>    #29 0x7fee9683c1e0 in mozilla::EventListenerManager::HandleEventInternal(nsPresContext*, mozilla::WidgetEvent*, nsIDOMEvent**, mozilla::dom::EventTarget*, nsEventStatus*) dom/events/EventListenerManager.cpp:1011
+>    #30 0x7fee9682cbf1 in mozilla::EventTargetChainItem::HandleEventTargetChain(nsTArray<mozilla::EventTargetChainItem>&, mozilla::EventChainPostVisitor&, mozilla::EventDispatchingCallback*, mozilla::ELMCreationDetector&) dom/events/EventDispatcher.cpp:287
+>    #31 0x7fee96830d16 in mozilla::EventDispatcher::Dispatch(nsISupports*, nsPresContext*, mozilla::WidgetEvent*, nsIDOMEvent*, nsEventStatus*, mozilla::EventDispatchingCallback*, nsCOMArray<mozilla::dom::EventTarget>*) dom/events/EventDispatcher.cpp:597
+>    #32 0x7fee9658bb49 in nsGlobalWindow::PostHandleEvent(mozilla::EventChainPostVisitor&) dom/base/nsGlobalWindow.cpp:3212
+>    #33 0x7fee9682cd3e in mozilla::EventTargetChainItem::HandleEventTargetChain(nsTArray<mozilla::EventTargetChainItem>&, mozilla::EventChainPostVisitor&, mozilla::EventDispatchingCallback*, mozilla::ELMCreationDetector&) dom/events/EventDispatcher.cpp:243
+>    #34 0x7fee9682d3f7 in mozilla::EventTargetChainItem::HandleEventTargetChain(nsTArray<mozilla::EventTargetChainItem>&, mozilla::EventChainPostVisitor&, mozilla::EventDispatchingCallback*, mozilla::ELMCreationDetector&) dom/events/EventDispatcher.cpp:336
+>    #35 0x7fee96830d16 in mozilla::EventDispatcher::Dispatch(nsISupports*, nsPresContext*, mozilla::WidgetEvent*, nsIDOMEvent*, nsEventStatus*, mozilla::EventDispatchingCallback*, nsCOMArray<mozilla::dom::EventTarget>*) dom/events/EventDispatcher.cpp:597
+>    #36 0x7fee97d775a4 in nsDocumentViewer::LoadComplete(tag_nsresult) layout/base/nsDocumentViewer.cpp:1003
+>    #37 0x7fee989ecc08 in nsDocShell::EndPageLoad(nsIWebProgress*, nsIChannel*, tag_nsresult) docshell/base/nsDocShell.cpp:6972
+>    #38 0x7fee989e9b99 in nsDocShell::OnStateChange(nsIWebProgress*, nsIRequest*, unsigned int, tag_nsresult) docshell/base/nsDocShell.cpp:6763
+>    #39 0x7fee989e9fff in non-virtual thunk to nsDocShell::OnStateChange(nsIWebProgress*, nsIRequest*, unsigned int, tag_nsresult) docshell/base/nsDocShell.cpp:6770
+>    #40 0x7fee9499882d in nsDocLoader::DoFireOnStateChange(nsIWebProgress*, nsIRequest*, int&, tag_nsresult) uriloader/base/nsDocLoader.cpp:1329
+>    #41 0x7fee94997b83 in nsDocLoader::doStopDocumentLoad(nsIRequest*, tag_nsresult) uriloader/base/nsDocLoader.cpp:863
+>    #42 0x7fee94995790 in nsDocLoader::DocLoaderIsEmpty(bool) uriloader/base/nsDocLoader.cpp:753
+>    #43 0x7fee94996d72 in nsDocLoader::OnStopRequest(nsIRequest*, nsISupports*, tag_nsresult) uriloader/base/nsDocLoader.cpp:637
+>    #44 0x7fee9499753c in non-virtual thunk to nsDocLoader::OnStopRequest(nsIRequest*, nsISupports*, tag_nsresult) objdir-ff-asan/uriloader/base/Unified_cpp_uriloader_base0.cpp:641
+>    #45 0x7fee93926997 in nsLoadGroup::RemoveRequest(nsIRequest*, nsISupports*, tag_nsresult) netwerk/base/src/nsLoadGroup.cpp:689
+>    #46 0x7fee96e0299c in nsDocument::DoUnblockOnload() content/base/src/nsDocument.cpp:8701
+>    #47 0x7fee96e0264a in nsDocument::UnblockOnload(bool) content/base/src/nsDocument.cpp:8629
+>    #48 0x7fee96dd7508 in nsDocument::DispatchContentLoadedEvents() content/base/src/nsDocument.cpp:4910
+>    #49 0x7fee96e28140 in nsRunnableMethodImpl<void (nsDocument::*)(), void, true>::Run() objdir-ff-asan/content/base/src/../../../dist/include/nsThreadUtils.h:387
+>    #50 0x7fee937b9020 in nsThread::ProcessNextEvent(bool, bool*) xpcom/threads/nsThread.cpp:699
+>    #51 0x7fee9367dfda in NS_ProcessNextEvent(nsIThread*, bool) xpcom/glue/nsThreadUtils.cpp:263
+>    #52 0x7fee93f8d909 in mozilla::ipc::MessagePump::Run(base::MessagePump::Delegate*) ipc/glue/MessagePump.cpp:95
+>    #53 0x7fee93f363b0 in MessageLoop::Run() ipc/chromium/src/base/message_loop.cc:226
+>    #54 0x7fee961dca07 in nsBaseAppShell::Run() widget/xpwidgets/nsBaseAppShell.cpp:164
+>    #55 0x7fee99044638 in nsAppStartup::Run() toolkit/components/startup/nsAppStartup.cpp:277
+>    #56 0x7fee98eb63b3 in XREMain::XRE_mainRun() toolkit/xre/nsAppRunner.cpp:4019
+>    #57 0x7fee98eb729d in XREMain::XRE_main(int, char**, nsXREAppData const*) toolkit/xre/nsAppRunner.cpp:4088
+>    #58 0x7fee98eb80ed in XRE_main toolkit/xre/nsAppRunner.cpp:4300
+>    #59 0x48c6e7 in main browser/app/nsBrowserApp.cpp:282
+>    #60 0x7feea1f7276c in __libc_start_main /build/buildd/eglibc-2.15/csu/libc-start.c:226
+>
+>SUMMARY: AddressSanitizer: heap-use-after-free ??:0 ??
+>Shadow bytes around the buggy address:
+>  0x0c328011da30: fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd
+>  0x0c328011da40: fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd
+>  0x0c328011da50: fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd
+>  0x0c328011da60: fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd
+>  0x0c328011da70: fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd
+>=>0x0c328011da80: fd fd fd fd fd fd fd fd fd[fd]fd fd fd fd fd fd
+>  0x0c328011da90: fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd
+>  0x0c328011daa0: fd fd fd fd fd fd fd fd fd fd fd fd fd fa fa fa
+>  0x0c328011dab0: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+>  0x0c328011dac0: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+>  0x0c328011dad0: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+>Shadow byte legend (one shadow byte represents 8 application bytes):
+>  Addressable:           00
+>  Partially addressable: 01 02 03 04 05 06 07
+>  Heap left redzone:       fa
+>  Heap right redzone:      fb
+>  Freed heap region:       fd
+>  Stack left redzone:      f1
+>  Stack mid redzone:       f2
+>  Stack right redzone:     f3
+>  Stack partial redzone:   f4
+>  Stack after return:      f5
+>  Stack use after scope:   f8
+>  Global redzone:          f9
+>  Global init order:       f6
+>  Poisoned by user:        f7
+>  Contiguous container OOB:fc
+>  ASan internal:           fe
+>==15935==ABORTING
+>
+>

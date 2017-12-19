@@ -1,0 +1,92 @@
+Crash in caps with "minimal" build options
+For the past day or so, my "minimal config" build has been crashing on startup.
+ My default+crypto+extensions build works fine.  The build options that seem to
+be causing the problem are:
+
+ac_add_options --enable-extensions='cookie xmlextras transformiix'
+ac_add_options --disable-tests
+ac_add_options --disable-ldap
+
+I see this assertion before the crash:
+nsNativeComponentLoader: autoregistering succeeded
+###!!! ASSERTION: This is not supposed to fail!: 'Error', file
+../../../../../mozilla/js/src/xpconnect/src/nsXPConnect.cpp, line 412
+###!!! Break: at file
+../../../../../mozilla/js/src/xpconnect/src/nsXPConnect.cpp, line 412
+
+
+
+Here's the trace:
+
+(gdb) bt
+#0  0x4009fea2 in js_AtomizeString (cx=0x0, str=0xbfffe618, flags=130)
+    at ../../../mozilla/js/src/jsatom.c:563
+#1  0x400a0149 in js_Atomize (cx=0x0, bytes=0x40d800fb "caller", length=6, 
+    flags=2) at ../../../mozilla/js/src/jsatom.c:645
+#2  0x4009a0a3 in JS_InternString (cx=0x0, s=0x40d800fb "caller")
+    at ../../../mozilla/js/src/jsapi.c:3504
+#3  0x40d6fec9 in nsScriptSecurityManager::nsScriptSecurityManager (
+    this=0x80a5f50)
+    at ../../../mozilla/caps/src/nsScriptSecurityManager.cpp:2170
+#4  0x40d701e6 in nsScriptSecurityManager::GetScriptSecurityManager ()
+    at ../../../mozilla/caps/src/nsScriptSecurityManager.cpp:2222
+#5  0x40d736c5 in Construct_nsIScriptSecurityManager (aOuter=0x0, 
+    aIID=@0x40a97680, aResult=0xbfffe7c0)
+    at ../../../mozilla/caps/src/nsSecurityManagerFactory.cpp:337
+#6  0x40218e25 in nsGenericFactory::CreateInstance (this=0x80a6b28, 
+    aOuter=0x0, aIID=@0x40a97680, aResult=0xbfffe7c0)
+    at ../../../mozilla/xpcom/components/nsGenericFactory.cpp:75
+#7  0x40213c22 in nsComponentManagerImpl::CreateInstanceByContractID (
+    this=0x80a0140, 
+    aContractID=0x40a96f80 "@mozilla.org/scriptsecuritymanager;1", 
+    aDelegate=0x0, aIID=@0x40a97680, aResult=0xbfffe7c0)
+    at ../../../mozilla/xpcom/components/nsComponentManager.cpp:1860
+#8  0x40214c69 in nsComponentManagerImpl::GetServiceByContractID (
+---Type <return> to continue, or q <return> to quit---
+    this=0x80a0140, 
+    aContractID=0x40a96f80 "@mozilla.org/scriptsecuritymanager;1", 
+    aIID=@0x40a97680, result=0xbfffe860)
+    at ../../../mozilla/xpcom/components/nsComponentManager.cpp:2251
+#9  0x4020f727 in nsGetServiceByContractID::operator() (this=0xbfffe8c0, 
+    aIID=@0x40a97680, aInstancePtr=0xbfffe860)
+    at ../../../mozilla/xpcom/components/nsComponentManager.cpp:234
+#10 0x40a91c48 in nsCOMPtr<nsIScriptSecurityManager>::assign_from_helper (
+    this=0xbfffe8d0, helper=@0xbfffe8c0, aIID=@0x40a97680)
+    at ../../../../dist/include/xpcom/nsCOMPtr.h:972
+#11 0x40a902cd in nsCOMPtr<nsIScriptSecurityManager>::nsCOMPtr (
+    this=0xbfffe8d0, helper=@0xbfffe8c0)
+    at ../../../../dist/include/xpcom/nsCOMPtr.h:553
+#12 0x40a8bb5c in mozJSComponentLoader::ReallyInit (this=0x80a5d30)
+    at ../../../../../mozilla/js/src/xpconnect/loader/mozJSComponentLoader.cpp:514
+#13 0x40a8d243 in mozJSComponentLoader::ModuleForLocation (this=0x80a5d30, 
+    registryLocation=0x80a5fa0 "rel:nsProxyAutoConfig.js", component=0x80a5df8)
+    at ../../../../../mozilla/js/src/xpconnect/loader/mozJSComponentLoader.cpp:988
+#14 0x40a8c9ec in mozJSComponentLoader::AttemptRegistration (this=0x80a5d30, 
+    component=0x80a5df8, deferred=0)
+    at
+../../../../../mozilla/js/src/xpconnect/loader/mozJSComponentLoader.cpp:8---Type
+<return> to continue, or q <return> to quit---
+33
+#15 0x40a8c6b4 in mozJSComponentLoader::AutoRegisterComponent (this=0x80a5d30, 
+    when=0, component=0x80a5df8, registered=0xbfffeba0)
+    at ../../../../../mozilla/js/src/xpconnect/loader/mozJSComponentLoader.cpp:759
+#16 0x40a8bf41 in mozJSComponentLoader::RegisterComponentsInDir (
+    this=0x80a5d30, when=0, dir=0x80c0318)
+    at ../../../../../mozilla/js/src/xpconnect/loader/mozJSComponentLoader.cpp:589
+#17 0x40a8bd31 in mozJSComponentLoader::AutoRegisterComponents (
+    this=0x80a5d30, when=0, aDirectory=0x80c0318)
+    at ../../../../../mozilla/js/src/xpconnect/loader/mozJSComponentLoader.cpp:545
+#18 0x4021756b in nsComponentManagerImpl::AutoRegisterImpl (this=0x80a0140, 
+    when=0, inDirSpec=0x0, fileIsCompDir=1)
+    at ../../../mozilla/xpcom/components/nsComponentManager.cpp:3185
+#19 0x40216bb8 in nsComponentManagerImpl::AutoRegister (this=0x80a0140, 
+    when=0, inDirSpec=0x0)
+    at ../../../mozilla/xpcom/components/nsComponentManager.cpp:3072
+#20 0x40218890 in nsComponentManager::AutoRegister (when=0, directory=0x0)
+    at ../../../mozilla/xpcom/components/nsComponentManagerObsolete.cpp:221
+#21 0x0805a346 in main1 (argc=1, argv=0xbfffef04, nativeApp=0x809b798)
+    at ../../../mozilla/xpfe/bootstrap/nsAppRunner.cpp:1133
+---Type <return> to continue, or q <return> to quit---
+#22 0x0805ba7b in main (argc=1, argv=0xbfffef04)
+    at ../../../mozilla/xpfe/bootstrap/nsAppRunner.cpp:1625
+#23 0x40613627 in ?? () from /lib/i686/libc.so.6

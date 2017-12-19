@@ -1,0 +1,430 @@
+Use of uninitialized value from imgStatusTracker::CalculateAndApplyDifference(imgStatusTracker*) (imgStatusTracker.cpp:563)
+Use of uninitialized value from
+imgStatusTracker::CalculateAndApplyDifference(imgStatusTracker*) (imgStatusTracker.cpp:563)
+
+
+Running thunderbird under valgrind while "make mozmill" test harness
+of thunderbird is run revealed
+new uninitialized value usage has been introduced in the last 10 days.
+
+Background: I am trying to find out the cause of strange memory error
+during GC which was noticed about 10 days ago, and I have been
+checking the execution under memgrind after a refresh of source code
+re-run the test. In contrast to the test I ran back in the middle of April I
+now see a sudden increase of uninitialized value usage.
+[I wish I could run this more often, but the whole run takes a full day
+more or less (and I am running this with full DEBUG BUILD so that
+I can co-relate the memory problem with the running of the program
+more easily.), but I digress.]
+
+In the summary below, note that because of the longer time out caused
+by the the very slow nature of valgrind execution, some tests
+inevitably timed out and could not be run successfully.  So the errors summarized may vary from each run.  But not this much for an identical binary,
+for example. And the warning signature is something I have never seen before.
+
+Summary created on April 15
+Analyzing /FF-NEW/log84-memcheck-fixedstack.txt ...
+ ========================================
+ Summary
+ ========================================
+      6	   Memcheck:Addr4     <=== some of these are GC bug
+      7	   Memcheck:Cond      <=== ****
+     17	   Memcheck:Free
+    182	   Memcheck:Leak
+      2	   Memcheck:Param 
+      4	   Memcheck:Value4
+
+Summary created Apri 18.
+Analyzing /FF-NEW/log88-memcheck.txt ...
+ ========================================
+ Summary
+ ========================================
+      4	   Memcheck:Addr4
+     10	   Memcheck:Cond	<==== ****
+     17	   Memcheck:Free
+    180	   Memcheck:Leak
+      2	   Memcheck:Param
+      5	   Memcheck:Value4
+
+Summary from the run on April 28.
+Analyzing /FF-NEW/log94-mozmill-memcheck.txt ...
+ ========================================
+ Summary
+ ========================================
+      3	   Memcheck:Addr4
+    205	   Memcheck:Cond    <=== **** SUDDEN INCREASE
+     18	   Memcheck:Free
+    189	   Memcheck:Leak
+      2	   Memcheck:Param
+      5	   Memcheck:Value4
+
+
+Typical stack trace of where the errors are attached at the end.
+
+CalculateAndApplyDifference seems to reference an uninitialized value
+from somewhere.
+
+I am reporting this today, and will try to figure out where the
+uninitialized value comes from next week.
+
+I noticed that there is
+Bug 850951 - Heap-use-after-free in imgStatusTracker::OnStopRequest
+which may or may not be related to this bug, but since that bug
+was discussed back in March, I don't think we are talking about the
+same issue.
+
+Version Info:
+I am using comm-central for building TB locally,
+/COMM-CENTRAL/comm-central
+hg identify
+6b23f3c319d8 qtip/tip/trychooser.patch
+
+pwd
+/COMM-CENTRAL/comm-central/mozilla
+hg identify
+ccfb2dea3b8e jsd_scpt-warning.patch/qtip/tip
+
+
+Stacktrace:
+(1)
+
+==30114== Conditional jump or move depends on uninitialised value(s)
+==30114==    at 0x8E5C145: imgStatusTracker::CalculateAndApplyDifference(imgStatusTracker*) (imgStatusTracker.cpp:563)
+==30114==    by 0x8E2CD02: mozilla::image::RasterImage::FinishedSomeDecoding(mozilla::image::RasterImage::eShutdownIntent, mozilla::image::RasterImage::DecodeRequest*) (RasterImage.cpp:3467)
+==30114==    by 0x8E2C436: mozilla::image::RasterImage::DecodePool::DecodeUntilSizeAvailable(mozilla::image::RasterImage*) (RasterImage.cpp:3737)
+==30114==    by 0x8E31CB3: mozilla::image::RasterImage::RequestDecodeCore(mozilla::image::RasterImage::RequestDecodeType) (RasterImage.cpp:2769)
+==30114==    by 0x8E224BF: mozilla::image::RasterImage::StartDecoding() (RasterImage.cpp:2730)
+==30114==    by 0x8E531D8: imgRequest::OnDataAvailable(nsIRequest*, nsISupports*, nsIInputStream*, unsigned long long, unsigned int) (imgRequest.cpp:789)
+==30114==    by 0x8E3C020: ProxyListener::OnDataAvailable(nsIRequest*, nsISupports*, nsIInputStream*, unsigned long long, unsigned int) (imgLoader.cpp:2109)
+==30114==    by 0x8BC64A2: nsBaseChannel::OnDataAvailable(nsIRequest*, nsISupports*, nsIInputStream*, unsigned long long, unsigned int) (nsBaseChannel.cpp:765)
+==30114==    by 0x8BDB212: nsInputStreamPump::OnStateTransfer() (nsInputStreamPump.cpp:484)
+==30114==    by 0x8BDC82E: nsInputStreamPump::OnInputStreamReady(nsIAsyncInputStream*) (nsInputStreamPump.cpp:372)
+==30114==    by 0xAC12595: nsInputStreamReadyEvent::Run() (nsStreamUtils.cpp:82)
+==30114==    by 0xAC35546: nsThread::ProcessNextEvent(bool, bool*) (nsThread.cpp:627)
+==30114==    by 0xABC651E: NS_ProcessNextEvent(nsIThread*, bool) (nsThreadUtils.cpp:238)
+==30114==    by 0xAC35F98: nsThread::Shutdown() (nsThread.cpp:474)
+==30114==    by 0x8B6AFDE: nsRunnableMethodImpl<void (nsPACMan::*)(), true>::Run() (nsThreadUtils.h:350)
+==30114==    by 0xAC35546: nsThread::ProcessNextEvent(bool, bool*) (nsThread.cpp:627)
+==30114==    by 0xABC651E: NS_ProcessNextEvent(nsIThread*, bool) (nsThreadUtils.cpp:238)
+==30114==    by 0xA7C8304: mozilla::ipc::MessagePump::Run(base::MessagePump::Delegate*) (MessagePump.cpp:82)
+==30114==    by 0xAC842CA: MessageLoop::RunInternal() (message_loop.cc:219)
+==30114==    by 0xAC842E6: MessageLoop::RunHandler() (message_loop.cc:212)
+==30114==    by 0xAC84649: MessageLoop::Run() (message_loop.cc:186)
+==30114==    by 0xA14D8B0: nsBaseAppShell::Run() (nsBaseAppShell.cpp:163)
+==30114==    by 0x9E75B87: nsAppStartup::Run() (nsAppStartup.cpp:289)
+==30114==    by 0x8B5BAE0: XREMain::XRE_mainRun() (nsAppRunner.cpp:3878)
+==30114==    by 0x8B5D0B3: XREMain::XRE_main(int, char**, nsXREAppData const*) (nsAppRunner.cpp:3945)
+==30114==    by 0x8B5D481: XRE_main (nsAppRunner.cpp:4146)
+==30114==    by 0x8049B7C: main (nsMailApp.cpp:113)
+==30114==  Uninitialised value was created by a heap allocation
+==30114==    at 0x40273B8: malloc (vg_replace_malloc.c:270)
+==30114==    by 0x4A94EB3: moz_xmalloc (mozalloc.cpp:54)
+==30114==    by 0x8E5F030: imgStatusTracker::CloneForRecording() (mozalloc.h:201)
+==30114==    by 0x8E23CEF: mozilla::image::RasterImage::DecodeRequest::DecodeRequest(mozilla::image::RasterImage*) (RasterImage.h:401)
+==30114==    by 0x8E2F2E7: mozilla::image::RasterImage::InitDecoder(bool, bool) (RasterImage.cpp:2560)
+==30114==    by 0x8E2FD36: mozilla::image::RasterImage::Init(char const*, unsigned int) (RasterImage.cpp:517)
+==30114==    by 0x8E1BE48: mozilla::image::ImageFactory::CreateRasterImage(nsIRequest*, imgStatusTracker*, nsCString const&, nsIURI*, unsigned int, unsigned int) (ImageFactory.cpp:189)
+==30114==    by 0x8E1C1D5: mozilla::image::ImageFactory::CreateImage(nsIRequest*, imgStatusTracker*, nsCString const&, nsIURI*, bool, unsigned int) (ImageFactory.cpp:106)
+==30114==    by 0x8E52878: imgRequest::OnDataAvailable(nsIRequest*, nsISupports*, nsIInputStream*, unsigned long long, unsigned int) (imgRequest.cpp:768)
+==30114==    by 0x8E3C020: ProxyListener::OnDataAvailable(nsIRequest*, nsISupports*, nsIInputStream*, unsigned long long, unsigned int) (imgLoader.cpp:2109)
+==30114==    by 0x8BC64A2: nsBaseChannel::OnDataAvailable(nsIRequest*, nsISupports*, nsIInputStream*, unsigned long long, unsigned int) (nsBaseChannel.cpp:765)
+==30114==    by 0x8BDB212: nsInputStreamPump::OnStateTransfer() (nsInputStreamPump.cpp:484)
+==30114==    by 0x8BDC82E: nsInputStreamPump::OnInputStreamReady(nsIAsyncInputStream*) (nsInputStreamPump.cpp:372)
+==30114==    by 0xAC12595: nsInputStreamReadyEvent::Run() (nsStreamUtils.cpp:82)
+==30114==    by 0xAC35546: nsThread::ProcessNextEvent(bool, bool*) (nsThread.cpp:627)
+==30114==    by 0xABC651E: NS_ProcessNextEvent(nsIThread*, bool) (nsThreadUtils.cpp:238)
+==30114==    by 0xAC35F98: nsThread::Shutdown() (nsThread.cpp:474)
+==30114==    by 0x8B6AFDE: nsRunnableMethodImpl<void (nsPACMan::*)(), true>::Run() (nsThreadUtils.h:350)
+==30114==    by 0xAC35546: nsThread::ProcessNextEvent(bool, bool*) (nsThread.cpp:627)
+==30114==    by 0xABC651E: NS_ProcessNextEvent(nsIThread*, bool) (nsThreadUtils.cpp:238)
+==30114==    by 0xA7C8304: mozilla::ipc::MessagePump::Run(base::MessagePump::Delegate*) (MessagePump.cpp:82)
+==30114==    by 0xAC842CA: MessageLoop::RunInternal() (message_loop.cc:219)
+==30114==    by 0xAC842E6: MessageLoop::RunHandler() (message_loop.cc:212)
+==30114==    by 0xAC84649: MessageLoop::Run() (message_loop.cc:186)
+==30114==    by 0xA14D8B0: nsBaseAppShell::Run() (nsBaseAppShell.cpp:163)
+==30114==    by 0x9E75B87: nsAppStartup::Run() (nsAppStartup.cpp:289)
+==30114==    by 0x8B5BAE0: XREMain::XRE_mainRun() (nsAppRunner.cpp:3878)
+==30114==    by 0x8B5D0B3: XREMain::XRE_main(int, char**, nsXREAppData const*) (nsAppRunner.cpp:3945)
+==30114==    by 0x8B5D481: XRE_main (nsAppRunner.cpp:4146)
+==30114==    by 0x8049B7C: main (nsMailApp.cpp:113)
+==30114==
+
+
+(1-b)
+
+This is similar (1), but called from a slightly different placd (4th entry in the stack.)
+==30297==    by 0x8E2C452: mozilla::image::RasterImage::DecodePool::DecodeUntilSizeAvailable(mozilla::image::RasterImage*) (RasterImage.cpp:3719)
+
+(Entry (1) above had different line. (3737 vs 3719)
+==30114==    by 0x8E2C436: mozilla::image::RasterImage::DecodePool::DecodeUntilSizeAvailable(mozilla::image::RasterImage*) (RasterImage.cpp:3737)
+
+
+==30297== Conditional jump or move depends on uninitialised value(s)
+==30297==    at 0x8E5BFDA: imgStatusTracker::CalculateAndApplyDifference(imgStatusTracker*) (imgStatusTracker.cpp:546)
+==30297==    by 0x8E2CD02: mozilla::image::RasterImage::FinishedSomeDecoding(mozilla::image::RasterImage::eShutdownIntent, mozilla::image::RasterImage::DecodeRequest*) (RasterImage.cpp:3467)
+==30297==    by 0x8E2C452: mozilla::image::RasterImage::DecodePool::DecodeUntilSizeAvailable(mozilla::image::RasterImage*) (RasterImage.cpp:3719)
+==30297==    by 0x8E30E28: mozilla::image::RasterImage::DoImageDataComplete() (RasterImage.cpp:1757)
+==30297==    by 0x8E31115: mozilla::image::RasterImage::OnImageDataComplete(nsIRequest*, nsISupports*, tag_nsresult, bool) (RasterImage.cpp:1806)
+==30297==    by 0x8E4E991: imgRequest::OnStopRequest(nsIRequest*, nsISupports*, tag_nsresult) (imgRequest.cpp:616)
+==30297==    by 0x8E3D7E9: ProxyListener::OnStopRequest(nsIRequest*, nsISupports*, tag_nsresult) (imgLoader.cpp:2095)
+==30297==    by 0x8BC8BCD: nsBaseChannel::OnStopRequest(nsIRequest*, nsISupports*, tag_nsresult) (nsBaseChannel.cpp:737)
+==30297==    by 0x8BDC3AD: nsInputStreamPump::OnStateStop() (nsInputStreamPump.cpp:555)
+==30297==    by 0x8BDC7BD: nsInputStreamPump::OnInputStreamReady(nsIAsyncInputStream*) (nsInputStreamPump.cpp:375)
+==30297==    by 0xAC12595: nsInputStreamReadyEvent::Run() (nsStreamUtils.cpp:82)
+==30297==    by 0xAC35546: nsThread::ProcessNextEvent(bool, bool*) (nsThread.cpp:627)
+==30297==    by 0xABC651E: NS_ProcessNextEvent(nsIThread*, bool) (nsThreadUtils.cpp:238)
+==30297==    by 0xA7C8304: mozilla::ipc::MessagePump::Run(base::MessagePump::Delegate*) (MessagePump.cpp:82)
+==30297==    by 0xAC842CA: MessageLoop::RunInternal() (message_loop.cc:219)
+==30297==    by 0xAC842E6: MessageLoop::RunHandler() (message_loop.cc:212)
+==30297==    by 0xAC84649: MessageLoop::Run() (message_loop.cc:186)
+==30297==    by 0xA14D8B0: nsBaseAppShell::Run() (nsBaseAppShell.cpp:163)
+==30297==    by 0x9E75B87: nsAppStartup::Run() (nsAppStartup.cpp:289)
+==30297==    by 0x8B5BAE0: XREMain::XRE_mainRun() (nsAppRunner.cpp:3878)
+==30297==    by 0x8B5D0B3: XREMain::XRE_main(int, char**, nsXREAppData const*) (nsAppRunner.cpp:3945)
+==30297==    by 0x8B5D481: XRE_main (nsAppRunner.cpp:4146)
+==30297==    by 0x8049B7C: main (nsMailApp.cpp:113)
+==30297==  Uninitialised value was created by a heap allocation
+==30297==    at 0x40273B8: malloc (vg_replace_malloc.c:270)
+==30297==    by 0x4A94EB3: moz_xmalloc (mozalloc.cpp:54)
+==30297==    by 0x8E5F030: imgStatusTracker::CloneForRecording() (mozalloc.h:201)
+==30297==    by 0x8E23CEF: mozilla::image::RasterImage::DecodeRequest::DecodeRequest(mozilla::image::RasterImage*) (RasterImage.h:401)
+==30297==    by 0x8E2F2E7: mozilla::image::RasterImage::InitDecoder(bool, bool) (RasterImage.cpp:2560)
+==30297==    by 0x8E2FD36: mozilla::image::RasterImage::Init(char const*, unsigned int) (RasterImage.cpp:517)
+==30297==    by 0x8E1BE48: mozilla::image::ImageFactory::CreateRasterImage(nsIRequest*, imgStatusTracker*, nsCString const&, nsIURI*, unsigned int, unsigned int) (ImageFactory.cpp:189)
+==30297==    by 0x8E1C1D5: mozilla::image::ImageFactory::CreateImage(nsIRequest*, imgStatusTracker*, nsCString const&, nsIURI*, bool, unsigned int) (ImageFactory.cpp:106)
+==30297==    by 0x8E52878: imgRequest::OnDataAvailable(nsIRequest*, nsISupports*, nsIInputStream*, unsigned long long, unsigned int) (imgRequest.cpp:768)
+==30297==    by 0x8E3C020: ProxyListener::OnDataAvailable(nsIRequest*, nsISupports*, nsIInputStream*, unsigned long long, unsigned int) (imgLoader.cpp:2109)
+==30297==    by 0x8BC64A2: nsBaseChannel::OnDataAvailable(nsIRequest*, nsISupports*, nsIInputStream*, unsigned long long, unsigned int) (nsBaseChannel.cpp:765)
+==30297==    by 0x8BDB212: nsInputStreamPump::OnStateTransfer() (nsInputStreamPump.cpp:484)
+==30297==    by 0x8BDC82E: nsInputStreamPump::OnInputStreamReady(nsIAsyncInputStream*) (nsInputStreamPump.cpp:372)
+==30297==    by 0xAC12595: nsInputStreamReadyEvent::Run() (nsStreamUtils.cpp:82)
+==30297==    by 0xAC35546: nsThread::ProcessNextEvent(bool, bool*) (nsThread.cpp:627)
+==30297==    by 0xABC651E: NS_ProcessNextEvent(nsIThread*, bool) (nsThreadUtils.cpp:238)
+==30297==    by 0xA7C8304: mozilla::ipc::MessagePump::Run(base::MessagePump::Delegate*) (MessagePump.cpp:82)
+==30297==    by 0xAC842CA: MessageLoop::RunInternal() (message_loop.cc:219)
+==30297==    by 0xAC842E6: MessageLoop::RunHandler() (message_loop.cc:212)
+==30297==    by 0xAC84649: MessageLoop::Run() (message_loop.cc:186)
+==30297==    by 0xA14D8B0: nsBaseAppShell::Run() (nsBaseAppShell.cpp:163)
+==30297==    by 0x9E75B87: nsAppStartup::Run() (nsAppStartup.cpp:289)
+==30297==    by 0x8B5BAE0: XREMain::XRE_mainRun() (nsAppRunner.cpp:3878)
+==30297==    by 0x8B5D0B3: XREMain::XRE_main(int, char**, nsXREAppData const*) (nsAppRunner.cpp:3945)
+==30297==    by 0x8B5D481: XRE_main (nsAppRunner.cpp:4146)
+==30297==    by 0x8049B7C: main (nsMailApp.cpp:113)
+==30297==
+
+
+(2) This and the following (3) shows calls from OnStartRequest, and OnImageDataComplete
+
+==30114== Conditional jump or move depends on uninitialised value(s)
+==30114==    at 0x8E5C010: imgStatusTracker::CalculateAndApplyDifference(imgStatusTracker*) (imgStatusTracker.cpp:563)
+==30114==    by 0x8E390EB: mozilla::image::VectorImage::OnStartRequest(nsIRequest*, nsISupports*) (VectorImage.cpp:784)
+==30114==    by 0x8E1B62C: mozilla::image::ImageFactory::CreateVectorImage(nsIRequest*, imgStatusTracker*, nsCString const&, nsIURI*, unsigned int, unsigned int) (ImageFactory.cpp:237)
+==30114==    by 0x8E1C217: mozilla::image::ImageFactory::CreateImage(nsIRequest*, imgStatusTracker*, nsCString const&, nsIURI*, bool, unsigned int) (ImageFactory.cpp:103)
+==30114==    by 0x8E52878: imgRequest::OnDataAvailable(nsIRequest*, nsISupports*, nsIInputStream*, unsigned long long, unsigned int) (imgRequest.cpp:768)
+==30114==    by 0x8E3C020: ProxyListener::OnDataAvailable(nsIRequest*, nsISupports*, nsIInputStream*, unsigned long long, unsigned int) (imgLoader.cpp:2109)
+==30114==    by 0x8BC64A2: nsBaseChannel::OnDataAvailable(nsIRequest*, nsISupports*, nsIInputStream*, unsigned long long, unsigned int) (nsBaseChannel.cpp:765)
+==30114==    by 0x8BDB212: nsInputStreamPump::OnStateTransfer() (nsInputStreamPump.cpp:484)
+==30114==    by 0x8BDC82E: nsInputStreamPump::OnInputStreamReady(nsIAsyncInputStream*) (nsInputStreamPump.cpp:372)
+==30114==    by 0xAC12595: nsInputStreamReadyEvent::Run() (nsStreamUtils.cpp:82)
+==30114==    by 0xAC35546: nsThread::ProcessNextEvent(bool, bool*) (nsThread.cpp:627)
+==30114==    by 0xAC61A63: NS_InvokeByIndex (in /TEST-MAIL-DIR/objdir-tb3/mozilla/toolkit/library/libxul.so)
+==30114==    by 0x9CF77CB: CallMethodHelper::Call() (XPCWrappedNative.cpp:2945)
+==30114==    by 0x9CF81BA: XPCWrappedNative::CallMethod(XPCCallContext&, XPCWrappedNative::CallMode) (XPCWrappedNative.cpp:2246)
+==30114==    by 0x9CFFBE3: XPC_WN_CallMethod(JSContext*, unsigned int, JS::Value*) (XPCWrappedNativeJSOps.cpp:1483)
+==30114==    by 0xB29ACEB: js::CallJSNative(JSContext*, int (*)(JSContext*, unsigned int, JS::Value*), JS::CallArgs const&) (jscntxtinlines.h:337)
+==30114==    by 0xB2AAC29: js::InvokeKernel(JSContext*, JS::CallArgs, js::MaybeConstruct) (jsinterp.cpp:407)
+==30114==    by 0xB2A358B: js::Interpret(JSContext*, js::StackFrame*, js::InterpMode, bool) (jsinterp.cpp:2396)
+==30114==    by 0xB2A9D2E: js::RunScript(JSContext*, js::StackFrame*) (jsinterp.cpp:364)
+==30114==    by 0xB2AAB35: js::InvokeKernel(JSContext*, JS::CallArgs, js::MaybeConstruct) (jsinterp.cpp:421)
+==30114==    by 0xB2AB4AB: js::Invoke(JSContext*, JS::Value const&, JS::Value const&, unsigned int, JS::Value*, JS::Value*) (jsinterp.h:134)
+==30114==    by 0xB2F9672: js::DirectProxyHandler::call(JSContext*, JS::Handle<JSObject*>, JS::CallArgs const&) (jsproxy.cpp:481)
+==30114==    by 0xB3936BA: js::CrossCompartmentWrapper::call(JSContext*, JS::Handle<JSObject*>, JS::CallArgs const&) (jswrapper.cpp:453)
+==30114==    by 0xB2FC977: js::Proxy::call(JSContext*, JS::Handle<JSObject*>, JS::CallArgs const&) (jsproxy.cpp:2613)
+==30114==    by 0xB2FCA6F: proxy_Call(JSContext*, unsigned int, JS::Value*) (jsproxy.cpp:3177)
+==30114==    by 0xB29ACEB: js::CallJSNative(JSContext*, int (*)(JSContext*, unsigned int, JS::Value*), JS::CallArgs const&) (jscntxtinlines.h:337)
+==30114==    by 0xB2AAD7E: js::InvokeKernel(JSContext*, JS::CallArgs, js::MaybeConstruct) (jsinterp.cpp:400)
+==30114==    by 0xB2A358B: js::Interpret(JSContext*, js::StackFrame*, js::InterpMode, bool) (jsinterp.cpp:2396)
+==30114==    by 0xB2A9D2E: js::RunScript(JSContext*, js::StackFrame*) (jsinterp.cpp:364)
+==30114==    by 0xB2AAB35: js::InvokeKernel(JSContext*, JS::CallArgs, js::MaybeConstruct) (jsinterp.cpp:421)
+==30114==    by 0xB24FB16: js_fun_apply(JSContext*, unsigned int, JS::Value*) (jsinterp.h:134)
+==30114==    by 0xB29ACEB: js::CallJSNative(JSContext*, int (*)(JSContext*, unsigned int, JS::Value*), JS::CallArgs const&) (jscntxtinlines.h:337)
+==30114==    by 0xB2AAC29: js::InvokeKernel(JSContext*, JS::CallArgs, js::MaybeConstruct) (jsinterp.cpp:407)
+==30114==    by 0xB2AB4AB: js::Invoke(JSContext*, JS::Value const&, JS::Value const&, unsigned int, JS::Value*, JS::Value*) (jsinterp.h:134)
+==30114==    by 0xB2F9672: js::DirectProxyHandler::call(JSContext*, JS::Handle<JSObject*>, JS::CallArgs const&) (jsproxy.cpp:481)
+==30114==    by 0xB3936BA: js::CrossCompartmentWrapper::call(JSContext*, JS::Handle<JSObject*>, JS::CallArgs const&) (jswrapper.cpp:453)
+==30114==    by 0xB2FC977: js::Proxy::call(JSContext*, JS::Handle<JSObject*>, JS::CallArgs const&) (jsproxy.cpp:2613)
+==30114==    by 0xB2FCA6F: proxy_Call(JSContext*, unsigned int, JS::Value*) (jsproxy.cpp:3177)
+==30114==    by 0xB29ACEB: js::CallJSNative(JSContext*, int (*)(JSContext*, unsigned int, JS::Value*), JS::CallArgs const&) (jscntxtinlines.h:337)
+==30114==    by 0xB2AAD7E: js::InvokeKernel(JSContext*, JS::CallArgs, js::MaybeConstruct) (jsinterp.cpp:400)
+==30114==    by 0xB2A358B: js::Interpret(JSContext*, js::StackFrame*, js::InterpMode, bool) (jsinterp.cpp:2396)
+==30114==    by 0xB2A9D2E: js::RunScript(JSContext*, js::StackFrame*) (jsinterp.cpp:364)
+==30114==    by 0xB2AAB35: js::InvokeKernel(JSContext*, JS::CallArgs, js::MaybeConstruct) (jsinterp.cpp:421)
+==30114==    by 0xB2AB4AB: js::Invoke(JSContext*, JS::Value const&, JS::Value const&, unsigned int, JS::Value*, JS::Value*) (jsinterp.h:134)
+==30114==    by 0xB2F9672: js::DirectProxyHandler::call(JSContext*, JS::Handle<JSObject*>, JS::CallArgs const&) (jsproxy.cpp:481)
+==30114==    by 0xB3936BA: js::CrossCompartmentWrapper::call(JSContext*, JS::Handle<JSObject*>, JS::CallArgs const&) (jswrapper.cpp:453)
+==30114==    by 0xB2FC977: js::Proxy::call(JSContext*, JS::Handle<JSObject*>, JS::CallArgs const&) (jsproxy.cpp:2613)
+==30114==    by 0xB2FCA6F: proxy_Call(JSContext*, unsigned int, JS::Value*) (jsproxy.cpp:3177)
+==30114==    by 0xB29ACEB: js::CallJSNative(JSContext*, int (*)(JSContext*, unsigned int, JS::Value*), JS::CallArgs const&) (jscntxtinlines.h:337)
+==30114==    by 0xB2AAD7E: js::InvokeKernel(JSContext*, JS::CallArgs, js::MaybeConstruct) (jsinterp.cpp:400)
+==30114==  Uninitialised value was created by a heap allocation
+==30114==    at 0x40273B8: malloc (vg_replace_malloc.c:270)
+==30114==    by 0x4A94EB3: moz_xmalloc (mozalloc.cpp:54)
+==30114==    by 0x8E5F030: imgStatusTracker::CloneForRecording() (mozalloc.h:201)
+==30114==    by 0x8E390AE: mozilla::image::VectorImage::OnStartRequest(nsIRequest*, nsISupports*) (VectorImage.cpp:781)
+==30114==    by 0x8E1B62C: mozilla::image::ImageFactory::CreateVectorImage(nsIRequest*, imgStatusTracker*, nsCString const&, nsIURI*, unsigned int, unsigned int) (ImageFactory.cpp:237)
+==30114==    by 0x8E1C217: mozilla::image::ImageFactory::CreateImage(nsIRequest*, imgStatusTracker*, nsCString const&, nsIURI*, bool, unsigned int) (ImageFactory.cpp:103)
+==30114==    by 0x8E52878: imgRequest::OnDataAvailable(nsIRequest*, nsISupports*, nsIInputStream*, unsigned long long, unsigned int) (imgRequest.cpp:768)
+==30114==    by 0x8E3C020: ProxyListener::OnDataAvailable(nsIRequest*, nsISupports*, nsIInputStream*, unsigned long long, unsigned int) (imgLoader.cpp:2109)
+==30114==    by 0x8BC64A2: nsBaseChannel::OnDataAvailable(nsIRequest*, nsISupports*, nsIInputStream*, unsigned long long, unsigned int) (nsBaseChannel.cpp:765)
+==30114==    by 0x8BDB212: nsInputStreamPump::OnStateTransfer() (nsInputStreamPump.cpp:484)
+==30114==    by 0x8BDC82E: nsInputStreamPump::OnInputStreamReady(nsIAsyncInputStream*) (nsInputStreamPump.cpp:372)
+==30114==    by 0xAC12595: nsInputStreamReadyEvent::Run() (nsStreamUtils.cpp:82)
+==30114==    by 0xAC35546: nsThread::ProcessNextEvent(bool, bool*) (nsThread.cpp:627)
+==30114==    by 0xAC61A63: NS_InvokeByIndex (in /TEST-MAIL-DIR/objdir-tb3/mozilla/toolkit/library/libxul.so)
+==30114==    by 0x9CF77CB: CallMethodHelper::Call() (XPCWrappedNative.cpp:2945)
+==30114==    by 0x9CF81BA: XPCWrappedNative::CallMethod(XPCCallContext&, XPCWrappedNative::CallMode) (XPCWrappedNative.cpp:2246)
+==30114==    by 0x9CFFBE3: XPC_WN_CallMethod(JSContext*, unsigned int, JS::Value*) (XPCWrappedNativeJSOps.cpp:1483)
+==30114==    by 0xB29ACEB: js::CallJSNative(JSContext*, int (*)(JSContext*, unsigned int, JS::Value*), JS::CallArgs const&) (jscntxtinlines.h:337)
+==30114==    by 0xB2AAC29: js::InvokeKernel(JSContext*, JS::CallArgs, js::MaybeConstruct) (jsinterp.cpp:407)
+==30114==    by 0xB2A358B: js::Interpret(JSContext*, js::StackFrame*, js::InterpMode, bool) (jsinterp.cpp:2396)
+==30114==    by 0xB2A9D2E: js::RunScript(JSContext*, js::StackFrame*) (jsinterp.cpp:364)
+==30114==    by 0xB2AAB35: js::InvokeKernel(JSContext*, JS::CallArgs, js::MaybeConstruct) (jsinterp.cpp:421)
+==30114==    by 0xB2AB4AB: js::Invoke(JSContext*, JS::Value const&, JS::Value const&, unsigned int, JS::Value*, JS::Value*) (jsinterp.h:134)
+==30114==    by 0xB2F9672: js::DirectProxyHandler::call(JSContext*, JS::Handle<JSObject*>, JS::CallArgs const&) (jsproxy.cpp:481)
+==30114==    by 0xB3936BA: js::CrossCompartmentWrapper::call(JSContext*, JS::Handle<JSObject*>, JS::CallArgs const&) (jswrapper.cpp:453)
+==30114==    by 0xB2FC977: js::Proxy::call(JSContext*, JS::Handle<JSObject*>, JS::CallArgs const&) (jsproxy.cpp:2613)
+==30114==    by 0xB2FCA6F: proxy_Call(JSContext*, unsigned int, JS::Value*) (jsproxy.cpp:3177)
+==30114==    by 0xB29ACEB: js::CallJSNative(JSContext*, int (*)(JSContext*, unsigned int, JS::Value*), JS::CallArgs const&) (jscntxtinlines.h:337)
+==30114==    by 0xB2AAD7E: js::InvokeKernel(JSContext*, JS::CallArgs, js::MaybeConstruct) (jsinterp.cpp:400)
+==30114==    by 0xB2A358B: js::Interpret(JSContext*, js::StackFrame*, js::InterpMode, bool) (jsinterp.cpp:2396)
+==30114==    by 0xB2A9D2E: js::RunScript(JSContext*, js::StackFrame*) (jsinterp.cpp:364)
+==30114==    by 0xB2AAB35: js::InvokeKernel(JSContext*, JS::CallArgs, js::MaybeConstruct) (jsinterp.cpp:421)
+==30114==    by 0xB24FB16: js_fun_apply(JSContext*, unsigned int, JS::Value*) (jsinterp.h:134)
+==30114==    by 0xB29ACEB: js::CallJSNative(JSContext*, int (*)(JSContext*, unsigned int, JS::Value*), JS::CallArgs const&) (jscntxtinlines.h:337)
+==30114==    by 0xB2AAC29: js::InvokeKernel(JSContext*, JS::CallArgs, js::MaybeConstruct) (jsinterp.cpp:407)
+==30114==    by 0xB2AB4AB: js::Invoke(JSContext*, JS::Value const&, JS::Value const&, unsigned int, JS::Value*, JS::Value*) (jsinterp.h:134)
+==30114==    by 0xB2F9672: js::DirectProxyHandler::call(JSContext*, JS::Handle<JSObject*>, JS::CallArgs const&) (jsproxy.cpp:481)
+==30114==    by 0xB3936BA: js::CrossCompartmentWrapper::call(JSContext*, JS::Handle<JSObject*>, JS::CallArgs const&) (jswrapper.cpp:453)
+==30114==    by 0xB2FC977: js::Proxy::call(JSContext*, JS::Handle<JSObject*>, JS::CallArgs const&) (jsproxy.cpp:2613)
+==30114==    by 0xB2FCA6F: proxy_Call(JSContext*, unsigned int, JS::Value*) (jsproxy.cpp:3177)
+==30114==    by 0xB29ACEB: js::CallJSNative(JSContext*, int (*)(JSContext*, unsigned int, JS::Value*), JS::CallArgs const&) (jscntxtinlines.h:337)
+==30114==    by 0xB2AAD7E: js::InvokeKernel(JSContext*, JS::CallArgs, js::MaybeConstruct) (jsinterp.cpp:400)
+==30114==    by 0xB2A358B: js::Interpret(JSContext*, js::StackFrame*, js::InterpMode, bool) (jsinterp.cpp:2396)
+==30114==    by 0xB2A9D2E: js::RunScript(JSContext*, js::StackFrame*) (jsinterp.cpp:364)
+==30114==    by 0xB2AAB35: js::InvokeKernel(JSContext*, JS::CallArgs, js::MaybeConstruct) (jsinterp.cpp:421)
+==30114==    by 0xB2AB4AB: js::Invoke(JSContext*, JS::Value const&, JS::Value const&, unsigned int, JS::Value*, JS::Value*) (jsinterp.h:134)
+==30114==    by 0xB2F9672: js::DirectProxyHandler::call(JSContext*, JS::Handle<JSObject*>, JS::CallArgs const&) (jsproxy.cpp:481)
+==30114==    by 0xB3936BA: js::CrossCompartmentWrapper::call(JSContext*, JS::Handle<JSObject*>, JS::CallArgs const&) (jswrapper.cpp:453)
+==30114==    by 0xB2FC977: js::Proxy::call(JSContext*, JS::Handle<JSObject*>, JS::CallArgs const&) (jsproxy.cpp:2613)
+==30114==    by 0xB2FCA6F: proxy_Call(JSContext*, unsigned int, JS::Value*) (jsproxy.cpp:3177)
+==30114==
+
+
+(3)
+
+==30297== Conditional jump or move depends on uninitialised value(s)
+==30297==    at 0x8E5BFDA: imgStatusTracker::CalculateAndApplyDifference(imgStatusTracker*) (imgStatusTracker.cpp:546)
+==30297==    by 0x8E36096: mozilla::image::VectorImage::OnImageDataComplete(nsIRequest*, nsISupports*, tag_nsresult, bool) (VectorImage.cpp:388)
+==30297==    by 0x8E4E991: imgRequest::OnStopRequest(nsIRequest*, nsISupports*, tag_nsresult) (imgRequest.cpp:616)
+==30297==    by 0x8E3D7E9: ProxyListener::OnStopRequest(nsIRequest*, nsISupports*, tag_nsresult) (imgLoader.cpp:2095)
+==30297==    by 0x8BC8BCD: nsBaseChannel::OnStopRequest(nsIRequest*, nsISupports*, tag_nsresult) (nsBaseChannel.cpp:737)
+==30297==    by 0x8BDC3AD: nsInputStreamPump::OnStateStop() (nsInputStreamPump.cpp:555)
+==30297==    by 0x8BDC7BD: nsInputStreamPump::OnInputStreamReady(nsIAsyncInputStream*) (nsInputStreamPump.cpp:375)
+==30297==    by 0xAC12595: nsInputStreamReadyEvent::Run() (nsStreamUtils.cpp:82)
+==30297==    by 0xAC35546: nsThread::ProcessNextEvent(bool, bool*) (nsThread.cpp:627)
+==30297==    by 0xAC61A63: NS_InvokeByIndex (in /TEST-MAIL-DIR/objdir-tb3/mozilla/toolkit/library/libxul.so)
+==30297==    by 0x9CF77CB: CallMethodHelper::Call() (XPCWrappedNative.cpp:2945)
+==30297==    by 0x9CF81BA: XPCWrappedNative::CallMethod(XPCCallContext&, XPCWrappedNative::CallMode) (XPCWrappedNative.cpp:2246)
+==30297==    by 0x9CFFBE3: XPC_WN_CallMethod(JSContext*, unsigned int, JS::Value*) (XPCWrappedNativeJSOps.cpp:1483)
+==30297==    by 0xB29ACEB: js::CallJSNative(JSContext*, int (*)(JSContext*, unsigned int, JS::Value*), JS::CallArgs const&) (jscntxtinlines.h:337)
+==30297==    by 0xB2AAC29: js::InvokeKernel(JSContext*, JS::CallArgs, js::MaybeConstruct) (jsinterp.cpp:407)
+==30297==    by 0xB2A358B: js::Interpret(JSContext*, js::StackFrame*, js::InterpMode, bool) (jsinterp.cpp:2396)
+==30297==    by 0xB2A9D2E: js::RunScript(JSContext*, js::StackFrame*) (jsinterp.cpp:364)
+==30297==    by 0xB2AAB35: js::InvokeKernel(JSContext*, JS::CallArgs, js::MaybeConstruct) (jsinterp.cpp:421)
+==30297==    by 0xB2AB4AB: js::Invoke(JSContext*, JS::Value const&, JS::Value const&, unsigned int, JS::Value*, JS::Value*) (jsinterp.h:134)
+==30297==    by 0xB2F9672: js::DirectProxyHandler::call(JSContext*, JS::Handle<JSObject*>, JS::CallArgs const&) (jsproxy.cpp:481)
+==30297==    by 0xB3936BA: js::CrossCompartmentWrapper::call(JSContext*, JS::Handle<JSObject*>, JS::CallArgs const&) (jswrapper.cpp:453)
+==30297==    by 0xB2FC977: js::Proxy::call(JSContext*, JS::Handle<JSObject*>, JS::CallArgs const&) (jsproxy.cpp:2613)
+==30297==    by 0xB2FCA6F: proxy_Call(JSContext*, unsigned int, JS::Value*) (jsproxy.cpp:3177)
+==30297==    by 0xB29ACEB: js::CallJSNative(JSContext*, int (*)(JSContext*, unsigned int, JS::Value*), JS::CallArgs const&) (jscntxtinlines.h:337)
+==30297==    by 0xB2AAD7E: js::InvokeKernel(JSContext*, JS::CallArgs, js::MaybeConstruct) (jsinterp.cpp:400)
+==30297==    by 0xB2A358B: js::Interpret(JSContext*, js::StackFrame*, js::InterpMode, bool) (jsinterp.cpp:2396)
+==30297==    by 0xB2A9D2E: js::RunScript(JSContext*, js::StackFrame*) (jsinterp.cpp:364)
+==30297==    by 0xB2AAB35: js::InvokeKernel(JSContext*, JS::CallArgs, js::MaybeConstruct) (jsinterp.cpp:421)
+==30297==    by 0xB24FB16: js_fun_apply(JSContext*, unsigned int, JS::Value*) (jsinterp.h:134)
+==30297==    by 0xB29ACEB: js::CallJSNative(JSContext*, int (*)(JSContext*, unsigned int, JS::Value*), JS::CallArgs const&) (jscntxtinlines.h:337)
+==30297==    by 0xB2AAC29: js::InvokeKernel(JSContext*, JS::CallArgs, js::MaybeConstruct) (jsinterp.cpp:407)
+==30297==    by 0xB2AB4AB: js::Invoke(JSContext*, JS::Value const&, JS::Value const&, unsigned int, JS::Value*, JS::Value*) (jsinterp.h:134)
+==30297==    by 0xB2F9672: js::DirectProxyHandler::call(JSContext*, JS::Handle<JSObject*>, JS::CallArgs const&) (jsproxy.cpp:481)
+==30297==    by 0xB3936BA: js::CrossCompartmentWrapper::call(JSContext*, JS::Handle<JSObject*>, JS::CallArgs const&) (jswrapper.cpp:453)
+==30297==    by 0xB2FC977: js::Proxy::call(JSContext*, JS::Handle<JSObject*>, JS::CallArgs const&) (jsproxy.cpp:2613)
+==30297==    by 0xB2FCA6F: proxy_Call(JSContext*, unsigned int, JS::Value*) (jsproxy.cpp:3177)
+==30297==    by 0xB29ACEB: js::CallJSNative(JSContext*, int (*)(JSContext*, unsigned int, JS::Value*), JS::CallArgs const&) (jscntxtinlines.h:337)
+==30297==    by 0xB2AAD7E: js::InvokeKernel(JSContext*, JS::CallArgs, js::MaybeConstruct) (jsinterp.cpp:400)
+==30297==    by 0xB2A358B: js::Interpret(JSContext*, js::StackFrame*, js::InterpMode, bool) (jsinterp.cpp:2396)
+==30297==    by 0xB2A9D2E: js::RunScript(JSContext*, js::StackFrame*) (jsinterp.cpp:364)
+==30297==    by 0xB2AAB35: js::InvokeKernel(JSContext*, JS::CallArgs, js::MaybeConstruct) (jsinterp.cpp:421)
+==30297==    by 0xB2AB4AB: js::Invoke(JSContext*, JS::Value const&, JS::Value const&, unsigned int, JS::Value*, JS::Value*) (jsinterp.h:134)
+==30297==    by 0xB2F9672: js::DirectProxyHandler::call(JSContext*, JS::Handle<JSObject*>, JS::CallArgs const&) (jsproxy.cpp:481)
+==30297==    by 0xB3936BA: js::CrossCompartmentWrapper::call(JSContext*, JS::Handle<JSObject*>, JS::CallArgs const&) (jswrapper.cpp:453)
+==30297==    by 0xB2FC977: js::Proxy::call(JSContext*, JS::Handle<JSObject*>, JS::CallArgs const&) (jsproxy.cpp:2613)
+==30297==    by 0xB2FCA6F: proxy_Call(JSContext*, unsigned int, JS::Value*) (jsproxy.cpp:3177)
+==30297==    by 0xB29ACEB: js::CallJSNative(JSContext*, int (*)(JSContext*, unsigned int, JS::Value*), JS::CallArgs const&) (jscntxtinlines.h:337)
+==30297==    by 0xB2AAD7E: js::InvokeKernel(JSContext*, JS::CallArgs, js::MaybeConstruct) (jsinterp.cpp:400)
+==30297==    by 0xB2A358B: js::Interpret(JSContext*, js::StackFrame*, js::InterpMode, bool) (jsinterp.cpp:2396)
+==30297==    by 0xB2A9D2E: js::RunScript(JSContext*, js::StackFrame*) (jsinterp.cpp:364)
+==30297==  Uninitialised value was created by a heap allocation
+==30297==    at 0x40273B8: malloc (vg_replace_malloc.c:270)
+==30297==    by 0x4A94EB3: moz_xmalloc (mozalloc.cpp:54)
+==30297==    by 0x8E5F030: imgStatusTracker::CloneForRecording() (mozalloc.h:201)
+==30297==    by 0x8E3601F: mozilla::image::VectorImage::OnImageDataComplete(nsIRequest*, nsISupports*, tag_nsresult, bool) (VectorImage.cpp:385)
+==30297==    by 0x8E4E991: imgRequest::OnStopRequest(nsIRequest*, nsISupports*, tag_nsresult) (imgRequest.cpp:616)
+==30297==    by 0x8E3D7E9: ProxyListener::OnStopRequest(nsIRequest*, nsISupports*, tag_nsresult) (imgLoader.cpp:2095)
+==30297==    by 0x8BC8BCD: nsBaseChannel::OnStopRequest(nsIRequest*, nsISupports*, tag_nsresult) (nsBaseChannel.cpp:737)
+==30297==    by 0x8BDC3AD: nsInputStreamPump::OnStateStop() (nsInputStreamPump.cpp:555)
+==30297==    by 0x8BDC7BD: nsInputStreamPump::OnInputStreamReady(nsIAsyncInputStream*) (nsInputStreamPump.cpp:375)
+==30297==    by 0xAC12595: nsInputStreamReadyEvent::Run() (nsStreamUtils.cpp:82)
+==30297==    by 0xAC35546: nsThread::ProcessNextEvent(bool, bool*) (nsThread.cpp:627)
+==30297==    by 0xAC61A63: NS_InvokeByIndex (in /TEST-MAIL-DIR/objdir-tb3/mozilla/toolkit/library/libxul.so)
+==30297==    by 0x9CF77CB: CallMethodHelper::Call() (XPCWrappedNative.cpp:2945)
+==30297==    by 0x9CF81BA: XPCWrappedNative::CallMethod(XPCCallContext&, XPCWrappedNative::CallMode) (XPCWrappedNative.cpp:2246)
+==30297==    by 0x9CFFBE3: XPC_WN_CallMethod(JSContext*, unsigned int, JS::Value*) (XPCWrappedNativeJSOps.cpp:1483)
+==30297==    by 0xB29ACEB: js::CallJSNative(JSContext*, int (*)(JSContext*, unsigned int, JS::Value*), JS::CallArgs const&) (jscntxtinlines.h:337)
+==30297==    by 0xB2AAC29: js::InvokeKernel(JSContext*, JS::CallArgs, js::MaybeConstruct) (jsinterp.cpp:407)
+==30297==    by 0xB2A358B: js::Interpret(JSContext*, js::StackFrame*, js::InterpMode, bool) (jsinterp.cpp:2396)
+==30297==    by 0xB2A9D2E: js::RunScript(JSContext*, js::StackFrame*) (jsinterp.cpp:364)
+==30297==    by 0xB2AAB35: js::InvokeKernel(JSContext*, JS::CallArgs, js::MaybeConstruct) (jsinterp.cpp:421)
+==30297==    by 0xB2AB4AB: js::Invoke(JSContext*, JS::Value const&, JS::Value const&, unsigned int, JS::Value*, JS::Value*) (jsinterp.h:134)
+==30297==    by 0xB2F9672: js::DirectProxyHandler::call(JSContext*, JS::Handle<JSObject*>, JS::CallArgs const&) (jsproxy.cpp:481)
+==30297==    by 0xB3936BA: js::CrossCompartmentWrapper::call(JSContext*, JS::Handle<JSObject*>, JS::CallArgs const&) (jswrapper.cpp:453)
+==30297==    by 0xB2FC977: js::Proxy::call(JSContext*, JS::Handle<JSObject*>, JS::CallArgs const&) (jsproxy.cpp:2613)
+==30297==    by 0xB2FCA6F: proxy_Call(JSContext*, unsigned int, JS::Value*) (jsproxy.cpp:3177)
+==30297==    by 0xB29ACEB: js::CallJSNative(JSContext*, int (*)(JSContext*, unsigned int, JS::Value*), JS::CallArgs const&) (jscntxtinlines.h:337)
+==30297==    by 0xB2AAD7E: js::InvokeKernel(JSContext*, JS::CallArgs, js::MaybeConstruct) (jsinterp.cpp:400)
+==30297==    by 0xB2A358B: js::Interpret(JSContext*, js::StackFrame*, js::InterpMode, bool) (jsinterp.cpp:2396)
+==30297==    by 0xB2A9D2E: js::RunScript(JSContext*, js::StackFrame*) (jsinterp.cpp:364)
+==30297==    by 0xB2AAB35: js::InvokeKernel(JSContext*, JS::CallArgs, js::MaybeConstruct) (jsinterp.cpp:421)
+==30297==    by 0xB24FB16: js_fun_apply(JSContext*, unsigned int, JS::Value*) (jsinterp.h:134)
+==30297==    by 0xB29ACEB: js::CallJSNative(JSContext*, int (*)(JSContext*, unsigned int, JS::Value*), JS::CallArgs const&) (jscntxtinlines.h:337)
+==30297==    by 0xB2AAC29: js::InvokeKernel(JSContext*, JS::CallArgs, js::MaybeConstruct) (jsinterp.cpp:407)
+==30297==    by 0xB2AB4AB: js::Invoke(JSContext*, JS::Value const&, JS::Value const&, unsigned int, JS::Value*, JS::Value*) (jsinterp.h:134)
+==30297==    by 0xB2F9672: js::DirectProxyHandler::call(JSContext*, JS::Handle<JSObject*>, JS::CallArgs const&) (jsproxy.cpp:481)
+==30297==    by 0xB3936BA: js::CrossCompartmentWrapper::call(JSContext*, JS::Handle<JSObject*>, JS::CallArgs const&) (jswrapper.cpp:453)
+==30297==    by 0xB2FC977: js::Proxy::call(JSContext*, JS::Handle<JSObject*>, JS::CallArgs const&) (jsproxy.cpp:2613)
+==30297==    by 0xB2FCA6F: proxy_Call(JSContext*, unsigned int, JS::Value*) (jsproxy.cpp:3177)
+==30297==    by 0xB29ACEB: js::CallJSNative(JSContext*, int (*)(JSContext*, unsigned int, JS::Value*), JS::CallArgs const&) (jscntxtinlines.h:337)
+==30297==    by 0xB2AAD7E: js::InvokeKernel(JSContext*, JS::CallArgs, js::MaybeConstruct) (jsinterp.cpp:400)
+==30297==    by 0xB2A358B: js::Interpret(JSContext*, js::StackFrame*, js::InterpMode, bool) (jsinterp.cpp:2396)
+==30297==    by 0xB2A9D2E: js::RunScript(JSContext*, js::StackFrame*) (jsinterp.cpp:364)
+==30297==    by 0xB2AAB35: js::InvokeKernel(JSContext*, JS::CallArgs, js::MaybeConstruct) (jsinterp.cpp:421)
+==30297==    by 0xB2AB4AB: js::Invoke(JSContext*, JS::Value const&, JS::Value const&, unsigned int, JS::Value*, JS::Value*) (jsinterp.h:134)
+==30297==    by 0xB2F9672: js::DirectProxyHandler::call(JSContext*, JS::Handle<JSObject*>, JS::CallArgs const&) (jsproxy.cpp:481)
+==30297==    by 0xB3936BA: js::CrossCompartmentWrapper::call(JSContext*, JS::Handle<JSObject*>, JS::CallArgs const&) (jswrapper.cpp:453)
+==30297==    by 0xB2FC977: js::Proxy::call(JSContext*, JS::Handle<JSObject*>, JS::CallArgs const&) (jsproxy.cpp:2613)
+==30297==    by 0xB2FCA6F: proxy_Call(JSContext*, unsigned int, JS::Value*) (jsproxy.cpp:3177)
+==30297==    by 0xB29ACEB: js::CallJSNative(JSContext*, int (*)(JSContext*, unsigned int, JS::Value*), JS::CallArgs const&) (jscntxtinlines.h:337)
+==30297==    by 0xB2AAD7E: js::InvokeKernel(JSContext*, JS::CallArgs, js::MaybeConstruct) (jsinterp.cpp:400)
+==30297==
+
+
+Full run log can be sent gzipped (about 800KB, ungzipped about 8MB) on request.

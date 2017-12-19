@@ -1,0 +1,115 @@
+accept 3rd-party cookies + prompt for all cookies + Flagfox 4.0.0 = Firefox crash [@ nsXPConnect::Peek(JSContext**) ] [@ JS_RestoreFrameChain ] [@ JS_ResumeRequest ]
+If you set Firefox to the (annoying) mode of prompting for all cookies and also have 3rd-party cookies enabled, then install Flagfox 4.0.0, Firefox will usually crash on startup. Flagfox is pure JavaScript; it has no compiled modules.
+https://addons.mozilla.org/en-US/firefox/addons/versions/5791#version-4.0.0
+
+It's triggered on preloading the favicons for the context menu. Disabling either 3rd-party cookies or prompting for all cookies will prevent the crash. Disabling favicons in the Flagfox options also avoids the crash.
+
+This is usually the stack I get under Linux:
+bp-c173dbb7-c688-4de0-9582-167502100224
+0  	libxul.so  	nsXPConnect::Peek  	 js/src/xpconnect/src/nsXPConnect.cpp:2557
+1 	libxul.so 	nsCxPusher::DoPush 	content/base/src/nsContentUtils.cpp:2712
+2 	libxul.so 	nsCxPusher::Push 	content/base/src/nsContentUtils.cpp:2827
+3 	libxul.so 	nsCxPusher::Push 	content/base/src/nsContentUtils.cpp:2774
+4 	libxul.so 	nsXBLProtoImplAnonymousMethod::Execute 	content/xbl/src/nsXBLProtoImplMethod.cpp:322
+5 	libxul.so 	nsXBLPrototypeBinding::BindingAttached 	content/xbl/src/nsXBLPrototypeBinding.cpp:504
+6 	libxul.so 	nsXBLBinding::ExecuteAttachedHandler 	content/xbl/src/nsXBLBinding.cpp:977
+7 	libxul.so 	nsRunnableMethod<nsXBLBinding, void>::Run 	nsThreadUtils.h:282
+8 	libxul.so 	nsContentUtils::RemoveScriptBlocker 	content/base/src/nsContentUtils.cpp:4484
+9 	libxul.so 	DocumentViewerImpl::InitInternal 	nsContentUtils.h:1659
+10 	libxul.so 	DocumentViewerImpl::Init 	layout/base/nsDocumentViewer.cpp:698
+11 	libxul.so 	nsDocShell::SetupNewViewer 	docshell/base/nsDocShell.cpp:7298
+12 	libxul.so 	nsDocShell::Embed 	docshell/base/nsDocShell.cpp:5463
+13 	libxul.so 	nsDocShell::CreateAboutBlankContentViewer 	docshell/base/nsDocShell.cpp:6171
+14 	libxul.so 	nsDocShell::EnsureContentViewer 	docshell/base/nsDocShell.cpp:6070
+15 	libxul.so 	nsDocShell::GetInterface 	docshell/base/nsDocShell.cpp:857
+16 	libxul.so 	nsGetInterface::operator const 	nsIInterfaceRequestorUtils.cpp:52
+17 	libxul.so 	nsCOMPtr_base::assign_from_helper 	nsCOMPtr.cpp:150
+18 	libxul.so 	nsGlobalWindow::GetDocument 	nsCOMPtr.h:621
+19 	libxul.so 	nsDataDocumentContentPolicy::ShouldLoad 	content/base/src/nsDataDocumentContentPolicy.cpp:71
+20 	libxul.so 	nsContentPolicy::CheckPolicy 	content/base/src/nsContentPolicy.cpp:157
+21 	libxul.so 	nsContentPolicy::ShouldLoad 	content/base/src/nsContentPolicy.cpp:218
+22 	libxul.so 	NS_CheckContentLoadPolicy 	nsContentPolicyUtils.h:223
+23 	libxul.so 	nsDocShell::InternalLoad 	docshell/base/nsDocShell.cpp:7575
+24 	libxul.so 	nsDocShell::LoadURI 	docshell/base/nsDocShell.cpp:1354
+25 	libxul.so 	nsWindowWatcher::OpenWindowJSInternal 	embedding/components/windowwatcher/src/nsWindowWatcher.cpp:942
+26 	libxul.so 	nsWindowWatcher::OpenWindow 	embedding/components/windowwatcher/src/nsWindowWatcher.cpp:424
+27 	libxul.so 	nsCookiePromptService::CookieDialog 	extensions/cookie/nsCookiePromptService.cpp:114
+28 	libxul.so 	nsCookiePermission::CanSetCookie 	extensions/cookie/nsCookiePermission.cpp:355
+29 	libxul.so 	nsCookieService::SetCookieInternal 	netwerk/cookie/src/nsCookieService.cpp:1482
+30 	libxul.so 	nsCookieService::SetCookieStringInternal 	netwerk/cookie/src/nsCookieService.cpp:802
+31 	libxul.so 	nsCookieService::SetCookieStringFromHttp 	netwerk/cookie/src/nsCookieService.cpp:757
+32 	libxul.so 	nsHttpChannel::SetCookie 	netwerk/protocol/http/src/nsHttpChannel.cpp:5037
+33 	libxul.so 	nsHttpChannel::ProcessResponse 	netwerk/protocol/http/src/nsHttpChannel.cpp:990
+34 	libxul.so 	nsHttpChannel::OnStartRequest 	netwerk/protocol/http/src/nsHttpChannel.cpp:5157
+35 	libxul.so 	nsInputStreamPump::OnStateStart 	netwerk/base/src/nsInputStreamPump.cpp:439
+36 	libxul.so 	nsInputStreamPump::OnInputStreamReady 	netwerk/base/src/nsInputStreamPump.cpp:395
+37 	libxul.so 	nsInputStreamReadyEvent::Run 	xpcom/io/nsStreamUtils.cpp:112
+38 	libxul.so 	nsThread::ProcessNextEvent 	xpcom/threads/nsThread.cpp:527
+39 	libxul.so 	NS_ProcessNextEvent_P 	nsThreadUtils.cpp:250
+40 	libxul.so 	nsSyncStreamListener::WaitForData 	netwerk/base/src/nsSyncStreamListener.cpp:58
+41 	libxul.so 	nsSyncStreamListener::Available 	netwerk/base/src/nsSyncStreamListener.cpp:160
+42 	libxul.so 	NS_ImplementChannelOpen 	nsNetUtil.h:619
+43 	libxul.so 	nsHttpChannel::Open 	netwerk/protocol/http/src/nsHttpChannel.cpp:4403
+44 	libxul.so 	NS_GetXPTCallStub_P 	
+45 	libxul.so 	XPCWrappedNative::CallMethod 	js/src/xpconnect/src/xpcwrappednative.cpp:2721
+46 	libxul.so 	XPC_WN_CallMethod 	js/src/xpconnect/src/xpcwrappednativejsops.cpp:1740
+47 	libmozjs.so 	js_Invoke 	js/src/jsinterp.cpp:1360
+48 	libmozjs.so 	js_Interpret 	js/src/jsops.cpp:2240
+49 	libmozjs.so 	js_Invoke 	js/src/jsinterp.cpp:1368
+50 	libxul.so 	nsXPCWrappedJSClass::CallMethod 	js/src/xpconnect/src/xpcwrappedjsclass.cpp:1696
+51 	libxul.so 	nsXPCWrappedJS::CallMethod 	js/src/xpconnect/src/xpcwrappedjs.cpp:570
+52 	libxul.so 	PrepareAndDispatch 	xpcom/reflect/xptcall/src/md/unix/xptcstubs_gcc_x86_unix.cpp:95
+53 	libxul.so 	nsThread::ProcessNextEvent 	xpcom/threads/nsThread.cpp:527
+54 	libxul.so 	NS_ProcessNextEvent_P 	nsThreadUtils.cpp:250
+55 	libxul.so 	nsThread::ThreadFunc 	xpcom/threads/nsThread.cpp:254
+56 	libnspr4.so 	_pt_root 	nsprpub/pr/src/pthreads/ptthread.c:228
+57 	libpthread-2.7.so 	libpthread-2.7.so@0x54fa
+
+Also got this one once:
+bp-48bee7b3-bda6-4d46-84cd-df8562100224
+0  	libmozjs.so  	JS_RestoreFrameChain  	 js/src/jsapi.cpp:5220
+1 	libxul.so 	XPCJSContextStack::Pop 	js/src/xpconnect/src/xpcthreadcontext.cpp:107
+2 	libxul.so 	nsXPConnect::Pop 	js/src/xpconnect/src/nsXPConnect.cpp:2573
+3 	libxul.so 	nsXPConnect::AfterProcessNextEvent 	js/src/xpconnect/src/nsXPConnect.cpp:2316
+4 	libxul.so 	nsThread::ProcessNextEvent 	xpcom/threads/nsThread.cpp:540
+5 	libxul.so 	NS_ProcessNextEvent_P 	nsThreadUtils.cpp:250
+6 	libxul.so 	nsXULWindow::ShowModal 	xpfe/appshell/src/nsXULWindow.cpp:416
+7 	libxul.so 	nsContentTreeOwner::ShowAsModal 	xpfe/appshell/src/nsContentTreeOwner.cpp:528
+8 	libxul.so 	nsWindowWatcher::OpenWindowJSInternal 	embedding/components/windowwatcher/src/nsWindowWatcher.cpp:1003
+9 	libxul.so 	nsWindowWatcher::OpenWindow 	embedding/components/windowwatcher/src/nsWindowWatcher.cpp:424
+... (same as above afterwards) ...
+
+Under Windows most tests ended in a hang. Got this one crash report:
+bp-b32cdb5b-cbca-4b05-823f-005e92100224
+0  	js3250.dll  	JS_ResumeRequest  	 js/src/jsapi.cpp:1011
+1 	xul.dll 	nsXPConnect::Pop 	js/src/xpconnect/src/nsXPConnect.cpp:2502
+2 	xul.dll 	nsCxPusher::Pop 	content/base/src/nsContentUtils.cpp:2804
+3 	xul.dll 	nsCxPusher::~nsCxPusher 	content/base/src/nsContentUtils.cpp:2669
+4 	xul.dll 	nsXBLBinding::ExecuteAttachedHandler 	content/xbl/src/nsXBLBinding.cpp:978
+5 	xul.dll 	nsBindingManager::ProcessAttachedQueue 	content/xbl/src/nsBindingManager.cpp:996
+6 	xul.dll 	PresShell::InitialReflow 	layout/base/nsPresShell.cpp:2697
+7 	xul.dll 	nsXULDocument::StartLayout 	content/xul/document/src/nsXULDocument.cpp:2064
+8 	xul.dll 	nsXULDocument::DoneWalking 	content/xul/document/src/nsXULDocument.cpp:3208
+9 	xul.dll 	nsXULDocument::ResumeWalk 	content/xul/document/src/nsXULDocument.cpp:3157
+10 	mozcrt19.dll 	free 	obj-firefox/memory/jemalloc/src/jemalloc.c:6404
+11 	xul.dll 	nsCOMPtr_base::~nsCOMPtr_base 	obj-firefox/xpcom/build/nsCOMPtr.cpp:81
+12 	xul.dll 	nsXULDocument::OnStreamComplete 	content/xul/document/src/nsXULDocument.cpp:3611
+13 	xul.dll 	nsStreamLoader::OnStopRequest 	netwerk/base/src/nsStreamLoader.cpp:108
+14 	xul.dll 	nsJARChannel::OnStopRequest 	modules/libjar/nsJARChannel.cpp:877
+15 	xul.dll 	nsInputStreamPump::OnStateStop 	netwerk/base/src/nsInputStreamPump.cpp:576
+16 	xul.dll 	nsInputStreamPump::OnInputStreamReady 	netwerk/base/src/nsInputStreamPump.cpp:401
+17 	xul.dll 	nsInputStreamReadyEvent::Run 	xpcom/io/nsStreamUtils.cpp:111
+18 	xul.dll 	nsThread::ProcessNextEvent 	xpcom/threads/nsThread.cpp:521
+19 	xul.dll 	NS_ProcessNextEvent_P 	obj-firefox/xpcom/build/nsThreadUtils.cpp:227
+20 	xul.dll 	nsXULWindow::ShowModal 	xpfe/appshell/src/nsXULWindow.cpp:415
+21 	xul.dll 	nsContentTreeOwner::ShowAsModal 	xpfe/appshell/src/nsContentTreeOwner.cpp:528
+22 	xul.dll 	xul.dll@0x3613f1 	
+23 	xul.dll 	nsWindowWatcher::OpenWindow 	embedding/components/windowwatcher/src/nsWindowWatcher.cpp:422
+24 	xul.dll 	nsCookiePromptService::CookieDialog 	extensions/cookie/nsCookiePromptService.cpp:114
+25 	xul.dll 	xul.dll@0x30d4f8 	
+26 		@0x360f217 	
+27 	nspr4.dll 	nspr4.dll@0x1758f 	
+28 	xul.dll 	nsCookieService::SetCookieInternal 	netwerk/cookie/src/nsCookieService.cpp:1401
+29 	xul.dll 	nsCookieService::SetCookieInternal 	netwerk/cookie/src/nsCookieService.cpp:1416
+
+I'm in the process of releasing a Flagfox 4.0.1 update that will disable favicon preloading with this set of cookie options on. Even if it didn't crash it'd be annoying with all the popups on startup. Not quite sure why it's even monkeying around with cookies at all, as I'm just using a favicon image.

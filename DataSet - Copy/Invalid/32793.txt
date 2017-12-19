@@ -1,0 +1,92 @@
+UMR: nsTableBorderCollapser::GetMaxBorder()
+Load sample #4 in viewer.  I also scrolled around some, did some selections. 
+Built fresh today.
+
+      UMR: Uninitialized memory read (9 times)
+      This is occurring while in:
+            nsTableBorderCollapser::GetMaxBorder(int,int,int,int,nsMargin)
+[nsTableBorderCollapser.cpp:865]
+                   for (PRInt32 colX = aStartColIndex; colX <= aEndColIndex;
+colX++) {
+                     nsMargin border;
+                     GetBorderAt(rowX, colX, border);
+            =>       aBorder.top    = PR_MAX(aBorder.top,    border.top);
+                     aBorder.right  = PR_MAX(aBorder.right,  border.right);
+                     aBorder.bottom = PR_MAX(aBorder.bottom, border.bottom);
+                     aBorder.left   = PR_MAX(aBorder.left,   border.left);
+           
+nsTableFrame::GetTableBorderForRowGroup(nsTableRowGroupFrame*,nsMargin&)
+[nsTableFrame.cpp:4000]
+           
+nsTableFrame::ResizeReflowPass1(nsIPresContext*,nsHTMLReflowMetrics&,const
+nsHTMLReflowState&,unsigned int&,nsTableRowGroupFrame*,nsReflowReason,int)
+[nsTableFrame.cpp:1733]
+            nsTableFrame::Reflow(nsIPresContext*,nsHTMLReflowMetrics&,const
+nsHTMLReflowState&,unsigned int&) [nsTableFrame.cpp:1552]
+           
+nsContainerFrame::ReflowChild(nsIFrame*,nsIPresContext*,nsHTMLReflowMetrics&,const
+nsHTMLReflowState&,int,int,unsigned int,unsigned int&)
+[nsContainerFrame.cpp:646]
+            nsTableOuterFrame::Reflow(nsIPresContext*,nsHTMLReflowMetrics&,const
+nsHTMLReflowState&,unsigned int&) [nsTableOuterFrame.cpp:1003]
+            nsBlockReflowContext::ReflowBlock(nsIFrame*,const
+nsRect&,int,int,int,nsMargin&,unsigned int&) [nsBlockReflowContext.cpp:449]
+            nsBlockFrame::ReflowBlockFrame(nsBlockReflowState&,nsLineBox*,int*)
+[nsBlockFrame.cpp:3538]
+            nsBlockFrame::ReflowLine(nsBlockReflowState&,nsLineBox*,int*,int)
+[nsBlockFrame.cpp:2851]
+            nsBlockFrame::ReflowDirtyLines(nsBlockReflowState&)
+[nsBlockFrame.cpp:2658]
+            nsBlockFrame::Reflow(nsIPresContext*,nsHTMLReflowMetrics&,const
+nsHTMLReflowState&,unsigned int&) [nsBlockFrame.cpp:1577]
+            nsBlockReflowContext::ReflowBlock(nsIFrame*,const
+nsRect&,int,int,int,nsMargin&,unsigned int&) [nsBlockReflowContext.cpp:449]
+            nsBlockFrame::ReflowBlockFrame(nsBlockReflowState&,nsLineBox*,int*)
+[nsBlockFrame.cpp:3538]
+            nsBlockFrame::ReflowLine(nsBlockReflowState&,nsLineBox*,int*,int)
+[nsBlockFrame.cpp:2851]
+            nsBlockFrame::ReflowDirtyLines(nsBlockReflowState&)
+[nsBlockFrame.cpp:2658]
+            nsBlockFrame::Reflow(nsIPresContext*,nsHTMLReflowMetrics&,const
+nsHTMLReflowState&,unsigned int&) [nsBlockFrame.cpp:1577]
+            nsAreaFrame::Reflow(nsIPresContext*,nsHTMLReflowMetrics&,const
+nsHTMLReflowState&,unsigned int&) [nsAreaFrame.cpp:272]
+           
+nsContainerFrame::ReflowChild(nsIFrame*,nsIPresContext*,nsHTMLReflowMetrics&,const
+nsHTMLReflowState&,int,int,unsigned int,unsigned int&)
+[nsContainerFrame.cpp:646]
+            RootFrame::Reflow(nsIPresContext*,nsHTMLReflowMetrics&,const
+nsHTMLReflowState&,unsigned int&) [nsHTMLFrame.cpp:326]
+           
+nsContainerFrame::ReflowChild(nsIFrame*,nsIPresContext*,nsHTMLReflowMetrics&,const
+nsHTMLReflowState&,int,int,unsigned int,unsigned int&)
+[nsContainerFrame.cpp:646]
+            nsScrollPortFrame::Reflow(nsIPresContext*,nsHTMLReflowMetrics&,const
+nsHTMLReflowState&,unsigned int&) [nsScrollPortFrame.cpp:478]
+           
+nsContainerFrame::ReflowChild(nsIFrame*,nsIPresContext*,nsHTMLReflowMetrics&,const
+nsHTMLReflowState&,int,int,unsigned int,unsigned int&)
+[nsContainerFrame.cpp:646]
+           
+nsGfxScrollFrameInner::ReflowFrame(nsIPresContext*,nsHTMLReflowMetrics&,const
+nsHTMLReflowState&,unsigned int&,nsIFrame*,const nsSize&,const
+nsSize&,int&,nsIFrame*&) [nsGfxScrollFrame.cpp:1360]
+           
+nsGfxScrollFrameInner::ReflowScrollArea(nsIPresContext*,nsHTMLReflowMetrics&,const
+nsHTMLReflowState&,unsigned int&,nsIFrame*&) [nsGfxScrollFrame.cpp:1425]
+            nsGfxScrollFrame::Reflow(nsIPresContext*,nsHTMLReflowMetrics&,const
+nsHTMLReflowState&,unsigned int&) [nsGfxScrollFrame.cpp:580]
+           
+nsContainerFrame::ReflowChild(nsIFrame*,nsIPresContext*,nsHTMLReflowMetrics&,const
+nsHTMLReflowState&,int,int,unsigned int,unsigned int&)
+[nsContainerFrame.cpp:646]
+            ViewportFrame::Reflow(nsIPresContext*,nsHTMLReflowMetrics&,const
+nsHTMLReflowState&,unsigned int&) [nsViewportFrame.cpp:530]
+           
+nsHTMLReflowCommand::Dispatch(nsIPresContext*,nsHTMLReflowMetrics&,const
+nsSize&,nsIRenderingContext&) [nsHTMLReflowCommand.cpp:144]
+            PresShell::ProcessReflowCommands(int) [nsPresShell.cpp:2052]
+            PresShell::ExitReflowLock(int) [nsPresShell.cpp:906]
+      Reading 4 bytes from 0xefffb31c on the stack.
+      Address 0xefffb31c is 4 bytes past start of local variable "border" in
+function nsTableBorderCollapser::GetMaxBorder(int,int,int,int,nsMargin).

@@ -1,0 +1,145 @@
+Memory leak of 16 bytes from 1 block allocated in nsCategoryManager::AddCategoryEntry
+I've seen the other two bugs (bug 54633 and bug 54639) about nsCategoryManager 
+not being threadsafe, probably this is related:
+
+I see *numerous* leaks of this type when simply starting up the browser and 
+then shutting down.
+
+Default http://home.netscape.com homepage.
+
+[W] MLK: Memory leak of 16 bytes from 1 block allocated in 
+nsCategoryManager::AddCategoryEntry(char const*,char const*,char 
+const*,int,int,char * *)
+        Distribution of leaked blocks
+        Allocation location
+            new(UINT)      [MSVCRT.DLL]
+            nsCategoryManager::AddCategoryEntry(char const*,char const*,char 
+const*,int,int,char * *) [nsCategoryManager.cpp:386]
+                        delete entry;
+                
+                          // now put in the new vaentrylue
+             =>         entry = new LeafNode(aValue);
+                        nsCStringKey entryNameKey(aEntryName);
+                        category->Put(&entryNameKey, entry);
+                
+            nsBrowserContentHandler::RegisterProc(nsIComponentManager *,nsIFile 
+*,char const*,char const*,nsModuleComponentInfo const*) 
+[nsBrowserInstance.cpp:676]
+                {
+                }
+                
+             => CMDLINEHANDLER_OTHERS_IMPL(nsBrowserContentHandler,"-
+chrome","general.startup.browser","Load the specified 
+chrome.",NS_BROWSERSTARTUPHANDLER_CONTRACTID,"Browser Startup Handler", 
+PR_TRUE, PR_FALSE)
+                
+                NS_IMETHODIMP nsBrowserContentHandler::GetChromeUrlForTask(char 
+**aChromeUrlForTask) {
+                
+            nsGenericModule::RegisterSelf(nsIComponentManager *,nsIFile *,char 
+const*,char const*) [nsGenericFactory.cpp:409]
+                        if (cp->mRegisterSelfProc)
+                        {
+                            rv = cp->mRegisterSelfProc(aCompMgr, aPath, 
+registryLocation,
+             =>                                        componentType, cp);
+                            if (NS_FAILED(rv)) {
+                #ifdef DEBUG
+                                printf("nsGenericModule %s: Register hook for %
+s component returned error => %x\n",
+            nsNativeComponentLoader::SelfRegisterDll(nsDll *,char const*,int) 
+[nsNativeComponentLoader.cpp:488]
+                        nsresult res2 = dll->GetDllSpec(getter_AddRefs
+(fs));    // don't change 'res2' -- see warning, above
+                        if (NS_SUCCEEDED(res2)) {
+                            res = mobj->RegisterSelf(mCompMgr, fs, 
+registryLocation,
+             =>                                      nativeComponentType);
+                        }
+                        else
+                        {
+            nsNativeComponentLoader::AutoRegisterComponent(int,nsIFile *,int *) 
+[nsNativeComponentLoader.cpp:933]
+                    // changed since we last saw it and it is unloaded 
+successfully.
+                    //
+                    // Now we can try register the dll for sure.
+             =>     nsresult res = SelfRegisterDll(dll, persistentDescriptor, 
+PR_FALSE);
+                    if (NS_FAILED(res))
+                    {
+                        if (res == NS_ERROR_FACTORY_REGISTER_AGAIN) {
+            nsNativeComponentLoader::RegisterComponentsInDir(int,nsIFile *) 
+[nsNativeComponentLoader.cpp:316]
+                                {
+                                    PRBool registered;
+                                    // This is a file. Try to register it.
+             =>                     rv = AutoRegisterComponent(when, dirEntry, 
+&registered);
+                                }
+                            }
+                        }
+            nsNativeComponentLoader::AutoRegisterComponents(int,nsIFile *) 
+[nsNativeComponentLoader.cpp:250]
+                NS_IMETHODIMP
+                nsNativeComponentLoader::AutoRegisterComponents(PRInt32 aWhen,
+                                                                nsIFile 
+*aDirectory)
+             => {
+                #ifdef DEBUG
+                    /* do we _really_ want to print this every time? */
+                    printf("nsNativeComponentLoader: autoregistering 
+begins.\n");
+            nsComponentManagerImpl::AutoRegisterImpl(int,nsIFile *,int) 
+[nsComponentManager.cpp:3135]
+                                                  "start");
+                
+                    /* do the native loader first, so we can find other loaders 
+*/
+             =>     rv = mNativeComponentLoader->AutoRegisterComponents
+((PRInt32)when, dir);
+                    if (NS_FAILED(rv)) return rv;
+                
+                #ifdef ENABLE_STATIC_COMPONENT_LOADER
+            nsComponentManagerImpl::AutoRegister(int,nsIFile *) 
+[nsComponentManager.cpp:3072]
+                {
+                    nsresult rv;
+                    ((nsRegistry *)mRegistry)->SetBufferSize( 
+BIG_REGISTRY_BUFLEN );
+             =>     rv = AutoRegisterImpl(when, inDirSpec);
+                    mRegistry->Flush();
+                    ((nsRegistry *)mRegistry)->SetBufferSize( -1 );
+                    return rv;
+            ???            [ip=0x0271ade4]
+            nsComponentManager::AutoRegister(int,nsIFile *) 
+[nsComponentManagerObsolete.cpp:221]
+                    nsIComponentManagerObsolete* cm;
+                    nsresult rv = NS_GetGlobalComponentManager
+((nsIComponentManager**)&cm);
+                    if (NS_FAILED(rv)) return rv;
+             =>     return cm->AutoRegister(when, directory);
+                }
+                
+                nsresult
+            main1          [nsAppRunner.cpp:1199]
+                
+                  if (needAutoReg) {
+                    nsComponentManager::AutoRegister
+(nsIComponentManagerObsolete::NS_Startup,
+             =>                                      NULL /* default */);
+                    // XXX ...and autoreg was successful?
+                    NS_SoftwareUpdateDidAutoReg();
+                  }
+            main           [nsAppRunner.cpp:1698]
+                  }
+                #endif
+                
+             =>   nsresult mainResult = main1(argc, argv, nativeApp ? 
+(nsISupports*)nativeApp : (nsISupports*)splash);
+                
+                  /* if main1() didn't succeed, then don't bother trying to 
+shut down clipboard, etc */
+                  if (NS_SUCCEEDED(mainResult)) {
+            WinMain        [nsAppRunner.cpp:1716]
+            WinMainCRTStartup [crtexew.obj]

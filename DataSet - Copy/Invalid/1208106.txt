@@ -1,0 +1,64 @@
+Firefox 41 (regression): PresShell::RemoveImageFromVisibleList (with backtrace)
+User Agent: Mozilla/5.0 (X11; Linux x86_64; rv:39.0) Gecko/20100101 Firefox/39.0
+Build ID: 20150807162358
+
+Steps to reproduce:
+
+I compiled Firefox 41 with gcc 5.2.0 and after running it for a while, I got this segfault:
+
+Program received signal SIGSEGV, Segmentation fault.
+0x00007ffff3efb19f in PresShell::RemoveImageFromVisibleList (this=0x7fffabbf1400, aImage=0x7fffc709bb40) at /home/fraga/src/mozilla/layout/base/nsPresShell.cpp:5919
+5919        MOZ_ASSERT(mVisibleImages.Count() == 0, "shouldn't have any images in the table");
+(gdb) bt
+#0  0x00007ffff3efb19f in PresShell::RemoveImageFromVisibleList (this=0x7fffabbf1400, aImage=0x7fffc709bb40) at /home/fraga/src/mozilla/layout/base/nsPresShell.cpp:5919
+#1  0x00007ffff2ecc9e4 in nsImageLoadingContent::FrameDestroyed (this=0x7fffc709bb40, aFrame=0x7fffa8dd3de0) at /home/fraga/src/mozilla/dom/base/nsImageLoadingContent.cpp:560
+#2  0x00007ffff3f9b311 in nsImageFrame::DestroyFrom (this=0x7fffa8dd3de0, aDestructRoot=0x7fffa8dd3de0) at /home/fraga/src/mozilla/layout/generic/nsImageFrame.cpp:205
+#3  0x00007ffff3f40c79 in nsBlockFrame::DoRemoveFrame (this=this@entry=0x7fffa8de4b40, aDeletedFrame=aDeletedFrame@entry=0x7fffa8dd3de0, aFlags=aFlags@entry=2)
+    at /home/fraga/src/mozilla/layout/generic/nsBlockFrame.cpp:5628
+#4  0x00007ffff3f41141 in nsBlockFrame::RemoveFrame (this=0x7fffa8de4b40, aListID=<optimized out>, aOldFrame=0x7fffa8dd3de0) at /home/fraga/src/mozilla/layout/generic/nsBlockFrame.cpp:4997
+#5  0x00007ffff3ee77d5 in nsFrameManager::RemoveFrame (this=this@entry=0x7fffb503b9c0, aListID=mozilla::layout::kPrincipalList, aOldFrame=aOldFrame@entry=0x7fffa8dd3de0)
+    at /home/fraga/src/mozilla/layout/base/nsFrameManager.cpp:513
+#6  0x00007ffff3ed5ee2 in nsCSSFrameConstructor::ContentRemoved (this=this@entry=0x7fffb503b9c0, aContainer=0x7fffb99ebe60, aChild=aChild@entry=0x7fffc709bab0, 
+    aOldNextSibling=0x7fffc512a6b0, aFlags=nsCSSFrameConstructor::REMOVE_FOR_RECONSTRUCTION, aDidReconstruct=aDidReconstruct@entry=0x7fffffff589b, aDestroyedFramesFor=0x0)
+    at /home/fraga/src/mozilla/layout/base/nsCSSFrameConstructor.cpp:8229
+#7  0x00007ffff3ed667c in nsCSSFrameConstructor::RecreateFramesForContent (this=0x7fffb503b9c0, aContent=aContent@entry=0x7fffc709bab0, aAsyncInsert=aAsyncInsert@entry=false, 
+    aFlags=aFlags@entry=nsCSSFrameConstructor::REMOVE_FOR_RECONSTRUCTION, aDestroyedFramesFor=aDestroyedFramesFor@entry=0x0)
+    at /home/fraga/src/mozilla/layout/base/nsCSSFrameConstructor.cpp:9389
+#8  0x00007ffff3e88aac in mozilla::RestyleManager::RestyleElement (this=0x7fffbaf24f10, aElement=aElement@entry=0x7fffc709bab0, aPrimaryFrame=aPrimaryFrame@entry=0x7fffa8dd3de0, 
+    aMinHint=aMinHint@entry=nsChangeHint_ReconstructFrame, aRestyleTracker=..., aRestyleHint=aRestyleHint@entry=eRestyle_Subtree)
+    at /home/fraga/src/mozilla/layout/base/RestyleManager.cpp:1020
+#9  0x00007ffff3e97902 in mozilla::RestyleTracker::ProcessOneRestyle (this=this@entry=0x7fffbaf24f60, aElement=0x7fffc709bab0, aRestyleHint=eRestyle_Subtree, 
+    aChangeHint=aChangeHint@entry=nsChangeHint_ReconstructFrame) at /home/fraga/src/mozilla/layout/base/RestyleTracker.cpp:213
+#10 0x00007ffff3e9091c in mozilla::RestyleTracker::DoProcessRestyles (this=this@entry=0x7fffbaf24f60) at /home/fraga/src/mozilla/layout/base/RestyleTracker.cpp:369
+#11 0x00007ffff3e97a20 in mozilla::RestyleManager::ProcessRestyles (this=this@entry=0x7fffbaf24f10, aRestyleTracker=...) at /home/fraga/src/mozilla/layout/base/RestyleManager.h:450
+#12 0x00007ffff3e911c5 in mozilla::RestyleManager::ProcessPendingRestyles (this=0x7fffbaf24f10) at /home/fraga/src/mozilla/layout/base/RestyleManager.cpp:1703
+#13 0x00007ffff3f2098d in PresShell::FlushPendingNotifications (this=0x7fffabbf1400, aFlush=...) at /home/fraga/src/mozilla/layout/base/nsPresShell.cpp:4051
+#14 0x00007ffff3e6f472 in nsRefreshDriver::Tick (this=this@entry=0x7fffb7aaa800, aNowEpoch=<optimized out>, aNowTime=...) at /home/fraga/src/mozilla/layout/base/nsRefreshDriver.cpp:1684
+#15 0x00007ffff3e6ff64 in nsRefreshDriver::DoTick (this=0x7fffb7aaa800) at /home/fraga/src/mozilla/layout/base/nsRefreshDriver.cpp:1401
+#16 0x00007ffff3e6f33b in nsRefreshDriver::Tick (this=this@entry=0x7fffde20c000, aNowEpoch=<optimized out>, aNowTime=...) at /home/fraga/src/mozilla/layout/base/nsRefreshDriver.cpp:1650
+#17 0x00007ffff3e6ff64 in nsRefreshDriver::DoTick (this=this@entry=0x7fffde20c000) at /home/fraga/src/mozilla/layout/base/nsRefreshDriver.cpp:1401
+#18 0x00007ffff3e70058 in nsRefreshDriver::DoRefresh (this=this@entry=0x7fffde20c000) at /home/fraga/src/mozilla/layout/base/nsRefreshDriver.cpp:2083
+#19 0x00007ffff3e700a6 in nsRefreshDriver::FinishedWaitingForTransaction (this=0x7fffde20c000) at /home/fraga/src/mozilla/layout/base/nsRefreshDriver.cpp:1941
+#20 0x00007ffff2dad26e in mozilla::layers::CompositorChild::RecvDidComposite (this=<optimized out>, aId=<optimized out>, aTransactionId=<optimized out>)
+    at /home/fraga/src/mozilla/gfx/layers/ipc/CompositorChild.cpp:352
+#21 0x00007ffff2a1df8c in mozilla::layers::PCompositorChild::OnMessageReceived (this=0x7fffda0d8400, msg__=...) at /home/fraga/src/firefox/ipc/ipdl/PCompositorChild.cpp:931
+#22 0x00007ffff278c269 in mozilla::ipc::MessageChannel::DispatchAsyncMessage (this=0x7fffda0d8468, aMsg=...) at /home/fraga/src/mozilla/ipc/glue/MessageChannel.cpp:1373
+#23 0x00007ffff2795259 in mozilla::ipc::MessageChannel::DispatchMessage (this=this@entry=0x7fffda0d8468, aMsg=...) at /home/fraga/src/mozilla/ipc/glue/MessageChannel.cpp:1293
+#24 0x00007ffff2795cee in mozilla::ipc::MessageChannel::OnMaybeDequeueOne (this=0x7fffda0d8468) at /home/fraga/src/mozilla/ipc/glue/MessageChannel.cpp:1264
+#25 0x00007ffff2766c66 in MessageLoop::RunTask (this=0x7ffff6b984e0, task=0x7fffa8c1e840) at /home/fraga/src/mozilla/ipc/chromium/src/base/message_loop.cc:364
+#26 0x00007ffff276ba52 in MessageLoop::DeferOrRunPendingTask (this=<optimized out>, pending_task=...) at /home/fraga/src/mozilla/ipc/chromium/src/base/message_loop.cc:372
+#27 0x00007ffff276bb73 in MessageLoop::DoWork (this=0x7ffff6b984e0) at /home/fraga/src/mozilla/ipc/chromium/src/base/message_loop.cc:459
+#28 0x00007ffff278a500 in mozilla::ipc::DoWorkRunnable::Run (this=<optimized out>) at /home/fraga/src/mozilla/ipc/glue/MessagePump.cpp:220
+#29 0x00007ffff24ff111 in nsThread::ProcessNextEvent (this=0x7ffff6ba3310, aMayWait=<optimized out>, aResult=0x7fffffff73c0) at /home/fraga/src/mozilla/xpcom/threads/nsThread.cpp:849
+#30 0x00007ffff250ad07 in NS_InvokeByIndex (that=<optimized out>, methodIndex=<optimized out>, paramCount=<optimized out>, params=<optimized out>)
+    at /home/fraga/src/mozilla/xpcom/reflect/xptcall/md/unix/xptcinvoke_x86_64_unix.cpp:176
+#31 0x00007ffff2b42594 in CallMethodHelper::Invoke (this=0x7fffffff7360) at /home/fraga/src/mozilla/js/xpconnect/src/XPCWrappedNative.cpp:2080
+#32 CallMethodHelper::Call (this=0x7fffffff7360) at /home/fraga/src/mozilla/js/xpconnect/src/XPCWrappedNative.cpp:1417
+#33 0x00007ffff2b321c3 in XPCWrappedNative::CallMethod (ccx=..., mode=<optimized out>) at /home/fraga/src/mozilla/js/xpconnect/src/XPCWrappedNative.cpp:1384
+#34 0x00007ffff2b36811 in XPC_WN_CallMethod (cx=0x7ffff6b98d50, argc=<optimized out>, vp=0x7fffffff7648) at /home/fraga/src/mozilla/js/xpconnect/src/XPCWrappedNativeJSOps.cpp:1145
+#35 0x00007fffde9b6698 in ?? ()
+#36 0x00007fffcca4b6a0 in ?? ()
+#37 0x00007fffffff7620 in ?? ()
+#38 0x0000000000000000 in ?? ()
+
+Any hints?

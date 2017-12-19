@@ -1,0 +1,198 @@
+AddressSanitizer: heap-use-after-free on address 0x61500020f8d8 at pc 0x7f89c25296c3 bp 0x7f89a4ef5b70 sp 0x7f89a4ef5b68
+When looking for a cause of bug 1261598 I noticed a lot of the failures seems to be because of a use-after-free
+
+log from  https://treeherder.mozilla.org/logviewer.html#?repo=autoland&job_id=117482049&lineNumber=2471
+
+[task 2017-07-25T12:20:28.184974Z] 12:20:28     INFO - TEST-INFO | started process GECKO(1783)
+[task 2017-07-25T12:20:33.645179Z] 12:20:33     INFO - GECKO(1783) | 1500985233635	Marionette	INFO	Enabled via --marionette
+[task 2017-07-25T12:20:40.865615Z] 12:20:40     INFO - GECKO(1783) | =================================================================
+[task 2017-07-25T12:20:40.869707Z] 12:20:40     INFO - GECKO(1783) | ==1783==ERROR: AddressSanitizer: heap-use-after-free on address 0x61500020f8d8 at pc 0x7f89c25296c3 bp 0x7f89a4ef5b70 sp 0x7f89a4ef5b68
+[task 2017-07-25T12:20:40.871428Z] 12:20:40     INFO - GECKO(1783) | READ of size 8 at 0x61500020f8d8 thread T38 (SaveScripts)
+[task 2017-07-25T12:20:43.234960Z] 12:20:43     INFO - GECKO(1783) |     #0 0x7f89c25296c2 in get /home/worker/workspace/build/src/obj-firefox/dist/include/nsAutoPtr.h:171:12
+[task 2017-07-25T12:20:43.238021Z] 12:20:43     INFO - GECKO(1783) |     #1 0x7f89c25296c2 in operator mozilla::ScriptPreloader::CachedScript * /home/worker/workspace/build/src/obj-firefox/dist/include/nsAutoPtr.h:185
+[task 2017-07-25T12:20:43.239705Z] 12:20:43     INFO - GECKO(1783) |     #2 0x7f89c25296c2 in get /home/worker/workspace/build/src/js/xpconnect/loader/ScriptPreloader-inl.h:294
+[task 2017-07-25T12:20:43.242753Z] 12:20:43     INFO - GECKO(1783) |     #3 0x7f89c25296c2 in operator mozilla::ScriptPreloader::CachedScript * /home/worker/workspace/build/src/js/xpconnect/loader/ScriptPreloader-inl.h:299
+[task 2017-07-25T12:20:43.245187Z] 12:20:43     INFO - GECKO(1783) |     #4 0x7f89c25296c2 in Construct<mozilla::loader::HashElemIter<nsClassHashtable<nsCStringHashKey, mozilla::ScriptPreloader::CachedScript> >::Elem &> /home/worker/workspace/build/src/obj-firefox/dist/include/nsTArray.h:557
+[task 2017-07-25T12:20:43.250171Z] 12:20:43     INFO - GECKO(1783) |     #5 0x7f89c25296c2 in AppendElement<mozilla::loader::HashElemIter<nsClassHashtable<nsCStringHashKey, mozilla::ScriptPreloader::CachedScript> >::Elem &, nsTArrayInfallibleAllocator> /home/worker/workspace/build/src/obj-firefox/dist/include/nsTArray.h:2203
+[task 2017-07-25T12:20:43.252583Z] 12:20:43     INFO - GECKO(1783) |     #6 0x7f89c25296c2 in mozilla::ScriptPreloader::WriteCache() /home/worker/workspace/build/src/js/xpconnect/loader/ScriptPreloader.cpp:627
+[task 2017-07-25T12:20:43.261142Z] 12:20:43     INFO - GECKO(1783) |     #7 0x7f89c2529ff0 in mozilla::ScriptPreloader::Run() /home/worker/workspace/build/src/js/xpconnect/loader/ScriptPreloader.cpp:682:27
+[task 2017-07-25T12:20:43.263168Z] 12:20:43     INFO - GECKO(1783) |     #8 0x7f89c252a1fc in non-virtual thunk to mozilla::ScriptPreloader::Run() /home/worker/workspace/build/src/js/xpconnect/loader/ScriptPreloader.cpp:667:18
+[task 2017-07-25T12:20:43.266279Z] 12:20:43     INFO - GECKO(1783) |     #9 0x7f89c0d1d9e4 in nsThread::ProcessNextEvent(bool, bool*) /home/worker/workspace/build/src/xpcom/threads/nsThread.cpp:1579:14
+[task 2017-07-25T12:20:43.269361Z] 12:20:43     INFO - GECKO(1783) |     #10 0x7f89c0d236d8 in NS_ProcessNextEvent(nsIThread*, bool) /home/worker/workspace/build/src/xpcom/threads/nsThreadUtils.cpp:530:10
+[task 2017-07-25T12:20:43.286941Z] 12:20:43     INFO - GECKO(1783) |     #11 0x7f89c1b37820 in mozilla::ipc::MessagePumpForNonMainThreads::Run(base::MessagePump::Delegate*) /home/worker/workspace/build/src/ipc/glue/MessagePump.cpp:339:20
+[task 2017-07-25T12:20:43.309032Z] 12:20:43     INFO - GECKO(1783) |     #12 0x7f89c1a93a5b in RunInternal /home/worker/workspace/build/src/ipc/chromium/src/base/message_loop.cc:321:10
+[task 2017-07-25T12:20:43.311779Z] 12:20:43     INFO - GECKO(1783) |     #13 0x7f89c1a93a5b in RunHandler /home/worker/workspace/build/src/ipc/chromium/src/base/message_loop.cc:314
+[task 2017-07-25T12:20:43.313451Z] 12:20:43     INFO - GECKO(1783) |     #14 0x7f89c1a93a5b in MessageLoop::Run() /home/worker/workspace/build/src/ipc/chromium/src/base/message_loop.cc:294
+[task 2017-07-25T12:20:43.319275Z] 12:20:43     INFO - GECKO(1783) |     #15 0x7f89c0d14458 in nsThread::ThreadFunc(void*) /home/worker/workspace/build/src/xpcom/threads/nsThread.cpp:507:11
+[task 2017-07-25T12:20:43.335327Z] 12:20:43     INFO - GECKO(1783) |     #16 0x7f89db5d8423 in _pt_root /home/worker/workspace/build/src/nsprpub/pr/src/pthreads/ptthread.c:216:5
+[task 2017-07-25T12:20:43.351711Z] 12:20:43     INFO - GECKO(1783) |     #17 0x7f89df8bb6b9 in start_thread (/lib/x86_64-linux-gnu/libpthread.so.0+0x76b9)
+[task 2017-07-25T12:20:43.516121Z] 12:20:43     INFO - GECKO(1783) |     #18 0x7f89de94482c in clone /build/glibc-9tT8Do/glibc-2.23/misc/../sysdeps/unix/sysv/linux/x86_64/clone.S:109
+[task 2017-07-25T12:20:43.519863Z] 12:20:43     INFO - GECKO(1783) | 0x61500020f8d8 is located 88 bytes inside of 512-byte region [0x61500020f880,0x61500020fa80)
+[task 2017-07-25T12:20:43.521796Z] 12:20:43     INFO - GECKO(1783) | freed by thread T0 here:
+[task 2017-07-25T12:20:43.538114Z] 12:20:43     INFO - GECKO(1783) |     #0 0x4bb69b in __interceptor_free /builds/slave/moz-toolchain/src/llvm/projects/compiler-rt/lib/asan/asan_malloc_linux.cc:47:3
+[task 2017-07-25T12:20:43.542424Z] 12:20:43     INFO - GECKO(1783) |     #1 0x7f89c0c03d88 in PLDHashTable::ChangeTable(int) /home/worker/workspace/build/src/xpcom/ds/PLDHashTable.cpp:503:3
+[task 2017-07-25T12:20:43.551110Z] 12:20:43     INFO - GECKO(1783) |     #2 0x7f89c0c042ee in PLDHashTable::Add(void const*, mozilla::fallible_t const&) /home/worker/workspace/build/src/xpcom/ds/PLDHashTable.cpp:573:10
+[task 2017-07-25T12:20:43.559912Z] 12:20:43     INFO - GECKO(1783) |     #3 0x7f89c0c0486e in PLDHashTable::Add(void const*) /home/worker/workspace/build/src/xpcom/ds/PLDHashTable.cpp:602:28
+[task 2017-07-25T12:20:43.562415Z] 12:20:43     INFO - GECKO(1783) |     #4 0x7f89c252abed in PutEntry /home/worker/workspace/build/src/obj-firefox/dist/include/nsTHashtable.h:155:43
+[task 2017-07-25T12:20:43.567176Z] 12:20:43     INFO - GECKO(1783) |     #5 0x7f89c252abed in mozilla::ScriptPreloader::CachedScript* nsClassHashtable<nsCStringHashKey, mozilla::ScriptPreloader::CachedScript>::LookupOrAdd<mozilla::ScriptPreloader&, nsCString const&, nsCString const&, decltype(nullptr)>(nsACString const&, mozilla::ScriptPreloader&, nsCString const&, nsCString const&, decltype(nullptr)&&) /home/worker/workspace/build/src/obj-firefox/dist/include/nsClassHashtable.h:72
+[task 2017-07-25T12:20:43.577265Z] 12:20:43     INFO - GECKO(1783) | previously allocated by thread T0 here:
+[task 2017-07-25T12:20:43.578728Z] 12:20:43     INFO - GECKO(1783) |     #0 0x4bb9ec in malloc /builds/slave/moz-toolchain/src/llvm/projects/compiler-rt/lib/asan/asan_malloc_linux.cc:64:3
+[task 2017-07-25T12:20:43.581980Z] 12:20:43     INFO - GECKO(1783) |     #1 0x7f89c0c03a35 in PLDHashTable::ChangeTable(int) /home/worker/workspace/build/src/xpcom/ds/PLDHashTable.cpp:472:32
+[task 2017-07-25T12:20:43.584042Z] 12:20:43     INFO - GECKO(1783) |     #2 0x7f89c0c042ee in PLDHashTable::Add(void const*, mozilla::fallible_t const&) /home/worker/workspace/build/src/xpcom/ds/PLDHashTable.cpp:573:10
+[task 2017-07-25T12:20:43.589943Z] 12:20:43     INFO - GECKO(1783) |     #3 0x7f89c0c0486e in PLDHashTable::Add(void const*) /home/worker/workspace/build/src/xpcom/ds/PLDHashTable.cpp:602:28
+[task 2017-07-25T12:20:43.591946Z] 12:20:43     INFO - GECKO(1783) |     #4 0x7f89c252a731 in PutEntry /home/worker/workspace/build/src/obj-firefox/dist/include/nsTHashtable.h:155:43
+[task 2017-07-25T12:20:43.594613Z] 12:20:43     INFO - GECKO(1783) |     #5 0x7f89c252a731 in mozilla::ScriptPreloader::CachedScript* nsClassHashtable<nsCStringHashKey, mozilla::ScriptPreloader::CachedScript>::LookupOrAdd<mozilla::ScriptPreloader&, nsCString const&, nsCString const&, JS::Handle<JSScript*>&>(nsACString const&, mozilla::ScriptPreloader&, nsCString const&, nsCString const&, JS::Handle<JSScript*>&) /home/worker/workspace/build/src/obj-firefox/dist/include/nsClassHashtable.h:72
+[task 2017-07-25T12:20:43.604074Z] 12:20:43     INFO - GECKO(1783) | Thread T38 (SaveScripts) created by T0 here:
+[task 2017-07-25T12:20:43.607486Z] 12:20:43     INFO - GECKO(1783) |     #0 0x4a3dc6 in __interceptor_pthread_create /builds/slave/moz-toolchain/src/llvm/projects/compiler-rt/lib/asan/asan_interceptors.cc:245:3
+[task 2017-07-25T12:20:43.610534Z] 12:20:43     INFO - GECKO(1783) |     #1 0x7f89db5d51c9 in _PR_CreateThread /home/worker/workspace/build/src/nsprpub/pr/src/pthreads/ptthread.c:457:14
+[task 2017-07-25T12:20:43.614231Z] 12:20:43     INFO - GECKO(1783) |     #2 0x7f89db5d4dde in PR_CreateThread /home/worker/workspace/build/src/nsprpub/pr/src/pthreads/ptthread.c:548:12
+[task 2017-07-25T12:20:43.625567Z] 12:20:43     INFO - GECKO(1783) |     #3 0x7f89c0d16848 in nsThread::Init(nsACString const&) /home/worker/workspace/build/src/xpcom/threads/nsThread.cpp:689:8
+[task 2017-07-25T12:20:43.627665Z] 12:20:43     INFO - GECKO(1783) |     #4 0x7f89c0d2288f in nsThreadManager::NewNamedThread(nsACString const&, unsigned int, nsIThread**) /home/worker/workspace/build/src/xpcom/threads/nsThreadManager.cpp:275:22
+[task 2017-07-25T12:20:43.631647Z] 12:20:43     INFO - GECKO(1783) |     #5 0x7f89c0d262f3 in NS_NewNamedThread(nsACString const&, nsIThread**, nsIRunnable*, unsigned int) /home/worker/workspace/build/src/xpcom/threads/nsThreadUtils.cpp:154:45
+[task 2017-07-25T12:20:43.637990Z] 12:20:43     INFO - GECKO(1783) |     #6 0x7f89c2524140 in NS_NewNamedThread<12> /home/worker/workspace/build/src/obj-firefox/dist/include/nsThreadUtils.h:72:10
+[task 2017-07-25T12:20:43.640086Z] 12:20:43     INFO - GECKO(1783) |     #7 0x7f89c2524140 in mozilla::ScriptPreloader::Observe(nsISupports*, char const*, char16_t const*) /home/worker/workspace/build/src/js/xpconnect/loader/ScriptPreloader.cpp:320
+[task 2017-07-25T12:20:43.644184Z] 12:20:43     INFO - GECKO(1783) |     #8 0x7f89c0c25e0c in nsObserverList::NotifyObservers(nsISupports*, char const*, char16_t const*) /home/worker/workspace/build/src/xpcom/ds/nsObserverList.cpp:112:19
+[task 2017-07-25T12:20:43.650383Z] 12:20:43     INFO - GECKO(1783) |     #9 0x7f89c0c29b12 in nsObserverService::NotifyObservers(nsISupports*, char const*, char16_t const*) /home/worker/workspace/build/src/xpcom/ds/nsObserverService.cpp:295:19
+[task 2017-07-25T12:20:43.652340Z] 12:20:43     INFO - GECKO(1783) |     #10 0x7f89c0d3e2b1 in NS_InvokeByIndex /home/worker/workspace/build/src/xpcom/reflect/xptcall/md/unix/xptcinvoke_asm_x86_64_unix.S:129
+[task 2017-07-25T12:20:43.690621Z] 12:20:43     INFO - GECKO(1783) |     #11 0x7f89c261be00 in Invoke /home/worker/workspace/build/src/js/xpconnect/src/XPCWrappedNative.cpp:1996:12
+[task 2017-07-25T12:20:43.692183Z] 12:20:43     INFO - GECKO(1783) |     #12 0x7f89c261be00 in Call /home/worker/workspace/build/src/js/xpconnect/src/XPCWrappedNative.cpp:1315
+[task 2017-07-25T12:20:43.693732Z] 12:20:43     INFO - GECKO(1783) |     #13 0x7f89c261be00 in XPCWrappedNative::CallMethod(XPCCallContext&, XPCWrappedNative::CallMode) /home/worker/workspace/build/src/js/xpconnect/src/XPCWrappedNative.cpp:1282
+[task 2017-07-25T12:20:43.695883Z] 12:20:43     INFO - GECKO(1783) |     #14 0x7f89c2622dcf in XPC_WN_CallMethod(JSContext*, unsigned int, JS::Value*) /home/worker/workspace/build/src/js/xpconnect/src/XPCWrappedNativeJSOps.cpp:967:12
+[task 2017-07-25T12:20:43.781151Z] 12:20:43     INFO - GECKO(1783) |     #15 0x7f89cba8fc34 in CallJSNative /home/worker/workspace/build/src/js/src/jscntxtinlines.h:293:15
+[task 2017-07-25T12:20:43.783269Z] 12:20:43     INFO - GECKO(1783) |     #16 0x7f89cba8fc34 in js::InternalCallOrConstruct(JSContext*, JS::CallArgs const&, js::MaybeConstruct) /home/worker/workspace/build/src/js/src/vm/Interpreter.cpp:470
+[task 2017-07-25T12:20:43.837524Z] 12:20:43     INFO - GECKO(1783) |     #17 0x7f89cba789ab in CallFromStack /home/worker/workspace/build/src/js/src/vm/Interpreter.cpp:521:12
+[task 2017-07-25T12:20:43.839093Z] 12:20:43     INFO - GECKO(1783) |     #18 0x7f89cba789ab in Interpret(JSContext*, js::RunState&) /home/worker/workspace/build/src/js/src/vm/Interpreter.cpp:3066
+[task 2017-07-25T12:20:43.858633Z] 12:20:43     INFO - GECKO(1783) |     #19 0x7f89cba5f4a8 in js::RunScript(JSContext*, js::RunState&) /home/worker/workspace/build/src/js/src/vm/Interpreter.cpp:410:12
+[task 2017-07-25T12:20:43.864623Z] 12:20:43     INFO - GECKO(1783) |     #20 0x7f89cba8fdcc in js::InternalCallOrConstruct(JSContext*, JS::CallArgs const&, js::MaybeConstruct) /home/worker/workspace/build/src/js/src/vm/Interpreter.cpp:488:15
+[task 2017-07-25T12:20:43.868741Z] 12:20:43     INFO - GECKO(1783) |     #21 0x7f89cba789ab in CallFromStack /home/worker/workspace/build/src/js/src/vm/Interpreter.cpp:521:12
+[task 2017-07-25T12:20:43.870142Z] 12:20:43     INFO - GECKO(1783) |     #22 0x7f89cba789ab in Interpret(JSContext*, js::RunState&) /home/worker/workspace/build/src/js/src/vm/Interpreter.cpp:3066
+[task 2017-07-25T12:20:43.878215Z] 12:20:43     INFO - GECKO(1783) |     #23 0x7f89cba5f4a8 in js::RunScript(JSContext*, js::RunState&) /home/worker/workspace/build/src/js/src/vm/Interpreter.cpp:410:12
+[task 2017-07-25T12:20:43.879811Z] 12:20:43     INFO - GECKO(1783) |     #24 0x7f89cba8fdcc in js::InternalCallOrConstruct(JSContext*, JS::CallArgs const&, js::MaybeConstruct) /home/worker/workspace/build/src/js/src/vm/Interpreter.cpp:488:15
+[task 2017-07-25T12:20:43.881420Z] 12:20:43     INFO - GECKO(1783) |     #25 0x7f89cba90722 in js::Call(JSContext*, JS::Handle<JS::Value>, JS::Handle<JS::Value>, js::AnyInvokeArgs const&, JS::MutableHandle<JS::Value>) /home/worker/workspace/build/src/js/src/vm/Interpreter.cpp:534:10
+[task 2017-07-25T12:20:44.055022Z] 12:20:44     INFO - GECKO(1783) |     #26 0x7f89cc442cab in JS::Call(JSContext*, JS::Handle<JS::Value>, JS::Handle<JS::Value>, JS::HandleValueArray const&, JS::MutableHandle<JS::Value>) /home/worker/workspace/build/src/js/src/jsapi.cpp:2948:12
+[task 2017-07-25T12:20:44.117506Z] 12:20:44     INFO - GECKO(1783) |     #27 0x7f89c4e99147 in mozilla::dom::EventListener::HandleEvent(JSContext*, JS::Handle<JS::Value>, mozilla::dom::Event&, mozilla::ErrorResult&) /home/worker/workspace/build/src/obj-firefox/dom/bindings/EventListenerBinding.cpp:47:8
+[task 2017-07-25T12:20:44.154573Z] 12:20:44     INFO - GECKO(1783) |     #28 0x7f89c581950f in HandleEvent<mozilla::dom::EventTarget *> /home/worker/workspace/build/src/obj-firefox/dist/include/mozilla/dom/EventListenerBinding.h:65:12
+[task 2017-07-25T12:20:44.157589Z] 12:20:44     INFO - GECKO(1783) |     #29 0x7f89c581950f in mozilla::EventListenerManager::HandleEventSubType(mozilla::EventListenerManager::Listener*, nsIDOMEvent*, mozilla::dom::EventTarget*) /home/worker/workspace/build/src/dom/events/EventListenerManager.cpp:1138
+[task 2017-07-25T12:20:44.162118Z] 12:20:44     INFO - GECKO(1783) |     #30 0x7f89c581b5d4 in mozilla::EventListenerManager::HandleEventInternal(nsPresContext*, mozilla::WidgetEvent*, nsIDOMEvent**, mozilla::dom::EventTarget*, nsEventStatus*) /home/worker/workspace/build/src/dom/events/EventListenerManager.cpp:1311:20
+[task 2017-07-25T12:20:44.190008Z] 12:20:44     INFO - GECKO(1783) |     #31 0x7f89c57fb291 in mozilla::EventTargetChainItem::HandleEventTargetChain(nsTArray<mozilla::EventTargetChainItem>&, mozilla::EventChainPostVisitor&, mozilla::EventDispatchingCallback*, mozilla::ELMCreationDetector&) /home/worker/workspace/build/src/dom/events/EventDispatcher.cpp:464:16
+[task 2017-07-25T12:20:44.201164Z] 12:20:44     INFO - GECKO(1783) |     #32 0x7f89c57fe762 in mozilla::EventDispatcher::Dispatch(nsISupports*, nsPresContext*, mozilla::WidgetEvent*, nsIDOMEvent*, nsEventStatus*, mozilla::EventDispatchingCallback*, nsTArray<mozilla::dom::EventTarget*>*) /home/worker/workspace/build/src/dom/events/EventDispatcher.cpp:824:9
+[task 2017-07-25T12:20:44.217404Z] 12:20:44     INFO - GECKO(1783) |     #33 0x7f89c57ccb6a in mozilla::EventDispatcher::DispatchDOMEvent(nsISupports*, mozilla::WidgetEvent*, nsIDOMEvent*, nsPresContext*, nsEventStatus*) /home/worker/workspace/build/src/dom/events/EventDispatcher.cpp:893:12
+[task 2017-07-25T12:20:44.235156Z] 12:20:44     INFO - GECKO(1783) |     #34 0x7f89c7bcadf0 in nsPresContext::FireDOMPaintEvent(nsTArray<nsRect>*, unsigned long, mozilla::TimeStamp) /home/worker/workspace/build/src/layout/base/nsPresContext.cpp:2469:3
+[task 2017-07-25T12:20:44.236567Z] 12:20:44     INFO - GECKO(1783) |     #35 0x7f89c7bdcff3 in DelayedFireDOMPaintEvent::Run() /home/worker/workspace/build/src/layout/base/nsPresContext.cpp:2696:21
+[task 2017-07-25T12:20:44.256359Z] 12:20:44     INFO - GECKO(1783) |     #36 0x7f89c35b195f in nsContentUtils::RemoveScriptBlocker() /home/worker/workspace/build/src/dom/base/nsContentUtils.cpp:5637:15
+[task 2017-07-25T12:20:44.277948Z] 12:20:44     INFO - GECKO(1783) |     #37 0x7f89c726797f in ~nsAutoScriptBlocker /home/worker/workspace/build/src/obj-firefox/dist/include/nsContentUtils.h:3357:5
+[task 2017-07-25T12:20:44.281366Z] 12:20:44     INFO - GECKO(1783) |     #38 0x7f89c726797f in nsView::DidCompositeWindow(unsigned long, mozilla::TimeStamp const&, mozilla::TimeStamp const&) /home/worker/workspace/build/src/view/nsView.cpp:1120
+[task 2017-07-25T12:20:44.306171Z] 12:20:44     INFO - GECKO(1783) |     #39 0x7f89c2f64978 in mozilla::layers::ClientLayerManager::DidComposite(unsigned long, mozilla::TimeStamp const&, mozilla::TimeStamp const&) /home/worker/workspace/build/src/gfx/layers/client/ClientLayerManager.cpp:523:17
+[task 2017-07-25T12:20:44.322904Z] 12:20:44     INFO - GECKO(1783) |     #40 0x7f89c3047cdb in mozilla::layers::CompositorBridgeChild::RecvDidComposite(unsigned long const&, unsigned long const&, mozilla::TimeStamp const&, mozilla::TimeStamp const&) /home/worker/workspace/build/src/gfx/layers/ipc/CompositorBridgeChild.cpp:525:8
+[task 2017-07-25T12:20:44.400554Z] 12:20:44     INFO - GECKO(1783) |     #41 0x7f89c2279985 in mozilla::layers::PCompositorBridgeChild::OnMessageReceived(IPC::Message const&) /home/worker/workspace/build/src/obj-firefox/ipc/ipdl/PCompositorBridgeChild.cpp:1495:20
+[task 2017-07-25T12:20:44.402530Z] 12:20:44     INFO - GECKO(1783) |     #42 0x7f89c1b2e7b9 in mozilla::ipc::MessageChannel::DispatchAsyncMessage(IPC::Message const&) /home/worker/workspace/build/src/ipc/glue/MessageChannel.cpp:2105:25
+[task 2017-07-25T12:20:44.406007Z] 12:20:44     INFO - GECKO(1783) |     #43 0x7f89c1b2b814 in mozilla::ipc::MessageChannel::DispatchMessage(IPC::Message&&) /home/worker/workspace/build/src/ipc/glue/MessageChannel.cpp:2031:17
+[task 2017-07-25T12:20:44.407479Z] 12:20:44     INFO - GECKO(1783) |     #44 0x7f89c1b2d0f4 in mozilla::ipc::MessageChannel::RunMessage(mozilla::ipc::MessageChannel::MessageTask&) /home/worker/workspace/build/src/ipc/glue/MessageChannel.cpp:1888:5
+[task 2017-07-25T12:20:44.412269Z] 12:20:44     INFO - GECKO(1783) |     #45 0x7f89c1b2d6d8 in mozilla::ipc::MessageChannel::MessageTask::Run() /home/worker/workspace/build/src/ipc/glue/MessageChannel.cpp:1921:15
+[task 2017-07-25T12:20:44.415478Z] 12:20:44     INFO - GECKO(1783) |     #46 0x7f89c0d1d9e4 in nsThread::ProcessNextEvent(bool, bool*) /home/worker/workspace/build/src/xpcom/threads/nsThread.cpp:1579:14
+[task 2017-07-25T12:20:44.416937Z] 12:20:44     INFO - GECKO(1783) |     #47 0x7f89c0d236d8 in NS_ProcessNextEvent(nsIThread*, bool) /home/worker/workspace/build/src/xpcom/threads/nsThreadUtils.cpp:530:10
+[task 2017-07-25T12:20:44.418371Z] 12:20:44     INFO - GECKO(1783) |     #48 0x7f89c1b36481 in mozilla::ipc::MessagePump::Run(base::MessagePump::Delegate*) /home/worker/workspace/build/src/ipc/glue/MessagePump.cpp:97:21
+[task 2017-07-25T12:20:44.434694Z] 12:20:44     INFO - GECKO(1783) |     #49 0x7f89c1a93a5b in RunInternal /home/worker/workspace/build/src/ipc/chromium/src/base/message_loop.cc:321:10
+[task 2017-07-25T12:20:44.436113Z] 12:20:44     INFO - GECKO(1783) |     #50 0x7f89c1a93a5b in RunHandler /home/worker/workspace/build/src/ipc/chromium/src/base/message_loop.cc:314
+[task 2017-07-25T12:20:44.437902Z] 12:20:44     INFO - GECKO(1783) |     #51 0x7f89c1a93a5b in MessageLoop::Run() /home/worker/workspace/build/src/ipc/chromium/src/base/message_loop.cc:294
+[task 2017-07-25T12:20:44.514306Z] 12:20:44     INFO - GECKO(1783) |     #52 0x7f89c72eb35f in nsBaseAppShell::Run() /home/worker/workspace/build/src/widget/nsBaseAppShell.cpp:156:27
+[task 2017-07-25T12:20:44.519316Z] 12:20:44     INFO - GECKO(1783) |     #53 0x7f89cb3cc361 in nsAppStartup::Run() /home/worker/workspace/build/src/toolkit/components/startup/nsAppStartup.cpp:287:30
+[task 2017-07-25T12:20:44.541433Z] 12:20:44     INFO - GECKO(1783) |     #54 0x7f89cb5a6014 in XREMain::XRE_mainRun() /home/worker/workspace/build/src/toolkit/xre/nsAppRunner.cpp:4596:22
+[task 2017-07-25T12:20:44.546241Z] 12:20:44     INFO - GECKO(1783) |     #55 0x7f89cb5a7c18 in XREMain::XRE_main(int, char**, mozilla::BootstrapConfig const&) /home/worker/workspace/build/src/toolkit/xre/nsAppRunner.cpp:4760:8
+[task 2017-07-25T12:20:44.550945Z] 12:20:44     INFO - GECKO(1783) |     #56 0x7f89cb5a904b in XRE_main(int, char**, mozilla::BootstrapConfig const&) /home/worker/workspace/build/src/toolkit/xre/nsAppRunner.cpp:4855:21
+[task 2017-07-25T12:20:44.554653Z] 12:20:44     INFO - GECKO(1783) |     #57 0x4eb613 in do_main /home/worker/workspace/build/src/browser/app/nsBrowserApp.cpp:236:22
+[task 2017-07-25T12:20:44.557878Z] 12:20:44     INFO - GECKO(1783) |     #58 0x4eb613 in main /home/worker/workspace/build/src/browser/app/nsBrowserApp.cpp:309
+[task 2017-07-25T12:20:44.560794Z] 12:20:44     INFO - GECKO(1783) |     #59 0x7f89de85e82f in __libc_start_main /build/glibc-9tT8Do/glibc-2.23/csu/../csu/libc-start.c:291
+[task 2017-07-25T12:20:44.597700Z] 12:20:44     INFO - GECKO(1783) | SUMMARY: AddressSanitizer: heap-use-after-free /home/worker/workspace/build/src/obj-firefox/dist/include/nsAutoPtr.h:171:12 in get
+[task 2017-07-25T12:20:44.599282Z] 12:20:44     INFO - GECKO(1783) | Shadow bytes around the buggy address:
+[task 2017-07-25T12:20:44.600431Z] 12:20:44     INFO - GECKO(1783) |   0x0c2a80039ec0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[task 2017-07-25T12:20:44.601909Z] 12:20:44     INFO - GECKO(1783) |   0x0c2a80039ed0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[task 2017-07-25T12:20:44.603249Z] 12:20:44     INFO - GECKO(1783) |   0x0c2a80039ee0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[task 2017-07-25T12:20:44.604493Z] 12:20:44     INFO - GECKO(1783) |   0x0c2a80039ef0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[task 2017-07-25T12:20:44.605558Z] 12:20:44     INFO - GECKO(1783) |   0x0c2a80039f00: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+[task 2017-07-25T12:20:44.606903Z] 12:20:44     INFO - GECKO(1783) | =>0x0c2a80039f10: fd fd fd fd fd fd fd fd fd fd fd[fd]fd fd fd fd
+[task 2017-07-25T12:20:44.608002Z] 12:20:44     INFO - GECKO(1783) |   0x0c2a80039f20: fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd
+[task 2017-07-25T12:20:44.609234Z] 12:20:44     INFO - GECKO(1783) |   0x0c2a80039f30: fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd
+[task 2017-07-25T12:20:44.617890Z] 12:20:44     INFO - GECKO(1783) |   0x0c2a80039f40: fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd
+[task 2017-07-25T12:20:44.619692Z] 12:20:44     INFO - GECKO(1783) |   0x0c2a80039f50: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+[task 2017-07-25T12:20:44.621457Z] 12:20:44     INFO - GECKO(1783) |   0x0c2a80039f60: fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd
+[task 2017-07-25T12:20:44.625946Z] 12:20:44     INFO - GECKO(1783) | Shadow byte legend (one shadow byte represents 8 application bytes):
+[task 2017-07-25T12:20:44.627779Z] 12:20:44     INFO - GECKO(1783) |   Addressable:           00
+[task 2017-07-25T12:20:44.629521Z] 12:20:44     INFO - GECKO(1783) |   Partially addressable: 01 02 03 04 05 06 07
+[task 2017-07-25T12:20:44.631440Z] 12:20:44     INFO - GECKO(1783) |   Heap left redzone:       fa
+[task 2017-07-25T12:20:44.635208Z] 12:20:44     INFO - GECKO(1783) |   Heap right redzone:      fb
+[task 2017-07-25T12:20:44.636932Z] 12:20:44     INFO - GECKO(1783) |   Freed heap region:       fd
+[task 2017-07-25T12:20:44.638686Z] 12:20:44     INFO - GECKO(1783) |   Stack left redzone:      f1
+[task 2017-07-25T12:20:44.640448Z] 12:20:44     INFO - GECKO(1783) |   Stack mid redzone:       f2
+[task 2017-07-25T12:20:44.643832Z] 12:20:44     INFO - GECKO(1783) |   Stack right redzone:     f3
+[task 2017-07-25T12:20:44.645647Z] 12:20:44     INFO - GECKO(1783) |   Stack partial redzone:   f4
+[task 2017-07-25T12:20:44.647411Z] 12:20:44     INFO - GECKO(1783) |   Stack after return:      f5
+[task 2017-07-25T12:20:44.649138Z] 12:20:44     INFO - GECKO(1783) |   Stack use after scope:   f8
+[task 2017-07-25T12:20:44.650847Z] 12:20:44     INFO - GECKO(1783) |   Global redzone:          f9
+[task 2017-07-25T12:20:44.653702Z] 12:20:44     INFO - GECKO(1783) |   Global init order:       f6
+[task 2017-07-25T12:20:44.655478Z] 12:20:44     INFO - GECKO(1783) |   Poisoned by user:        f7
+[task 2017-07-25T12:20:44.657220Z] 12:20:44     INFO - GECKO(1783) |   Container overflow:      fc
+[task 2017-07-25T12:20:44.658928Z] 12:20:44     INFO - GECKO(1783) |   Array cookie:            ac
+[task 2017-07-25T12:20:44.660675Z] 12:20:44     INFO - GECKO(1783) |   Intra object redzone:    bb
+[task 2017-07-25T12:20:44.664140Z] 12:20:44     INFO - GECKO(1783) |   ASan internal:           fe
+[task 2017-07-25T12:20:44.665952Z] 12:20:44     INFO - GECKO(1783) |   Left alloca redzone:     ca
+[task 2017-07-25T12:20:44.668645Z] 12:20:44     INFO - GECKO(1783) |   Right alloca redzone:    cb
+[task 2017-07-25T12:20:44.670378Z] 12:20:44     INFO - GECKO(1783) | ==1783==ABORTING
+[task 2017-07-25T12:20:44.757315Z] 12:20:44     INFO - GECKO(1783) | Crash Annotation GraphicsCriticalError: |[C0][GFX1-]: Receive IPC close with reason=AbnormalShutdown (t=7.92141) [GFX1-]: Receive IPC close with reason=AbnormalShutdown
+[task 2017-07-25T12:20:44.760399Z] 12:20:44     INFO - GECKO(1783) | [Child 1824] WARNING: pipe error (3): Connection reset by peer: file /home/worker/workspace/build/src/ipc/chromium/src/chrome/common/ipc_channel_posix.cc, line 353
+[task 2017-07-25T12:20:44.760675Z] 12:20:44     INFO - GECKO(1783) | ASAN:DEADLYSIGNAL
+[task 2017-07-25T12:20:44.763006Z] 12:20:44     INFO - GECKO(1783) | =================================================================
+[task 2017-07-25T12:20:44.764427Z] 12:20:44     INFO - GECKO(1783) | ==1824==ERROR: AddressSanitizer: SEGV on unknown address 0x000000000000 (pc 0x7fac9c830e65 bp 0x7fac98961380 sp 0x7fac98961360 T2)
+[task 2017-07-25T12:20:44.765623Z] 12:20:44     INFO - GECKO(1783) | ==1824==The signal is caused by a WRITE memory access.
+[task 2017-07-25T12:20:44.766820Z] 12:20:44     INFO - GECKO(1783) | ==1824==Hint: address points to the zero page.
+[task 2017-07-25T12:20:46.067462Z] 12:20:46     INFO - GECKO(1783) |     #0 0x7fac9c830e64 in mozilla::ipc::MessageChannel::OnChannelErrorFromLink() /home/worker/workspace/build/src/ipc/glue/MessageChannel.cpp:2530:13
+[task 2017-07-25T12:20:46.073038Z] 12:20:46     INFO - GECKO(1783) |     #1 0x7fac9c835df7 in OnChannelError /home/worker/workspace/build/src/ipc/glue/MessageLink.cpp:387:12
+[task 2017-07-25T12:20:46.074524Z] 12:20:46     INFO - GECKO(1783) |     #2 0x7fac9c835df7 in non-virtual thunk to mozilla::ipc::ProcessLink::OnChannelError() /home/worker/workspace/build/src/ipc/glue/MessageLink.cpp:379
+[task 2017-07-25T12:20:46.094931Z] 12:20:46     INFO - GECKO(1783) |     #3 0x7fac9c7e0a41 in event_persist_closure /home/worker/workspace/build/src/ipc/chromium/src/third_party/libevent/event.c:1580:9
+[task 2017-07-25T12:20:46.096427Z] 12:20:46     INFO - GECKO(1783) |     #4 0x7fac9c7e0a41 in event_process_active_single_queue /home/worker/workspace/build/src/ipc/chromium/src/third_party/libevent/event.c:1639
+[task 2017-07-25T12:20:46.097796Z] 12:20:46     INFO - GECKO(1783) |     #5 0x7fac9c7d81a9 in event_process_active /home/worker/workspace/build/src/ipc/chromium/src/third_party/libevent/event.c:1741:9
+[task 2017-07-25T12:20:46.099198Z] 12:20:46     INFO - GECKO(1783) |     #6 0x7fac9c7d81a9 in event_base_loop /home/worker/workspace/build/src/ipc/chromium/src/third_party/libevent/event.c:1961
+[task 2017-07-25T12:20:46.102629Z] 12:20:46     INFO - GECKO(1783) |     #7 0x7fac9c798abd in base::MessagePumpLibevent::Run(base::MessagePump::Delegate*) /home/worker/workspace/build/src/ipc/chromium/src/base/message_pump_libevent.cc:373:7
+[task 2017-07-25T12:20:46.104008Z] 12:20:46     INFO - GECKO(1783) |     #8 0x7fac9c793a5b in RunInternal /home/worker/workspace/build/src/ipc/chromium/src/base/message_loop.cc:321:10
+[task 2017-07-25T12:20:46.109078Z] 12:20:46     INFO - GECKO(1783) |     #9 0x7fac9c793a5b in RunHandler /home/worker/workspace/build/src/ipc/chromium/src/base/message_loop.cc:314
+[task 2017-07-25T12:20:46.110521Z] 12:20:46     INFO - GECKO(1783) |     #10 0x7fac9c793a5b in MessageLoop::Run() /home/worker/workspace/build/src/ipc/chromium/src/base/message_loop.cc:294
+[task 2017-07-25T12:20:46.111849Z] 12:20:46     INFO - GECKO(1783) |     #11 0x7fac9c7b1bd9 in base::Thread::ThreadMain() /home/worker/workspace/build/src/ipc/chromium/src/base/thread.cc:181:16
+[task 2017-07-25T12:20:46.121131Z] 12:20:46     INFO - GECKO(1783) |     #12 0x7fac9c7a1eec in ThreadFunc(void*) /home/worker/workspace/build/src/ipc/chromium/src/base/platform_thread_posix.cc:38:13
+[task 2017-07-25T12:20:46.122498Z] 12:20:46     INFO - GECKO(1783) |     #13 0x7facba5aa6b9 in start_thread (/lib/x86_64-linux-gnu/libpthread.so.0+0x76b9)
+[task 2017-07-25T12:20:46.185596Z] 12:20:46     INFO - GECKO(1783) |     #14 0x7facb963382c in clone /build/glibc-9tT8Do/glibc-2.23/misc/../sysdeps/unix/sysv/linux/x86_64/clone.S:109
+[task 2017-07-25T12:20:46.187343Z] 12:20:46     INFO - GECKO(1783) | AddressSanitizer can not provide additional info.
+[task 2017-07-25T12:20:46.188737Z] 12:20:46     INFO - GECKO(1783) | SUMMARY: AddressSanitizer: SEGV /home/worker/workspace/build/src/ipc/glue/MessageChannel.cpp:2530:13 in mozilla::ipc::MessageChannel::OnChannelErrorFromLink()
+[task 2017-07-25T12:20:46.191066Z] 12:20:46     INFO - GECKO(1783) | Thread T2 (Chrome_~dThread) created by T0 (Web Content) here:
+[task 2017-07-25T12:20:46.207883Z] 12:20:46     INFO - GECKO(1783) |     #0 0x4a3dc6 in __interceptor_pthread_create /builds/slave/moz-toolchain/src/llvm/projects/compiler-rt/lib/asan/asan_interceptors.cc:245:3
+[task 2017-07-25T12:20:46.216341Z] 12:20:46     INFO - GECKO(1783) |     #1 0x7fac9c7a102c in CreateThread /home/worker/workspace/build/src/ipc/chromium/src/base/platform_thread_posix.cc:135:14
+[task 2017-07-25T12:20:46.218560Z] 12:20:46     INFO - GECKO(1783) |     #2 0x7fac9c7a102c in PlatformThread::Create(unsigned long, PlatformThread::Delegate*, unsigned long*) /home/worker/workspace/build/src/ipc/chromium/src/base/platform_thread_posix.cc:146
+[task 2017-07-25T12:20:46.222937Z] 12:20:46     INFO - GECKO(1783) |     #3 0x7fac9c7b160e in base::Thread::StartWithOptions(base::Thread::Options const&) /home/worker/workspace/build/src/ipc/chromium/src/base/thread.cc:99:8
+[task 2017-07-25T12:20:46.224389Z] 12:20:46     INFO - GECKO(1783) |     #4 0x7fac9c837e37 in mozilla::ipc::ProcessChild::ProcessChild(int) /home/worker/workspace/build/src/ipc/glue/ProcessChild.cpp:24:5
+[task 2017-07-25T12:20:46.238895Z] 12:20:46     INFO - GECKO(1783) |     #5 0x7faca62adc2d in ContentProcess /home/worker/workspace/build/src/obj-firefox/dist/include/mozilla/dom/ContentProcess.h:31:7
+[task 2017-07-25T12:20:46.241262Z] 12:20:46     INFO - GECKO(1783) |     #6 0x7faca62adc2d in XRE_InitChildProcess(int, char**, XREChildData const*) /home/worker/workspace/build/src/toolkit/xre/nsEmbedFunctions.cpp:644
+[task 2017-07-25T12:20:46.243232Z] 12:20:46     INFO - GECKO(1783) |     #7 0x4eb813 in content_process_main /home/worker/workspace/build/src/browser/app/../../ipc/contentproc/plugin-container.cpp:64:30
+[task 2017-07-25T12:20:46.247284Z] 12:20:46     INFO - GECKO(1783) |     #8 0x4eb813 in main /home/worker/workspace/build/src/browser/app/nsBrowserApp.cpp:285
+[task 2017-07-25T12:20:46.248720Z] 12:20:46     INFO - GECKO(1783) |     #9 0x7facb954d82f in __libc_start_main /build/glibc-9tT8Do/glibc-2.23/csu/../csu/libc-start.c:291
+[task 2017-07-25T12:20:46.248985Z] 12:20:46     INFO - GECKO(1783) | ==1824==ABORTING
+[task 2017-07-25T12:23:28.241094Z] 12:23:28     INFO -  Traceback (most recent call last):
+[task 2017-07-25T12:23:28.245391Z] 12:23:28     INFO -    File "/home/worker/workspace/build/tests/mochitest/runtests.py", line 2539, in doTests
+[task 2017-07-25T12:23:28.247111Z] 12:23:28     INFO -      marionette_args=marionette_args,
+[task 2017-07-25T12:23:28.248861Z] 12:23:28     INFO -    File "/home/worker/workspace/build/tests/mochitest/runtests.py", line 2140, in runApp
+[task 2017-07-25T12:23:28.250640Z] 12:23:28     INFO -      self.marionette.start_session(timeout=port_timeout)
+[task 2017-07-25T12:23:28.252430Z] 12:23:28     INFO -    File "/home/worker/workspace/build/venv/local/lib/python2.7/site-packages/marionette_driver/decorators.py", line 28, in _
+[task 2017-07-25T12:23:28.255681Z] 12:23:28     INFO -      m._handle_socket_failure()
+[task 2017-07-25T12:23:28.257570Z] 12:23:28     INFO -    File "/home/worker/workspace/build/venv/local/lib/python2.7/site-packages/marionette_driver/decorators.py", line 23, in _
+[task 2017-07-25T12:23:28.266142Z] 12:23:28     INFO -      return func(*args, **kwargs)
+[task 2017-07-25T12:23:28.268035Z] 12:23:28     INFO -    File "/home/worker/workspace/build/venv/local/lib/python2.7/site-packages/marionette_driver/marionette.py", line 1208, in start_session
+[task 2017-07-25T12:23:28.270425Z] 12:23:28     INFO -      self.protocol, _ = self.client.connect()
+[task 2017-07-25T12:23:28.272306Z] 12:23:28     INFO -    File "/home/worker/workspace/build/venv/local/lib/python2.7/site-packages/marionette_driver/transport.py", line 223, in connect
+[task 2017-07-25T12:23:28.275505Z] 12:23:28     INFO -      self.sock.connect((self.addr, self.port))
+[task 2017-07-25T12:23:28.277253Z] 12:23:28     INFO -    File "/usr/lib/python2.7/socket.py", line 228, in meth
+[task 2017-07-25T12:23:28.283161Z] 12:23:28     INFO -      return getattr(self._sock,name)(*args)
+[task 2017-07-25T12:23:28.284901Z] 12:23:28     INFO -  error: [Errno 111] Connection refused
+[task 2017-07-25T12:23:28.286746Z] 12:23:28    ERROR - Automation Error: Received unexpected exception while running application
+[task 2017-07-25T12:23:28.288573Z] 12:23:28    ERROR - 
+[task 2017-07-25T12:23:28.290452Z] 12:23:28     INFO - Stopping web server
+[task 2017-07-25T12:23:28.331476Z] 12:23:28     INFO - Stopping web socket server
+[task 2017-07-25T12:23:28.350024Z] 12:23:28     INFO - Stopping ssltunnel
+[task 2017-07-25T12:23:28.367222Z] 12:23:28  WARNING - leakcheck | refcount logging is off, so leaks can't be detected!

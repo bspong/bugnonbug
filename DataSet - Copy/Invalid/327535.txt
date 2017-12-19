@@ -1,0 +1,175 @@
+DomAttrModified not fired under rendering redraws
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.8.0.1) Gecko/20060111 Firefox/1.5.0.1
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.8.0.1) Gecko/20060111 Firefox/1.5.0.1
+
+In my app I have a popup menu with icon images.  If these images are not found in the cache they are pulled form the server and replaced with temporary markers.  When these markers are replaced with images, the size of the menu changes and the DomAttrModified event is not fired.  I looked into the DOM Event spec and this situation was not addressed.  
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.Clear cache
+2.load sample code
+3.press button and observe
+
+Actual Results:  
+The menu will appear and icon place holders will appear.  When the images load, the menu will be at its final size, but the attached event is never fired.
+
+Expected Results:  
+The menu should appear and the event should be fired when the menu changes size.
+
+Drop the following onto a server with the images icon1.gif, icon2.gif, and icon 4.gif in the same directory.  The resizing is harder to observe on a local connection because of latency (or reletive lack of).
+
+<script>
+function openMenu(evt) {
+		menu = document.createElement("div");
+
+		menu.setAttribute("id", 'contextMenu');
+		menu.style.zIndex = '100';
+
+		menu.style.position = 'absolute';
+		menu.style.top = 0;
+		menu.style.left = 0;
+
+		var temp = null
+		menu.style.visibility = 'hidden';
+		menu.style.backgroundColor = '#CFD9DD'
+
+
+		menuItem = getMenuItem1();
+		menuItem.style.padding = '3';
+		menuItem.style.paddingLeft = '.8em';
+		menuItem.style.paddingRight = '1em';				
+		menuItem.style.paddingTop = '.2em';				
+		menuItem.style.paddingBottom = '.2em';								
+		menu.appendChild(menuItem);
+
+		menuItem = getMenuItem2();
+		menuItem.style.padding = '3';
+		menuItem.style.paddingLeft = '.8em';
+		menuItem.style.paddingRight = '1em';				
+		menuItem.style.paddingTop = '.2em';				
+		menuItem.style.paddingBottom = '.2em';								
+		menu.appendChild(menuItem);
+
+		menuItem = getMenuItem3();
+		menuItem.style.padding = '3';
+		menuItem.style.paddingLeft = '.8em';
+		menuItem.style.paddingRight = '1em';				
+		menuItem.style.paddingTop = '.2em';				
+		menuItem.style.paddingBottom = '.2em';								
+		menu.appendChild(menuItem);
+
+		menuItem = getMenuItem1();
+		menuItem.style.padding = '3';
+		menuItem.style.paddingLeft = '.8em';
+		menuItem.style.paddingRight = '1em';				
+		menuItem.style.paddingTop = '.2em';				
+		menuItem.style.paddingBottom = '.2em';								
+		menu.appendChild(menuItem);
+
+		menuItem = getMenuItem2();
+		menuItem.style.padding = '3';
+		menuItem.style.paddingLeft = '.8em';
+		menuItem.style.paddingRight = '1em';				
+		menuItem.style.paddingTop = '.2em';				
+		menuItem.style.paddingBottom = '.2em';								
+		menu.appendChild(menuItem);
+
+		menuItem = getMenuItem3();
+		menuItem.style.padding = '3';
+		menuItem.style.paddingLeft = '.8em';
+		menuItem.style.paddingRight = '1em';				
+		menuItem.style.paddingTop = '.2em';				
+		menuItem.style.paddingBottom = '.2em';								
+		menu.appendChild(menuItem);
+
+		menuItem = getMenuItem1();
+		menuItem.style.padding = '3';
+		menuItem.style.paddingLeft = '.8em';
+		menuItem.style.paddingRight = '1em';				
+		menuItem.style.paddingTop = '.2em';				
+		menuItem.style.paddingBottom = '.2em';								
+		menu.appendChild(menuItem);
+
+		menuItem = getMenuItem2();
+		menuItem.style.padding = '3';
+		menuItem.style.paddingLeft = '.8em';
+		menuItem.style.paddingRight = '1em';				
+		menuItem.style.paddingTop = '.2em';				
+		menuItem.style.paddingBottom = '.2em';								
+		menu.appendChild(menuItem);
+
+		menuItem = getMenuItem3();
+		menuItem.style.padding = '3';
+		menuItem.style.paddingLeft = '.8em';
+		menuItem.style.paddingRight = '1em';				
+		menuItem.style.paddingTop = '.2em';				
+		menuItem.style.paddingBottom = '.2em';								
+		menu.appendChild(menuItem);
+
+
+		menu.style.visibility = 'hidden';
+
+		document.body.appendChild(menu);
+
+
+
+		if ((document.body.clientHeight) < (menu.offsetHeight + (evt.clientY))) {
+			menu.style.top = (document.body.scrollTop + evt.clientY)- (menu.offsetHeight);
+		} else {
+				menu.style.top = (document.body.scrollTop + evt.clientY);
+		}
+
+		if (document.body.offsetWidth < (menu.offsetWidth + (document.body.scrollLeft + evt.clientX))) {
+			menu.style.left = document.body.scrollLeft + ((document.body.scrollLeft + evt.clientX) - (menu.offsetWidth));
+		} else {
+			menu.style.left = document.body.scrollLeft + evt.clientX;
+		}
+		
+		menu.style.visibility = 'visible';
+
+		menu.addEventListener('DOMAttrModified',function(event){alert('1');},false);
+
+}
+
+function getMenuItem1() {
+	div = document.createElement('div');
+
+	image = document.createElement("img");
+	image.style.cssText = 'margin-right:2em';
+	image.style.cssText = 'margin-right:2em';		
+	image.style.width = "25px";
+	image.src = 'icon1.gif';
+	div.appendChild(image);
+
+	return div;
+
+}
+function getMenuItem2() {
+	div = document.createElement('div');
+
+	image = document.createElement("img");
+	image.style.cssText = 'margin-right:2em';
+	image.style.cssText = 'margin-right:2em';		
+	image.style.width = "25px";
+	image.src = 'icon2.gif';
+	div.appendChild(image);
+
+	return div;
+}
+function getMenuItem3() {
+	div = document.createElement('div');
+
+	image = document.createElement("img");
+	image.style.cssText = 'margin-right:2em';
+	image.style.cssText = 'margin-right:2em';		
+	image.style.width = "25px";
+	image.src = 'icon4.gif';
+	div.appendChild(image);
+
+	return div;
+}
+
+
+</script>
+<input type="button" onclick="openMenu(event)" value="PressMe"/>

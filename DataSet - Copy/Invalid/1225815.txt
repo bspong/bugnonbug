@@ -1,0 +1,109 @@
+TextureChild and ShadowLayerForwarder leak when exiting e10s browser normally
+|<----------------Class--------------->|<-----Bytes------>|<----Objects---->|
+     |                                      | Per-Inst   Leaked|   Total      Rem|
+   0 |TOTAL                                 |       29     1696| 4266573       21|
+  31 |AsyncTransactionTrackersHolder        |       72      144|      11        2|
+ 113 |CompositableChild                     |      144      144|       9        1|
+ 125 |CondVar                               |       40       80|    1536        2|
+ 347 |LayerTransactionChild                 |      296      296|       1        1|
+ 374 |Mutex                                 |       32       64|    3220        2|
+ 406 |PCompositableChild                    |       48       48|       9        1|
+ 423 |PLayerTransactionChild                |      192      192|       1        1|
+ 434 |PTextureChild                         |       48       96|    1232        2|
+ 555 |ShadowLayerForwarder                  |      200      200|       1        1|
+ 592 |TextureChild                          |      176      352|    1232        2|
+ 640 |WeakReference<MessageListener>        |       16       64|    3887        4|
+1234 |nsTArray_base                         |        8       16| 1261048        2|
+
+
+
+The TextureClient for the leaked TextureChild is finalized during nsXULWindow::Destroy (as it tears down the layer tree):
+#0  0x00007f75da30f1f3 in mozilla::layers::TextureChild::SetTextureClient(mozilla::layers::TextureClient*) (this=, aTextureClient=0x0) at /home/roc/mozilla-inbound/gfx/layers/client/TextureClient.cpp:161
+#1  0x00007f75da2fd69f in mozilla::layers::TextureClient::Finalize() (this=0x7f75af3ea7c0)
+    at /home/roc/mozilla-inbound/gfx/layers/client/TextureClient.cpp:665
+#2  0x00007f75da230431 in mozilla::AtomicRefCountedWithFinalize<mozilla::layers::TextureClient>::Release() (this=0x7f75af3ea7c8) at ../../dist/include/mozilla/layers/AtomicRefCountedWithFinalize.h:146
+#3  0x00007f75da24d5e3 in RefPtr<mozilla::layers::TextureClient>::AddRefTraitsReleaseHelper(mozilla::layers::TextureClient*) (aPtr=0x7f75af3ea7c0) at ../../dist/include/mozilla/RefPtr.h:362
+#4  0x00007f75da24c95a in RefPtr<mozilla::layers::TextureClient>::AddRefTraits<mozilla::layers::TextureClient>::Release(mozilla::layers::TextureClient*) (aPtr=0x7f75af3ea7c0) at ../../dist/include/mozilla/RefPtr.h:372
+#5  0x00007f75da24d2ed in RefPtr<mozilla::layers::TextureClient>::assign_assuming_AddRef(mozilla::layers::TextureClient*) (this=0x7f75c2924ec8, aNewPtr=0x0) at ../../dist/include/mozilla/RefPtr.h:43
+#6  0x00007f75da24c994 in RefPtr<mozilla::layers::TextureClient>::assign_with_AddRef(mozilla::layers::TextureClient*) (this=0x7f75c2924ec8, aRawPtr=0x0) at ../../dist/include/mozilla/RefPtr.h:34
+#7  0x00007f75da2eaced in RefPtr<mozilla::layers::TextureClient>::operator=(mozilla::layers::TextureClient*) (this=0x7f75c2924ec8, aRhs=0x0) at ../../dist/include/mozilla/RefPtr.h:153
+#8  0x00007f75da30b2db in mozilla::layers::ContentClientDoubleBuffered::Clear() (this=0x7f75c2924e00)
+    at ../../dist/include/mozilla/layers/ContentClient.h:329
+#9  0x00007f75da30b837 in mozilla::layers::ClientPaintedLayer::ClearCachedResources() (this=0x7f75c27a1800)
+    at /home/roc/mozilla-inbound/gfx/layers/client/ClientPaintedLayer.h:75
+#10 0x00007f75da2f3821 in mozilla::layers::ClientLayerManager::ClearLayer(mozilla::layers::Layer*) (this=0x7f75a9460380, aLayer=0x7f75c27a1800) at /home/roc/mozilla-inbound/gfx/layers/client/ClientLayerManager.cpp:753
+#11 0x00007f75da2f3856 in mozilla::layers::ClientLayerManager::ClearLayer(mozilla::layers::Layer*) (this=0x7f75a9460380, aLayer=0x7f75c295a000) at /home/roc/mozilla-inbound/gfx/layers/client/ClientLayerManager.cpp:756
+#12 0x00007f75da2f3736 in mozilla::layers::ClientLayerManager::ClearCachedResources(mozilla::layers::Layer*) (this=0x7f75a9460380, aSubtree=0x0) at /home/roc/mozilla-inbound/gfx/layers/client/ClientLayerManager.cpp:735
+#13 0x00007f75da309a35 in mozilla::layers::ClientLayerManager::Destroy() (this=0x7f75a9460380)
+    at /home/roc/mozilla-inbound/gfx/layers/client/ClientLayerManager.h:51
+#14 0x00007f75dc3af4f3 in nsWindow::Destroy() (this=0x7f75b5beac00)
+    at /home/roc/mozilla-inbound/widget/gtk/nsWindow.cpp:700
+#15 0x00007f75dce38a58 in nsXULWindow::Destroy() (this=0x7f75b83794b0)
+    at /home/roc/mozilla-inbound/xpfe/appshell/nsXULWindow.cpp:540
+
+
+TextureClient::ForceRemove is called:
+#0  0x00007f75da2fd18d in mozilla::layers::TextureClient::ForceRemove(bool) (this=0x7f75af3ea7c0, sync=false)
+    at /home/roc/mozilla-inbound/gfx/layers/client/TextureClient.cpp:611
+#1  0x00007f75da375f34 in mozilla::layers::ShadowLayerForwarder::RemoveTexture(mozilla::layers::TextureClient*) (this=0x7f75b0a41300, aTexture=0x7f75af3ea7c0)
+    at /home/roc/mozilla-inbound/gfx/layers/ipc/ShadowLayers.cpp:491
+#2  0x00007f75da2fd6ea in mozilla::layers::TextureClient::Finalize() (this=0x7f75af3ea7c0)
+    at /home/roc/mozilla-inbound/gfx/layers/client/TextureClient.cpp:672
+#3  0x00007f75da230431 in mozilla::AtomicRefCountedWithFinalize<mozilla::layers::TextureClient>::Release() (this=0x7f75af3ea7c8) at ../../dist/include/mozilla/layers/AtomicRefCountedWithFinalize.h:146
+#4  0x00007f75da24d5e3 in RefPtr<mozilla::layers::TextureClient>::AddRefTraitsReleaseHelper(mozilla::layers::TextureClient*) (aPtr=0x7f75af3ea7c0) at ../../dist/include/mozilla/RefPtr.h:362
+#5  0x00007f75da24c95a in RefPtr<mozilla::layers::TextureClient>::AddRefTraits<mozilla::layers::TextureClient>::Release(mozilla::layers::TextureClient*) (aPtr=0x7f75af3ea7c0) at ../../dist/include/mozilla/RefPtr.h:372
+#6  0x00007f75da24d2ed in RefPtr<mozilla::layers::TextureClient>::assign_assuming_AddRef(mozilla::layers::TextureClient*) (this=0x7f75c2924ec8, aNewPtr=0x0) at ../../dist/include/mozilla/RefPtr.h:43
+
+
+The corresponding TextureParent::RecvDestroy is called:
+#0  0x00007f75da35d3f2 in mozilla::layers::ParentActor<mozilla::layers::PTextureParent>::RecvDestroy() (this=0x7f75b1c226a0) at /home/roc/mozilla-inbound/gfx/layers/IPDLActor.h:109
+#1  0x00007f75d99d3571 in mozilla::layers::PTextureParent::OnMessageReceived(IPC::Message const&) (this=0x7f75b1c226a0, msg__=...) at /home/roc/mozilla-inbound/obj-ff-debug/ipc/ipdl/PTextureParent.cpp:207
+#2  0x00007f75d9b5d2bb in mozilla::layers::PCompositorParent::OnMessageReceived(IPC::Message const&) (this=0x7f75c29a6000, msg__=...) at /home/roc/mozilla-inbound/obj-ff-debug/ipc/ipdl/PCompositorParent.cpp:515
+#3  0x00007f75d960a676 in mozilla::ipc::MessageChannel::DispatchAsyncMessage(IPC::Message const&) (this=0x7f75c29a6068, aMsg=...) at /home/roc/mozilla-inbound/ipc/glue/MessageChannel.cpp:1385
+#4  0x00007f75d960a17d in mozilla::ipc::MessageChannel::DispatchMessage(IPC::Message const&) (this=0x7f75c29a6068, aMsg=...) at /home/roc/mozilla-inbound/ipc/glue/MessageChannel.cpp:1305
+
+
+
+It calls Send__delete__, and the __delete__ message is placed in the MessageChannel:
+#7  0x00007f75d960816e in mozilla::ipc::MessageChannel::OnMessageReceivedFromLink(IPC::Message const&) (this=0x7f75c2725468, aMsg=...) at /home/roc/mozilla-inbound/ipc/glue/MessageChannel.cpp:756
+#8  0x00007f75d960cdd4 in mozilla::ipc::ThreadLink::SendMessage(IPC::Message*) (this=0x7f75b8349520, msg=0x7f75a7b42d30) at /home/roc/mozilla-inbound/ipc/glue/MessageLink.cpp:286
+#9  0x00007f75d96078c9 in mozilla::ipc::MessageChannel::Send(IPC::Message*) (this=0x7f75c29a6068, aMsg=0x7f75a7b42d30) at /home/roc/mozilla-inbound/ipc/glue/MessageChannel.cpp:561
+#10 0x00007f75d99d2d6e in mozilla::layers::PTextureParent::Send__delete__(mozilla::layers::PTextureParent*) (actor=0x7f75b1c226a0) at /home/roc/mozilla-inbound/obj-ff-debug/ipc/ipdl/PTextureParent.cpp:58
+#11 0x00007f75da35d3fe in mozilla::layers::ParentActor<mozilla::layers::PTextureParent>::RecvDestroy() (this=0x7f75b1c226a0) at /home/roc/mozilla-inbound/gfx/layers/IPDLActor.h:109
+
+
+(Meanwhile the main thread is waiting for a sync reply to SendWillStop:)
+#3  0x00007f75d903d70e in mozilla::Monitor::Wait(unsigned int) (this=0x7f75c29dc560, aInterval=4294967295)
+    at ../../dist/include/mozilla/Monitor.h:40
+#4  0x00007f75d960b067 in mozilla::ipc::MessageChannel::WaitForSyncNotify(bool) (this=0x7f75c2725468)
+    at /home/roc/mozilla-inbound/ipc/glue/MessageChannel.cpp:1584
+#5  0x00007f75d9608b2c in mozilla::ipc::MessageChannel::Send(IPC::Message*, IPC::Message*) (this=0x7f75c2725468, aMsg=0x7f75a7b42d30, aReply=0x7fff04f1be80) at /home/roc/mozilla-inbound/ipc/glue/MessageChannel.cpp:943
+#6  0x00007f75d9b54414 in mozilla::layers::PCompositorChild::SendWillStop() (this=0x7f75c2725400)
+    at /home/roc/mozilla-inbound/obj-ff-debug/ipc/ipdl/PCompositorChild.cpp:218
+#4  0x00007f75d960b067 in mozilla::ipc::MessageChannel::WaitForSyncNotify(bool) (this=0x7f75c2725468)
+    at /home/roc/mozilla-inbound/ipc/glue/MessageChannel.cpp:1584
+
+
+But tragically the MessageChannel is destroyed when CompositorChild is released, before the pending __delete__s can run:
+#0  0x00007f75d9606dd2 in mozilla::ipc::MessageChannel::~MessageChannel() (this=0x7f75c2725468, __in_chrg=<optimized out>) at /home/roc/mozilla-inbound/ipc/glue/MessageChannel.cpp:356
+#1  0x00007f75d9b53ad0 in mozilla::layers::PCompositorChild::~PCompositorChild() (this=0x7f75c2725400, __in_chrg=<optimized out>) at /home/roc/mozilla-inbound/obj-ff-debug/ipc/ipdl/PCompositorChild.cpp:69
+#2  0x00007f75da35eb4c in mozilla::layers::CompositorChild::~CompositorChild() (this=0x7f75c2725400, __in_chrg=<optimized out>) at /home/roc/mozilla-inbound/gfx/layers/ipc/CompositorChild.cpp:47
+#3  0x00007f75da35eb88 in mozilla::layers::CompositorChild::~CompositorChild() (this=0x7f75c2725400, __in_chrg=<optimized out>) at /home/roc/mozilla-inbound/gfx/layers/ipc/CompositorChild.cpp:55
+#4  0x00007f75da37cb08 in mozilla::layers::CompositorChild::DeleteToBeCalledOnMainThread() (this=0x7f75c2725400) at ../../dist/include/mozilla/layers/CompositorChild.h:39
+#5  0x00007f75da37cba3 in mozilla::layers::CompositorChild::Release() (this=0x7f75c2725400)
+    at ../../dist/include/mozilla/layers/CompositorChild.h:39
+#6  0x00007f75da38a9e0 in RefPtr<mozilla::layers::CompositorChild>::AddRefTraitsReleaseHelper(mozilla::layers::CompositorChild*) (aPtr=0x7f75c2725400) at ../../dist/include/mozilla/RefPtr.h:362
+#7  0x00007f75da384fa8 in RefPtr<mozilla::layers::CompositorChild>::AddRefTraits<mozilla::layers::CompositorChild>::Release(mozilla::layers::CompositorChild*) (aPtr=0x7f75c2725400)
+    at ../../dist/include/mozilla/RefPtr.h:372
+#8  0x00007f75da37f7ab in RefPtr<mozilla::layers::CompositorChild>::~RefPtr() (this=0x7fff04f1c030, __in_chrg=<optimized out>) at ../../dist/include/mozilla/RefPtr.h:56
+#9  0x00007f75dc352291 in nsBaseWidget::DestroyCompositor() (this=0x7f75b5beac00)
+    at /home/roc/mozilla-inbound/widget/nsBaseWidget.cpp:249
+#10 0x00007f75dc3af521 in nsWindow::Destroy() (this=0x7f75b5beac00)
+    at /home/roc/mozilla-inbound/widget/gtk/nsWindow.cpp:709
+#11 0x00007f75dce38a58 in nsXULWindow::Destroy() (this=0x7f75b83794b0)
+    at /home/roc/mozilla-inbound/xpfe/appshell/nsXULWindow.cpp:540
+
+
+Deletion of the MessageChannel clears the pending message queue without running the messages. The async runnables that would run the messages bail out doing nothing.
+
+So the problem is relatively simple: we trigger async __delete__s but we destroy the MessageChannel containing those async __delete__s before returning to the event loop to get a chance to run them.
