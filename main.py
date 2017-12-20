@@ -5,6 +5,8 @@ from sklearn.feature_extraction.text import CountVectorizer
 import loadData
 import tokenVec
 import weighting
+import ModelSelection
+#import bm25_
 
 #from sklearn.feature_extraction import DictVextorzier
 
@@ -12,6 +14,7 @@ import weighting
 
 # pathFile = 'DataSet/Bug/'
 pathFile = 'DataSet'
+stopWord = 'english'
 # #readFile.ReadAllinDir(pathFile)
 # # bugContent = readFile.ReadAllinDir(pathFile)
 # bugContent = loadDataScikit.loadDataSet(pathFile)
@@ -28,12 +31,18 @@ pathFile = 'DataSet'
 # scount_vect = CountVectorizer() 
 # #training = count_vect.fit()
 print ('######################################################')
-train_dataSet = loadData.loadData(pathFile)
-print ('DataSet : '+str(len(train_dataSet.data)) + ' Report')
+contentVec = loadData.loadData(pathFile)
+print('DataSet : ' + str(len(contentVec.data)) + ' Report')
+# x = contentVec.toarray()
+# print (x)
 
 #print('#####################2################################')
-vecContent = tokenVec.countVector(train_dataSet)
+
+vecContent = tokenVec.countVector(contentVec,stopWord)
+#bm25_.BM25Score(vecContent)
+
 vecWeighted = weighting.tf_idf_Weigth(vecContent)
+#ModelSelection.cv(vecWeighted, classifier, 5)
 # x = vecWeighted.toarray()
 # print(x)
 # x = []

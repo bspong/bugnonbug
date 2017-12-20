@@ -44,7 +44,6 @@ print("%d categories" % len(text_train_subset.target_names))
 #labels = text_train_subset.target #Mark Label to Doc
 #print (labels)
 
-
 print('\n\n')
 print(list(text_train_subset.target_names))
 
@@ -52,14 +51,9 @@ vectorizer = CountVectorizer()
 x = vectorizer.fit_transform(text_train_subset.data)
 print(x.shape)
 
-
-
-
 # vectorizer = DictVectorizer()
 # vectorizer.fit_transform(text_train_subset.data)
 #vectorizerTFidf = TFidfVectorizer()
-
-
 
 text_test_subset = text_train_subset # load your actual test data here
 
