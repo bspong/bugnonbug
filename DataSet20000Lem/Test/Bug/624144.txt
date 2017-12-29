@@ -1,0 +1,123 @@
+Firefox doe not execute:imageArea.innerHTML = "<image alt='&#x" +parts[1]+";' src='/images/dictionary/"+parts[1]+".jpg'/>";I .jpg is replaced by gif, if doe fine. Setting httpd_read_user_content=1(SELinux suggested) make the area totally black black.
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.2.13) Gecko/20110103 Fedora/3.6.13-1.fc14 Firefox/3.6.13
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.2.13) Gecko/20110103 Fedora/3.6.13-1.fc14 Firefox/3.6.13
+
+Firefox doe not execute:imageArea.innerHTML = "<image alt='&#x" +parts[1]+";' src='/images/dictionary/"+parts[1]+".jpg'/>";I .jpg is replaced by gif, if doe fine. Setting httpd_read_user_content=1(SELinux suggested) make the area totally black
+
+From SELinux:
+SELinux is preventing /usr/sbin/httpd from 'read' access on the file /var/www/html/images/dictionary/9F9F.jpg.
+
+***** Plugin catchall_boolean (89.3 confidence) suggests *******************
+
+If you want to allow httpd to read user content
+Then you must tell SELinux about this by enabling the 'httpd_read_user_content' boolean.
+Do
+setsebool -P httpd_read_user_content 1
+
+***** Plugin catchall (11.6 confidence) suggests ***************************
+
+If you believe that httpd should be allowed read access on the 9F9F.jpg file by default.
+Then you should report this a a bug.
+You can generate a local policy module to allow this access.
+Do
+allow this access for now by executing:
+# grep /usr/sbin/httpd /var/log/audit/audit.log | audit2allow -M mypol
+# semodule -i mypol.pp
+
+Additional Information:
+Source Context system_u:system_r:httpd_t:s0
+Target Context unconfined_u:object_r:user_home_t:s0
+Target Objects /var/www/html/images/dictionary/9F9F.jpg [ file ]
+Source httpd
+Source Path /usr/sbin/httpd
+Port <Unknown>
+Host (removed)
+Source RPM Packages httpd-2.2.17-1.fc14
+Target RPM Packages
+Policy RPM selinux-policy-3.9.7-19.fc14
+Selinux Enabled True
+Policy Type targeted
+Enforcing Mode Enforcing
+Host Name (removed)
+Platform Linux fmiwinux 2.6.35.10-74.fc14.i686.PAE #1 SMP
+Thu Dec 23 16:10:47 UTC 2010 i686 i686
+Alert Count 3
+First Seen Fri 07 Jan 2011 04:12:48 PM EST
+Last Seen Sat 08 Jan 2011 10:02:45 AM EST
+Local ID fa07769e-863c-4c5a-89ba-5371ddb28092
+
+Raw Audit Messages
+type=AVC msg=audit(1294498965.285:35): avc: denied { read } for pid=1932 comm="httpd" name="9F9F.jpg" dev=dm-0 ino=1180501 scontext=system_u:system_r:httpd_t:s0 tcontext=unconfined_u:object_r:user_home_t:s0 tclass=file
+
+httpd,httpd_t,user_home_t,file,read
+type=SYSCALL msg=audit(1294498965.285:35): arch=i386 syscall=open success=no exit=EACCES a0=b5d0aaa0 a1=88000 a2=0 a3=1021 items=0 ppid=1904 pid=1932 auid=4294967295 uid=48 gid=489 euid=48 suid=48 fsuid=48 egid=489 sgid=489 fsgid=489 tty=(none) ses=4294967295 comm=httpd exe=/usr/sbin/httpd subj=system_u:system_r:httpd_t:s0 key=(null)
+httpd,httpd_t,user_home_t,file,read
+
+#============= httpd_t ==============
+#!!!! This avc can be allowed using the boolean 'httpd_read_user_content'
+
+allow httpd_t user_home_t:file read;
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.In the Summary, parts[1] is returned from php in an Ajax environment using utf-8 encoding. this parts[1] is used a an image file name without extention.
+2.Entention .gif work fine but not so for jpg.
+3.
+
+
+
+SELinux is preventing /usr/sbin/httpd from 'read' access on the file /var/www/html/images/dictionary/9F9F.jpg.
+
+***** Plugin catchall_boolean (89.3 confidence) suggests *******************
+
+If you want to allow httpd to read user content
+Then you must tell SELinux about this by enabling the 'httpd_read_user_content' boolean.
+Do
+setsebool -P httpd_read_user_content 1
+
+***** Plugin catchall (11.6 confidence) suggests ***************************
+
+If you believe that httpd should be allowed read access on the 9F9F.jpg file by default.
+Then you should report this a a bug.
+You can generate a local policy module to allow this access.
+Do
+allow this access for now by executing:
+# grep /usr/sbin/httpd /var/log/audit/audit.log | audit2allow -M mypol
+# semodule -i mypol.pp
+
+Additional Information:
+Source Context system_u:system_r:httpd_t:s0
+Target Context unconfined_u:object_r:user_home_t:s0
+Target Objects /var/www/html/images/dictionary/9F9F.jpg [ file ]
+Source httpd
+Source Path /usr/sbin/httpd
+Port <Unknown>
+Host (removed)
+Source RPM Packages httpd-2.2.17-1.fc14
+Target RPM Packages
+Policy RPM selinux-policy-3.9.7-19.fc14
+Selinux Enabled True
+Policy Type targeted
+Enforcing Mode Enforcing
+Host Name (removed)
+Platform Linux fmiwinux 2.6.35.10-74.fc14.i686.PAE #1 SMP
+Thu Dec 23 16:10:47 UTC 2010 i686 i686
+Alert Count 3
+First Seen Fri 07 Jan 2011 04:12:48 PM EST
+Last Seen Sat 08 Jan 2011 10:02:45 AM EST
+Local ID fa07769e-863c-4c5a-89ba-5371ddb28092
+
+Raw Audit Messages
+type=AVC msg=audit(1294498965.285:35): avc: denied { read } for pid=1932 comm="httpd" name="9F9F.jpg" dev=dm-0 ino=1180501 scontext=system_u:system_r:httpd_t:s0 tcontext=unconfined_u:object_r:user_home_t:s0 tclass=file
+
+httpd,httpd_t,user_home_t,file,read
+type=SYSCALL msg=audit(1294498965.285:35): arch=i386 syscall=open success=no exit=EACCES a0=b5d0aaa0 a1=88000 a2=0 a3=1021 items=0 ppid=1904 pid=1932 auid=4294967295 uid=48 gid=489 euid=48 suid=48 fsuid=48 egid=489 sgid=489 fsgid=489 tty=(none) ses=4294967295 comm=httpd exe=/usr/sbin/httpd subj=system_u:system_r:httpd_t:s0 key=(null)
+httpd,httpd_t,user_home_t,file,read
+
+#============= httpd_t ==============
+#!!!! This avc can be allowed using the boolean 'httpd_read_user_content'
+
+allow httpd_t user_home_t:file read;

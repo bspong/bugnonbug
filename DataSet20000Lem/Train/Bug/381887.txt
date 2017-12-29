@@ -1,0 +1,22 @@
+Figure out the best moment to display the Session Restore prompt
+The Session Restore prompt cause various issue such a blocking DDE under Windows (bug 371031), potentially allowing to discard the session under OS X (bug 381386), appearing even when there's no browser window to restore into (bug 365581) and probably a few others.
+
+The alternative seem to be the following:
+
+1. Keep the prompt where it is and prevent any browser window from opening while it is displayed.
+
+- This might not only be annoying (stupid prompt getting in the way), we'd also have to have a way to keep track of all the URLs the user tried to open while the prompt wa displayed (using a command line handler hack). Won't fix bug 365581, though.
+
+2. Delay the prompt a suggested in bug 354894 but still prevent any further browser window from opening.
+
+- Similar issue a before, although intercepting opened URLs can happen at a later moment (i.e. just pick them out at the "domwindowopened" notification and close the window without actually displaying them). We'll just have to make sure to open new windows/tabs accordingly afterwards.
+
+3. Allow further browser window to be opened while the prompt is displayed.
+
+- With the prompt shown plus one browser window opened, what should be restored in case of a crash at that point? Probably both the openend and the to-be-restored windows. Such a solution will require further coupling between nsSessionStore and nsSessionStartup.
+
+4. Use an error page instead of the prompt, which would either restore the session replacing itself and adding new window a needed, or just replace itself with nsBrowserHandler.defaultArgs (i.e. homepage(s) or blank tab).
+
+- Would require a new about:crashedsession page (or similar for the error page) and might be mistaken for a homepage-could-not-be-loaded error page. Otherwise the least intrusive and best handled (by the current implementation) solution.
+
+I'd propose to go with either solution 2 or solution 4. 2 should be doable with le code, but in the age of going non-modal, 4 might be preferable...

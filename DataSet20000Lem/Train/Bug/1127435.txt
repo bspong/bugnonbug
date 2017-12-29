@@ -1,0 +1,46 @@
+Queuing request is slower than sending them one by one via DebuggerClient.request
+It is really not clear why/how it happens to be slower but, it happens to be faster to wait for a request to finish, before piping another one via Debuggerclient APIs.
+It's not clear mostly because DebuggerClient and DebuggerTransport are already queuing request in order to send/receive them one by one!!
+
+I identified this slowness while working on bug 1123788, where fetching icon one by one is faster than piling up requests.
+
+Here is a very simple xpcshell test exposing this slowness:
+const run_test = Test(function*() {
+initTestDebuggerServer();
+const connection = DebuggerServer.connectPipe();
+const client = Async(new DebuggerClient(connection));
+
+yield client.connect();
+
+let N = 100;
+
+let a = new Date().getTime();
+for(var i = 0; i < N; i++) {
+let response = yield client.request({
+to: "root",
+type: "echo"
+});
+}
+let s = "Sequential: "+(new Date().getTime()-a)+"\n";
+dump(s);
+
+let promise = []
+for(var i = 0; i < N; i++) {
+promises.push(client.request({
+to: "root",
+type: "echo"
+}));
+}
+yield promise.all(promises)
+.then(() => {
+dump(s + "Parallel: "+(new Date().getTime()-a)+"\n");
+});
+
+yield client.close();
+});
+
+"Sequential: 170"
+"Parallel: 345"
+
+
+Now, I have no idea where it end up being slower...

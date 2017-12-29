@@ -1,0 +1,103 @@
+Spotlight Importer plugin for Mac-OS-X 10.4
+User-Agent:       Mozilla/5.0 (Macintosh; U; PPC Mac OS X Mach-O; de-DE; rv:1.7.7) Gecko/20050416 Firefox/1.0.3 (PPC-970-optimiert, 1.0.3-DE, 17.4.2005, Hilarious)
+Build Identifier: Mozilla/5.0 (Macintosh; U; PPC Mac OS X Mach-O; de-DE; rv:1.7.7) Gecko/20050416 Firefox/1.0.3 (PPC-970-optimiert, 1.0.3-DE, 17.4.2005, Hilarious)
+
+Mac-OS-X 10.4 new search engine offers safari bookmark indexing. I would like to
+have the same thing for Firefox, too
+
+Reproducible: Always
+
+
+
+
+I have tried to build an .mdimporter bundle of myself:
+
+http://developer.apple.com/documentation/Carbon/Conceptual/MDImporters/index.html#//apple_ref/doc/uid/TP40001267
+
+
+But it looks like it's to complicated to me.
+
+My first problem: How to identify the file 'bookmarks.html'? the .mdimporter
+identfies its files by file type, not by name or path. sadly the mozilla
+bookmarks are a standard html file. I have defined this ( in info.plist):
+
+<key>UTExportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeIdentifier</key>
+			<string>org.mozilla.firefox.bookmarks</string>
+			<key>UTTypeReferenceURL</key>
+			<string>http://www.mozilla.org/firefox</string>
+			<key>UTTypeDescription</key>
+			<string>Firefox Bookmarks</string>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.html</string>
+				<string>public.text</string>
+			</array>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<string>bookmarks.html</string>
+			</dict>
+		</dict>
+	</array>
+
+
+I am not sure how if "public.filename-extension" = "bookmarks.html" will work?
+normaly this has to be something like only "html". but i dont want to index all
+.html files
+
+My second problem is how to extrack the data. this has to be done in
+GetMetadataForFile.c GetMetadataForFile():
+
+Boolean GetMetadataForFile(void* thisInterface, 
+			   CFMutableDictionaryRef attributes, 
+			   CFStringRef contentTypeUTI,
+			   CFStringRef pathToFile)
+{
+    /* Pull any available metadata from the file at the specified path */
+    /* Return the attribute keys and attribute values in the dict */
+    /* Return true if successful, false if there was no data provided */
+    Boolean success=NO;
+    NSDictionary *tempDict;
+    NSAutoreleasePool *pool;
+
+    // Don't assume that there is an autorelease pool around the calling of this
+function.
+    pool = [[NSAutoreleasePool alloc] init];
+    // load the document at the specified location
+    tempDict=[[NSDictionary alloc] initWithContentsOfFile:(NSString *)pathToFile];
+    if (tempDict)
+    {
+    // set the kMDItemTitle attribute to the Name of the Bookmark
+    [(NSMutableDictionary *)attributes setObject:[tempDict objectForKey:@"title"]
+                          forKey:(NSString *)kMDItemTitle];
+
+    // set the kMDItemWhereFroms attribute to an URL of the Bookmark
+    // value
+    [(NSMutableDictionary *)attributes setObject:[NSArray
+arrayWithObject:[tempDict objectForKey:@"author"]]
+                          forKey:(NSString *)kMDItemWhereFroms];
+
+
+    // set our custom document notes attribute to the Notes value
+    // (in the real world, you'd likely use the kMDItemTextContent attribute,
+however that
+    // would make it hard to demonstrate using a custom key!)
+    [(NSMutableDictionary *)attributes setObject:[tempDict objectForKey:@"notes"]
+
+                         
+forKey:@"com_apple_myCocoaDocumentApp_myCustomDocument_notes"];
+
+
+    // return YES so that the attributes are imported
+    success=YES;
+
+    // release the loaded document
+    [tempDict release];
+    }
+    [pool release];
+    return success;
+
+if someone knows how to help me or wants the entire source code, please contact me

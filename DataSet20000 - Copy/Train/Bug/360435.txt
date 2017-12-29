@@ -1,0 +1,39 @@
+nsIAlertsService not available under Linux anymore (BAD_IID error when loading the interface for the alerts service)
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.0.8) Gecko/20061109 Firefox/1.5.0.8 Flock/0.7.8 XpcomViewer/0.9
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.0.8) Gecko/20061109 Firefox/1.5.0.8 Flock/0.7.8 XpcomViewer/0.9
+
+I have a problem creating an alert under linux. Not the typical JS alert (window.alert) but the nsIAlertsService: I can't trigger an alert that is used by some of the extensions I use here (Yahoo Mail Notifier, Forecastfox, etc.).
+
+After some research I came up with the idea that the interface Components.interfaces.nsIAlertsService is not shipped with Firefox. Using the extension XPComViewer showed me that an old version of Flock had this interface shipped but Firefox 1.5.0.6 had not this interface shipped with (strange english, I know ;) ). After an email conversation with Michael Dosik I came up with the idea that only the newer versions of Firefox are affected. So, basically: every Firefox starting from 1.5.0.6 up to 2.0 have no nsIAlertsInterface on the linux platform.
+
+Hence my question: why has this interface not found its way to the linux platform? Why has it been removed from the newer releases?
+
+Funnily: with Firefox 2.0 I SAW a nsIAlert when a download finished (I had to enable this behaviour by changing an option in about:config). So, the alertsService MAY be available but why is it not available the way it was mentioned at http://developer.mozilla.org/en/docs/nsIAlertsService?
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. download the linux version of firefox (1.5.0.6 or 2.0, both should not work)
+2. install it
+3. use a non-root account to execute this: ./firefox -P alertsProfile (or use another profile, whatever you like)
+3a. just tested: you can also use a root account. The problem also occurs here.
+4. open the javascript console (in Firefox 2: the error console)
+5. execute this line:
+Components.classes["@mozilla.org/alerts-service;1"].getService(Components.interfaces.nsIAlertsService);
+Actual Results:  
+Actual result: BAD_IID exception. 0x80570018
+
+(Since 1.5.0.6 or 1.5.0.7 you can't copy any exception information from the javascript console to the clipboard anymore???)
+
+Expected Results:  
+Expected result: nothing. You may get a single response that tells you that the service is available, or something like that. No error or warning should occur.
+
+Only the linux version is affected I think. Don't try to reproduce this bug on a windows machine: you'll not find it ;)
+
+I tested this with the following browsers:
+
+a) Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.0.7) Gecko/20061031 Firefox/1.5.0.7 Flock/0.7.7 XpcomViewer/0.9
+b) Mozilla/5.0 (X11; U; Linux i686; de; rv:1.8.0.6) Gecko/20060728 Firefox/1.5.0.6
+c) Mozilla/5.0 (X11; U; Linux i686; de; rv:1.8.1) Gecko/20061010 Firefox/2.0
+d) Mozilla/5.0 (X11; U; Linux i686; en-GB; rv:1.8.1) Gecko/20061010 Firefox/2.0
+e) Mozilla/5.0 (X11; U; Linux i686; de; rv:1.8.0.7) Gecko/20060909 Firefox/1.5.0.7

@@ -1,0 +1,15 @@
+Remove Windows XP/Vista/7-specific toolbar button styling rules
+Created attachment 8661723
+patch
+
+The toolbar button styling on Windows is pretty messy, because there are base rules used across the board and then there are Windows XP/Vista/7-specific rules, which makes it brittle to touch the base rules since you might break the others along the way. It's non-trivial dependency since the rules are fairly complex.
+
+I think we can largely drop those XP/Vista/7-specific rules and basically just set the CSS variables to get the desired background, border and box-shadow. The differences for Win7 and older implemented by these legacy rules are often arbitrary if they make sense at all. There are some differences worth explaining:
+
+- There was a 2px border radius, but the location and search bar use a 1px radius across the board, so it makes sense to have toolbar buttons follow suit.
+
+- type="menu-button" toolbar buttons had an extra hover state for the nested buttons. We don't have this on Linux, and considering that we haven't implemented it for Windows 8 when it came out nor for 10, I think this is safe to drop.
+
+- --toolbarbutton-checkedhover-backgroundcolor wasn't used on Windows 8 and 10. I moved the corresponding rule so it's used for all versions.
+
+There's a try build here: http://ftp-ssl.mozilla.org/pub/mozilla.org/firefox/try-builds/dgottwald@mozilla.com-808b62786775/try-win32/

@@ -1,0 +1,22 @@
+browser startup crashes in nprpffbrowserrecordext.dll or similar with Firefox 40+
+This bug was filed from the Socorro interface and is 
+report bp-1fa5d9b8-0719-4161-af1b-f3df02150525.
+=============================================================
+
+Top frames:
+0 	kernelbase.dll 	RaiseException 	
+Ø 1 	nprpffbrowserrecordext.dll 	nprpffbrowserrecordext.dll@0x3d0b 	
+Ø 2 	nprpffbrowserrecordext.dll 	nprpffbrowserrecordext.dll@0x2b6a 	
+3 	xul.dll 	ffi_call 	
+4 	xul.dll 	js::ctypes::FunctionType::Call 	js/src/ctypes/CTypes.cpp
+5 	xul.dll 	js::Invoke(JSContext*, JS::CallArgs, js::MaybeConstruct) 	js/src/vm/Interpreter.cpp
+6 	xul.dll 	js::CrossCompartmentWrapper::call(JSContext*, JS::Handle<JSObject*>, JS::CallArgs const&) 	js/src/proxy/CrossCompartmentWrapper.cpp
+7 	xul.dll 	js::Invoke(JSContext*, JS::CallArgs, js::MaybeConstruct) 	js/src/vm/Interpreter.cpp
+8 	xul.dll 	Interpret 	js/src/vm/Interpreter.cpp
+
+We have three different signatures with similar DLL names and stacks that are spiking in 39.0b1, all on browser startup. The reason seems to always be 0xc06d007e / 0x00000000 with a 0x7XXXXXXX address, which might just be common for an uncaught exception (which I guess "RaiseException" at the top of the stack points to).
+Even though the library name starts with "np" which usually is plugins, this is loaded in an add-on (I think) via JS-CTypes.
+
+I don't have much more clue as to what's happening there but it sounds like people with this installed are unable to use Firefox at all.
+
+David, do you have any more insight there?

@@ -1,0 +1,62 @@
+A missing semicolon in a css imported file looses css declaration.
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.8) Gecko/2009032609 Firefox/3.0.8
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.8) Gecko/2009032609 Firefox/3.0.8
+
+Firefox is loosing a css declaration. It is requiring a semicolon after the last declaration in an imported file, This only happens in the included file from another css file, via an import. A missing semicolon in the first file works fine.
+
+The w3c grammar for a ruleset has the semicolon as not needed following a declaration. It is only needed in a declaration when it follows another declaration.
+http://www.w3.org/TR/CSS21/grammar.html
+ruleset
+  : selector [ COMMA S* selector ]*
+    LBRACE S* declaration [ ';' S* declaration ]* '}' S*
+
+declaration
+  : property ':' S* expr prio?
+  | /* empty */
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. There are 3 files needed to reproduce the problem. 
+   I have included them below.
+     The main html page, 
+     the first css file pulled in by the link tag, 
+     the second imported css file.
+3. Save the three files that are below.
+4. Open the HTML page, notice that the last line is visible.
+5. Change the imported css file by adding a semicolon after the the last declaration.
+6. Redisplay the files, notice that it now works, and the font is very small.
+   Look in Firebug at the css ruleset, you will see that it is missing the last declaration "font-size:3px" when the semicolon is missing.
+
+Actual Results:  
+Firefox is loosing the last declaration.
+
+Expected Results:  
+All the css declarations should be recognized.
+
+
+========= the html file ========
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<title>main page</title>
+<link  href=main.css type="text/css" rel="stylesheet"/>
+</head>
+<body class="body">
+this is a line that is not in a "p" statement this should be green
+<p>This is in a "p" statement this should be orange </p>
+</body>
+</html>
+========= the html file ========
+
+========= The first css file, name this main.css =======
+@import url("include.css");
+.body {color:green; font-size:20px}
+========= The first css file, name this main.css =======
+
+========= The second css file, name this include.css =======
+/* include file */
+p {color:orange; font-size:3px )   /* Notice that the 3px fonts does not work */
+                                   /* if you add a semicolon it will          */
+                                   /* font-size:3px;                          */
+========= The second css file, name this include.css =======

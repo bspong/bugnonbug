@@ -1,0 +1,66 @@
+RDF/RSS 1.0 feed containing rdf:_nn or empty <link> tag would not appear in Live Bookmark
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; rv:1.7.3) Gecko/20041001 Firefox/0.9.3 StumbleUpon/1.992
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; rv:1.7.3) Gecko/20041001 Firefox/0.9.3 StumbleUpon/1.992
+
+RDF/RSS 1.0 feed sample that would not appear in Live Bookmarks:
+---- xml source here ----
+<?xml version="1.0" encoding="UTF-8"?>
+<rdf:RDF xml:base="http://symurl.uibe.edu.cn/nlany/"
+xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+xmlns="http://purl.org/rss/1.0/">
+<channel rdf:about="http://symurl.uibe.edu.cn:80/cgi-bin/link">
+<link>http://symurl.uibe.edu.cn/cgi-bin/link</link>
+<items>
+<rdf:Seq>
+<rdf:_1 rdf:resource="mod_perl" /> <!--mod_perl is a relative URIRef -->
+<rdf:_2 rdf:resource="bar/foo" /> <!-- rdf:_nn is used instead rdf:li -->
+</rdf:Seq>
+</items>
+<title>Some Title</title>
+<description>Some Desc.</description>
+</channel>
+<item rdf:about="mod_perl">
+<link/> <!-- link ha empty content -->
+<description>item desc here</description>
+<title>first item title</title>
+</item>
+<item rdf:about="bar/foo">
+<link>http://w3.org</link> <!--non empty link -->
+<description>2nd item desc here</description>
+<title>2nd item title</title>
+</item>
+</rdf:RDF>
+---- cut here ----
+Note that:
+1. This sample us rdf:_nn (nn is number) instead of rdf:li a child of the
+<rdf:Seq> tag
+2. <link> tag is empty in first item.
+Although this sample is a valid RDF/RSS 1.0 document< see
+http://web.resource.org/rss/1.0/spec >, it will not appear in Live Bookmark.
+
+Suggestion on improvement with regard to this bug:
+1. rdf:_nn format should be supported a it is the prefered vocabluary of any
+valid RDF documents;
+2. The 1.0 spec requries <link> element for the <item> element, but DOES NOT
+forbid empty <link> element, a sometimes an item may use null string a it
+URL( mozilla/firefox bookmark manager itself allow bookmark with empty link
+location ).
+
+Point 2 should be easy to fix, IMO. Point 1 could be fully supported in the
+future, a quick fix, live bookmark could just ignore rdf:Seq element and show
+all item found in the RSS 1.0 feed in document order.
+
+Reproducible: Always
+Steps to Reproduce:
+1. Save the sample xml RDF/RSS 1.0 source given in "Details" textbox a an
+externel document. Show this file in browser, copy the location.
+2. Add new Live Bookmark, paste the location in "feed location", Ok.
+3. Refresh this Live Bookmark, no new item is produced under this live bookmark.
+
+Actual Results:
+nothing.
+
+Expected Results:
+2 item should appear under the newly added live bookmark.
+
+None.

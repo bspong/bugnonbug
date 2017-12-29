@@ -1,0 +1,44 @@
+once an image has failed to load FF will not try to retrieve it again (until after some time)
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US) AppleWebKit/532.5 (KHTML, like Gecko) Chrome/4.1.249.1045 Safari/532.5
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.2.3) Gecko/20100401 Firefox/3.6.3 (.NET CLR 3.5.30729)
+
+I set the src of an image element using javascript to an endpoint that returns a 500. When the endpoint is fixed and returns the image I try to load the image again (using javascript setting the src attribute of the image element). However, a request is never fired and the image is still deemed unavailable. It takes some more tries after a some time (varies from 1-5 minutes) when firefox actually tries to and successfully retrieve the image from the server.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Use javascript to set the image src to an endpoint that return a 500
+2. Change the image src to empty
+3. Fix the endpoint such that it returns a valid image
+4. Change the image src to that endpoint again
+Actual Results:  
+5. The image is not displayed (no request to the server to retrieve the image is fired)
+Note: this does work after waiting some time and setting the image src again (1-5min).
+
+Expected Results:  
+5. A request is fired to the server to retrieve the image which is then available and the result is the image is displayed. Additionally, the cache header on the image (and page) are no-store, no-cache, must-revalidate.
+(In IE6-8 the request is send again to the server and the image is succesfully retrieved).
+
+Since the image could not be retrieved and the cache headers are set to no-cache no-store I would expect a new request to the server.
+
+The cache header of the page:
+Response Headers
+Server	Apache-Coyote/1.1
+Expires	0
+Cache-Control	no-store, no-cache, must-revalidate, post-check=0, pre-check=0
+Location	http://localhost:8080/viewer/patient/query.html
+Content-Type	application/octet-stream
+Content-Length	0
+Date	Tue, 06 Apr 2010 14:45:23 GMT
+
+Header details the image (500)
+Response Headers
+Server	Apache-Coyote/1.1
+Expires	0
+Cache-Control	no-store, no-cache, must-revalidate, post-check=0, pre-check=0
+Content-Type	text/xml
+Content-Length	2429
+Date	Tue, 06 Apr 2010 14:46:22 GMT
+Connection	close
+
+Workaround: refresh the page (F5) resolves this issue.

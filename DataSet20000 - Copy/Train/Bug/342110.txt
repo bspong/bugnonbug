@@ -1,0 +1,98 @@
+crash when copying and pasting bookmark folder [@ nsBookmarksService::UpdateBookmarkForwardProxy]
+Using latest branch 1.8 build...
+
+Steps to reproduce:
+1. Create a new folder on the Bookmarks Toolbar.
+2. Add five bookmarks to the folder.
+3. Right click > copy on the folder, then right click > paste on an empty area on the toolbar.
+
+Results:
+Crash.
+
+Expected results:
+No crash.
+
+Phil Ringnalda has verified by local backout that this is a regression from bug 168411.
+
+Relevant bits of the stack:
+Thread 0 Crashed:
+0   org.mozilla.firefox 	0x003a1188 nsBookmarksService::UpdateBookmarkForwardProxy(nsIRDFDataSource*, nsIRDFResource*) + 268
+1   org.mozilla.firefox 	0x003a13b0 nsBookmarksService::Assert(nsIRDFResource*, nsIRDFResource*, nsIRDFNode*, int) + 180
+2   libxpcom_core.dylib 	0x2c05eaec _XPTC_InvokeByIndex + 216
+3   org.mozilla.firefox 	0x0047fe70 XPCWrappedNative::CallMethod(XPCCallContext&, XPCWrappedNative::CallMode) + 2524
+4   org.mozilla.firefox 	0x004730b0 XPC_WN_CallMethod(JSContext*, JSObject*, unsigned, long*, long*) + 220
+5   libmozjs.dylib      	0x2302d57c js_Invoke + 1808
+6   libmozjs.dylib      	0x23035788 js_Interpret + 29200
+7   libmozjs.dylib      	0x2302d5c0 js_Invoke + 1876
+8   org.mozilla.firefox 	0x007564a0 nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS*, unsigned short, nsXPTMethodInfo const*, nsXPTCMiniVariant*) + 3260
+9   libxpcom_core.dylib 	0x2c05e988 PrepareAndDispatch + 560
+10  libxpcom_core.dylib 	0x2c05f32c SharedStub + 112
+11  org.mozilla.firefox 	0x003fd90c nsTransactionManager::BeginTransaction(nsITransaction*) + 172
+12  org.mozilla.firefox 	0x003fbe30 nsTransactionManager::DoTransaction(nsITransaction*) + 160
+13  libxpcom_core.dylib 	0x2c05eaec _XPTC_InvokeByIndex + 216
+14  org.mozilla.firefox 	0x0047fe70 XPCWrappedNative::CallMethod(XPCCallContext&, XPCWrappedNative::CallMode) + 2524
+15  org.mozilla.firefox 	0x004730b0 XPC_WN_CallMethod(JSContext*, JSObject*, unsigned, long*, long*) + 220
+16  libmozjs.dylib      	0x2302d57c js_Invoke + 1808
+17  libmozjs.dylib      	0x23035788 js_Interpret + 29200
+18  libmozjs.dylib      	0x2302d5c0 js_Invoke + 1876
+19  org.mozilla.firefox 	0x007564a0 nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS*, unsigned short, nsXPTMethodInfo const*, nsXPTCMiniVariant*) + 3260
+20  libxpcom_core.dylib 	0x2c05e988 PrepareAndDispatch + 560
+21  libxpcom_core.dylib 	0x2c05f32c SharedStub + 112
+22  libxpcom_core.dylib 	0x2c05eaec _XPTC_InvokeByIndex + 216
+23  org.mozilla.firefox 	0x0047fe70 XPCWrappedNative::CallMethod(XPCCallContext&, XPCWrappedNative::CallMode) + 2524
+24  org.mozilla.firefox 	0x004730b0 XPC_WN_CallMethod(JSContext*, JSObject*, unsigned, long*, long*) + 220
+25  libmozjs.dylib      	0x2302d57c js_Invoke + 1808
+26  libmozjs.dylib      	0x23035788 js_Interpret + 29200
+27  libmozjs.dylib      	0x2302d5c0 js_Invoke + 1876
+28  org.mozilla.firefox 	0x007564a0 nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS*, unsigned short, nsXPTMethodInfo const*, nsXPTCMiniVariant*) + 3260
+29  libxpcom_core.dylib 	0x2c05e988 PrepareAndDispatch + 560
+30  libxpcom_core.dylib 	0x2c05f32c SharedStub + 112
+31  libxpcom_core.dylib 	0x2c05eaec _XPTC_InvokeByIndex + 216
+32  org.mozilla.firefox 	0x0047fe70 XPCWrappedNative::CallMethod(XPCCallContext&, XPCWrappedNative::CallMode) + 2524
+33  org.mozilla.firefox 	0x004730b0 XPC_WN_CallMethod(JSContext*, JSObject*, unsigned, long*, long*) + 220
+34  libmozjs.dylib      	0x2302d57c js_Invoke + 1808
+35  libmozjs.dylib      	0x23035788 js_Interpret + 29200
+36  libmozjs.dylib      	0x2302d5c0 js_Invoke + 1876
+37  libmozjs.dylib      	0x2302d7cc js_InternalInvoke + 184
+38  libmozjs.dylib      	0x230080f0 JS_CallFunctionValue + 44
+39  org.mozilla.firefox 	0x0024e6a8 nsJSContext::CallEventHandler(JSObject*, JSObject*, unsigned, long*, long*) + 284
+40  org.mozilla.firefox 	0x0059af54 nsJSEventListener::HandleEvent(nsIDOMEvent*) + 948
+41  org.mozilla.firefox 	0x001cfc20 nsEventListenerManager::HandleEventSubType(nsListenerStruct*, nsIDOMEventListener*, nsIDOMEvent*, nsIDOMEventTarget*, unsigned, unsigned) + 580
+42  org.mozilla.firefox 	0x001cff78 nsEventListenerManager::HandleEvent(nsPresContext*, nsEvent*, nsIDOMEvent**, nsIDOMEventTarget*, unsigned, nsEventStatus*) + 772
+43  org.mozilla.firefox 	0x0020a9e0 nsXULElement::HandleDOMEvent(nsPresContext*, nsEvent*, nsIDOMEvent**, unsigned, nsEventStatus*) + 2888
+44  org.mozilla.firefox 	0x0020a234 nsXULElement::HandleDOMEvent(nsPresContext*, nsEvent*, nsIDOMEvent**, unsigned, nsEventStatus*) + 924
+45  org.mozilla.firefox 	0x001500c0 PresShell::HandleDOMEventWithTarget(nsIContent*, nsEvent*, nsEventStatus*) + 112
+46  org.mozilla.firefox 	0x005ca5ac nsMenuFrame::Execute(nsGUIEvent*) + 820
+47  org.mozilla.firefox 	0x005c7770 nsMenuFrame::HandleEvent(nsPresContext*, nsGUIEvent*, nsEventStatus*) + 532
+48  org.mozilla.firefox 	0x0014febc PresShell::HandleEventInternal(nsEvent*, nsIView*, unsigned, nsEventStatus*) + 1088
+49  org.mozilla.firefox 	0x0014f968 PresShell::HandleEvent(nsIView*, nsGUIEvent*, nsEventStatus*, int, int&) + 1300
+50  org.mozilla.firefox 	0x00215264 nsViewManager::HandleEvent(nsView*, nsGUIEvent*, int) + 792
+51  org.mozilla.firefox 	0x00214428 nsViewManager::DispatchEvent(nsGUIEvent*, nsEventStatus*) + 3356
+52  org.mozilla.firefox 	0x0053a974 ViewWrapper::GetInterface(nsID const&, void**) + 468
+53  org.mozilla.firefox 	0x006d5bd8 nsWindow::DispatchEvent(nsGUIEvent*, nsEventStatus&) + 172
+54  org.mozilla.firefox 	0x006d5c64 nsWindow::DispatchWindowEvent(nsGUIEvent&) + 32
+55  org.mozilla.firefox 	0x006d5d28 nsWindow::DispatchMouseEvent(nsMouseEvent&) + 112
+56  org.mozilla.firefox 	0x006d22c0 nsMacEventHandler::HandleMouseUpEvent(EventRecord&) + 200
+57  org.mozilla.firefox 	0x006d0824 nsMacEventHandler::HandleOSEvent(EventRecord&) + 108
+58  org.mozilla.firefox 	0x00325960 nsMacWindow::DispatchEvent(void*, int*) + 64
+59  org.mozilla.firefox 	0x006ccd4c nsMacMessagePump::DispatchOSEventToRaptor(EventRecord&, OpaqueWindowPtr*) + 96
+60  org.mozilla.firefox 	0x006ccc48 nsMacMessagePump::DoMouseUp(EventRecord&) + 76
+61  org.mozilla.firefox 	0x006cc5d0 nsMacMessagePump::DispatchEvent(EventRecord*) + 92
+62  org.mozilla.firefox 	0x006cce5c nsMacMessagePump::WNETransitionEventHandler(OpaqueEventHandlerCallRef*, OpaqueEventRef*, void*) + 44
+63  com.apple.HIToolbox 	0x931d7794 DispatchEventToHandlers(EventTargetRec*, OpaqueEventRef*, HandlerCallRec*) + 692
+64  com.apple.HIToolbox 	0x931d6eec SendEventToEventTargetInternal(OpaqueEventRef*, OpaqueEventTargetRef*, HandlerCallRec*) + 372
+65  com.apple.HIToolbox 	0x931ddc8c SendEventToEventTarget + 40
+66  com.apple.HIToolbox 	0x93269e58 HandleMouseEventForWindow(OpaqueWindowPtr*, OpaqueEventRef*, unsigned short) + 236
+67  com.apple.HIToolbox 	0x933cc9c8 HandleMouseEvent(OpaqueEventRef*) + 368
+68  com.apple.HIToolbox 	0x931ddff8 ToolboxEventDispatcherHandler(OpaqueEventHandlerCallRef*, OpaqueEventRef*, void*) + 496
+69  com.apple.HIToolbox 	0x931d79e4 DispatchEventToHandlers(EventTargetRec*, OpaqueEventRef*, HandlerCallRec*) + 1284
+70  com.apple.HIToolbox 	0x931d6eec SendEventToEventTargetInternal(OpaqueEventRef*, OpaqueEventTargetRef*, HandlerCallRec*) + 372
+71  com.apple.HIToolbox 	0x931ddc8c SendEventToEventTarget + 40
+72  com.apple.HIToolbox 	0x9321e9a0 ToolboxEventDispatcher + 92
+73  com.apple.HIToolbox 	0x9321e92c HLTBEventDispatcher + 16
+74  com.apple.HIToolbox 	0x9321cee4 RunApplicationEventLoop + 148
+75  org.mozilla.firefox 	0x0031ef30 nsAppShell::Run() + 64
+76  org.mozilla.firefox 	0x003b9acc nsAppStartup::Run() + 60
+77  org.mozilla.firefox 	0x0001252c XRE_main + 3972
+78  org.mozilla.firefox 	0x0000d768 start + 432
+79  org.mozilla.firefox 	0x0000d5e8 start + 48

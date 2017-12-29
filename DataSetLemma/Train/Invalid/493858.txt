@@ -1,0 +1,82 @@
+object/embed params not inherited by nested object/embed
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.9) Gecko/2009040821 Firefox/3.0.9
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.9) Gecko/2009040821 Firefox/3.0.9
+
+Hello Mozilla!
+
+I already wrote this message to you by email and here is a post in bugzilla.
+
+I want to warn you about vulnerability in Mozilla Firefox which I called property not-inheritance vulnerability.
+
+This vulnerability I found at web site megaswf.com (http://websecurity.com.ua/3131/). I already informed admins of the site about vulnerability at their site, but for now they fixed only one from three hole (only fixed one persistent XSS). And they didn't fix the hole which I'll tell you about, so all real example (at megaswf.com) are still working.
+
+This vulnerability at first sight can look like incorrect using of html code for embedding flash files. But because the attack work only in Firefox (in all browser on Mozilla's engine), but not in other browsers, I decided that it is a vulnerability and it'll be interesting for you. Also this vulnerability can look like hole at single site, but it's possible that this html code (for embedding flash files) is widespread in Internet, so other site can be vulnerable too, and so you can decide to fix it.
+
+Real example of property not-inheritance vulnerability in Firefox which lead to XSS attack.
+
+XSS:
+
+It's persistent XSS via Flash.
+
+http://megaswf.com/view/0f27b9f2e8318bbcee4b577917f110fd.html
+
+http://megaswf.com/view/6439d956fbc06d5962bde637b874364a.html
+
+
+Description of vulnerability.
+
+There is official method from Adobe to protect from XSS attack via flash files, when they are placed at web sites. For this it's needed to set parameter allowScriptAccess value never. IE support only tag object, so it's needed to set allowScriptAccess in it, and other browser support tag embed, in which it's needed to set allowScriptAccess (or some browser support both tag object and embed). So for all used tag for placing flash file it's needed to set allowScriptAccess.
+
+Recently I found vulnerability in Mozilla Firefox, which I called Properties not-inheritance vulnerability. This vulnerability can be used for conducting Cross-Site Scripting attacks.
+
+Browser Firefox support placing of flash file via object and embed tags. At that at this site for showing flash file in all browser two nested object tag are used (first for IE, and second for other browsers). In first tag object the parameter <param name=”allowscriptaccess” value=”never”> is set, but it isn't set in second tag.
+
+In result XSS code from flash file work in Firefox, but not work in other browsers. Because for IE the protection is set in first tag object, while Opera and Google Chrome inherit this parameter from first into second nested tag object. Which doesn't do Firefox. So it's Properties not-inheritance vulnerability in Firefox.
+
+Here I make three example for you of html code for placing flash file with protection from XSS.
+
+1. Correct variant (which I used in my practice).
+
+<object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" codebase="http://fpdownload.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=8,0,0,0" width="550" height="400">
+<param name="allowScriptAccess" value="never" />
+<param name="movie" value="flash.swf" />
+<embed src="flash.swf" width="550" height="400" allowScriptAccess="never" type="application/x-shockwave-flash" pluginspage="http://www.macromedia.com/go/getflashplayer" />
+
+2. Variant similar to code at megaswf.com which is vulnerable for XSS in Firefox.
+
+<object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" codebase="http://fpdownload.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=8,0,0,0" width="550" height="400">
+<param name="allowScriptAccess" value="never" />
+<param name="movie" value="flash.swf" />
+<object type="application/x-shockwave-flash" data="flash.swf" width="550" height="400"></object>
+</object>
+
+3. This variant is my modification of 2nd variant which is not vulnerable for XSS in Firefox (as in other browsers). Which can be used by admins of megaswf.com.
+
+<object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" codebase="http://fpdownload.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=8,0,0,0" width="550" height="400" align="middle">
+<param name="allowScriptAccess" value="never" />
+<param name="movie" value="flash.swf" />
+<object type="application/x-shockwave-flash" data="flash.swf" width="550" height="400">
+<param name="allowScriptAccess" value="never" />
+</object>
+</object>
+
+Vulnerable version is Firefox 3.0.9 (and 3.0.10 must be also) and previous versions. Vulnerable are all browser on Mozilla's engine.
+
+Attend to security of all of yours web sites, web software, browser and to security-audit.
+
+I mentioned about this vulnerability at my site (http://websecurity.com.ua/3135/).
+
+Best wish & regards,
+MustLive
+Administrator of Websecurity web site
+http://websecurity.com.ua
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Visit URL: http://megaswf.com/view/0f27b9f2e8318bbcee4b577917f110fd.html
+Actual Results:
+XSS code is executed.
+
+Expected Results:
+XSS code must not be executed.

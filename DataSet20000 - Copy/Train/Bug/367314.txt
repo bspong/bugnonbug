@@ -1,0 +1,51 @@
+back/forward history menus should group similar pages
+User-Agent:       Mozilla/5.0 (Macintosh; U; Intel Mac OS X; en-US; rv:1.8.1.1) Gecko/20061204 Firefox/2.0.0.1
+Build Identifier: Mozilla/5.0 (Macintosh; U; Intel Mac OS X; en-US; rv:1.8.1.1) Gecko/20061204 Firefox/2.0.0.1
+
+This RFE may provide a solution to allow users to navigate forward and backwards by many pages at a time without making the actual menus too large.  It is in response to bug 287277, bug 282988, and bug 62010, but hopefully provides a better solution that will satisfy arguments for and against those other bugs.
+
+The situation posted by Jesse Ruderman in bug 282988 is similar to what I've run into enough times to seek out an improvement:
+
+> This isn't as rare as you seem to think.  Suppose I find myself at
+> http://www.ok-cancel.com/comic/29.html and start reading the comics in reverse
+> chronological order.  Once I've read the first 29 comics, I want to go back 28
+> pages in session history so I can read the remaining comics in chronological
+> order.
+
+The overall issue being that the menu on the Back button only lists the most recent 15 pages, so if I've viewed more than 15 images/comics/pages and want to go back to where I was before, I have to go to the last item in the menu multiple times to get back to what I want.
+
+A solution that I thought of that could help this particular part
+of the problem (seems like it's one of the very common cases in which the
+session history would get that long at all) is to develop some sort of grouping
+strategy for history entries, based on things like closeness in time viewed,
+similarity of URL, and similarity of page title.  In Jesse's example and other
+ones I've run into (specifically today, photos shared on Facebook), all of the
+image pages have the same page title.
+
+As a user, I'll often want to go back one image, go back to the first image (as
+in Jesse's case), or back to the page just before the first image.  If I've looked at 30 images and they all have the same page title, it's unlikely that I'll want to go back to the 18th most recent image (because I won't even remember which one that is).  But wanting to go back to the oldest image or the most recent non-image both seem pretty natural.
+
+Perhaps the menu could show the fifteen most recent items like it does now, but
+then if those 15 items are all similar enough to be grouped (by time, URL,
+title, etc.), then show a separator or a '...' or something to indicate that
+entries are being skipped, and then show the very first (oldest) element of the
+group and the page right before that (the most recent page not in the group). 
+Or, if there are only 16 or 17 images in the group, just expand the normal menu
+to cover those couple additional entries.
+
+Another way to handle the group of similar pages that might be even more elegant would be to place them all in a submenu, the way that bookmark folders appear in the bookmarks menu.  Then the back menu shows a folder for all the similar pages as the first element, and the most recent different page as the second element, making it easy to get to the second element (but not quite as easy to get to the oldest page of the group).
+
+This certainly takes more code than just changing the size of the menu, but may
+serve everyone's purpose, allowing users to quickly get back to the pages they
+want to get back to, and preventing the menu from becoming unsightly.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Browse >15 similar pages
+2. Click the down arrow next to the back button
+Actual Results:  
+See only the most recent 15 pages
+
+Expected Results:  
+Be able to go back more than 15 results easily

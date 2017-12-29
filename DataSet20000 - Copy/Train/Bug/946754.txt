@@ -1,0 +1,28 @@
+Switch CustomizableUI tests from using homebrewed test runner to built-in add_task
+Our tests for CustomizableUI were written at a time when writing mochitests for asynchronous stuff resulted in much callback spaghetti.
+
+To resolve this, we wrote our own homebrewed testrunner thing to make writing Promise-y tests easier.
+
+It turns out that bug 872229 landed a few months back which gives us this Promise-y goodness in the form of add_task.
+
+We should axe our homebrew testrunner and use add_task instead.
+
+Instructions:
+
+1) Go inside browser/components/customizableui/test/
+2) For each file that starts with browser_, open it up, and find the "gTests" object.
+3) Extract the "run" functions for each of the objects in gTests, and put those in add_task functions, like this:
+
+add_task(function name_of_test() {
+  // Code from "run" function in here.
+});
+
+4) Make sure the test runs by executing it from the root mozilla-central folder:
+
+./mach mochitest-browser browser/components/customizableui/test/browser_test_file_name_here.js
+
+We might have to do a little thinking about clean-up functions, but I think this conversion will be relatively straight forward.
+
+New hackers should get a simple Firefox build going: https://developer.mozilla.org/en/docs/Simple_Firefox_build
+
+These videos are also very helpful: http://codefirefox.com/

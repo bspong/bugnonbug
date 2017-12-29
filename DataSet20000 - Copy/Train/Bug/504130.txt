@@ -1,0 +1,21 @@
+page resized only on focus, leading to problems with background-loaded tabs
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.11) Gecko/2009060215 Firefox/3.0.11 (.NET CLR 3.5.30729)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.11) Gecko/2009060215 Firefox/3.0.11 (.NET CLR 3.5.30729)
+
+If you've changed the default zoom on a website, Firefox remembers this and changes the size automatically on all future visits. If this resizing is done in the tab with focus, it is generally unnoticeable to the user--the page is initially displayed to the user in the user-set size. However, if browser.tabs.loadInBackground is set to true, the resize doesn't occur when the page is initially loaded, but rather when the tab is brought into focus. This creates problems when the user has diverted a fragment-identifying url (e.g. http://en.wikipedia.org/wiki/Fragment_identifier#Examples), because FF positions the page vertically based on the initially-rendered font size. When the user switches to the tab, the text is resized and the desired fragment (foo) is no longer positioned where it should be. (The resizing behavior is the same when clicking on non-fragment-identifying links, but since for regular pages the vertical positioning is already at the top of the page and resizing doesn't change this, there isn't any real problem in those cases.)
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Set browser.tabs.loadInBackground to true
+2. Visit a webpage, e.g. http://en.wikipedia.org/wiki/Fragment_identifier
+3. Change the default zoom size. The greater the change, the more evident the problem.
+4. Open a link with a fragment identifier (e.g. http://en.wikipedia.org/wiki/Fragment_identifier#Examples) in a new tab by ctrl- or middle-clicking. The tab should load in the background.
+5. After it's finished loading, click on the background tab to bring it to focus.
+Actual Results:  
+As soon as the background tab is brought to focus, you should see the page resize, causing all the elements to shift vertically up or down. This means that the fragment (in this case the "Examples" section of the page) goes from being properly positioned (at the top of the page) to being improperly positioned (either higher if the page has been zoomed out, or lower if the page has been zoomed in).
+
+Expected Results:  
+Background-loaded tabs should be resized when they are initially rendered, just as foregound-loaded tabs are. This way when a user loads a fragment-identifying link in the background and brings it to focus after rendering is complete, the page position won't suddenly change, forcing the user to scroll up or down to get to the position the user expected the page to already be at.
+
+Bug occurs with -safe-mode switch, so I don't believe it's a theme or add-on problem.

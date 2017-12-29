@@ -1,0 +1,37 @@
+no repaint over settimeout
+Since Mozilla (just a IE) is practically frozen during execution of a
+JavaScript block, it is common to split a large JS task into smaller piece and
+let each piece call the next one via setTimeout("nextPiece()", 0). This usually
+ha the effect that in between the piece the browser responds to click and
+keystroke and repaints the document if the DOM ha changed.
+
+With the attached testcase however, this doesn't work any more in Firefox 0.9.1
+(gtk2+xft on Debian unstable). It worked in Ff 0.8.
+
+Instructions:
+1. Open the testcase.
+2. Enter "loop [100] times, painting [1000] number per loop, interval [0]" into
+the form and hit "Go".
+
+This call the function
+
+function loop(n, m, interval) {
+if (!self.debugWin) self.debugWin = open("about:blank","debugWin");
+for (var i=0; i<m; i++) debugWin.document.write("<pre>"+n+"."+m+"</pre>");
+if (n--) setTimeout("loop("+n+","+m+","+interval+")", interval);
+}
+
+with n=100, m=1000, interval=0. The function open a popup window (so unblock
+popups!) and writes the number 20.0 20.1 ... 20.999 19.0 19.1 ... 19.999 18.0
+etc. into the document, with 20 setTimeout break in between.
+
+Expected result: At every call of setTimeout, the browser should be responsive
+to user feedback.
+
+Actual result: The browser is frozen until all number have been written.
+
+When I repeat the test without reloading (by just hitting "Go" again) much lower
+value suffice to produce the effect, e.g. 100 - 10 - 0. That's probably because
+more computation is required to write to an already very long document. If
+you're on a faster machine, you might have to enter higher value (into the
+first to fields).

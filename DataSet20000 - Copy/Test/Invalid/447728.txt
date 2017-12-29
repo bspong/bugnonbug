@@ -1,0 +1,31 @@
+Javascript Code Module cache not updated properly between chrome windows
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.1) Gecko/2008070208 Firefox/3.0.1
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.1) Gecko/2008070208 Firefox/3.0.1
+
+I've got a simple variable in a code module:
+var EXPORTED_SYMBOLS = ["currentSymbol"]
+var currentSymbol = "not assigned yet";
+
+I access this variable from an Observer for nsIPrefBranch2.  In my Observer, if topic is "nsPref:changed", I set currentSymbol to the new preference value.  
+
+Each open chrome window calls my Observer function in turn, as expected.  However, the value of "currentSymbol", which is changed by the first window to call my Observer, retains its original value in each subsequent Observer call by other open windows.  The next time I change the preference, the initial value of currentSymbol matches the updated preference value.
+
+For example, if currentSymbol is "AAPL", and I change the associated preference to "TZIX", the value of currentSymbol remains "AAPL" throughout each Observer involcation despite the Observer setting currentSymbol to "TZIX".  The next time the preference is changed, currentSymbol = "TZIX" as expected.
+
+This seems like a caching problem - the module cache is not updated until the Observer in all windows has been called.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Modify a module-based string variable from a "preferences changed" observer - change it from "a" to "b".
+2. In the observer, use alert to display the new value of the module variable.
+3. Change the associated preference using about:config
+4. The module variable is displayed as "a" for each open browser window
+5. Repeat step 3 - the module variable is displayed as "b".
+Actual Results:  
+4. The module variable is displayed as "a" for each open browser window - the module variable's value does not change until all Observers have fired.
+
+Expected Results:  
+After step 3 the module variable should display as "a" for the first browser window and "b" for all others.
+
+I will use the FUEL application object instead to share values across windows.

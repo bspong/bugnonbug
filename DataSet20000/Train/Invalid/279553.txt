@@ -1,0 +1,91 @@
+JavaScript child-to-parent-to-child frame reference doesn't work in a for/next loop.
+User-Agent:       Opera/6.0 (Windows 2000; U)  [en]
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.7.5) Gecko/20041107 Firefox/1.0
+
+I made a page with 7 frames, like this:
+
+<frameset rows="23,7,7,7,7,7,15" border="1" framespacing="0">
+  <frame src="tstFooPlaceholder.htm" scrolling="no" name="TopFrame">
+  <frame src="tstFoo.htm" scrolling="no" name="Frame1">
+  <frame src="tstFoo.htm" scrolling="no" name="Frame2">
+  <frame src="tstFoo.htm" scrolling="no" name="Frame3">
+  <frame src="tstFoo.htm" scrolling="no" name="Frame4">
+  <frame src="tstFoo.htm" scrolling="no" name="Frame5">
+  <frame src="tstFooValidate.htm" scrolling="no" name="BottomFrame">
+</frameset>
+
+tstFoo.htm has one <input type="text" /> field in it. In the real world, it's actually a file input field where people can choose files to upload, but this is just my quick and dirty test code to verify the bug.
+
+So I have 5 instances of tstFoo.htm in frames 1 to 5. The page in the top frame doesn't do anything, and the page in the bottom frame (tstFooValidate.htm) has a 'GO' button and some JavaScript code that iterates the contents of each instance of tstFoo.htm and tells us the value of each text field foo.htm (there's only 1). Works fine in IE 5.5 or Opera versions 6 or 7.
+
+Here is the JavaScript code:
+
+<script language="JavaScript">
+	function GoValidate() {
+		for (var i = 1; i <= 5; i++) {
+			// Seems to be this line that doesn't work in FireFox:
+			// (although it works in Opera and IE)
+			var sVal = parent.frames[i].frmFoo.txtFoo.value;
+// show me:
+alert ("sVal = " + sVal);
+
+		} // next i
+	} // end function
+
+</script>
+
+The Firefox JavaScript Console tells me:
+
+Error: parent.frames[i].frmFoo has no properties
+Source File: http://192.168.0.101/phptest/tstFooValidate.htm
+Line: 14
+
+That's this line:
+var sVal = parent.frames[i].frmFoo.txtFoo.value;
+
+I don't think so. My JavaScript book ('JavaScript Bible, Gold Edition' by Danny Goodman) tells me that that syntax is a valid and legal way to address frames in a child->parent->other child relationship (plus it works in those other browsers).
+
+Is it perhaps not interpreting 'i' properly? Shouldn't that JavaScript Console error message instead say:
+
+Error: parent.frames[1].frmUpload has no properties
+
+For thoroughness, I should also report that the JavaScript Console shows an additional error, thus:
+
+Error: syntax error
+Source File: http://wpad/wpad.dat	Line: 207
+Source Code: <HTML>
+
+I have no idea what that means, but if I click on the http://wpad/wpad.dat link, I see:
+
+<HTML>
+<HEAD><TITLE>500 Server Error</TITLE></HEAD>
+<BODY>
+<H1>Server Error</H1>
+<H4>
+The following error occurred:<P>
+[code=SERVER_RESPONSE_RESET] The server response could not be read because of an error. Contact your system administrator.
+</H4>
+<HR>
+Please contact the administrator.
+</BODY>
+</HTML>
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Make a stack of frames with multiple instances of 1 htm file in frames 1 - 5
+2. Write JavaScript loop to reference parent.frames[i].formName.Input.value
+3.  where i = 1 to 5
+
+Actual Results:  
+Firefox does not loop through the frames, shows error in JavaScript Console:
+Error: parent.frames[i].formName has no properties
+
+
+Expected Results:  
+My idea is that it should have evaluated 'i' and didn't. Reason I think this is because the same JavaScript code shown above works fine if I remove the stack of frames and the for/next loop, and the parent.frames[i] reference.
+
+I do not use themes. If you want me to send my test htm files, I'll be happy to do that.
+
+I have to add that I'm highly impressed with Firefox. Good work! One thing that I do miss is Opera's F2 key (open new link)...

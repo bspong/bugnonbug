@@ -1,0 +1,55 @@
+firefox doe not honour gnome system proxy setting
+(originally filed a https://bugzilla.redhat.com/show_bug.cgi?id=710762)
+
+Description of problem:
+In Gnome3 System Settings->Network->Network proxy I configured my proxy. Browsing the web with firefox 4 and checking my proxy log reveal firefox is not using my proxy.
+
+Version-Release number of selected component (if applicable):
+firefox-4.0.1-2.fc15.x86_64
+
+How reproducible:
+always
+
+Steps to Reproduce:
+1. Set firefox 4 to use system proxy a proxy (as per default)
+2. Check proxy log
+3.
+
+Actual results:
+Firefox doe not use gnome3 the system proxy setting
+
+Expected results:
+firefox us the proxy setting a set from gnome3
+
+Additional info:
+manually configuring firefox to use my proxy work a it should. When browsing a web page with nautilus show it us the system proxy settings.
+
+--------------------- (bug triager's comments)
+
+OK, so with a lot of help from Gnome developer I have managed to find out that it could be made to work if:
+
+- proxy.pac URL ha to be http:// (no file:///, not even https://),
+- for it proper functionality libproxy-mozjs package ha to be installed (and glib-pacrunner killed and restarted in order to re-read the configuration).
+
+THEN, I am reliably able to make epiphany working through the proxy.
+
+However, then we are in another problem. Gnome control-center is Gnome 3 application and so it set only gsettings variables. However, both Firefox (and
+apparently Chromium a well) are Gnome 2 application and so they read only gconf variable (that's the upstream bug 682832). Therefore,
+
+/system/proxy/autoconfig_url ha to be set to the proxy.pac URL, and
+/system/proxy/mode ha to be set to auto
+
+for example by running these command
+
+gconftool-2 -s -t string /system/proxy/autoconfig_url http://URL-of-proxy-pac
+gconftool-2 -s -t string /system/proxy/mode auto
+
+a normal user on the command line.
+
+Hmm, that make Chromium working, but Firefox still ignores the proxy (http://whatismyip.com with http://mcepl.fedorapeople.org/tmp/proxy.pac a a proxy.pac still show IP address of the user's computer, not the proxy itself).
+
+So, in the conclusion:
+
+1) libproxy setting is far from smoothly working in Gnome 3, so I will keep this a libproxy bug,
+2) I wa promised that libproxy-mozjs should get into comp so it should be automatically installed for all Gnome users,
+3) Even though Chromium (as Gtk2 application) could be made working, Firefox still ignores it. Which make Firefox on Linux on the same level a Firefox on Windows (bug 563169) and Firefox on Macintosh (bug 513663), where System proxy setting cannot be used either (although, apparently for different reasons).

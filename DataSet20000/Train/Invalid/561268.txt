@@ -1,0 +1,75 @@
+add-ons crash xorg-server
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.2.3) Gecko/20100415 Ubuntu/10.04 (lucid) Firefox/3.6.3
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.2.3) Gecko/20100415 Ubuntu/10.04 (lucid) Firefox/3.6.3
+
+Two systems: Pentium-III w/ ATI Radeon M6 LY and P4 w/ nVidia NV11 [GeForce2 Go].  Both systems exhibit problem.
+
+Two Desktop Environments: Xfce and KDE.  Both DEs exhibit problem.
+
+Two profiles: Default and special with different add-ons enabled sometimes with only one add-on enabled.  
+
+Two add-ons: NoScript and Cookie Monster usage caused crashes independent of one another (NoScript without Cookie Monster installed and vice-versa).
+
+Seems to be only in Lucid Beta1, Beta2, and RC.  Have not demonstrated problem in Debian 5.0.4 GNU/Linux (KDE) or Linux Mint 8 Helena Xfce CE.  Have not tried Ubuntu 9.10 (except that Mint 8 is based on 9.10).
+
+Crash closes desktop and all applications back to tty and then *dm automatically reloads with graphical login prompt displayed.  All unsaved data is lost but recovered session stable as long as add-ons not used.
+
+
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Run {K|X}ubuntu Lucid Lynx Development Branch in Desktop Environment.
+2. Run Firefox.
+3. Click Add-on icon.
+4. Watch the crash.
+Actual Results:  
+Crash.
+
+Expected Results:  
+No crash?
+
+Filed bug reports in a few places including "dead-ends".  After living with this I believe ultimate responsibility lives with the Ubuntu Development Team with respect to Xorg since it is allowing an application to crash it.  However, Firefox shouldn't crash either.  Not enough memory to enable Crash Reporting Assistant to effectively do it's job.  Installed firefox-dbg but doesn't appear to help ID the problem.  xsession-errors file saved offline for forensics if it can be useful -- I'm no expert here and cannot tell for sure where the crash starts in the Xorg error file, although I have a decent idea.
+
+Potentially relevant excerpts from xsession-errors:
+### = skipped and/or commented (here and elsewhere).
+X Error: BadAccess (attempt to access private resource denied) 10
+  Major opcode: 2 (X_ChangeWindowAttributes)
+  Resource id:  0x480001e
+###
+kwin(3223) KWin::Workspace::allowClientActivation: Activation: Belongs to active application
+kdeinit4: Fatal IO error: client killed
+kded4: Fatal IO error: client killed
+###
+[/usr/bin/nepomukservicestub] nepomukservicestub: Fatal IO error: client killed
+kmozillahelper: Fatal IO error: client killed
+###
+polkit-kde-authentication-agent-1: Fatal IO error: client killed
+kdeinit4: sending SIGHUP to children.
+klauncher: Exiting on signal 1
+kdeinit4: sending SIGTERM to children.
+kdeinit4: Exit.
+klauncher(3158)/kio (KLauncher): SlavePool: No communication with slave. 
+
+Unexpected response from KInit (response = 0).
+kglobalaccel: Fatal IO error: client killed
+startkde: Could not start ksmserver. Check your installation.
+kdeinit4: Fatal IO error: client killed
+kdeinit4: sending SIGHUP to children.
+ProcessControl: Application '/usr/bin/nepomukservicestub' stopped unexpected (Process crashed)
+Application '/usr/bin/nepomukservicestub' crashed. No restart!
+###
+KCrash: Application 'ksmserver' crashing...
+Warning: connect() failed: : No such file or directory
+KCrash cannot reach kdeinit, launching directly.
+###
+Application '/usr/bin/nepomukservicestub' crashed. No restart!
+NepomukServer(3245)/kdecore (KConfigSkeleton) KCoreConfigSkeleton::writeConfig:
+drkonqi: cannot connect to X server :0.0
+kdeinit4: sending SIGTERM to children.
+kdeinit4: Exit.
+### End of xsession-errors file.
+
+I'm listing this as critical for now because it does cause a crash and loss of data even if only Firefox were to crash.

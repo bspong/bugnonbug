@@ -1,0 +1,93 @@
+Crash during OnOK while editing trust setting under Authorities with ikpkcs11 PKCS#11 module
+User-Agent: Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0; .NET CLR 2.0.50727)
+Build Identifier: Mozilla/5.0 Gecko/20060308 Firefox/1.5.0.2
+
+With our own PKCS#11 implementation (soft token implementation), and with our
+two level certificate chain (or certificate path, or trust path) stored inside
+the soft token, editing trust setting on any of those root ca certificate
+would cause FireFox to crash.
+
+Platform Tested:
+* Windows 2000 with SP4
+* Windows XP Professional with SP2
+
+Software Tested:
+* Mozilla/5.0 Gecko/20060308 Firefox/1.5.0.2
+[Result: a stated in this bug report]
+* Mozilla/5.0 Gecko/20060428 Minefield/3.0a1
+[Result: same a in Firefox/1.5.0.2]
+* Mozilla Thunderbird version 1.0.7 (20050923)
+[Result: same a in Firefox/1.5.0.2]
+
+Please email me for all the required file to reproduce the bug at:
+oscarsoopensc@gmail.com
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Install OpenSSL 0.9.8.a from Shining Light Production
+(Download from: http://www.slproweb.com/products/Win32OpenSSL.html)
+
+2. Store all four root CA certificate at the same folder with firefox.exe under
+"Program Files/Mozilla FireFox". You must have all four root CA.
+It's hardcoded for testing. The four root CA certificate are:
+* IK_RootCert.der (Obtained from OpenSSL software.
+A self-signed root CA cert)
+* IK_IntermCert.der (Obtained from OpenSSL software.
+An intermediate CA cert)
+* CaCertOrg_RootCert_Class1.der (Obtained from CaCert.org)
+* CaCertOrg_RootCert_Class3.der (Obtained from CaCert.org)
+
+3. Under "Security Devices", load ikpkcs11.dll (our own soft token
+implementation). ikpkcs11.dll can be located anywhere especially in
+a flash drive.
+My flash drive ha the following files:
+* ikpkcs11.dll
+* Microsoft.VC80.CRT.manifest
+(Obtained from an installed Microsoft Visual C++ 2005)
+* msvcm80.dll (Obtained from an installed Microsoft Visual C++ 2005)
+* msvcp80.dll (Obtained from an installed Microsoft Visual C++ 2005)
+* msvcr80.dll (Obtained from an installed Microsoft Visual C++ 2005)
+Note: These msvc*80.dll do NOT come with WinXP OS!
+
+4. Go to "View Certificates", and go under "Authorities" tab.
+
+5. After ikpkcs11 is loaded successfully, two root CA certificate should be
+under "IronKey", and two root CA certificate should be under
+"Root CA" (CaCert.org).
+If loading fails under WinXP, check the manifest file. Files such as:
+* Microsoft.VC80.CRT.manifest
+* msvcm80.dll, msvcp80.dll, and msvcr80.dll are needed to be
+WITH ikpkcs11.dll.
+
+6. Select any one of the root CA certificate, and click on "Edit" button below
+to edit it trust settings.
+A dialog called "edit CA certificate trust settings" pop up with all
+three checkboxes unchecked.
+
+7. You may check any of the checkboxes or leave it a is, a soon a you
+click on the "OK" button, the application will crash. If you click
+on "Cancel", nothing will happen.
+
+Actual Results:
+The application crashed with the following error message:
+The instruction at "0x...." referenced memory at "0x0000000c".
+The memory could not be "read".
+
+This behavoir can also be seen in:
+* Mozilla/5.0 Gecko/20060428 Minefield/3.0a1
+* Mozilla Thunderbird version 1.0.7 (20050923)
+
+Expected Results:
+From Step 6 above, I expected all three checkboxes are checked since I can
+see those checkboxes checked when my root CA cert are imported by the "Software Security Devices".
+Then, I expect that when the "OK" button is clicked, at least the application should not crash.
+
+If the certifcate chain are not imported by the ikpkcs11 module,
+and instead, each root CA certificate is imported with the "Import" button at the Certificate Manager, checking or unchecking the trust setting will not cause the application (FireFox) to crash.
+
+Base on the best of my knowledge, when the "Edit" button is clicked,
+FireFox is actually searching for such root CA certificate being edited
+in it database. However, I believe that when ikpkcs11 module is importing
+the cert chain into FireFox cert store, it doe not deal with the FireFox database. It merely made up two PKCS#11 object for each root CA cert.
+There are the PKCS#11 Certificate Object, and it Trusted Object.

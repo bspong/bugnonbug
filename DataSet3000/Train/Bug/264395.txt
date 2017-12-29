@@ -1,0 +1,34 @@
+"Force links ... to open in: the same tab" breaks some sites
+Bug 172962 gives the user the option of folding new windows back into the opener
+("force links that open new windows to open in the same tab/window as the
+link.") Despite this just being a scary and seemingly technically inadvisable
+thing to do, it pretty much works. Some things however will not work.
+
+Websites coded to pass data between the opener and opened windows obviously
+won't function correctly, since the opener is gone. Sites that will experience
+this problem are generally sites that treat the opened window like a dialog.
+http://www.magic.gov.uk is an example. There are of course many others. Sites
+with complex opening code like this
+
+var w = window.open("about:blank")
+w.location = "http://www.mozilla.org/"
+
+won't work, again because the script aborts when the opener window is replaced.
+(Note that this:
+
+var w = window.open("")
+w.location = "http://www.mozilla.org/"
+
+does work. I was able to finagle that.)
+
+Obviously full-on Single Window Mode has disadvantages and I hope users will
+lean toward tabbed Single Window Mode, which doesn't have the same fundamental
+inability. It occurs that FoSWM could be fixed if we actually opened the new
+window into a new tab, presumably without showing the tab bar. Now both windows
+remain open simultaneously and script should work. Close the new tab and the
+window reverts to the original window/tab. Navigate away from the new tab and we
+know we can close the original tab. (Generally. Multiple layers of "dialogs"
+wouldn't work if we were too eager to close the original tab.)
+
+I'm not seriously suggesting we implement this. But it is an issue with full-on
+single window/tab mode, and I expect this bug will collect duplicates.

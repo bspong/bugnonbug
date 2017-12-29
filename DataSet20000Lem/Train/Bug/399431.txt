@@ -1,0 +1,43 @@
+64bit browser hang on startup when restoring session
+User-Agent: Mozilla/5.0 (X11; U; Linux x86_64; en-GB; rv:1.8.1) Gecko/20061023 SUSE/2.0-30 Firefox/2.0
+Build Identifier: Mozilla/5.0 (X11; U; Linux x86_64; en-GB; rv:1.8.1) Gecko/20061023 SUSE/2.0-30 Firefox/2.0
+
+The browser hang on startup when the session is restored. The window is unresponsive the only widget that work is minimise/restore. All the tab indicate that page are still loading. Firefox ha to be killed with a -9.
+
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+Reproducing the problem is difficult. The first time it happened wa when our IT department stopped direct internet access and required u to use a proxy server.
+Somehow on this occasion it made the entire computer hang such that a hard reset wa required. I have since upgraded from Suse 10.0 64 bit to Suse 10.26 bit.
+
+The last time it happened wa just now after rebooting following increasing the size of the swap partition. Prior to killing firefox I attached gdb and obtained a stack trace a below.
+
+brucea@UKTNS-D11865:..main/TARDIS>ps aux | grep firefox
+brucea 4319 0.0 0.2 14368 1056 ? S 11:54 0:00 /bin/sh /usr/bin/firefox
+brucea 4324 0.7 7.2 379368 36464 ? Sl 11:54 0:03 /usr/lib64/firefox/firefox-bin
+
+(gdb) where
+#0 0x00002b49fb5961f6 in poll () from /lib64/libc.so.6
+#1 0x00002b49f7ea2c16 in g_main_context_prepare () from /opt/gnome/lib64/libglib-2.0.so.0
+#2 0x00002b49f7ea32ee in g_main_context_iteration () from /opt/gnome/lib64/libglib-2.0.so.0
+#3 0x000000000062321a in CallQueryInterface<nsIFile, nsILocalFile> ()
+#4 0x00000000009ef545 in nsIAtom::GetIID ()
+#5 0x000000000094f2c4 in nsCOMPtr<nsISupportsArray>::operator= ()
+#6 0x000000000094f4bd in nsCOMPtr<nsISupportsArray>::operator= ()
+#7 0x000000000095202e in nsCOMPtr<nsIEventQueue>::nsCOMPtr ()
+#8 0x0000000000950ff5 in nsCOMPtr<nsIEventQueue>::nsCOMPtr ()
+#9 0x000000000094b78c in nsCOMPtr<nsISupportsArray>::operator= ()
+#10 0x0000000000a6da5b in nsIAtomService::GetIID ()
+#11 0x00000000005446ac in nsCSubstring::Append ()
+#12 0x000000000054552a in nsCSubstring::Append ()
+#13 0x000000000054589e in nsCSubstring::Append ()
+#14 0x00000000005459f8 in nsCSubstring::Append ()
+
+
+
+
+
+
+I suspect this problem is 64bit specific but I am not certain. Suse 64bit linux
+seems to have a number of problems. Yast would not work with the proxy until I manually updated curl from 15.X to 17.X. Colleagues using 32bit Suse 10.2 have not had this problem. I have also seen firefox killed by the OS when the system run out of virtual memory (hence the increase in swap size previously mentioned). I believe this to be a manifestation of a separate known firefox problem though I have not so far been able to capture evidence of a memory leak.

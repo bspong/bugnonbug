@@ -1,0 +1,47 @@
+null return value from CustomizableUIInternal.normalizeWidget ignored in createWidget
+User Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36
+
+Steps to reproduce:
+
+After a bit of playing with UI customization and adding/reving an addon icon, it wasn't possible to see the icon anymore, even after reinstalling the addon.
+
+
+Actual results:
+
+unhandled exception
+
+fileName:"resource://app/modules/CustomizableUI.jsm"
+lineNumber:1230
+message:"aId is undefined"
+stack:"isSpecialWidget@resource://app/modules/CustomizableUI.jsm:1230:5
+getWidgetProvider@resource://app/modules/CustomizableUI.jsm:851:9
+wrapWidget@resource://app/modules/CustomizableUI.jsm:463:20
+createWidget@resource://app/modules/CustomizableUI.jsm:3266:12
+create@resource://gre/modules/commonjs/sdk/ui/button/view.js:122:3
+setup@resource://gre/modules/commonjs/sdk/ui/button/toggle.js:61:5
+@resource://gre/modules/commonjs/sdk/core/disposable.js:45:56
+dispatch@resource://gre/modules/commonjs/method/core.js:119:12
+initialize@resource://gre/modules/commonjs/sdk/core/disposable.js:135:17
+constructor@resource://gre/modules/commonjs/sdk/core/heritage.js:146:23
+[20]<@resource://jid1-r1tduninb4seww-at-jetpack/lib/main.js:13691:14
+s@resource://jid1-r1tduninb4seww-at-jetpack/lib/main.js:1:245
+e@resource://jid1-r1tduninb4seww-at-jetpack/lib/main.js:1:424
+@resource://jid1-r1tduninb4seww-at-jetpack/lib/main.js:1:44
+@resource://jid1-r1tduninb4seww-at-jetpack/lib/main.js:1:2
+run@resource://gre/modules/commonjs/sdk/addon/runner.js:147:19
+startup/</<@resource://gre/modules/commonjs/sdk/addon/runner.js:87:9
+process@resource://gre/modules/Promise-backend.js:922:23
+walkerLoop@resource://gre/modules/Promise-backend.js:806:7
+scheduleWalkerLoop/<@resource://gre/modules/Promise-backend.js:742:11
+"
+
+
+Expected results:
+
+at CustomizableUI.jsm,
+createWidget(aProperties) {
+return CustomizableUIInternal.wrapWidget(
+CustomizableUIInternal.createWidget(aProperties)
+);
+},
+createWidget return undefined because normalizeWidget ha failed. This value is passeed with any failure check to wrapWidget where it crashes. normalizeWidget can return null for a large number of reasons, out of them at least gPalette.has(widget.id) is valid and should be handled.

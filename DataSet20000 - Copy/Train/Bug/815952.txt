@@ -1,0 +1,28 @@
+Remove the "clear clipboard on exit" during Private Browsing
+What did you do:
+Set to "Private Browsing" indirectly, by selecting:  Tools --> Options --> Privacy --> History --> "Never remember history"
+Accessed a URL.
+Copied text from within the content at the URL.
+Closed FireFox.
+Attempted to paste the text into another application.
+
+What happened:
+No data was pasted from the clipboard.
+
+What should have happened:
+Data pasted from clipboard.
+
+Reference:
+This feature was implemented as with Bug 462106 (https://bugzilla.mozilla.org/show_bug.cgi?id=462106).  One comment issued recently on that bug, requests a way to disable the function via "about:config".
+
+Request:
+Please provide a way to disable this function of Private Browsing.  Please also consider making the clearing behavior optional, rather than default.
+
+Rationale:
+Below I explore an improvement, which I believe takes the motivation for clearing the clipboard to a further extreme.  The intention of this exaggeration is to make clear two simple reasons why the new clipboard-clearing behavior feels uncomfortable to a user.
+
+It looks like the idea is a special "Private" clipboard that breaks with the standard Operating System clipboard behavior, to improve data privacy control.  To achieve this, a custom clipboard should be implemented as a feature of Private Browsing, leaving the OS clipboard as a separate entity.  Or, possibly, making only clearly-defined interactions with the OS clipboard.  With the clipboard is cleared only on exit, it feels incomplete and intrusive.
+
+Incomplete:  The overall goal seems to be isolation of data related to a Private Browsing [PB] session.  Looking at the possible dataflows, the clipboard is one.  From this point of view, just clearing on exit only provides situational isolation.  Data could also be imported from outside a PB session by pasting data from outside sources.  Data from a PB source could be exported before the browser closes, and before the PB session ends.  Inside the perimeter, data can also flow from one tab to another, and one domain to another (see JavaScript's "Single Origin Policy").  It's possible that PB doesn't clear other areas, because they are left to the user/OS, e.g.: on the file system (slack space from temporary files or swap files), in RAM (previously-used stack or heap memory).
+
+Intrusive:  A "clear on exit" feature [or any "clear on event" feature] breaks the typical use contract between users and their operating system.  A common assumption by users is that the OS provides the clipboard, and all applications do is get and put data upon the direct command of the user.  Applications aren't to touch the clipboard for other reasons.  An exception might be when their purpose clearly involves some operating system function (e.g. A/V may scans many things, including the clipboard, for malicious activity or content), or specifically the clipboard (e.g. a utility that converts all clipboard contents to plain text).  Personally, I don't know of any apps that touch it.  To attentive users, deleting contents of the clipboard feels like an intrusion.

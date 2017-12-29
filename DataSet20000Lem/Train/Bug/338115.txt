@@ -1,0 +1,63 @@
+High CPU usage because of simple JavaScript that update element on page
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.0.3) Gecko/20060514 Firefox/1.5.0.3
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.0.3) Gecko/20060514 Firefox/1.5.0.3
+
+All page on http://politiken.dk/ contains a watch that is updated every second. Because of this firefox us 50% - 80% CPU on a ~1.7GHz machine, sl long a the page is displayed. Which make the browser behave poorly.
+
+I have tried on both Linux and Windows XP, and the problem is the same.
+
+I have also tested the website with IE, Opera and Mozilla 1.7, they all have no problem with displaying the page with low CPU usage - a soon a the page is rendered.
+
+I have made a small GreaseMonkey script that prevents the watch from being displayed. Using this the CPU usage is normal.
+The script cam be found at http://www.blum.dk/ur_pol.user.js
+
+the JavaScript that update the watch is very simple, and is included here for your convenience:
+function Ur_top ()
+{
+tid = new Date();
+tt = tid.getHours();
+mm = tid.getMinutes();
+s = tid.getSeconds();
+if (tt<10)
+tt="0" + tt;
+if (mm<10)
+mm="0" + mm;
+if(ss<10)
+ss="0" + ss;
+document.getElementById("urfelt").innerHTML= "&nbsp;kl.&nbsp;" + tt + ":" + mm;
+setTimeout("Ur_top();",1000);
+}
+
+
+My appologies if this is a duplicate bug, but there are a lot of bug regarding CPU usage. At least I hope that the detail here will helt locate the problem.
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Go to http://politiken.dk/
+
+
+Actual Results:
+High CPU Usage
+
+Expected Results:
+Low CPU usage
+
+The GreaseMonkey script ... Just in case:
+// ==UserScript==
+// @name Remove Watch - politiken.dk
+// @namespace Platypus
+// @include http://politiken.dk/*
+function do_platypus_script() {
+remove_it(window.document,document.getElementById('urfelt'),null,null,null);
+}; // Ends do_platypus_script
+window.addEventListener("load", function() { do_platypus_script() }, false);
+
+function remove_it(doc, node) {
+if (doc == null || node == null) return;
+if (!node.parentNode) return;
+node.style.display = "none";
+doc.last_removed_node = node;
+};

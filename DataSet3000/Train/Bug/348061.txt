@@ -1,0 +1,53 @@
+Browser unnecessarily fetches all SWF files twice.
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.0.6) Gecko/20060728 Firefox/1.5.0.6
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.0.6) Gecko/20060728 Firefox/1.5.0.6
+
+On any page with a Flash SWF Firefox will issue two GETs for the swf file.  I tested with Firefox 1.5.0.5 and 1.5.0.6 both with Flash 8 on WinXP SP2.  I used Ethereal Version 0.10.13 to grab the traces.
+
+The first GET, in my test case, produced a 7700 byte trace in Ethereal and I assume it is incomplete because the second GET produced a 26000 byte trace.  In any case, the two GETs are not the same.
+
+This came up because we've developed a banner server that tracks impressions.  People using Firefox, at least version 1.5.x and perhaps others, are generating double the impressions and this is a problem.
+
+The HTTP headers are below:
+
+GET /ads/i/2394.swf HTTP/1.1
+Host: www.xxx.com
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.0.6) Gecko/20060728 Firefox/1.5.0.6
+Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
+Accept-Language: en-us,en;q=0.5
+Accept-Encoding: gzip,deflate
+Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7
+Keep-Alive: 300
+Connection: keep-alive
+
+
+HTTP/1.1 200 OK
+Date: Wed, 09 Aug 2006 17:27:26 GMT
+Server: Apache/2.0.54 (Debian GNU/Linux) PHP/5.1.4-1.dotdeb.3 mod_ssl/2.0.54 OpenSSL/0.9.7e
+X-Powered-By: PHP/5.1.4-1.dotdeb.3
+Vary: Accept-Encoding
+Content-Encoding: gzip
+Content-Length: 25271
+Keep-Alive: timeout=15, max=100
+Connection: Keep-Alive
+Content-Type: application/x-shockwave-flash
+
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Load page that contains a SWF
+
+Actual Results:  
+Browser issues two GETs for the SWF file
+
+Expected Results:  
+Browser issues one GET for the SWF file
+
+The HTML for the test page looks like:
+
+<object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=6,0,0,0" width="468" height="60"> 
+<param name="movie" value="http://www.xxx.com/ads/i/2394.swf" />
+<embed src="http://www.xxx.com/ads/i/2394.swf" quality="high" pluginspage="http://www.macromedia.com/shockwave/download/index.cgi?P1_Prod_Version=ShockwaveFlash" type="application/x-shockwave-flash" width="468" height="60" /></object>

@@ -1,0 +1,21 @@
+Tabs in Inspector's sidebar should not deform when I close DevTools
+Created attachment 8649244
+Tabs in Inspector's sidebar should not deform when I close DevTools.webm
+
+STR: (Win7, Nightly 43.0a1 (2015-08-15))
+1. Open new tab
+2. Open devtools, open successively all devtools tabs, record a profile (~5% buffer) in Performance tab (so that devtools were "heavy". That's necessary to see the result. Also, it's good if you run Nightly in not-multiprocess mode)
+3. Switch to Inspector tab, make sure that sidebar is opened
+4. Click close button in devtools
+
+Result:       For ~0.5 second I see that tabs in sidebar gain greater height, then devtools collapse
+Expectations: Tabs should remain their height.
+
+I think that this line is responsible for this.
+https://dxr.mozilla.org/mozilla-central/source/browser/devtools/framework/sidebar.js#165
+>    // Moving back the tabs as a first child of the tabbox
+>--->this._tabbox.insertBefore(tabs, this._tabbox.tabpanels);
+>    this._tabbox.querySelector("stack").remove();
+While I don't know why we need to "move back the tabs as a first child of the tabbox" (because it's already 1st child of the tabbox), I still think that line should be corrected
+>-   this._tabbox.insertBefore(tabs, this._tabbox.tabpanels);
+>+   this._tabbox.insertBefore(this._tabbox.tabpanels, tabs);

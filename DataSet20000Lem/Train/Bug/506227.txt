@@ -1,0 +1,42 @@
+intl.accept_languages preconfiguration feature fails in FF 3.x series
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.1.1) Gecko/20090715 Firefox/3.5.1
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.1.1) Gecko/20090715 Firefox/3.5.1
+
+If intl.accept_languages is preconfigured (via so-called mozilla.txt feature) for FF 3.5.1 (and all earlier 3.x versions) both in Windows XP and Linux a this:
+defaultPref("intl.accept_languages", "et,en,en-us");
+or this way
+defaultPref("intl.accept_languages", "et, en, en-us");
+then configruation is not read correctly (not displayed in UI and not sent in http-requests Accept-language: header).
+
+This feature wa working fine in Firefox 2.x and this also work fine in Firefox 3.x if written in locked mode:
+lockPref("intl.accept_languages", "et,en,en-us");
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+0. close Firefox
+1. create mozilla.txt file in Firefox root directory
+2. add this line into mozilla.txt
+defaultPref("intl.accept_languages", "et,en,en-us");
+3. enforce mozilla.txt through all.js
+pref("general.config.filename", "mozilla.txt");
+pref('general.config.obscure_value', 0);
+or any other mechanism (eg. in Linuxes)
+4. open Firefox
+Actual Results:
+As the result:
+- http-requests Accept-language: header is missing
+- in prefs UI Content-Languages is empty and no way to add any language
+but the same time:
+- about:config show a line for intl.accept_languages with the same value a defined
+
+Expected Results:
+I'd expect:
+- http-requests Accept-language: header should be sent
+- in prefs UI Content-Languages contains preconfigured value and allows to change them
+
+Fast workaround:
+Modify preconfigured intl.accept_languages through about:config and value appear in UI and are sent in http-request headers.
+
+I found this error when an non-public webapplication didn't allow logins because of missing Accept-language: header in http-requests (although that also in an error in that application; application is only in english and should'n depend of Accept-language: headers)

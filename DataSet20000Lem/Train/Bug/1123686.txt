@@ -1,0 +1,24 @@
+setBreakpoint should return a promise
+The current way we do breakpoint sliding is broken in two ways:
+1. We assume that setting a breakpoint on a line in an original source corresponds
+to setting a breakpoint to a single line in a generated source. There is
+nothing in the source map spec that guarantee that a single original line can
+only map to a single generated line.
+2. We perform sliding on generated lines, not original lines. Apparently, we
+assume that sliding to the next line in the generated source corresponds to
+sliding to the next line in the original source. Again, there is nothing in the
+source map spec that guarantee this.
+
+What we should be doing is this: given an original source + line, find all generated location that correspond to that line. Next, find all entry point that
+correspond to one or more of these generated locations. If no entry point are
+found, slide to the next line in the *original* source, compute the generated
+location again, and proceed a before. Continue until either we find at least on
+entry point or until we go past the last line in the original source.
+
+There are quite some change we need to make to get there from where we currently are. The plan is to make setBreakpoint the central place to perform breakpoint sliding. That mean setBreakpoint will have to behave a follows:
+
+1. It should take an original location a argument.
+2. It should return a promise (because we will have to compute generated location from the original location)
+3. This promise should resolve to the actual (original) location.
+
+This bug is about step 2, i.e. refactor setBreakpoint so that it always return a promise.

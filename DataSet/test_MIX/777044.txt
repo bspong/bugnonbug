@@ -1,0 +1,84 @@
+networking code has reference cycles; doesn't appear to declare them to the CC; this might be fine of course, just checking
+There don't appear to be any CYCLE_COLLECTING macros in the netwerk/ code:
+
+$ grep -R CYCLE netwerk/ | wc -l
+0
+
+Yet, running a tool that finds reference cycles, I find many reference cycles in the netwerk code, most of them falling into either of the following two patterns (by patterns I mean the set of places in the source code where the referenced objects are allocated).
+
+Please have a look; of course this might be just fine if you're explicitly destroying these objects/references.
+
+Pattern #1:
+
+Contains 2 blocks, listed below. The references are a nsCOMPtr in one way, and a nsRefPtr in the other way.
+
+block 618466
+has references to these blocks: 12696, 530459
+allocation call stack:
+at 0x402B1FE: malloc (vg_replace_malloc.c:268)
+by 0x403BEE4: moz_xmalloc (mozalloc.cpp:54)
+by 0x69704C0: nsInputStreamPump::Create(nsInputStreamPump**, nsIInputStream*, long, long, unsigned int, unsigned int, bool) (mozalloc.h:200)
+by 0x6A2B856: mozilla::net::nsHttpChannel::SetupTransaction() (nsHttpChannel.cpp:866)
+by 0x6A30E17: mozilla::net::nsHttpChannel::ContinueConnect() (nsHttpChannel.cpp:506)
+by 0x6A35E83: mozilla::net::nsHttpChannel::OnCacheEntryAvailable(nsICacheEntryDescriptor*, int, unsigned int) (nsHttpChannel.cpp:5454)
+by 0x6A2E2F7: mozilla::net::HttpCacheQuery::Run() (nsHttpChannel.cpp:2882)
+by 0x79AAF24: nsThread::ProcessNextEvent(bool, bool*) (nsThread.cpp:624)
+by 0x7963E60: NS_ProcessNextEvent_P(nsIThread*, bool) (nsThreadUtils.cpp:217)
+by 0x783433F: mozilla::ipc::MessagePump::Run(base::MessagePump::Delegate*) (MessagePump.cpp:82)
+by 0x79DDB5A: MessageLoop::RunInternal() (message_loop.cc:208)
+by 0x79DDB8B: MessageLoop::Run() (message_loop.cc:175)
+
+block 530459
+has references to these blocks: 270246, 530455, 530467, 530470, 530471, 618452, 618466
+allocation call stack:
+at 0x402B1FE: malloc (vg_replace_malloc.c:268)
+by 0x403BEE4: moz_xmalloc (mozalloc.cpp:54)
+by 0x6A1B659: nsHttpHandler::NewProxiedChannel(nsIURI*, nsIProxyInfo*, nsIChannel**) (mozalloc.h:200)
+by 0x6A196A5: nsHttpHandler::NewChannel(nsIURI*, nsIChannel**) (nsHttpHandler.cpp:1398)
+by 0x6976A2D: nsIOService::NewChannelFromURIWithProxyFlags(nsIURI*, nsIURI*, unsigned int, nsIChannel**) (nsIOService.cpp:657)
+by 0x696E061: NS_NewChannel(nsIChannel**, nsIURI*, nsIIOService*, nsILoadGroup*, nsIInterfaceRequestor*, unsigned int, nsIChannelPolicy*) (nsNetUtil.h:191)
+by 0x6E35C9F: nsScriptLoader::StartLoad(nsScriptLoadRequest*, nsAString_internal const&) (nsScriptLoader.cpp:297)
+by 0x6E3840C: nsScriptLoader::ProcessScriptElement(nsIScriptElement*) (nsScriptLoader.cpp:554)
+by 0x6E3416B: nsScriptElement::MaybeProcessScript() (nsScriptElement.cpp:136)
+by 0x6F4D085: nsHTMLScriptElement::BindToTree(nsIDocument*, nsIContent*, nsIContent*, bool) (nsHTMLScriptElement.cpp:150)
+by 0x6E152C6: nsINode::doInsertChildAt(nsIContent*, unsigned int, bool, nsAttrAndChildArray&) (nsINode.cpp:1304)
+by 0x6E16ED8: nsINode::ReplaceOrInsertBefore(bool, nsINode*, nsINode*) (nsINode.cpp:1886)
+
+
+
+Pattern #2:
+
+
+Contains 2 blocks, listed below. The references are nsCOMPtrs.
+
+block 416833
+has references to these blocks: 12696, 396050
+allocation call stack:
+at 0x402B1FE: malloc (vg_replace_malloc.c:268)
+by 0x403BEE4: moz_xmalloc (mozalloc.cpp:54)
+by 0x6A0DF03: nsHttpConnectionMgr::nsHalfOpenSocket::OnOutputStreamReady(nsIAsyncOutputStream*) (mozalloc.h:200)
+by 0x6990A6D: nsSocketOutputStream::OnSocketReady(unsigned int) (nsSocketTransport2.cpp:490)
+by 0x6990B0E: nsSocketTransport::OnSocketReady(PRFileDesc*, short) (nsSocketTransport2.cpp:1532)
+by 0x69954EA: nsSocketTransportService::DoPollIteration(bool) (nsSocketTransportService2.cpp:743)
+by 0x69956FC: nsSocketTransportService::Run() (nsSocketTransportService2.cpp:614)
+by 0x79AAF24: nsThread::ProcessNextEvent(bool, bool*) (nsThread.cpp:624)
+by 0x7963E60: NS_ProcessNextEvent_P(nsIThread*, bool) (nsThreadUtils.cpp:217)
+by 0x79AA5D0: nsThread::ThreadFunc(void*) (nsThread.cpp:257)
+by 0x4085FFA: _pt_root (ptthread.c:156)
+by 0x4A2CE99: start_thread (pthread_create.c:308)
+
+block 396050
+has references to these blocks: 416414, 416833
+allocation call stack:
+at 0x402B1FE: malloc (vg_replace_malloc.c:268)
+by 0x403BEE4: moz_xmalloc (mozalloc.cpp:54)
+by 0x6993A0C: nsSocketTransportService::CreateTransport(char const**, unsigned int, nsACString_internal const&, int, nsIProxyInfo*, nsISocketTransport**) (mozalloc.h:200)
+by 0x6A0A2D7: nsHttpConnectionMgr::nsHalfOpenSocket::SetupStreams(nsISocketTransport**, nsIAsyncInputStream**, nsIAsyncOutputStream**, bool) (nsHttpConnectionMgr.cpp:2388)
+by 0x6A0AF61: nsHttpConnectionMgr::nsHalfOpenSocket::SetupPrimaryStreams() (nsHttpConnectionMgr.cpp:2450)
+by 0x6A0D357: nsHttpConnectionMgr::CreateTransport(nsHttpConnectionMgr::nsConnectionEntry*, nsAHttpTransaction*, unsigned char, bool) (nsHttpConnectionMgr.cpp:1759)
+by 0x6A0ECE6: nsHttpConnectionMgr::OnMsgSpeculativeConnect(int, void*) (nsHttpConnectionMgr.cpp:2284)
+by 0x6A05C35: nsHttpConnectionMgr::nsConnEvent::Run() (nsHttpConnectionMgr.h:538)
+by 0x79AAF24: nsThread::ProcessNextEvent(bool, bool*) (nsThread.cpp:624)
+by 0x7963E60: NS_ProcessNextEvent_P(nsIThread*, bool) (nsThreadUtils.cpp:217)
+by 0x6995723: nsSocketTransportService::Run() (nsSocketTransportService2.cpp:621)
+by 0x79AAF24: nsThread::ProcessNextEvent(bool, bool*) (nsThread.cpp:624)

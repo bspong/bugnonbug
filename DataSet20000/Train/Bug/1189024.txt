@@ -1,0 +1,9 @@
+Set filterUnits and primitiveUnits to objectBoundingBox for Devtools "invert" filter
+As noted in bug 1180048 comment 13, we're triggering some NS_WARNINGS when rendering filters.svg's "invert" filter for the first time (at least), due to it having percentages which apply to a frame which initially has 0 width and 0 height (until reflow has completed).
+
+This is in part because it has the default "userSpaceOnUse" sizing behavior, which means x/y/width/height are in the coordinate space that the target-element is inside of:
+ http://www.w3.org/TR/SVG11/filters.html#FilterElementPrimitiveUnitsAttribute
+
+This filter *really* wants to have its units (x="0%" y="0%" width="100%" height="100%") apply to the target-element's bounding-box -- not to the coordinate space around the element.  So, it should request objectBoundingBox to opt-in to that sizing behavior.
+
+(I'm not 100% sure, but I think objectBoundingBox and userSpaceOnUse effectively behave the same when SVG filters are applied to HTML content.  But we get to the eventual result in different ways, and in this case we trip over ourselves a bit [triggering this warning] when trying to evaluate the userSpaceOnUse behavior -- so directly asking for objectBoundingBox would be nicer there, in addition to being a bit more declarative about the intent.)

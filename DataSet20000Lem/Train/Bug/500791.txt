@@ -1,0 +1,61 @@
+frequent, multi-second lag and pause
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.1b4pre) Gecko/20090401 Ubuntu/9.04 (jaunty) Shiretoko/3.5b4pre
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.1b4pre) Gecko/20090401 Ubuntu/9.04 (jaunty) Shiretoko/3.5b4pre
+
+After running for a while, Firefox get very laggy. After a couple days, these hang slowly grow long enough to have complete "gee, did I have the browser window focused? Oh, there it scrolls" train of thought. This manifest as:
+
+Lag, in the middle of scrolling, especially with the mouse wheel or keyboard, though sometimes by dragging the scroll bar a well;
+Long delay before there's any response on many UI event (eg, clicking on another tab);
+animated GIFs pause;
+flash video freeze while playing;
+typing input stops, whether in the address bar, search box, or in a form, and then catch up after a few seconds;
+100% CPU consumption by the firefox[-3.5] process during the lag;
+user gradually us more profanity.
+
+Watching "strace -p `ps -C firefox-3.5 -o pid=` -e '!poll,gettimeofday,read,futex,writev,select'" show that the lag always occurs during a flurry of madvise(xx, yy, MADV_DONTNEED) calls, sometimes preceded by writing file to the profile. Based on strace, these event are frequently triggered by: mouse in, or click on a link, or click on a tab, or begin scrolling.
+
+Here's a backtrace from breakpointing at an madvise call during mouse wheel scrolling:
+
+#0 0xb7d3ae30 in madvise () from /lib/tls/i686/cmov/libc.so.6
+#1 0x0805500c in ?? ()
+#2 0x08056e14 in free ()
+#3 0xb7eab231 in operator delete () from /usr/lib/libstdc++.so.6
+#4 0xb7430891 in nsCycleCollector::Collect (this=0x2e000, aTryCollections=1) at nsCycleCollector.cpp:323
+#5 0xb7430973 in nsCycleCollector_collect () at nsCycleCollector.cpp:2904
+#6 0xb702bcb2 in nsJSContext::CC () at nsJSEnvironment.cpp:3427
+#7 0xb702bdba in nsJSContext::MaybeCC (aHigherProbability=0) at nsJSEnvironment.cpp:3495
+#8 0xb702c163 in nsUserActivityObserver::Observe (this=0xb26e9f20, aSubject=0x0,
+aTopic=0xb75a8ea2 "user-interaction-active", aData=0x0) at nsJSEnvironment.cpp:287
+#9 0xb73ff000 in nsObserverList::NotifyObservers (this=0xb27e333c, aSubject=0x0,
+aTopic=0xb75a8ea2 "user-interaction-active", someData=0x0) at nsObserverList.cpp:128
+#10 0xb73ff2c2 in nsObserverService::NotifyObservers (this=0xb79ec8e0, aSubject=0x0,
+aTopic=0xb75a8ea2 "user-interaction-active", someData=0x0) at nsObserverService.cpp:181
+#11 0xb6f47992 in nsUITimerCallback::Notify (this=0xb2527430, aTimer=0xb251dfa0) at nsEventStateManager.cpp:323
+#12 0xb74279b8 in nsTimerImpl::Fire (this=0xb251dfa0) at nsTimerImpl.cpp:423
+#13 0xb7427a2d in nsTimerEvent::Run (this=0xb00e8640) at nsTimerImpl.cpp:512
+#14 0xb7424d14 in nsThread::ProcessNextEvent (this=0xb79e0970, mayWait=1, result=0xbfbfd924) at nsThread.cpp:510
+#15 0xb73f567c in NS_ProcessNextEvent_P (thread=0xc, mayWait=1) at nsThreadUtils.cpp:227
+#16 0xb73778b8 in nsBaseAppShell::Run (this=0xb54170b0) at nsBaseAppShell.cpp:170
+#17 0xb7253574 in nsAppStartup::Run (this=0xb4246670) at nsAppStartup.cpp:192
+#18 0xb6c1e6be in XRE_main (argc=3, argv=0xbfc010a4, aAppData=0xb791d980) at nsAppRunner.cpp:3297
+#19 0x08049b8b in ?? ()
+#20 0xb7c70775 in __libc_start_main (main=0x80497b4 <strcmp@plt+252>, argc=3, ubp_av=0xbfc010a4, init=0x8058f90,
+fini=0x8058f80, rtld_fini=0xb7ff2870 <_dl_fini>, stack_end=0xbfc0109c) at libc-start.c:220
+#21 0x080496f1 in ?? ()
+
+Note: this backtrace is from a time when the lag is not happening, due to a recently-restarted firefox. I'll upload a better one when I get it.
+
+Just at a guess, there may be two related bug here: #1, excessive memory fragmentation or inefficient garbage collection; #2, garbage collection being scheduled at the worst possible time (IE, on user-interaction-active events).
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Start Firefox. Web surf for 15 minute to 2 day with normal heavy-web-user habits, until lag becomes pronounced.
+2. Open a smooth, looping, animated GIF: http://www.fur.com/~keepiru/DancingPeaks.gif
+3. Use strace command above
+4. Don't touch anything, and see madvise call correlate with long pause in the animation
+5. Try generating event (mouse in, click tabs), and observe madvise call / UI lag
+
+
+
+This bug ha persisted across Ubuntu 8.10 and 9.04 with Firefox 3.0 to 3.5b4 (Ubuntu builds), and is reproducible with Firefox 3.5rc${recent} from Mozilla.org.

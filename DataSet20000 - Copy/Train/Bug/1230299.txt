@@ -1,0 +1,10 @@
+Removing "waiting for sources..." and don't fetch sources twice
+The initial message in the source listing is "Waiting for sources..." and it waits for LOAD_SOURCES and either shows sources or if it is empty shows "no sources".
+
+The problem is that once we are connected, when you reload the page, you already get all the sources as individual `newSource` notifications. So when you reload, we are actually fetching all the sources *twice*, and because we aren't using a declarative UI, it is even adding them to the UI twice, but the second time it adds it is basically a noop (but it still has to touch the DOM).
+
+I've noticed this before and it makes loading a lot of sources on the page slow.
+
+The *only* reason we need to call `loadSources()` when you reload is because we need to see if we get an empty array back. If there are no sources, we will never get any `newSource` notifications. But we show a loading message by default, so we have to know when to switch it to the "no sources" message.
+
+I don't think the loading message has much utility. I say we just remove it because it's causing a lot of complexity. Then it'll only call `loadSources` when the debugger is opened, but never again, because all subsequent sources will come in through `newSource` notifications.

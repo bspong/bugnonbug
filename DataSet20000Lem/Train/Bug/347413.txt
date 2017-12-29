@@ -1,0 +1,27 @@
+Java applet don't load if a PAC file is used for proxy configuration
+User-Agent: Mozilla/5.0 (Macintosh; U; PPC Mac OS X Mach-O; en-US; rv:1.8.0.6) Gecko/20060728 Firefox/1.5.0.6
+Build Identifier: Mozilla/5.0 (Macintosh; U; PPC Mac OS X Mach-O; en-US; rv:1.8.0.6) Gecko/20060728 Firefox/1.5.0.6
+
+If I am behind a corporate firewall and I configure Mac OS (via the Proxy panel of the Network system settings) to use a PAC file for proxy autoconfiguration, Java applet won't load. The attached URL is Sun's page for testing JVM's, and it demonstrates the problem.
+
+If I manually configure the proxy to use a specific IP address and port, then applet load and run OK.
+
+Safari doe not exhibit this problem.
+
+According to the Java Console logs, two plugins load when this page is accessed. First, Apple's Java 1.5.0 plugin load - which correctly handle the PAC file. Then, the MRJ plugin (part of the Firefox application bundle) loads, which doesn't like the PAC file, and therefore try to use DIRECT connection to load the applet - which fails because of the corporate firewall.
+
+On Safari, the MRJ plugin is not used, only the Apple Java plugin, and everything is loaded through the proxy, a it should be.
+
+I will attach the Java Console logs.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Configure Mac OS to use a PAC file for proxy configuration (Firefox's configuration doesn't matter. The Java plugins use the OS's configuration.)
+
+2. Visit http://www.java.com/en/download/help/testvm.xml
+Actual Results:
+You get a red "X" icon where the applet should be. The Java Console (if enabled with tracing information) show that this is because the PAC file wa not used, so the attempt to load the class got blocked by the corporate firewall.
+
+Expected Results:
+The JVM test applet should've run, displaying version information along with a dancing "Duke" icon.

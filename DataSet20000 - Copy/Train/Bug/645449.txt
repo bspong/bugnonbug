@@ -1,0 +1,32 @@
+firefox spending 100% CPU time in XCloseDisplay->XReply after quitting on F14
+User-Agent:       Mozilla/5.0 (X11; U; Linux x86_64; en-US) AppleWebKit/534.16 (KHTML, like Gecko) Chrome/10.0.648.204 Safari/534.16
+Build Identifier: Firefox 4.0
+
+OS: Fedora 14/x86-64 with 32bit firefox 4.0
+
+I quit firefox 4.0 after a browsing session and after the windows were gone
+firefox-bin took 100% CPU time without quitting.
+
+In perf top I see 99%+ of the CPU time is spent in _XReply and some 
+related functions
+
+Attaching gdb I see
+
+(gdb) bt
+#0  0x4ed983bc in _XReply () from /usr/lib/libX11.so.6
+#1  0x4ed7c629 in XListExtensions () from /usr/lib/libX11.so.6
+#2  0x0104fa65 in ?? () from /home2/andi/firefox/libxul.so
+#3  0x4ed979f2 in ?? () from /usr/lib/libX11.so.6
+#4  0x4ed97a3d in ?? () from /usr/lib/libX11.so.6
+#5  0x4ed984e8 in _XReply () from /usr/lib/libX11.so.6
+#6  0x4ed8b878 in XSync () from /usr/lib/libX11.so.6
+#7  0x4ed6b07c in XCloseDisplay () from /usr/lib/libX11.so.6
+#8  0x47ec6ea0 in ?? () from /usr/lib/libgdk-x11-2.0.so.0
+#9  0x4efbe13c in g_object_unref () from /lib/libgobject-2.0.so.0
+#10 0x47e93ee8 in gdk_display_close () from /usr/lib/libgdk-x11-2.0.so.0
+#11 0x01045251 in ?? () from /home2/andi/firefox/libxul.so
+Backtrace stopped: previous frame inner to this frame (corrupt stack?)
+
+
+
+Reproducible: Didn't try

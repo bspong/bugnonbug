@@ -1,0 +1,45 @@
+pdf.js: too many copies of images
+Decoding and painting an image in pdf.js involves lots of copies of the data.
+
+(a) pdf.worker.js is a JS worker. It first decodes the colour data from the PDF
+    into an RGB array (24 bits per pixel), and the opacity data into an A array
+    (8 bits per pixel). These two combined are effectively copy 1.
+
+(b) pdf.worker.js combines the RGB and A arrays into a new RGBA typed array,
+    which has 32 bits per pixel. This is copy 2. Copy 1 is now dead, and will
+    be reclaimed by the next GC.
+
+(c) pdf.worker.js transfers copy 2 to the main pdf.js thread. (This is a
+    transfer, not a copy, possible because it's a typed array.)
+
+(d) pdf.js does |d = createImageData()|, which ends up in
+    mozilla::dom::CreateImageData(), which allocates a Uint8ClampedArray. This
+    is copy 3. pdf.js copies the typed arrays (copy 2) into the ImageData (copy
+    3). Copy 2 is now dead, and will be reclaimed by the next GC.
+
+(e) pdf.js does |putImageData(d, 0, 0)|, which ends up in
+    mozilla::dom::CanvasRenderingContext2D::PutImageData_explicit.
+    
+(f) PutImageData_explicit() creates a new gfxImageSurface() and copies in the
+    data. This is copy 4, and it is short-lived.
+
+(g) PutImageData_explicit() then calls CreateSourceSurfaceFromData(), creating
+    a cairo surface. This is copy 5, and it is short-lived. Copy 3 is now dead,
+    and will be reclaimed by the next GC(?)
+
+Each copy can easily be multiple MB, and in the worst case (which is probably
+common) we have five copies of the data alive at once.
+
+So, ways to improve it.
+
+- In steps (d) and (e) we can split the image up into smaller chunks, and then
+  create/put those chunks one at a time. This will make copies 3, 4 and 5 much
+  smaller.
+
+- In steps (a) and (b) it is possible to decode the data directly into the RGBA
+  array, which would merge copies 1 and 2. However, it's not easy, due to the
+  various kinds of colour encodings and the possibility of images being
+  resized.
+
+If we did both of those, we end up with one full-size copy, and three copies of
+each chunk, but two of the copies of each chunk would be very short-lived.

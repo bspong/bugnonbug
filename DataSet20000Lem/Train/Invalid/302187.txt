@@ -1,0 +1,30 @@
+Shared section vulnerability when opening microsoft office document resulting in DoS
+User-Agent: Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.1.4322)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; fr-FR; rv:1.7.8) Gecko/20050511 Firefox/1.0.4
+
+There is a shared section vulnerability in office product when trying to open
+an office document with firefox. For example try to open a word document
+attached in a webmail. firefox.exe process will create a son winword.exe
+process. When creating this process a shared section is created called
+\BaseNameObjects\Mso97SharedDgXXXXXXXX (the number may change I am not sure at
+the present time). The right on this shared section are put on "everyone" for
+delete/synchronise/query/modify. this allows to write arbitrary data and to
+perform a Dos against ALL Office open applications.
+As the firefox.exe process is responsible of the creation of the winword.exe
+it is a firefox vulnerability. The issue is not present with Internet Explorer
+for example.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Open by instance a word document from firefox to create a winword.exe
+process
+2. Use for example Process Explorer (sysinternals.com) to identify the
+\BaseNameObjects\Mso97SharedDgXXXXXXXX shared section and look at the right
+3. Use TestSS tool from A. Cerrudo to write arbitrary data on this section
+
+Actual Results:
+DoS of all office application
+
+Expected Results:
+create the winword process with good right on the shared section

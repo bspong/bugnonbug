@@ -1,0 +1,59 @@
+Firefox hangs when loading MIME content
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.5) Gecko/20050210 Firefox/1.0 (Debian package 1.0+dfsg.1-6)
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.5) Gecko/20050210 Firefox/1.0 (Debian package 1.0+dfsg.1-6)
+
+After I installed some additional software on my machine, Firefox started
+freezing anytime I loaded a non-vanilla html file.  In other words if I clicked
+to download a file or multimedia content, Firefox would freeze hard.  This did
+not usually affect X Window or Linux directly.  Doing a 'killall firefox-bin'
+would kill the offending process.
+
+Having never seen this before, I thought that one of my last kernel changes had
+screwed up Firefox.  Luckily I ran 'strace' to find out what was going on.
+
+As you can see below, the trace begins with Firefox doing a polling routine as
+it waits for events.  When I click on a 'download' link, Firefox does a number
+of things, but primarily it's looking for MIME libraries to figure out what to
+do with the content I just clicked on.
+
+If you look closely, it does manage to open the '/usr/lib/gnome-vfs-2.0
+directory looking for the 'modules' subdirecty and various helper modules.  It
+apparently loads the one it's looking for and then uses some sort of gnome-vfs
+protocol to try to load the correct helper app.  Some of that routine includes
+opening up an RPC channel to the localhost.
+
+Well since I just have gnome-vfs installed, but I'm running XFCE4 there isn't
+anyone listening for RPC/Orbit requests.  It essentially waits forever.
+
+I even told XFCE4 to startup gnome services after starting itself, but to no avail.
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Have libgnomevfs2-common installed on Debian or gnome-vfs-2.0 folder in the
+/usr/lib/ file hierarchy.
+2. Use XFCE4 (or possibly another) Window Manager.  Anything but Gnome/Metacity.
+3. Load up Firefox and click on any page that would normally be processed as an
+unknown or non-native file type.
+4. Watch Firefox Lockup Hard
+ 
+
+Actual Results:  
+Firefox locked up hard, but Linux and X Window are still active and stable.
+
+Expected Results:  
+Firefox should either give you a popup asking where to save the content, or it
+should already know what helper application to use.
+
+Firefox should not believe that vfs2 MIME services are actually available unless
+it's made calls to check that gnome-vfs-2.0 services is actually listening.
+
+
+
+
+Problem was isolated using 'strace firefox'.  
+
+Temporary, but ugly work around is to rename the /usr/lib/gnome-vfs-2.0
+directory to something else.  That fixes the problem, but if you use this I hope
+you don't need gnome-vfs functionality ;-)

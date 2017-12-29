@@ -1,0 +1,79 @@
+Firefox : 3 render problems: #1: body tag margin displaces first output line above pixel line 1 #2: 12x <big> will disable <br> #3: &nbsp not correctly recognized by missing cutoff at parsing even if a semicolon is missing
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.0; de-DE; rv:1.7.10) Gecko/20050717 Firefox/1.0.6
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.0; de-DE; rv:1.7.10) Gecko/20050717 Firefox/1.0.6
+
+Concerning Firefox (until 1.0.6):
+HTML sourcecode example
+
+<html>
+
+
+<!-- Margins set like in line 11 of the body tag will move the first line almost
+out of sight = before line 1
+Question: How could you ever level up logical (text and graphics) line 1 before
+actual line 1 in the output context ?
+This in an inconsequent behaviour to me ! Only CSS shall be able to do thing
+like that (if wanted to place the starting pixel line out of (=above) the output
+context.
+
+Consequence: Let graphical pixel line 1 be the top of the output in any case
+except for ! a CSS setting ! is altering the first pixel line to a level above
+the first pixel line -->
+
+<!-- Leave away the margin setting of the body tag below - here in the HTML
+source - to observe mistake 2 and 3 in a more convenient way -->
+
+<body rightmargin="0" topmargin="0" leftmargin="0" bottommargin="0"
+marginheight="0" marginwidth="0">
+
+
+<!-- Mistake 2: combination of two nested font tag with 12 !!! (11 do not show
+the mistake) BIG tag disables the linefeed by <br>
+Hint: Obviously an error - a sort of overflow - in the tag counting structure
+and the procedure managing these -->
+
+<!-- Leave away one BIG tag and strangely enough it will work in Firefox a
+expected -->
+
+<FONT face=times color=#ff6820 size=5>
+<BIG><BIG><BIG><BIG><BIG><BIG><BIG><BIG><BIG><BIG><BIG>
+<BIG>
+<FONT size=2>
+Line 1 Line 1 Line 1 Line 1 Line 1 Line 1 Line 1 Line 1 Line 1 Line 1 Line 1
+Line 1 Line 1 Line 1 Line 1 Line 1 Line 1 Line 1
+<br>
+
+
+<!-- Mistake 3: leaving no space between &nbsp and the string "Line..." make
+the special character '&nbsp' to be interpreted a text rather than a special
+character.
+Solution: Parsing '&nbsp' should immediately result in a space character in the
+output stream ! -->
+
+&nbspLine 2 Line 2 Line 2 Line 2 Line 2 Line 2 Line 2 Line 2 Line 2 Line 2 Line
+2 Line 2 Line 2 Line 2 Line 2 Line 2 Line 2 Line 2
+
+</FONT>
+</BIG></BIG></BIG></BIG></BIG></BIG></BIG></BIG></BIG></BIG></BIG>
+</BIG>
+</font>
+
+
+</body>
+</html>
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. just save the html code of the Details section to a .htm file and opem the
+.htm file with Firefox to see mistake 1
+2. delete the margin setting of the body tag to see mistake 2 and 3
+3. delete one <big> </big> tag bracket to see mistake 2 to disappear, insert a
+blank character after &nbsp to make mistake 3 go away
+
+
+Expected Results:
+See comment in the code example in Details section
+
+AMD K8 Athlon64 3000+, 2 GB DDR400, Windows 2000 SP4 + SP5, Firefox 1.0.6

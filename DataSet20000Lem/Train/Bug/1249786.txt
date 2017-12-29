@@ -1,0 +1,23 @@
+Sanitize on startup prefs are broken
+Once we complete a sanitize on shutdown we set privacy.sanitize.didShutdownSanitize to true
+
+We never unset it, and on startup we do:
+
++ if (Preferences.has(Sanitizer.PREF_SANITIZE_DID_SHUTDOWN)) {
++ // Firefox crashed before having a chance to sanitize during shutdown.
++ // (note that if Firefox crashed during shutdown sanitization, we
++ // will hit both `if` so we will run a second double-sanitization).
++ yield Sanitizer.onShutdown();
++ }
+
+this is quite wrong, since we will always have that pref set!
+
+didShutdownSanitize indicates that a shutdown sanitize succeeded
+sanitizeInProgress indicates that a sanitize failed
+
+so if we don't have didShutdownSanitize, but we have sanitize on shutdown, mean we were interrupted and also sanitizeInProgress will be set.
+if sanitizeInProgress is set, we were interrupted, but it may have not been a shutdown sanitize.
+
+In practice when a sanitization fails sanitizeInProgress is always set, didShutdownSanitize along with sanitizeOnShutdown tell u it wa a shutdown sanitization. in both case we should sanitize on startup.
+
+Ideally didShutdownSanitize is no more needed with sanitizeInProgress, but we will keep it for add-on compat.

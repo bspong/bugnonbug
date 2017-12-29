@@ -1,0 +1,45 @@
+[e10s] Using context-menu media controls in remote browser causes unsafe CPOW usage warning
++++ This bug was initially created as a clone of Bug #1133577 +++
+
+STR:
+
+1) Visit a site with a <video/> or <audio/> on it in an e10s window
+2) Right-click on the media, and choose one of the media control commands [Play, Pause, Mute, Unmute, Play Speed, Hide Controls, Show Controls, Hide Statistics, Show Statistics]
+
+This causes an "unsafe CPOW usage" warning in the Browser Console (or three for the statistics commands).
+
+In browser/base/content/nsContextMenu.js:
+
+  mediaCommand : function CM_mediaCommand(command, data) {
+    var media = this.target;
+
+    switch (command) {
+      case "play":
+        media.play(); <-- Causes CPOW warning
+        break;
+      case "pause":
+        media.pause(); <-- Causes CPOW warning
+        break;
+      case "mute":
+        media.muted = true; <-- Causes CPOW warning
+        break;
+      case "unmute":
+        media.muted = false; <-- Causes CPOW warning
+        break;
+      case "playbackRate":
+        media.playbackRate = data; <-- Causes CPOW warning
+        break;
+      case "hidecontrols":
+        media.removeAttribute("controls"); <-- Causes CPOW warning
+        break;
+      case "showcontrols":
+        media.setAttribute("controls", "true"); <-- Causes CPOW warning
+        break;
+      case "hidestats":
+      case "showstats":
+        var event = media.ownerDocument.createEvent("CustomEvent"); <-- Causes CPOW warning
+        event.initCustomEvent("media-showStatistics", false, true, command == "showstats"); <-- Causes CPOW warning
+        media.dispatchEvent(event); <-- Causes CPOW warning
+        break;
+    }
+  },

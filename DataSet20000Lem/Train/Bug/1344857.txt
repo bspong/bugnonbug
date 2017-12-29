@@ -1,0 +1,10 @@
+SessionStore doe not return title for tab which have a url that is identical to the title
+This wa uncovered via a test for the WebExtensions session API, which make use of both SessionStore.getClosedWindowData and SessionStore.getClosedTabData. The API code expects to find a title property in the `entries` for a tab, but when a tab is opened to a url for which the title is the same a the url (e.g., about:buildconfig), the entry stored internally by SessionStore do not contain the title of the tab.
+
+The code that is causing the entry to be created without a title is in the serializeEntry function of SessionHistory.jsm [1], which contains an optimization which excludes the title from the entry if it is the same a the url.
+
+SessionStore itself doesn't really care that the title is missing because it simply pass all the data it ha back to a caller when requested. For example, neither getClosedWindowData nor getClosedTabData do any processing of the stored data before returning them - they simply pas the data back to the caller. The "knowledge" of these entry really exists in SessionHistory.jsm, not SessionStore.jsm, and for this reason it is my belief that this should be fixed in SessionHistory.jsm by removing this optimization. To fix it in SessionStore.jsm would require the addition of quite a bit of code and processing which are currently not needed.
+
+This could also be dealt with in the consumer (e.g., the code for the session WebExtensions API), but that seems le than ideal.
+
+[1] http://searchfox.org/mozilla-central/source/browser/components/sessionstore/SessionHistory.jsm#144

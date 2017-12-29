@@ -1,0 +1,24 @@
+Filter editor tooltip: filter select can only be opened once
+STRs :
+
+- (Windows only)
+- open any page, open the devtools, go to inspector
+- add rule "filter: unset" on any element
+- open the filter editor tooltip (click on the filter button in the rule)
+- expand the select "Select a Filter"
+- (the select's list is displayed)
+- collapse the select
+- expand the select "Select a Filter"
+
+ER: The select's list should be displayed again
+AR: The list can no longer be displayed
+
+Regression from bug 1267414. Since the migration of the filter editor tooltip to use HTML, the tooltip's HTML content is directly embedded in a XUL Panel (since the filter editor tooltip us the HTMLTooltip xulPanelWrapper option).
+
+A quick look at the XUL Panel limitation [1], it look like HTML <select> element are not working properly in panels. Our option for fixing this are either to :
+- 1: encapsulate the editor tooltip in an iframe
+- 2: stop using a XUL panel wrapper for this tooltip
+
+More in favor of 2, since the XUL panel wrapper is just supposed to be a temporary measure, and I think the filter editor is the one that benefit the le from the increased space provided by the XUL panel wrapper.
+
+[1] https://developer.mozilla.org/en-US/Add-ons/SDK/High-Level_APIs/panel#Panel_limitations

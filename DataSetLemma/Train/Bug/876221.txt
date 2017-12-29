@@ -1,0 +1,141 @@
+ASAN stack-buffer-overflow in mozilla::DisplayItemClip::IntersectWith
+Created attachment 754207
+testcase (crashes firefox)
+
+The attached testcase crash the latest nightly build.
+
+ASAN output:
+
+==6688== ERROR: AddressSanitizer: stack-buffer-overflow on address 0x7fff37ec45e0 at pc 0x7f7b3031cba3 bp 0x7fff37ec1bb0 sp 0x7fff37ec1ba8
+READ of size 1 at 0x7fff37ec45e0 thread T0
+#0 0x7f7b3031cba2 in mozilla::DisplayItemClip::IntersectWith(mozilla::DisplayItemClip const&) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/base/DisplayItemClip.cpp:56:0
+#1 0x7f7b3031fe95 in mozilla::DisplayListClipState::GetCurrentCombinedClip(nsDisplayListBuilder*) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/base/DisplayListClipState.cpp:24:0
+#2 0x7f7b303dc2a4 in nsDisplayItem::nsDisplayItem(nsDisplayListBuilder*, nsIFrame*) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/svg/../base/nsDisplayList.h:723:0
+#3 0x7f7b303d51fd in nsDisplayImageContainer::nsDisplayImageContainer(nsDisplayListBuilder*, nsIFrame*) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/xul/base/src/../../../base/nsDisplayList.h:1657:0
+#4 0x7f7b303d4d3b in nsDisplayBackgroundImage::nsDisplayBackgroundImage(nsDisplayListBuilder*, nsIFrame*, unsigned int, bool, nsStyleBackground const*) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/base/nsDisplayList.cpp:1564:0
+#5 0x7f7b303d5f57 in nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder*, nsIFrame*, nsDisplayList*, nsDisplayBackgroundImage**) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/base/nsDisplayList.cpp:1672:0
+#6 0x7f7b3055b08d in nsFrame::DisplayBorderBackgroundOutline(nsDisplayListBuilder*, nsDisplayListSet const&, bool) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/generic/nsFrame.cpp:1508:0
+#7 0x7f7b304e2993 in nsTextControlFrame::BuildDisplayList(nsDisplayListBuilder*, nsRect const&, nsDisplayListSet const&) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/forms/nsTextControlFrame.cpp:1458:0
+#8 0x7f7b3055d67d in nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*, nsIFrame*, nsRect const&, nsDisplayListSet const&, unsigned int) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/generic/nsFrame.cpp:2161:0
+#9 0x7f7b30522538 in DisplayLine(nsDisplayListBuilder*, nsRect const&, nsRect const&, nsLineList_iterator&, int, int&, nsDisplayListSet const&, nsBlockFrame*, mozilla::css::TextOverflow*) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/generic/nsBlockFrame.cpp:6157:0
+#10 0x7f7b305214c8 in nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*, nsRect const&, nsDisplayListSet const&) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/generic/nsBlockFrame.cpp:6248:0
+#11 0x7f7b3055d828 in nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*, nsIFrame*, nsRect const&, nsDisplayListSet const&, unsigned int) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/generic/nsFrame.cpp:2148:0
+#12 0x7f7b30522538 in DisplayLine(nsDisplayListBuilder*, nsRect const&, nsRect const&, nsLineList_iterator&, int, int&, nsDisplayListSet const&, nsBlockFrame*, mozilla::css::TextOverflow*) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/generic/nsBlockFrame.cpp:6157:0
+#13 0x7f7b305214c8 in nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*, nsRect const&, nsDisplayListSet const&) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/generic/nsBlockFrame.cpp:6248:0
+#14 0x7f7b3055d67d in nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*, nsIFrame*, nsRect const&, nsDisplayListSet const&, unsigned int) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/generic/nsFrame.cpp:2161:0
+#15 0x7f7b30522538 in DisplayLine(nsDisplayListBuilder*, nsRect const&, nsRect const&, nsLineList_iterator&, int, int&, nsDisplayListSet const&, nsBlockFrame*, mozilla::css::TextOverflow*) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/generic/nsBlockFrame.cpp:6157:0
+#16 0x7f7b305214c8 in nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*, nsRect const&, nsDisplayListSet const&) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/generic/nsBlockFrame.cpp:6248:0
+#17 0x7f7b3055d828 in nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*, nsIFrame*, nsRect const&, nsDisplayListSet const&, unsigned int) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/generic/nsFrame.cpp:2148:0
+#18 0x7f7b30522538 in DisplayLine(nsDisplayListBuilder*, nsRect const&, nsRect const&, nsLineList_iterator&, int, int&, nsDisplayListSet const&, nsBlockFrame*, mozilla::css::TextOverflow*) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/generic/nsBlockFrame.cpp:6157:0
+#19 0x7f7b305214c8 in nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*, nsRect const&, nsDisplayListSet const&) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/generic/nsBlockFrame.cpp:6248:0
+#20 0x7f7b3055d828 in nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*, nsIFrame*, nsRect const&, nsDisplayListSet const&, unsigned int) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/generic/nsFrame.cpp:2148:0
+#21 0x7f7b30522538 in DisplayLine(nsDisplayListBuilder*, nsRect const&, nsRect const&, nsLineList_iterator&, int, int&, nsDisplayListSet const&, nsBlockFrame*, mozilla::css::TextOverflow*) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/generic/nsBlockFrame.cpp:6157:0
+#22 0x7f7b305214c8 in nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*, nsRect const&, nsDisplayListSet const&) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/generic/nsBlockFrame.cpp:6248:0
+#23 0x7f7b3055d828 in nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*, nsIFrame*, nsRect const&, nsDisplayListSet const&, unsigned int) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/generic/nsFrame.cpp:2148:0
+#24 0x7f7b305bd5c6 in nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*, nsRect const&, nsDisplayListSet const&) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/generic/nsCanvasFrame.cpp:334:0
+#25 0x7f7b3055d828 in nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*, nsIFrame*, nsRect const&, nsDisplayListSet const&, unsigned int) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/generic/nsFrame.cpp:2148:0
+#26 0x7f7b305ab020 in nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*, nsRect const&, nsDisplayListSet const&) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/generic/nsGfxScrollFrame.cpp:2179:0
+#27 0x7f7b3055d828 in nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*, nsIFrame*, nsRect const&, nsDisplayListSet const&, unsigned int) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/generic/nsFrame.cpp:2148:0
+#28 0x7f7b30674539 in ViewportFrame::BuildDisplayList(nsDisplayListBuilder*, nsRect const&, nsDisplayListSet const&) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/generic/nsViewportFrame.cpp:74:0
+#29 0x7f7b3055baff in nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder*, nsRect const&, nsDisplayList*) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/generic/nsFrame.cpp:1827:0
+#30 0x7f7b3062d361 in nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*, nsRect const&, nsDisplayListSet const&) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/generic/nsSubDocumentFrame.cpp:409:0
+#31 0x7f7b3055baff in nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder*, nsRect const&, nsDisplayList*) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/generic/nsFrame.cpp:1827:0
+#32 0x7f7b3055d5a6 in nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*, nsIFrame*, nsRect const&, nsDisplayListSet const&, unsigned int) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/generic/nsFrame.cpp:2132:0
+#33 0x7f7b30865db9 in nsStackFrame::BuildDisplayListForChildren(nsDisplayListBuilder*, nsRect const&, nsDisplayListSet const&) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/xul/base/src/nsStackFrame.cpp:59:0
+#34 0x7f7b3085a0ca in nsBoxFrame::BuildDisplayList(nsDisplayListBuilder*, nsRect const&, nsDisplayListSet const&) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/xul/base/src/nsBoxFrame.cpp:1324:0
+#35 0x7f7b3055d828 in nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*, nsIFrame*, nsRect const&, nsDisplayListSet const&, unsigned int) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/generic/nsFrame.cpp:2148:0
+#36 0x7f7b3085a316 in nsBoxFrame::BuildDisplayListForChildren(nsDisplayListBuilder*, nsRect const&, nsDisplayListSet const&) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/xul/base/src/nsBoxFrame.cpp:1358:0
+#37 0x7f7b3085a0ca in nsBoxFrame::BuildDisplayList(nsDisplayListBuilder*, nsRect const&, nsDisplayListSet const&) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/xul/base/src/nsBoxFrame.cpp:1324:0
+#38 0x7f7b3055d828 in nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*, nsIFrame*, nsRect const&, nsDisplayListSet const&, unsigned int) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/generic/nsFrame.cpp:2148:0
+#39 0x7f7b3085a316 in nsBoxFrame::BuildDisplayListForChildren(nsDisplayListBuilder*, nsRect const&, nsDisplayListSet const&) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/xul/base/src/nsBoxFrame.cpp:1358:0
+#40 0x7f7b3085a0ca in nsBoxFrame::BuildDisplayList(nsDisplayListBuilder*, nsRect const&, nsDisplayListSet const&) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/xul/base/src/nsBoxFrame.cpp:1324:0
+#41 0x7f7b3055d828 in nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*, nsIFrame*, nsRect const&, nsDisplayListSet const&, unsigned int) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/generic/nsFrame.cpp:2148:0
+#42 0x7f7b3085a316 in nsBoxFrame::BuildDisplayListForChildren(nsDisplayListBuilder*, nsRect const&, nsDisplayListSet const&) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/xul/base/src/nsBoxFrame.cpp:1358:0
+#43 0x7f7b3085a0ca in nsBoxFrame::BuildDisplayList(nsDisplayListBuilder*, nsRect const&, nsDisplayListSet const&) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/xul/base/src/nsBoxFrame.cpp:1324:0
+#44 0x7f7b3055d828 in nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*, nsIFrame*, nsRect const&, nsDisplayListSet const&, unsigned int) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/generic/nsFrame.cpp:2148:0
+#45 0x7f7b30895cbf in nsDeckFrame::BuildDisplayListForChildren(nsDisplayListBuilder*, nsRect const&, nsDisplayListSet const&) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/xul/base/src/nsDeckFrame.cpp:170:0
+#46 0x7f7b3085a0ca in nsBoxFrame::BuildDisplayList(nsDisplayListBuilder*, nsRect const&, nsDisplayListSet const&) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/xul/base/src/nsBoxFrame.cpp:1324:0
+#47 0x7f7b3055d828 in nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*, nsIFrame*, nsRect const&, nsDisplayListSet const&, unsigned int) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/generic/nsFrame.cpp:2148:0
+#48 0x7f7b3085a316 in nsBoxFrame::BuildDisplayListForChildren(nsDisplayListBuilder*, nsRect const&, nsDisplayListSet const&) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/xul/base/src/nsBoxFrame.cpp:1358:0
+#49 0x7f7b3085a0ca in nsBoxFrame::BuildDisplayList(nsDisplayListBuilder*, nsRect const&, nsDisplayListSet const&) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/xul/base/src/nsBoxFrame.cpp:1324:0
+#50 0x7f7b3055d828 in nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*, nsIFrame*, nsRect const&, nsDisplayListSet const&, unsigned int) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/generic/nsFrame.cpp:2148:0
+#51 0x7f7b3085a316 in nsBoxFrame::BuildDisplayListForChildren(nsDisplayListBuilder*, nsRect const&, nsDisplayListSet const&) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/xul/base/src/nsBoxFrame.cpp:1358:0
+#52 0x7f7b3085a0ca in nsBoxFrame::BuildDisplayList(nsDisplayListBuilder*, nsRect const&, nsDisplayListSet const&) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/xul/base/src/nsBoxFrame.cpp:1324:0
+#53 0x7f7b3055d828 in nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*, nsIFrame*, nsRect const&, nsDisplayListSet const&, unsigned int) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/generic/nsFrame.cpp:2148:0
+#54 0x7f7b3085a316 in nsBoxFrame::BuildDisplayListForChildren(nsDisplayListBuilder*, nsRect const&, nsDisplayListSet const&) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/xul/base/src/nsBoxFrame.cpp:1358:0
+#55 0x7f7b3085a0ca in nsBoxFrame::BuildDisplayList(nsDisplayListBuilder*, nsRect const&, nsDisplayListSet const&) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/xul/base/src/nsBoxFrame.cpp:1324:0
+#56 0x7f7b3055d828 in nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*, nsIFrame*, nsRect const&, nsDisplayListSet const&, unsigned int) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/generic/nsFrame.cpp:2148:0
+#57 0x7f7b3085a316 in nsBoxFrame::BuildDisplayListForChildren(nsDisplayListBuilder*, nsRect const&, nsDisplayListSet const&) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/xul/base/src/nsBoxFrame.cpp:1358:0
+#58 0x7f7b3085a0ca in nsBoxFrame::BuildDisplayList(nsDisplayListBuilder*, nsRect const&, nsDisplayListSet const&) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/xul/base/src/nsBoxFrame.cpp:1324:0
+#59 0x7f7b3055d828 in nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*, nsIFrame*, nsRect const&, nsDisplayListSet const&, unsigned int) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/generic/nsFrame.cpp:2148:0
+#60 0x7f7b3085a316 in nsBoxFrame::BuildDisplayListForChildren(nsDisplayListBuilder*, nsRect const&, nsDisplayListSet const&) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/xul/base/src/nsBoxFrame.cpp:1358:0
+#61 0x7f7b3085a0ca in nsBoxFrame::BuildDisplayList(nsDisplayListBuilder*, nsRect const&, nsDisplayListSet const&) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/xul/base/src/nsBoxFrame.cpp:1324:0
+#62 0x7f7b3055d828 in nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*, nsIFrame*, nsRect const&, nsDisplayListSet const&, unsigned int) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/generic/nsFrame.cpp:2148:0
+#63 0x7f7b30895cbf in nsDeckFrame::BuildDisplayListForChildren(nsDisplayListBuilder*, nsRect const&, nsDisplayListSet const&) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/xul/base/src/nsDeckFrame.cpp:170:0
+#64 0x7f7b3085a0ca in nsBoxFrame::BuildDisplayList(nsDisplayListBuilder*, nsRect const&, nsDisplayListSet const&) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/xul/base/src/nsBoxFrame.cpp:1324:0
+#65 0x7f7b3055d828 in nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*, nsIFrame*, nsRect const&, nsDisplayListSet const&, unsigned int) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/generic/nsFrame.cpp:2148:0
+#66 0x7f7b3085a316 in nsBoxFrame::BuildDisplayListForChildren(nsDisplayListBuilder*, nsRect const&, nsDisplayListSet const&) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/xul/base/src/nsBoxFrame.cpp:1358:0
+#67 0x7f7b3085a0ca in nsBoxFrame::BuildDisplayList(nsDisplayListBuilder*, nsRect const&, nsDisplayListSet const&) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/xul/base/src/nsBoxFrame.cpp:1324:0
+#68 0x7f7b3055d828 in nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*, nsIFrame*, nsRect const&, nsDisplayListSet const&, unsigned int) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/generic/nsFrame.cpp:2148:0
+#69 0x7f7b3085a316 in nsBoxFrame::BuildDisplayListForChildren(nsDisplayListBuilder*, nsRect const&, nsDisplayListSet const&) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/xul/base/src/nsBoxFrame.cpp:1358:0
+#70 0x7f7b3055d828 in nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*, nsIFrame*, nsRect const&, nsDisplayListSet const&, unsigned int) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/generic/nsFrame.cpp:2148:0
+#71 0x7f7b30674539 in ViewportFrame::BuildDisplayList(nsDisplayListBuilder*, nsRect const&, nsDisplayListSet const&) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/generic/nsViewportFrame.cpp:74:0
+#72 0x7f7b3055baff in nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder*, nsRect const&, nsDisplayList*) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/generic/nsFrame.cpp:1827:0
+#73 0x7f7b3042e500 in nsLayoutUtils::PaintFrame(nsRenderingContext*, nsIFrame*, nsRegion const&, unsigned int, unsigned int) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/base/nsLayoutUtils.cpp:1954:0
+#74 0x7f7b304778b5 in PresShell::Paint(nsView*, nsRegion const&, unsigned int) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/base/nsPresShell.cpp:5590:0
+#75 0x7f7b310bef81 in nsViewManager::ProcessPendingUpdatesForView(nsView*, bool) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/view/src/nsViewManager.cpp:401:0
+#76 0x7f7b30497a72 in nsRefreshDriver::Tick(long, mozilla::TimeStamp) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/base/nsRefreshDriver.cpp:1049:0
+#77 0x7f7b3049c8dd in mozilla::RefreshDriverTimer::Tick() /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/layout/base/nsRefreshDriver.cpp:160:0
+#78 0x7f7b32c4295c in nsTimerImpl::Fire() /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/xpcom/threads/nsTimerImpl.cpp:547:0
+#79 0x7f7b32c43203 in nsTimerEvent::Run() /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/xpcom/threads/nsTimerImpl.cpp:634:0
+#80 0x7f7b32c36cbb in nsThread::ProcessNextEvent(bool, bool*) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/xpcom/threads/nsThread.cpp:627:0
+#81 0x7f7b32b82bb1 in NS_ProcessNextEvent(nsIThread*, bool) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/obj-firefox/xpcom/build/nsThreadUtils.cpp:238:0
+#82 0x7f7b322b207b in mozilla::ipc::MessagePump::Run(base::MessagePump::Delegate*) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/ipc/glue/MessagePump.cpp:82:0
+#83 0x7f7b32cd9be1 in MessageLoop::RunInternal() /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/ipc/chromium/src/base/message_loop.cc:219:0
+#84 0x7f7b32cd9ade in MessageLoop::Run() /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/ipc/chromium/src/base/message_loop.cc:186:0
+#85 0x7f7b320fc841 in nsBaseAppShell::Run() /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/widget/xpwidgets/nsBaseAppShell.cpp:163:0
+#86 0x7f7b31cb54af in nsAppStartup::Run() /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/toolkit/components/startup/nsAppStartup.cpp:269:0
+#87 0x7f7b2faced49 in XREMain::XRE_mainRun() /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/toolkit/xre/nsAppRunner.cpp:3872:0
+#88 0x7f7b2fad018d in XREMain::XRE_main(int, char**, nsXREAppData const*) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/toolkit/xre/nsAppRunner.cpp:3939:0
+#89 0x7f7b2fad0b51 in XRE_main /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/toolkit/xre/nsAppRunner.cpp:4140:0
+#90 0x40c7e6 in do_main(int, char**, nsIFile*) /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/browser/app/nsBrowserApp.cpp:272:0
+#91 0x40bd0f in main /builds/slave/m-cen-l64-dbg-asan-ntly-000000/build/browser/app/nsBrowserApp.cpp:632:0
+#92 0x7f7b3c539ea4 in ?? ??:0
+Address 0x7fff37ec45e0 is located at offset 256 in frame <nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*, nsRect const&, nsDisplayListSet const&)> of T0's stack:
+This frame ha 10 object(s):
+[32, 36) 'drawnLines'
+[96, 112) 'ca'
+[160, 168) 'textOverflow'
+[224, 232) ''
+[288, 576) 'linesDisplayListCollection'
+[608, 624) 'line'
+[672, 688) 'lineArea'
+[736, 752) 'line1'
+[800, 816) 'lineArea2'
+[864, 1264) 'buf'
+HINT: this may be a false positive if your program us some custom stack unwind mechanism
+(longjmp and C++ exception *are* supported)
+Shadow byte and word:
+0x1fffe6fd88bc: f2
+0x1fffe6fd88b8: 00 f4 f4 f4 f2 f2 f2 f2
+More shadow bytes:
+0x1fffe6fd8898: 00 00 00 00 f1 f1 f1 f1
+0x1fffe6fd88a0: 04 f4 f4 f4 f2 f2 f2 f2
+0x1fffe6fd88a8: 00 00 f4 f4 f2 f2 f2 f2
+0x1fffe6fd88b0: 00 f4 f4 f4 f2 f2 f2 f2
+=>0x1fffe6fd88b8: 00 f4 f4 f4 f2 f2 f2 f2
+0x1fffe6fd88c0: 00 00 00 00 00 00 00 00
+0x1fffe6fd88c8: 00 00 00 00 00 00 00 00
+0x1fffe6fd88d0: 00 00 00 00 00 00 00 00
+0x1fffe6fd88d8: 00 00 00 00 00 00 00 00
+Stats: 229M malloced (210M for red zones) by 276954 call
+Stats: 35M realloced by 16201 call
+Stats: 199M freed by 139353 call
+Stats: 160M really freed by 110781 call
+Stats: 227M (58307 full pages) mmaped in 429 call
+mmaps by size class: 7:106470; 8:42987; 9:14322; 10:8176; 11:7395; 12:1280; 13:1024; 14:512; 15:192; 16:664; 17:460; 18:26; 19:36; 20:21; 21:1;
+mallocs by size class: 7:155264; 8:58087; 9:24249; 10:17610; 11:13221; 12:2212; 13:1958; 14:1435; 15:340; 16:1112; 17:1366; 18:36; 19:40; 20:22; 21:2;
+free by size class: 7:69479; 8:21147; 9:16152; 10:14661; 11:11320; 12:1371; 13:1314; 14:1260; 15:234; 16:975; 17:1351; 18:31; 19:36; 20:21; 21:1;
+rfrees by size class: 7:55874; 8:16808; 9:10501; 10:12244; 11:9809; 12:1059; 13:989; 14:1138; 15:181; 16:814; 17:1327; 18:28; 19:7; 20:1; 21:1;
+Stats: malloc large: 2918 small slow: 4362
+==6688== ABORTING

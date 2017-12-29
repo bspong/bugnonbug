@@ -1,0 +1,42 @@
+[e10s] Add API for iterating over all (content) windows
+Sometimes extension code running in the chrome process needs to know what content windows are opened.
+
+It is a trivial task for non-e10s code, but currently for e10s it requires too much work.
+
+For example, it is useful for network/TabSelect observers.
+
+I suggest something like the following.
+
+=======8<-------
+
+var map = Components.utils.winMap;
+var innerId;
+
+innerId = channel.loadInfo.innerWindowID;
+innerId = map.getCurrentInnerId(tab.linkedBrowser.outerWindowID);
+
+map.getOuterId(innerId);
+map.getUrl(innerId);        // "https://www.mozilla.org/"
+map.getParent(innerId);     // 17
+map.getTop(innerId);        // 11
+map.getOpener(innerId);     // -1
+map.getFrames(innerId);     // [21, 22, 23]
+map.getTopContentWindows(); // [11, 12, 13, 14, 15] (i.e. 5 tabs)
+map.isContent(innerId);     // true
+map.getAllWindows();        // [11, 21, ...] // chrome windows too?
+
+
+// observers, so I can keep the data in a worker thread:
+
+var obs = {
+  observe: function(subject, topic, data) {
+    var innerId = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
+    console.log("new window: " + Cu.winMap.getUrl(innerId));
+  
+    var outerId = map.getOuterId(map.getTop(innerId));
+    var browser = tabbrowser.getBrowserForOuterWindowID(outerId);
+  }
+};
+
+Services.obs.addObserver(obs, "inner-window-added", false);
+// and "inner-window-removed"

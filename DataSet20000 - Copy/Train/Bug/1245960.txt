@@ -1,0 +1,61 @@
+base 64 pdf/iframe
+User Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:44.0) Gecko/20100101 Firefox/44.0
+Build ID: 20160123151951
+
+Steps to reproduce:
+
+<!---HTML & javascript to return base64 encoded pdf from server (saved as db blob there)-->
+
+<iframe  allowtransparency="true" id ="pdfFrame" style="float:none;display:inline;width:100%;height:100%;-moz-box-sizing:border-box;z-index:1000;" src="" frameborder="0"></iframe>
+
+
+/*http://stackoverflow.com/questions/8022425/getting-blob-data-from-xhr-request*/
+        function loadPdfBlob(u_id)
+        {
+          var xhr = new XMLHttpRequest();
+xhr.open('GET', contextPath + '/servlets/GetBlobDataServlet?u_id='+u_id, true);
+
+xhr.responseType = 'arraybuffer';
+
+xhr.onload = function(e) 
+{
+ 
+  if (this.status == 200) 
+  {
+    
+    var uInt8Array = new Uint8Array(this.response);
+    var i = uInt8Array.length;
+      
+    var binaryString = new Array(i);
+    while (i--)
+    {
+      binaryString[i] = String.fromCharCode(uInt8Array[i]);
+    }
+    var data = binaryString.join('');
+
+    var base64 = window.btoa(data);
+    //alert(base64);
+    document.getElementById("pdfFrame").src= "data:application/pdf;base64,"+ base64;
+    
+    //var blob = this.response;
+    //alert(blob);
+    //document.getElementById("pdfFrame").src =  window.URL.createObjectURL(blob);
+    
+  }
+  else
+  {
+    alert(this.status);    
+      
+  }    
+};
+
+
+Actual results:
+
+No expected results.
+
+
+Expected results:
+
+Test page: http://agrozoo.net/jsp/a_oglasna_deska.jsp
+Open in google chrome, Click on B button.

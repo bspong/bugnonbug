@@ -1,0 +1,17 @@
+console call shouldn't be piped to the parent until it is any useful
+While looking at a recent regression, bug 1380449, I realized that the "processsingleton" code wa piping absolutely all console call from content to parent, without any conditions, so, always.
+
+Here is the code:
+http://searchfox.org/mozilla-central/source/toolkit/components/processsingleton/MainProcessSingleton.js#21-24
+http://searchfox.org/mozilla-central/source/toolkit/components/processsingleton/ContentProcessSingleton.js#50-107
+
+It basically pipe all "console-api-log-event" from content to parent.
+
+If I understand all the console codebase correctly, this is only useful for the "Browser Console" and the "Browser Toolbox". That allows seeing call to console made by website and see everything. This wa the original behavior of the browser console before e10s appeared and we kept that behavior.
+
+If you ignore this bug, the typical behavior of devtools codebase is to listen to console-api-log-event *ONLY* if a console is opened. So for the regular webconsole, we do not listen, nor do anything until a console is opened against a tab. Then when you do open one, we listen and start slowing thing down.
+
+I believe we should:
+1/ Move most of this processsingleton component to /devtools a it really relates to devtools more than any standard platform feature.
+2/ Run this component *only* when we open either the browser console/toolbox!
+3/ And ideally turn it off if we close the browser console/toolbox

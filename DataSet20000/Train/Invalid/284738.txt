@@ -1,0 +1,192 @@
+Firefox sends additional GET for a POST
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.5) Gecko/20041107 Firefox/1.0
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.5) Gecko/20041107 Firefox/1.0
+
+Firefox and Jakarta Tomcat 5.0.28/5.5.7:
+On a specific page, if I click a submit-button "Weiter", Firefox will send a GET
+request additional to a POST request to Tomcat. 
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Go to http://www.hamburg.de/info/1,3004,meine_produkte,00.html
+2. Select "Jetzt anmelden" from "Basis Mail"
+3. Enter some random text in the 2 input fields, click "Weiter"
+4. On the next page "Zugangsdaten" again enter some random text in the input
+fields and click "Weiter".
+
+
+Actual Results:  
+Firefox sends a POST request with the correct form data, but additional a GET
+request (of course without any form data).
+This causes our webapplication to forward to a page (which isn't seen in the
+browser) where all session data is cleared. Therefore the header "Basis Mail"
+directly above "Zugangsdaten" will show "null" then.
+I have no clue in which way this page is different from the other pages
+(especially the page before).
+
+NOTE: I will change the behaviout to clear the session in the near future.
+Therefore this direct effect will not be visible anymore.
+
+Expected Results:  
+Firefox should only send a POST request
+
+I have observed this behaviour with Tomcat 1.0 and 1.01. Internet Explorer 6.0
+works fine.
+I was able to reproduce the error on a development machine. This is the output
+from the Tomcat Requestdumper Valve for the erroneous page. The first request is
+the correct POST, the second is unimportant (a counter pixel which is missing on
+the devel box) and the 3rd is the GET-request
+
+2005-03-03,17:59:57,INFO,===============================================================
+2005-03-03,18:00:08,INFO,REQUEST URI       =/meinbereich/anmeldung/neu_anmelden.html
+2005-03-03,18:00:08,INFO,          authType=null
+2005-03-03,18:00:08,INFO, characterEncoding=null
+2005-03-03,18:00:08,INFO,     contentLength=74
+2005-03-03,18:00:08,INFO,       contentType=application/x-www-form-urlencoded
+2005-03-03,18:00:08,INFO,       contextPath=/meinbereich
+2005-03-03,18:00:08,INFO,            header=host=localhost:6080
+2005-03-03,18:00:08,INFO,            header=user-agent=Mozilla/5.0 (Windows; U;
+Windows NT 5.1; en-US; rv:1.7.6) Gecko/20050223 Firefox/1.0.1
+2005-03-03,18:00:08,INFO,           
+header=accept=text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
+2005-03-03,18:00:08,INFO,            header=accept-language=de,en-us;q=0.7,en;q=0.3
+2005-03-03,18:00:08,INFO,            header=accept-encoding=gzip,deflate
+2005-03-03,18:00:08,INFO,            header=accept-charset=UTF-8,*
+2005-03-03,18:00:08,INFO,            header=keep-alive=300
+2005-03-03,18:00:08,INFO,            header=connection=keep-alive
+2005-03-03,18:00:08,INFO,           
+header=referer=http://localhost:6080/meinbereich/anmeldung/neu_anmelden.html;jsessionid=DD2108E894A86053C4F82097C14DE16D?product=bmail&page=0
+2005-03-03,18:00:08,INFO,           
+header=content-type=application/x-www-form-urlencoded
+2005-03-03,18:00:08,INFO,            header=content-length=74
+2005-03-03,18:00:08,INFO,            locale=de
+2005-03-03,18:00:08,INFO,            method=POST
+2005-03-03,18:00:08,INFO,         parameter=emailLocal2=fgdhfdhfd
+2005-03-03,18:00:08,INFO,         parameter=next=Weiter
+2005-03-03,18:00:08,INFO,         parameter=emailSeparator=.
+2005-03-03,18:00:08,INFO,         parameter=page=3
+2005-03-03,18:00:08,INFO,         parameter=emailLocal=dgfdh
+2005-03-03,18:00:08,INFO,          pathInfo=null
+2005-03-03,18:00:08,INFO,          protocol=HTTP/1.1
+2005-03-03,18:00:08,INFO,       queryString=null
+2005-03-03,18:00:08,INFO,        remoteAddr=127.0.0.1
+2005-03-03,18:00:08,INFO,        remoteHost=127.0.0.1
+2005-03-03,18:00:08,INFO,        remoteUser=null
+2005-03-03,18:00:08,INFO,requestedSessionId=DD2108E894A86053C4F82097C14DE16D
+2005-03-03,18:00:08,INFO,            scheme=http
+2005-03-03,18:00:08,INFO,        serverName=localhost
+2005-03-03,18:00:08,INFO,        serverPort=6080
+2005-03-03,18:00:08,INFO,       servletPath=/anmeldung/neu_anmelden.html
+2005-03-03,18:00:08,INFO,          isSecure=false
+2005-03-03,18:00:08,INFO,---------------------------------------------------------------
+2005-03-03,18:00:09,INFO,---------------------------------------------------------------
+2005-03-03,18:00:09,INFO,          authType=null
+2005-03-03,18:00:09,INFO,     contentLength=-1
+2005-03-03,18:00:09,INFO,       contentType=text/html;charset=ISO-8859-1
+2005-03-03,18:00:09,INFO,           
+header=Content-Type=text/html;charset=ISO-8859-1
+2005-03-03,18:00:09,INFO,            header=Transfer-Encoding=chunked
+2005-03-03,18:00:09,INFO,            header=Content-Encoding=gzip
+2005-03-03,18:00:09,INFO,            header=Vary=Accept-Encoding
+2005-03-03,18:00:09,INFO,            header=Date=Thu, 03 Mar 2005 17:00:09 GMT
+2005-03-03,18:00:09,INFO,           message=null
+2005-03-03,18:00:09,INFO,        remoteUser=null
+2005-03-03,18:00:09,INFO,            status=200
+2005-03-03,18:00:09,INFO,===============================================================
+2005-03-03,18:00:09,INFO,REQUEST URI       =/zaehl/no.php
+2005-03-03,18:00:09,INFO,          authType=null
+2005-03-03,18:00:09,INFO, characterEncoding=null
+2005-03-03,18:00:09,INFO,     contentLength=-1
+2005-03-03,18:00:09,INFO,       contentType=null
+2005-03-03,18:00:09,INFO,       contextPath=
+2005-03-03,18:00:09,INFO,            header=host=localhost:6080
+2005-03-03,18:00:09,INFO,            header=user-agent=Mozilla/5.0 (Windows; U;
+Windows NT 5.1; en-US; rv:1.7.6) Gecko/20050223 Firefox/1.0.1
+2005-03-03,18:00:09,INFO,            header=accept=image/png,*/*;q=0.5
+2005-03-03,18:00:09,INFO,            header=accept-language=de,en-us;q=0.7,en;q=0.3
+2005-03-03,18:00:09,INFO,            header=accept-encoding=gzip,deflate
+2005-03-03,18:00:09,INFO,            header=accept-charset=UTF-8,*
+2005-03-03,18:00:09,INFO,            header=keep-alive=300
+2005-03-03,18:00:09,INFO,            header=connection=keep-alive
+2005-03-03,18:00:09,INFO,           
+header=referer=http://localhost:6080/meinbereich/anmeldung/neu_anmelden.html;jsessionid=DD2108E894A86053C4F82097C14DE16D
+2005-03-03,18:00:09,INFO,            locale=de
+2005-03-03,18:00:09,INFO,            method=GET
+2005-03-03,18:00:09,INFO,        
+parameter=r=http://localhost:6080/meinbereich/anmeldung/neu_anmelden.html;jsessionid=DD2108E894A86053C4F82097C14DE16D?product=bmail&page=0
+2005-03-03,18:00:09,INFO,         parameter=fli=1
+2005-03-03,18:00:09,INFO,        
+parameter=p=http://localhost:6080/meinbereich/anmeldung/neu_anmelden.html;jsessionid=DD2108E894A86053C4F82097C14DE16D
+2005-03-03,18:00:09,INFO,         parameter=java=1
+2005-03-03,18:00:09,INFO,         parameter=scz=32
+2005-03-03,18:00:09,INFO,         parameter=scy=1024
+2005-03-03,18:00:09,INFO,         parameter=scx=1280
+2005-03-03,18:00:09,INFO,         parameter=art=sec
+2005-03-03,18:00:09,INFO,         parameter=pos=top
+2005-03-03,18:00:09,INFO,          pathInfo=null
+2005-03-03,18:00:09,INFO,          protocol=HTTP/1.1
+2005-03-03,18:00:09,INFO,      
+queryString=art=sec&pos=top&scx=1280&scy=1024&scz=32&java=1&fli=1&r=http%3A//localhost%3A6080/meinbereich/anmeldung/neu_anmelden.html%3Bjsessionid%3DDD2108E894A86053C4F82097C14DE16D%3Fproduct%3Dbmail%26page%3D0&p=http%3A//localhost%3A6080/meinbereich/anmeldung/neu_anmelden.html%3Bjsessionid%3DDD2108E894A86053C4F82097C14DE16D
+2005-03-03,18:00:09,INFO,        remoteAddr=127.0.0.1
+2005-03-03,18:00:09,INFO,        remoteHost=127.0.0.1
+2005-03-03,18:00:09,INFO,        remoteUser=null
+2005-03-03,18:00:09,INFO,requestedSessionId=null
+2005-03-03,18:00:09,INFO,            scheme=http
+2005-03-03,18:00:09,INFO,        serverName=localhost
+2005-03-03,18:00:09,INFO,        serverPort=6080
+2005-03-03,18:00:09,INFO,       servletPath=/zaehl/no.php
+2005-03-03,18:00:09,INFO,          isSecure=false
+2005-03-03,18:00:09,INFO,---------------------------------------------------------------
+2005-03-03,18:00:09,INFO,---------------------------------------------------------------
+2005-03-03,18:00:09,INFO,          authType=null
+2005-03-03,18:00:09,INFO,     contentLength=-1
+2005-03-03,18:00:09,INFO,       contentType=text/html;charset=utf-8
+2005-03-03,18:00:09,INFO,           message=/zaehl/no.php
+2005-03-03,18:00:09,INFO,        remoteUser=null
+2005-03-03,18:00:09,INFO,            status=404
+2005-03-03,18:00:09,INFO,===============================================================
+2005-03-03,18:00:09,INFO,REQUEST URI       =/meinbereich/anmeldung/neu_anmelden.html
+2005-03-03,18:00:09,INFO,          authType=null
+2005-03-03,18:00:09,INFO, characterEncoding=null
+2005-03-03,18:00:09,INFO,     contentLength=-1
+2005-03-03,18:00:09,INFO,       contentType=null
+2005-03-03,18:00:09,INFO,       contextPath=/meinbereich
+2005-03-03,18:00:09,INFO,            header=host=localhost:6080
+2005-03-03,18:00:09,INFO,            header=user-agent=Mozilla/5.0 (Windows; U;
+Windows NT 5.1; en-US; rv:1.7.6) Gecko/20050223 Firefox/1.0.1
+2005-03-03,18:00:09,INFO,           
+header=accept=text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
+2005-03-03,18:00:09,INFO,            header=accept-language=de,en-us;q=0.7,en;q=0.3
+2005-03-03,18:00:09,INFO,            header=accept-encoding=gzip,deflate
+2005-03-03,18:00:09,INFO,            header=accept-charset=UTF-8,*
+2005-03-03,18:00:09,INFO,            header=keep-alive=300
+2005-03-03,18:00:09,INFO,            header=connection=keep-alive
+2005-03-03,18:00:09,INFO,            locale=de
+2005-03-03,18:00:09,INFO,            method=GET
+2005-03-03,18:00:09,INFO,          pathInfo=null
+2005-03-03,18:00:09,INFO,          protocol=HTTP/1.1
+2005-03-03,18:00:09,INFO,       queryString=null
+2005-03-03,18:00:09,INFO,        remoteAddr=127.0.0.1
+2005-03-03,18:00:09,INFO,        remoteHost=127.0.0.1
+2005-03-03,18:00:09,INFO,        remoteUser=null
+2005-03-03,18:00:09,INFO,requestedSessionId=DD2108E894A86053C4F82097C14DE16D
+2005-03-03,18:00:09,INFO,            scheme=http
+2005-03-03,18:00:09,INFO,        serverName=localhost
+2005-03-03,18:00:09,INFO,        serverPort=6080
+2005-03-03,18:00:09,INFO,       servletPath=/anmeldung/neu_anmelden.html
+2005-03-03,18:00:09,INFO,          isSecure=false
+2005-03-03,18:00:09,INFO,---------------------------------------------------------------
+2005-03-03,18:00:09,INFO,---------------------------------------------------------------
+2005-03-03,18:00:09,INFO,          authType=null
+2005-03-03,18:00:09,INFO,     contentLength=-1
+2005-03-03,18:00:09,INFO,       contentType=text/html;charset=ISO-8859-1
+2005-03-03,18:00:09,INFO,           
+header=Content-Type=text/html;charset=ISO-8859-1
+2005-03-03,18:00:09,INFO,            header=Transfer-Encoding=chunked
+2005-03-03,18:00:09,INFO,            header=Content-Encoding=gzip
+2005-03-03,18:00:09,INFO,            header=Vary=Accept-Encoding
+2005-03-03,18:00:09,INFO,            header=Date=Thu, 03 Mar 2005 17:00:09 GMT
+2005-03-03,18:00:09,INFO,           message=null
+2005-03-03,18:00:09,INFO,        remoteUser=null
+2005-03-03,18:00:09,INFO,            status=200

@@ -1,0 +1,31 @@
+afterCache and afterCommit should return Promise
+Created attachment 8563839
+wait_for_afterCache.patch
+
+test_nocache.js can be failed because the test doe not wait for afterCache() on search.init().
+
+The failure can be easily reproduced with removing "firefox-appdir = browser" from toolkit/components/search/tests/xpcshell/xpcshell.ini.
+
+The result:
+
+./mach xpcshell-test toolkit/components/search/tests/xpcshell/test_nocache.js
+
+<snip>
+0:01.11 LOG: Thread-1 INFO "CONSOLE_MESSAGE: (info) NOTIFY: Engine: "Test search engine"; Verb: "engine-loaded""
+0:01.11 LOG: Thread-1 INFO "CONSOLE_MESSAGE: (info) nsSearchService::observe: Done installation of Test search engine."
+0:01.11 LOG: Thread-1 INFO "CONSOLE_MESSAGE: (info) _addEngineToStore: Adding engine: "Test search engine""
+0:01.11 LOG: Thread-1 INFO "CONSOLE_MESSAGE: (info) NOTIFY: Engine: "Test search engine"; Verb: "engine-added""
+0:01.14 LOG: Thread-1 INFO "afterCache: write-cache-to-disk-complete"
+0:01.14 LOG: Thread-1 INFO "afterCache: write-cache-to-disk-complete"
+0:01.14 TEST_STATUS: Thread-1 test_nocache PASS [test_nocache : 31] true == true
+0:01.14 LOG: Thread-1 INFO "Searching test engine in cache"
+0:01.14 TEST_STATUS: Thread-1 test_nocache FAIL [test_nocache : 62] false == true
+/home/ikezoe/mozilla-central/obj-firefox/_tests/xpcshell/toolkit/components/search/tests/xpcshell/test_nocache.js:test_nocache:62
+self-hosted:next:610
+_run_next_test@/home/ikezoe/mozilla-central/testing/xpcshell/head.js:1375:9
+do_execute_soon/<.run@/home/ikezoe/mozilla-central/testing/xpcshell/head.js:644:9
+_do_main@/home/ikezoe/mozilla-central/testing/xpcshell/head.js:207:5
+_execute_test@/home/ikezoe/mozilla-central/testing/xpcshell/head.js:504:5
+@-e:1:1
+0:01.14 LOG: Thread-1 INFO exiting test
+0:01.14 LOG: Thread-1 ERROR Unexpected exception 2147500036

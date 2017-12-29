@@ -1,0 +1,32 @@
+double-dash within an HTML comment tag break the comment tag
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.6) Gecko/20050223 Firefox/1.0.1
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.6) Gecko/20050223 Firefox/1.0.1
+
+When a double-dash is found inside a comment tag, e.g.
+
+<!-- #BeginLibraryItem "/Library/footer--main.lbi" -->
+
+Firefox drop the "<!" from the front and render the remainder of the comment
+tag visibly on the page, e.g.
+
+-- #BeginLibraryItem "/Library/footer--main.lbi" -->
+
+Changing the "--" in the middle, e.g. footer-main.lbi, fixed the rendering
+problem. My guess would be that Firefox's tag parser is looking for the next
+occurrence of "--" instead of "-->" to determine when the tag is "closed".
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Insert an HTML comment field into an HTML file. In the text surrounded by the
+start and end comment indicator ("<!--" and "-->", respectively) insert a
+double dash "--".
+2. View the file in FireFox
+
+Actual Results:
+The leading part of the comment tag disappears from the view file, exposing
+whatever text wa inside the comment tag.
+
+Expected Results:
+Not rendered the comment tag at all. Firefox is mis-parsing the comment tag
+content in violation of HTML.

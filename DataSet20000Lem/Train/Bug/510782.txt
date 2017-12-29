@@ -1,0 +1,31 @@
+Mozilla disk activity cause hardware conflict with USB device
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.1.2) Gecko/20090729 Firefox/3.5.2 (.NET CLR 3.5.30729)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.1.2) Gecko/20090729 Firefox/3.5.2 (.NET CLR 3.5.30729)
+
+This bug ha been around for a very long time. Essentially, significant Firefox storage activity trigger a hardware conflict with USB device which can bump device off-line temporarily, or in some case semi-permanently (until some kind of manual intervention).
+
+This show up most often when Firefox is used on a laptop, and most often occurs with web page that have many large graphic object in a scrollable list or firefox object that store lot of "local settings". This problem doe not appear when using other browser on the same hardware to view the same web page and is specific to Firefox storage routines.
+
+The specific sequence of event is that you go to a web site, it load a flash object, and then your external mouse or keyboard becomes unresponsive and jerky even though the laptop mouse and keyboard still work fine. If the flash applet continues running the external USB device bus may simply stop responding. Typically you can recover from this by closing the web page with the onboard input devices. However sometimes you have to put the laptop into standby mode, or close Firefox, or all of the above, in order to allow the computer to rescan the devices. Sometimes you have to unplug the external device and wait for the hardware detection routine to notice that the device have been removed and reinserted before they will work again.
+
+It is possible to avoid the above scenario by using the Flash security setting page (http://www.macromedia.com/support/documentation/en/flashplayer/help/settings_manager03.html) to disable local storage. However many flash applet depend on local storage for thing like saving audio playback levels, and some applet will not work at all if local caching is disabled, so this is not a functional workaround. But it doe demonstrate that the problem is related to the way that Firefox manages local storage.
+
+Another instance where this can happen often is when viewing multipage list of images. Whenever the browser scroll down a page and new image are loaded, there is a hit to disk while the browser doe something (clears file from cache to make room for object? I don't know), and this cause the USB device to go unresponsive until the activity ends. If this is unchecked, then the device will go offline altogether, just a occurs with the flash object that write to disk.
+
+FWIW, I used to have this problem with a Dell Latitude D600 laptop a couple of year ago and thought it wa just a disk driver issue. However I have since upgraded to an IBM/Lenovo Thinkpad T60p and the same issue appear there, and they have completely different USB hardware of course. I have also replaced the external keyboard and mouse.
+
+Other people have reported similar problems. #498034 seems to be an instance of this bug, for example. #485725 is identical instance of the multiple-objects scrolling problem.
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. using a laptop with external USB mouse and/or keyboard, access a web page with multiple embedded object or use a flash object with large amount of "local" data
+
+Actual Results:
+device on the USB bus become jumpy and start to stutter, and will eventually stop responding altogether. on-board mouse and keyboard will continue to operate normally.
+
+
+Expected Results:
+the software should not do whatever it is doing to cause the USB device to go offline. it appears to me that soem storage operation are causing hardware conflict with some type of USB devices.

@@ -1,0 +1,24 @@
+Use CNAME for SPN in Firefox doesn't work
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.1.5) Gecko/20091102 Firefox/3.5.5 (.NET CLR 3.5.30729)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.1.5) Gecko/20091102 Firefox/3.5.5 (.NET CLR 3.5.30729)
+
+We have two CISCO 6500 Content Switching Modules with two GSS in Front of them. There ist a CNAME elakneut.magwien.gv.at to login to the Application. When you connect to the application, you connect to the IP-address 10.152.252.145. But if a Reverse Lookup is made für taking a Kerberos Ticket, you get the Name "elakneut.gslb.magwien.gv.at". Firefox sends this ticket to the Apache. When the apache compares the refferer with the principal in the kerberos ticket, they are different (reffer: elakneut.magwien.gv.at; Princ in ticket is elakneut.gslb.magwien.gv.at). There is a new wininet.dll from Microsoft with a Fix for the Internet-Explorer versio 6 oder higher. It's documented there http://support.microsoft.com/kb/911149. Can anybody build a fix for Firefox?
+
+Dears 
+Bernd Aschenbrenner
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Login to the Web-Site via Kerberos
+2. In the Error-Log of the apache you'll see krb5_144
+Actual Results:  
+When you have a CName, thata is different to the "servername", you'll get problems with kerberos authentication, when firefox does a reverse lookup.
+
+I'll get a failure in the apache error log
+[Tue Jan 05 11:21:56 2010] [error] [client 10.152.253.145] mod_spnego: gss_accept_sec_context failed; GSS-API: Unspecified GSS failure.  Minor code may provide more information), referer: https://elakneut.magwien.gv.at/fscelak/
+[Tue Jan 05 11:21:56 2010] [error] [client 10.152.253.145] mod_spnego: gss_accept_sec_context failed; GSS-API mechanism: Unknown code krb5 144), referer: https://elakneut.magwien.gv.at/fscelak/
+
+
+Expected Results:  
+The Software should Log in to the Web-Site and send a krb5 ticket with the Principal "elakneut.magwien.gv.at"

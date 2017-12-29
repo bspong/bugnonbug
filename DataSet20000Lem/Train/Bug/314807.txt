@@ -1,0 +1,37 @@
+new Instance of XMLHTTPRequest() doesn't set operation path to content
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.9a1) Gecko/20051030 Firefox/1.6a1
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.9a1) Gecko/20051030 Firefox/1.6a1
+
+When a XML wa transformed by inline XSL(T) an further you would transform an XML manual via JavaScript, eg you would set an XSLT-Parameter, an Patherror occurs.
+
+A new Instanz of XMLHTTPRequest should set the working path to the current path, but it doesn't.
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+
+# you have an XUL in path .
+# you call a XML with a xml-stylesheet instruction in path named foobar
+# after transformation you would manual transform a xml without xml-stylesheet instruction via the gecko-interface based on javascript, creating an new XSLTProcessor an XMLHTTPRequest, the working path is still the path of last transformation in thise case in foobar
+
+function create_XML_Fragment(Source_XSL, Source_XML, Param_name, Param_value) {
+var xsltProcessor = new XSLTProcessor();
+var myXMLHTTPRequest = new XMLHttpRequest();
+myXMLHTTPRequest.open("GET", Source_XSL, false);
+myXMLHTTPRequest.send(null);
+var xslRef = myXMLHTTPRequest.responseXML;
+xsltProcessor.importStylesheet(xslRef);
+myXMLHTTPRequest = new XMLHttpRequest();
+myXMLHTTPRequest.open("GET", '.'+Source_XML, false);
+/* the reason for the dot is, the XSLT-Processor wa called before, therefore the 'focus' is on the old request directory, we must navigate forward */
+myXMLHTTPRequest.send(null);
+var xmlDoc = myXMLHTTPRequest.responseXML;
+xsltProcessor.setParameter(null, Param_name, Param_value);
+var result = xsltProcessor.transformToFragment(xmlDoc, document);
+return result.childNodes[1]; }
+
+
+
+
+You should solve by manual navigate through the path, but it is difficult for dynamic scripts.

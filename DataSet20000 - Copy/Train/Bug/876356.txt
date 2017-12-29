@@ -1,0 +1,32 @@
+[Win8] crash in OXIDEntry::PostCall
+It's #747 browser crasher in 23.0a2 and #50 in 24.0a1.
+
+It first showed up in 23.0a1/20130505. The regression range is:
+http://hg.mozilla.org/mozilla-central/pushloghtml?fromchange=69008b1fd6eb&tochange=c8e47b184aba
+
+Stack traces are various:
+Frame 	Module 	Signature 	Source
+0 	combase.dll 	OXIDEntry::PostCall 	d:\win8_gdr\com\combase\dcomrem\ipidtbl.cxx:1680
+1 	combase.dll 	TransmitCall 	d:\win8_gdr\com\combase\dcomrem\chancont.cxx:812
+2 	combase.dll 	combase.dll@0xf0891 	
+3 	ntdll.dll 	ntdll.dll@0x43711 	
+4 	rpcrt4.dll 	NdrClientCall2 	
+5 	combase.dll 	ObjectStubless 	d:\win8_gdr\com\combase\ndr\ndrole\i386\stubless.asm:142 
+
+Frame 	Module 	Signature 	Source
+0 	combase.dll 	OXIDEntry::PostCall 	d:\win8_gdr\com\combase\dcomrem\ipidtbl.cxx:1680
+1 	combase.dll 	MTAThreadDispatchCrossApartmentCall 	d:\win8_gdr\com\combase\dcomrem\chancont.cxx:177
+2 	combase.dll 	combase.dll@0x101429 	
+3 	combase.dll 	ThreadInvoke 	
+4 	combase.dll 	DefaultSendReceive 	d:\win8_gdr\com\combase\dcomrem\callctrl.cxx:671
+5 	rpcrt4.dll 	NdrpConformantArrayMarshall 	
+6 	rpcrt4.dll 	NdrpClientMarshal
+
+Frame 	Module 	Signature 	Source
+0 	combase.dll 	OXIDEntry::PostCall 	d:\win8_gdr\com\combase\dcomrem\ipidtbl.cxx:1680
+1 	combase.dll 	TransmitCall 	d:\win8_gdr\com\combase\dcomrem\chancont.cxx:812
+2 	combase.dll 	combase.dll@0xf0891 	
+3 	mscms.dll 	GetProfileForProfileID
+
+More reports at:
+https://crash-stats.mozilla.com/report/list?signature=OXIDEntry%3A%3APostCall%28CMessageCall*%2C+unsigned+long*%29

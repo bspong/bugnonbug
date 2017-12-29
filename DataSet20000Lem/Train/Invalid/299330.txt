@@ -1,0 +1,49 @@
+Unable to set Proxy config programatically
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.8) Gecko/20050517 Firefox/1.0.4 (Debian package 1.0.4-2)
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.8) Gecko/20050517 Firefox/1.0.4 (Debian package 1.0.4-2)
+
+I use different proxy depending on the network environment I boot into.
+For example, an init script detects that I'm in the office, so I need DNS
+configure this way, WiFi off, etc; if I'm at home, then DNS need to be
+configured another way, and WiFi should be started in a certain way.
+
+It would be great to use a simple piece of sed to update FF's prefs.js to
+specify "Use this proxy / Use that proxy / Use no proxy".
+
+It could well be my ignorance; I cannot find anywhere in prefs.js (or elsewhere)
+that "Direct internet connection" / "Manual Proxy Settings" are defined:
+grep -i proxy prefs.js
+only find the default manual Proxy settings; not whether or not they are enabled.
+
+Is there a big On/Off button I have missed? I can go
+Edit/Prefs/General/Connection Settings manually, each time I boot into a new
+environment, but being able to automate this would save a heck of a lot of hassle.
+
+Not necessarily an API, just a prefs.js setting of:
+user_pref("network.proxy.useproxy", "foo");
+where "foo" is "none", "auto", "manual", and maybe even "manual1", "manual2",
+etc... in such a way that the prefs.js can be set with sed (or similarly
+automagically before the user log in to the environment.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Boot into a network which requires a proxy
+2. Change Proxy setting (Edit/Prefs/General/Connection Settings/OK/OK)
+3. Shutdown
+4. Boot into a network which requires a different proxy
+5. Change Proxy Settings (see (2)
+6. Shutdown
+7. Boot into yet another config .... etc.
+
+
+Actual Results:
+The last-used Proxy setting are maintained across a reboot (That's a Good Thing).
+There is no (obvious) method to script a change depending upon the network
+environment found on boot.
+
+Expected Results:
+Allow a script such as:
+sed s/user_pref("network.proxy", "on")/"user_pref("network.proxy", "off")/1
+$USER/prefs_template.js > $USER/prefs.js
+to change the proxy depending on the enviroment found.

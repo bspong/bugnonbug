@@ -1,0 +1,18 @@
+Work around Inspector and Style Inspector test failure before switching Task.jsm to use Promise.jsm
+The Inspector and Style Inspector browser-chrome test have several intermittent failure that are already very frequent, and are made much more frequent in Windows optimized build when Task.jsm is changed by bug 887923 to use Promise.jsm.
+
+There are currently 23 intermittent failure open, that I've collected a dependency of bug 992211, that may or may not have a common underlying cause. I did some test and a quick survey of the code, and did not find anything that could be obviously causing the failures. In any case, fixing them probably requires a relevant effort, even if done by the team that originally worked on the code.
+
+Landing bug 887923 is very important:
+- It block extending the use of Task in devtools (bug 988048, bug 991797)
+- It block the eradication of old "sync" promise (bug 881047)
+- Any new Task-based code introduced from now on may unintentionally rely
+on the incorrect behavior of the current implementation, making it more
+difficult to switch to the correct implementation in the future
+- The "catch" method is unavailable on promise returned by Task.spawn.
+
+Unless any brilliant solution is found to fix all the tests, my proposal
+is to disable the above test on Windows optimized build (and maybe debug
+build if the increase in frequency is also relevant there).
+
+This will allow u to complete the Promise/Task conversion in time for Firefox 31 ESR.

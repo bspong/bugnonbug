@@ -1,0 +1,28 @@
+dnd folders in bookmarks organizer eats disk, filling /tmp to limit
+User-Agent:       Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.0.13) Gecko/2009080315 Ubuntu/9.04 (jaunty) Firefox/3.0.13
+Build Identifier: Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.0.13) Gecko/2009080315 Ubuntu/9.04 (jaunty) Firefox/3.0.13
+
+With a large collection of bookmarks (the exported html has 4 megabytes, around 8500 lines), trying to move a relatively big folder around can cause firefox to start thrashing, completely filling /tmp with clipboardcache-* files.  I watched this gradually eat 5gigs of disk... I suspect it continues without limit until the partition is full.  I reproduced this behavior three times before giving up.
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+1. Create a large collection of bookmarks (~8000 entires, with some moderate sub-division into folders)
+2. Grab a bigger folder (with around 60 entries), drag it into another folder, then try to drag it up to the top level again.
+3. If you get the system to hang-up on you, do a Ctrl-Alt-f4 to get a terminal, watch the disk usage climb by doing a "df" repeatedly.  Look at what's showing up in the /tmp directory. 
+
+Actual Results:  
+System freezes up, entire /tmp partition is filled.
+If you let it go long enough to fill the disk, you can lose 
+data: I blanked out my Profiles.ini file this way and had to 
+recreate it manually.
+
+
+Expected Results:  
+My expectation would be that you can move a hundred lines around in a collection of 10000 lines without chugging and thrashing.  
+
+(1)Give me a preference to dump the Icon data in the bookmarks-- I don't care about it, and it eats space. 
+(2)Get a better sqlite library?  Let me use a real database instead? 
+(3)Force us to use tags instead of physical rearrangment of the data?
+
+This might be related to bug 518583 (and possibly 405765).

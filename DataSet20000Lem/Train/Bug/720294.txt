@@ -1,0 +1,27 @@
+Refactor style sheet switching code in browser.js
+As is well-known, browser.js is just a little bit of a mess. Lots of old global functions, lot of... well, lot and lot of just stuff.
+
+As a first step towards fixing the madness, seems like it would be good to start grouping together bit of related functionality into method on a new gRelatedStuff object. To retain backwards compatibility, we can keep the old function identifier a pointer into the new object.
+
+Example:
+
+function bar() { ... }
+function baz() { ... }
+
+becomes
+
+var gFoo = {
+bar : function() { ... }
+baz : function() { ... }
+};
+var bar = gFoo.bar;
+var baz = gFoo.baz;
+
+Eventually, window.bar and window.baz could go away, and gFoo can be migrated to a Foo.jsm. (I suppose the step are technically independent).
+
+
+Risk here is fairly low, the two main issue I can think of are:
+
+* Need to watch for place where |this| is affected (was |window|, now |gFoo|). Given low test coverage of some of the more crufty code, this will need manual verification. But it's pretty mechanical.
+* Addons that override / intercept / alter the function that move would need to update sooner rather than later. Otherwise code calling |gFoo.bar()| directly would not be caught.
+* Code blame will be off, but that's going to happen anyway if/when we split thing into JSMs.

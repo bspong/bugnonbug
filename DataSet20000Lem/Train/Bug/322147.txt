@@ -1,0 +1,60 @@
+xmlhttp request return xhtml with an img tag but doe not display the image,
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-GB; rv:1.7.12) Gecko/20051010 Firefox/1.0.7 (Ubuntu package 1.0.7)
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-GB; rv:1.7.12) Gecko/20051010 Firefox/1.0.7 (Ubuntu package 1.0.7)
+
+A xmlhttp response return the following xhtml element (which are then appended to the body of a page) but fails to display the image. A http trace show a request for the xmlhttp request but no request for the image, a such the alt text is displayed. I have not had this issue under window IE.
+
+<div xmlns=\"http://www.w3.org/1999/xhtml\"><img id=\"test\" src=\"../themes/default/blockImageHead.png\" alt=\"test\" /></div>
+
+Right clicking the alt text and clicking "view image" then display the image correctly in a separate window.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Create a javascript xmlhttp (see below) that call a url that return some the xhtml: <div xmlns=\"http://www.w3.org/1999/xhtml\"><img id=\"test\" src=\"../themes/default/blockImageHead.png\" alt=\"test\" /></div>
+-- Replace the image with an image you have access to --
+2. Create a page that launch the javascript and appends the xhtml to the page.
+
+Javascript function:
+
+var xmlhttp=false;
+var url='http://localhost:8080/ws/home';
+
+if (window.XMLHttpRequest) {
+xmlhttp = new XMLHttpRequest();
+} else if (window.ActiveXObject) {
+xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+}
+
+xmlhttp.open("GET", url, false);
+xmlhttp.send(null);
+
+if (xmlhttp.status != 200) {
+alert (xmlhttp.responseText);
+} else {
+w = document.getElementById('workspace'); // this is the body
+if (browser.isIE) {
+ws.appendChild(xmlhttp.responseText);
+} else
+if (browser.isNS) {
+ws.appendChild(xmlhttp.responseXML.childNodes.item(0));
+}
+
+Actual Results:
+See detail
+
+Expected Results:
+Image should be displayed. I've tried pre-loading but this doe not help:
+
+// var image = xmlhttp.responseXML.getElementsByTagName("img");
+// if (images.length != 0) {
+// var preLoad = new Array(images.length);
+// for (var i = 0; i < images.length; i++) {
+// var img = images[i];
+// if (img != null) {
+// preLoad[i] = new Image();
+// preLoad[i].src = img.src;
+// }
+// }
+// delay(100);
+// }

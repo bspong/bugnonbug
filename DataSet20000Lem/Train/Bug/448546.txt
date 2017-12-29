@@ -1,0 +1,38 @@
+When middle-clicking back/forward/reload, the new tab should inherit history from the tab that opened it (using duplicateTab)
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.9.1a2pre) Gecko/2008073002 Minefield/3.1a2pre
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.9.1a2pre) Gecko/2008073002 Minefield/3.1a2pre
+
+From bug 263942 comment #48 :
+> Hang on - there are much better way to duplicate a tab!
+>
+> Bug 393716 added the duplicateTab method (documented at
+> http://developer.mozilla.org/en/docs/nsISessionStore ) which will duplicate a
+> tab including it's history, scroll position, form contents, etc.
+>
+> This method can be used directly for the "tab" and "tabshifted" case (for the
+> foreground tab case you'll have to set selectedTab manually). For the window
+> case, while duplicateTab can copy tab to different windows, it currently
+> requires the window to already be open. The cleanest approach is probably to
+> extend duplicateTab so that it creates a new window if the passed window is
+> null. This would also be useful to Bug 225680 / extension wanting to allow
+> tab to be "detached" a new windows.
+>
+> Note however that the session service requires the browser.sessionstore.enabled
+> preference to be true (the default); if not we should fall back on your
+> existing code which just copy the uri (and this can continue to handle the
+> "save" case).
+>
+> I'm happy to have a go at implementing this if you want.
+
+After the tab is duplicated it should reload/go back/go forward(depends on which button wa middle/ctrl-clicked). This behavior could also be applied to other item such a home-button/bookmarks/hyperlinks in webpages, but that is for another bug.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Go to a page and click on a link.
+2. Now middle-click the back-button.
+Actual Results:
+A new tab is opened with the url of the "back"-page without restoring history, scroll position, form contents, etc.
+
+Expected Results:
+Middle-click on the back-button should clone the current tab and then go back one page.

@@ -1,0 +1,25 @@
+[FUEL] consider changing the PreferenceBranch.events API
+Given that Firefox code will be converted to fuel in the near term, I think we should get APIs for it right.
+
+Among others, I have a few issue with the PreferenceBranch.events API. I think the older nsIPrefBranch2 interface wa a better solution for the problem (letting consumer listen for pref changes) for the following reasons:
+
+1. nsIPB2 didn't expose a generic way to add event listeners. I.e. once you got an nsIPrefBranch2, you could do this:
+prefBranch2.addObserver("subpref", listener, false);
+
+whereas in FUEL you use:
+prefBranch.events.addListener("change", listener);
+
+The issue is the need to specify the "change" topic here. Are any other topic possible/planned with a preference branch? If not, why can't we have the addListener directly on the fuelIPreferenceBranch (with the listener topic implied)?
+
+I suppose the idea wa to have a single way to register a callback throughout the API, but I don't think it's better for the user of the API.
+
+1a. Another issue is the "events." part. What is the reason you didn't mimic the DOM EventTarget interface here? Something like:
+interface fuelIPreferenceBranch : fuelIEventTarget {
+...
+}
+
+2. The Events object waste cycle checking that the listener in question isn't already registered. Why is this needed? I think this is modeled after addEventListener DOM API, but a noted in bug 343416 comment 14 it's a quirky API (see that comment for details).
+
+Please consider changing this. FWIW, I think prefBrach(.events).addListener could just forward to nsIPB2.addObserver without any loss for usability.
+
+I realize you might not have time for this, so in the case anything of this is agreed on, I can create the patch.

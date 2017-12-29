@@ -1,0 +1,35 @@
+Remove use of for-each from services/.
+Need to replace non-standard for-each with one of:
+  * for-of
+  * for-in
+  * array.map/array.filter for array-comprehension
+as a part of bug 1083470.
+
+converting rules are following:
+  * for-each
+    * for each (let x in array) { ... }
+      -> for (let x of array) { ... }
+    * for each (let x in object) { ... }
+      -> for (let key in object) { let x = object[key]; ... }
+    * for each (let [key, value] in Iterator(object)) { ... }
+      -> for (let key in object) { let value = object[key]; ... }
+    * for each (let x in array) { ... }
+      where array can be null or undefined
+      -> if (array) { for (let x of array) { ... } }
+
+  * legacy array comprehension with for-each
+    * [EXPR for each (x in array)]
+      -> array.map(x => EXPR)
+    * [EXPR for each (x in array) if (COND)]
+      -> array.filter(x => COND).map(x => EXPR)
+    * [x for each (x in array) if (COND)]
+      -> array.filter(x => COND)
+    * [EXPR for each ([i, x] in Iterator(array)) if (g(x, i)]
+      -> array.filter((x, i) => g(x, i)).map((x => EXPR)
+    * [EXPR for each (x in arraylike)]
+      -> Array.from(arraylike).map(x => EXPR)
+    * [EXPR for each (x in string)]
+      -> Array.prototype.slice.call(string).map(x => EXPR)
+         // Array.from behaves differently for surrogate-pair
+
+I'll post a patch shortly.

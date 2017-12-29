@@ -1,0 +1,15 @@
+Allow closing a tab directly while the (tab-modal) onbeforeunload dialog is visible
+In bug 578828 comment 65, I took a quick look at the state of unbeforeonload on Mobile... Safari does not support it at all. Mobile Chrome/Firefox only support it for navigation, but not for closing a tab. (Desktop Firefox, Chrome, and Safari all always show a prompt.)
+
+For example, in mobile Chrome/Firefox, the following occurs:
+
+0) Load some random page to fill a history entry
+1) Load http://dolske.net/mozilla/tests/prompt/onbeforeunload.html
+2) Click back
+3) Enjoy a onbeforeunload dialog blocking the navigation
+
+But if in step 2 you simply close the tab, no prompt is shown. The tab is immediately closed.
+
+Seems like we could pick up the same behavior for desktop Firefox.
+
+Alternatively, we could show the prompt on the *first* attempt to close the tab, but make tab-closing UI abort the prompt the *second* time. Currently you can't close a tab when the prompt is already showing. This would allow closing such a page by clicking the close button twice, or pressing Control/Command-W twice. This would be a more conservative change, but given that the major 3 mobile browser already ignore it (when closing a tab), I think we should just go for it.

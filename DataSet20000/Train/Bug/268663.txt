@@ -1,0 +1,38 @@
+Autocomplete via setAttribute ignored on forms if focus() has been called
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; rv:1.7.3) Gecko/20040913 Firefox/0.10
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; rv:1.7.3) Gecko/20040913 Firefox/0.10
+
+It appears that setting autcomplete to off via js setAttribute, for both forms
+as well as an individual text box, doesn't work if the textbox has received focus.
+
+For a simple example, see:
+  http://www.kennwhite.com/mozilla/autocomplete_no_bueno.html
+and
+  http://www.kennwhite.com/mozilla/autocomplete_works.html
+
+It's a non-issue if one sets autocomplete in the form or input tag itself, but
+then, that won't validate as XHTML strict.  FWIW, this same behavior can be
+reproduced in doctype-less quirks mode too, as well as when called from an
+external js script.  The examples above are inline for clarity.
+
+Reproducible: Always
+Steps to Reproduce:
+1. Create a valid form, with an input (type=text) name="q", id="q"
+2. Set focus on the element: document.getElementById('q').focus();
+3. Use setAttribute to disable autocomplete: 
+document.getElementById('q').setAttribute('autocomplete', 'off');
+4. Enter "asdf" followed by Enter, to go to the Get/Post page
+5. Go back (or flush cache, stop/start browser), and type "as" -- autocomplete
+will drop down with "asdf"
+
+Reverse 2 and 3, and autocomplete is disabled.
+
+
+Actual Results:  
+someTextBox.focus() reliably disables setting autocomplete off downstream.
+
+Expected Results:  
+Maybe this is to prevent an event race condition, but it wouldn't seem like
+focus should override autocomplete.
+
+This behavior is particularly problematic for login forms (i.e., username/password).

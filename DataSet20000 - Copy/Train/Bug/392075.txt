@@ -1,0 +1,26 @@
+GUI performance dropping over time;
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.6) Gecko/20070725 Firefox/2.0.0.6
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.6) Gecko/20070725 Firefox/2.0.0.6
+
+It appears that as Firefox has more windows and more tabs open, the GUI thread keeps going slower and slower.  This IS NOT limited by CPU resources -- when it locks up (multi-seconds at a time), it only "sometimes" is even using the full resources of 1 CPU (25% of total on my 4P machine).  This most often locks up when I quickly go down a list of "sites", like on google news or even multiple pages like on bbc.co.uk/news -- I press "middle click" to open interesting tabs in background -- but after opening a few tabs, the GUI becomes sluggish and unresponsive -- ignoring button presses and any GUI updating (indeed, if I pull a window across the FF window at this point, the window won't refresh, but may be corrupt for a few seconds at a time.  
+
+Now I don't what the GUI thread is locking up on, but there seems to be some operation(s) where it is performing the opening of other webpages (in background) *synchronously* from the main GUI thread(s).  They lock up while the background tabs "start" to open; once the tabs start displaying, the GUI will become responsive again.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Go to a site like google news (news.google.com/news)
+2. have middle click config'ed to open tabs in background
+3. start opening multiple tabs "quickly"....starts to slow down after 3rd or 4th tab and locks out the GUI.  This isn't "right".  The opens should be happening as a background operation that doesn't lock up the GUI.  Note -- it may be CPU bound on 1 processor, but it isn't CPU bound, overall, (cores>1 not used).
+Actual Results:  
+GUI thread gets slower and slower until it becomes unresponsive
+
+Expected Results:  
+GUI thread should stay responsive with "tab" open "enqueued" and performed in background (since they are being requested to open in background!).
+
+
+Problem might become less visible if FF could use multiple cores, but on Windows, it doesn't (over 25 threads, but none will run on more than 1 core).
+
+I feel its a fairly major flaw that the GUI window is "synchronously" performing "work" that stops it from updating and from being responsive to user input.
+
+The flaws may be addressable on multiple "fronts" - one would be to make sure GUI thread has higher priority than background threads, but the biggest fix would be to remove "synchronous" operations from the gui thread.  It would probably help "hide" the problem if bug 392073 was fixed (allowing more cores to be used), but fixing that bug would only hide the areas where the GUI was performing synchronous operations.

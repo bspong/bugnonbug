@@ -1,0 +1,57 @@
+"Skype extension for Firefox 2.2.0.102" cause severe memory leak, leading to OOM crash
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.1.1) Gecko/20090715 Firefox/3.5.1 (.NET CLR 3.5.30729)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.1.1) Gecko/20090715 Firefox/3.5.1 (.NET CLR 3.5.30729)
+
+FF 3.5.1 ha crashed several time over the last couple weeks. This generates a Windows error dialog regarding the C++ runtime library, but the Firefox crash reporter doesn't catch it, so no crash report on this have been sent in.
+
+Bug 460920 and bug 490127 both also refer to crash in the runtime library, but the circumstance given for each don't seem to apply to what I've been seeing, so filing a a new bug.
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+Cannot reproduce on demand. It most often seems to occur when the browser is idle. In one case it crashed while I wa scrolling down a long forum thread page. In another case it crashed while FF wa in the background, and I wa playing a game in an entirely separate application in the foreground. Most recently it crashed while being left open overnight (found the crash notice when I got on the computer this morning), though it ha also stayed up for day at a time without issue. In no case doe it feel like any particular action I performed triggered the crash.
+
+
+
+I tried using WinDbg to get a stack trace, but FF flat out won't run when I tried to use it following the instruction given at https://developer.mozilla.org/en/How_to_get_a_stacktrace_with_WinDbg
+
+~~ Just saw the suggestion in bug 490127 to attach WinDbg to the already running FF process, so I've done that and will add that report the next time FF crashes.
+
+I've opened a debug session in Visual Studio 2008 after the most recent crash and tried to collection what information I could.
+
+I've included what information I could find below:
+
+
+Main error dialog:
+--
+Microsoft Visual C++ Runtime Library
+
+Runtime Error!
+
+Program C:\Program Files\Mozilla Firefox\firefox.exe
+
+This application ha requested the Runtime to terminate in an unusual way.
+Please contact the application's support team for more information.
+
+
+Followed by:
+--
+Visual Studio Just-In-Time Debugger
+
+An unhandled win32 exception occurred in firefox.exe
+
+
+--
+Attempting to debug.
+
+Call stack:
+
+firefox.exe!004015b0()
+[Frames below may be incorrect and/or missing, no symbol loaded for firefox.exe]
+kernel32.dll!7c817077()
+sqlite3.dll!002c0073()
+
+
+Disassembly:
+
+Selected prior and current apparent function's worth of instructions. Will add code in a followup attachment.

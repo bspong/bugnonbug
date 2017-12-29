@@ -1,0 +1,104 @@
+When I try to login to Yahoo Mail I cannot and then get the following error message:
+User-Agent:       Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; DigExt; FunWebProducts; .NET CLR 1.0.3705; .NET CLR 1.1.4322; .NET CLR 2.0.50727; SpamBlockerUtility 4.8.4)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.8.1.4) Gecko/20070515 Firefox/2.0.0.4
+
+<?PHP
+ini_set('display_errors', 0); 
+$data = yahoo_reg_login_setup();
+if ( $data === FALSE )
+{
+    exit();
+}
+else if ( ! isset( $data['DISPLAY_FORM'] ) )
+{
+    error_log( "yahoo_reg_login_setup didn't set the DISPLAY_FORM field" );
+    header( "Location: http://login.yahoo.com/");
+    exit();
+}
+
+$tstname = @$data['.testname'];
+$src = @$data['.src'];
+$partner = @$data['.partner'];
+$intl = @$data['.intl'];
+// This is a hack put in place so that persistancy files are 
+// picked from the regular html directory.
+// yinst packaging didn't allow for the multiple links to be created
+// with one single command.
+if($tstname == "tst_pst") {
+  $tstname = "";
+}
+// Adding support for pkg using PHP
+if((@$data['pkg'] != null) && (@$data['pkg'] != "" ))
+{
+  $data['.abs_path'] = "/home/y/share/htdocs/idaho/php/${intl}_shrkwp";
+  $res=include("/home/y/share/pear/Yahoo/reg/logic/shrkwp.inc");
+}
+// Adding support for .partner via PHP
+// If both .src and .partner are present, and .src=ym, then .src takes
+// precedence, else .partner takes precedence. - Aanchal, Bug #368481 
+// Please note that if in future, a more complicated pprecednce has to
+// be added, the priorityMap array from propTemplate.inc.ros and
+// header.inc.ros should be used.
+// Disabling the src=ym precedence over the partner user as ym is not
+// converted in intls like ca and cf and users end up seeing the older
+// login_verify page for ym. It is better if we show them the partner
+// branding. - bug # 652617
+//else if(($src != null) && ($src != "") && ($src == "ym"))
+//{
+  //$data['.abs_path'] = "/home/y/share/htdocs/idaho/php/${tstname}/${intl}_${src}";
+  //$res=include("/home/y/share/htdocs/idaho/php/${tstname}/${intl}_${src}/login/${data['DISPLAY_FORM']}");
+//}
+else if(($partner != null) && ($partner != ""))
+{
+  $data['.abs_path'] = "/home/y/share/htdocs/idaho/php/${tstname}/${intl}_${partner}";
+  $res=include("/home/y/share/htdocs/idaho/php/${tstname}/${intl}_${partner}/login/${data['DISPLAY_FORM']}");
+}
+else if(($src != null) && ($src != ""))
+{
+  $data['.abs_path'] = "/home/y/share/htdocs/idaho/php/${tstname}/${intl}_${src}";
+  $res=include("/home/y/share/htdocs/idaho/php/${tstname}/${intl}_${src}/login/${data['DISPLAY_FORM']}");
+}
+else
+{
+  $data['.abs_path'] = "/home/y/share/htdocs/idaho/php/${tstname}/${intl}";
+  $res=include("/home/y/share/htdocs/idaho/php/${tstname}/${intl}/login/${data['DISPLAY_FORM']}");
+}
+// This check is put in place to avoid showing a blank login page
+// when some test is set in common_login.conf and that test package is not
+// installed on the machine.
+// Ideally this should not happen. - Aanchal, Feb 3, 2005
+// Bug # 305858
+if($res != '1')
+{
+  if(!is_dir($data['.abs_path'])){
+        // reset abs_path only if it didn't exist before
+        // a temp fix for ym logout issue
+        // Bug 1146959
+        $data['.abs_path'] = "/home/y/share/htdocs/idaho/php/${intl}";
+  }
+  include("/home/y/share/htdocs/idaho/php/${intl}/login/${data['DISPLAY_FORM']}");
+}
+?>
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.I use two different email address; the same error is reproduced with both of them.
+2. If I switch off and then power-up again the same error message is repeated
+3. If I use MS Internet Explorer instead of Mozilla Firefox I do not get these error messages. Instead I can login and out normally. Therefore the bug must in in the Mozilla Firefox browser.
+Actual Results:  
+Go to Yahoo.co.uk
+Select My Mail
+Login with username and password (both unchanged)
+Read mail item(s)
+Try to sign out
+Get error message as above and so am unable to Sign out
+
+Expected Results:  
+In order to exit from the error message I used the Back Arrow, which took me back to My Mail.
+Tried again to sign out - got error message again.
+The only way I could exit was to close down Mozilla Firefox
+
+It should have asked if I wished to Sign out completely. 
+After confirming that I did, then I could have re-entered Yahoo Mail to read the mail in my other email address.

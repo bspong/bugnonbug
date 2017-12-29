@@ -1,0 +1,100 @@
+crash pasting in the address bar [@ nsAutoCompleteController::CompleteDefaultIndex]
+crash pasting in the address bar [@ nsAutoCompleteController::CompleteDefaultIndex]
+
+according to http://crash-stats.mozilla.com/report/list?range_unit=months&query_search=signature&query_type=contains&product=Firefox&signature=nsAutoCompleteController%3A%3ACompleteDefaultIndex(int)&query=nsAutoCompleteController%3A%3ACompleteDefaultIndex&range_value=1 this is mac only
+
+note, of the report the "old" one from around 9/5 have a stack that look like:
+http://crash-stats.mozilla.com/report/index/f561c13d-5c78-11dc-9e4c-001a4bd43ef6
+
+and the "new" one from around 9/20 have stack that look like this:
+http://crash-stats.mozilla.com/report/index/cc9521f3-6797-11dc-b1f2-001a4bd43ed6
+
+Focusing on the new crashers, the stack look like:
+
+0 nsAutoCompleteController::CompleteDefaultIndex(int) mozilla/toolkit/components/autocomplete/src/nsAutoCompleteController.cpp:1291
+1 nsCycleCollector::MarkRoots(GCGraph&) mozilla/xpcom/base/nsCycleCollector.cpp:1130
+2 XPCWrappedNative::FindTearOff(XPCCallContext&, XPCNativeInterface*, int, unsigned int*) mozilla/js/src/xpconnect/src/xpcwrappednative.cpp:3500
+3 XPCNativeSet::GetNewOrUsed(XPCCallContext&, nsIClassInfo*) mozilla/js/src/xpconnect/src/xpcwrappednativeinfo.cpp:91
+4 js_Invoke mozilla/js/src/jsinterp.c:1422
+5 js_Interpret mozilla/js/src/jsinterp.c:4102
+6 js_Invoke mozilla/js/src/jsinterp.c:1229
+7 js_InternalInvoke mozilla/js/src/jsinterp.c:1473
+8 JS_NewStringCopyZ mozilla/js/src/jsapi.c:5072
+9 nsJSContext::EvaluateString(nsAString_internal const&, void*, nsIPrincipal*, char const*, unsigned int, unsigned int, nsAString_internal*, int*) mozilla/dom/src/base/nsJSEnvironment.cpp:1332
+10 nsDOMScriptObjectFactory::GetScriptRuntime(nsAString_internal const&, nsIScriptRuntime**) mozilla/dom/src/base/nsDOMScriptObjectFactory.cpp:131
+11 nsXBLPrototypeHandler::GetController(nsPIDOMEventTarget*) mozilla/content/xbl/src/nsXBLPrototypeHandler.cpp:645
+12 nsXBLProtoImpl::InitTargetObjects(nsXBLPrototypeBinding*, nsIScriptContext*, nsIContent*, nsIXPConnectJSObjectHolder**, void**) mozilla/content/xbl/src/nsXBLProtoImpl.cpp:132
+13 nsEventListenerManager::AddScriptEventListener(nsISupports*, nsIAtom*, nsAString_internal const&, unsigned int, int, int) mozilla/content/events/src/nsEventListenerManager.cpp:428
+14 nsEventListenerManager::GetCoordinatesFor(nsIDOMElement*, nsPresContext*, nsIPresShell*, nsPoint&) mozilla/content/events/src/nsEventListenerManager.cpp:1627
+15 nsXMLEventsListener::InitXMLEventsListener(nsIDocument*, nsXMLEventsManager*, nsIContent*) mozilla/content/events/src/nsXMLEventsManager.cpp:645
+16 nsXMLEventsManager::AddListeners(nsIDocument*) mozilla/content/events/src/nsXMLEventsManager.cpp:324
+17 nsEventDispatcher::CreateEvent(nsPresContext*, nsEvent*, nsAString_internal const&, nsIDOMEvent**) mozilla/content/events/src/nsEventDispatcher.cpp:555
+18 PresShell::PaintRangePaintInfo(nsTArray<nsAutoPtr<RangePaintInfo> >*, nsISelection*, nsIRegion*, nsRect, nsPoint&, nsRect*) mozilla/layout/base/nsPresShell.cpp:5028
+19 PresShell::PaintRangePaintInfo(nsTArray<nsAutoPtr<RangePaintInfo> >*, nsISelection*, nsIRegion*, nsRect, nsPoint&, nsRect*) mozilla/layout/base/nsPresShell.cpp:5061
+20 nsTextControlFrame::CreateFrameFor(nsIContent*) mozilla/layout/forms/nsTextControlFrame.cpp:1399
+21 nsTextControlFrame::CreateFrameFor(nsIContent*) mozilla/layout/forms/nsTextControlFrame.cpp:1553
+22 nsEditor::CreateRange(nsIDOMNode*, int, nsIDOMNode*, int, nsIDOMRange**) mozilla/editor/libeditor/base/nsEditor.cpp:5094
+23 nsEditor::Init(nsIDOMDocument*, nsIPresShell*, nsIContent*, nsISelectionController*, unsigned int) mozilla/editor/libeditor/base/nsEditor.cpp:713
+24 nsPlaintextEditor::CanCopy(int*) mozilla/editor/libeditor/text/nsPlaintextEditor.cpp:542
+25 nsPlaintextEditor::GetAndInitDocEncoder(nsAString_internal const&, unsigned int, nsACString_internal const&, nsIDocumentEncoder**) mozilla/editor/libeditor/text/nsPlaintextEditor.cpp:542
+26 nsTextEditorDragListener::CanDrop(nsIDOMEvent*) mozilla/editor/libeditor/text/nsEditorEventListeners.cpp:1477
+27 nsEventListenerManager::GetCoordinatesFor(nsIDOMElement*, nsPresContext*, nsIPresShell*, nsPoint&) mozilla/content/events/src/nsEventListenerManager.cpp:645
+28 nsXMLEventsListener::InitXMLEventsListener(nsIDocument*, nsXMLEventsManager*, nsIContent*) mozilla/content/events/src/nsXMLEventsManager.cpp:645
+29 nsXMLEventsManager::AddListeners(nsIDocument*) mozilla/content/events/src/nsXMLEventsManager.cpp:325
+30 nsXMLEventsManager::AttributeChanged(nsIDocument*, nsIContent*, int, nsIAtom*, int, unsigned int) mozilla/content/events/src/nsXMLEventsManager.cpp:380
+31 nsEventDispatcher::CreateEvent(nsPresContext*, nsEvent*, nsAString_internal const&, nsIDOMEvent**) mozilla/content/events/src/nsEventDispatcher.cpp:555
+32 PresShell::PaintRangePaintInfo(nsTArray<nsAutoPtr<RangePaintInfo> >*, nsISelection*, nsIRegion*, nsRect, nsPoint&, nsRect*) mozilla/layout/base/nsPresShell.cpp:5028
+33 PresShell::ScrollLine(int) mozilla/layout/base/nsPresShell.cpp:2745
+34 nsViewManager::ForceUpdate() mozilla/view/src/nsViewManager.cpp:321
+35 nsViewManager::ProcessSynthMouseMoveEvent(int) mozilla/view/src/nsViewManager.cpp:62
+36 nsXULPrototypeDocument::Read(nsIObjectInputStream*) mozilla/content/xul/document/src/nsXULPrototypeDocument.cpp:334
+37 nsChildView::Scroll(int, int, nsRect*) mozilla/widget/src/cocoa/nsChildView.mm:1252
+38 nsChildView::StandardCreate(nsIWidget*, nsRect const&, nsEventStatus (*)(nsGUIEvent*), nsIDeviceContext*, nsIAppShell*, nsIToolkit*, nsWidgetInitData*, void*) mozilla/widget/src/cocoa/nsChildView.mm:415
+39 -[ChildView flagsChanged:] mozilla/widget/src/cocoa/nsChildView.mm:495
+40 -[ChildView convertCocoaKeyEvent:toGeckoEvent:] mozilla/widget/src/cocoa/nsChildView.mm:3357
+41 -[NSKeyBindingManager(NSKeyBindingManager_MultiClients) interpretEventAsCommand:forClient:]
+42 -[NSTSMInputContext interpretKeyEvents:]
+43 -[NSView interpretKeyEvents:]
+44 -[ChildView scrollWheel:forAxis:] mozilla/widget/src/cocoa/nsChildView.mm:3015
+45 -[NSWindow sendEvent:]
+46 -[NSApplication sendEvent:]
+47 nsToolkit::UnregisterAllProcessMouseEventHandlers() mozilla/widget/src/cocoa/nsToolkit.mm:310
+48 nsPrintSettingsX::ReadPageFormatFromPrefs() mozilla/widget/src/cocoa/nsPrintSettingsX.mm:320
+49 nsPrintSessionX::~nsPrintSessionX() mozilla/widget/src/cocoa/nsPrintSessionX.mm:55
+50 nsEventQueue::GetEvent(int, nsIRunnable**) mozilla/xpcom/components/nsServiceManagerObsolete.cpp:89
+51 nsVoidArray::InsertElementAt(void*, int) nsVoidArray.cpp:63
+52 nsPrintSettingsX::ReadPageFormatFromPrefs() mozilla/widget/src/cocoa/nsPrintSettingsX.mm:325
+53 ToolkitSleepWakeCallback(void*, unsigned int, unsigned int, void*) mozilla/widget/src/cocoa/nsToolkit.mm:153
+54 __NSFireDelayedPerform
+55 CFRunLoopRunSpecific
+56 CFRunLoopRunInMode
+57 RunCurrentEventLoopInMode
+58 ReceiveNextEventCommon
+59 BlockUntilNextEventMatchingListInMode
+60 _DPSNextEvent
+61 -[NSApplication nextEventMatchingMask:untilDate:inMode:dequeue:]
+62 EventTapCallback(__CGEventTapProxy*, unsigned int, __CGEvent*, void*) mozilla/widget/src/cocoa/nsToolkit.mm:236
+63 nsPrintSettingsX::ReadPageFormatFromPrefs() mozilla/widget/src/cocoa/nsPrintSettingsX.mm:320
+64 nsPrintSessionX::~nsPrintSessionX() mozilla/widget/src/cocoa/nsPrintSessionX.mm:55
+65 nsEventQueue::GetEvent(int, nsIRunnable**) mozilla/xpcom/components/nsServiceManagerObsolete.cpp:89
+66 nsSmallVoidArray::EnsureArray() nsVoidArray.cpp:1467
+67 nsPrintSettingsX::ReadPageFormatFromPrefs() mozilla/widget/src/cocoa/nsPrintSettingsX.mm:316
+68 nsAppShell::ProcessNextNativeEvent(int) mozilla/widget/src/cocoa/nsAppShell.mm:416
+69 nsAppShell::ProcessNextNativeEvent(int) mozilla/widget/src/cocoa/nsAppShell.mm:421
+70 __NSFireMachPort
+71 __CFMachPortPerform
+72 CFRunLoopRunSpecific
+73 CFRunLoopRunInMode
+74 RunCurrentEventLoopInMode
+75 ReceiveNextEventCommon
+76 BlockUntilNextEventMatchingListInMode
+77 _DPSNextEvent
+78 -[NSApplication nextEventMatchingMask:untilDate:inMode:dequeue:]
+79 -[NSApplication run]
+80 NS_GetCurrentToolkit(nsIToolkit**) mozilla/widget/src/cocoa/nsToolkit.mm:351
+81 nsCommandLine::EnumerateHandlers(unsigned int (*)(nsICommandLineHandler*, nsICommandLine*, void*), void*) mozilla/toolkit/components/commandlines/src/nsCommandLine.cpp:563
+82 XRE_main mozilla/toolkit/xre/nsAppRunner.cpp:677
+83 main mozilla/browser/app/nsBrowserApp.cpp:153
+84 start crt.c:272
+85 start
+86 @0x2

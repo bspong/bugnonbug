@@ -1,0 +1,50 @@
+[e10s] "Save Image/Audio/Video As..." in remote browser causes unsafe CPOW usage warning
++++ This bug was initially created as a clone of Bug #1133577 +++
+
+STR:
+
+1) Visit a site with some images, <audio/>s, <video/>s, or <canvas/>s on it in an e10s window
+2) Right-click on one of the media elements, and choose "Save Image/Audio/Video As..."
+
+This causes some "unsafe CPOW usage" warnings in the Browser Console.
+
+In browser/base/content/nsContextMenu.js:
+
+  saveHelper: function(linkURL, linkText, dialogTitle, bypassCache, doc) {
+[...]
+    if (channel instanceof Ci.nsIHttpChannel) {
+      channel.referrer = BrowserUtils.makeURIFromCPOW(doc.documentURIObject); <-- Causes CPOW warning [audio, video]
+      if (channel instanceof Ci.nsIHttpChannelInternal)
+        channel.forceAllowThirdPartyCookie = true;
+    }
+
+[...]
+
+  // Save URL of the clicked upon image, video, or audio.
+  saveMedia: function() {
+    var doc =  this.target.ownerDocument; <-- Causes CPOW warning
+    if (this.onCanvas) {
+      // Bypass cache, since it's a data: URL.
+      saveImageURL(this.target.toDataURL(), "canvas.png", "SaveImageTitle", <-- Causes CPOW warning [canvas]
+                   true, false, BrowserUtils.makeURIFromCPOW(doc.documentURIObject), doc); <-- Causes CPOW warning [canvas]
+    }
+    else if (this.onImage) {
+      urlSecurityCheck(this.mediaURL, this.principal);
+      saveImageURL(this.mediaURL, null, "SaveImageTitle", false,
+                   false, BrowserUtils.makeURIFromCPOW(doc.documentURIObject), doc); <-- Causes CPOW warning [image]
+    }
+    else if (this.onVideo || this.onAudio) {
+      urlSecurityCheck(this.mediaURL, this.principal);
+      var dialogTitle = this.onVideo ? "SaveVideoTitle" : "SaveAudioTitle";
+      this.saveHelper(this.mediaURL, null, dialogTitle, false, doc);
+    }
+  },
+
+
+in toolkit/modules/BrowserUtils.jsm
+
+  makeURIFromCPOW: function(aCPOWURI) {
+    return Services.io.newURI(aCPOWURI.spec, aCPOWURI.originCharset, null); <-- Causes CPOW warning
+  },
+
+warnings are tagged e.g. [image] if they only occur with certain element types.

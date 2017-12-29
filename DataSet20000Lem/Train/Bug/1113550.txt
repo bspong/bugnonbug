@@ -1,0 +1,26 @@
+Closing an about:home tab after typing a search term result in an error thrown by IDBDatabase.cpp:776
+Reproducible on: Firefox 35.0b5 (20141218174327), Aurora 36.0a2 (2014-12-18), Nightly 37.0a1 (2014-12-18).
+
+Affected platform(s): Ubuntu 12.04 LTS 32-bit, Windows 8.1 32-bit and Mac OS X 10.9.5.
+
+STR:
+1. Launch Firefox with a clean profile.
+2. Access about:home in a new tab.
+3. Type a random search term in the search field from the body of about:home and either press ENTER or leave the page a is.
+4. Open a new tab.
+5. Close the about:home tab and check the Browser Console.
+
+Expected result: The about:home is successfully closed with no error thrown for this action.
+
+Actual result: Closing the about:home tab cause IDBDatabase.cpp:776 to throw the following error message:
+> IndexedDB UnknownErr: IDBDatabase.cpp:776
+
+Notes:
+(a) The error message and it origin varies from branch to branch:
+(a.1) on Aurora 36.0a2 (2014-12-18):
+> An IndexedDB transaction that wa not yet complete ha been aborted due to page navigation. aboutHome.js:276:0
+(a.2) on Nightly 37.0a1 (2014-12-18):
+> An IndexedDB transaction that wa not yet complete ha been aborted due to page navigation. aboutHome.js:278:0
+(b) Firefox 33.1.1 (20141113143407) and Firefox 34.0.5 (20141126041045) are *not affected* by this issue.
+(c) On Nightly 37.0a1 (2014-12-18), the error is thrown with and without e10s enabled.
+(d) The error is *sometimes* thrown for search performed from the toolbar a well, following the same steps.

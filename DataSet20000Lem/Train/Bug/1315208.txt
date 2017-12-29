@@ -1,0 +1,40 @@
+Remove explicit call to `ReactDOM.render` in the LayoutView
+Original comment https://bugzilla.mozilla.org/show_bug.cgi?id=1314931#c5
+
+Rendering of the panel content should be responsibility of the Sidebar component (it should render it child automatically). Note that in regular React app, there is just one `ReactDOM.render` call - the one that render the root component and we should go towards it.
+
+So, what about rename the layout.js to main.js and export just a single function. This function would create the root component and append it directly into the sidebar.
+
+exports.addSidebarTab = (inspector, defaultTab) => {
+let store = Store();
+let provider = createElement(Provider, {
+store,
+id: "layoutview",
+title: INSPECTOR_L10N.getStr("inspector.sidebar.layoutViewTitle"),
+key: "layoutview",
+}, App());
+
+inspector.addSidebarTab(
+null,
+null,
+provider,
+defaultTab == "layoutview
+);
+}
+
+The inspector.js would call that function a follows:
+
+if (Services.prefs.getBoolPref("devtools.layoutview.enabled")) {
+const {addSidebarTab} = this.browserRequire("devtools/client/inspector/layout/main");
+addSidebarTab(this, defaultTab);
+}
+
+Comments:
+- I am not sure if 'addSidebarTab' is the best name for the function, you might find better name (e.g. registerLayoutPanel, etc.)
+- You can remove the helper node in inspector.xul
+- In case the `addSidebarTab` is actually part of inspector.js (a method of Inspector object) you shouldn't need to modify the BROWSER_BASED_DIRS and you don't need the main.js at all.
+- Finally, we might want to improve the API and avoid the two 'null' arguments. At least we could introduce the following method in Inspector object:
+
+addSidebarComponent: function (component, selected) {
+this.sidebar.addTab(undefined, undefined, component, selected);
+}

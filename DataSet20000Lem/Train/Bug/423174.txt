@@ -1,0 +1,34 @@
+Starting drag/drop in one window cause another active window to never update.
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.2; en-US; rv:1.8.1.12) Gecko/20080201 Firefox/2.0.0.12
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.2; en-US; rv:1.8.1.12) Gecko/20080201 Firefox/2.0.0.12
+
+Having a pending drag/drop seems to prevent Firefox from updating page content in ANY window, and when the drag/drop is released it never completes them.
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Create two Firefox window (not two tab in the same window). Have both visible, either overlapping or not, make no difference.
+
+2. Do something in one window that take some time - like a form submittal, although I suspect retrieving a page from any slow server will do.
+
+3. While this is happening click on a link (URL) in the other window and move the cursor to start a drag/drop. It's not necessary to actually drop it anywhere, you only have to move it while selected to trigger a drag/drop event.
+
+4. Keep hold of the drag/drop until the other window finish it's action and say 'done' on the status bar.
+Actual Results:
+The content of the other window (the one that wa busy) don't update, even though the status bar say 'done'. They never update, even when you let go of the drag/drop in the other window. Firefox wa presumably unable to update any window while a drag/drop wa in progress and ha subsequently forgotten about it.
+
+Expected Results:
+It should either have updated the other window a their content arrived, or should have deferred some event to cause the update to happen after the drag/drop wa released.
+
+These are the exact circumstance in which I encountered the problem.
+
+I have a form that accepts a URL in a field. Clicking submit then cause a script on the remote server to process that URL and re-feed an empty form. This run in one Firefox window.
+
+I have another Firefox window open showing a page from which I'm choosing these links.
+
+I drag a link from one window to a form-field on the other window and click submit.
+
+If I now start to drag another link from the first window before the form window ha refreshed it lock up and never updates, although it show 'done' in the status bar the page remains with the previous contents.
+
+Although I have not been able to test it I suspect this ha nothing directly to do with form submittal. I suspect that if you start a drag/drop in one Firefox window then any other 'busy' window will fail to update.

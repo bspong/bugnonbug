@@ -1,0 +1,66 @@
+AVC Denial break talkback on Fedora 8 and Firefox 2.0.0.9
+Selinux AVC Denial Warning when starting Firefox 2.0.0.9 Mozilla/5.0 (X11; U; Linux i686 (x86_64); en-US; rv:1.8.1.9) Gecko/2007102514 Firefox/2.0.0.9
+
+This prevent Talkback from working when Firefox crash.
+
+Summary
+SELinux is preventing /opt/firefox/firefox-bin from loading
+/opt/firefox/extensions/talkback@mozilla.org/components/libqfaservices.so
+which requires text relocation.
+
+Detailed Description
+The /opt/firefox/firefox-bin application attempted to load
+/opt/firefox/extensions/talkback@mozilla.org/components/libqfaservices.so
+which requires text relocation. This is a potential security problem. Most
+library do not need this permission. Libraries are sometimes coded
+incorrectly and request this permission. The
+http://people.redhat.com/drepper/selinux-mem.html web page explains how to
+remove this requirement. You can configure SELinux temporarily to allow
+/opt/firefox/extensions/talkback@mozilla.org/components/libqfaservices.so to
+use relocation a a workaround, until the library is fixed. Please file a
+http://bugzilla.redhat.com/bugzilla/enter_bug.cgi against this package.
+
+Allowing Access
+If you trust
+/opt/firefox/extensions/talkback@mozilla.org/components/libqfaservices.so to
+run correctly, you can change the file context to textrel_shlib_t. "chcon -t
+textrel_shlib_t
+/opt/firefox/extensions/talkback@mozilla.org/components/libqfaservices.so"
+You must also change the default file context file on the system in order
+to preserve them even on a full relabel. "semanage fcontext -a -t
+textrel_shlib_t
+/opt/firefox/extensions/talkback@mozilla.org/components/libqfaservices.so"
+
+The following command will allow this access:
+chcon -t textrel_shlib_t /opt/firefox/extensions/talkback@mozilla.org/components/libqfaservices.so
+
+Additional Information
+
+Source Context system_u:system_r:unconfined_t:s0
+Target Context system_u:object_r:usr_t:s0
+Target Objects /opt/firefox/extensions/talkback@mozilla.org/compo
+nents/libqfaservices.so [ file ]
+Affected RPM Packages
+Policy RPM selinux-policy-3.0.8-47.fc8
+Selinux Enabled True
+Policy Type targeted
+MLS Enabled True
+Enforcing Mode Enforcing
+Plugin Name plugins.allow_execmod
+Host Name localhost.localdomain
+Platform Linux localhost.localdomain 2.6.23.1-49.fc8 #1 SMP
+Thu Nov 8 22:14:09 EST 2007 x86_64 x86_64
+Alert Count 1
+First Seen Wed 14 Nov 2007 07:18:26 AM PST
+Last Seen Wed 14 Nov 2007 07:18:26 AM PST
+Local ID 5bdff4ed-7813-46f0-9272-44d90a63bdd1
+Line Numbers
+
+Raw Audit Messages
+
+avc: denied { execmod } for comm=firefox-bin dev=dm-0 egid=500 euid=500
+exe=/opt/firefox/firefox-bin exit=-13 fsgid=500 fsuid=500 gid=500 items=0
+path=/opt/firefox/extensions/talkback@mozilla.org/components/libqfaservices.so
+pid=3129 scontext=system_u:system_r:unconfined_t:s0 sgid=500
+subj=system_u:system_r:unconfined_t:s0 suid=500 tclass=file
+tcontext=system_u:object_r:usr_t:s0 tty=pts1 uid=500

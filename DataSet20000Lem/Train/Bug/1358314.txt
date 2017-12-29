@@ -1,0 +1,35 @@
+'Open Link in New Tab' doe not work after unloading document
+0. Disable e10s
+1. Click a link which point to a slow server (bugzilla.mozilla.org is a good example)
+2. Before the document unloads, right click another link
+3. Wait until the new document load
+4. Click 'Open Link in New Tab' in the context menu
+
+Expected result: a new tab load the url of the 2nd link
+Result: no new tab, an error is thrown.
+
+TypeError: window is null (resource://gre/modules/WebNavigationFrames.jsm:59:1)
+getFrameId (resource://gre/modules/WebNavigationFrames.jsm:59:1)
+_openLinkInParameters (chrome://browser/content/nsContextMenu.js:1036:35)
+openLinkInTab (chrome://browser/content/nsContextMenu.js:1085:37)
+oncommand (chrome://browser/content/browser.xul:1:1)
+
+If you follow the same steps, but now inside an iframe, the error is
+
+TypeError: can't access dead object (chrome://browser/content/nsContextMenu.js)
+_openLinkInParameters (chrome://browser/content/nsContextMenu.js:1036:7)
+openLinkInTab (chrome://browser/content/nsContextMenu.js:1085:37)
+oncommand (chrome://browser/content/browser.xul:1:1)
+
+The problem is
+
+if (!this.isRemote) {
+params.frameOuterWindowID = WebNavigationFrames.getFrameId(this.target.ownerGlobal);
+}
+
+In the iframe case, this.target is a DeadObject, so this.target.ownerGlobal throws.
+In the non-iframe case, this.target.ownerGlobal is null, so window.parent === window throw in getFrameId.
+
+This worked correctly before bug 1190687.
+
+This is a regression (bug 1025568), so please add automated test to ensure this doesn't happen a third time.

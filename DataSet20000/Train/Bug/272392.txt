@@ -1,0 +1,58 @@
+~/.mozilla contains multiple directories for storing e.g. preferences, these directories have names withs lots of 8-bit characters in it.
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.5) Gecko/20041115 Firefox/1.0
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.5) Gecko/20041115 Firefox/1.0
+
+ls ~/.mozilla returns various directories with 8-bit chars in the name, all
+these directories store the standard preferences/cache etc. directory structure.
+There is 2 bugs: there should only be one of these directories and the names of
+this directory should be 8-bit clean for access by other applications.
+$ ls ~/.mozilla
+appreg   joost          plugins   ?+#@@??  ?+#@???  ?+#@???  ?+#@???
+appreg~  mozver.dat     registry  ?+#@???  ?+#@???  ?+#@???  ?+#@???
+default  pluginreg.dat  ?+#@      ?+#@???  ?+#@???  ?+#@???
+$ ls ~/.mozilla | od -xc
+0000000 7061 7270 6765 610a 7070 6572 7e67 640a
+          a   p   p   r   e   g  \n   a   p   p   r   e   g   ~  \n   d
+0000020 6665 7561 746c 6a0a 6f6f 7473 6d0a 7a6f
+          e   f   a   u   l   t  \n   j   o   o   s   t  \n   m   o   z
+0000040 6576 2e72 6164 0a74 6c70 6775 6e69 6572
+          v   e   r   .   d   a   t  \n   p   l   u   g   i   n   r   e
+0000060 2e67 6164 0a74 6c70 6775 6e69 0a73 6572
+          g   .   d   a   t  \n   p   l   u   g   i   n   s  \n   r   e
+0000100 6967 7473 7972 e80a 232b 0a40 2be8 4023
+          g   i   s   t   r   y  \n 350   +   #   @  \n 350   +   #   @
+0000120 ae40 0aff 2be8 4023 ceb0 0aff 2be8 4023
+          @ 256 377  \n 350   +   #   @ 260 316 377  \n 350   +   #   @
+0000140 d4b0 0aff 2be8 4023 cec0 0aff 2be8 4023
+        260 324 377  \n 350   +   #   @ 300 316 377  \n 350   +   #   @
+0000160 d4c0 0aff 2be8 4023 dad0 0aff 2be8 4023
+        300 324 377  \n 350   +   #   @ 320 332 377  \n 350   +   #   @
+0000200 dae0 0aff 2be8 4023 dce0 0aff 2be8 4023
+        340 332 377  \n 350   +   #   @ 340 334 377  \n 350   +   #   @
+0000220 aef0 0aff 2be8 4023 daf0 0aff 2be8 4023
+        360 256 377  \n 350   +   #   @ 360 332 377  \n 350   +   #   @
+0000240 dcf0 0aff
+        360 334 377  \n
+0000244
+$ find ~/.mozilla -name prefs.js
+/home/joost/.mozilla/default/rv1iydjb.slt/prefs.js
+/home/joost/.mozilla/default/prefs.js
+/home/joost/.mozilla/joost/w2eeq5ga.slt/prefs.js
+/home/joost/.mozilla/ш+#@№мџ/i4bftjdr.default/prefs.js
+/home/joost/.mozilla/ш+#@рмџ/hp9f14ke.default/prefs.js
+
+
+Reproducible: Always
+Steps to Reproduce:
+1. migrate from old (pre 1.0) firefox to new firefox
+2. 
+3.
+
+Actual Results:  
+after some tries to get the preferences saved, no new directories were added to
+~/.mozilla.
+
+Expected Results:  
+Create one single readable directory under ~/.mozilla.
+
+I build firefox from source.

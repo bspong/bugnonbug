@@ -1,0 +1,628 @@
+change nsCRT::mem* to mem*
+As Roland memtion in the statement below, this is a performance issue. 
+
+We should change all nsCRT::memcpy to ::memcpy according to the discussion in 
+bug 116976:
+
+------- Additional Comment #19 From Roland Mainz 2002-01-03 13:19 -------
+
+
+BTW: Why are we using nsCRT::memcpy() instead of ANSI C memcpy() (this destroys
+the optimisations some compiler/OSes can do when using their "built-in" memcpy()
+versions) ?
+
+
+
+
+------- Additional Comment #21 From Frank Tang 2002-01-03 13:23 -------
+
+>BTW: Why are we using nsCRT::memcpy() instead of ANSI C memcpy() (this destroys
+>the optimisations some compiler/OSes can do when using their "built-in" memcpy()
+>versions) ?
+
+We should always use nsCRT if possible in xp code. If Compiler/OS can do with
+their build-in memcpy() can we fix that in nsCRT::memcpy() ?
+
+
+
+
+------- Additional Comment #22 From Frank Tang 2002-01-03 13:24 -------
+
+>I can test this on Solaris/SPARC if someone can explain me how I can verify this
+
+thanks, I already verify it on Solaris.
+It should impact the correctness of Hebrew/Arabic display . Hard to explain.
+
+
+
+------- Additional Comment #23 From Roland Mainz 2002-01-03 23:43 -------
+
+ftang wrote:
+> We should always use nsCRT if possible in xp code. If Compiler/OS can do with
+> their build-in memcpy() can we fix that in nsCRT::memcpy() ?
+
+Not really. The built-in compiler memcpy() requires to be |inline| because they
+look for common optimisations (small fixed[1] size (inline long word block
+copies), large fixed size (which calls specfic OS routine for large mem copies,
+alignment optimisations etc. etc)
+
+[1]=("fixed" = either constant fixed value or the compiler can figure out that
+the variable may only contain a known value/expresson which can be used for
+further optimisation).
+
+I would vote to implement a PL_memcpy() which should be a macro to memcpy() on
+platforms where memcpy() is not available (is there any ?) ...
+
+
+
+------- Additional Comment #24 From Brendan Eich 2002-01-04 00:03 -------
+
+I don't believe we need PL_strcpy, nsCRT::memcpy, etc. any longer.  The
+rationale for these is almost lost in the mists of time (I dimly recall an HP-UX
+memcpy bug from 1996).  jdunn, do you agree?
+
+I see lots of Mozilla code using memcpy, strlen, etc. and porting as well as any
+other code.  I see on reason to rub these hold-over "portability worry beads"
+any longer.  Sorry I didn't say this earlier.
+
+/be
+
+
+
+------- Additional Comment #25 From Jim Dunn 2002-01-04 04:41 -------
+
+I can't recall the memcpy issue from '96.
+The lastest patch does look ok, however
+you should get Shanmu to look at this on Tru64
+(unless someone else has done a 64bit build?!?)
+However, it looks ok to me.  Shanmu, can you
+try to make sure the latest patch compiles on
+Tru64?  I have no idea how to test it...
+
+I also agree with Brendan maybe it is time we
+go thru and look at removing nsCRT::memcpy's
+but if we do, we should do that as a separate
+issue since it is going to consume a bunch of 
+time (I assume we will do performance analysis
+on it as well)
+
+And below are the list I found of "nsCRT::memcpy"
+
+http://lxr.mozilla.org/seamonkey/search?string=nsCRT%3A%3Amemcpy
+
+Regular Expression Search
+nsCRT::memcpy
+/directory/xpcom/base/src/nsLDAPOperation.cpp, line 251 -- nsCRT::memcpy(attrs,
+aAttributes, aAttrCount * sizeof(char *));
+/extensions/python/xpcom/src/VariantUtils.cpp, line 223 -- nsCRT::memcpy(pthis,
+PyString_AS_STRING(sequence_ob), sequence_size);
+/extensions/python/xpcom/src/VariantUtils.cpp, line 315 -- nsCRT::memcpy(*pp,
+&iid, sizeof(iid));
+/extensions/python/xpcom/src/VariantUtils.cpp, line 373 -- nsCRT::memcpy(*pp,
+sz, sizeof(PRUnichar) * (nch + 1));
+/extensions/python/xpcom/src/VariantUtils.cpp, line 815 --
+nsCRT::memcpy(this_buffer_pointer, &iid, sizeof(iid));
+/extensions/python/xpcom/src/VariantUtils.cpp, line 855 --
+nsCRT::memcpy(this_buffer_pointer, PyString_AS_STRING(val_use),
+cb_this_buffer_pointer);
+/extensions/python/xpcom/src/VariantUtils.cpp, line 936 --
+nsCRT::memcpy(this_buffer_pointer, PyString_AS_STRING(val_use),
+cb_this_buffer_pointer);
+/extensions/python/xpcom/src/VariantUtils.cpp, line 958 --
+nsCRT::memcpy(this_buffer_pointer, PyUnicode_AS_UNICODE(val_use),
+cb_this_buffer_pointer);
+/extensions/python/xpcom/src/VariantUtils.cpp, line 1743 -- nsCRT::memcpy(*pp,
+&iid, sizeof(iid));
+/extensions/python/xpcom/src/VariantUtils.cpp, line 1816 -- nsCRT::memcpy(*pp,
+sz, sizeof(PRUnichar) * (nch + 1));
+/extensions/python/xpcom/src/VariantUtils.cpp, line 1891 -- nsCRT::memcpy(*(char
+**)ns_v.val.p, sz, nch);
+/extensions/python/xpcom/src/VariantUtils.cpp, line 1905 -- nsCRT::memcpy(*pp,
+sz, nch);
+/extensions/python/xpcom/src/VariantUtils.cpp, line 1947 --
+nsCRT::memcpy(*(PRUnichar **)ns_v.val.p, sz, nbytes);
+/extensions/python/xpcom/src/VariantUtils.cpp, line 1962 -- nsCRT::memcpy(*pp,
+sz, nbytes);
+/docshell/base/nsDocShell.cpp, line 4371 -- nsCRT::memcpy(headersBuf,
+pHeadersBuf, headersBufLen);
+/docshell/base/nsDocShell.cpp, line 4383 -- nsCRT::memcpy(pHeadersBuf,
+fromRawSegment, rawSegmentLen);
+/intl/locale/src/mac/nsCollationMac.cpp, line 247 -- nsCRT::memcpy(key, str,
+str_len);
+/intl/locale/src/unix/nsDateTimeFormatUnix.cpp, line 172 --
+nsCRT::memcpy(&tmTime, localtime(&timetTime), sizeof(struct tm));
+/intl/locale/src/unix/nsCollationUnix.cpp, line 238 -- nsCRT::memcpy(key, str,
+*outLen);
+/intl/uconv/src/nsConverterInputStream.cpp, line 114 -- nsCRT::memcpy(aBuf +
+aOffset, mUnicharData->GetBuffer() + mUnicharDataOffset,
+/intl/unicharutil/src/nsBidiImp.cpp, line 1425 -- nsCRT::memcpy(levels, mLevels,
+start);
+/intl/unicharutil/src/nsEntityConverter.cpp, line 108 --
+nsCRT::memcpy(mVersionList[i].mEntityListName, value.get(), len*sizeof(PRUnichar));
+/intl/unicharutil/src/nsSaveAsCharset.cpp, line 173 -- nsCRT::memcpy((*outString
++ *currentPos), fallbackStr, tempLen);
+/modules/libimg/gifcom/gif.cpp, line 266 -- nsCRT::memcpy(*destination, source,
+source_length);
+/modules/oji/src/nsCSecurityContext.cpp, line 180 --
+nsCRT::memcpy(buf,origin,originlen);
+/modules/oji/src/nsCSecurityContext.cpp, line 217 --
+nsCRT::memcpy(buf,certificate,certlen);
+/modules/oji/src/nsCNullSecurityContext.cpp, line 58 -- nsCRT::memcpy(buf,
+origin, originLen);
+/modules/plugin/base/src/nsIPluginHost.h, line 170 -- nsCRT::memcpy(newBuf,
+data, headersLen);
+/modules/plugin/base/src/nsIPluginHost.h, line 172 -- nsCRT::memcpy(newBuf +
+headersLen, crlfcrlf, 4);
+/modules/plugin/base/src/nsIPluginHost.h, line 175 -- nsCRT::memcpy(newBuf +
+headersLen + 4, t, dataLen);
+/modules/plugin/base/src/nsIPluginHost.h, line 189 -- nsCRT::memcpy(buf, data,
+contentLength);
+/modules/libpr0n/decoders/gif/GIF2.cpp, line 143 -- nsCRT::memcpy(*destination,
+source, source_length);
+/modules/libpr0n/decoders/icon/win/nsIconChannel.cpp, line 154 --
+nsCRT::memcpy(temporaryRowHolder, (void *) &aInitialBuffer[currentRow],
+numBytesPerRow);
+/modules/libpr0n/decoders/icon/win/nsIconChannel.cpp, line 155 --
+nsCRT::memcpy((void *) &aInitialBuffer[currentRow], (void
+*)&aInitialBuffer[lastRow], numBytesPerRow);
+/modules/libpr0n/decoders/icon/win/nsIconChannel.cpp, line 156 --
+nsCRT::memcpy((void *) &aInitialBuffer[lastRow], temporaryRowHolder,
+numBytesPerRow);
+/modules/libpr0n/decoders/bmp/nsBMPDecoder.cpp, line 215 --
+nsCRT::memcpy(mRawBuf + mPos, aBuffer, toCopy);
+/modules/libpr0n/decoders/bmp/nsBMPDecoder.cpp, line 233 --
+nsCRT::memcpy(mRawBuf + (mPos - 18), aBuffer, toCopy);
+/modules/libpr0n/decoders/bmp/nsBMPDecoder.cpp, line 329 --
+nsCRT::memcpy(mRawBuf + (mPos - mLOH), aBuffer, toCopy);
+/modules/libpr0n/decoders/bmp/nsBMPDecoder.cpp, line 375 -- nsCRT::memcpy(mRow +
+mRowBytes, aBuffer, toCopy);
+/modules/libpr0n/decoders/bmp/nsBMPDecoder.cpp, line 483 --
+nsCRT::memcpy(&mBIH.width, mRawBuf, 2);
+/modules/libpr0n/decoders/bmp/nsBMPDecoder.cpp, line 484 --
+nsCRT::memcpy(&mBIH.height, mRawBuf + 2, 2);
+/modules/libpr0n/decoders/bmp/nsBMPDecoder.h, line 94 -- #define DOCOPY(dest,
+src) nsCRT::memcpy(dest, src, sizeof(dest))
+/modules/libpr0n/decoders/bmp/nsICODecoder.cpp, line 230 --
+nsCRT::memcpy(mDirEntryArray + sizeof(mDirEntryArray) - toCopy, aBuffer, toCopy);
+/modules/libpr0n/decoders/bmp/nsICODecoder.cpp, line 260 --
+nsCRT::memcpy(mBIHraw + (mPos - mImageOffset), aBuffer, toCopy);
+/modules/libpr0n/decoders/bmp/nsICODecoder.cpp, line 357 -- nsCRT::memcpy(mRow +
+mRowBytes, aBuffer, toCopy);
+/modules/libpr0n/decoders/bmp/nsICODecoder.cpp, line 454 -- nsCRT::memcpy(mRow +
+mRowBytes, aBuffer, toCopy);
+/netwerk/base/src/nsBufferedStreams.cpp, line 274 -- nsCRT::memcpy(buf + read,
+mBuffer + mCursor, amt);
+/netwerk/base/src/nsBufferedStreams.cpp, line 347 -- nsCRT::memcpy(mBuffer,
+mBuffer + mCursor, rem);
+/netwerk/base/src/nsBufferedStreams.cpp, line 500 -- nsCRT::memcpy(mBuffer +
+mCursor, buf + written, amt);
+/netwerk/base/src/nsBufferedStreams.cpp, line 538 -- nsCRT::memcpy(mBuffer,
+mBuffer + amt, rem);
+/netwerk/base/src/nsStorageTransport.cpp, line 49 -- nsCRT::memcpy(toBuf +
+aOffset, aFromBuf, aCount);
+/netwerk/base/src/nsStorageTransport.cpp, line 63 -- nsCRT::memcpy(aToBuf,
+fromBuf + aOffset, aCount);
+/netwerk/base/src/nsURLHelper.cpp, line 235 -- nsCRT::memcpy(str, &inURI[start],
+length);
+/netwerk/cache/src/nsCacheMetaData.cpp, line 302 -- nsCRT::memcpy(state->bufPtr,
+hashEntry->key->get(), keySize);
+/netwerk/cache/src/nsCacheMetaData.cpp, line 304 -- nsCRT::memcpy(state->bufPtr,
+hashEntry->value->get(), valSize);
+/netwerk/cache/src/nsDiskCacheEntry.cpp, line 124 --
+nsCRT::memcpy(diskEntry->mKeyStart, entry->Key()->get(),keySize);
+/netwerk/dns/src/nsDnsService.cpp, line 592 --
+nsCRT::memcpy(mHostEntry.hostEnt.h_name, mInetHostInfo.name, len + 1);
+/netwerk/protocol/data/src/nsDataChannel.cpp, line 108 --
+nsCRT::memcpy(toRawSegment, dataToWrite->data + offset, write);
+/netwerk/protocol/http/src/nsHttpDigestAuth.cpp, line 90 --
+nsCRT::memcpy(mHashBuf, chash, DIGEST_LENGTH);
+/netwerk/protocol/theme/src/nsThemeHandler.cpp, line 261 --
+nsCRT::memcpy(buffer, *imageHandle, imageLength);
+/netwerk/socket/base/nsSOCKSIOLayer.cpp, line 192 --
+nsCRT::memcpy(*aExternalProxyAddr, &mExternalProxyAddr, sizeof(PRNetAddr));
+/netwerk/socket/base/nsSOCKSIOLayer.cpp, line 199 --
+nsCRT::memcpy(&mExternalProxyAddr, aExternalProxyAddr, sizeof(PRNetAddr));
+/netwerk/socket/base/nsSOCKSIOLayer.cpp, line 206 --
+nsCRT::memcpy(*aDestinationAddr, &mDestinationAddr, sizeof(PRNetAddr));
+/netwerk/socket/base/nsSOCKSIOLayer.cpp, line 213 --
+nsCRT::memcpy(&mDestinationAddr, aDestinationAddr, sizeof(PRNetAddr));
+/netwerk/socket/base/nsSOCKSIOLayer.cpp, line 220 --
+nsCRT::memcpy(*aInternalProxyAddr, &mInternalProxyAddr, sizeof(PRNetAddr));
+/netwerk/socket/base/nsSOCKSIOLayer.cpp, line 227 --
+nsCRT::memcpy(&mInternalProxyAddr, aInternalProxyAddr, sizeof(PRNetAddr));
+/netwerk/streamconv/converters/nsMultiMixedConv.cpp, line 427 --
+nsCRT::memcpy(tmp, mBuffer, mBufLen);
+/netwerk/streamconv/converters/nsMultiMixedConv.cpp, line 430 --
+nsCRT::memcpy(tmp+mBufLen, buffer, bufLen);
+/netwerk/streamconv/converters/nsMultiMixedConv.cpp, line 462 --
+nsCRT::memcpy(tmp, token, mTokenLen);
+/netwerk/streamconv/converters/nsMultiMixedConv.cpp, line 463 --
+nsCRT::memcpy(tmp+mTokenLen, "\n", 1);
+/netwerk/streamconv/converters/nsMultiMixedConv.cpp, line 464 --
+nsCRT::memcpy(tmp+mTokenLen+1, cursor, read);
+/netwerk/streamconv/converters/nsMultiMixedConv.cpp, line 698 --
+nsCRT::memcpy(buffer, aData, aLen);
+/netwerk/streamconv/converters/nsMultiMixedConv.cpp, line 798 --
+nsCRT::memcpy(tmp, aBuffer, aLen);
+/netwerk/streamconv/src/nsAppleFileDecoder.cpp, line 133 --
+nsCRT::memcpy(&fpb->ioFlFndrInfo, &m_finderInfo, sizeof (FInfo));
+/netwerk/streamconv/src/nsAppleFileDecoder.cpp, line 134 --
+nsCRT::memcpy(&fpb->ioFlXFndrInfo, &m_finderExtraInfo, sizeof (FXInfo));
+/netwerk/streamconv/src/nsAppleFileDecoder.cpp, line 233 --
+nsCRT::memcpy(&m_dataBuffer[m_dataBufferLength], buffPtr, dataCount);
+/netwerk/streamconv/src/nsAppleFileDecoder.cpp, line 238 --
+nsCRT::memcpy(&m_headers, m_dataBuffer, sizeof(ap_header));
+/netwerk/streamconv/src/nsAppleFileDecoder.cpp, line 271 --
+nsCRT::memcpy(&m_dataBuffer[m_dataBufferLength], buffPtr, dataCount);
+/netwerk/streamconv/src/nsAppleFileDecoder.cpp, line 278 --
+nsCRT::memcpy(&m_entries[i], &m_dataBuffer[i * sizeof(ap_entry)], sizeof(ap_entry));
+/netwerk/streamconv/src/nsAppleFileDecoder.cpp, line 337 --
+nsCRT::memcpy(&m_dataBuffer[m_dataBufferLength], buffPtr, dataCount);
+/netwerk/streamconv/src/nsAppleFileDecoder.cpp, line 346 --
+nsCRT::memcpy(&m_comment[1], buffPtr, m_comment[0]);
+/netwerk/streamconv/src/nsAppleFileDecoder.cpp, line 350 --
+nsCRT::memcpy(&m_dates, buffPtr, m_currentPartLength);
+/netwerk/streamconv/src/nsAppleFileDecoder.cpp, line 355 --
+nsCRT::memcpy(&m_finderInfo, buffPtr, sizeof(m_finderInfo));
+/netwerk/streamconv/src/nsAppleFileDecoder.cpp, line 356 --
+nsCRT::memcpy(&m_finderExtraInfo, buffPtr + sizeof(m_finderInfo),
+sizeof(m_finderExtraInfo));
+/rdf/base/src/nsRDFXMLDataSource.cpp, line 172 -- nsCRT::memcpy(aBuf,
+mBuffer+mIndex, readCount);
+/uriloader/exthandler/mac/nsDecodeAppleFile.cpp, line 137 --
+nsCRT::memcpy(&fpb->ioFlFndrInfo, &m_finderInfo, sizeof (FInfo));
+/uriloader/exthandler/mac/nsDecodeAppleFile.cpp, line 138 --
+nsCRT::memcpy(&fpb->ioFlXFndrInfo, &m_finderExtraInfo, sizeof (FXInfo));
+/uriloader/exthandler/mac/nsDecodeAppleFile.cpp, line 234 --
+nsCRT::memcpy(&m_dataBuffer[m_dataBufferLength], buffPtr, dataCount);
+/uriloader/exthandler/mac/nsDecodeAppleFile.cpp, line 239 --
+nsCRT::memcpy(&m_headers, m_dataBuffer, sizeof(ap_header));
+/uriloader/exthandler/mac/nsDecodeAppleFile.cpp, line 272 --
+nsCRT::memcpy(&m_dataBuffer[m_dataBufferLength], buffPtr, dataCount);
+/uriloader/exthandler/mac/nsDecodeAppleFile.cpp, line 279 --
+nsCRT::memcpy(&m_entries[i], &m_dataBuffer[i * sizeof(ap_entry)], sizeof(ap_entry));
+/uriloader/exthandler/mac/nsDecodeAppleFile.cpp, line 338 --
+nsCRT::memcpy(&m_dataBuffer[m_dataBufferLength], buffPtr, dataCount);
+/uriloader/exthandler/mac/nsDecodeAppleFile.cpp, line 347 --
+nsCRT::memcpy(&m_comment[1], buffPtr, m_comment[0]);
+/uriloader/exthandler/mac/nsDecodeAppleFile.cpp, line 351 --
+nsCRT::memcpy(&m_dates, buffPtr, m_currentPartLength);
+/uriloader/exthandler/mac/nsDecodeAppleFile.cpp, line 356 --
+nsCRT::memcpy(&m_finderInfo, buffPtr, sizeof(m_finderInfo));
+/uriloader/exthandler/mac/nsDecodeAppleFile.cpp, line 357 --
+nsCRT::memcpy(&m_finderExtraInfo, buffPtr + sizeof(m_finderInfo),
+sizeof(m_finderExtraInfo));
+/xpcom/ds/nsByteBuffer.cpp, line 117 -- nsCRT::memcpy(newbuf, mBuffer, mLength);
+/xpcom/ds/nsCRT.cpp, line 256 -- nsCRT::memcpy(rslt, str, len * sizeof(PRUnichar));
+/xpcom/ds/nsHashtable.cpp, line 600 -- nsCRT::memcpy(str, mStr, len);
+/xpcom/ds/nsHashtable.cpp, line 694 -- nsCRT::memcpy(str, mStr, len);
+/xpcom/ds/nsHashtable.cpp, line 763 -- nsCRT::memcpy(str, mBuf, len);
+/xpcom/ds/nsSupportsPrimitives.cpp, line 172 -- nsCRT::memcpy(mData, aData,
+aLength * sizeof(char));
+/xpcom/ds/nsSupportsPrimitives.cpp, line 186 -- nsCRT::memcpy(newData, aData,
+aLength * sizeof(char));
+/xpcom/ds/nsSupportsPrimitives.cpp, line 283 -- nsCRT::memcpy(mData, aData,
+aLength * sizeof(PRUnichar));
+/xpcom/ds/nsSupportsPrimitives.cpp, line 297 -- nsCRT::memcpy(newData, aData,
+aLength * sizeof(PRUnichar));
+/xpcom/ds/nsVoidArray.cpp, line 240 -- nsCRT::memcpy(newImpl->mArray, mImpl->mArray,
+/xpcom/ds/nsVoidArray.cpp, line 323 -- nsCRT::memcpy(mImpl->mArray,
+other.mImpl->mArray, otherCount * sizeof(mImpl->mArray[0]));
+/xpcom/ds/nsVoidArray.cpp, line 329 -- nsCRT::memcpy(mImpl->mArray,
+other.mImpl->mArray, otherCount * sizeof(mImpl->mArray[0]));
+/xpcom/ds/nsUnicharBuffer.cpp, line 117 -- nsCRT::memcpy(newbuf, mBuffer,
+mLength * sizeof(PRUnichar));
+/xpcom/components/nsComponentManager.cpp, line 2106 --
+nsCRT::memcpy(registryName, prefix, len);
+/xpcom/io/nsFileSpec.cpp, line 198 -- nsCRT::memcpy(mData->mString, inData,
+inLength);
+/xpcom/io/nsFileSpec.cpp, line 282 -- nsCRT::memcpy(newData, mData, sizeof(Data)
++ copyLength);
+/xpcom/io/nsLinebreakConverter.cpp, line 137 -- nsCRT::memcpy(resultString,
+inSrc, sizeof(T) * ioLen); // includes the null, if any
+/xpcom/io/nsLocalFileMac.cpp, line 1657 -- nsCRT::memcpy(fullPath,
+*fullPathHandle, fullPathLen);
+/xpcom/io/nsPipe2.cpp, line 535 -- nsCRT::memcpy(&toBuf[offset], fromRawSegment,
+count);
+/xpcom/io/nsPipe2.cpp, line 788 -- nsCRT::memcpy(toRawSegment, &fromBuf[offset],
+count);
+/xpcom/io/nsSegmentedBuffer.cpp, line 102 --
+nsCRT::memcpy(&mSegmentArray[mSegmentArrayCount],
+/xpcom/io/nsUnicharInputStream.cpp, line 100 -- nsCRT::memcpy(aBuf, us + mPos,
+sizeof(PRUnichar) * amount);
+/xpcom/io/nsUnicharInputStream.cpp, line 219 -- nsCRT::memcpy(aBuf + aOffset,
+mUnicharData->GetBuffer() + mUnicharDataOffset,
+/xpcom/io/nsUnicharInputStream.cpp, line 262 -- nsCRT::memcpy((void
+*)mUnicharData->GetBuffer(),
+/content/html/style/src/nsCSSScanner.cpp, line 365 -- nsCRT::memcpy(newPushback,
+mPushback, sizeof(PRUnichar) * mPushbackCount);
+/content/html/style/src/nsHTMLAttributes.cpp, line 1059 -- nsCRT::memcpy(buffer,
+mAttrNames, sizeof(nsIAtom*) * mAttrCount);
+/content/html/style/src/nsHTMLAttributes.cpp, line 1085 --
+nsCRT::memcpy(mNameBuffer, mAttrNames, index * sizeof(nsIAtom*));
+/content/html/style/src/nsHTMLAttributes.cpp, line 1088 --
+nsCRT::memcpy(&(mNameBuffer[index]), &(mAttrNames[index + 1]),
+/content/shared/public/nsStyleCoord.h, line 193 -- nsCRT::memcpy(&aValue,
+&mValue, sizeof(nsStyleUnion));
+/content/shared/src/nsTextFragment.cpp, line 297 -- nsCRT::memcpy(aDest, m2b +
+aOffset, sizeof(PRUnichar) * aCount);
+/content/shared/src/nsTextFragment.cpp, line 330 -- nsCRT::memcpy(aDest, m1b +
+aOffset, sizeof(char) * aCount);
+/content/shared/src/nsStyleCoord.cpp, line 195 -- nsCRT::memcpy(&mValue,
+&aValue, sizeof(nsStyleUnion));
+/content/shared/src/nsStyleStruct.cpp, line 463 --
+nsCRT::memcpy((nsStyleBorder*)this, &aSrc, sizeof(nsStyleBorder));
+/content/shared/src/nsStyleStruct.cpp, line 630 --
+nsCRT::memcpy((nsStyleOutline*)this, &aSrc, sizeof(nsStyleOutline));
+/content/shared/src/nsStyleStruct.cpp, line 718 --
+nsCRT::memcpy((nsStyleXUL*)this, &aSource, sizeof(nsStyleXUL));
+/content/shared/src/nsStyleStruct.cpp, line 765 --
+//nsCRT::memcpy((nsStyleSVG*)this, &aSource, sizeof(nsStyleSVG));
+/content/shared/src/nsStyleStruct.cpp, line 837 --
+nsCRT::memcpy((nsStylePosition*)this, &aSource, sizeof(nsStylePosition));
+/content/shared/src/nsStyleStruct.cpp, line 875 --
+nsCRT::memcpy((nsStyleTable*)this, &aSource, sizeof(nsStyleTable));
+/content/shared/src/nsStyleStruct.cpp, line 913 --
+nsCRT::memcpy((nsStyleTableBorder*)this, &aSource, sizeof(nsStyleTableBorder));
+/content/shared/src/nsStyleStruct.cpp, line 1243 --
+nsCRT::memcpy((nsStyleTextReset*)this, &aSource, sizeof(nsStyleTextReset));
+/content/shared/src/nsStyleStruct.cpp, line 1280 --
+nsCRT::memcpy((nsStyleText*)this, &aSource, sizeof(nsStyleText));
+/content/xbl/src/nsXBLService.cpp, line 486 -- nsCRT::memcpy(aBuf,
+mBuffer+mIndex, readCount);
+/gfx/src/nsBlender.cpp, line 287 -- nsCRT::memcpy(aDImage, aSImage, aNumBytes);
+/gfx/src/windows/nsDrawingSurfaceWin.cpp, line 630 -- nsCRT::memcpy(colortable,
+masks, sizeof(DWORD) * allocsize);
+/htmlparser/src/nsExpatTokenizer.cpp, line 906 -- nsCRT::memcpy(uniBuf, aBuf,
+sizeof(PRUnichar) * retLen);
+/layout/base/src/nsBidiPresUtils.cpp, line 939 -- nsCRT::memcpy(aText, buffer,
+aTextLength * sizeof(PRUnichar) );
+/layout/base/src/nsBidiPresUtils.cpp, line 946 -- nsCRT::memcpy(aText, buffer,
+aTextLength * sizeof(PRUnichar) );
+/layout/base/src/nsStyleChangeList.cpp, line 88 --
+nsCRT::memcpy(&(mArray[index]), &(mArray[index + 1]),
+/layout/base/src/nsStyleChangeList.cpp, line 107 -- nsCRT::memcpy(newArray,
+mArray, mCount * sizeof(nsStyleChangeData));
+/layout/html/base/src/nsFrame.cpp, line 4129 -- nsCRT::memcpy(aPropertyValue,
+&val, aSize);
+/layout/html/base/src/nsPresShell.cpp, line 494 -- nsCRT::memcpy(mMarks,
+oldMarks, sizeof(StackMark)*oldLength);
+/layout/html/base/src/nsTextFrame.cpp, line 169 -- nsCRT::memcpy(newBuffer,
+mBuffer, sizeof(PRInt32) * mBufferLen);
+/layout/html/base/src/nsTextFrame.cpp, line 1632 --
+nsCRT::memcpy(aTextBuffer->mBuffer + dstOffset, bp,
+/layout/html/base/src/nsTextFrame.cpp, line 5452 --
+nsCRT::memcpy((void*)newWordBuf, aWordBuf,
+sizeof(PRUnichar)*(newWordBufSize-moreSize));
+/layout/html/base/src/nsTextFrame.cpp, line 5558 --
+nsCRT::memcpy((void*)&(aWordBuf[aRunningWordLen]), bp, sizeof(PRUnichar)*wordLen);
+/layout/html/base/src/nsTextTransformer.cpp, line 90 --
+nsCRT::memcpy(&newBuffer[aCopyToHead ? 0 : mBufferLen],
+/widget/src/mac/nsMacTSMMessagePump.cpp, line 426 --
+nsCRT::memcpy(unicodeTextPtr, *(aAEDesc.dataHandle), text_size * 2);
+/widget/src/windows/nsClipboard.cpp, line 255 -- nsCRT::memcpy ( data, lpStr,
+allocSize );
+/xpfe/appshell/src/nsInternetConfigService.cpp, line 140 -- nsCRT::memcpy(pref +
+pref[0] + 1, protocol, nsCRT::strlen(protocol));
+/mailnews/base/search/src/nsMsgBodyHandler.cpp, line 171 -- nsCRT::memcpy(buf,
+m_headers, numBytesCopied);
+/mailnews/base/src/nsMsgDBView.cpp, line 2817 -- nsCRT::memcpy((void *)pTemp,
+pField, bytesToCopy);
+/mailnews/base/src/nsMsgFolderCache.cpp, line 477 -- nsCRT::memcpy(result,
+yarn.mYarn_Buf, yarn.mYarn_Fill);
+/mailnews/base/util/nsMsgLineBuffer.cpp, line 434 -- nsCRT::memcpy(newLine,
+startOfLine, aNumBytesInLine); // copy the string into the new line buffer
+/mailnews/base/util/nsUInt32Array.cpp, line 116 -- nsCRT::memcpy(pNewData,
+m_pData, m_nSize * sizeof(PRUint32));
+/mailnews/base/util/nsUInt32Array.cpp, line 175 -- nsCRT::memcpy(m_pData +
+m_nSize - numElements, elementPtr, numElements * sizeof(PRUint32));
+/mailnews/base/util/nsUInt32Array.cpp, line 184 -- nsCRT::memcpy(copyOfData,
+m_pData, m_nSize * sizeof(PRUint32));
+/mailnews/base/util/nsUInt32Array.cpp, line 273 -- nsCRT::memcpy(m_pData,
+oldA.m_pData, m_nSize * sizeof(PRUint32));
+/mailnews/base/util/nsUint8Array.cpp, line 109 -- nsCRT::memcpy(pNewData,
+m_pData, m_nSize * sizeof(PRUint8));
+/mailnews/compose/src/nsMsgAppleDecodeStream.cpp, line 276 --
+nsCRT::memcpy(obj->in_buff+obj->bytes_in_buff,
+/mailnews/compose/src/nsMsgAppleDecodeStream.cpp, line 298 --
+nsCRT::memcpy(obj->in_buff+obj->bytes_in_buff,
+/mailnews/compose/src/nsMsgAppleDecode.cpp, line 598 --
+nsCRT::memcpy(&reply.sfFile.name, p_ap_decode_obj->mSpec->name , 63 );
+/mailnews/compose/src/nsMsgAppleDecode.cpp, line 601 --
+nsCRT::memcpy(p_ap_decode_obj->fname,
+/mailnews/compose/src/nsMsgAppleDoubleEncode.cpp, line 123 --
+nsCRT::memcpy(p_ap_encode_obj->fname, fspec.name+1, *fspec.name);
+/mailnews/compose/src/nsMsgAppleEncode.cpp, line 67 --
+nsCRT::memcpy(p_ap_encode_obj->outbuff + p_ap_encode_obj->pos_outbuff,
+/mailnews/compose/src/nsMsgAppleEncode.cpp, line 80 --
+nsCRT::memcpy(p_ap_encode_obj->outbuff + p_ap_encode_obj->pos_outbuff,
+/mailnews/compose/src/nsMsgAppleEncode.cpp, line 83 --
+nsCRT::memcpy(p_ap_encode_obj->b_overflow + p_ap_encode_obj->s_overflow,
+/mailnews/compose/src/nsMsgBinHex.cpp, line 258 --
+nsCRT::memcpy(p_bh_encode_obj->overflow,
+/mailnews/compose/src/nsMsgBinHex.cpp, line 291 --
+nsCRT::memcpy(p_bh_encode_obj->name,
+/mailnews/compose/src/nsMsgBinHex.cpp, line 297 --
+nsCRT::memcpy(&(p_bh_encode_obj->head),
+/mailnews/compose/src/nsMsgBinHex.cpp, line 368 -- nsCRT::memcpy(buff,
+(char*)&p_bh_encode_obj->head,
+/mailnews/compose/src/nsMsgBinHex.cpp, line 373 -- nsCRT::memcpy(buff + 10, buff
++ 12, 8);
+/mailnews/compose/src/nsMsgBinHex.cpp, line 719 --
+nsCRT::memcpy(&reply.sfFile.name, p_bh_decode_obj->mSpec->name , 63 );
+/mailnews/compose/src/nsMsgBinHex.cpp, line 722 --
+nsCRT::memcpy(p_bh_decode_obj->name,
+/mailnews/compose/src/nsMsgSendLater.cpp, line 237 --
+nsCRT::memcpy(mLeftoverBuffer, startBuf, aLen);
+/mailnews/compose/src/nsMsgSendLater.cpp, line 254 --
+nsCRT::memcpy(mLeftoverBuffer + leftoverSize, aBuf, aCount);
+/mailnews/compose/src/nsMsgSendLater.cpp, line 898 -- nsCRT::memcpy(newh, value, L);
+/mailnews/compose/src/nsMsgSendLater.cpp, line 905 -- nsCRT::memcpy((*header),
+value, L);
+/mailnews/compose/src/nsMsgSendLater.cpp, line 926 -- nsCRT::memcpy(draftInfo,
+value, L);
+/mailnews/compose/src/nsMsgSendLater.cpp, line 1079 -- nsCRT::memcpy(m_headers +
+m_headersFP, line, length);
+/mailnews/db/msgdb/src/nsMsgDatabase.cpp, line 2968 -- nsCRT::memcpy(*result,
+yarn.mYarn_Buf, yarn.mYarn_Fill);
+/mailnews/imap/src/nsIMAPGenericParser.cpp, line 559 --
+nsCRT::memcpy(returnString + charsReadSoFar, terminatedLine ? fCurrentLine :
+fCurrentTokenPlaceHolder, bytesToCopy);
+/mailnews/imap/src/nsImapMailFolder.cpp, line 2677 --
+nsCRT::memcpy(m_copyState->m_dataBuffer, start,
+/mailnews/imap/src/nsImapProtocol.cpp, line 3256 --
+nsCRT::memcpy(m_fetchBodyIdList, keys, keyCount * sizeof(PRUint32));
+/mailnews/imap/src/nsImapService.cpp, line 234 -- nsCRT::memcpy(m_dataBuffer, start,
+/mailnews/import/eudora/src/nsEudoraCompose.cpp, line 991 -- nsCRT::memcpy(
+read.m_pBuffer, read.m_pBuffer + read.m_writeOffset, read.m_bytesInBuf -
+read.m_writeOffset);
+/mailnews/import/eudora/src/nsEudoraCompose.h, line 73 -- if (pOldBuffer) {
+nsCRT::memcpy( m_pBuffer, pOldBuffer, oldSize); delete [] pOldBuffer;}
+/mailnews/import/eudora/src/nsEudoraCompose.h, line 85 -- nsCRT::memcpy(
+m_pBuffer + offset, pData, len);
+/mailnews/import/eudora/src/nsEudoraMac.cpp, line 950 -- nsCRT::memcpy(
+&(str63[1]), volumeName.get(), 63);
+/mailnews/import/eudora/src/nsEudoraMac.cpp, line 954 -- nsCRT::memcpy(
+&(str63[1]), volumeName.get(), volumeName.Length());
+/mailnews/import/eudora/src/nsEudoraMailbox.cpp, line 792 -- nsCRT::memcpy(
+tymStr, pTok, tokLen);
+/mailnews/import/eudora/src/nsEudoraMailbox.cpp, line 1048 -- nsCRT::memcpy(
+read.m_pBuffer, read.m_pBuffer + read.m_writeOffset, read.m_bytesInBuf -
+read.m_writeOffset);
+/mailnews/import/oexpress/nsOE5File.cpp, line 198 -- nsCRT::memcpy( pNewIndex,
+pArray->pIndex, (pArray->alloc * 4));
+/mailnews/import/oexpress/nsOE5File.cpp, line 483 -- nsCRT::memcpy( &marker,
+recordHead, 4);
+/mailnews/import/oexpress/nsOE5File.cpp, line 484 -- nsCRT::memcpy( &recordSize,
+recordHead + 4, 4);
+/mailnews/import/oexpress/nsOE5File.cpp, line 493 -- nsCRT::memcpy( &tagData,
+pBuffer + attrOffset + 1, 3);
+/mailnews/import/oexpress/nsOE5File.cpp, line 499 -- nsCRT::memcpy( &tagData,
+pBuffer + attrOffset + 1, 3);
+/mailnews/import/oexpress/nsOE5File.cpp, line 501 -- nsCRT::memcpy( &offset,
+pBuffer + (numAttrs * 4) + tagData, 4);
+/mailnews/import/oexpress/nsOEMailbox.cpp, line 474 -- nsCRT::memcpy(
+m_pInBuffer, pIn, cnt);
+/mailnews/import/oexpress/nsOEScanBoxes.cpp, line 386 -- nsCRT::memcpy( &data,
+&(pBytes[dataOffset + 1]), 3);
+/mailnews/import/outlook/src/MapiMessage.cpp, line 781 -- nsCRT::memcpy( pData,
+m_pData, (m_allocated - m_growBy) * sizeof( PRUint32));
+/mailnews/import/outlook/src/MapiApi.cpp, line 1184 -- nsCRT::memcpy( lpEntryId,
+pVal->Value.bin.lpb, cbEntryId);
+/mailnews/import/outlook/src/MapiApi.cpp, line 1295 -- nsCRT::memcpy( &uid,
+pVal->Value.bin.lpb, 16);
+/mailnews/import/outlook/src/MapiApi.cpp, line 1667 -- nsCRT::memcpy( m_lpEid,
+lpEid, cbEid);
+/mailnews/import/outlook/src/MapiApi.cpp, line 1706 -- nsCRT::memcpy( m_lpEid,
+lpEid, cbEid);
+/mailnews/import/outlook/src/MapiApi.cpp, line 1751 -- nsCRT::memcpy( m_fLpEid,
+lpEid, cbEid);
+/mailnews/import/outlook/src/MapiApi.cpp, line 1868 -- nsCRT::memcpy(
+m_lastLpEid, lpEID, cbEID);
+/mailnews/import/outlook/src/MapiMimeTypes.cpp, line 115 -- nsCRT::memcpy(
+m_mimeBuffer, pByte, len);
+/mailnews/import/outlook/src/nsOutlookCompose.cpp, line 912 -- nsCRT::memcpy(
+read.m_pBuffer, read.m_pBuffer + read.m_writeOffset, read.m_bytesInBuf -
+read.m_writeOffset);
+/mailnews/import/outlook/src/nsOutlookCompose.h, line 70 -- if (pOldBuffer) {
+nsCRT::memcpy( m_pBuffer, pOldBuffer, oldSize); delete [] pOldBuffer;}
+/mailnews/import/outlook/src/nsOutlookCompose.h, line 82 -- nsCRT::memcpy(
+m_pBuffer + offset, pData, len);
+/mailnews/import/src/ImportOutFile.cpp, line 203 -- nsCRT::memcpy( m_pBuf,
+m_pBuf + transLen, m_pos - transLen);
+/mailnews/import/src/ImportOutFile.h, line 95 -- nsCRT::memcpy( m_pBuf + m_pos,
+pSrc, m_bufSz - m_pos);
+/mailnews/import/src/ImportOutFile.h, line 105 -- nsCRT::memcpy( m_pBuf + m_pos,
+pSrc, len);
+/mailnews/import/src/nsImportEncodeScan.cpp, line 299 -- nsCRT::memcpy( m_pBuf,
+gAppleSingleHeader, kAppleSingleHeaderSize);
+/mailnews/import/src/nsImportEncodeScan.cpp, line 306 -- nsCRT::memcpy( m_pBuf +
+m_bytesInBuf, &numEntries, sizeof( numEntries));
+/mailnews/import/src/nsImportService.cpp, line 778 -- nsCRT::memcpy( pList,
+m_pList, sizeof( ImportModuleDesc *) * m_alloc);
+/mailnews/import/src/nsImportTranslator.cpp, line 276 -- nsCRT::memcpy( pOut,
+pEolStr, eolLen);
+/mailnews/import/src/nsImportTranslator.cpp, line 287 -- nsCRT::memcpy( pOut,
+pEolStr, eolLen);
+/mailnews/import/src/nsImportTranslator.h, line 59 -- virtual void
+ConvertBuffer( const PRUint8 * pIn, PRUint32 inLen, PRUint8 * pOut) {
+nsCRT::memcpy( pOut, pIn, inLen); pOut[inLen] = 0;}
+/mailnews/import/text/src/nsTextAddress.cpp, line 161 -- nsCRT::memcpy( pLine +
+lineLen, "\x0D\x0A", 2);
+/mailnews/local/src/nsLocalMailFolder.cpp, line 2412 -- nsCRT::memcpy
+(mCopyState->m_dataBuffer, start,
+/mailnews/local/src/nsParseMailbox.cpp, line 1291 -- nsCRT::memcpy(md5_bin,
+"dummy message id", sizeof(md5_bin));
+/mailnews/local/src/nsPop3Sink.cpp, line 419 -- nsCRT::memcpy(m_outputBuffer +
+blockOffset, block, length - blockOffset);
+/mailnews/mime/cthandlers/calendar/mimecal.cpp, line 144 --
+nsCRT::memcpy(clazz->buffer + clazz->bufferlen, line, length);
+/mailnews/mime/cthandlers/vcard/mimevcrd.cpp, line 1733 --
+nsCRT::memcpy(workString, obj->headers->all_headers,
+obj->headers->all_headers_size);
+/mailnews/mime/src/mimebuf.cpp, line 92 -- nsCRT::memcpy ((*bufferP) +
+(*buffer_fpP), net_buffer, size);
+/mailnews/mime/src/mimebuf.cpp, line 240 -- nsCRT::memcpy ((*bufferP) +
+(*buffer_fpP), net_buffer, (end - net_buffer));
+/mailnews/mime/src/mimecont.cpp, line 193 -- nsCRT::memcpy(new_kids, old_kids,
+sizeof(MimeObject *) * cont->nchildren);
+/mailnews/mime/src/mimedrft.cpp, line 765 -- nsCRT::memcpy(name, head, colon -
+head);
+/mailnews/mime/src/mimedrft.cpp, line 774 -- nsCRT::memcpy(c2, contents, end -
+contents);
+/mailnews/mime/src/mimeebod.cpp, line 141 -- nsCRT::memcpy(bod->body + L, line,
+length);
+/mailnews/mime/src/mimeenc.cpp, line 115 -- nsCRT::memcpy (data->token, token, i);
+/mailnews/mime/src/mimeenc.cpp, line 279 -- nsCRT::memcpy (data->token, token, i);
+/mailnews/mime/src/mimehdrs.cpp, line 162 --
+nsCRT::memcpy(hdrs->all_headers+hdrs->all_headers_fp, buffer, size);
+/mailnews/mime/src/mimehdrs.cpp, line 186 -- nsCRT::memcpy(hdrs2->all_headers,
+hdrs->all_headers, hdrs->all_headers_fp);
+/mailnews/mime/src/mimehdrs.cpp, line 462 -- nsCRT::memcpy(s, contents, end -
+contents);
+/mailnews/mime/src/mimehdrs.cpp, line 567 -- nsCRT::memcpy (s, value_start,
+value_end - value_start);
+/mailnews/mime/src/mimehdrs.cpp, line 600 -- nsCRT::memcpy(*charset,
+value_start, s_quote1-value_start);
+/mailnews/mime/src/mimehdrs.cpp, line 610 -- nsCRT::memcpy(*language,
+s_quote1+1, s_quote2-(s_quote1+1));
+/mailnews/mime/src/mimehdrs.cpp, line 620 -- nsCRT::memcpy(s, s_quote2+1,
+value_end-(s_quote2+1));
+/mailnews/mime/src/mimehdrs.cpp, line 655 -- nsCRT::memcpy(s+len, value_start,
+value_end-value_start);
+/mailnews/mime/src/mimehdrs.cpp, line 754 -- nsCRT::memcpy(name, head, colon -
+head);
+/mailnews/mime/src/mimehdrs.cpp, line 765 -- nsCRT::memcpy(c2, contents, end -
+contents);
+/mailnews/mime/src/mimei.cpp, line 1087 -- nsCRT::memcpy(result, url, part_end -
+url);
+/mailnews/mime/src/mimei.cpp, line 1093 -- nsCRT::memcpy(result, url, part_begin
+- url);
+/mailnews/mime/src/mimei.cpp, line 1366 -- nsCRT::memcpy(options->part_to_load,
+value, end-value);
+/mailnews/mime/src/mimemrel.cpp, line 633 -- nsCRT::memcpy(relobj->head_buffer +
+relobj->head_buffer_fp, line, length);
+/mailnews/mime/src/mimemrel.cpp, line 721 -- nsCRT::memcpy(relobj->curtag +
+relobj->curtag_length, buf, size);
+/mailnews/mime/src/mimemsg.cpp, line 232 -- nsCRT::memcpy(s, line, length);
+/mailnews/mime/src/mimepbuf.cpp, line 226 -- nsCRT::memcpy(data->part_buffer +
+data->part_buffer_fp,
+/mailnews/mime/src/mimetext.cpp, line 544 --
+nsCRT::memcpy(text->lineDamPtrs[text->lastLineInDam], line, length);
+/mailnews/mime/src/mimetric.cpp, line 156 -- nsCRT::memcpy (out, last_end,
+this_start - last_end);
+/mailnews/mime/src/mimeunty.cpp, line 426 -- nsCRT::memcpy(name, s,
+(line+length)-s);
+/mailnews/mime/src/nsMsgHeaderParser.cpp, line 59 -- nsCRT::memcpy(_D,_S,_LEN);
+_D += _LEN; } } while (0)
+/mailnews/mime/src/nsMsgHeaderParser.cpp, line 943 -- nsCRT::memcpy(address,
+orig_out, new_length);
+/mailnews/mime/src/nsMsgHeaderParser.cpp, line 1035 -- nsCRT::memcpy(out, s, j);
+/mailnews/mime/src/nsMsgHeaderParser.cpp, line 1101 -- nsCRT::memcpy(out, s1, len1);
+/mailnews/mime/src/nsMsgHeaderParser.cpp, line 1106 -- nsCRT::memcpy(out, s2, len2);
+/mailnews/mime/src/nsMsgHeaderParser.cpp, line 1229 -- nsCRT::memcpy(out, aName,
+len1);
+/mailnews/mime/src/nsMsgHeaderParser.cpp, line 1234 -- nsCRT::memcpy(out,
+anAddr, len2);
+/mailnews/news/src/nsNNTPProtocol.cpp, line 156 -- nsCRT::memcpy(aBuf, mBuffer,
+amt);

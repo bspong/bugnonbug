@@ -1,0 +1,58 @@
+textContent is incorrect both in setter and getter
+User-Agent: Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0; SLCC1; .NET CLR 2.0.50727; Media Center PC 5.0; .NET CLR 3.0.04506; .NET CLR 1.1.4322)
+Build Identifier: 2.0.0.14
+
+textContent doesn't report correctly the content of a <textarea>, and doesn't set it correctly either, after the first get/set.
+
+Reproducible: Always
+
+Steps to Reproduce:
+Create a html page containing the following :
+
+<html>
+<body>
+<script type="text/javascript">
+function Check() {
+var t = document.getElementById('t');
+alert(t.textContent);
+t.textContent = 'blah';
+}
+</script>
+<textarea name="t" id="t"></textarea>
+<a href="javascript:Check();">Check</a>
+</body>
+</html>
+
+Load the page in FF, click on "check", everything work a expected :
+the alert box is empty then "blah" is shown in the textarea.
+
+Then delete a character in the textarea (say, the letter "h") and
+click again on "check" :
+1) the alert incorrectly show "blah" instead of "bla".
+2) it then should replace the content of the textarea with "blah",
+but it doesn't.
+
+
+From then on, whatever you do, including refreshing the page, it won't
+work a expected. Placing the script below the textarea declaration
+doesn't change a thing.
+Actual Results:
+The textContent of the <textarea> object is reported incorrectly after the first report. It is not set either after the first report.
+
+Expected Results:
+myTextArea.textContent = "yo";
+...should set the content of the <textarea> to "yo".
+
+I can't test this on platform other than my own (Vista). Here's the buildconfig :
+
+Build platform
+target
+i586-pc-msvc
+
+Build tool
+Compiler Version Compiler flag
+$(CYGWIN_WRAPPER) cl 12.00.8804 -TC -nologo -W3 -Gy -Fd$(PDBFILE)
+$(CYGWIN_WRAPPER) cl 12.00.8804 -TP -nologo -W3 -Gy -Fd$(PDBFILE)
+
+Configure argument
+--enable-application=browser --enable-update-channel=release --enable-official-branding --enable-optimize --disable-debug --disable-tests --enable-static --disable-shared --enable-svg --enable-canvas --enable-update-packaging

@@ -1,0 +1,25 @@
+Global search in source fails with two TypeErrors
+Steps to reproduce:
+1. Go to www.idnes.cz (Czech news site)
+2. Open debugger, and start global search, i.e., type "!something" into the searchbox.
+
+Expected result:
+The global search show some results.
+
+Actual result:
+No search result are shown, and after a while, two unhandled promise rejection are reported in the browser console:
+
+Full Message: TypeError: is not iterable
+Full Stack: onError@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/client/debugger/content/actions/sources.js:254:1
+
+Full Message: TypeError: text is undefined
+Full Stack: GlobalSearchView.prototype<._doSearch@chrome://devtools/content/debugger/views/global-search-view.js:160:11
+
+What happens?
+
+The page load a document with inline script from a misbehaving URL: http://bbnaut.ibillboard.com/g/ca2
+This URL sometimes reset the connection, sometimes return 304 status code... the result is that loading the source from debugger throw a NS_BASE_STREAM_CLOSED, and that error is not handled correctly by the debugger code.
+
+The issue can be reproduced only when the idnes.cz page is loaded for the first time. On repeated visits, cooky are set and different resource are loaded. I open a private window when I want to reproduce the bug.
+
+I tried to create a minimal test case (nodejs script that serf minimal set of requests), but then I discovered bug 1259743 and had to give up. I'll try again when creating a test.

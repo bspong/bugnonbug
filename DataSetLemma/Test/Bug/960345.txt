@@ -1,0 +1,186 @@
+Re-enable OOP browser-element test on OSX debug
+I had to disable the OOP browser-element test on OSX debug due to frequent mochitest-2 crash that first appeared on a merge. We attempted to disable the crashing test, but that just moved it to another. Rather than play whack-a-mole all night, I opted to skip the test on OSX debug instead.
+
+The crash look like this:
+https://tbpl.mozilla.org/php/getParsedLog.php?id=33065236&tree=Mozilla-Central
+
+16:53:57 INFO - 3133 INFO TEST-START | /tests/dom/browser-element/mochitest/test_browserElement_oop_ForwardName.html
+16:53:57 INFO - --DOCSHELL 0x14ae5a270 == 8 [pid = 899] [id = 155]
+16:53:57 INFO - --DOMWINDOW == 51 (0x149925b48) [pid = 899] [serial = 758] [outer = 0x0] [url = http://mochi.test:8888/tests/dom/browser-element/mochitest/test_browserElement_oop_BackForward.html]
+16:53:57 INFO - --DOMWINDOW == 50 (0x149a24518) [pid = 899] [serial = 760] [outer = 0x0] [url = http://mochi.test:8888/tests/dom/browser-element/mochitest/test_browserElement_oop_BadScreenshot.html]
+16:53:57 INFO - --DOMWINDOW == 49 (0x1281f31a8) [pid = 899] [serial = 764] [outer = 0x0] [url = http://mochi.test:8888/tests/dom/browser-element/mochitest/test_browserElement_oop_BrowserWindowResize.html]
+16:53:57 INFO - --DOMWINDOW == 48 (0x149905ed8) [pid = 899] [serial = 750] [outer = 0x0] [url = http://mochi.test:8888/tests/dom/browser-element/mochitest/test_browserElement_oop_AlertInFrame.html]
+16:53:57 INFO - --DOMWINDOW == 47 (0x149983cd8) [pid = 899] [serial = 752] [outer = 0x0] [url = http://mochi.test:8888/tests/dom/browser-element/mochitest/test_browserElement_oop_AppFramePermission.html]
+16:53:57 INFO - --DOMWINDOW == 46 (0x14aeeaf98) [pid = 899] [serial = 719] [outer = 0x0] [url = http://mochi.test:8888/tests/dom/browser-element/mochitest/test_browserElement_inproc_XFrameOptionsAllowFrom.html]
+16:53:57 INFO - --DOMWINDOW == 45 (0x14ae27f28) [pid = 899] [serial = 741] [outer = 0x0] [url = http://mochi.test:8888/tests/dom/browser-element/mochitest/test_browserElement_inproc_XFrameOptionsSameOrigin.html]
+16:53:57 INFO - --DOMWINDOW == 44 (0x14ae5f108) [pid = 899] [serial = 702] [outer = 0x0] [url = http://mochi.test:8888/tests/dom/browser-element/mochitest/test_browserElement_inproc_TopBarrier.html]
+16:53:57 INFO - --DOMWINDOW == 43 (0x149a84e58) [pid = 899] [serial = 748] [outer = 0x0] [url = http://mochi.test:8888/tests/dom/browser-element/mochitest/test_browserElement_oop_Alert.html]
+16:53:57 INFO - --DOMWINDOW == 42 (0x1499419a8) [pid = 899] [serial = 680] [outer = 0x0] [url = http://mochi.test:8888/tests/dom/browser-element/mochitest/test_browserElement_inproc_TargetBlank.html]
+16:53:57 INFO - --DOMWINDOW == 41 (0x144ce7768) [pid = 899] [serial = 775] [outer = 0x14994f1e8] [url = http://example.org/tests/dom/browser-element/mochitest/file_empty.html]
+16:53:57 INFO - --DOMWINDOW == 40 (0x144df2288) [pid = 899] [serial = 765] [outer = 0x0] [url = http://mochi.test:8888/tests/SimpleTest/iframe-between-tests.html]
+16:53:57 INFO - --DOMWINDOW == 39 (0x14a0716c8) [pid = 899] [serial = 757] [outer = 0x0] [url = http://mochi.test:8888/tests/SimpleTest/iframe-between-tests.html]
+16:53:57 INFO - --DOMWINDOW == 38 (0x149964c98) [pid = 899] [serial = 755] [outer = 0x0] [url = http://mochi.test:8888/tests/SimpleTest/iframe-between-tests.html]
+16:53:57 INFO - --DOMWINDOW == 37 (0x144d1faf8) [pid = 899] [serial = 763] [outer = 0x0] [url = http://mochi.test:8888/tests/SimpleTest/iframe-between-tests.html]
+16:53:57 INFO - --DOMWINDOW == 36 (0x144da16b8) [pid = 899] [serial = 749] [outer = 0x0] [url = http://mochi.test:8888/tests/SimpleTest/iframe-between-tests.html]
+16:53:57 INFO - --DOMWINDOW == 35 (0x14b37bfb8) [pid = 899] [serial = 759] [outer = 0x0] [url = http://mochi.test:8888/tests/SimpleTest/iframe-between-tests.html]
+16:53:57 INFO - --DOMWINDOW == 34 (0x125dc7778) [pid = 899] [serial = 761] [outer = 0x0] [url = http://mochi.test:8888/tests/SimpleTest/iframe-between-tests.html]
+16:53:57 INFO - --DOMWINDOW == 33 (0x144600138) [pid = 899] [serial = 753] [outer = 0x0] [url = http://mochi.test:8888/tests/SimpleTest/iframe-between-tests.html]
+16:53:57 INFO - --DOMWINDOW == 32 (0x144685c98) [pid = 899] [serial = 756] [outer = 0x0] [url = http://mochi.test:8888/tests/dom/browser-element/mochitest/test_browserElement_oop_Auth.html]
+16:53:57 INFO - --DOMWINDOW == 31 (0x14b39a048) [pid = 899] [serial = 774] [outer = 0x0] [url = about:blank]
+16:53:57 INFO - --DOMWINDOW == 30 (0x14994f1e8) [pid = 899] [serial = 773] [outer = 0x0] [url = http://example.org/tests/dom/browser-element/mochitest/file_empty.html]
+16:53:57 INFO - [Child 924] WARNING: NS_ENSURE_TRUE(mDocShell) failed: file ../../../../embedding/browser/webBrowser/nsWebBrowser.cpp, line 365
+16:53:57 INFO - [Child 924] WARNING: NS_ENSURE_TRUE(domWindow) failed: file ../../../../embedding/browser/webBrowser/nsDocShellTreeOwner.cpp, line 86
+16:53:57 INFO - [Parent 899] WARNING: RemoveObserver() called for unregistered observer: file ../../hal/Hal.cpp, line 204
+16:53:57 INFO - [Parent 899] WARNING: RemoveObserver() called for unregistered observer: file ../../hal/Hal.cpp, line 204
+16:53:57 INFO - [Parent 899] WARNING: RemoveObserver() called for unregistered observer: file ../../hal/Hal.cpp, line 204
+16:53:57 INFO - [Parent 899] WARNING: RemoveObserver() called for unregistered observer: file ../../hal/Hal.cpp, line 204
+16:53:57 INFO - [Parent 899] WARNING: RemoveObserver() called for unregistered observer: file ../../hal/Hal.cpp, line 204
+16:53:57 INFO - ************************************************************
+16:53:57 INFO - * Call to xpconnect wrapped JSObject produced this error: *
+16:53:57 INFO - [Exception... "Component returned failure code: 0x80040111 (NS_ERROR_NOT_AVAILABLE) [nsIPropertyBag2.getPropertyAsAString]" nsresult: "0x80040111 (NS_ERROR_NOT_AVAILABLE)" location: "JS frame :: chrome://specialpowers/content/SpecialPowersObserverAPI.js :: addDumpIDToMessage :: line 76" data: no]
+16:53:57 INFO - ************************************************************
+16:53:57 INFO - NOTE: child process received `Goodbye', closing down
+16:53:57 INFO - [Child 924] WARNING: nsAppShell::Exit() called redundantly: file ../../../widget/cocoa/nsAppShell.mm, line 760
+16:53:57 INFO - ++DOMWINDOW == 31 (0x14a0648a8) [pid = 899] [serial = 781] [outer = 0x128135dd8]
+16:53:57 INFO - --DOCSHELL 0x1057d0a10 == 0 [pid = 924] [id = 1]
+16:53:57 INFO - --DOMWINDOW == 4 (0x1061e3488) [pid = 924] [serial = 2] [outer = 0x1057d1df8] [url = about:blank]
+16:53:57 INFO - [Child 924] WARNING: NS_ENSURE_TRUE(inBrowser) failed: file ../../../../embedding/browser/webBrowser/nsDocShellTreeOwner.cpp, line 82
+16:53:57 INFO - [Child 924] WARNING: NS_ENSURE_TRUE(mDocShell) failed: file ../../../../embedding/browser/webBrowser/nsWebBrowser.cpp, line 365
+16:53:57 INFO - [Child 924] WARNING: NS_ENSURE_TRUE(mDocShell) failed: file ../../../../embedding/browser/webBrowser/nsWebBrowser.cpp, line 365
+16:53:57 INFO - [Child 924] WARNING: NS_ENSURE_TRUE(domWindow) failed: file ../../../../embedding/browser/webBrowser/nsDocShellTreeOwner.cpp, line 86
+16:53:57 INFO - [Child 924] WARNING: NS_ENSURE_TRUE(inBrowser) failed: file ../../../../embedding/browser/webBrowser/nsDocShellTreeOwner.cpp, line 82
+16:53:57 INFO - --DOMWINDOW == 3 (0x1057d1df8) [pid = 924] [serial = 1] [outer = 0x0] [url = about:certerror?e=nssBadCert&u=https%3A//nocert.example.com/&c=UTF-8&d=nocert.example.com%20uses%20an%20invalid%20security%20certificate.%0A%0AThe%20certificate%20is%20only%20valid%20for%20the%20following%20names%3A%0A%20%20example.com%2C%20test1.example.com%2C%20test2.example.com%2C%20sub1.test1.example.com%2C%20sub1.test2.example.com%2C%20sub2.test1.example.com%2C%20sub2.test2.example.com%2C%20requestclientcert.example.com%2C%20requireclientcert.example.com%2C%20xn--hxajbheg2az3al.xn--jxalpdlp%2C%20sub1.xn--hxajbheg2az3al.xn--jxalpdlp%2C%20sectest1.example.org%2C%20sub.sectest2.example.org%2C%20sectest2.example.org%2C%20sub.sectest1.example.org%2C%20redirproxy.example.com%2C%20w3c-test.org%2C%20www.w3c-test.org%2C%20www1.w3c-test.org%2C%20www2.w3c-test.org%2C%20xn--n8j6ds53lwwkrqhv28a.w3c-test.org%2C%20xn--lve-6lad.w3c-test.org%20%20%0A%0A%28Error%20code%3A%20ssl_error_bad_cert_domain%29%0A]
+16:53:57 INFO - --DOMWINDOW == 2 (0x109e87878) [pid = 924] [serial = 3] [outer = 0x0] [url = about:neterror?e=dnsNotFound&u=http%3A//this_is_not_a_domain.example.com/&c=UTF-8&d=Firefox%20can%27t%20find%20the%20server%20at%20this_is_not_a_domain.example.com.]
+16:53:57 INFO - --DOMWINDOW == 1 (0x11e02a578) [pid = 924] [serial = 4] [outer = 0x0] [url = about:certerror?e=nssBadCert&u=https%3A//expired.example.com/&c=UTF-8&d=expired.example.com%20uses%20an%20invalid%20security%20certificate.%0A%0AThe%20certificate%20expired%20on%201/5/10%209%3A20%20PM.%20The%20current%20time%20is%201/15/14%204%3A53%20PM.%0A%0A%28Error%20code%3A%20sec_error_expired_certificate%29%0A]
+16:53:57 INFO - --DOMWINDOW == 0 (0x11e031808) [pid = 924] [serial = 5] [outer = 0x0] [url = about:certerror?e=nssBadCert&u=https%3A//nocert.example.com/&c=UTF-8&d=nocert.example.com%20uses%20an%20invalid%20security%20certificate.%0A%0AThe%20certificate%20is%20only%20valid%20for%20the%20following%20names%3A%0A%20%20example.com%2C%20test1.example.com%2C%20test2.example.com%2C%20sub1.test1.example.com%2C%20sub1.test2.example.com%2C%20sub2.test1.example.com%2C%20sub2.test2.example.com%2C%20requestclientcert.example.com%2C%20requireclientcert.example.com%2C%20xn--hxajbheg2az3al.xn--jxalpdlp%2C%20sub1.xn--hxajbheg2az3al.xn--jxalpdlp%2C%20sectest1.example.org%2C%20sub.sectest2.example.org%2C%20sectest2.example.org%2C%20sub.sectest1.example.org%2C%20redirproxy.example.com%2C%20w3c-test.org%2C%20www.w3c-test.org%2C%20www1.w3c-test.org%2C%20www2.w3c-test.org%2C%20xn--n8j6ds53lwwkrqhv28a.w3c-test.org%2C%20xn--lve-6lad.w3c-test.org%20%20%0A%0A%28Error%20code%3A%20ssl_error_bad_cert_domain%29%0A]
+16:53:57 INFO - 2014-01-15 16:53:34.945 plugin-container[924:903] *** __NSAutoreleaseNoPool(): Object 0x109e98bc0 of class NSFont autoreleased with no pool in place - just leaking
+16:53:57 INFO - 2014-01-15 16:53:34.948 plugin-container[924:903] *** __NSAutoreleaseNoPool(): Object 0x7fff7076e588 of class NSCFString autoreleased with no pool in place - just leaking
+16:53:57 INFO - 2014-01-15 16:53:34.948 plugin-container[924:903] *** __NSAutoreleaseNoPool(): Object 0x109e98f70 of class NSImage autoreleased with no pool in place - just leaking
+16:53:57 INFO - 2014-01-15 16:53:34.949 plugin-container[924:903] *** __NSAutoreleaseNoPool(): Object 0x109e99e20 of class NSButtonImageSource autoreleased with no pool in place - just leaking
+16:53:57 INFO - 2014-01-15 16:53:34.950 plugin-container[924:903] *** __NSAutoreleaseNoPool(): Object 0x7fff7076e588 of class NSCFString autoreleased with no pool in place - just leaking
+16:53:57 INFO - 2014-01-15 16:53:34.950 plugin-container[924:903] *** __NSAutoreleaseNoPool(): Object 0x109e9be60 of class NSImage autoreleased with no pool in place - just leaking
+16:53:57 INFO - 2014-01-15 16:53:34.952 plugin-container[924:903] *** __NSAutoreleaseNoPool(): Object 0x109e9bff0 of class NSButtonImageSource autoreleased with no pool in place - just leaking
+16:53:57 INFO - 2014-01-15 16:53:34.952 plugin-container[924:903] *** __NSAutoreleaseNoPool(): Object 0x7fff7076e588 of class NSCFString autoreleased with no pool in place - just leaking
+16:53:57 INFO - [Parent 899] WARNING: parent WaitForMessage() failed: 0x10004003 (ipc/rcv) timed out: file ../../../ipc/glue/GeckoChildProcessHost.cpp, line 687
+16:53:57 INFO - [925] WARNING: XPCOM object created/destroyed from static ctor/dtor: file ../../../xpcom/base/nsTraceRefcntImpl.cpp, line 142
+16:53:57 INFO - [925] WARNING: XPCOM object created/destroyed from static ctor/dtor: file ../../../xpcom/base/nsTraceRefcntImpl.cpp, line 142
+16:53:57 INFO - [925] WARNING: XPCOM object created/destroyed from static ctor/dtor: file ../../../xpcom/base/nsTraceRefcntImpl.cpp, line 142
+16:53:57 INFO - [925] WARNING: XPCOM object created/destroyed from static ctor/dtor: file ../../../xpcom/base/nsTraceRefcntImpl.cpp, line 142
+16:53:57 INFO - 2014-01-15 16:53:34.955 plugin-container[924:903] *** __NSAutoreleaseNoPool(): Object 0x11e023ed0 of class NSImage autoreleased with no pool in place - just leaking
+16:53:57 INFO - 2014-01-15 16:53:57.602 plugin-container[924:903] *** __NSAutoreleaseNoPool(): Object 0x11e023ed0 of class NSImage autoreleased with no pool in place - just leaking
+16:53:57 INFO - 2014-01-15 16:53:57.603 plugin-container[924:903] *** __NSAutoreleaseNoPool(): Object 0x7fff70797988 of class NSCFString autoreleased with no pool in place - just leaking
+16:53:57 INFO - 2014-01-15 16:53:57.604 plugin-container[924:903] *** __NSAutoreleaseNoPool(): Object 0x109e9c7a0 of class NSImage autoreleased with no pool in place - just leaking
+16:53:57 INFO - 2014-01-15 16:53:57.605 plugin-container[924:903] *** __NSAutoreleaseNoPool(): Object 0x109e9cdd0 of class NSImage autoreleased with no pool in place - just leaking
+16:53:57 INFO - 2014-01-15 16:53:57.606 plugin-container[924:903] *** __NSAutoreleaseNoPool(): Object 0x1048cae78 of class NSCFString autoreleased with no pool in place - just leaking
+16:53:57 INFO - 2014-01-15 16:53:57.606 plugin-container[924:903] *** __NSAutoreleaseNoPool(): Object 0x109e9d7b0 of class NSFont autoreleased with no pool in place - just leaking
+16:53:57 INFO - 2014-01-15 16:53:57.607 plugin-container[924:903] *** __NSAutoreleaseNoPool(): Object 0x11e023ca0 of class NSImage autoreleased with no pool in place - just leaking
+16:53:57 INFO - 2014-01-15 16:53:57.608 plugin-container[924:903] *** __NSAutoreleaseNoPool(): Object 0x11e04ed00 of class __NSFastEnumerationEnumerator autoreleased with no pool in place - just leaking
+16:53:57 INFO - 2014-01-15 16:53:57.609 plugin-container[924:903] *** __NSAutoreleaseNoPool(): Object 0x11e025ca0 of class __NSFastEnumerationEnumerator autoreleased with no pool in place - just leaking
+16:53:57 INFO - 2014-01-15 16:53:57.610 plugin-container[924:903] *** __NSAutoreleaseNoPool(): Object 0x10573c930 of class NSCFArray autoreleased with no pool in place - just leaking
+16:53:57 INFO - 2014-01-15 16:53:57.617 plugin-container[924:903] *** __NSAutoreleaseNoPool(): Object 0x1061ced80 of class NSCFArray autoreleased with no pool in place - just leaking
+16:53:57 INFO - 2014-01-15 16:53:57.618 plugin-container[924:903] *** __NSAutoreleaseNoPool(): Object 0x106181e50 of class NSCFArray autoreleased with no pool in place - just leaking
+16:53:57 INFO - 2014-01-15 16:53:57.619 plugin-container[924:903] *** __NSAutoreleaseNoPool(): Object 0x10611e2b0 of class NSCFArray autoreleased with no pool in place - just leaking
+16:53:57 INFO - 2014-01-15 16:53:57.619 plugin-container[924:903] *** __NSAutoreleaseNoPool(): Object 0x106108f40 of class NSCFArray autoreleased with no pool in place - just leaking
+16:53:57 INFO - 2014-01-15 16:53:57.620 plugin-container[924:903] *** __NSAutoreleaseNoPool(): Object 0x109ea5ac0 of class NSScrollView autoreleased with no pool in place - just leaking
+16:53:57 INFO - 2014-01-15 16:53:57.621 plugin-container[924:903] *** __NSAutoreleaseNoPool(): Object 0x109ea5ac0 of class NSScrollView autoreleased with no pool in place - just leaking
+16:53:57 INFO - 2014-01-15 16:53:57.622 plugin-container[924:903] *** __NSAutoreleaseNoPool(): Object 0x1048cae78 of class NSCFString autoreleased with no pool in place - just leaking
+16:53:57 INFO - [Child 924] WARNING: '!compMgr', file ../../../xpcom/glue/nsComponentManagerUtils.cpp, line 59
+16:53:57 INFO - nsStringStats
+16:53:57 INFO - => mAllocCount: 10732
+16:53:57 INFO - => mReallocCount: 579
+16:53:57 INFO - => mFreeCount: 10732
+16:53:57 INFO - => mShareCount: 13325
+16:53:57 INFO - => mAdoptCount: 378
+16:53:57 INFO - => mAdoptFreeCount: 378
+16:53:57 INFO - => Process ID: 924, Thread ID: 140735088958656
+16:53:58 INFO - [925] WARNING: child WaitForMessage() failed: file ../../../toolkit/xre/nsEmbedFunctions.cpp, line 339
+16:53:58 INFO - [925] WARNING: NS_ENSURE_SUCCESS(rv, 1) failed with result 0x80004005: file ../../../ipc/app/MozillaRuntimeMain.cpp, line 138
+16:53:58 INFO - ### XPCOM_MEM_BLOAT_LOG defined -- logging bloat/leaks to /var/folders/ex/exslp6ZvEC0ewj0B54hTgk+++-k/-Tmp-/tmpuZnC0i/runtests_leaks.log
+16:53:58 INFO - nsStringStats
+16:53:58 INFO - => mAllocCount: 1
+16:53:58 INFO - => mReallocCount: 0
+16:53:58 INFO - => mFreeCount: 1
+16:53:58 INFO - => mShareCount: 0
+16:53:58 INFO - => mAdoptCount: 0
+16:53:58 INFO - => mAdoptFreeCount: 0
+16:53:58 INFO - => Process ID: 925, Thread ID: 140735088958656
+16:53:58 INFO - Assertion failure: opened, at ../../../dom/ipc/ContentParent.cpp:1423
+16:54:01 WARNING - TEST-UNEXPECTED-FAIL | /tests/dom/browser-element/mochitest/test_browserElement_oop_ForwardName.html | application terminated with exit code 1
+16:54:01 INFO - INFO | runtests.py | Application ran for: 0:03:07.335462
+16:54:01 INFO - INFO | zombiecheck | Reading PID log: /var/folders/ex/exslp6ZvEC0ewj0B54hTgk+++-k/-Tmp-/tmpRR4X3npidlog
+16:54:20 WARNING - PROCESS-CRASH | /tests/dom/browser-element/mochitest/test_browserElement_oop_ForwardName.html | application crashed [@ mozilla::dom::ContentParent::InitInternal(mozilla::hal::ProcessPriority, bool, bool)]
+16:54:20 INFO - Crash dump filename: /var/folders/ex/exslp6ZvEC0ewj0B54hTgk+++-k/-Tmp-/tmpuZnC0i/minidumps/879BADC7-2347-4B05-8EB0-C09B924D43E5.dmp
+16:54:20 INFO - Operating system: Mac OS X
+16:54:20 INFO - 10.6.8 10K549
+16:54:20 INFO - CPU: amd64
+16:54:20 INFO - family 6 model 23 stepping 10
+16:54:20 INFO - 2 CPUs
+16:54:20 INFO - Crash reason: EXC_BAD_ACCESS / KERN_INVALID_ADDRESS
+16:54:20 INFO - Crash address: 0x0
+16:54:20 INFO - Thread 0 (crashed)
+16:54:20 INFO - 0 XUL!mozilla::dom::ContentParent::InitInternal(mozilla::hal::ProcessPriority, bool, bool) [ContentParent.cpp:fabe7c66bd3e : 1423 + 0x0]
+16:54:20 INFO - rbx = 0x00007fff70fb32f8 r12 = 0x0000000100133610
+16:54:20 INFO - r13 = 0x0000000000000000 r14 = 0x0000000120ae7600
+16:54:20 INFO - r15 = 0x0000000000000001 rip = 0x000000010270b23d
+16:54:20 INFO - rsp = 0x00007fff5fbf85c0 rbp = 0x00007fff5fbf86f0
+16:54:20 INFO - Found by: given a instruction pointer in context
+16:54:20 INFO - 1 XUL!mozilla::dom::ContentParent::ContentParent(mozIApplication*, bool, bool, base::ChildPrivileges, mozilla::hal::ProcessPriority, bool) [ContentParent.cpp:fabe7c66bd3e : 1293 + 0x17]
+16:54:20 INFO - rbx = 0x0000000120ae7600 r12 = 0x0000000100133610
+16:54:20 INFO - r13 = 0x0000000000000000 r14 = 0x00000001446abe00
+16:54:20 INFO - r15 = 0x0000000000000000 rip = 0x000000010270acd1
+16:54:20 INFO - rsp = 0x00007fff5fbf8700 rbp = 0x00007fff5fbf87c0
+16:54:20 INFO - Found by: call frame info
+16:54:20 INFO - 2 XUL!mozilla::dom::ContentParent::GetNewOrUsed(bool) [ContentParent.cpp:fabe7c66bd3e : 1296 + 0x1f]
+16:54:20 INFO - rbx = 0x0000000120ae7600 r12 = 0x0000000000000000
+16:54:20 INFO - r13 = 0x0000000000000000 r14 = 0x0000000000000001
+16:54:20 INFO - r15 = 0x00007fff5fbf8a28 rip = 0x0000000102708219
+16:54:20 INFO - rsp = 0x00007fff5fbf87d0 rbp = 0x00007fff5fbf8800
+16:54:20 INFO - Found by: call frame info
+16:54:20 INFO - 3 XUL!mozilla::dom::ContentParent::CreateBrowserOrApp(mozilla::dom::TabContext const&, mozilla::dom::Element*) [ContentParent.cpp:fabe7c66bd3e : 519 + 0xf]
+16:54:20 INFO - rbx = 0x000000014a045fe0 r12 = 0x0000000000000000
+16:54:20 INFO - r13 = 0x0000000000000000 r14 = 0x000000014a045fe0
+16:54:20 INFO - r15 = 0x00007fff5fbf8a28 rip = 0x000000010270885e
+16:54:20 INFO - rsp = 0x00007fff5fbf8810 rbp = 0x00007fff5fbf8970
+16:54:20 INFO - Found by: call frame info
+16:54:20 INFO - 4 XUL!nsFrameLoader::TryRemoteBrowser() [nsFrameLoader.cpp:fabe7c66bd3e : 2076 + 0x4]
+16:54:20 INFO - rbx = 0x000000014a045fe0 r12 = 0x000000010022b070
+16:54:20 INFO - r13 = 0x0000000000000000 r14 = 0x000000014a057590
+16:54:20 INFO - r15 = 0x00000001001576c0 rip = 0x0000000102d95c13
+16:54:20 INFO - rsp = 0x00007fff5fbf8980 rbp = 0x00007fff5fbf8b30
+16:54:20 INFO - Found by: call frame info
+16:54:20 INFO - 5 XUL!nsFrameLoader::ReallyStartLoadingInternal() [nsFrameLoader.cpp:fabe7c66bd3e : 468 + 0x7]
+16:54:20 INFO - rbx = 0x0000000101405148 r12 = 0x00000001053eb818
+16:54:20 INFO - r13 = 0x0000000000000000 r14 = 0x000000014a0575c8
+16:54:20 INFO - r15 = 0x000000014a057590 rip = 0x0000000102d93cee
+16:54:20 INFO - rsp = 0x00007fff5fbf8b40 rbp = 0x00007fff5fbf8cd0
+16:54:20 INFO - Found by: call frame info
+16:54:20 INFO - 6 XUL!nsFrameLoader::ReallyStartLoading() [nsFrameLoader.cpp:fabe7c66bd3e : 408 + 0x4]
+16:54:20 INFO - rbx = 0x0000000101405148 r12 = 0x00000001053eb818
+16:54:20 INFO - r13 = 0x00000001051cc9ad r14 = 0x000000014a057590
+16:54:20 INFO - r15 = 0x000000014a057590 rip = 0x0000000102d93c0f
+16:54:20 INFO - rsp = 0x00007fff5fbf8ce0 rbp = 0x00007fff5fbf8cf0
+16:54:20 INFO - Found by: call frame info
+16:54:20 INFO - 7 XUL!nsDocument::MaybeInitializeFinalizeFrameLoaders() [nsDocument.cpp:fabe7c66bd3e : 6367 + 0x7]
+16:54:20 INFO - rbx = 0x0000000101405148 r12 = 0x00000001053eb818
+16:54:20 INFO - r13 = 0x00000001051cc9ad r14 = 0x0000000101404c00
+16:54:20 INFO - r15 = 0x000000014a057590 rip = 0x0000000102cb340f
+16:54:20 INFO - rsp = 0x00007fff5fbf8d00 rbp = 0x00007fff5fbf8d30
+16:54:20 INFO - Found by: call frame info
+16:54:20 INFO - 8 XUL!nsDocument::EndUpdate(unsigned int) [nsDocument.cpp:fabe7c66bd3e : 4539 + 0x7]
+16:54:20 INFO - rbx = 0x0000000101404c00 r12 = 0x00000001499670b8
+16:54:20 INFO - r13 = 0x00000001051cc9ad r14 = 0x0000000000000001
+16:54:20 INFO - r15 = 0x00000001499670b8 rip = 0x0000000102cb31c3
+16:54:20 INFO - rsp = 0x00007fff5fbf8d40 rbp = 0x00007fff5fbf8d80
+16:54:20 INFO - Found by: call frame info
+16:54:20 INFO - 9 XUL!nsHTMLDocument::EndUpdate(unsigned int) [nsHTMLDocument.cpp:fabe7c66bd3e : 2400 + 0x4]
+16:54:20 INFO - rbx = 0x0000000101404c00 r12 = 0x000000014a045fe0
+16:54:20 INFO - r13 = 0x000000014a045fe0 r14 = 0x000000011a34bf00
+16:54:20 INFO - r15 = 0x000000014a045fe0 rip = 0x0000000102f4fcad
+16:54:20 INFO - rsp = 0x00007fff5fbf8d90 rbp = 0x00007fff5fbf8da0
+16:54:20 INFO - Found by: call frame info
+16:54:20 INFO - 10 XUL!nsINode::ReplaceOrInsertBefore(bool, nsINode*, nsINode*, mozilla::ErrorResult&) [mozAutoDocUpdate.h:fabe7c66bd3e : 38 + 0xe]
+16:54:20 INFO - rbx = 0x00007fff5fbf90c8 r12 = 0x000000014a045fe0
+16:54:20 INFO - r13 = 0x000000014a045fe0 r14 = 0x000000011a34bf80
+16:54:20 INFO - r15 = 0x000000014a045fe0 rip = 0x0000000102db8dae
+16:54:20 INFO - rsp = 0x00007fff5fbf8db0 rbp = 0x00007fff5fbf90b0
+16:54:20 INFO - Found by: call frame info

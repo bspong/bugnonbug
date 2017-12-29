@@ -1,0 +1,37 @@
+site_icons cause uncached image to be loaded twice or thrice (if bookmarked)
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.8.0.7) Gecko/20060909
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.8.0.7) Gecko/20060909
+
+If browser.chrome.site_icons and tabbed browsing is enabled and you retrieve an
+image via a script (uncached) the image is loaded twice. If you add a bookmark to
+the URL and retrieve it again it will be loaded three time from the webserver.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Put an arbitrary jpeg-image (named j.jpg) on your server. Enable CGI.
+2. put the delivery script p.pl into the directory where you
+put the image:
+--- p.pl ----
+#!/usr/bin/perl
+use CGI qw/:standard/;
+print header(-type => 'image/jpeg');
+open(J,'<j.jpg');
+read J, $b, 1000000;
+print $b;
+--- end p.pl ---
+3. set browser.chrome.site_icons to true and retrieve the URL (p.pl)
+with firefox. Count the line in the webserer log.
+4. Bookmark the URL and retrieve the URL again. Count the line in the webserver
+log.
+Actual Results:
+3. 2 GETs are logged
+4. 3 GETs are logged
+
+Expected Results:
+The image shall be loaded *once* regardless of site_icon setting or existence of bookmarks.
+
+Does this behaviour reveal whether the user ha bookmarked some URL?
+Is this a potential privacy issue?
+
+Workaround: set browser.chrome.site_icons to false :-(

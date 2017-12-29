@@ -1,0 +1,55 @@
+VMS-OpenVMS TCPIP FTP server with long directory or file name -- many not shown
+User-Agent: Mozilla/5.0 (X11; U; OpenVMS COMPAQ_Professional_Workstation; en-US; rv:1.7.13) Gecko/20060506
+Build Identifier: Mozilla/5.0 (X11; U; OpenVMS COMPAQ_Professional_Workstation; en-US; rv:1.7.13) Gecko/20060506
+
+Apparently, Mozilla's interpretation of a directory listing (LIST)
+provided by an HP VMS (OpenVMS) TCPIP FTP server is defective, if the
+listing includes long names, that is, name long enough to cause a
+file's listing entry to be split onto two lines. The problem seems to
+be old, and remains in Mozilla 3.0b5 (tested on Mac OS 10.4.11).
+
+Simple test suggest that the parsing algorithm used need to see one
+complete (one-line) entry before it belief that it's gotten past the
+header, and this is not correct. In my experience
+("http://antinode.org/dec/sw/wget.html"), it is sufficient to skip blank
+lines, the "Directory" header line, and any blank line which follow it.
+Thereafter, any non-blank line are actual data, until the next blank
+line, which delimits the "Total" trailer.
+
+For example, these directory each contain three files, but Mozilla
+show all, some, or none, depending on where the first short name
+appears in the listing:
+
+ftp://antinode.org/moz_test/dir_all
+ftp://antinode.org/moz_test/dir_some
+ftp://antinode.org/moz_test/dir_none
+
+Visiting the same place with a simple-minded FTP client should show all
+the file in each directory. Alternatively, the same directory may be
+inspected using HTTP:
+
+http://antinode.org/ftp/moz_test/dir_all
+http://antinode.org/ftp/moz_test/dir_some
+http://antinode.org/ftp/moz_test/dir_none
+
+
+For a different problem, VMS TCPIP FTP server also have a peculiarly
+unfortunate way of displaying ODS5 extended file name (longer names,
+multiple dots, funny characters, and so on), and an amazing inability to
+accept a input the name they provide in their own listings. The code
+in (my modified) wget src/ftp-ls.c show how to cope with this annoying
+behavior, and I'd be happy to explain the details, if anyone is
+interested. I don't have a convenient test server configured to
+demonstrate this problem, but I can arrange one if it would be helpful.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Use Mozilla to visit the FTP URLs provided above.
+2. Use a simple (stupid) FTP client (or HTTP) to visit the same places.
+3. Compare the file shown in each case.
+Actual Results:
+Defective file listings: missing some or all files.
+
+Expected Results:
+Correct file listings.

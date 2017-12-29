@@ -1,0 +1,116 @@
+crash while using timeline v2
+I used timeline v2 to make a recording.
+Then I tried to make a second recording and firefox crashed.
+
+I've appended the stack trace of the crashing thread.
+It is crashing in ProfileBuffer::Release, presumably
+due to a thread mismatch, because the only other assertion is ok.
+
+
+The method is defined like so:
+
+NS_METHOD_(MozExternalRefCountType) Release(void) __VA_ARGS__ { \
+MOZ_ASSERT(int32_t(mRefCnt) > 0, "dup release"); \
+nsrefcnt count = --mRefCnt; \
+NS_LOG_RELEASE(this, count, #_class); \
+if (count == 0) { \
+delete (this); \
+return 0; \
+} \
+return count; \
+} \
+
+
+This is in frame #6:
+
+(gdb) p *this
+$6 = {
+mRefCnt = {
+static isThreadSafe = false,
+mValue = 1
+},
+_mOwningThread = {
+mThread = 0x9d40f0
+},
+mEntries = {
+mTuple = {
+<mozilla::detail::PairHelper<ProfileEntry*, mozilla::DefaultDelete<ProfileEntry []>, (mozilla::detail::StorageType)1, (mozilla::detail::StorageType)0>> = {
+<mozilla::DefaultDelete<ProfileEntry []>> = {<No data fields>},
+member of mozilla::detail::PairHelper<ProfileEntry*, mozilla::DefaultDelete<ProfileEntry []>, (mozilla::detail::StorageType)1, (mozilla::detail::StorageType)0>:
+mFirstA = 0x11f2fe0
+}, <No data fields>}
+},
+mWritePos = 9,
+mReadPos = 0,
+mEntrySize = 1000,
+mGeneration = 0,
+mStoredMarkers = {
+mHead = 0x0,
+mTail = 0x0
+}
+}
+
+mThread look garbaged there to me, but unfortunately I lost the debug
+session, so I can't readily check.
+Not sure but one theory is that ProfileBuffer should use the thread-safe
+refcount.
+
+
+Thread 2 (Thread 0x7f7903fff700 (LWP 6474)):
+#0 0x00007f79629996ed in nanosleep ()
+at ../sysdeps/unix/syscall-template.S:81
+#1 0x00007f7962999584 in __sleep (seconds=0)
+at ../sysdeps/unix/sysv/linux/sleep.c:137
+#2 0x00007f7967b274fa in ah_crap_handler (signum=11)
+at /home/tromey/firefox-git/gecko-dev/toolkit/xre/nsSigHandlers.cpp:101
+#3 0x00007f7967b27545 in child_ah_crap_handler (signum=11)
+at /home/tromey/firefox-git/gecko-dev/toolkit/xre/nsSigHandlers.cpp:113
+#4 0x00007f79688e8740 in AsmJSFaultHandler (signum=11, info=0x7f7903ffe4b0,
+context=0x7f7903ffe380)
+at /home/tromey/firefox-git/gecko-dev/js/src/asmjs/AsmJSSignalHandlers.cpp:928
+#5 <signal handler called>
+#6 0x00007f79678afa3f in ProfileBuffer::Release (this=0x1108270)
+at /home/tromey/firefox-git/gecko-dev/tools/profiler/ProfileEntry.h:78
+#7 0x00007f79678b3507 in nsRefPtr<ProfileBuffer>::~nsRefPtr (this=0x1766380,
+__in_chrg=<optimized out>)
+at /home/tromey/firefox-git/gecko-dev/xpcom/base/nsRefPtr.h:60
+#8 0x00007f79678a93fe in ThreadProfile::~ThreadProfile (this=0x1766370,
+__in_chrg=<optimized out>)
+at /home/tromey/firefox-git/gecko-dev/tools/profiler/ProfileEntry.cpp:594
+#9 0x00007f79678aacab in SyncProfile::~SyncProfile (this=0x1766370,
+__in_chrg=<optimized out>)
+at /home/tromey/firefox-git/gecko-dev/tools/profiler/SyncProfile.cpp:18
+#10 0x00007f79678aace2 in SyncProfile::~SyncProfile (this=0x1766370,
+__in_chrg=<optimized out>)
+at /home/tromey/firefox-git/gecko-dev/tools/profiler/SyncProfile.cpp:28
+#11 0x00007f79678a99da in ProfilerBacktrace::~ProfilerBacktrace (
+this=0x14f8cb0, __in_chrg=<optimized out>)
+at /home/tromey/firefox-git/gecko-dev/tools/profiler/ProfilerBacktrace.cpp:23
+#12 0x00007f79678c5ad4 in mozilla_sampler_free_backtrace (
+aBacktrace=0x14f8cb0)
+at /home/tromey/firefox-git/gecko-dev/tools/profiler/platform.cpp:1027
+#13 0x00007f796789cbf7 in profiler_free_backtrace (aBacktrace=0x14f8cb0)
+at /home/tromey/firefox-git/gecko-dev/tools/profiler/GeckoProfilerImpl.h:118
+#14 0x00007f79678a9cf6 in ProfilerMarkerPayload::~ProfilerMarkerPayload (
+this=0x1627710, __in_chrg=<optimized out>)
+at /home/tromey/firefox-git/gecko-dev/tools/profiler/ProfilerMarkers.cpp:28
+#15 0x00007f79678bde58 in ProfilerMarkerTracing::~ProfilerMarkerTracing (
+this=0x1627710, __in_chrg=<optimized out>)
+at /home/tromey/firefox-git/gecko-dev/tools/profiler/ProfilerMarkers.h:78
+#16 0x00007f79678bde90 in ProfilerMarkerTracing::~ProfilerMarkerTracing (
+this=0x1627710, __in_chrg=<optimized out>)
+at /home/tromey/firefox-git/gecko-dev/tools/profiler/ProfilerMarkers.h:78
+#17 0x00007f79678c381b in ProfilerMarker::~ProfilerMarker (this=0x13dc080,
+__in_chrg=<optimized out>)
+at /home/tromey/firefox-git/gecko-dev/tools/profiler/platform.cpp:172
+#18 0x00007f79678a8303 in ProfileBuffer::deleteExpiredStoredMarkers (
+this=0xddb1d0)
+at /home/tromey/firefox-git/gecko-dev/tools/profiler/ProfileEntry.cpp:183
+#19 0x00007f79678aaf48 in TableTicker::DeleteExpiredMarkers (this=0xddaa50)
+at /home/tromey/firefox-git/gecko-dev/tools/profiler/TableTicker.cpp:112
+#20 0x00007f7967899348 in SignalSender (arg=0x0)
+at /home/tromey/firefox-git/gecko-dev/tools/profiler/platform-linux.cc:297
+#21 0x00007f796c35eee5 in start_thread (arg=0x7f7903fff700)
+at pthread_create.c:309
+#22 0x00007f79629d1b8d in clone ()
+at ../sysdeps/unix/sysv/linux/x86_64/clone.S:111

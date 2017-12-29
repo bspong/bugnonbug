@@ -1,0 +1,46 @@
+tabs.activeTab.attach() is failing with "window is null" (e10s)
+User Agent: Mozilla/5.0 (X11; Linux x86_64; rv:40.0) Gecko/20100101 Firefox/40.0
+Build ID: 20150730171029
+
+Steps to reproduce:
+
+testing my addon for e10s compatibility without shim on nightly 43.0a1 (2015-08-23)
+
+addon's main code does:
+var tab = require("sdk/tabs");
+var worker = tabs.activeTab.attach({ contentScriptFile: self.data.url('password-fill-cs.js') });
+
+similar result with
+var worker = tabs.activeTab.attach({ contentScript: 'alert("hello");' });
+
+
+
+Actual results:
+
+attached script is not loaded / run. Instead the following error is output on console:
+
+console.error: masterpassword-firefox:
+JPM [error] Message: TypeError: window is null
+Stack:
+@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/commonjs/sdk/content/worker.js:127:7
+dispatch@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/commonjs/method/core.js:119:12
+initialize@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/commonjs/sdk/content/worker.js:61:7
+constructor@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/commonjs/sdk/core/heritage.js:146:23
+Worker@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/commonjs/sdk/tabs/worker.js:11:16
+Tab<.attach@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/commonjs/sdk/tabs/tab-firefox.js:197:12
+createPanel/<@resource://gre/modules/commonjs/toolkit/loader.js -> resource://jid1-pn4afskf9wbada-at-jetpack/lib/main.js:136:22
+emitOnObject@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/commonjs/sdk/event/core.js:112:9
+emit@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/commonjs/sdk/event/core.js:89:38
+portEmit@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/commonjs/sdk/content/sandbox.js:350:7
+emitOnObject@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/commonjs/sdk/event/core.js:112:9
+emit@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/commonjs/sdk/event/core.js:89:38
+onContentEvent/<@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/commonjs/sdk/content/sandbox.js:391:5
+delay/<@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/commonjs/sdk/lang/functional/concurrent.js:38:20
+notify@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/commonjs/sdk/timers.js:40:9
+
+
+
+
+Expected results:
+
+content script loaded and executed

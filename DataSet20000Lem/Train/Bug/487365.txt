@@ -1,0 +1,47 @@
+FF3 downloads over 2GiB(2GB) [DVD ISOs] end up truncated a 0 byte
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.8) Gecko/2009032609 Firefox/3.0.8 (.NET CLR 3.5.30729)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.8) Gecko/2009032609 Firefox/3.0.8 (.NET CLR 3.5.30729)
+
+Downloading any ISO file over 2GiB-1 in size cause window version to truncate the file to 0 bytes.
+you can find some more at http://jesusnjim.com/pc-repair/massive-security-patches.html
+
+somebody need to fix the download manager so that this works. can't do this with IE either - it give you an http error immediately.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. run FF3.
+2. go to http://www.microsoft.com/downloads/details.aspx?FamilyID=0b6c5f73-e661-4b2f-8aca-d90f4179f39f&DisplayLang=en
+3. download the file.
+4. look at the file size with window explorer.
+Actual Results:
+take a long time to download but you get a 0-length file when done. The reason is because it is > 2^(32-1)-1=2147483647 bytes.
+
+Expected Results:
+a 2.4GB file when done.
+
+The mistake wa somebody used a 32-bit int or a long for the filesize or something like that instead of a long long (gcc) or a __int64 (MINGW, borland, MSVC++).
+
+however, on MinGW compiler which is a gcc variant, it doe not natively support __int64 so you must do something like
+/*detect MinGW compiler and if it is*/
+#if defined(__MINGW32__)
+#include <basetsd.h> /* defines __int64. not needed for borland, MSVC++ */
+typedef __int64 qlong;
+/* now define a printf format string we can use */
+#define QLPRINTF "%I64d"
+#elif defined(__BORLANDC__)||defined(_MSC_VER)
+typedef __int64 qlong;
+/* now define a printf format string we can use */
+#define QLPRINTF "%I64d"
+#elif defined(LINUX)
+typedef long long qlong;
+/* now define a printf format string we can use */
+#define QLPRINTF "%lld"
+#elif defined(__DJGPP__)
+typedef long long qlong;
+/* now define a printf format string we can use */
+#define QLPRINTF "%lld"
+#endif
+
+
+your mileage will vary for your distribution/build of linux depending on what -D option you have on gcc/g++, it may not use LINUX #define. check your build script and makefiles.

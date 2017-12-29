@@ -1,6 +1,6 @@
 from sklearn.datasets import load_files
-#from sklearn.feature_extraction.text import CountVectorizer
-#from sklearn.feature_extraction.text import TFidfVectorizer
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
+#from sklearn.feature_extraction.text import 
 from nltk.tokenize import word_tokenize
 #from sklearn.feature_extraction import DictVectorizer
 #from sklearn.naive_bayes import MultinomialNB

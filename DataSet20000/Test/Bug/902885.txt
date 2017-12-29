@@ -1,0 +1,11 @@
+PGO in Gentoo Linux without the crashreporter needs patching client.mk and automation.py.in
+Created attachment 787465
+firefox-23.0-pgo-Gentoo_bug_474978_c7-mod.patch
+
+In Gentoo Linux, profile guided optimization of Firefox has been deemed unstable since last December. However, I think we can improve the situation here, because presently a patch to the build configuration seems to make things work and the issue seems not Gentoo-specific.
+
+Gentoo is a distribution where everything is usually compiled from its source code. We have disabled the crashreporter via --disable-crashreporter. However, build/automation.py.in references the "mozcrash" module unconditionally, leading to "ImportError: No module named mozcrash". Probably it should import it and run the crash-tests only if the crashreporter is available. I haven't seen any indication that a build without the crashreporter, but with PGO should be unsupported.
+
+Another error surfaces even earlier in the build process: namely, client.mk references the make target "pgo-profile-run" and make cannot find it as it resides in testdir/testsuite-targets.mk. Perhaps it is the same as bug 689002, but perhaps not: the latter is reported (in its comment #7) to have vanished.
+
+I am attaching a patch that resolves both issues for me. I have taken it from https://bugs.gentoo.org/show_bug.cgi?id=474978#c7 and updated it for Firefox 23.0. Any thoughts? Can it be incorporated or is a variant of it already in the trunk?

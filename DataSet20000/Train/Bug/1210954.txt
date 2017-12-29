@@ -1,0 +1,22 @@
+Move devtools variables into a single variables.css file that gets imported into both dark and light theme
+Right now we have two separate CSS files for the light and dark theme.
+
+https://dxr.mozilla.org/mozilla-central/source/devtools/client/themes/light-theme.css
+https://dxr.mozilla.org/mozilla-central/source/devtools/client/themes/dark-theme.css
+
+The first thing each of these does is declare a bunch of variables.  We could move all of these into a separate file that does something like:
+
+:root.theme-light {
+  --theme-body-background: #fcfcfc;
+  ...
+}
+:root.theme-dark {
+  --theme-body-background: #14171a;
+  ...
+}
+
+Then @import("variables.css") from each theme file.
+
+This would get us closer to being able to replace light-theme.css and dark-theme.css with a single file since there's a lot of copy/paste between them. 
+
+Relatedly, there are cases like in the Web IDE where the full theme files are included basically just to get access to a few of these variables: https://dxr.mozilla.org/mozilla-central/search?q=theme+path:webide+path:logs&redirect=true&case=true&limit=100&offset=0.  This bug wouldn't allow us to get rid of that, but it would make it much easier to replace the theme-switching.js reference in Web IDE with a link to variables.css and a simple listener that swaps the theme-light / theme-dark class on the root element.

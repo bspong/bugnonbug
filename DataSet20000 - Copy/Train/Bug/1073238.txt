@@ -1,0 +1,20 @@
+Split UITour.jsm into chrome and content parts that communicate via messages
++++ This bug was initially created as a clone of Bug #941428 +++
+
+Broken down from bug 941428.
+
+This doesn't seem too bad.  UITour.jsm already communicates to the page using events.  Most of the UITour "actions" access chrome given some primitive data from content (like strings) and don't touch content at all.
+
+Mainly we just need to insert an object in content.js that shuttles messages and events back and forth, like how ContentSearchMediator, AboutHomeListener, WebChannel et al. do.  UITour.jsm would send messages to this object instead of firing events, and then the object would forward the messages on to content by firing events.
+
+Below are other problems that should be called out.  I'm sure I'm missing things that might be obvious when someone actually gets into the implementation.  I don't think it's necessary to break this down any further, but I'll file another bug to fix the tests.
+
+ensureTrustedOrigin: Uses content doc.  Instead, the aforementioned object in content.js should filter out page events that are untrusted, forwarding only trusted events on to chrome as messages.  The permission manager appears to be read-only in content, which is fine.
+
+resolveURL: Uses contentDoc.documentURIObject.  Could use browser.documentURI instead, which is defined on both remote and non-remote xul:browsers.
+
+startUrlbarCapture: Uses contentDoc.nodePrincipal.  Could use browser.contentPrincipal instead, which is defined on both remote and non-remote browsers.  Or, it looks like scriptSecurityManager.checkLoadURIWithPrincipal may be safe from content, and if so, could check the principle from content.js before forwarding on the message.
+
+showFirefoxAccounts: Sets contentDoc.location.href.  Could use browser.webNavigation.loadURI instead, which will work for both remote and non-remote browsers.  Or maybe there's a more straightforward way to change the URI.  Or this could be handled entirely in the content script.
+
+Detecting when tabs are detached: UITour accesses content docs to determine whether a newly selected tab is actually a previously torn-off tab.  I think we can use the SwapDocShells event instead of listening for a pair of TabBecomingWindow and TabSelect.  SwapDocShells gives us the new browser in event.detail.  Then we can stop firing TabBecomingWindow altogether since it was only added for this purpose (bug 970321, http://mxr.mozilla.org/mozilla-central/search?string=TabBecomingWindow).

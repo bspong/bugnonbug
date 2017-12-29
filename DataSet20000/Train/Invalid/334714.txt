@@ -1,0 +1,8 @@
+Fix bugs in browser's content listener, move to browser
+The browser implements a content listener that "in theory" should be the arbiter of what content can get loaded in the content area (see 334703). Fortunately, 334703 exists and the content listener implementation in browser.js is not consulted, because it is very buggy. 
+
+Its isPreferred method is wacky, it has a hard coded list of types that can be handled inline in the browser docshell. It should really be getting this from nsIWebNavigationInfo, like the one in seamonkey has been doing for some time.
+
+Since this is one of those pieces of overhead that is "required" to make the browser go properly, when in effect, so I figured it'd be cleaner if this was merged into the browser binding, so that any conversions specified here apply to all tabs, not just the first one.
+
+In addition, I wanted to make this work so that I could specify a content type conversion, from application/vnd.mozilla.maybe.feed to application/vnd.mozilla.xul+xml, for Feed Handling, so I added an API to the browser/tabbrowser bindings to register content conversions, and now I invoke this from the browser startup itself to register a feed conversion handler.

@@ -1,0 +1,79 @@
+firebird build fails for widget/src/xremoteclient/mozilla-xremote-client
+User-Agent: Mozilla/5.0 (X11; U; SunOS sun4u; en-US; rv:1.4b) Gecko/20030515 Mozilla Firebird/0.6
+Build Identifier: Mozilla/5.0 (X11; U; SunOS sun4u; en-US; rv:1.4b) Gecko/20030515 Mozilla Firebird/0.6
+
+When trying to compile Mozilla Firebird, the linking of
+widget/src/xremoteclient/mozilla-xremote-client
+fails:
+
+c++ -o mozilla-xremote-client.o -c -DOSTYPE=\"SunOS5\" -DOSARCH=\"SunOS\"
+-I../../../dist/include/xpcom -I../../../dist/include/string
+-I../../../dist/include/widget -I../../../dist/include
+-I/home-local/leineweb/tmp/firebird/mozilla/dist/include/nspr -fPIC
+-fno-rtti -fno-exceptions -pedantic -Wno-long-long -pthreads -pipe -DNDEBUG
+-DTRIMMED -O2 -DDEPENDENT_LIBS="\"libxpcom.so\", \"libc.so\", \"libplds4.so\",
+\"libplc4.so\", \"libnspr4.so\", \"libdl.so\", \"libposix4.so\","
+-DMOZILLA_CLIENT -include ../../../mozilla-config.h
+-Wp,-MD,.deps/mozilla-xremote-client.pp mozilla-xremote-client.cpp
+c++ -o mozilla-xremote-client -fno-rtti -fno-exceptions -pedantic
+-Wno-long-long -pthreads -pipe -DNDEBUG -DTRIMMED -O2
+-DDEPENDENT_LIBS="\"libxpcom.so\", \"libc.so\", \"libplds4.so\", \"libplc4.so\",
+\"libnspr4.so\", \"libdl.so\", \"libposix4.so\"," mozilla-xremote-client.o
+XRemoteClient_standalone.o -L../../../dist/bin -L../../../dist/lib
+-L/home-local/leineweb/tmp/firebird/mozilla/dist/lib -lplds4 -lplc4 -lnspr4 -ldl
+-lposix4 -lsocket -ldl -lm
+Undefined first referenced
+symbol in file
+XUngrabServer XRemoteClient_standalone.o
+XOpenDisplay XRemoteClient_standalone.o
+XNextEvent XRemoteClient_standalone.o
+XChangeProperty XRemoteClient_standalone.o
+XGetWindowProperty XRemoteClient_standalone.o
+XSync XRemoteClient_standalone.o
+XSelectInput XRemoteClient_standalone.o
+XGrabServer XRemoteClient_standalone.o
+XFree XRemoteClient_standalone.o
+XQueryTree XRemoteClient_standalone.o
+XCloseDisplay XRemoteClient_standalone.o
+XInternAtom XRemoteClient_standalone.o
+ld: fatal: Symbol referencing errors. No output written to mozilla-xremote-client
+collect2: ld returned 1 exit status
+gmake[5]: *** [mozilla-xremote-client] Error 1
+gmake[5]: Leaving directory
+`/home-local/leineweb/tmp/firebird/mozilla/widget/src/xremoteclient'
+
+It seems, the X-Libraries are not put into the compile-command.
+This also happens after a new configure-run.
+
+Reproducible: Always
+
+Steps to Reproduce:
+my .mozconfig (modulo line-breaks)
+
+export MOZ_PHOENIX=1
+mk_add_options MOZ_PHOENIX=1
+ac_add_options --enable-crypto
+ac_add_options --disable-tests
+ac_add_options --disable-debug
+ac_add_options --disable-mailnews
+ac_add_options --disable-composer
+ac_add_options --enable-optimize=-O2
+ac_add_options --disable-ldap
+ac_add_options --disable-mailnews
+ac_add_options
+--enable-extensions=default,-inspector,-irc,-venkman,-content-packs,-help
+ac_add_options --enable-plaintext-editor-only
+
+
+
+
+
+When adding "-lX11" to the c++-command above, the compile works.
+
+grep -- "-lX" config/autoconf.mk give only one line:
+
+MOZ_GTK_LDFLAGS = -L/app/unido-inf/sun4_56/gtk/1.2.10/lib
+-R/app/unido-inf/sun4_56/gtk/1.2.10/lib -L/usr/openwin/lib -R/usr/openwin/lib
+-lgtk -lgdk -L/app/unido-inf/sun4_56/glib/1.2.10/lib
+-R/app/unido-inf/sun4_56/glib/1.2.10/lib -lgmodule -lglib -ldl -lXext -lX11
+-lsocket -lnsl -lm

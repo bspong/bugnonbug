@@ -1,0 +1,36 @@
+during session restoration, window tab list is incorrectly written a empty to sessionstore.js
+User-Agent: Mozilla/5.0 (Windows NT 5.2; WOW64; rv:2.0b12) Gecko/20100101 Firefox/4.0b12
+Build Identifier: Mozilla/5.0 (Windows NT 5.2; WOW64; rv:2.0b12) Gecko/20100101 Firefox/4.0b12
+
+The issue happened to me when upgrading from 4.0b11 to 4.0b12, although the issue probably ha nothing to do with the update system.
+
+1. I had 15 window open in 4.0b11, each having many tab open.
+2. Firefox prompt me to restart to upgrade to 4.0b12 and I accept.
+3. The upgrade fails because the Firefox process was, for some reason, still running when the updater started.
+4. Firefox 4.0b11 go on with the restoration of my 15 windows.
+5. During restoration I kill the Firefox process so that I can restart it with 4.0b12. Before I killed it the 15 window were (AFAICT) all open, but the tab were not fully loaded.
+6. When starting Firefox again, the update to 4.0b12 occurs successfully.
+7. But only 2 of the 15 window have been restored!
+
+Expected result: all 15 window should have been restored.
+
+I immediately made a copy of sessionstore.js and sessionstore.bak. Both of them were valid JSON file (not truncated).
+
+sessionstore.js only held the 2 windows, aside from some _closedWindows that I had closed myself in the previous session and were therefore not relevant.
+sessionstore.bak held all 15 windows. Unfortunately, for each of the lost window the "_closedTabs" and "selected" field were complete and correct, but the "tabs" entry wa an empty array. It wa usually true that "w.selected > w.tabs.length", which doesn't make much sense.
+
+I could understand data loss on JSON truncation. But here, it wa clear that a serialization command wa issued even though the session restore data wa in an incomplete state. And because the data *looked* valid, it caused a silent override of the old backup file, leading to irremediable data loss.
+
+I'm not familiar with the session store low-level architecture, but here a few solution I can think of:
+1. Never write sessionstore.js if it would lead to write a "tabs" entry containing le tab than the actual number of shown tabs.
+2. If a tab is shown in a window's tab bar, it MUST be written to the "tabs" entry of the corresponding window, even if some data about it will be incomplete (such a the title).
+3. Keep an extra backup of sessionstore.bak to allow manual restoration in similar situations.
+
+Solution 1 could be a bit dangerous because it could lead to sessionstore.js never being written if a tab remains in an incomplete state forever.
+
+If feasible, the best way would be to implement both solution 2 and solution 3: solution 2 solves this specific bug transparently for the user, and solution 3 is a safeguard against data loss for any similar bug that could happen in the future.
+
+
+I'm flagging this a critical since this is a data loss issue and Firefox has, in my experience, always been very careful about ensuring session data is kept even in the case of crash or forceful termination.
+
+Reproducible: Didn't try

@@ -1,0 +1,16 @@
+[e10s] Closing tab during “Save As… Complete Document” crash with MsgRouteError
+This bug is for the MsgRouteError crash; bug 1203602 will be reduced in scope to the remaining data loss bugs, because it already ha comment which go into detail about them.
+
++++ This bug wa initially created a a clone of Bug #1203602 +++
+
+Part of the cause of bug 1202887 is that closing a tab while a persistence operation is in progress will immediately destroy the PBrowser actor and all it descendents, including any PWebBrowserPersistDocument actors, thus leaving a partially completed save.
+
+This is almost certainly not what the user expects, and also doesn't match the non-e10s behavior where holding a reference to the document is enough to keep it alive.
+
+But it's worse than that: a parent->child message can be sent on the PWebBrowserPersistDocument concurrently with the child->parent PBrowser::__delete__, which result in one of these:
+
+###!!! [Child][DispatchAsyncMessage] Error: (msgtype=0xE60003,name=???) Route error: message sent to unknown actor ID
+
+Which crash the content process. (For reference, 0xE60003 is PWebBrowserPersistDocument::SetPersistFlags.) There are probably already some of these on crash-stats, but I don't know if there's enough info in the dump to distinguish them from other child-side MsgRouteError crashes.
+
+So this need a way of keeping the TabChild alive until persistence is finished.

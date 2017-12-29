@@ -1,0 +1,189 @@
+Uninitialized memory read in StretchDIBits
+Simply running the Browser Buster with the latest Win32 CVS trunk build on 
+Windows 2000 (Purify) yields:
+
+[W] UMR: Uninitialized memory read in StretchDIBits {9 occurrences}
+        Reading 13 bytes from 0x08dc1ed0 (13 bytes at 0x08dc1ed0 uninitialized)
+        Address 0x08dc1ed0 is argument #10 of StretchDIBits
+        Address 0x08dc1ed0 is at the beginning of a 1760 byte block
+        Address 0x08dc1ed0 points to a C++ new block in heap 0x02710000
+        Thread ID: 0x4b8
+        Error location
+            StretchDIBits  [GDI32.DLL]
+            nsImageWin::DrawToImage(nsIImage *,int,int,int,int) 
+[nsImageWin.cpp:1414]
+                          MONOBITMAPINFO  bmi(imgWin->mAlphaWidth, imgWin-
+>mAlphaHeight);
+                
+                          ::StretchDIBits(dstMemDC, 0, 0, aDWidth, aDHeight,0, 
+0,mNaturalWidth, mNaturalHeight, imgWin->mAlphaBits,
+             =>                                         (LPBITMAPINFO)&bmi, 
+DIB_RGB_COLORS, SRCAND);
+                           rop = SRCPAINT;
+                        }
+                      }
+            gfxImageFrame::DrawTo(gfxIImageFrame *,int,int,int,int) 
+[gfxImageFrame.cpp:394]
+                    return NS_ERROR_NOT_INITIALIZED;
+                
+                  nsCOMPtr<nsIImage> img(do_GetInterface(aDst));
+             =>   return mImage->DrawToImage(img, aDX, aDY, aDWidth, aDHeight);
+                }
+                
+                
+            imgContainer::AppendFrame(gfxIImageFrame *) [imgContainer.cpp:182]
+                      firstFrame->GetWidth(&width);
+                      firstFrame->GetHeight(&height);
+                
+             =>       firstFrame->DrawTo(mCompositingFrame, x, y, width, 
+height);
+                      ZeroMask(mCompositingFrame);
+                      BuildCompositeMask(mCompositingFrame, firstFrame);
+                    }
+            HaveDecodedRow [nsGIFDecoder2.cpp:378]
+                      decoder->mGIFStruct->x_offset, decoder->mGIFStruct-
+>y_offset,
+                      decoder->mGIFStruct->width, decoder->mGIFStruct->height, 
+format);
+                
+             =>     decoder->mImageContainer->AppendFrame(decoder->mImageFrame);
+                
+                    if (decoder->mObserver)
+                      decoder->mObserver->OnStartFrame(nsnull, nsnull, decoder-
+>mImageFrame);
+            output_row     [GIF2.cpp:230]
+                                    drow_start,                /* Row number */
+                                    drow_end - drow_start + 1, /* Number of 
+times to duplicate the row? */
+                                    drawmode,                  /* il_draw_mode 
+*/
+             =>                     gs->ipass);                /* interlace 
+pass (1-4) */
+                            }
+                    }
+                
+            do_lzw         [GIF2.cpp:421]
+                            do {
+                                *rowp++ = *--stackp;
+                                if (rowp == rowend) {
+             =>                     OUTPUT_ROW(gs);
+                                }
+                            } while (stackp > stack);
+                        }
+            gif_write(gif_struct *,BYTE const*,UINT) [GIF2.cpp:757]
+                        switch(gs->state)
+                        {
+                        case gif_lzw:
+             =>             if (do_lzw(gs, q) < 0)
+                            {
+                                gs->state = gif_error;
+                                break;
+            ???            [ip=0x0013fad0]
+            nsGIFDecoder2::ProcessData(BYTE *,UINT,UINT *) 
+[nsGIFDecoder2.cpp:204]
+                  // In the new decoder, we should always be able to process 
+more data since
+                  // we don't wait to decode each frame in an animation now.
+                  if (gif_write_ready(mGIFStruct)) {
+             =>     PRStatus result = gif_write(mGIFStruct, data, count);
+                    if (result != PR_SUCCESS)
+                      return NS_ERROR_FAILURE;
+                  }
+        Allocation location
+            new(UINT)      [MSVCRT.DLL]
+            nsImageWin::Init(int,int,int,nsMaskRequirements) 
+[nsImageWin.cpp:197]
+                      // 32-bit align each row
+                      mARowBytes = (mARowBytes + 3) & ~0x3;
+                
+             =>       mAlphaBits = new unsigned char[mARowBytes * aHeight];
+                      mAlphaWidth = aWidth;
+                      mAlphaHeight = aHeight;
+                    }else{
+            gfxImageFrame::Init(int,int,int,int,int) [gfxImageFrame.cpp:105]
+                    break;
+                  }
+                
+             =>   rv = mImage->Init(aWidth, aHeight, depth, maskReq);
+                  if (NS_FAILED(rv)) return rv;
+                
+                  mImage->SetNaturalWidth(aWidth);
+            imgContainer::AppendFrame(gfxIImageFrame *) [imgContainer.cpp:152]
+                       (numFrames >= 1)) // Not sure if I want to create a 
+composite frame for every anim. Could be smarter.
+                    {
+                      mCompositingFrame = do_CreateInstance
+("@mozilla.org/gfx/image/frame;2");
+             =>       mCompositingFrame->Init(0, 0, mSize.width, mSize.height, 
+gfxIFormats::RGB_A1);
+                
+                      nsCOMPtr<nsIInterfaceRequestor> ireq(do_QueryInterface
+(mCompositingFrame));
+                      if (ireq) {
+            HaveDecodedRow [nsGIFDecoder2.cpp:378]
+                      decoder->mGIFStruct->x_offset, decoder->mGIFStruct-
+>y_offset,
+                      decoder->mGIFStruct->width, decoder->mGIFStruct->height, 
+format);
+                
+             =>     decoder->mImageContainer->AppendFrame(decoder->mImageFrame);
+                
+                    if (decoder->mObserver)
+                      decoder->mObserver->OnStartFrame(nsnull, nsnull, decoder-
+>mImageFrame);
+            output_row     [GIF2.cpp:230]
+                                    drow_start,                /* Row number */
+                                    drow_end - drow_start + 1, /* Number of 
+times to duplicate the row? */
+                                    drawmode,                  /* il_draw_mode 
+*/
+             =>                     gs->ipass);                /* interlace 
+pass (1-4) */
+                            }
+                    }
+                
+            do_lzw         [GIF2.cpp:421]
+                            do {
+                                *rowp++ = *--stackp;
+                                if (rowp == rowend) {
+             =>                     OUTPUT_ROW(gs);
+                                }
+                            } while (stackp > stack);
+                        }
+            gif_write(gif_struct *,BYTE const*,UINT) [GIF2.cpp:757]
+                        switch(gs->state)
+                        {
+                        case gif_lzw:
+             =>             if (do_lzw(gs, q) < 0)
+                            {
+                                gs->state = gif_error;
+                                break;
+            ???            [ip=0x0013fad0]
+            nsGIFDecoder2::ProcessData(BYTE *,UINT,UINT *) 
+[nsGIFDecoder2.cpp:204]
+                  // In the new decoder, we should always be able to process 
+more data since
+                  // we don't wait to decode each frame in an animation now.
+                  if (gif_write_ready(mGIFStruct)) {
+             =>     PRStatus result = gif_write(mGIFStruct, data, count);
+                    if (result != PR_SUCCESS)
+                      return NS_ERROR_FAILURE;
+                  }
+            ???            [ip=0x08dc4018]
+            ReadDataOut    [nsGIFDecoder2.cpp:147]
+            nsInputStreamTee::WriteSegmentFun(nsIInputStream *,void *,char 
+const*,UINT,UINT,UINT *) [nsInputStreamTee.cpp:96]
+            nsPipe::nsPipeInputStream::ReadSegments((*)(nsIInputStream *,void 
+*,char const*,UINT,UINT,UINT *),void *,UINT,UINT *) [nsPipe2.cpp:428]
+            nsInputStreamTee::ReadSegments((*)(nsIInputStream *,void *,char 
+const*,UINT,UINT,UINT *),void *,UINT,UINT *) [nsInputStreamTee.cpp:152]
+            nsGIFDecoder2::WriteFrom(nsIInputStream *,UINT,UINT *) 
+[nsGIFDecoder2.cpp:223]
+            imgRequest::OnDataAvailable(nsIRequest *,nsISupports 
+*,nsIInputStream *,UINT,UINT) [imgRequest.cpp:728]
+            ProxyListener::OnDataAvailable(nsIRequest *,nsISupports 
+*,nsIInputStream *,UINT,UINT) [imgLoader.cpp:592]
+            nsStreamListenerTee::OnDataAvailable(nsIRequest *,nsISupports 
+*,nsIInputStream *,UINT,UINT) [nsStreamListenerTee.cpp:56]
+            nsHttpChannel::OnDataAvailable(nsIRequest *,nsISupports 
+*,nsIInputStream *,UINT,UINT) [nsHttpChannel.cpp:2543]

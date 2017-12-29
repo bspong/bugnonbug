@@ -1,0 +1,41 @@
+Unwanted text get appended to a page if the same page is viewed in another tab and caching is enabled
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.2; en-US; rv:1.8.1.1) Gecko/20061204 Firefox/2.0.0.1
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.2; en-US; rv:1.8.1.1) Gecko/20061204 Firefox/2.0.0.1
+
+If you load a page in 2 different tab (tabs 1 and 2) and perform some operation in tab 1 you will get unwanted html code from tab 2 appended at the end of your document.
+
+If you disable caching the problem will go away.
+
+This problem is not happening on a linux vm running Mozilla/5.0 Gecko/20060601 Firefox/2.0 Ubuntu-edgy. The problem is also not happening with Mozilla/5.0 (Windows; U; Windows NT 5.2; en-US; rv:1.9a1) Gecko/20061218 Minefield/3.0a1
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+This is a reproducible error but my take a few try to get it to work properly.
+
+1. Load two tab in a single instance of firefox.
+2. Navigate both tab to http://www.onlineguide.learnalberta.ca/default.aspx?lang=en-US&formID=2&navID=1
+3. On the second tab ctrl-f5 a few times.
+4. Go back to the first tab and click browse
+5. Select Grade 1 and Aboriginal Studies and click Browse Resources (for example)
+6. Click back
+7. Observer "Search Resources" may be displayed at the bottom of the page.
+8. Disable caching and repeat step 1-7 noting that Search Resources doe not appear at the bottom of the page.
+Actual Results:
+The actual result vary a bit depending on which selection you select for step 5. What 'appears' to be happening is*:
+A- There is a shared buffer between the two tab that is cached client side. The buffer writes to the end displaying the current page and when that is finished continuing on with what ever else is left in the buffer (which in this case come from tab 2).
+B- There is some kind of buffer overflow happening here where memory from tab 2 is being copied, rendered and appended to tab 1.
+
+* - just my best guess, you guy are the professionals.
+
+If you view the source of tab 1 you will see that additional html code is being appended to the page, often in mid-tag and after the document should obviously end (after the /html).
+
+If you view the source of tab 2 you will see that the appended text match exactly what is in tab 2.
+
+Expected Results:
+Page render with no code after the </html> tag. No code from tab 2 is appended to tab 1.
+
+To test whether or not this wa a caching issue I used the WebDeveloper 1.02 plugin. We have access to the asp.net code if you require that, but monitoring http traffic will I believe point you in the direction of this specific version of firefox.
+
+Just in case (small chance) that this error is caused be case B above, I'm marking this a security. I haven't looked in to the problem at all but I wonder about the possibility of a malicious user injecting code into tab 2, that would possibly get run after the rendering of tab 1 is complete.

@@ -1,0 +1,89 @@
+javascript in XSL file failed to do "document.createElement('div')"
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.1b1pre) Gecko/20080918073230 Minefield/3.1b1pre
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.1b1pre) Gecko/20080918073230 Minefield/3.1b1pre
+
+1. good.html
+---------------------------------------------------------------------------------
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+		<title>test xsl bug</title>
+		<script language="javascript">
+		function test(){
+			var bug = document.createElement("div");
+			with(bug.style){
+				color="red";
+				height="100";
+				width="100";
+			}
+			var test=document.createElement("span");
+			test.innerHTML="BUG";
+			bug.appendChild(test);
+			document.body.appendChild(bug);
+		}
+		</script>
+	</head>
+	<body>
+		<input type=button onclick="test()" value="test">
+	</body>
+</html>
+---------------------------------------------------------------------------------
+
+2.bug.xml
+---------------------------------------------------------------------------------
+<?xml version="1.0" encoding="utf-8" ?>
+<?xml-stylesheet type="text/xsl" href="bug.xsl"?>
+<data>
+</data>
+---------------------------------------------------------------------------------
+
+3.bug.xsl
+---------------------------------------------------------------------------------
+<html xsl:version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<title>test xsl bug</title>
+<script language="javascript">
+function test(){
+	var bug = document.createElement("div");
+	with(bug.style){
+		color="red";
+		height="100";
+		width="100";
+	}
+	var test=document.createElement("span");
+	test.innerHTML="BUG";
+	bug.appendChild(test);
+	document.body.appendChild(bug);
+}
+</script>
+</head>
+<body>
+	<input type="button" onclick="test()" value="test"/>	
+</body>
+</html>
+---------------------------------------------------------------------------------
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.open good.html in firefox.
+2.open bad.xml in firefox
+
+Actual Results:  
+1. good.html:Click button "test", a word "bug" will show.
+2. bad.xml: Click buttion "test", nothing showed.
+  click "tools"-->"error console", a error information showed.
+  "bug.style" is undefined.
+
+Expected Results:  
+1. both good.html and bad.xml are should show word "bug" when click button "test".
+
+1. It's ok in IE7.
+2. It's also failed in Google Chrome.
+3. If we check the result of "document.createElement("div"),
+   var bug=document.createElement("div");
+   alert(bug);
+
+   in good.html, it's show "[object HTMLDivElement]"
+   in bad.xml, it's show "[Object Element]"

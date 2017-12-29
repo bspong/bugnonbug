@@ -1,0 +1,69 @@
+Unresolved reference when trying to compile static Firebird cvs
+User-Agent:       Mozilla/5.0 (X11; U; Linux i586; en-US; rv:1.5b) Gecko/20030802 Mozilla Firebird/0.6.1
+Build Identifier: Mozilla/5.0 (X11; U; Linux i586; en-US; rv:1.5b) Gecko/20030802 Mozilla Firebird/0.6.1
+
+I've been trying to compile static MozFirebird cvs on redhat 9 this way:
+# create ~/.mozconfig
+export CVSROOT=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot"
+cvs co mozilla/client.mk
+cd mozilla
+make -f client.mk checkout
+make -f client.mk build
+
+My .mozconfig:
+export MOZ_PHOENIX=1
+mk_add_options MOZ_PHOENIX=1
+ac_add_options --enable-static
+ac_add_options --disable-shared
+ac_add_options --prefix=/opt/MozillaFirebird
+ac_add_options --enable-crypto
+ac_add_options --disable-tests
+ac_add_options --disable-debug
+ac_add_options --disable-mailnews
+ac_add_options --disable-composer
+ac_add_options --disable-ldap
+ac_add_options --enable-optimize="-Os -march=k6-3 -pipe -fomit-frame-pointer"
+ac_add_options --enable-default-toolkit=gtk2
+ac_add_options
+--enable-extensions=default,-inspector,-irc,-venkman,-content-packs,-help
+ac_add_options --enable-plaintext-editor-only
+ac_add_options --enable-strip
+ac_add_options --enable-strip-libs
+ac_add_options --enable-xft
+ac_add_options --with-system-zlib
+ac_add_options --with-system-jpeg
+ac_add_options --with-system-png
+
+I've got this error:
+c++ -o MozillaFirebird-bin -Os -march=k6-3 -pipe -fomit-frame-pointer 
+-I/usr/X11R6/include -fno-rtti -fno-exceptions -Wall -Wconversion
+-Wpointer-arith -Wcast-align -Woverloaded-virtual -Wsynth -Wno-ctor-dtor-privacy
+-pedantic -Wno-long-long -fshort-wchar -pthread -pipe  -DNDEBUG -DTRIMMED -Os
+-march=k6-3 -pipe -fomit-frame-pointer  nsBrowserApp.o nsStaticComponents.o    
+-L../../dist/bin -L../../dist/lib -L../../dist/lib/components -lxpcom_compat_c
+-lxpconnect -luconv -lucvmath -li18n -loji -lipcdc -lnecko -lnecko2 -lpref
+-lcaps -lrdf -lhtmlpars -lgfxps -lgfxxprint -lgfx_gtk -limglib2 -lgkplugin
+-ljsdom -lwidget_gtk2 -lxremote_client -lgklayout -lmork -ldocshell -lprofile
+-lnsprefm -lembedcomponents -lwebbrwsr -leditor -ltxmgr -lnsappshell -lchrome
+-laccessibility -lfileview -lmozfind -lxremoteservice -lappcomps -ltoolkitcomps
+-lcookie -lwallet -lwalletviewers -lxmlextras -lp3p -lautoconfig -lsystem-pref
+-ltransformiix -luniversalchardet -ltypeaheadfind -lwebsrvcs -lpipboot
+-lpipnss-lpippki -lbrowsercomps -lunicharutil_s -lucvutil_s -ljsj -lgtkxtbin
+-lgfxshared_s -lgfxft2_s -lxlibrgb -lxprintutil -lgkgfx -lxulapp_s
+../../dist/lib/libxulapp_s.a -L../../dist/bin -lmozjs -L../../dist/bin -lxpcom 
+-L/home/acrozy/mozilla/dist/lib -lplds4 -lplc4 -lnspr4 -lpthread -ldl 
+-Wl,--export-dynamic -lgtk-x11-2.0 -lgdk-x11-2.0 -latk-1.0 -lgdk_pixbuf-2.0 -lm
+-lpangoxft-1.0 -lpangox-1.0 -lpango-1.0 -lgobject-2.0 -lgmodule-2.0 -ldl
+-lglib-2.0    -ldl -lm  -L../../dist/lib/components -lpng  -ljpeg  -lz  
+-L../../dist/bin -L../../dist/lib ../../dist/lib/libcrmf.a -lsmime3 -lssl3
+-lnss3 -lsoftokn3   -L/usr/X11R6/lib -lXt -L/usr/X11R6/lib -lXp -lXext -lX11
+-L../../dist/lib -lxpcom_compat
+nsStaticComponents.o(.text+0x31d): In function `nsSystemPrefModule_NSGetmodule':
+: undefined reference to `nsSystemPrefModule_gModuleInfo'
+
+with --enable-static and --disable-shared removed, I successfully finish compiling.
+
+
+Reproducible: Always
+
+Steps to Reproduce:

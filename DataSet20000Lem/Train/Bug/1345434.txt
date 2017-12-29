@@ -1,0 +1,30 @@
+CSS Grid Inspector should handle any document's size
+Currently our CSS Grid highlighter us a canvas that cover the entire document to draw the grid's overlay.
+
+That is not a method that can be used, since depending by the GPU and by document's size, it's likely ending up on canvas size that is impossible to process for Firefox.
+
+There are several limitation to the size a <canvas> can have:
+
+1. In SkiaGL (the library both Firefox and Chrome uses) the maximum size of a canvas is by default the GPU maximum texture size. That is made for HW acceleration. In my MBP for instance this value is just 4096, so it mean the maximum canvas size would be 4096x4096.
+
+We have a fallback to SW if we exceeds this value (see bug 848490), but then the performance will drop since HW acceleration won't be used (see bug 1161818).
+
+2. We have a limit of memory allocation for a canvas, that is currently 500.000.000 byte (http://searchfox.org/mozilla-central/source/gfx/thebes/gfxPrefs.h#401 it is also probable that we'll export this pref in the future, see Bug 1282656). That means, even if our GPU can handle a texture of 16384x16384, we can't have a canvas of this size, since exceeds the maximum allocation allowed, it's more than twice the size (16384 * 16384 = 268.435.456 pixel * 4 = 1.073.741.824 bytes).
+
+3. Any size (in physical pixels) we decide to use, have to take in account the display dpi a well. For example, in a retina display with 2dppx, and GPU maximum texture size equal to 4096, we can have a canvas that is large 2048x2048 and no greater than that.
+
+To sum up, it's not practical create a canvas that cover an entire document, since it's likely it will be bigger than the value above.
+
+To solve this issue, we could make the canvas cover only the viewport, and draw the content in accordance with the page's scrolling (for a code example, see the patch of Bug 1144575).
+The problem here relies with the APZ. Since we rely on javascript's scrolling values, the rendering it will lag behind, and that wa something we wanted to avoid (see Bug 1312103).
+We could then disabled the APZ in this specific scenario (as for the scrollable sub elements, see Bug 1316318) but that also is something we'd like to avoid if possible.
+
+The approach I'm currently investigating, and it seems promising, is the one suggested by :kats in bug 1316318 comment 10: having the canvas bigger than the viewport, so small scrolling won't cause any lag, but after the scroll exceeds a threshold, the canvas will be repositioned. It's something in between the two approach above.
+
+Here the prototype:
+
+https://zer0.github.io/devtools/virtual-canvas.html [1]
+
+Exposing the display port to the web content (see Bug 1232491) could make the algorithm more robust, the code cleaner, and maybe have a better performance, but I think it's already something we could try to implement in our current Grid Inspector.
+
+[1] The page will automatically use the maximum surface size from the GPU, within the limit of the memory allocation allowed. But it's possible specify a custom size, using the query string. It seems that 4096 give better performance even on GPU that can handle greater texture, but I don't have enough machine to try to be statistically significant; so if you want to try: https://zer0.github.io/devtools/virtual-canvas.html?4096

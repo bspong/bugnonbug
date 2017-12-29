@@ -1,0 +1,46 @@
+add simple protection against phishing/MITM
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8) Gecko/20051111 Firefox/1.5
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8) Gecko/20051111 Firefox/1.5
+
+To protect not just against normal phishing, but even against a real-time man-in-the-middle attacks, the following approach seems to provide decent protection where firefox can play an essential role in:
+
+1) the user intends to visit https://myTrusted.site.org and clicks on *a*
+   https - link
+2) to log in, she clicks on the bottom right lock of her Firefox.
+   Firefox copies a 6-(or longer?) character (ASCII) SSL/TLS session identifier 
+   into the clipboard. This identifier is calculated by Firefox as follows:
+   Take the handshake_messages of http://www.rfc.net/rfc2246.html#s7.4.8. (since 
+   MITM are typically prevented when client certificate authentication is done,
+   it only entails (and applies to) the messages of a handshake without client
+   cert auth) and digest them until the result fits into the "identifier".
+3) The user opens passwordsafe or an equivalently trustworthy open source
+   utility
+4) upon right-clicking on the previously stored password entry of
+   myTrusted.site.org in the passwordsafe list, it does a
+   HMAC(password,identifier), where HMAC is a keyed-hash function described 
+   in RFC2104. The result(/"response") is then stored in the clipboard again.
+5) in a login form, myTrusted.site.org asks for user-id and response (not
+   password!) and the user pastes the clipboard value into the response field
+   and fills in the user-id.
+6) The myTrusted.site.org server receives the two values and
+   i)  calculates the "identifier" independently by its own view on the 
+       handshake it was involved in
+   ii) retrieves the password from the secure user credential store and 
+       calculates the HMAC response
+   if it matches, there was no MITM, if it doesn't match the user most likely
+   entered the response into a MITM (SSL proxy) and the server better aborts
+   the session.
+
+passwordsafe development (as per the above URL) has indicated to be interested in providing a prototype for this. We would take care of providing the server-side part for it. 
+
+Would Firefox participate as well?
+
+-------
+P.S.: As soon as the refereeing process is over, we'll be able to provide two detailed papers on this approach including a way to authenticate the server back to the user and many more variants of the overall MITM protection issue, some of which might not be contributed to the open source.
+
+Reproducible: Always
+
+
+
+
+see also Bug 285361 - also, I guess this is a lot simpler than what is discussed in Bug 268835

@@ -1,0 +1,43 @@
+Add a SLIME-style "compile-defun" command
+From my mailing list thread:
+
+We could do some coolness like SLIME[0]'s compile-defun command, which
+(translated into the JS world) compiles and evaluates all the code that
+your cursor is at (or is selected, or whatever) up until the top level.
+Take for example the following source
+
+  function foo () {
+    return 'foo'; // 1
+  }
+
+  function dodo() {
+    return 5;
+  }
+
+If your cursor was on the line with the "// 1" comment, it would
+re-evaluate the foo function, but not the dodo function.
+
+However in this example:
+
+  function bar() {
+    function nested() {
+      return 1; // 2
+    }
+    return nested();
+  }
+
+  function qux() {
+    return void 0;
+  }
+
+If your cursor was on the line with the "// 2" comment, it would
+re-evaluate the bar function (which includes re-evaluating the nested
+function). The qux function is not re-evaluated.
+
+It shouldn't be too hard to implement with the machinery we have in
+place at this time.
+
+Yes, I know you can do an equivalent thing right now by highlighting a
+top level function by hand and doing an eval, but that is way too
+difficult/manual to be useful. This should be its own keyboard shortcut
+for ease of use, or else it is completely useless.

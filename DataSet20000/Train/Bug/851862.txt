@@ -1,0 +1,30 @@
+Console warning for undefined property rule.selectorText
+I've sometimes noticed this console warning in my builds:
+
+JavaScript strict warning: chrome://browser/content/tabbrowser.xml, line 3062: reference to undefined property rule.selectorText
+
+This is easily reproducible with a new profile:
+
+1) Start browser (you'll get 2 default tabs)
+2) Close the leftmost tab
+
+Relevant code:
+
+      <field name="_delayResizingRule" readonly="true"><![CDATA[
+        const href = "chrome://browser/content/browser.css";
+        const selector = ".tabbrowser-tabs[dontresize] > .tabbrowser-tab[fadein]:not([pinned])";
+
+        // XXX: document.styleSheets is not iterable (see bug 738196)
+        for (let sheet of Array.slice(document.styleSheets))
+          if (sheet.href == href)
+            for (let rule of Array.slice(sheet.cssRules))
+              if (rule.selectorText == selector) { rule; break; }
+      ]]></field>
+
+
+Some debug logging seems to show this it triggered right away by the first 2 rules in the sheet. I suspect this is because the first two rules in browser.css are:
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+@namespace html url("http://www.w3.org/1999/xhtml");
+
+Seems like |sheet.cssRules| should either just skip this info, or map it into a useful form.

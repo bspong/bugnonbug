@@ -1,0 +1,43 @@
+Remove legacy generator from browser/.
+Created attachment 8815629
+Remove legacy generator from browser/.
+
+If the code fit into async function and also it's test code, replaced legacy generator with async function.
+for other cases, just replaced legacy generator with ES6 generator.
+
+some notes:
+
+* browser/base/content/test/chrome/test_aboutCrashed.xul
+Task.jsm and Promise.jsm are no more used.
+
+* browser/components/downloads/test/browser/browser_libraryDrop.js
+|drop| function (previously |task_drop|) now return promise, so
+|yield*| in caller is changed to |yield|
+
+* browser/components/privatebrowsing/test/browser/browser_privatebrowsing_DownloadLastDirWithCPS.js
+all function called by |runTest| can return promise, so changed |runTest| to async function and just await for them.
+also, checkDownloadLastDir and checkDownloadLastDirNull didn't return value. fixed them.
+
+* browser/components/privatebrowsing/test/browser/browser_privatebrowsing_downloadLastDir_toggle.js
+what |testHelper| doe is Task.async, that can be just replaced with async.
+
+* browser/components/privatebrowsing/test/browser/browser_privatebrowsing_windowtitle.js
+|testTabTitle| is also used like Task.async, so replaced with async
+
+* browser/components/sessionstore/SessionMigration.jsm
+this can also use async, but I used ES6 generator since it's not test.
+also, replaced |throw new Task.Result(state);| with |return state;|,
+since ES6 generator can return value.
+
+* browser/components/sessionstore/test/browser_capabilities.js
+|createTab| return a promise that is resolved to tab.
+so that can be rewritten by async that return tab.
+
+* browser/components/sessionstore/test/browser_formdata_format.js
+this test wait for the all tab to be closed,
+so created an array of promises, and pushed all promise that is resolved
+when the tab is closed, and the test finish when those all promise are
+resolved
+
+|testTabRestoreData| function doe partially Task.async, so replaced whole
+function to async.

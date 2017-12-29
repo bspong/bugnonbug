@@ -1,0 +1,28 @@
+(e10s) Weird "ghost" mouseover event targeting content in tab strip's empty space
+Created attachment 8547041
+Mouse movement in e10s to empty tab area
+
+(Before anything, let me know if you'd like me to try to get a more simplified test case, a I realize working directly with the add-on like this might not be optimal for you. And this requires such strict steps, I'm not sure I can even do it just like that... Anyway,)
+
+Tested with latest version of The Fox, Only Better (https://addons.mozilla.org/firefox/addon/the-fox-only-better/) with latest Nightly in a clean profile with e10s enabled. The bug doesn't happen every time though, I usually have to restart the browser at least once after installing the add-on.
+
+Short story: since the tab strip's empty space doesn't react to mouse event (so it can be used like a regular window's border for dragging and stuff), I listen to mouseout event for when the mouse leaf the reactive part of the window into that empty area, to simulate a sort of mouseover event on it.
+
+Relevant code highlighted: https://github.com/Quicksaver/The-Fox--Only-Better/blob/master/resource/modules/slimChrome.jsm#L165-L200 . browserPanel = document.getElementById('browser-panel'), although I've also tested with 'tab-view-deck' and the result are the same.
+
+I've attached a screencast showing how the UI's reacting to the mouse movement, and in it you can see that the toolbars don't appear a they should when the mouse is moved to the empty tab area. Mid-way through I open a non-e10s window to show how everything should always be working.
+
+With some debugging through the console (added these message in my local build, not on AMO), it's obvious that in the e10s window, whenever the mouse move to the empty area, it seems to fire another mouseover event (onMouseReEnterBrowser), targeting the html node of the content document, which follows (and cancels) the original mouseout code (onMouseOutBrowser - onMouseOver). This doesn't happen in the non-e10s window.
+
+Exact step to reproduce:
+1. Start e10s Nightly in clean profile
+2. Install add-on, everything usually work for me at this point
+3. Install Restartless Restart add-on (https://addons.mozilla.org/firefox/addon/restartless-restart/), it's just what I use to restart the browser
+4. Surf back to about:home
+5. Hit Ctrl+Alt+R to restart
+6. Click anywhere in the page to dismiss the mini bar, let it hide and then move the mouse to the empty tab area
+6.1 This step seems important to be done in that order for some reason. For example, if I hit any key before this, such a Ctrl+Shift+J to open the console before I move the mouse, the empty tab area will usually work correctly.
+
+BTW, in the screencast you'll notice that I've hidden the small brighter area of the toolbars at the top, to simplify testing a it directly trigger the toolbars, bypassing the code above. You have to make sure that when you're moving the mouse up, it doesn't step-stop in there on it way up and go directly to the empty tab area.
+
+Ugh, talk about complex... Any thoughts?

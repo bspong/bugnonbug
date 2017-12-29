@@ -1,0 +1,41 @@
+sidebar contentWindow NS_NOINTERFACE exception after re-opening
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9b4) Gecko/2008030318 Firefox/3.0b4
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9b4) Gecko/2008030318 Firefox/3.0b4
+
+From an extension's chrome code, the following javascript work until you close the (overlayed) sidebar and re-open it:
+
+var sbNode = document.getElementById("sidebar");
+if ( ! sbNode.contentWindow )
+return null;
+return sbNode.contentWindow;
+
+As long a the sidebar ha not been closed and re-opened, the contentWindow is returned.
+
+Once the sidebar is closed and re-opened, just the check for "( ! sbNode.contentWindow )" throw an exception which I catch and print as:
+
+Exception trying to get sidebar: locally MSG=[Exception... "Component returned failure code: 0x80004002 (NS_NOINTERFACE) [nsIInterfaceRequestor.getInterface]" nsresult: "0x80004002 (NS_NOINTERFACE)" location: "JS frame :: chrome://global/content/bindings/browser.xml :: get_contentWindow :: line 0" data: no]
+
+This problem doe not seem to exist in pre-FF 3.0 versions.
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Open custom/overlayed sidebar
+2. Close custom/overlayed sidebar
+3. Open custom/overlayed sidebar
+4. Attempt to get sidebar contentWindow via chrome code with:
+var sbNode = document.getElementById("sidebar");
+if ( ! sbNode.contentWindow )
+return null;
+return sbNode.contentWindow;
+
+Actual Results:
+The 'if' condition throw an exception.
+
+Expected Results:
+Content window should exist and no exception should be thrown.
+
+
+This is reproducible in the FF extension I am working on, and doe not happen on pre-FF 3.0 versions. I don't think there is anything peculiar about my extension in regard to this bug, but I have not attempted to reproduce this bug outside my extension.

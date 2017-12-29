@@ -1,0 +1,150 @@
+crash dereferencing null pointer
+the URL crashes dereferencing a null "container" returned by the pres context
+(with return value = NS_OK).  Either the pres context is returning the wrong
+value, making the nsObjectFrame::Reflow code correct, or the interface is
+allowed to return null in the "NS_OK" case making the reflow code incorrect.  I
+can't tell which is right.  If null is a legal return value, we should check all
+uses of GetContainer.
+
+stack:
+nsObjectFrame::Reflow() line 371 + 16 bytes
+nsInlineReflow::ReflowFrame() line 498
+nsInlineReflow::ReflowFrame() line 271 + 16 bytes
+nsInlineFrame::ReflowFrame() line 976 + 12 bytes
+nsInlineFrame::ReflowMapped() line 909 + 24 bytes
+nsInlineFrame::InitialReflow() line 789 + 20 bytes
+nsInlineFrame::Reflow() line 549 + 25 bytes
+nsInlineReflow::ReflowFrame() line 498
+nsInlineReflow::ReflowFrame() line 271 + 16 bytes
+nsBlockFrame::ReflowInlineFrame() line 3575 + 18 bytes
+nsBlockFrame::ReflowLine() line 2844 + 28 bytes
+nsBlockFrame::ReflowLinesAt() line 2707 + 20 bytes
+nsBlockFrame::ResizeReflow() line 2695 + 19 bytes
+nsBlockFrame::InitialReflow() line 2265 + 12 bytes
+nsBlockFrame::Reflow() line 1702 + 18 bytes
+nsBodyFrame::Reflow() line 268 + 25 bytes
+nsContainerFrame::ReflowChild() line 391 + 28 bytes
+nsTableCellFrame::Reflow() line 334
+nsContainerFrame::ReflowChild() line 391 + 28 bytes
+nsTableRowFrame::InitialReflow() line 761 + 34 bytes
+nsTableRowFrame::Reflow() line 1364 + 39 bytes
+nsContainerFrame::ReflowChild() line 391 + 28 bytes
+nsTableRowGroupFrame::ReflowMappedChildren() line 365 + 34 bytes
+nsTableRowGroupFrame::Reflow() line 873 + 39 bytes
+nsContainerFrame::ReflowChild() line 391 + 28 bytes
+nsTableFrame::ResizeReflowPass1() line 1696
+nsTableFrame::Reflow() line 1547 + 43 bytes
+nsContainerFrame::ReflowChild() line 391 + 28 bytes
+nsTableOuterFrame::Reflow() line 999 + 37 bytes
+nsInlineReflow::ReflowFrame() line 498
+nsInlineReflow::ReflowFrame() line 271 + 16 bytes
+nsBlockFrame::ReflowBlockFrame() line 3354 + 12 bytes
+nsBlockFrame::ReflowLine() line 2837 + 24 bytes
+nsBlockFrame::ReflowLinesAt() line 2707 + 20 bytes
+nsBlockFrame::ResizeReflow() line 2695 + 19 bytes
+nsBlockFrame::InitialReflow() line 2265 + 12 bytes
+nsBlockFrame::Reflow() line 1702 + 18 bytes
+nsBodyFrame::Reflow() line 268 + 25 bytes
+nsContainerFrame::ReflowChild() line 391 + 28 bytes
+nsTableCellFrame::Reflow() line 334
+nsContainerFrame::ReflowChild() line 391 + 28 bytes
+nsTableRowFrame::InitialReflow() line 761 + 34 bytes
+nsTableRowFrame::Reflow() line 1364 + 39 bytes
+nsContainerFrame::ReflowChild() line 391 + 28 bytes
+nsTableRowGroupFrame::ReflowMappedChildren() line 365 + 34 bytes
+nsTableRowGroupFrame::Reflow() line 873 + 39 bytes
+nsContainerFrame::ReflowChild() line 391 + 28 bytes
+nsTableFrame::ResizeReflowPass1() line 1696
+nsTableFrame::Reflow() line 1547 + 43 bytes
+nsContainerFrame::ReflowChild() line 391 + 28 bytes
+nsTableOuterFrame::Reflow() line 999 + 37 bytes
+nsInlineReflow::ReflowFrame() line 498
+nsInlineReflow::ReflowFrame() line 271 + 16 bytes
+nsBlockFrame::ReflowBlockFrame() line 3354 + 12 bytes
+nsBlockFrame::ReflowLine() line 2837 + 24 bytes
+nsBlockFrame::ReflowLinesAt() line 2707 + 20 bytes
+nsBlockFrame::ResizeReflow() line 2695 + 19 bytes
+nsBlockFrame::InitialReflow() line 2265 + 12 bytes
+nsBlockFrame::Reflow() line 1702 + 18 bytes
+nsBodyFrame::Reflow() line 268 + 25 bytes
+nsContainerFrame::ReflowChild() line 391 + 28 bytes
+nsTableCellFrame::Reflow() line 334
+nsContainerFrame::ReflowChild() line 391 + 28 bytes
+nsTableRowFrame::InitialReflow() line 761 + 34 bytes
+nsTableRowFrame::Reflow() line 1364 + 39 bytes
+nsContainerFrame::ReflowChild() line 391 + 28 bytes
+nsTableRowGroupFrame::ReflowMappedChildren() line 365 + 34 bytes
+nsTableRowGroupFrame::Reflow() line 873 + 39 bytes
+nsContainerFrame::ReflowChild() line 391 + 28 bytes
+nsTableFrame::ResizeReflowPass1() line 1696
+nsTableFrame::Reflow() line 1547 + 43 bytes
+nsContainerFrame::ReflowChild() line 391 + 28 bytes
+nsTableOuterFrame::Reflow() line 999 + 37 bytes
+nsInlineReflow::ReflowFrame() line 498
+nsInlineReflow::ReflowFrame() line 271 + 16 bytes
+nsBlockFrame::ReflowBlockFrame() line 3354 + 12 bytes
+nsBlockFrame::ReflowLine() line 2837 + 24 bytes
+nsBlockFrame::ReflowLinesAt() line 2707 + 20 bytes
+nsBlockFrame::ResizeReflow() line 2695 + 19 bytes
+nsBlockFrame::InitialReflow() line 2265 + 12 bytes
+nsBlockFrame::Reflow() line 1702 + 18 bytes
+nsBodyFrame::Reflow() line 268 + 25 bytes
+nsContainerFrame::ReflowChild() line 391 + 28 bytes
+nsScrollFrame::Reflow() line 349
+nsContainerFrame::ReflowChild() line 391 + 28 bytes
+RootFrame::Reflow() line 209
+PresShell::InitialReflow() line 551
+PresShell::VerifyIncrementalReflow() line 1461
+PresShell::ProcessReflowCommands() line 770
+PresShell::ExitReflowLock() line 453
+PresShell::ContentAppended() line 889
+nsDocument::ContentAppended() line 870
+nsHTMLDocument::ContentAppended() line 425 + 17 bytes
+HTMLContentSink::WillInterrupt() line 1398
+CNavDTD::WillInterruptParse() line 3569 + 18 bytes
+nsParser::ResumeParse() line 692
+nsParser::OnDataAvailable() line 929 + 15 bytes
+nsDocumentBindInfo::OnDataAvailable() line 1553 + 24 bytes
+OnDataAvailableProxyEvent::HandleEvent() line 606 + 45 bytes
+StreamListenerProxyEvent::HandlePLEvent() line 452 + 12 bytes
+PL_HandleEvent() line 395 + 10 bytes
+
+
+code:
+NS_IMETHODIMP
+nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
+                      nsHTMLReflowMetrics&     aMetrics,
+                      const nsHTMLReflowState& aReflowState,
+                      nsReflowStatus&          aStatus)
+{
+  // Get our desired size
+  GetDesiredSize(&aPresContext, aReflowState, aMetrics);
+
+  // XXX deal with border and padding the usual way...wrap it up!
+
+  nsIAtom* atom;
+  mContent->GetTag(atom);
+  if ((nsnull != atom) && (nsnull == mInstanceOwner)) {
+    static NS_DEFINE_IID(kIPluginHostIID, NS_IPLUGINHOST_IID);
+    static NS_DEFINE_IID(kIContentViewerContainerIID,
+NS_ICONTENT_VIEWER_CONTAINER_IID);
+
+    nsISupports               *container;
+    nsIPluginHost             *pm;
+    nsIContentViewerContainer *cv;
+    nsresult                  rv;
+
+    mInstanceOwner = new nsPluginInstanceOwner();
+
+    if (nsnull != mInstanceOwner) {
+      NS_ADDREF(mInstanceOwner);
+      mInstanceOwner->Init(&aPresContext, this);
+
+      rv = aPresContext.GetContainer(&container);
+
+                    /* returns NS_OK with NULL container */
+
+      if (NS_OK == rv) {
+        rv = container->QueryInterface(kIContentViewerContainerIID, (void
+**)&cv);
+              /* container is NULL! */

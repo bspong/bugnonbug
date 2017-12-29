@@ -1,0 +1,30 @@
+Debugging with source maps highlights the wrong line when stepping in this case, incorrect line numbers
+Created attachment 8355739
+the JS file for the test
+
+In Nightly, OS X:
+
+1. Set breakpoint at testcase.html:5
+        console.log(regExp.execDebug("a"));
+2. Click the button on the test page.
+3. Step in
+4. In RegExpJS.prototype.execDebug step over until line 202
+    var res = exec(str, this.$startNode, i, this.multiline, this.ignoreCase);
+5. Step into exec()
+
+Actual results: Line 814, just above the function declaration is highlighted:
+>> 814 }
+   815 function exec(matchStr, startNode, lastIndex, multiline, ignoreCase) {
+
+Expected results: the line just below the function declaration is highlighted:
+   815 function exec(matchStr, startNode, lastIndex, multiline, ignoreCase) {
+>> 816   idCounterTrace = 0;
+
+Also worth noting that the line numbers are not as specified in the source map. In the source map (and the original) exec.js has 1005 lines, while the debugger mangled the source to fit into 899 lines.
+
+The Chrome devtools both display the correct version of the file and highlight the correct line:
+   913 function exec(matchStr, startNode, lastIndex, multiline, ignoreCase) {
+>> 914    idCounterTrace = 0;
+
+If I try the steps to reproduce again without reloading I always end up on line 814.
+If I reload the page and try to reproduce, I end up on line 914, which would be correct, except the displayed source is still 899 lines.

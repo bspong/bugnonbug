@@ -1,0 +1,29 @@
+Download Manager us API function CopyFile to replace existing files. Better use ReplaceFile to preserve security setting of the already existing file.
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.8.1.3) Gecko/20070309 Firefox/2.0.0.3
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.8.1.3) Gecko/20070309 Firefox/2.0.0.3
+
+If you download a file you will be warned if the file already exists. If you decide to do so the file will be replaced. It seems that the file is overwritten by calling CopyFile(x ,y , FALSE).
+
+The problem is that the new file doe not inherit the security descriptor that is already applied to the existing file. Better use the API function ReplaceFile in this scenario since it will preserve all NTFS setting of the old file.
+
+Example for IIS directories:
+
+There is a file special.htm that is located in the inetpub directory. This file ha special NTFS setting applied.
+
+If you overwrite this file with the firefox download manager the special NTFS setting are lost which can lead to security compromise if this is not noticed.
+
+By using the ReplaceFile function these setting would have been preserved.
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. apply special NTFS setting to local file
+2. download file with same name
+3. choose to overwrite existing file
+
+Actual Results:
+NTFS setting have changed to default value that have been inherited from the directory. Old NTFS setting are lost.
+
+Expected Results:
+NTFS setting of the old file should be preserved

@@ -1,0 +1,41 @@
+Addons using nsIXMLHttpRequest or nsIChannel can cause Private Browsing to leak cache entries
+Mozilla/5.0 (Windows NT 6.1; rv:22.0) Gecko/20130321 Firefox/22.0
+Build ID: 20130321030940
+
+After exiting Permanent Private Browsing I noticed some YouTube Data leak in about:cache. Before entering Permanent Private Browsing I cleared all the History (Ctrl+Shift+H -> Everything), so the data leak is from the private session. 
+I should also mention that the data leak could be related with one of the many add-ons that are installed on my profile. On a clean profile I could not reproduce the leaking. 
+
+Step to reproduce:
+1. Launch Firefox
+2. Go to the History menu -> Clear All History -> Everything
+3. Enter Permanent Private Browsing:
+Tools menu -> Options -> Privacy -> select Nightly will Use Custom settings for history -> Uncheck Accept cookies from site -> check Always use private browsing mode -> restart the browser when prompted
+4. Navigate to YouTube and load several videos 
+5. Exit Permanent Private Browsing:
+Tools menu -> Options -> Privacy -> select Nightly Remember History -> restart the browser when prompted
+6. After the restart check about:cache.
+
+Expected results:
+There is no URL containing YouTube in about:cache.
+
+Actual results:
+Some URLs containing "youtube" are listed in about:cache.
+Here is an example:
+Cache entry information
+key: 	http://r2---sn-gqn-vhgl.c.youtube.com/videoplayback?algorithm=throttle-factor&burst=40&cp=U0hVSFlRV19JTkNONV9RS0FGOllvZ2V0RjRERklB&cpn=cNVnXeDCjpJV16Nm&expire=1363969544&factor=1.25&fexp=904000%2C919111%2C906079%2C929206%2C916626%2C902547%2C902000%2C919512%2C913605%2C931202%2C900821%2C900823%2C931203%2C931401%2C904476%2C908529%2C919373%2C930803%2C920201%2C929602%2C930101%2C930603%2C900824&id=221b8fb955b09f93&ip=188.27.147.153&ipbits=8&itag=34&keepalive=yes&key=yt1&ms=au&mt=1363944610&mv=m&newshard=yes&ratebypass=yes&signature=B7B6632243126F102E88B8ED7C6C012E08EBC8E8.8CED60CF2467FC4A44CB0F7D5E56ECE8ABC86D9C&source=youtube&sparams=algorithm%2Cburst%2Ccp%2Cfactor%2Cid%2Cip%2Cipbits%2Citag%2Csource%2Cupn%2Cexpire&sver=3&upn=NTtH00dAVB4
+fetch count: 	2
+last fetched: 	2013-03-22 11:43:29
+last modified: 	2013-03-22 11:30:06
+expires: 	2013-03-23 11:30:06
+Data size: 	0
+file on disk: 	C:\Users\simona.marcu\AppData\Local\Mozilla\Firefox\Profiles\iqntpeac.beta6\Cache\3\1C\ABE65d01
+Security: 	This document does not have any security info associated with it.
+Client: 	HTTP
+request-method: 	HEAD
+response-head: 	HTTP/1.1 200 OK Last-Modified: Thu, 20 Dec 2012 13:08:53 GMT Content-Type: video/x-flv Date: Fri, 22 Mar 2013 09:30:35 GMT Expires: Fri, 22 Mar 2013 09:30:35 GMT Cache-Control: max-age=86400 Accept-Ranges: bytes Content-Length: 9092634 X-Content-Type-Options: nosniff Server: gvs 1.0
+
+Note: 
+Reproducible also on the latest Aurora and on Firefox 20 beta 6:
+Mozilla/5.0 (Windows NT 6.1; rv:21.0) Gecko/20130320 Firefox/21.0 Build ID: 20130320042012
+Mozilla/5.0 (Windows NT 6.1; rv:20.0) Gecko/20100101 Firefox/20.0 Build ID: 20130320062118
+This is not a recent regression - the issue is also reproducible on Firefox 19.0.2.

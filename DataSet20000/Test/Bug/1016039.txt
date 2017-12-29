@@ -1,0 +1,46 @@
+"TypeError: candidate is undefined" when switching tab group (panorama) by keyboard shortcut
+The shortcut "Ctrl-Shift-`" switches the panorama. However, if the mouse cursor is on any tab, it fails to update visibility of tabs. As the result, broken group appears.
+
+Steps to reproduce:
+ 1. Open a new browser window.
+ 2. Open the browser console by Ctrl-Shift-J.
+ 3. Open three tabs: "about:blank?1", "about:blank?2", and "about:blank?3".
+ 4. Enter to the Panorama view by Ctrl-Shift-E.
+ 5. Create two groups:
+     A - "about:blank?1"
+     B - "about:blank?2" and "about:blank?3"
+ 6. Click "about:blank?1" thumbnail to enter the group A.
+ 7. Now there is only one visible tab.
+    Then, move your mouse cursor on the tab.
+ 8. Switch group by Ctrl-Shift-`.
+
+Actual result:
+  I'm in the group B, but there is only one visible tab "about:blank?2".
+  The secondary tab in the group "about:blank?3" is still hidden.
+  And, the error "TypeError: candidate is undefined tabbrowser.xml:4725"
+  appears in the browser console.
+
+Expected result:
+  I'm in the group B and there are two visible tabs "about:blank?2" and
+  "about:blank?3". There is no error in the browser console.
+
+Tested environment:
+ * Windows 7 Home Premium
+ * Firefox 29.0.1 and Nightly 32.0a1 (2014-05-26)
+ * With no addon
+
+The error is always reported from the section in tabbrowser.xml:
+
+>      <method name="_mouseenter">
+>        <body><![CDATA[
+>          if (this.closing)
+>            return;
+>
+>          let tabContainer = this.parentNode;
+>          let visibleTabs = tabContainer.tabbrowser.visibleTabs;
+>          let tabIndex = visibleTabs.indexOf(this);
+>          if (tabIndex == 0) {
+>            tabContainer._beforeHoveredTab = null;
+>          } else {
+>            let candidate = visibleTabs[tabIndex - 1];
+>            if (!candidate.selected) {  // <= this line.

@@ -1,0 +1,21 @@
+Contract-based component re-registration fails
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.10) Gecko/20071213 Fedora/2.0.0.10-3.fc8 Firefox/2.0.0.10 XPCOMViewer/1.0a1
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9b3pre) Gecko/2008012304 Minefield/3.0b3pre
+
+The Torbutton extension 'hooks' a couple of different component by implementing their interface under a new class id, but with the same contract-ID. However, for some components, this doe not seem to be possible under Firefox 3. In particular, the sessionstore;1 and sessionstartup;1 seem to be no longer augmentable in this way. In the case of the sessionstartup, the NSGetModule is called, but the new doRestore implementation doe not seem to get called (though registerFactoryLocation doe seem to succeed).
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Download https://tor-svn.freehaven.net/svn/torbutton/trunk/src/components/crash-observer.js
+2. Pepper it with dump statement
+3. Place it in the component directory of an arbitrary extension
+Actual Results:
+The NSGetModule is called, a is the registerSelf method, but the doRestore method doe not seem to get called.
+
+Expected Results:
+doRestore get called when the sesstionstartup;1 component is used, a happens in Firefox 2.
+
+If you download the torbutton extension to test this, it need a couple of hack to work with firefox 3: it need it rdf to be updated, and you need to remove the ignore-history.js file, which cause a firefox crash due to attempting to look up an obsolete class-id.
+
+The other component that exhibit this behavior is sessionstore;1. In Firefox 2, Torbutton wa simply able to copy nsSessionStore.js from the Firefox component directory, augment it, and have it get registered in place of the old one. This no longer seems possible. This may be an easier way to reproduce this bug without involving any Torbutton code.

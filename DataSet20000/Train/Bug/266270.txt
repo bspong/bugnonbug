@@ -1,0 +1,64 @@
+Firefox 1.0PR fails to build
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.3) Gecko/20040915
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.3) Gecko/20040915
+
+Firefox 1.0PR fails to build on suse 9.0 with 
+
+
+
+It fails while building a jar archive because somehow a contents.rdf is missing
+(see below).
+
+Reproducible: Always
+Steps to Reproduce:
+compile firefox 1.0PR
+
+We do essentially a (mozilla itself builds fine with this, but we check it)
+
+./configure --prefix=/usr/local/ --enable-strip --enable-mathml --disable-debug
+--disable-tests --enable-optimize --enable-crypto --disable-pedantic
+--with-system-zlib --with-system-jpeg
+
+make
+Actual Results:  
+Compile stop with the following error:
+
+.....
+
+/scr/furud/bogy2/firefox-1.0PR/ARENA/config/nsinstall -R -m 755 libnecko2.so
+../../dist/bin/components
+../../dist/bin/elf-dynstr-gc ../../dist/bin/components/libnecko2.so
+Couldn't GC any strings, exiting.
+gmake[3]: Leaving directory
+`/net/furud/fs1/scr/furud/bogy2/firefox-1.0PR/ARENA/netwerk/build2'
+gmake[3]: Entering directory
+`/net/furud/fs1/scr/furud/bogy2/firefox-1.0PR/ARENA/netwerk/resources'
++++ making chrome
+/net/furud/fs1/scr/furud/bogy2/firefox-1.0PR/ARENA/netwerk/resources  =>
+../../dist/bin/chrome/comm.jar
++++ updating chrome ../../dist/bin/chrome/installed-chrome.txt
++++	content,install,url,jar:resource:/chrome/comm.jar!/content/necko/
++++ overriding content/necko/contents.rdf 
+updating: content/necko/contents.rdf (stored 0%)
+error: file '../../toolkit/locales/en-US/chrome/necko/contents.rdf' doesn't
+exist at ../../config/make-jars.plq line 418.
++++ making chrome
+/net/furud/fs1/scr/furud/bogy2/firefox-1.0PR/ARENA/netwerk/resources  =>
+../../dist/bin/chrome/en-US.jar
+gmake[3]: *** [libs] Error 2
+gmake[3]: Leaving directory
+`/net/furud/fs1/scr/furud/bogy2/firefox-1.0PR/ARENA/netwerk/resources'
+gmake[2]: *** [libs] Error 2
+gmake[2]: Leaving directory
+`/net/furud/fs1/scr/furud/bogy2/firefox-1.0PR/ARENA/netwerk'
+gmake[1]: *** [tier_9] Error 2
+gmake[1]: Leaving directory `/net/furud/fs1/scr/furud/bogy2/firefox-1.0PR/ARENA'
+gmake: *** [default] Error 2
+
+
+Expected Results:  
+dist/bin/chrome/comm.jar contains content/necko/contents.rdf , but there is no
+../../toolkit/locales/en-US/chrome/necko/contents.rdf file as expected by
+make-jars.pl.
+
+How does that ever work for you?

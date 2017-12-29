@@ -1,0 +1,30 @@
+New history search feature does not retain percent encoding
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9b4) Gecko/2008030714 Firefox/3.0b4
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9b4) Gecko/2008030714 Firefox/3.0b4
+
+When returning to a visited URL using the new location bar auto-complete the resulting URL may be incorrect due to percent-encoding differences.  For example if the original URL contained a percent-encoded # (hash) character then the auto-completed URL will contain a literal # (hash) instead.  This is interpreted as a named anchor and so the full URL will not be requested correctly.
+
+Reproducible: Always
+
+Steps to Reproduce:
+Forgive the convoluted steps but they do demonstrate the bug quite well.
+
+1. Go to https://www.grc.com/ppp
+2. Select the second radio button under "Passcode character set" (to select larger character set).
+3. Submit form.
+4. Click on "Display next three cards" link at the bottom of the page.
+5. Note that the URL of the displayed page will be something like this:
+
+https://www.grc.com/ppp?1=fd2862b7b1ba92dce81eaca2d7cb6e28f1aadea6be6a83628f64803d428f2e01&2=4&4=!%22%23%24%25%26%27()*%2b%2c-.%2f23456789%3a%3b%3C%3d%3E%3f%40ABCDEFGHJKLMNOPRSTUVWXYZ[\]^_abcdefghijkmnopqrstuvwxyz{|}~&5=PPP%20Passcard%20Demo
+
+6. Type part of that URL into the location bar and select the item found in your history.
+7. Note that the page will be displayed incorrectly and the URL will look something like this:
+
+https://www.grc.com/ppp?1=fd2862b7b1ba92dce81eaca2d7cb6e28f1aadea6be6a83628f64803d428f2e01&2=4&4=!%22#$%&%27()*+,-./23456789:;%3C=%3E?@ABCDEFGHJKLMNOPRSTUVWXYZ[\]^_abcdefghijkmnopqrstuvwxyz{|}~&5=PPP%20Passcard%20Demo
+Actual Results:  
+The URL retrieved from the history by the new auto-complete mechanism was not percent-encoded in the same way as the original URL.
+
+Expected Results:  
+The URL should have been identical to that of the original page.  You will also notice that this page displayed differently to the original because of the literal # (hash) character in the URL.  This is must be interpreted as a named anchor and so the remainder of the URL is not part of the request.
+
+I have tested this on Firefox 2.0.0.7 (Linux i686) and the problem does not occur.  I presume this is because the bug has been introduced by the new location bar auto-complete mechanism.

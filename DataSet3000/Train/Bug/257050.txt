@@ -1,0 +1,57 @@
+firefox wrapper script doesn't set LD_LIBRARY_PATH soon enough for mozilla-xremote-client, patch included
+User-Agent:       Mozilla/5.0 (X11; U; SunOS sun4u; en-US; rv:1.7) Gecko/20040816 Firefox/0.9.3
+Build Identifier: Mozilla/5.0 (X11; U; SunOS sun4u; en-US; rv:1.7) Gecko/20040816 Firefox/0.9.3
+
+When running the firefox script (from the bin directory) to launch firefox, I
+get a "Killed" message when the script calls mozilla-xremote-client whether
+firefox is currently already running or not. It seems to be because the script
+doesn't set the LD_LIBRARY_PATH until after it does the check that calls
+mozilla-xremote-client and so that app fails because it can't find the firefox
+libs. The following patch shows what I changed in the script to set
+LD_LIBRARY_PATH prior to calling mozilla-xremote-client. This results in firefox
+launching without any seemingly extraneous (and somewhat disconcerting for end
+users) message. 
+
+diff -u firefox firefox.orig 
+--- firefox     Tue Aug 17 15:09:44 2004
++++ firefox.orig        Mon Aug 16 12:50:09 2004
+@@ -122,8 +122,6 @@
+ # The following is to check for a currently running instance.
+ # This is taken almost verbatim from the Mozilla RPM package's launch script.
+ MOZ_CLIENT_PROGRAM=$dist_bin/mozilla-xremote-client
+-LD_LIBRARY_PATH=$moz_libdir
+-export LD_LIBRARY_PATH
+ check_running() {
+     $MOZ_CLIENT_PROGRAM -a firefox 'ping()' 2>/dev/null >/dev/null
+     RETURN_VAL=$?
+
+Though the browser worked regardless, we were hesitant to release it to our user
+community with an odd "Killed" message that we'd just have to tell people to
+ignore. This seems like a cleaner solution. It probably wouldn't occur for
+people installing firefox in a default location, but I'm sure there are a lot of
+organizations installing it somewhere non-standard like we do for larger
+enviroments where it is mounted on several other systems. 
+
+KC Braunschweig
+
+Enterprise Infrastructure Group
+Information Services Division
+University of Southern California
+
+Reproducible: Always
+Steps to Reproduce:
+1.Run firefox from the command line: for us I use
+/usr/usc/firefox/0.9.3/bin/firefox &
+2.
+3.
+
+Actual Results:  
+A message "Killed" appears before the browser launches, regardless of whether an
+instance of firefox is already running or not. Otherwise the browser functions
+normally.
+
+Expected Results:  
+Not returned what seems like an error message when nothing seems to be wrong. 
+
+This is a fairly standard build of firefox 0.9.3 on solaris 8 with gcc 3.3.2
+using gtk2. It is installed in /usr/usc/firefox/0.9.3

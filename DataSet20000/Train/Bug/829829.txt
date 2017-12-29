@@ -1,0 +1,11 @@
+The stub installer fails to download the file when the server redirects to an HTTPS server
+Created attachment 701354
+Patch (v1)
+
+I was trying to demo the stub installer today and it failed miserably in that the installer did not manage to download anything, so I tried to understand why.  After a lengthy debugging session, this is what I found.
+
+So we fall into this loop in the inetbgdl NSIS plugin: <http://mxr.mozilla.org/mozilla-central/source/other-licenses/nsis/Contrib/InetBgDL/InetBgDL.cpp#386>.  On the first iteration we're on an HTTP connection and everything is fine.  Then the server sends a redirect to https://ftp.mozilla.org/... and we close the old connection and open a new connection here <http://mxr.mozilla.org/mozilla-central/source/other-licenses/nsis/Contrib/InetBgDL/InetBgDL.cpp#441> using port 443, which is fine.  then, we loop back and call HttpOpenRequest here <http://mxr.mozilla.org/mozilla-central/source/other-licenses/nsis/Contrib/InetBgDL/InetBgDL.cpp#393> *without* passing the INTERNET_FLAG_SECURE flag, which means that we will end up sending plaintext data to a connection on port 443 which expects SSL, so the server just closes the connection on us and we continue to try again indefinitely.  This matches what we observed in Wireshark as well.
+
+The fix is really simple, the patch that I attached does it.  Robert, I don't actually know how to build the stub installer so I did not test this, but could you please apply my patch, create a new inetbgdl.dll, rebuild the stub installer and see if this fixes the bug?
+
+Thanks!

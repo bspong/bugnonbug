@@ -1,0 +1,42 @@
+While DEP is turned on for all processes, Firefox seems to ignore this important technology
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.13) Gecko/20080311 Firefox/2.0.0.13
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.13) Gecko/20080311 Firefox/2.0.0.13
+
+Key configuration element (hardware & software):
+Intel Core2 Duo dual core CPU
+2GB RAM, integrated Intel GMA graphic card
+Windows XP SP2 with latest patch
+
+Symptom:
+DEP (Data Execution Prevention) is Microsoft's implementation of the NX/NXE (Non-Execute / No Execution Enable) bit x86 feature in Windows OSes. This technology appeared couple of year ago, and make it possible to mark memory non executable on per page basis. (Before NXE bit, only memory segment could be marked non-executable clearly.). With the help of the NXE hardware protection OSes now able to implement certain memory and stack protection technique easily. Namely, an attacker cannot execute an exploit code which is injected to a data or non-executable area.
+In Windows OS this is called DEP. This is an extremly important technology, because it allows the possibility to block attack based on unknown or unfixed security holes.
+You can adjust DEP behavior in Windows in the System Properties dialog: go to advanced tab, click on Performance setting and click Data Execution Prevention tab page in the upcoming Performance Options dialog.
+Unfortunately despite of the secure-by-default paradigm, Windows applies the upper (Turn on DEP for essential Windows program and service only) options, which leaf most of the system exposed (for example Internet Explorer, svchost services, etc.) to attack without the DEP protection barrier. So I applied the other option, which is: Turn on DEP for all program and services. This movement turned on the DEP protection for almost everything. But here is the cause of my bug report: except Firefox. Everything is protected but Firefox (see homepage link picture).
+(Or Process Explorer might display the DEP status inaccurately)
+
+Currently the easiest way to view the DEP status of the process in the system is using the Process Explorer tool (see homepage link picture). Process Explorer is an essential tool written by Mark Russinovich of Sysinternals, which is now the part of Microsoft, the program is free and downloadable from Microsoft website.
+After starting the tool, you should right click on the list header and click Select Columns context menu option. In the upcoming dialog select Process Image tab and turn on "DEP Status" checkbox.
+
+DEP only cause problem when a program do such a nasty thing like placing machine instruction into a data/stack area and later trying to execute them. Usually interpreted language VMs would do such a thing (Java, C#) or trampoline code (note: SUN Java VM can run with DEP). We can state that this kind of behavior is dangerous, property of security hole exploit code rather than well formed codes. These are nasty thing and should be eliminated. Note also, that Internet Explorer can run with DEP (or at least it seems that it run with DEP).
+
+Reproducible: Always
+
+Steps to Reproduce:
+(See the homepage picture)
+1. If Process Explorer doe not present on your system (for a developer it is a must) please install it. Downloadable from Microsoft.
+2. After starting the tool, you should right click on the list header and click Select Columns context menu option. In the upcoming dialog select Process Image tab and turn on "DEP Status" checkbox. See how a lot of component on your system lacks/ignores DEP protection
+3. Adjust DEP behavior in Windows in the System Properties dialog: go to advanced tab, click on Performance setting and click Data Execution Prevention tab page in the upcoming Performance Options dialog. Click the: Turn on DEP for all program and service checkbox. Close the dialog with OK
+4. Windows need reboot, restart the system.
+5. Check DEP status again in Process Explorer, Firefox seems to be a black horse.
+
+Actual Results:
+Process Explorer show DEP turned off for Firefox, so the web browser is exposed to attack against unknown / unfixed bug without the NXE bit / DEP protection barrier.
+
+Expected Results:
+a.) If it's intentional and because of nasty codes, then every nasty thing / code / module should be replaced with DEP compliant code.
+b.) If it's not intentional this case should be investigated.
+
+
+Sorry for Critical Severity, but this is really a serious security issue.
+
+I'm a C/C++/Java software developer, so I might be able to help to investigate the problem.

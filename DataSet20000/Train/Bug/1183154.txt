@@ -1,0 +1,31 @@
+Slow page loading with Electrolysis on.  (IPDL::PVsync::RecvNotify > nsRefreshDriver::Tick)?
+User Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:41.0) Gecko/20100101 Firefox/41.0
+Build ID: 20150713004006
+
+Steps to reproduce:
+
+Page load comparison between Electrolysis on and off, using the dev tools performance analysis pane.
+
+Test web site: http://codeblog.jonskeet.uk/
+
+
+
+
+Actual results:
+
+Screenshot with Electrolysis ON: http://imgur.com/7K3BtV2
+Screenshot with Electrolysis OFF: http://imgur.com/beV5wAX
+
+You can see the responsiveness up at the top, with the frames per second chart.  When it rises back from near-nothing back up to ~60 fps, then the page is working and usable again.  Duration of the 0 fps gap is about 1.5 seconds with electrolysis off, and about 4 seconds with electrolysis on.
+
+The notable transition is the second paint event.  With electrolysis off, it almost immediately follows the first paint event, and fps goes back up shortly after.  With electrolysis on, there's that massive gap between the paint events, though, again, the page is available shortly after the second paint event.
+
+Checking out the call tree and flame chart views, the period in question seems to be in calls to: IPDL::PVsync::RecvNotify > nsRefreshDriver::Tick
+
+
+I've done tests with an empty profile as well, and had similar results, though there tends to be more, smaller gaps rather than one large gap.
+
+
+Expected results:
+
+Expected that there should not be excessive delays during page load.

@@ -1,0 +1,26 @@
+Tabindex second+ cycle failure as application/xhtml+xml with relative body tabindex value
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9a6pre) Gecko/20070605 Minefield/3.0a6pre
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9a6pre) Gecko/20070605 Minefield/3.0a6pre
+
+If the page is served as application/xhtml+xml this bug will break keyboard navigation. I use an iframe like layout with an overflow div position by top, right, bottom, left positioning (no set height/width) so there is no content that will ever create any scrollbar on the body element directly. I noticed that the body was receiving focus (body:focus {background: #f0f;}.
+
+If you hold the tab key down for ten seconds it will fully cycle through all the elements with tabindex and then proceed to the browser's GUI. It will then eventually return back to the rendering error (a full cycle). However it fails to follow the tabindex on the *second cycle*.
+
+I had become aware of this bug earlier on without fully realizing it and had created a tabindex patch that I apply to the body element which serves the tabindex attribute and relative value to the body to all useragents except for validators. Returning back to the issue I did further investigation and determined this occurs when the page is served as application/xhtml+xml however it does not occur while the page is served as text/html.
+
+Additionally there is a weird quirk to this bug. The body's tabindex value will determine what relative starting value of tabindex Gecko will choose to start from: if the value is greater then 1 all elements with tabindex values of 1 will not be keyboard accessible after the first tab cycle! This forces JavaScript to blur the body's focus and automatically give it elsewhere (as there is no point on my styling layout to give the body focus *ever*) and reduce the numbering of times the visitor has to press the tab key before they can see visual queues of what the keyboard is currently in control of.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Create a document served as application/xhtml+xml.
+2. Test with and without tabindex directly on the body element using -1, 0, 1, 2, and 3 as values and be sure to make at least two full tab cycles watching what elements gain focus and what elements do not.
+Actual Results:  
+Gecko will only give focus to elements on the second cycle of equal or greater tabindex attribute value on the second and all following tab cycles leaving elements with a tabindex value lower then the body inaccessible after the first tab cycle if the page is served as application/xhtml+xml.
+
+Expected Results:  
+At the absolute minimum the body element should be given focus only after all other elements have gained focus *if it does not contain a tabindex attribute and value* and it should not deny elements with the tabindex attribute focus after the first cycle.
+
+However it should never gain focus unless it contains a tabindex value. If it is not a valid attribute in XHTML then it is yet another W3C self-induced error.
+
+The W3C has failed to make tabindex a valid attribute on elements that may validly make use of keyboard events. So you can use the onkeypress event on a divisible element but you can not gain keyboard access to it! The W3C's final standards *do* contain critical errors.

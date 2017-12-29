@@ -1,0 +1,47 @@
+Unable to customize toolbar when running through lbxproxy
+User-Agent:       Mozilla/5.0 (X11; U; Linux sparc64; en-US; rv:1.7.10) Gecko/20050907 Firefox/1.0.6
+Build Identifier: Mozilla/5.0 (X11; U; Linux sparc64; en-US; rv:1.7.10) Gecko/20050907 Firefox/1.0.6
+
+To speed up X apps, I ran lbxproxy and sent everything to that.  However, when I
+tried to drag widgets(?) out of the toolbar, Firefox refused to relinquish the
+mouse pointer and I got this on the xterm running lbxproxy + Firefox:
+
+ Xlib: sequence lost (0x10000 > 0x3f93) in reply type 0x0!
+ Xlib: sequence lost (0x10000 > 0x3f93) in reply type 0x10!
+
+Had to pkill it from another terminal after logging into the box.
+
+Both systems are Debian/stable, lbxproxy is out of the Debian apt repository. 
+Firefox was built from the 1.0.6 tarball with the following ~/.mozconfig:
+MOZ_PHOENIX=1
+export MOZ_PHOENIX
+. $topsrcdir/browser/config/mozconfig
+ac_add_options --disable-debug
+ac_add_options --enable-optimize=-O2
+ac_add_options --disable-freetype2
+ac_add_options --enable-view-source
+ac_add_options --enable-default-toolkit=gtk2
+ac_add_options --enable-crypto
+ac_add_options --disable-oji
+ac_add_options --disable-strip
+ac_add_options --disable-shared
+ac_add_options --enable-static
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. ssh user@somehost
+2. lbxproxy &
+3. DISPLAY=:63 export DISPLAY
+4. firefox &
+5. View->Toolbars->Customize...
+6. Drag something out of the toolbar into the window that pops up (what's it
+called, anyways?)
+7. Observe errors on terminal.
+
+Actual Results:  
+Mouse pointer not relinquished, Xlib errs reported.
+
+Expected Results:  
+Get rid of the widgets dragged out.

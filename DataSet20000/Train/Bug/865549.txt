@@ -1,0 +1,11 @@
+Browser Console landing added 10 minutes to Windows debug browser-chrome tests
+https://tbpl.mozilla.org/?tree=Fx-Team&tochange=26fb3bd67f5f&fromchange=07aae4e9a66a is the Browser Console landing and the push before it.
+
+If you look at debug browser-chrome run times, they jumped 5-10 minutes, which is most severe with WinXP and Win7 debug, because buildbot has a 2 hour time limit per buildstep, and thanks to our gradual climb as shown in http://people.mozilla.org/~catlee/sattap/f10048de.png we were already getting close to being up against that. Now we are up against it, losing around one run a day to a timeout until the next time someone adds a bunch of new tests, or makes one work harder, or makes us slower, when we'll suddenly start timing out in nearly every one.
+
+Ted suggested that "that patch mentions using the debugger api, wonder if it somehow enables the debugger api and forgets to disable it" which based on too small a sample size does seem likely to be the case. Comparing the time from the start of the test run up to the first devtools/ test, then the time for all the devtools/ tests, then the time for the tests which follow devtools/, we seem to be at around the same time, a couple minutes longer, around eight minutes longer. Making the tests *after* your tests run more slowly than they did before certainly does sound like leaving debugging turned on.
+
+If so (or, really, even if not):
+
+<jimb> It might be interesting to have the test harness assert that no compartments are in debug mode by the time we begin to shut down.
+<jimb> That way we could catch "leaked" Debuggers.

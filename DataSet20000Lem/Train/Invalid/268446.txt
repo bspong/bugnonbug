@@ -1,0 +1,102 @@
+catching error 404 (web.xml) cause several!!! 404 error
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7) Gecko/20040706 Firefox/0.9.1
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7) Gecko/20040706 Firefox/0.10.0
+
+I use Tomcat 5.5.4 on Fedora Core 2 a webserver with Struts.
+
+Precondition:
+index.html -> <% response.sendRedirect("/webX/operate.do"); %>
+where operate.do is a Dispatcher class in Java, logging in the default-User
+this dipatcher redirects to handler.jsp
+handler.jsp -> <body onload="top.location.href='/default.jsp'">
+default.jsp -> is the frameset one empty frame, one containing operate.jsp
+operate.jsp is the main page, building up whole page.
+
+There are several trace build in so, this happens eg with IE (sry for IE, but
+for testing purpose :))
+[SEVERE ][11/08/04 19:49:50][fadev.comix.core.util.trace.Trace
+][getAppLogger
+][********************************************************************]
+[SEVERE ][11/08/04 19:49:50][fadev.comix.core.util.trace.Trace
+][getAppLogger ]Trace restarted on [11/08/04 19:49:50]
+[INFO ][11/08/04 19:49:50][fadev.webX.WebXDispatcher
+][perform ]performing: null
+[SEVERE ][11/08/04 19:49:50][fadev.webX.WebXDispatcher
+][perform ]Not logged in -> log in a Guest
+[FINE ][11/08/04 19:49:51][fadev.webX.WebXDispatcher
+][perform ]Logged in a Guest
+[FINEST ][11/08/04 19:49:51][fadev.webX.WebXDispatcher
+][perform ]mapping.findForward - operate
+[FINEST ][11/08/04 19:49:51][org.apache.jsp.handler_jsp
+][_jspService ]redirecting ...
+[INFO ][11/08/04 19:49:52][org.apache.jsp.operate_jsp
+][_jspService ]operate...
+[FINEST ][11/08/04 19:49:52][org.apache.jsp.operate_jsp
+][_jspService ]Locale: English
+
+
+This is the way it should be, the same result I get with FireFox 0.9.1 on FC2.
+With FireFox 1.0PR on Windows XP following happens:
+[SEVERE ][11/08/04 20:44:48][fadev.comix.core.util.trace.Trace
+][getAppLogger
+][********************************************************************]
+[SEVERE ][11/08/04 20:44:48][fadev.comix.core.util.trace.Trace
+][getAppLogger ]Trace restarted on [11/08/04 20:44:48]
+[INFO ][11/08/04 20:44:48][fadev.webX.WebXDispatcher
+][perform ]performing: null
+[SEVERE ][11/08/04 20:44:48][fadev.webX.WebXDispatcher
+][perform ]Not logged in -> log in a Guest
+[FINE ][11/08/04 20:44:48][fadev.webX.WebXDispatcher
+][perform ]Logged in a Guest
+[FINEST ][11/08/04 20:44:48][fadev.webX.WebXDispatcher
+][perform ]mapping.findForward - operate
+[FINEST ][11/08/04 20:44:48][org.apache.jsp.handler_jsp
+][_jspService ]redirecting ...
+[INFO ][11/08/04 20:44:49][fadev.webX.WebXDispatcher
+][perform ]performing: error=404
+[SEVERE ][11/08/04 20:44:49][fadev.webX.WebXDispatcher
+][perform ]Set error: 404
+[FINEST ][11/08/04 20:44:49][fadev.webX.WebXDispatcher
+][perform ]mapping.findForward - operate
+[FINEST ][11/08/04 20:44:49][org.apache.jsp.handler_jsp
+][_jspService ]redirecting ...
+[INFO ][11/08/04 20:44:49][org.apache.jsp.operate_jsp
+][_jspService ]operate...
+[FINEST ][11/08/04 20:44:49][org.apache.jsp.operate_jsp
+][_jspService ]Locale: English
+[SEVERE ][11/08/04 20:44:49][org.apache.jsp.operate_jsp
+][_jspService ]errorCode: 404
+[INFO ][11/08/04 20:44:49][fadev.webX.WebXDispatcher
+][perform ]performing: error=404
+[SEVERE ][11/08/04 20:44:49][fadev.webX.WebXDispatcher
+][perform ]Set error: 404
+[FINEST ][11/08/04 20:44:49][fadev.webX.WebXDispatcher
+][perform ]mapping.findForward - operate
+[FINEST ][11/08/04 20:44:49][org.apache.jsp.handler_jsp
+][_jspService ]redirecting ...
+[INFO ][11/08/04 20:44:49][fadev.webX.WebXDispatcher
+][perform ]performing: error=404
+[SEVERE ][11/08/04 20:44:49][fadev.webX.WebXDispatcher
+][perform ]Set error: 404
+[FINEST ][11/08/04 20:44:49][fadev.webX.WebXDispatcher
+][perform ]mapping.findForward - operate
+[FINEST ][11/08/04 20:44:49][org.apache.jsp.handler_jsp
+][_jspService ]redirecting ...
+
+Where the number of 404 can vary from 1 up to 4.
+Changing web.xml and do not catch error 404 solves this behavior: FireFox 1.0PR
+on Windows XP work a it should.
+
+Reproducible: Always
+Steps to Reproduce:
+Build page like described in the detail or feel free to contact me
+
+IRC quakenet.org #:[FA]:
+ICQ 62862179
+Actual Results:
+The result differs (very randomly) often I get 404 on the page often it appears
+a nothing happened (whether trace always catch 404 errors)
+
+Expected Results:
+do not throw 404 error without any suitable reason just when error 404 is
+forwarded in web.xml

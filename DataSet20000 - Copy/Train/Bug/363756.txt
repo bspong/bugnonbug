@@ -1,0 +1,115 @@
+content cut off when using height=100% attribute. Also invisible content (still takes up space)
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.0.8) Gecko/20061025 Firefox/1.5.0.8
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.0.8) Gecko/20061025 Firefox/1.5.0.8
+
+--Moz & IE Browser Bug: Browser Height Test : Screen Resolution set to 1280 x 1024
+--Justin West
+--12/13/2006
+			
+This Mozilla bug appears to be an issue with the way the browser interprets height="100%".
+I tested this in Firefox 1.5 and 2.0 on PC, screen resolution set to 1280 x 1024.
+I was also able to replicate this issue in IE 6.0 and IE 7
+IF you cannot see the content or the border(s) being cut off at the bottom of this test page, try reducing the height of the spacer image until you can see content being cut off.
+Additionally, you may need to reduce the font-size in the style above or remove some of the my text content.
+
+The problem occurs when using content within a table that has its height set to 100%, when at least two elements exist within the table and one of them is also a table with height set to 100%.
+
+This example demonstrates the bug when the screen resolution is set to 1280 x 1024.
+
+			
+It seems that the overall length of the content has to extend past the viewable browser area(scrollbars) to replicate this bug.
+This example replicates the bug consistently.  
+As the html content gets more complex, with css styles getting added, 
+and DOM-injecting javscripts being referenced, the bug becomes intermittent...to the point where refreshing or even hiding/showing the status bar will cause the bug to go away or come back.  Larger portions of content can get cut off as well.
+
+Replacing the tables with divs using css does not appear to fix the problem either. 
+This is a problem with height="100%" (height:100%;)
+
+A workaround for Mozilla Browsers:
+Wrapping all content with a single element (a div, or span) in cases where there are more than one element within a table that has a height of 100% allows the browser to calculate height correctly.
+			
+Uncomment the span tags I've added, save and refresh your browser (You may need to clear your cache.)
+
+Still working on an IE work around that will also work with Mozilla...
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.Create a table that has its height set to 100%.
+2.Create two or more elements within the first table.  One of them must be a table with height also set to 100%
+3. Make the overall content extend far enough down the page that the page needs to scroll.
+
+Actual Results:  
+Two things.
+
+1. If the content within the first table consists of two elements: a div followed by a table, a portion of the content within the inner table gets cut off.
+
+2. If you add a third element after the inner table: another div, the above content will render correctly, but this third element will be invisible, yet still takes up space on the page where it *should be.
+
+Expected Results:  
+In applying these steps you will see that portions of content appear to be cut off prematurely.  Also some content is not visible yet takes up space on the page.
+
+
+
+
+I expect that using height=100% whether in tables or applied to divs through stylesheets should cause the element to expand to the greatest possible height within it's parent without causing content to be cut off.
+Added example source below(a file upload feature would make this easier):
+
+<table height="100%" cellpadding="0" cellspacing="0">
+			<tr>
+				<td width="400" style="border: solid 1px #0000FF;">
+					
+					<!--Uncomment span tags as a workaround for Mozilla browsers-->
+					<!--<span>-->
+					
+					<div>This is element 1 in table 1 with height at 100%</div>
+					<table height="100%" cellpadding="0" cellspacing="0">
+						<tr>
+							<td width="350" style="border: solid 1px #FF0000;">
+							
+									<div>Content in table 2 here and below</div>
+									<br>
+									<div>This Mozilla bug appears to be an issue with the way the browser interprets height="100%".</div>
+									<div>Tested in Firefox 1.5 and 2.0 on PC, screen resolution set to 1280 x 1024.</div>
+									<div>I was also able to replicate this issue in IE 6.0 and IE 7</div>
+									<div>IF you cannot see the content or the border(s) being cut off at the bottom of this test page, try reducing the height of the spacer image until you can see content being cut off.</div>
+									<div>Additionally, you may need to reduce the font-size in the style above or remove some of the my text content.</div>
+									<br>
+									<div>The problem occurs when using content within a table that has its height set to 100%, when at least two elements exist within the table and one of them is also a table with height set to 100%.</div>
+									<br>
+									<div>This example demonstrates the bug when the screen resolution is set to 1280 x 1024.</div>
+									<br>
+									<div>Using an image as a spacer here to knock down the overall size of the content past the viewable area.</div>
+									
+									<!--content spacer: you may need to adjust this height depending on your screen resolution-->
+									<div><img src="just_using_as_a_spacer.jpg" width="1" height="200" border="0"></div>
+									<!-------------------------------------------------------------------------------->
+									
+									<br>
+									<div>It seems that the overall length of the content has to extend past the viewable browser area(scrollbars) to replicate this bug.</div>
+									<br>															
+									<div>This example replicates the bug consistently.  As the html content gets more complex, with css styles getting added, and DOM-injecting javscripts being referenced, the bug becomes intermittent...to the point where refreshing or even hiding/showing the status bar will cause the bug to go away or come back.</div>
+									<br>
+									<div>Replacing the tables with divs using css does not appear to fix the problem either. This is a problem with height="100%" (height:100%;)</div>
+									<br>
+									<div>A workaround for Mozilla Browsers:</div>
+									<div>Wrapping all content with a single element (a div, or span) in cases where there are more than one element within a table that has a height of 100% will allow the browser to calculate height correctly.</div>
+									<div>The example work around for this bug can be found in the viewsource of this page</div>
+									<br>
+									<div>Still working on an IE fix that will also work with Mozilla...</div>
+									<div style="width:175px; border:solid 4px rgb(0,0,255);">End of Content in table 2.  This will get cut off if table 2 is the last elment within table 1</div>
+									
+							</td>
+						</tr>
+					</table>	
+					<!--When content is inserted here without my work around in place, the table above will render correctly but this content below will not be visible (It will take up space though.-->
+					<!--
+						<div>This is element 3 in table 1 with height at 100%</div>	
+						<div>This is element 4 in table 1 with height at 100%</div>
+					-->
+					
+					<!--</span>-->
+				</td>
+			</tr>
+		</table>

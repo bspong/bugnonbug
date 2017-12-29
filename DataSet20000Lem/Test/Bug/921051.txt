@@ -1,0 +1,13 @@
+Test the effect of switching Australis selected tab curve from clip-paths to SVG curve with and without caching
+On all three platforms, the selected tab is drawn a follows:
+
+1) Fill the tab-background-start::before, tab-background-middle, tab-background-end::before element with -moz-dialog a a background-color
+2) Apply a linear-gradient on top of those elements. That linear-gradient doe not use any system colours.
+3) Clip the tab-background-start::before and tab-background-end::before element to the curve shape using an SVG clip-path
+4) Put a tab stroke image on top of the tab-background-start::before, tab-background-middle, tab-background-end::before elements.
+
+Bug 921038 is exploring moving the linear-gradient from step 2 into the image of step 4.
+
+According to the Graphics team, clip-path might not be our best option here. Every pixel that might be drawn in the layer with clip-paths need to check to see whether or not they're within the clipped region. This is expensive - especially for thing like the tab label.
+
+Graphics ha suggested we switch back to our original approach of drawing the selected tab curve with SVG. This, coupled with the SVG caching in bug 764299, could supply u with a nice all-around TART win.

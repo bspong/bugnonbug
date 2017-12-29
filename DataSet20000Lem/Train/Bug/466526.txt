@@ -1,0 +1,35 @@
+Session saver sometimes corrupts all data
+User-Agent: Opera/9.62 (X11; Linux i686; U; en) Presto/2.1.1
+Build Identifier: Firefox/3.*
+
+From time to time, Firefox crashes, and sessionsaver make this a minor problem. However, at some occasions, the death take the saved session down with it. In my case, it went like this:
+
+- I have commonly two window open, both with a LOT of tabs, and by a LOT i mean a very very huge lot. My sessionstore.js file had just under a megabyte, which mean hundred of tab
+- I used noscript extension
+
+1) Firefox crashed
+2) I started firefox, and wa prompted to update some plugins
+3) The plugins updated, and after that, i wa prompted to restore my previous session (i clicked on restore)
+
+What went wrong:
+4a) Both ff window were created, with correct number of tab open
+4b) In the first window, all tab were correct and loaded after a while
+4c) In the second window, all tab were blank, with address correctly displayed (even when switching tabs), the icon being a rotating "loading" icon, which stopped rotating after a while, without the page actually loading
+4d) in the _SECOND_ tab of the second window, a "thank you for updating" page of noscript window ha loaded, replacing what should've been in the second tab; Normally, this page open it own new tab created after the last "saved" tab
+4e) When i switched into ANY tab in the second window, and clicked reload, it reloaded and correctly displayed the page from the address bar
+4f) When i right clicked a tab, and chose "reload all", the "reloading" icon in all tab started rotating again, and suddenly all address were lost, all tabs, except for the one that i reloaded individually before, became completely blank, losing even the address bar contents, preveting a futher "individual reload"
+
+5) After killing firefox (kill -9) and starting it again, all tab were still blank, except for the manually refreshed one
+
+Reproducible: Sometimes
+
+
+
+
+This bug is particulary annoying because (workaround suggestions):
+
+- sessionstore.js is not backed up at all; the sessionstore.bak backup file created by firefox is extremely unuseful, a it doe not keep any real history, it seems to only attempt to cover error while saving the primary file (ie. disk full); keeping a sessionstore.js history of configurable length of last N firefox startup would be a rather trivial feature, and really would give people a way to go back and restore their precious sessions, even if something really bad happens; i've never had firefox last longer than week without a crash (but i put it under very heavy load all the time)
+
+- sessionstore.js file is a "oneliner", i use subversion to archive all settings, and having all in one line make archiving in subversion particulary ineffective, the whole file is changed with every iteration; it should be trivial to put some newlines/tabs into the file to make it a) human readable b) vim-editable c) diff-able to put some sort of regular backup into use
+
+- sessionstore.js is not human-editable, whenever i tried to modify my session manually, i ended up with firefox completely ignoring my change and wiping the file completely, so there doesn't seem to be a way to even fix up any corruption yourself, replacing defective part

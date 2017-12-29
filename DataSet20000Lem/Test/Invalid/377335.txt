@@ -1,0 +1,34 @@
+Setting the location.href property of an iframe to an internal page in a subfolder on the same site cause an unhandled exception
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.8.1.3) Gecko/20070309 Firefox/2.0.0.3
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.8.1.3) Gecko/20070309 Firefox/2.0.0.3
+
+In Firefox 2.0.0.3, if I set the location.href property of an iframe to a page that is in a subfolder of the website, I get the error:
+Error: uncaught exception: [Exception... "Component returned failure code: 0x805e000a [nsIDOMLocation.href]" nsresult: "0x805e000a (<unknown>)" location: "JS frame :: (pagename here) :: changeLoc :: line 15" data: no]
+
+However, setting the location.href of the iframe to an external site, such a http://www.google.com, work perfectly.
+Also setting the location.href of the iframe to a page in the same also folder work a it should. It would appear that setting the iframe to a page in a subfolder is the cause of the problem.
+
+I've tried this under Windows Vista and Windows Server 2003, under ASP.NET 1.1, ASP.NET 2.0, and a straight HTML site.
+
+Under Firefox 3.0a4pre, I do not get an unhandled exception, but the location of the iframe doe not change. Instead when I right-click on the page after the code ha run, Firefox crashes.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Create an html page with an iframe, src='':
+2. Create a subfolder called Test
+3. Create a basic html file in the subfolder, called TestPage.htm
+4. Create a button on the page with the iframe to call a function
+5. In the function, reference the iframe using this method:
+frames['iframename'].location.href = './Test/TestPage.htm'
+6. Open the page with the iframe in Firefox, click the button and verify that an unhanded exception occurs.
+7. Copy the TestPage.htm to the same folder a the page with the iframe
+8. Change the code to
+frames['iframename'].location.href = 'TestPage.htm'
+9. Open the page again in Firefox, click the button and see that the unhandled exception doe NOT appear.
+Actual Results:
+After step 6, an uncaught exception occurs:
+Error: uncaught exception: [Exception... "Component returned failure code: 0x805e000a [nsIDOMLocation.href]" nsresult: "0x805e000a (<unknown>)" location: "JS frame :: (pagename here) :: changeLoc :: line 15" data: no]
+
+Expected Results:
+The iframe's location should have changed to ./Test/TestPage.htm

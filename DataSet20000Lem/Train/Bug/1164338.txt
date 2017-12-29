@@ -1,0 +1,9 @@
+[marker] Styles marker should be on DoProcessRestyles, rather than Flush_Style
+In this attached image, there are three big area going, for around 400ms each. The first chunk (PresShell::Flush (Flush_Style)->RestyleTracker::ProcessRestyles) we get a marker ("Styles"), but the second two chunk we do not.
+
+Reading all sort of information about our layout internals, and digging through code completely new to me (so please tear apart my assumptions):
+
+Why do we use the same area for "Styles" marker a the Gecko Profiler in PresShell::Flush for Flush_Style, but we mark "Reflow" in PresShell::DoReflow, rather than PresShell::Flush (Flush_Layout)[0]? The two giant gap in the timeline are half Flush_Layout and half Flush_InterruptibleLayout (is this sync v async layouts?) My understanding from reading around is Flush_Layout mean it ha to layout now, whereas the interruptible version can do it later if it take too long[1]? Is DoReflow actually where the reflow is occuring? In which case, what are Flush_[Interruptible]Layout? Because those need marked somehow!
+
+[0] http://mxr.mozilla.org/mozilla-central/source/layout/base/nsRefreshDriver.cpp#1712
+[1] https://wiki.mozilla.org/Gecko:Overview#Dynamic_change_handling_along_the_rendering_pipeline

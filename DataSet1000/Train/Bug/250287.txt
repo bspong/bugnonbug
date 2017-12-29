@@ -1,0 +1,44 @@
+Unquoted path to Firefox executable written to HKCR\FirefoxHTML\shell.
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7) Gecko/20040704 Firefox/0.9.0+
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7) Gecko/20040704 Firefox/0.9.0+
+
+When Firefox writes the default value to the registry key
+[HKEY_CLASSES_ROOT\FirefoxHTML\shell\open\command], it does so without quotes.
+On some systems it uses a short path, but when there is no short path the full
+path will be used unquoted, even though spaces can appear. This means, for the
+default installation path, that something called C:\Program.exe or C:\Program
+Files\Mozilla.bat, etc., would be executed before C:\Program Files\Mozilla
+Firefox\firefox.exe. This has minor security implications (hence the restriction
+on regular users writing to these locations under modern versions of Windows).
+
+Regardless of the security implications, there are bugs here. I'm bothered that
+the short path is written to the registry by default. It also pops up in error
+messages (like those due to the annoying default-registration bugs). The
+registration as default browser doesn't seem to report errors, by the way, even
+when ran without admin permissions (where it didn't work properly). Probably,
+the whole of the registration code should be reviewed by a professional Windows
+developer.
+
+Reproducible: Always
+Steps to Reproduce:
+1. Log on as a user that's a member of 'Administrators' or 'Power Users' or has
+appropriate permissions.
+2. Delete the HKCR\FirefoxHTML registry key, if it exists (make a backup, yadda
+yadda - other apps get here, so maybe restore it later).
+3. Set IE as default browser to subvert the Fx check, then set Fx as the default
+browser.
+Actual Results:  
+Unquoted filenames are written to the values under the key mentioned above, such
+as the icon path and the shell\open\command key (and print, etc?).
+
+Expected Results:  
+Nothing left to chance.
+
+As mentioned before, the short file name seems to be written to the registry on
+some systems. I haven't investigated this (it could be caused by something the
+installer does, or something the OS does, etc.), but that doesn't seem right.
+
+Short filenames can be disabled under XP by running:
+  fsutil behavior set disable8dot3 1
+or by setting the appropriate reg key (see the KB). The regkey exists on Win2k
+at least. Read about this before changing anything.

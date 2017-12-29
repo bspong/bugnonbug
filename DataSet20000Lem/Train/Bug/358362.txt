@@ -1,0 +1,42 @@
+tab owner not always reset after tab moved
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9a1) Gecko/20061026 Minefield/3.0a1
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9a1) Gecko/20061026 Minefield/3.0a1
+
+it look to me that there is a bug in addTab methot
+
+var self = this;
+function attrChanged(event) {
+if (event.attrName == "selectedIndex" &&
+event.prevValue != event.newValue)
+self.resetOwner(parseInt(event.prevValue));
+}
+if (!this.mTabChangedListenerAdded) {
+this.mTabBox.addEventListener("DOMAttrModified", attrChanged, false);
+this.mTabChangedListenerAdded = true;
+}
+
+a i understand it event.prevValue and event.newValue aren't prev and new tab index
+thay are prev and new panel index in mPanelContainer.
+
+after tab are moved this index aren't the same so we end up reset owner for the wrong tab
+this patch fix the bug
+
+<method name="resetOwner">
+<parameter name="oldIndex"/>
+<body>
+<![CDATA[
+// Reset the owner property, since we're leaving the modally opened
+// tab for another.
+if (oldIndex < this.mTabContainer.childNodes.length) {
++ var oldBrowser = this.mPanelContainer.childNodes[oldIndex].firstChild;
++ oldIndex = this.getBrowserIndexForDocument(oldBrowser.contentDocument);
++ if (oldIndex < 0)
++ return;
+var tab = this.mTabContainer.childNodes[oldIndex];
+tab.owner = null;
+}
+]]>
+</body>
+</method>
+
+Reproducible: Always

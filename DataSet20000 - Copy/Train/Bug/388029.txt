@@ -1,0 +1,19 @@
+Firefox tries to load favicon from non-http URIs
+User-Agent:       Mozilla/5.0 (Macintosh; U; Intel Mac OS X; en-US; rv:1.8.1.4) Gecko/20070515 Firefox/2.0.0.4
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.2) Gecko/20070219 Firefox/2.0.0.2
+
+When clicking on a link with a target URI on the format foo:bar:baz, after calling the handler that's registered for the foo URI schema, Firefox additionally, and incorrectly, tries to request the URI foo:favicon.ico from the foo handler, which results in an error in the handling application, since that's not a correct URI in the foo schema.
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+1. Create an application that registers as handler for the foo URI schema.
+2. Click in a link to a foo URI in Firefox.
+3. Accept calling the foo handler in the warning dialog box.
+Actual Results:  
+The foo handler receives two calls from Firefox: one for the correct URI and one for foo:favicon.ico.
+
+Expected Results:  
+Only the first call, to the correct URI, should be made. Firefox should not try to request favicons for URI schemas that it doesn't know of.
+
+This only happens the first time a URI in the given schema is followed in Firefox. It seems that Firefox caches the fact that no favicons are available for the given URI schema.

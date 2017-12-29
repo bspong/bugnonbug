@@ -1,0 +1,72 @@
+Crash after loading midimap.dll - FF 6.0.2 over 140 Tabs open, can open using Aurora or Nightly
+Created attachment 559825
+WinDbg Log for bp-e01daa16-f420-49c8-80bf-6d9922110911 .
+
+When I use TM+ with over 140 Tabs Firefox 6.0.2 crashes consistently. If I reload the same Session using Aurora or Nightly the Session can be reloaded easily.
+
+I have: about:crashes bp-e01daa16-f420-49c8-80bf-6d9922110911 and am attaching a WinDbg log.
+
+
+See also prior crash (no Log) for same reason: bp-8d853bae-61ce-4c50-a26a-5229f2110911
+
+
+These were throttled:
+
+5d729009-b686-49e2-abc0-b1d527e6ec1a	9/11/20110	9:54
+080de685-66bf-4dc7-a0cb-e3a7e74c2ee3	9/11/20110	9:54
+71a5d067-06a7-4696-ba43-94f58ca57a10	9/11/20110	9:53
+758db8db-6a54-44aa-afd8-e4b84fdf7614	9/11/20110	9:53
+57806470-3f1d-4b64-855f-c58a8d64bf36	9/11/20110	9:52
+e995e03f-e427-47af-ae86-291e001e72fe	9/11/20110	9:52
+841c3e33-551f-431e-8631-46eba593c618	9/11/20110	9:52
+
+
+
+Refer to WinDbg Log. 
+Started crashing here:
+
+...
+ModLoad: 648b0000 648c0000   C:\Documents and Settings\All Users\Application Data\Real\RealPlayer\BrowserRecordPlugin\ThinShims\rpnpshimswf.dll
+eax=000000c0 ebx=0182cc20 ecx=00160200 edx=00000020 esi=000004d0 edi=00000000
+eip=7c90e514 esp=0208ff2c ebp=0208ff90 iopl=0         nv up ei pl zr na pe nc
+cs=001b  ss=0023  ds=0023  es=0023  fs=003b  gs=0000             efl=00000246
+ntdll!KiFastSystemCallRet:
+7c90e514 c3              ret
+1:059> g
+DBGHELP: Symbol Search Path: srv*c:\symbols*http://symbols.mozilla.org/firefox;srv*c:\symbols*http://msdl.microsoft.com/download/symbols
+DBGHELP: Symbol Search Path: srv*c:\symbols*http://symbols.mozilla.org/firefox;srv*c:\symbols*http://msdl.microsoft.com/download/symbols
+DBGHELP: Symbol Search Path: srv*c:\symbols*http://symbols.mozilla.org/firefox;srv*c:\symbols*http://msdl.microsoft.com/download/symbols
+DBGHELP: Symbol Search Path: srv*c:\symbols*http://symbols.mozilla.org/firefox;srv*c:\symbols*http://msdl.microsoft.com/download/symbols
+DBGHELP: Symbol Search Path: srv*c:\symbols*http://symbols.mozilla.org/firefox;srv*c:\symbols*http://msdl.microsoft.com/download/symbols
+DBGHELP: Symbol Search Path: srv*c:\symbols*http://symbols.mozilla.org/firefox;srv*c:\symbols*http://msdl.microsoft.com/download/symbols
+Symbol search path is: SRV*c:\symbols*http://symbols.mozilla.org/firefox;SRV*c:\symbols*http://msdl.microsoft.com/download/symbols;srv*
+Executable search path is: 
+DBGHELP: SharedUserData - virtual symbol module
+ModLoad: 00400000 00406000   plugin-container.exe
+ModLoad: 7c900000 7c9b2000   ntdll.dll
+ModLoad: 7c800000 7c8f6000   C:\WINDOWS\system32\kernel32.dll
+...
+
+
+Firefox Window closed here:
+
+...
+ModLoad: 77bd0000 77bd7000   C:\WINDOWS\system32\midimap.dll
+(1ee8.1f54): Access violation - code c0000005 (first chance)
+First chance exceptions are reported before any exception handling.
+This exception may be expected and handled.
+eax=1010badc ebx=00000003 ecx=017c4730 edx=00000000 esi=00a6e800 edi=00000003
+eip=5000ecc5 esp=0012a5e8 ebp=0012a5f4 iopl=0         nv up ei pl nz na po nc
+cs=001b  ss=0023  ds=0023  es=0023  fs=003b  gs=0000             efl=00210202
+DBGHELP: logexts - public symbols  
+         c:\symbols\logexts.pdb\BD91A4A4F22A45ABAE9974E5F934B7061\logexts.pdb
+logexts!LogModuleSnapshot::GetModuleIndex+0x45:
+5000ecc5 3b820c010000    cmp     eax,dword ptr [edx+10Ch] ds:0023:0000010c=????????
+0:000> g
+ModLoad: 77b40000 77b62000   C:\WINDOWS\system32\Apphelp.dll
+DBGHELP: Symbol Search Path: srv*c:\symbols*http://symbols.mozilla.org/firefox;srv*c:\symbols*http://msdl.microsoft.com/download/symbols
+...
+
+
+Thanks,
+Rob

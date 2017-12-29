@@ -1,0 +1,17 @@
+Wrong stylesheet check while opening the respective editor.
+First of all, due to this bug, opening of style editor from inspector or web console or any other code using gDevTools api is broken for every first time style editor is loaded and the required sheet is not the first one.
+
+secondly, this also create intermittent on the test related to the opening of css error links in style editor from web console, for which the test is currently disabled (ref bug 808264)
+
+So here foes the bug:
+
+when style editor is loaded for the first time, it internally calls the selectStyleSheet with null params to load the first style sheet and just after that when some external code calls that method again, with soem proper styleSheet, the _styleSheetToSelect gets updated and we expect that the latest calues from that will be loaded.
+
+But in the addChromeListener's onEditorLoad, we bail out of the very first added editor everytime, as it is obvious that the first stylesheet will be selected just after the style editor's load.
+
+STR :
+1) be on any page with at least 2 style sheets
+2) Right click and inspect any node that has style applied to it from more than one of those style sheets.
+3) Click the link to any stylesheet that is not the first stylesheet in the style editor (but do not load the style editor yet, retry if required) from teh sidebar.
+4) Viola, aleays the first stylesheet would be selected.
+5) without closing the toolbox, repeat the steps, proper stylesheet is selected.

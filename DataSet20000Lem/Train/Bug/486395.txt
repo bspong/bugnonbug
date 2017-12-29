@@ -1,0 +1,30 @@
+Unable to copy url from location bar in popup
+STEPS TO REPRODUCE:
+
+1) Load attached HTML file
+2) Click the link
+3) Select the url in the url bar with the mouse.
+4) Cmd-C to copy it.
+
+EXPECTED RESULTS: URL copied
+
+ACTUAL RESULTS: Clipboard not affected.
+
+This make life suck a lot on site that pop up the "printable" version of article in a window like that; if I want to send the url to someone else, I have to jump through hoops.
+
+ADDITIONAL INFORMATION:
+1) This is worksforme on Linux, but I can reproduce quite reliably on Mac.
+2) I did some debugging, and it look like browser.css set
+"-moz-user-input: disable" on the urlbar in this case (due to the readonly
+attribute). This mean that all event handling on the input is suppressed,
+because of the code in nsHTMLInputElement::PreHandleEvent. In particular,
+the keypress event is just not dispatched at all, hence not seen by the XBL
+key event handler, and we get nowhere close to triggering the code in
+urlbarBindings.xml. I would expect this to be the case on all platforms,
+though, so not sure why this work on Linux.
+3) Using the menu's Edit > Copy to copy the text work fine.
+4) For some reason there is no context menu for the url bar in this case. I
+can file that a a separate bug, if it's caused by something other than the
+user-input style above.
+
+This look like a regression from bug 419772.

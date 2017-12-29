@@ -1,0 +1,25 @@
+places.sqlite stores dates byte-swapped
+User-Agent:       Mozilla/5.0 (Macintosh; U; Intel Mac OS X; en-US; rv:1.8.1.14) Gecko/20080404 Firefox/2.0.0.14
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9) Gecko/2008051206 Firefox/3.0
+
+Examining the places.sqlite database, one finds 64-bit integers in the dateAdded and lastModified fields of moz_bookmarks.  Viewed as 64 bits the number makes no sense.  The high 32 bits appear to be the actual number of seconds since 1970.  However, the correct date is displayed when one organizes bookmarks.
+
+I believe firefox is storing the number byte-swapped, then byte-swapping it again for display.  I'm sure there's some historical reason for this, but it's rather unfriendly to people who write tools to view/manipulate the database.  (I imagine this issue extends to all dates, but the bookmarks fields are the ones I ran into.)
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Open places.sqlite in any sqlite client.
+2. Look at the dateAdded and lastModified fields.
+3. Ask yourself just what those numbers mean.
+Actual Results:  
+For an example bookmark in places.sqlite, as shown via a .dump:
+
+INSERT INTO "moz_bookmarks" VALUES(103,1,169,98,4,'.Mac',NULL,NULL,1124217734000000,1200888214000000);
+
+Expected Results:  
+The same bookmark in FF2's bookmarks.html:
+
+ADD_DATE="1124217734" LAST_VISIT="1203614241" LAST_MODIFIED="1200888214"
+
+I confirmed this on both os-x and windows.

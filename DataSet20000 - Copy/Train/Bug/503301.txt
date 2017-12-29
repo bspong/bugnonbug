@@ -1,0 +1,50 @@
+Focus fired inconsistently on iframe's document.
+User-Agent:       Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.5; en-US; rv:1.9.0.11) Gecko/2009060214 Firefox/3.0.11
+Build Identifier: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.5; en-US; rv:1.9.0.11) Gecko/2009060214 Firefox/3.0.11
+
+I listen on the focus event for the content document of an iframe. It is fired twice when I click on the iframe and fired once even when the iframe already has focus. If I use tab to get focus on the document, it fires only once when the iframe gets focus, but when I use tab to focus out of the iframe, a focus event is still fired. If I use shift + tab to focus the iframe, 3 focus events are fired and 1 is fired when I use it to focus out. The below HTML can be used to observe the behaviour:
+
+<html>
+  <head>
+    <title>Firefox focus bug.</title>
+  </head>
+  <body>
+    <div>
+      Iframe focus testing.
+    </div>
+    <iframe id="testIframe">
+    </iframe>
+
+    <div id="logDiv">
+    </div>
+    <script type="text/javascript">
+      var iframe = document.getElementById('testIframe');
+      var iframeDoc = iframe.contentDocument;
+      iframeDoc.write('Focus me.');
+      var numFocus = 0;
+
+      iframeDoc.addEventListener('focus', handleFocusDoc, false);
+
+      function handleFocusDoc(event) {
+        var logDiv = document.getElementById('logDiv');
+        logDiv.innerHTML += ++numFocus + ' ';
+      }
+    </script>
+  </body>
+</html>
+
+Instead of the iframe document, if I listen to the iframe's content window, then the focus events are fired correctly.
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Create a file with the HTML given above.
+2. Click on the iframe.
+Actual Results:  
+Observe that the text at the bottom is "1 2", meaning the focus event was fired twice.
+
+Expected Results:  
+The text at the bottom should be "1 ".
+
+The same behaviour was observed on FF 3.0.10 on Linux also.

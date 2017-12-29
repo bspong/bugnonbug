@@ -1,0 +1,35 @@
+Custom area placements are lost if the user customizes while the area is not registered
+These are very specific steps to reproduce (which I'm sure will give it a low priority :) ), so please bare with me.
+
+1. Open clean profile in latest nightly
+2. Enter in the browser console:
+> var testBar = document.createElement('toolbar');
+> testBar.id = 'testBar';
+> testBar.setAttribute('toolbarname', 'Test Bar');
+> testBar.hidden = false;
+> testBar.collapsed = false;
+> testBar.setAttribute('class', 'toolbar-primary chromeclass-toolbar');
+> testBar.setAttribute('context', 'toolbar-context-menu');
+> testBar.setAttribute('toolboxid', 'navigator-toolbox');
+> testBar.setAttribute('customizable', 'true');
+> CustomizableUI.registerArea('testBar', 
+>   { type: CustomizableUI.TYPE_TOOLBAR, legacy: true }
+> );
+> gNavToolbox.appendChild(testBar);
+This will create a test toolbar at the top of the browser which can be customized.
+
+3. Enter this bit in the browser console:
+> document.getElementById('status-bar').setAttribute('removable', 'true');
+> CustomizableUI.removeWidgetFromArea('status-bar');
+Obviously, by itself this accomplishes next to nothing, but I use this bit in my code to remove the statusbar element from the add-on bar, so I can append it somewhere else without the CustomizableUI system going nuts every time I open and close new browser windows and try to customize them (it works sometimes without this bit of code but not always, so I figured it was because the node wasn't where CUI expected it to be, and I thought it was safer to just remove it in CUI as well; I will still try to play around with not using this bit of code for my specific case but that's not the point of this bug).
+
+4. Enter customize mode, add a couple of widgets to the new toolbar, and go ahead and add a couple more to nav-bar to compare later. Close customize mode.
+5. Restart firefox with add-ons disabled (safe mode). It should (or seems to) restart successfully.
+6. Close firefox and open it again (normal mode).
+7. Re-enter the first bit of code to re-add the toolbar.
+
+Result: the customization state was lost for this custom toolbar! The widgets added before are now back in the palette if you open customize mode. The customization state for the nav-bar is not affected, as the widgets added to it remain there.
+
+Something somewhere doesn't like that the status-bar was removed from the add-on bar; it's not a matter of having it physically present in the document, as it always is in my add-on; nor a matter of having it physically as a child of the add-on bar either, as I've also tried appendChild()'ing it back in there before restarting in safe mode.
+
+I have to add back the status-bar before I restart in safe mode, physically with appendChild'ing the node to the add-on bar, then through CUI.addWidgetToArea, to keep the customization state of the toolbar; this is also an easy fix to do on the add-on's side, provided CUI calls still work after quit-application has been dispatched (I haven't tested this yet), but shouldn't be necessary IMO and could probably be a bigger of something else that might be failing after safe mode. The same steps above without the second bit of code work fine, as do normal browser restarts.

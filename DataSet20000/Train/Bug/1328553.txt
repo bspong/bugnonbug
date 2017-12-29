@@ -1,0 +1,21 @@
+Netmonitor DAMP test should measure time until all request data is received and rendered
+Improve the netmonitorOpen DAMP test to better measure how long it takes Netmonitor to display all requests issued by a page.
+
+The test currently does this:
+1. Measure how long it takes to open the Netmonitor tool. Done by waiting for the promise returned by gDevTools.showToolbox() to resolve.
+
+2. Measure how long it takes to reload the page. Done by waiting for the "load" event on the selected "browser".
+
+Note that this "load" event has little relation to what the Netmonitor frontend is doing. The load is slowed down by the Netmonitor backend actor inspecting the nsHttpChannels in real-time, but the frontend and the RDP connection can be pretty busy even after the load is long finished.
+
+3. Wait for all the outstanding RDP requests to "settle". This part is not measured at all, and it hides important info on how well the RDP connection and the frontend are performing.
+
+The waitForRequestsToSettle method is not very reliable for Netmonitor and can resolve at times that are essentially random. The reason is that Netmonitor info is transferred mainly by a stream of events from the server, and requests from client to the server have a secondary role. It can happen that the server is still very busy sending events to the client, but there is no outstanding request from the client at a given moment.
+
+4. Measure how long it takes to close the toolbox. Done by waiting for the promise returned by gDevTools.closeToolbox() to resolve.
+
+Because waitForRequestsToSettle might not wait for long enough, a lot of activity can spill into the "closeToolbox" interval, making the timings unreliable and nondeterministic.
+
+The improvement I'm going to make is:
+- wait until request update events keep coming from the server
+- track the timing of this event as a new "netmonitor.requestsFinished" DAMP result

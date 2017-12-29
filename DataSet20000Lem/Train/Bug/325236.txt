@@ -1,0 +1,71 @@
+memory corruption probably caused by chrome alert()
+there is strange memory corruption probably caused by alert() involving chrome.
+
+valgrind doe not detect illegal writes, but detects several illegal reads.
+
+testcase to follow.
+
+#6 0x080ab66e in ah_crap_handler (signum=11) at nsSigHandlers.cpp:131
+#7 0x080abccb in nsProfileLock::FatalSignalHandler (signo=11)
+at nsProfileLock.cpp:210
+#8 <signal handler called>
+#9 0xb7a61b39 in gdk_x11_drawable_get_xid () from /usr/lib/libgdk-x11-2.0.so.0
+#10 0x097e08d0 in ?? ()
+#11 0x097d7bd0 in ?? ()
+#12 0xbfffdc80 in ?? ()
+#13 0xb7a4b800 in gdk_rgb_get_visual () from /usr/lib/libgdk-x11-2.0.so.0
+#14 0x097e08d0 in ?? ()
+#15 0x097d7bd0 in ?? ()
+#16 0xbfffdc80 in ?? ()
+#17 0x0828246f in nsDrawingSurfaceGTK::GetXftDraw (this=0xb7aa63f4)
+at /opt/firefox-cvs/mozilla/gfx/src/gtk/nsDrawingSurfaceGTK.cpp:334
+#18 0x08278823 in nsFontMetricsXft::PrepareToDraw (this=0x97a8670,
+aContext=0x97d7bd0, aSurface=0x97e08d0, aDraw=0xbfffdc94,
+aColor=@0xbfffdc98)
+#19 0x08276d36 in nsFontMetricsXft::DrawString (this=0x97a8670,
+aString=0xbfffdda8, aLength=9, aX=149464408, aY=149464408, aFontID=825,
+aSpacing=0x8e8a558, aContext=0x97d7bd0, aSurface=0x97e08d0)
+at /opt/firefox-cvs/mozilla/gfx/src/gtk/nsFontMetricsXft.cpp:636
+#20 0x082758a4 in nsRenderingContextGTK::DrawString (this=0x8e8a078,
+aString=0xbfffdda8, aLength=9, aX=5281, aY=4415, aFontID=825, aSpacing=0x0)
+at /opt/firefox-cvs/mozilla/gfx/src/gtk/nsRenderingContextGTK.cpp:1331
+#21 0x0834222c in nsBidiPresUtils::RenderText (this=0x9815220,
+aText=0xbfffe098, aLength=9, aBaseDirection=NSBIDI_LTR,
+aPresContext=0x96e9ef0, aRenderingContext=@0x97d7bd0, aX=5281, aY=4415,
+aPosResolve=0x0, aPosResolveCount=0)
+at /opt/firefox-cvs/mozilla/layout/base/nsBidiPresUtils.cpp:1129
+#22 0x08602766 in nsTreeBodyFrame::PaintText (this=0x9758b94, aRowIndex=0,
+aColumn=0x964a330, aTextRect=@0xbfffe1c0, aPresContext=0x96e9ef0,
+aRenderingContext=@0x97d7bd0, aDirtyRect=@0xbfffe480, aCurrX=@0xbfffe194)
+at /opt/firefox-cvs/mozilla/layout/xul/base/src/tree/src/nsTreeBodyFrame.cpp:3080
+#23 0x08601750 in nsTreeBodyFrame::PaintCell (this=0x9758b94, aRowIndex=0,
+aColumn=0x964a330, aCellRect=@0xbfffe290, aPresContext=0x96e9ef0,
+aRenderingContext=@0x97d7bd0, aDirtyRect=@0xbfffe480, aCurrX=@0x8e8a558,
+aPt={x = 0, y = -536862720})
+at /opt/firefox-cvs/mozilla/layout/xul/base/src/tree/src/nsTreeBodyFrame.cpp
+
+#24 0x08600f4c in nsTreeBodyFrame::PaintRow (this=0x9758b94, aRowIndex=0,
+aRowRect=@0xbfffe350, aPresContext=0x96e9ef0,
+aRenderingContext=@0x97d7bd0, aDirtyRect=@0xbfffe480, aPt=
+{x = 355, y = 4205})
+at /opt/firefox-cvs/mozilla/layout/xul/base/src/tree/src/nsTreeBodyFrame.cpp:2461
+#25 0x0860081f in nsTreeBodyFrame::PaintTreeBody (this=0x9758b94,
+aRenderingContext=@0x97d7bd0, aDirtyRect=@0xbfffe480, aPt=
+{x = 355, y = 4205})
+at /opt/firefox-cvs/mozilla/layout/xul/base/src/tree/src/nsTreeBodyFrame.cpp:2291
+#26 0x08600453 in PaintTreeBody (aFrame=0x9758b94, aCtx=0x97d7bd0,
+aDirtyRect=@0xbfffe480)
+at /opt/firefox-cvs/mozilla/layout/xul/base/src/tree/src/nsTreeBodyFrame.cpp:2212
+#27 0x0836c72e in nsDisplayGeneric::Paint (this=0x97f63c8,
+aBuilder=0xbfffe550, aCtx=0x97d7bd0, aDirtyRect=@0xbfffe480)
+at nsDisplayList.h:691
+#28 0x086ee29b in nsDisplayList::Paint (this=0x97f6408, aBuilder=0xbfffe550,
+
+(gdb) frame 9
+#9 0xb7a61b39 in gdk_x11_drawable_get_xid () from /usr/lib/libgdk-x11-2.0.so.0
+(gdb) x/i $eip
+0xb7a61b39 <gdk_x11_drawable_get_xid+41>: mov (%esi),%edx
+(gdb) p/x $esi
+$1 = 0x1
+(gdb) p/x $edi
+$2 = 0x1

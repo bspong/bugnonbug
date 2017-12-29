@@ -1,0 +1,113 @@
+SVG trigger bus error in gfx/src/nsBlender.cpp:473 [gfx][svg]
+Hi,
+I just tried with the CVS from yesterday to look at the SVG "roaring lion"
+linked from above URL.
+In both debug and optim, I crash, debug in nsBlender.cpp with a bus error.
+Assigned to dcone, a blame say it's his code. But this is from March, so no
+recent regression there.
+
+Axel
+
+Stack trace:
+#0 0xff2a2f58 in nsBlender::Do24Blend (this=0x8c6fc8, aBlendVal=191 '¿',
+aNumlines=24, aNumbytes=200, aSImage=0x8c7480 "", aDImage=0x8c87a8 "",
+aSecondSImage=0x8c9b08 "", aSLSpan=200, aDLSpan=200,
+aBlendQuality=nsHighQual, aSrcBackColor=4278190335,
+aSecondSrcBackColor=4294901760, aPixFormat=@0xffbedb80)
+at /tmp/mozilla/gfx/src/nsBlender.cpp:401
+#1 0xff2a26cc in nsBlender::Blend (this=0x8c6fc8, aSrcBits=0x8c7480 "",
+aSrcStride=200, aSrcBytes=200, aDestBits=0x8c87a8 "", aDestStride=200,
+aDestBytes=200, aSecondSrcBits=0x8c9b08 "", aSecondSrcStride=200,
+aSecondSrcBytes=200, aLines=24, aAlpha=75, aPixFormat=@0xffbedb80,
+aSrcBackColor=4278190335, aSecondSrcBackColor=4294901760)
+at /tmp/mozilla/gfx/src/nsBlender.cpp:228
+#2 0xff2a2374 in nsBlender::Blend (this=0x8c6fc8, aSX=0, aSY=0, aWidth=50,
+aHeight=24, aSrc=0x8c70d0, aDst=0x8c7018, aDX=0, aDY=0, aSrcOpacity=0.75,
+aSecondSrc=0x8c71a0, aSrcBackColor=4278190335,
+aSecondSrcBackColor=4294901760) at /tmp/mozilla/gfx/src/nsBlender.cpp:169
+#3 0xff2a2554 in nsBlender::Blend (this=0x8c6fc8, aSX=0, aSY=0, aWidth=50,
+aHeight=24, aSrc=0x8c72c0, aDest=0x8c7258, aDX=0, aDY=0, aSrcOpacity=0.75,
+aSecondSrc=0x8c7328, aSrcBackColor=4278190335,
+aSecondSrcBackColor=4294901760) at /tmp/mozilla/gfx/src/nsBlender.cpp:199
+#4 0xfaec3ac4 in nsViewManager2::RenderDisplayListElement (this=0x87cc38,
+element=0x8c6ea0, aRC=@0x8b9188)
+at /tmp/mozilla/view/src/nsViewManager2.cpp:908
+#5 0xfaec33c0 in nsViewManager2::RenderViews (this=0x87cc38,
+aRootView=0x86e138, aRC=@0x8b9188, aRect=@0xffbede90, aResult=@0xffbedeac)
+at /tmp/mozilla/view/src/nsViewManager2.cpp:803
+#6 0xfaec2d08 in nsViewManager2::Refresh (this=0x87cc38, aView=0x86e138,
+aContext=0x8b9188, rect=0xffbedf88, aUpdateFlags=1)
+at /tmp/mozilla/view/src/nsViewManager2.cpp:684
+#7 0xfaec53c8 in nsViewManager2::DispatchEvent (this=0x87cc38,
+aEvent=0xffbee208, aStatus=0xffbee024)
+at /tmp/mozilla/view/src/nsViewManager2.cpp:1348
+#8 0xfaea7f84 in HandleEvent (aEvent=0xffbee208)
+at /tmp/mozilla/view/src/nsView.cpp:67
+#9 0xfdde10fc in nsWidget::DispatchEvent (this=0x8a20c8, aEvent=0xffbee208,
+aStatus=@0xffbee16c) at /tmp/mozilla/widget/src/gtk/nsWidget.cpp:1483
+#10 0xfdde0b30 in nsWidget::DispatchWindowEvent (this=0x8a20c8,
+event=0xffbee208) at /tmp/mozilla/widget/src/gtk/nsWidget.cpp:1374
+#11 0xfdde9e44 in nsWindow::DoPaint (this=0x8a20c8, aX=0, aY=0, aWidth=798,
+aHeight=787, aClipRegion=0x613ff0)
+at /tmp/mozilla/widget/src/gtk/nsWindow.cpp:695
+#12 0xfddea210 in nsWindow::Update (this=0x8a20c8)
+at /tmp/mozilla/widget/src/gtk/nsWindow.cpp:741
+#13 0xfddea4cc in nsWindow::Update (this=0x809138)
+at /tmp/mozilla/widget/src/gtk/nsWindow.cpp:765
+#14 0xfaec4b50 in nsViewManager2::Composite (this=0x87cc38)
+at /tmp/mozilla/view/src/nsViewManager2.cpp:1127
+#15 0xfaec8994 in nsViewManager2::EnableRefresh (this=0x87cc38, aUpdateFlags=2)
+at /tmp/mozilla/view/src/nsViewManager2.cpp:2216
+#16 0xfbac8238 in nsXMLContentSink::RefreshIfEnabled (this=0x81bd40,
+vm=0x87cc38)
+at /tmp/mozilla/layout/xml/document/src/nsXMLContentSink.cpp:1815
+#17 0xfbac6578 in nsXMLContentSink::StartLayout (this=0x81bd40)
+at /tmp/mozilla/layout/xml/document/src/nsXMLContentSink.cpp:1516
+#18 0xfbac0008 in nsXMLContentSink::DidBuildModel (this=0x81bd40,
+aQualityLevel=1)
+at /tmp/mozilla/layout/xml/document/src/nsXMLContentSink.cpp:286
+#19 0xfb2870b4 in CWellFormedDTD::DidBuildModel (this=0x811160, anErrorCode=0,
+aNotifySink=1, aParser=0x81bbc0, aSink=0x81bd40)
+at /tmp/mozilla/htmlparser/src/nsWellFormedDTD.cpp:293
+#20 0xfb26e4c8 in nsParser::DidBuildModel (this=0x81bbc0, anErrorCode=0)
+at /tmp/mozilla/htmlparser/src/nsParser.cpp:1418
+#21 0xfb26fa64 in nsParser::ResumeParse (this=0x81bbc0, allowIteration=1,
+aIsFinalChunk=0) at /tmp/mozilla/htmlparser/src/nsParser.cpp:1923
+#22 0xfb26e764 in nsParser::EnableParser (this=0x81bbc0, aState=1)
+at /tmp/mozilla/htmlparser/src/nsParser.cpp:1524
+#23 0xfba0bf60 in CSSLoaderImpl::Cleanup (this=0x861348, aKey=@0xffbeeae0,
+aLoadData=0x7396b8)
+at /tmp/mozilla/layout/html/style/src/nsCSSLoader.cpp:714
+#24 0xfba0ca2c in CSSLoaderImpl::SheetComplete (this=0x861348, aSheet=0x0,
+aLoadData=0x7396b8)
+at /tmp/mozilla/layout/html/style/src/nsCSSLoader.cpp:840
+#25 0xfba0cc68 in CSSLoaderImpl::ParseSheet (this=0x861348, aIn=0x61d260,
+aLoadData=0x7396b8, aCompleted=@0xffbeec1c, aSheet=@0xffbeec18)
+at /tmp/mozilla/layout/html/style/src/nsCSSLoader.cpp:874
+#26 0xfba0ce38 in CSSLoaderImpl::DidLoadStyle (this=0x861348,
+aLoader=0x739b98, aStyleData=0x7e6510, aLoadData=0x7396b8, aStatus=0)
+at /tmp/mozilla/layout/html/style/src/nsCSSLoader.cpp:911
+#27 0xfba0bb8c in SheetLoadData::OnStreamComplete (this=0x7396b8,
+aLoader=0x739b98, context=0x0, aStatus=0, stringLen=534,
+string=0x7681a0 "/*IE 5.5 only */\nbody{\nscrollbar-3d-light-color:
+#ADD8E6;\n scrollbar-arrow-color: #EAEAEA;\n scrollbar-base-color: #ADD8E6;\n
+scrollbar-dark-shadow-color: Gray;\n scrollbar-face-color: #336699;\n
+scrollba"...)
+at /tmp/mozilla/layout/html/style/src/nsCSSLoader.cpp:649
+#28 0xfcdbffdc in nsStreamLoader::OnStopRequest (this=0x739b98,
+channel=0x739bd8, ctxt=0x0, aStatus=0, aStatusArg=0xff1b4ee8)
+at /tmp/mozilla/netwerk/base/src/nsStreamLoader.cpp:121
+#29 0xfce32258 in nsHTTPFinalListener::OnStopRequest (this=0x614458,
+aChannel=0x739bd8, aContext=0x0, aStatus=0, aStatusArg=0xff1b4ee8)
+at /tmp/mozilla/netwerk/protocol/http/src/nsHTTPResponseListener.cpp:1159
+#30 0xfcdeb7e0 in InterceptStreamListener::OnStopRequest (this=0x6146e8,
+channel=0x739bd8, ctxt=0x0, aStatus=0, aStatusArg=0xff1b4ee8)
+at /tmp/mozilla/netwerk/cache/mgr/nsCachedNetData.cpp:1211
+#31 0xfce21f2c in nsHTTPChannel::ResponseCompleted (this=0x739bd8,
+aListener=0x6146e8, aStatus=0, aStatusArg=0xff1b4ee8)
+at /tmp/mozilla/netwerk/protocol/http/src/nsHTTPChannel.cpp:1923
+#32 0xfce30754 in nsHTTPServerListener::OnStopRequest (this=0x80f448,
+channel=0x716a34, i_pContext=0x739bd8, i_Status=0, aStatusArg=0xff1b4ee8)
+at /tmp/mozilla/netwerk/protocol/http/src/nsHTTPResponseListener.cpp:729
+
+.... now I think we all know where we are, hihihihi. In mail flood heaven.

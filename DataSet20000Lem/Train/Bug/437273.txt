@@ -1,0 +1,24 @@
+bookmark backup fails when bookmark record ha no corresponding place record
+When bookmark are backed up either via PlacesUtils::backupBookmarksToFile or nsIPlacesImportExportService::exportHTMLToFile, and a bookmark record ha no corresponding place record (f.e. because of the Fx3b4/5 bug described by dietrich in bug 436696, comment 8), then backing up fails with an exception.
+
+PlacesUtils::backupBookmarksToFile exception:
+
+Error: uncaught exception: [Exception... "Component returned failure code: 0x804b000a (NS_ERROR_MALFORMED_URI) [nsIIOService.newURI]" nsresult: "0x804b000a (NS_ERROR_MALFORMED_URI)" location: "JS frame :: file:///home/myk/Applications/firefox-trunk/modules/utils.js :: PU__uri :: line 153" data: no]
+
+nsIPlacesImportExportService::exportHTMLToFile exception:
+(from Weave, which us this method)
+
+Error: uncaught exception: [Exception... "Component returned failure code: 0x804b000a (NS_ERROR_MALFORMED_URI) [nsIPlacesImportExportService.exportHTMLToFile]" nsresult: "0x804b000a (NS_ERROR_MALFORMED_URI)" location: "JS frame :: chrome://weave/content/wizard.js :: SyncWizard_onBookmarksBackup :: line 157" data: no]
+Bookmarks 2008-06-04.html
+
+nsIPlacesImportExportService::exportHTMLToFile doesn't write the file at all when it hit this exception, while PlacesUtils::BackupBookmarksToFile leaf the file in a partially-written state.
+
+It seems like both of these method should trap this exception and recover by either skipping the bookmark entirely or backing up a much info about it a they can instead of failing and aborting the backup.
+
+Additionally, perhaps PlacesUtils::backupBookmarksToFile should not leave the file in a partially-written state, and PlacesOrganizer::backupBookmarks should trap any exception thrown by PlacesUtils::backupBookmarksToFile and report the failure to the user who initiated the backup.
+
+You can trigger the exception by updating a moz_bookmarks record in a test profile to have an invalid foreign key. For example, in a relatively fresh profile I ran the following query on the Places database to hork the record for the "Get Bookmark Add-ons" bookmark.
+
+UPDATE moz_bookmarks SET fk = 4000 WHERE fk = 4;
+
+Then I tried to back up via Bookmarks > Organize Bookmarks > Import and Backup > Backup... and via the Weave configuration wizard.

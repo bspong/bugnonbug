@@ -1,0 +1,20 @@
+Offer Firefox Accounts to existing multi-device Firefox Sync desktop users
+This is much like Bug 999911, but for multi-device users.
+
+The big additional complexity here is:
+
+1. We'd ideally like to not silently partition the user's devices (partitioning: where the user upgrades one device but doesn't upgrade them all), and thus doesn't realize they're not syncing.
+
+2. We'd also ideally like to avoid the user having to laboriously sign out of Sync and sign in to FxA on each of their devices.
+
+
+We can address (1) in two ways. We can either write into your old Sync account, or we can not.
+
+If we don't, we can try to guess on another client that a transition from N to N-1 clients means that the user has upgraded to FxA, and offer on that device. So you'd upgrade on your desktop, it'd try its last-ditch client record deletion, and some time later your phone would say "hey, do you want to sign in with your Firefox Account?".
+
+If we do, we can be more precise about our messaging: "I see you just upgraded 'Richard's Firefox on MacBook Air' to Firefox Accounts. Do you want to sign in here? You must sign in to keep syncing.".
+
+
+If we choose the latter, we can address (2) fairly easily: instead of writing that simple sentinel, we write your FxA credentials; instead of showing that message, we automatically sign you in to FxA, falling back to a similar message on failure.
+
+That part is Bug 956444 on Android, Bug 908465 on desktop. I'm going to mark those as dependencies for now. The meta bug for those is Bug 895518.

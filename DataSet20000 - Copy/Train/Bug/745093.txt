@@ -1,0 +1,41 @@
+esr-10: Win PGO builds hitting 3GB virtual address space limit, failing with: "nsapprunner.cpp(3629 : fatal error C1001: An internal error has occurred in the compiler. LINK : fatal error LNK1000: Internal error during IMAGE::BuildImage"
++++ This bug was initially created as a clone of Bug #709193 +++
+
+You loved it as bug 709193, when we wound up closing trunk for several days and preffing off all sort of features and landing various intrusive patches that removed big chunks of code and pulled various things out of libxul; you're going to just flat out *adore* it now that we appear to be hitting the virtual address space limit on esr-10, where we can do none of those things.
+
+https://tbpl.mozilla.org/php/getParsedLog.php?id=10863993&tree=Mozilla-Esr10 on the landing of https://hg.mozilla.org/releases/mozilla-esr10/rev/5aeaf6c14ade from bug 679759, which certainly doesn't strike me as likely to have actually triggered it directly.
+
+Generating code
+3903 of 159877 (  2.44%) profiled functions will be compiled for speed
+e:\builds\moz2_slave\m-esr10-w32\build\toolkit\xre\nsapprunner.cpp(3629) : fatal error C1001: An internal error has occurred in the compiler.
+(compiler file 'F:\SP\vctools\compiler\utc\src\P2\main.c[0x10C9CFA1:0x007035F8]', line 182)
+ To work around this problem, try simplifying or changing the program near the locations listed above.
+Please choose the Technical Support command on the Visual C++ 
+ Help menu, or open the Technical Support help file for more information
+
+LINK : fatal error LNK1000: Internal error during IMAGE::BuildImage
+
+  Version 8.00.50727.762
+
+  ExceptionCode            = C0000005
+  ExceptionFlags           = 00000000
+  ExceptionAddress         = 10C9CFA1 (10B00000) "d:\msvs8\VC\BIN\c2.dll"
+  NumberParameters         = 00000002
+  ExceptionInformation[ 0] = 00000000
+  ExceptionInformation[ 1] = 007035F8
+
+CONTEXT:
+  Eax    = 693AB7D0  Esp    = 0012ED78
+  Ebx    = 10E84F60  Ebp    = 00000000
+  Ecx    = ADCA3F40  Esi    = 00000000
+  Edx    = 007035F8  Edi    = 10D0FF98
+  Eip    = 10C9CFA1  EFlags = 00010246
+  SegCs  = 0000001B  SegDs  = 00000023
+  SegSs  = 00000023  SegEs  = 00000023
+  SegFs  = 0000003B  SegGs  = 00000000
+  Dr0    = 00000000  Dr3    = 00000000
+  Dr1    = 00000000  Dr6    = 00000000
+  Dr2    = 00000000  Dr7    = 00000000
+linker max virtual size: 3019960320
+
+I retriggered the build, which won't really prove anything either way, and I closed the tree in anticipation of more failure.

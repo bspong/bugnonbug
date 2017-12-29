@@ -1,0 +1,29 @@
+browser_ext_devtools_inspectedWindow.js is going to frequently fail when Gecko 57 merges to Beta on 2017-09-20
+[Tracking Requested - why for this release]: Frequently failing test on the next merge day.
+
+I won't call this permafail since I'm pretty sure there were *some* green runs, but the failure rate is extremely high nonetheless (intermittently green more than the other way around).
+
+I bisected this down to the range below:
+https://hg.mozilla.org/mozilla-central/pushloghtml?fromchange=a2723b650460&tochange=e4b8ea7baeb6
+
+From there, bug 1395262 seems like the most obvious candidate within the range, but I haven't actually verified that. Regardless, can you please take a look, Tom? CCing Luca as well just in case he has any ideas.
+
+https://treeherder.mozilla.org/logviewer.html#?job_id=127609175&repo=try
+
+TEST-PASS | browser/components/extensions/test/browser/test-oop-extensions/browser_ext_devtools_inspectedWindow.js | Got exceptionInfo.value value Error: fake eval exception
+	@debugger eval called from moz-extension://b18d9dca-ab60-4f95-aea8-119930c216c9/ - eval code:1:7
+ matches /Error: fake eval exception\n.*moz-extension:\/\// - 
+Console message: [JavaScript Error: "TypeError: this._urls is null" {file: "resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/client/framework/source-map-url-service.js" line: 82}]
+Buffered messages finished
+TEST-UNEXPECTED-FAIL | browser/components/extensions/test/browser/test-oop-extensions/browser_ext_devtools_inspectedWindow.js | A promise chain failed to handle a rejection: this._urls is null - stack: null
+Rejection date: Fri Sep 01 2017 02:30:13 GMT+0000 (UTC) - false == true - JS frame :: resource://testing-common/PromiseTestUtils.jsm :: assertNoUncaughtRejections :: line 265
+Stack trace:
+    resource://testing-common/PromiseTestUtils.jsm:assertNoUncaughtRejections:265
+    chrome://mochikit/content/browser-test.js:Tester_execTest/<:825
+    Tester_execTest@chrome://mochikit/content/browser-test.js:794:9
+    Tester.prototype.nextTest</<@chrome://mochikit/content/browser-test.js:694:7
+    SimpleTest.waitForFocus/waitForFocusInner/focusedOrLoaded/<@chrome://mochikit/content/tests/SimpleTest/SimpleTest.js:795:59
+Leaving test bound test_devtools_inspectedWindow_eval
+
+The patch below should be sufficient for reproducing locally or on Try. Let me know if it doesn't work.
+https://hg.mozilla.org/try/rev/893117049f14004a416aad09dabe24ea2f5d5ef2

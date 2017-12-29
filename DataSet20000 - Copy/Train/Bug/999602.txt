@@ -1,0 +1,25 @@
+devtools/shared times out on windows debug when run as a standalone directory
+I have been working on bug 992911 which allows us to run each subdir of tests standalone.  I found that browser/devtools/shared/test would frequently timeout when run on try server for windows debug.  I got a loaner w7 machine and verified that I could easily reproduce this.
+
+Running it on a loaner machine, I found these 2 tests to be problematic:
+diff -r 22e57c335fc5 browser/devtools/shared/test/browser.ini
+--- a/browser/devtools/shared/test/browser.ini	Tue Apr 22 17:37:01 2014 +0100
++++ b/browser/devtools/shared/test/browser.ini	Tue Apr 22 15:00:44 2014 -0400
+@@ -29,7 +29,10 @@
+ [browser_telemetry_toolboxtabs_webconsole.js]
+ [browser_templater_basic.js]
+ [browser_toolbar_basic.js]
++skip-if = os == 'win' && debug # bug TBD - hack for shutdown timeout (these two for win7 debug fix)
+ [browser_toolbar_tooltip.js]
+ [browser_toolbar_webconsole_errors_count.js]
++skip-if = os == 'win' && debug # bug TBD - hack for shutdown timeout (these two for win7 debug fix)
+ [browser_spectrum.js]
+ [browser_csstransformpreview.js]
+
+
+but running on try server still yields a timeout, if I skip:
+browser_toolbar_tooltip.js, browser_spectrum.js, and browser_csstransformpreview.js I don't get timeouts on try server.  Note, this was just a simple clearcut of tests, I am not sure if all 3 are required on try.
+
+Here is a link to a try server log:
+xp: https://tbpl.mozilla.org/php/getParsedLog.php?id=38264680&tree=Try
+w7: https://tbpl.mozilla.org/php/getParsedLog.php?id=38264673&tree=Try

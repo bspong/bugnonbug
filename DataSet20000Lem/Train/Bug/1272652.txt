@@ -1,0 +1,48 @@
+Firefox fails to import bookmark from Chrome when it also try to import a large history
+[Affected versions]:
+- Firefox 47 beta 5
+- latest Developer Edition 48.0a2
+- latest Nightly 49.0a1
+
+[Unaffected versions]:
+- Firefox 46.0.1
+
+[Affected platforms]:
+- Mac OS X 10.10.5 (although I did not reproduce on another machine running 10.11.2 and 10.10.4)
+- Windows 7 64-bit (unable to reproduce on Windows 10 64-bit and Ubuntu 16.04 32-bit)
+
+[Steps to reproduce]:
+1. Run Firefox for the first time (or simply remove the profile folder: On Windows - %appdata%\Mozilla; On Mac - Library\Application Support\Firefox; On Linux - /home/user/.mozilla)
+2. Go to "Bookmarks -> Show All Bookmarks -> Import and Backup -> Import Data from Another Browser
+3. Make sure Chrome is not running
+4. Import data from Chrome
+
+[Expected result]:
+- Bookmarks are successfully imported
+
+[Actual result]:
+- Bookmarks are not imported. Folder 'Imported from Chrome' is empty.
+
+[Regression range]:
+- I am unable to determine a regression range using mozregression but:
+Mac OS X 10.10.5 - Firefox 47 beta 4 is not affected by this, so it's something between 47 beta 4 and beta 5.
+Windows 7 64-bit - Firefox 46.0 RC build 5 is not affected, all 47 beta are affected.
+
+[Additional notes]:
+- Console output:
+
+[Exception... "Component returned failure code: 0x804b000a (NS_ERROR_MALFORMED_URI) [nsIIOService.newURI]" nsresult: "0x804b000a (NS_ERROR_MALFORMED_URI)" location: "JS frame :: resource://gre/modules/NetUtil.jsm :: NetUtil_newURI :: line 191" data: no]
+ChromeProfileMigrator.js:319:0
+Error: Transaction timeout, most likely caused by unresolved pending work.
+Stack trace:
+ConnectionData.prototype<.executeTransaction/promise</timeoutPromise</<@resource://gre/modules/Sqlite.jsm:641:33
+setTimeout_timer@resource://gre/modules/Timer.jsm:30:5
+Sqlite.jsm:648
+some bookmark did not successfully migrate.
+TypeError: PlacesUtils.asContainer(...) is null
+places.js:336:7
+NS_ERROR_ILLEGAL_VALUE: Invalid argument nsLivemarkService.js:299:0
+TypeError: PlacesUtils.asContainer(...) is null
+places.js:336:7
+
+(this console output is received on both Windows and Mac)

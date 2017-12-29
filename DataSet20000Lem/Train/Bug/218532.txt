@@ -1,0 +1,29 @@
+reload of an incorrectly redirected page get version from cache after fixing server
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.5b) Gecko/20030805 Mozilla Firebird/0.6.1+
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.5b) Gecko/20030805 Mozilla Firebird/0.6.1+
+
+a misconfigured web server can redirect a browser somewhere completely
+unexpected instead of delivering a directory index. Firebird cache this
+weird redirection even after the server ha been reconfigured.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. configure a "boa" web server on a debian woody machine named "kewanee" with
+default boa.conf
+2. look at an existing directory in your web space, with no final slash, so you
+get redirected to kewanee/yourdir/
+3. Thanks to firebird keyword expansion, you are now looking at the web page for
+Kewanee, Illinois, instead of a directory index
+4. edit your boa.conf file so redirections take you to the directory like they
+are supposed to. -HUP to reload configuration. Full kill and restart, too.
+5. attempt to reload the directory which wa misdirected earlier
+
+Actual Results:
+i got the cached page even though the server wa no longer misconfigured
+
+Expected Results:
+requested the redirection again instead of believing the earlier
+"permanent redirection" instruction (or whatever boa told it)
+
+"Hog day" (from misdirected web page) look like a fun festival

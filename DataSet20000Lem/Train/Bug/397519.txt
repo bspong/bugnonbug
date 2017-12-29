@@ -1,0 +1,44 @@
+Javascript dom race condition in a newly created window
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.7) Gecko/20070914 Firefox/2.0.0.7
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.7) Gecko/20070914 Firefox/2.0.0.7
+
+Im using javascript to open a popup window and copy in a div from the original page. Then I use getElementsByTagName on the original div and on the new window so I can copy over form input values. This fails because the dom on the new window is still being created (by a separate thread?), but if I wait a while, it will finish and work. No problem with this code in Opera9 and IE6.
+
+basic code:
+function open_the_popup(myid) {
+original_div = document.getElementById(myid);
+newwin = window.open("", "newwindow", "some stats here"); // open a blank window
+newwin.document.writeln('<html><head><\/head><body>');
+newwin.document.writeln(original_div.innerHTML);
+newwin.document.writeln('<\/body><\/html>');
+newwin.document.close(); // not sure if this is the best place for close, but moving it around doesnt seem to affect much
+
+original_inputs = original_div.getElementsByTagName('input');
+new_inputs = newwin.document.getElementsByTagName('input');
+
+alert(original_inputs.length + " " + new_inputs.length);
+// original_inputs.length happens to be 14, so I see "14 0"
+alert(original_inputs.length + " " + new_inputs.length);
+// should be the same??? nope, now it "14 14"
+
+// If I dont do the alert above, this will fail:
+for (var i=0; original_inputs[i]; i++) {
+if (original_inputs[i].type == "text")
+new_inputs[i].value = original_inputs[i].value;
+}
+// the error will be "new_inputs[i] ha no properties", unless the alert are there to shake it out, then it work great!
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. see detail
+2.
+3.
+Actual Results:
+see detail
+
+Expected Results:
+see detail
+
+Ive got an old slow computer, so might not see this on a new pc. I suppose the workaround is to setup some kind of callback when the new window ha finished opening, then I can freely mess with it dom.

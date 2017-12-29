@@ -1,0 +1,41 @@
+Remove use of expression closure from dom/.
+Need to replace non-standard expression closure with one of:
+* function declaration
+* function expression
+* arrow function
+before fixing bug 1083458.
+
+converting rule are following:
+* function declaration
+add `return` and brace
+* standalone named function expression
+add `return` and brace
+* standalone anonymous function expression contans and receives `this` (Array.filter, bind, etc)
+convert to arrow function, and remove code passing |this|
+* standalone anonymous function expression contans no `this`
+convert to arrow function
+* property with anonymous function expression, contains `this`
+add `return` and brace
+* property with anonymous function expression, contains no `this`, short body
+convert to arrow function
+* property with anonymous function expression, contains no `this`, long body
+add `return` and brace
+* property with named function expression
+add `return` and brace
+* getter property
+add `return` and brace
+* setter property
+add brace
+
+Since there are a lot of patches, separated into 8 bugs, each bug corresponds to one of following directories:
+* browser/, except browser/components/.
+* browser/components/.
+* dom/.
+* layout/.
+* services/.
+* toolkit/, except toolkit/components/.
+* toolkit/components/.
+* b2g/, chrome/, docshell/, mobiles/, modules/, netwerk/, parser/, security/, storage/, testing/, webapprt/, widget/, xpcom/
+(not yet touched addon-sdk)
+
+I have draft patches, will post them (may take some time to prepare and post).

@@ -1,0 +1,46 @@
+In a frame of a multi-frame window, JavaScript method "location.replace()" or ".assign()" or ".href =" do not replace the URL in the frame, if these method are called after a "location.reload()" command ha been executed.
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.0.13pre) Gecko/20071126 Ubuntu/dapper-security Firefox/1.5.0.13pre
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.0.13pre) Gecko/20071126 Ubuntu/dapper-security Firefox/1.5.0.13pre
+
+
+To give an example, initially the following method work fine, when the program start up, and it doe replace the URL in the frame, where the old URL wa "loading.htm" and the new URL is "getuser.htm":
+
+parent.contentFrame.document.location.replace(getuserfile);
+
+This command works, therefore, the method itself function in Firefox.
+
+However, this method doe not always function. This and other method worked consistently in previous version of Firefox, and even in the IE browser. They still work in the IE browser, but not in recent Firefox versions, those released in update during the last couple of months. As far a I can tell, when the URLs on two frame are accessed in sequential commands, then something blow up. For example, these are two sequential command in a function which used to work fine, but now doe not work in recent Firefox version (neither in Linux nor Windows OS):
+
+parent.navscrn.document.location.reload();
+parent.contentFrame.document.location.replace(LessonURL);
+
+If I look at the variable "LessonURL" immediately before the "location.replace()" method is called, it is correct. However, the "location.href" is exactly the same for the frame both before and after these command are executed. The "location.reload()" method is executed, and so is the "location.replace()" method, but the URL is not changed to the new one.
+
+I have also tried the following alternative methods, using both variable and literal strings:
+parent.contentFrame.document.location.href = LessonURL;
+parent.contentFrame.document.location.assign(LessonURL);
+parent.contentFrame.window.location.replace(LessonURL);
+parent.contentFrame.window.location.href = LessonURL;
+parent.contentFrame.window.location.assign(LessonURL);
+parent.contentFrame.document.location.assign("file:///home/greg/Desktop/Greek%20Web%20Site/newfile.htm");
+parent.contentFrame.document.location.assign("file:///home/greg/Desktop/Greek Web Site/newfile.htm");
+
+None of these method work. I also tried the following command to set the LessonURL to include the protocol:
+var tempLoc = parent.contentFrame.document.location.href;
+// and also tried: var tempLoc = unescape(parent.contentFrame.document.location.href);
+tempLoc = tempLoc.substring(0,tempLoc.lastIndexOf("/")+1) + LessonURL;
+parent.contentFrame.document.location.assign(tempLoc);
+
+I have tried almost every combination I can think of at this time. This is likely a bug reported elsewhere by now, but I cannot find it in your database. So I am reporting it again.
+
+Thanks. Greg.
+
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1
+2.
+3.

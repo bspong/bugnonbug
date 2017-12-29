@@ -1,0 +1,54 @@
+Images should be displayed randomly, but seem to be stuck in cache
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.5) Gecko/20041107 Firefox/1.0
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.5) Gecko/20041107 Firefox/1.0
+
+On this page, I am using some JavaScript to display random text stings, and a
+PHP script to display random images. The image do not consistently change when
+the page is refreshed, but the text string do. This page/PHP script doe
+perform correctly in Opera 7.11 and IE 6.0.29
+
+Reproducible: Always
+Steps to Reproduce:
+Visit the page, look at the images, hit refresh few times...very few, if any, of
+the image will change.
+
+
+
+
+PHP script follows
+-----------------------
+
+<?php
+/*
+By Matt Mullenweg > http://photomatt.net
+Inspired by Dan Benjamin > http://hiveware.com/imagerotator.php
+Latest version always at:
+http://photomatt.net/scripts/randomimage
+*/
+
+// Make this the relative path to the images, like "../img" or "random/images/".
+// If the image are in the same directory, leave it blank.
+$folder = '';
+
+// Space seperated list of extensions, you probably won't have to change this.
+$exts = 'jpg jpeg png gif';
+
+$files = array(); $i = -1; // Initialize some variable
+if ('' == $folder) $folder = './';
+$handle = opendir($folder);
+$exts = explode(' ', $exts);
+while (false !== ($file = readdir($handle))) {
+foreach($exts a $ext) { // for each extension check the extension
+if (preg_match('/\.'.$ext.'$/i', $file, $test)) { // faster than ereg,
+case insensitive
+$files[] = $file; // it's good
+++$i;
+}
+}
+}
+closedir($handle); // We're not using it anymore
+mt_srand((double)microtime()*1000000); // seed for PHP < 4.2
+$rand = mt_rand(0, $i); // $i wa incremented a we went along
+
+header('Location: '.$folder.$files[$rand]); // Voila!
+?>

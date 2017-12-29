@@ -1,0 +1,19 @@
+Investigate UITour's performance impact during window opening and closing
+Created attachment 8850211
+Patch
+
+The observer from UITour.jsm is very visible in profiles: https://perfht.ml/2noCrEC
+
+http://searchfox.org/mozilla-central/rev/ee7cfd05d7d9f83b017dd54c2052a2ec19cbd48b/browser/components/uitour/UITour.jsm#718
+
+This iterates over all the existing windows, and that loop seems to be O(n2) (this landed in bug 1126756).
+
+This slow code run when receiving the message-manager-close notification, which is fired several time a a result of the tabbrowser updateBrowserRemoteness call.
+
+This UITour code run because for each new browser window there are 3 UITour:onPageEvent notification with getConfiguration call for "sync", "appinfo" and "selectedSearchEngine".
+
+I'm not sure what's causing these calls, I suspect it's self-support but haven't found the actual code yet.
+
+It's very easy to make the performance impact disappear here by not initializing UITour when the page event is only a getConfiguration one (initialization doesn't matter in that case because we don't display anything in the browser, so nothing need to be uninitialized later). This is what the attached patch does.
+
+But I think this deserves a bit more analysis.

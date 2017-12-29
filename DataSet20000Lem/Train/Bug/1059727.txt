@@ -1,0 +1,68 @@
+New API: Toolbox panel initialization event
+This report is fork from Bug 1036949 (New API: MarkupView customization)
+
+The purpose of this report is to modify toolbox API, so extension can access panel instance extend them and provide new features.
+
+Two goal here:
+
+1) Get reference to a toolbox panel instance a soon a it's created. This allows registering event listener (before any event are fired) and also set necessary property on the panel itself.
+
+2) Get panel frame element a soon a it's created. This allows to set proper attribute on it before it's loaded.
+
+---
+
+It's currently impossible to get instance of an existing panel (and panel-frame) at the right time. Panel instance is created inside Tool.build method and the reference is not returned from it. Return value is a promise that is resolved asynchronously. Registering listener after the promise is resolved is too late since some event are already fired.
+
+A solution is to return panel instance directly from the build method, fire an event that allows extension to access the panel and continue with panel build process by calling panel.open() method explicitly.
+
+There should be following event in order to allow hooking panel creation process.
+
+* "<panelId>-init" - after panel iframe is created
+* "<panelId>-build" - after panel iframe is loaded and panel instance created
+* "<panelId>-ready" - after panel's (async) initialization sequence is finished.
+
+
+Here is a code snippet that demonstrates when these event are fired (toolbox.js):
+
+Toolbox.loadTool = function(id) {
+
+...
+
+let definition = gDevTools.getToolDefinition(id);
+
+iframe = this.doc.createElement("iframe");
+// ...set iframe attribute
+
+// Fire an event saying that the <iframe> element is created
+gDevTools.emit(id + "-init", this, iframe);
+
+// onLoad is called when the iframe content is loaded.
+let onLoad = () => {
+
+// Call panel-definition's build method. It should return instance of the panel.
+let panel = definition.build(iframe.contentWindow, this);
+
+// Store reference to the panel, so it's accessible any time later
+// (e.g. for bootstrapped extension installed in the middle of Fx session)
+iframe.contentWindow.panel = panel;
+
+// Fire an event saying the panel is instanciated.
+// Extensions can register listener now.
+this.emit(id + "-build", panel);
+
+// Call 'open' on the panel.
+let built = panel.open();
+promise.resolve(built).then((panel) => {
+...
+// Fire when panel is ready (an existing event)
+this.emit(id + "-ready", panel);
+...
+});
+);
+
+iframe.setAttribute("src", definition.url);
+
+
+
+
+Honza

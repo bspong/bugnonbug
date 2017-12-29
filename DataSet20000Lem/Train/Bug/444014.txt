@@ -1,0 +1,27 @@
+Firefox honor embedded ICC intent flag, and probably shouldn't
+User-Agent: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_5_3; en-us) AppleWebKit/527+ (KHTML, like Gecko) Version/3.1.1 Safari/525.20
+Build Identifier: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.5; en-US; rv:1.9) Gecko/2008061004 Firefox/3.0
+
+In certain situations, image will display incorrectly in Firefox even though they display correctly in other applications. This is primarily due to Firefox honoring the ICC profile intent flag. Specifically honoring the intent if set to "absolute colorimetric" rendering.
+
+If the intent flag is set to "absolute colorimetric", and the wtpt tag in the two ICC profile aren't the same (i.e. wtpt XYZ value are D50 for display, and D65 for the embedded profile color space), the image will shift dramatically blue or yellow. (D65 image to D50 display = blue shift; D50 image to D65 display = yellow shift).
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Install and set display profile using a profile with wtpt tag set to D50.
+2. gfx.color_management.enabled set to true and app relaunched.
+3. Open in Firefox a JPEG with embedded sRGB ICC profile intent flag set to absolute colorimetric.
+4. Open in Fiefox a duplicate JPEG with embedded sRGB ICC profile intent flag set to relative colorimetric
+Actual Results:
+Image with intent=absolute colorimetric will display bluer than it should.
+
+Expected Results:
+All other apps ignore this intent and use an intent appropriate for use of the image. For display, Relative Colorimetric + Black Point compensation is what Photoshop doe by default. Next most appropriate is Perceptual.
+
+Bug 418538 depends on this bug.
+This likely applies to all platform and OSs.
+
+Otherwise useless information: for display profile the ICC spec state that the wtpt tag should always contain XYZ value for D50. If the actual white point is not D50, then the use of the chad tag is required. There are a number of malformed profile that don't follow this esoteric and debatable rule in the spec. But the result is that it's possible to get chromatic adaptation between different white point where it is not desired. The simple logic is that the user is chromatically adapted to the display, and further chromatic adaptation isn't needed, which is what is implied by use of absolute colorimetric rendering.
+
+I'd recommend that contingency be made in coding for content and context specific rendering intents. For example sRGB image displayed to sRGB display are best rendered using relative colorimetric. sRGB image for smaller gamut display such a laptop are best rendered using perceptual. HDR image (when we get there) rendered to HDR display are best rendered using absolute colorimetric, etc. So boolean logic should be employed to get the best results. In the meantime we probably should use Perceptual.

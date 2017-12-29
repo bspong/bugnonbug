@@ -1,0 +1,31 @@
+addEventListener for 'DOMContentLoaded' to the id='appcontent' element is causing an error FF 4.0b3pre
+User-Agent:       Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_4; en-US) AppleWebKit/533.4 (KHTML, like Gecko) Chrome/5.0.375.99 Safari/533.4
+Build Identifier: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.6; rv:2.0b3pre) Gecko/20100724 Minefield/4.0b3pre
+
+This is a bit complicated to explain, but here it goes..
+
+I contribute to GM, and this error applies for that extension as well, but I'm going to point you to the source code for my GM fork, Scriptish.
+
+The summary is that this line always used to work, and now with the new nightly, FF 4.0b3pre, this line causes the following error (this line = http://github.com/erikvold/scriptish/blob/wtf/content/browser.js#L63 ):
+
+Error: uncaught exception: [Exception... "Component returned failure code: 0x80570009 (NS_ERROR_XPC_BAD_CONVERT_JS) [nsIXPCComponents_Utils.lookupMethod]"  nsresult: "0x80570009 (NS_ERROR_XPC_BAD_CONVERT_JS)"  location: "JS frame :: chrome://greasemonkey/content/utils.js :: GM_listen :: line 44"  data: no]
+
+Also you'll notice there are lines below that falling line that look similar, well they still work fine, it's just the specific line that I'm point to that's failing, and I think it has something to do with the element being used.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. git clone https://erikvold@github.com/erikvold/scriptish.git
+2. git checkout fd028dfe94bf3e23ad864c0c90275714bed58710
+3. add this extension to a ff profile by creating a file in the profile's extension folder that points to your clone
+4. boot up firefox (make sure that Scriptish is installed and enabled)
+5. If scriptish is installed properly and it's enabled, then you will see the following error in the error console:
+
+Error: uncaught exception: [Exception... "Component returned failure code: 0x80570009 (NS_ERROR_XPC_BAD_CONVERT_JS) [nsIXPCComponents_Utils.lookupMethod]"  nsresult: "0x80570009 (NS_ERROR_XPC_BAD_CONVERT_JS)"  location: "JS frame :: chrome://greasemonkey/content/utils.js :: GM_listen :: line 44"  data: no]
+Actual Results:  
+An error.
+
+Expected Results:  
+No error.
+
+Oddly this commit seems to fix the bug: http://github.com/erikvold/scriptish/commit/5de28e356692b144c1e18e688de2fa6c869739d6

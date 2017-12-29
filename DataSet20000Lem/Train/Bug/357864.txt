@@ -1,0 +1,64 @@
+canvas from xbl doe not render when created with document.createElement
+User-Agent: Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9a1) Gecko/20061012 Firefox/3.0a1
+Build Identifier: Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9a1) Gecko/20061012 Firefox/3.0a1
+
+I have an xbl binding that contains a canvas. If I use the binding by just declaring a xul element and then setting the property then the canvas work ok. If I create a box with document.createElement and then set the className for the binding all the other element render except for the canvas.
+
+here's the xbl:
+
+<binding id="slide">
+<content>
+<html:canvas />
+<xul:label xbl:inherits="value=date"/>
+<xul:label xbl:inherits="value=title" />
+</content>
+<implementation>
+<property name="img">
+<getter><![CDATA[
+return this.getAttribute('img')
+]]></getter>
+<setter><![CDATA[
+var cnv = document.getAnonymousNodes(this)[0]
+var ctx = cnv.getContext('2d')
+var im = new Image()
+var f = function() {
+cnv.width = 170
+cnv.height = 170
+ctx.save()
+ctx.translate((cnv.width - im.height)/2, cnv.height)
+ctx.rotate(-Math.PI/2)
+ctx.drawImage(im, 0, 0)
+ctx.restore()
+}
+im.addEventListener("load", f, true);
+im.src = val
+return this.setAttribute('img', val)
+]]></setter>
+
+</property>
+<constructor><![CDATA[
+var cnv = document.getAnonymousNodes(this)[0]
+cnv.width = 170
+cnv.height = 170
+]]></constructor>
+</implementation>
+
+</binding>
+
+if I declare a box like this in the page:
+<box class="slide" date="24-10-2006" title="My Title" id="id1" />
+the following code works:
+document.getElementById('id1').img = 'file:///home/obender/Projects/Tests/Moz/test.jpg'
+
+If I try to create the box through code then the canvas will not render but the two label will display just fine:
+
+var b = document.createElement('box')
+b.className = 'slide'
+b.setAttribute('date', '24-10-2006')
+b.setAttribute('title', 'Created elem.')
+b.img = 'file:///home/obender/Projects/Tests/Moz/test.jpg'
+document.getElementById('secrow').appendChild(b)
+
+DomInspector show the canvas with both clientHeight=0 and clientWidth=0
+
+Reproducible: Always

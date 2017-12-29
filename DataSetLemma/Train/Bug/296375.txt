@@ -1,0 +1,840 @@
+document.addBinding() segfaults called on a node with existing binding
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8b2) Gecko/20050523 Firefox/1.0+
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8b2) Gecko/20050523 Firefox/1.0+
+
+This bug due to the request in
+https://bugzilla.mozilla.org/show_bug.cgi?id=51261#c23.
+
+Calling document.addBinding() produce a segmentation fault.
+
+Completely fresh checkout: checkout start: Thu Jun 2 10:21:53 CEST 2005
+
+
+Stacktrace (non-blank-line numbered for your convenience):
+
+1 (gdb) thread apply all bt
+
+2 Thread 6 (Thread 108567472 (LWP 10176)):
+3 #0 0x00b22d19 in __lll_mutex_lock_wait () from /lib/tls/libc.so.6
+4 #1 0x00aae1b4 in _L_mutex_lock_2570 () from /lib/tls/libc.so.6
+5 #2 0x0052eaf0 in __JCR_LIST__ () from
+firefox-devbuild/dist/bin/libxpcom_core.so
+6 #3 0x06789868 in ?? ()
+7 #4 0x00a33034 in ?? () from /usr/lib/libstdc++.so.5
+8 #5 0x0a0291d8 in ?? ()
+9 #6 0x06789ac0 in ?? ()
+10 #7 0x06789868 in ?? ()
+11 #8 0x00a10233 in operator delete () from /usr/lib/libstdc++.so.5
+12 #9 0x00a10233 in operator delete () from /usr/lib/libstdc++.so.5
+13 #10 0x004ac47d in nsStringInputStream::Release (this=0xb6beacd8) at
+/tmp/awuest/trees/statustext/mozilla/xpcom/io/nsStringStream.cpp:142
+14 #11 0x00fe1f73 in nsCOMPtr<nsIInputStream>::assign_assuming_AddRef
+(this=0xb6bea914, newPtr=0x0) at ../../../dist/include/xpcom/nsCOMPtr.h:568
+15 #12 0x00fe1b76 in nsCOMPtr<nsIInputStream>::assign_with_AddRef
+(this=0xb6bea914, rawPtr=0x0) at ../../../../dist/include/xpcom/nsCOMPtr.h:1224
+16 #13 0x00fe175f in nsCOMPtr<nsIInputStream>::operator= (this=0xb6bea914,
+rhs=0x0) at ../../../../dist/include/xpcom/nsCOMPtr.h:713
+17 #14 0x010a97ec in nsHttpTransaction::Close (this=0xb6bea8d8, reason=0) at
+/tmp/awuest/trees/statustext/mozilla/netwerk/protocol/http/src/nsHttpTransaction.cpp:532
+18 #15 0x0109b606 in nsHttpConnection::CloseTransaction (this=0xb6beaf38,
+trans=0xb6bea8d8, reason=0)
+19 at
+/tmp/awuest/trees/statustext/mozilla/netwerk/protocol/http/src/nsHttpConnection.cpp:485
+20 #16 0x0109c28d in nsHttpConnection::OnInputStreamReady (this=0xb6beaf38,
+in=0xb6f72224)
+21 at
+/tmp/awuest/trees/statustext/mozilla/netwerk/protocol/http/src/nsHttpConnection.cpp:749
+22 #17 0x0101ae26 in nsSocketInputStream::OnSocketReady (this=0xb6f72224,
+condition=0) at
+/tmp/awuest/trees/statustext/mozilla/netwerk/base/src/nsSocketTransport2.cpp:240
+23 #18 0x0101eade in nsSocketTransport::OnSocketReady (this=0xb6f72140,
+fd=0xb6bd0680, outFlags=1)
+24 at
+/tmp/awuest/trees/statustext/mozilla/netwerk/base/src/nsSocketTransport2.cpp:1453
+25 #19 0x0102340e in nsSocketTransportService::Run (this=0xa01c020) at
+/tmp/awuest/trees/statustext/mozilla/netwerk/base/src/nsSocketTransportService2.cpp:573
+26 #20 0x004d33e2 in nsThread::Main (arg=0xa029158) at
+/tmp/awuest/trees/statustext/mozilla/xpcom/threads/nsThread.cpp:118
+27 #21 0x00141796 in _pt_root (arg=0xa0291d8) at
+/tmp/awuest/trees/statustext/mozilla/nsprpub/pr/src/pthreads/ptthread.c:220
+28 #22 0x00c0fde8 in start_thread () from /lib/tls/libpthread.so.0
+29 #23 0x00b1593a in clone () from /lib/tls/libc.so.6
+
+30 Thread 5 (Thread 181783472 (LWP 10178)):
+31 #0 0x00b22d19 in __lll_mutex_lock_wait () from /lib/tls/libc.so.6
+32 #1 0x00aae1b4 in _L_mutex_lock_2570 () from /lib/tls/libc.so.6
+33 #2 0x00150368 in __JCR_LIST__ () from firefox-devbuild/dist/bin/libnspr4.so
+34 #3 0x0ad5cc08 in ?? ()
+35 #4 0x00150368 in __JCR_LIST__ () from firefox-devbuild/dist/bin/libnspr4.so
+36 #5 0x00000001 in ?? ()
+37 #6 0x0ad5cc08 in ?? ()
+38 #7 0x0ad5ca48 in ?? ()
+39 #8 0x00128ae0 in PR_Free (ptr=0xa343bc8) at
+/tmp/awuest/trees/statustext/mozilla/nsprpub/pr/src/malloc/prmem.c:477
+40 #9 0x00128ae0 in PR_Free (ptr=0xa343bc8) at
+/tmp/awuest/trees/statustext/mozilla/nsprpub/pr/src/malloc/prmem.c:477
+41 #10 0x001426dc in _pt_thread_death (arg=0xa343a58) at
+/tmp/awuest/trees/statustext/mozilla/nsprpub/pr/src/pthreads/ptthread.c:816
+42 #11 0x00c106a9 in deallocate_tsd () from /lib/tls/libpthread.so.0
+43 #12 0x00c0fdf6 in start_thread () from /lib/tls/libpthread.so.0
+44 #13 0x00b1593a in clone () from /lib/tls/libc.so.6
+
+45 Thread 4 (Thread 192273328 (LWP 10179)):
+46 #0 0x00c1245b in pthread_cond_timedwait@@GLIBC_2.3.2 () from
+/lib/tls/libpthread.so.0
+47 #1 0x00139d24 in pt_TimedWait (cv=0x9f9bbb4, ml=0x9f9cca0,
+timeout=838199) at
+/tmp/awuest/trees/statustext/mozilla/nsprpub/pr/src/pthreads/ptsynch.c:280
+48 #2 0x0013a23b in PR_WaitCondVar (cvar=0x9f9bbb0, timeout=838199) at
+/tmp/awuest/trees/statustext/mozilla/nsprpub/pr/src/pthreads/ptsynch.c:407
+49 #3 0x004d792b in TimerThread::Run (this=0x9f9be10) at
+/tmp/awuest/trees/statustext/mozilla/xpcom/threads/TimerThread.cpp:318
+50 #4 0x004d33e2 in nsThread::Main (arg=0xa343eb8) at
+/tmp/awuest/trees/statustext/mozilla/xpcom/threads/nsThread.cpp:118
+51 #5 0x00141796 in _pt_root (arg=0xa345020) at
+/tmp/awuest/trees/statustext/mozilla/nsprpub/pr/src/pthreads/ptthread.c:220
+52 #6 0x00c0fde8 in start_thread () from /lib/tls/libpthread.so.0
+53 #7 0x00b1593a in clone () from /lib/tls/libc.so.6
+
+54 Thread 3 (Thread 202763184 (LWP 10181)):
+55 #0 0x00b22d19 in __lll_mutex_lock_wait () from /lib/tls/libc.so.6
+56 ---Type <return> to continue, or q <return> to quit---
+57 #1 0x00aae1b4 in _L_mutex_lock_2570 () from /lib/tls/libc.so.6
+58 #2 0x0000ea61 in ?? ()
+59 #3 0x0c15ec08 in ?? ()
+60 #4 0x00150368 in __JCR_LIST__ () from firefox-devbuild/dist/bin/libnspr4.so
+61 #5 0x00000001 in ?? ()
+62 #6 0x0c15ec08 in ?? ()
+63 #7 0x0c15ea48 in ?? ()
+64 #8 0x00128ae0 in PR_Free (ptr=0xb73d1d00) at
+/tmp/awuest/trees/statustext/mozilla/nsprpub/pr/src/malloc/prmem.c:477
+65 #9 0x00128ae0 in PR_Free (ptr=0xb73d1d00) at
+/tmp/awuest/trees/statustext/mozilla/nsprpub/pr/src/malloc/prmem.c:477
+66 #10 0x001426dc in _pt_thread_death (arg=0xb73ad568) at
+/tmp/awuest/trees/statustext/mozilla/nsprpub/pr/src/pthreads/ptthread.c:816
+67 #11 0x00c106a9 in deallocate_tsd () from /lib/tls/libpthread.so.0
+68 #12 0x00c0fdf6 in start_thread () from /lib/tls/libpthread.so.0
+69 #13 0x00b1593a in clone () from /lib/tls/libc.so.6
+
+70 Thread 2 (Thread 213253040 (LWP 10183)):
+71 #0 0x00b22d19 in __lll_mutex_lock_wait () from /lib/tls/libc.so.6
+72 #1 0x00aae1b4 in _L_mutex_lock_2570 () from /lib/tls/libc.so.6
+73 #2 0x01106938 in __JCR_LIST__ () from
+/tmp/awuest/trees/statustext/mozilla/firefox-devbuild/dist/bin/components/libnecko.so
+74 #3 0x0cb5fc08 in ?? ()
+75 #4 0x00150368 in __JCR_LIST__ () from firefox-devbuild/dist/bin/libnspr4.so
+76 #5 0x00000001 in ?? ()
+77 #6 0x0cb5fc08 in ?? ()
+78 #7 0x0cb5fa48 in ?? ()
+79 #8 0x00128ae0 in PR_Free (ptr=0xb6bcea40) at
+/tmp/awuest/trees/statustext/mozilla/nsprpub/pr/src/malloc/prmem.c:477
+80 #9 0x00128ae0 in PR_Free (ptr=0xb6bcea40) at
+/tmp/awuest/trees/statustext/mozilla/nsprpub/pr/src/malloc/prmem.c:477
+81 #10 0x001426dc in _pt_thread_death (arg=0xb6bce8b8) at
+/tmp/awuest/trees/statustext/mozilla/nsprpub/pr/src/pthreads/ptthread.c:816
+82 #11 0x00c106a9 in deallocate_tsd () from /lib/tls/libpthread.so.0
+83 #12 0x00c0fdf6 in start_thread () from /lib/tls/libpthread.so.0
+84 #13 0x00b1593a in clone () from /lib/tls/libc.so.6
+
+85 Thread 1 (Thread -1218583904 (LWP 10159)):
+86 #0 0x00ae283c in __nanosleep_nocancel () from /lib/tls/libc.so.6
+87 #1 0x00ae265f in sleep () from /lib/tls/libc.so.6
+88 #2 0x0806945d in ah_crap_handler (signum=11) at nsSigHandlers.cpp:132
+89 #3 0x08069f79 in nsProfileLock::FatalSignalHandler (signo=11) at
+nsProfileLock.cpp:209
+90 #4 <signal handler called>
+91 #5 0x00aab2f0 in malloc_consolidate () from /lib/tls/libc.so.6
+92 #6 0x00aab1cd in _int_free () from /lib/tls/libc.so.6
+93 #7 0x00aaa048 in free () from /lib/tls/libc.so.6
+94 #8 0x08069a46 in DemangleSymbol (aSymbol=0x11ddec7
+"_ZN8nsCOMPtrI13nsIDOMElementE14assign_from_qiE16nsQueryInterfaceRK4nsID",
+95 aBuffer=0xbfff4624
+"nsCOMPtr<nsIDOMElement>::assign_from_qi(nsQueryInterface, nsID const&)",
+aBufLen=4096) at nsStackFrameUnix.cpp:80
+96 #9 0x08069bb5 in DumpStackToFile (aStream=0xb6bca0) at
+nsStackFrameUnix.cpp:129
+97 #10 0x08069416 in ah_crap_handler (signum=11) at nsSigHandlers.cpp:125
+98 #11 0x08069f79 in nsProfileLock::FatalSignalHandler (signo=11) at
+nsProfileLock.cpp:209
+99 #12 <signal handler called>
+100 #13 0x53e58955 in ?? ()
+101 #14 0x00450e6c in nsQueryInterface::operator() (this=0xbfff5b04,
+aIID=@0x1938e14, answer=0xbfff5af0) at nsCOMPtr.cpp:47
+102 #15 0x0140f363 in nsCOMPtr<nsIDOMElement>::assign_from_qi
+(this=0xbfff5b40, qi={mRawPtr = 0x52b008}, aIID=@0x1938e14) at
+../../../dist/include/xpcom/nsCOMPtr.h:1232
+103 #16 0x0140d18d in nsCOMPtr (this=0xbfff5b40, qi={mRawPtr = 0x52b008}) at
+../../../../dist/include/xpcom/nsCOMPtr.h:645
+104 #17 0x017fc468 in nsXBLBinding::GetAnonymousNodes (this=0xb6be6468) at
+/tmp/awuest/trees/statustext/mozilla/content/xbl/src/nsXBLBinding.cpp:1271
+105 #18 0x017f8f32 in BuildContentLists (aKey=0xb6bf1780, aData=0xb6bf1770,
+aClosure=0xbfff5e30) at
+/tmp/awuest/trees/statustext/mozilla/content/xbl/src/nsXBLBinding.cpp:303
+106 #19 0x004647fe in hashEnumerate (table=0xb6be64f0, hdr=0xb6bf1b2c, i=0,
+arg=0xbfff5ce0) at /tmp/awuest/trees/statustext/mozilla/xpcom/ds/nsHashtable.cpp:131
+107 #20 0x0045d35f in PL_DHashTableEnumerate (table=0xb6be64f0, etor=0x4647d0
+<hashEnumerate>, arg=0xbfff5ce0) at
+/tmp/awuest/trees/statustext/mozilla/xpcom/ds/pldhash.c:619
+108 #21 0x00465119 in nsHashtable::Enumerate (this=0xb6be64e8,
+aEnumFunc=0x17f8e2e <BuildContentLists>, aClosure=0xbfff5e30)
+109 at /tmp/awuest/trees/statustext/mozilla/xpcom/ds/nsHashtable.cpp:319
+110 #22 0x017f9d18 in nsXBLBinding::GenerateAnonymousContent
+(this=0xb6be6468) at
+/tmp/awuest/trees/statustext/mozilla/content/xbl/src/nsXBLBinding.cpp:527
+111 #23 0x017f975e in nsXBLBinding::GenerateAnonymousContent
+(this=0xb6bf1718) at
+/tmp/awuest/trees/statustext/mozilla/content/xbl/src/nsXBLBinding.cpp:437
+112 #24 0x01815b63 in nsXBLService::LoadBindings (this=0xb7323128,
+aContent=0xb6beb470, aURL=0xb6bf19b8, aAugmentFlag=1, aBinding=0xbfff65c0,
+aResolveStyle=0xbfff65bc)
+113 ---Type <return> to continue, or q <return> to quit---
+114 at
+/tmp/awuest/trees/statustext/mozilla/content/xbl/src/nsXBLService.cpp:636
+115 #25 0x0181ac6c in nsBindingManager::AddLayeredBinding (this=0xb7387258,
+aContent=0xb6beb470, aURL=0xb6bf19b8)
+116 at
+/tmp/awuest/trees/statustext/mozilla/content/xbl/src/nsBindingManager.cpp:630
+117 #26 0x016b5af2 in nsDocument::AddBinding (this=0xb732e6f8,
+aContent=0xb6beb48c, aURI=@0xb6bf1698) at
+/tmp/awuest/trees/statustext/mozilla/content/base/src/nsDocument.cpp:2730
+118 #27 0x004fb651 in XPTC_InvokeByIndex () at
+/tmp/awuest/trees/statustext/mozilla/xpcom/reflect/xptcall/src/md/unix/xptcinvoke_gcc_x86_unix.cpp:69
+119 #28 0x00cddaac in XPCWrappedNative::CallMethod (ccx=@0xbfff694c,
+mode=CALL_METHOD) at
+/tmp/awuest/trees/statustext/mozilla/js/src/xpconnect/src/xpcwrappednative.cpp:2104
+120 #29 0x00ce7d6b in XPC_WN_CallMethod (cx=0xb734ff68, obj=0xb73bfed8,
+argc=2, argv=0xb6bd7140, vp=0xbfff6afc)
+121 at
+/tmp/awuest/trees/statustext/mozilla/js/src/xpconnect/src/xpcwrappednativejsops.cpp:1348
+122 #30 0x002d0b7f in js_Invoke (cx=0xb734ff68, argc=2, flags=0) at
+/tmp/awuest/trees/statustext/mozilla/js/src/jsinterp.c:1178
+123 #31 0x002e03df in js_Interpret (cx=0xb734ff68, pc=0xa21907d ":",
+result=0xbfff7238) at /tmp/awuest/trees/statustext/mozilla/js/src/jsinterp.c:3468
+124 #32 0x002d0c08 in js_Invoke (cx=0xb734ff68, argc=0, flags=2) at
+/tmp/awuest/trees/statustext/mozilla/js/src/jsinterp.c:1198
+125 #33 0x002d0fb9 in js_InternalInvoke (cx=0xb734ff68, obj=0xb6d18b40,
+fval=-1227780280, flags=0, argc=0, argv=0x0, rval=0xbfff73dc)
+126 at /tmp/awuest/trees/statustext/mozilla/js/src/jsinterp.c:1275
+127 #34 0x0029d2a2 in JS_CallFunctionValue (cx=0xb734ff68, obj=0xb6d18b40,
+fval=-1227780280, argc=0, argv=0x0, rval=0xbfff73dc)
+128 at /tmp/awuest/trees/statustext/mozilla/js/src/jsapi.c:3858
+129 #35 0x0180ad92 in nsXBLProtoImplAnonymousMethod::Execute
+(this=0xb703e9a0, aBoundElement=0xb6beb470)
+130 at
+/tmp/awuest/trees/statustext/mozilla/content/xbl/src/nsXBLProtoImplMethod.cpp:333
+131 #36 0x017fd824 in nsXBLPrototypeBinding::BindingAttached
+(this=0xb703e788, aBoundElement=0xb6beb470)
+132 at
+/tmp/awuest/trees/statustext/mozilla/content/xbl/src/nsXBLPrototypeBinding.cpp:390
+133 #37 0x017fad14 in nsXBLBinding::ExecuteAttachedHandler (this=0xb6bd5538)
+at /tmp/awuest/trees/statustext/mozilla/content/xbl/src/nsXBLBinding.cpp:768
+134 #38 0x0181b439 in nsBindingManager::ProcessAttachedQueue
+(this=0xb7387258) at
+/tmp/awuest/trees/statustext/mozilla/content/xbl/src/nsBindingManager.cpp:761
+135 #39 0x013fff1f in nsCSSFrameConstructor::ContentAppended
+(this=0xb732ddb8, aContainer=0xb6d02158, aNewIndexInContainer=0)
+136 at
+/tmp/awuest/trees/statustext/mozilla/layout/base/nsCSSFrameConstructor.cpp:8576
+137 #40 0x0145d3be in PresShell::ContentAppended (this=0xb733bec8,
+aDocument=0xb732e6f8, aContainer=0xb6d02158, aNewIndexInContainer=0)
+138 at /tmp/awuest/trees/statustext/mozilla/layout/base/nsPresShell.cpp:5441
+139 #41 0x016b3fd9 in nsDocument::ContentAppended (this=0xb732e6f8,
+aContainer=0xb6d02158, aNewIndexInContainer=0)
+140 at
+/tmp/awuest/trees/statustext/mozilla/content/base/src/nsDocument.cpp:2194
+141 #42 0x0183d721 in nsXULDocument::ContentAppended (this=0xb732e6f8,
+aContainer=0xb6d02158, aNewIndexInContainer=0)
+142 at
+/tmp/awuest/trees/statustext/mozilla/content/xul/document/src/nsXULDocument.cpp:1172
+143 #43 0x0190b5a3 in nsXULContentBuilder::RebuildAll (this=0xb6d5d9d8) at
+/tmp/awuest/trees/statustext/mozilla/content/xul/templates/src/nsXULContentBuilder.cpp:1909
+144 #44 0x0191f25d in nsXULTemplateBuilder::Rebuild (this=0xb6d5d9d8) at
+/tmp/awuest/trees/statustext/mozilla/content/xul/templates/src/nsXULTemplateBuilder.cpp:244
+145 #45 0x0191f773 in nsXULTemplateBuilder::AttributeChanged
+(this=0xb6d5d9d8, aDocument=0xb732e6f8, aContent=0xb6d02158, aNameSpaceID=0,
+aAttribute=0xa346050, aModType=2)
+146 at
+/tmp/awuest/trees/statustext/mozilla/content/xul/templates/src/nsXULTemplateBuilder.cpp:343
+147 #46 0x0190a5b9 in nsXULContentBuilder::AttributeChanged (this=0xb6d5d9d8,
+aDocument=0xb732e6f8, aContent=0xb6d02158, aNameSpaceID=0, aAttribute=0xa346050,
+aModType=2)
+148 at
+/tmp/awuest/trees/statustext/mozilla/content/xul/templates/src/nsXULContentBuilder.cpp:1568
+149 #47 0x0183d527 in nsXULDocument::AttributeChanged (this=0xb732e6f8,
+aElement=0xb6d02158, aNameSpaceID=0, aAttribute=0xa346050, aModType=2)
+150 at
+/tmp/awuest/trees/statustext/mozilla/content/xul/document/src/nsXULDocument.cpp:1136
+151 #48 0x01822d3d in nsXULElement::SetAttrAndNotify (this=0xb6d02158,
+aNamespaceID=0, aAttribute=0xa346050, aPrefix=0x0, aOldValue=@0xbfff7ddc,
+aParsedValue=@0xbfff7dbc,
+152 aModification=0, aFireMutation=0, aNotify=1) at
+/tmp/awuest/trees/statustext/mozilla/content/xul/content/src/nsXULElement.cpp:1571
+153 #49 0x018227cc in nsXULElement::SetAttr (this=0xb6d02158, aNamespaceID=0,
+aName=0xa346050, aPrefix=0x0, aValue=@0xb6be63f8, aNotify=1)
+154 at
+/tmp/awuest/trees/statustext/mozilla/content/xul/content/src/nsXULElement.cpp:1495
+155 #50 0x0182d32a in nsXULElement::SetAttr (this=0xb6d02158, aNameSpaceID=0,
+aName=0xa346050, aValue=@0xb6be63f8, aNotify=1)
+156 at
+/tmp/awuest/trees/statustext/mozilla/content/xul/content/src/nsXULElement.h:482
+157 #51 0x01827141 in nsXULElement::SetRef (this=0xb6d02158,
+aValue=@0xb6be63f8) at
+/tmp/awuest/trees/statustext/mozilla/content/xul/content/src/nsXULElement.cpp:2646
+158 #52 0x004fb651 in XPTC_InvokeByIndex () at
+/tmp/awuest/trees/statustext/mozilla/xpcom/reflect/xptcall/src/md/unix/xptcinvoke_gcc_x86_unix.cpp:69
+159 #53 0x00cddaac in XPCWrappedNative::CallMethod (ccx=@0xbfff81b0,
+mode=CALL_SETTER) at
+/tmp/awuest/trees/statustext/mozilla/js/src/xpconnect/src/xpcwrappednative.cpp:2104
+160 #54 0x00ce911a in XPCWrappedNative::SetAttribute (ccx=@0xbfff81b0) at
+/tmp/awuest/trees/statustext/mozilla/js/src/xpconnect/src/xpcprivate.h:1902
+161 #55 0x00ce7f57 in XPC_WN_GetterSetter (cx=0xb734ff68, obj=0xb6d18808,
+argc=1, argv=0xb6bd711c, vp=0xbfff8360)
+162 at
+/tmp/awuest/trees/statustext/mozilla/js/src/xpconnect/src/xpcwrappednativejsops.cpp:1372
+163 #56 0x002d0b7f in js_Invoke (cx=0xb734ff68, argc=1, flags=2) at
+/tmp/awuest/trees/statustext/mozilla/js/src/jsinterp.c:1178
+164 #57 0x002d0fb9 in js_InternalInvoke (cx=0xb734ff68, obj=0xb6d18808,
+fval=-1227781320, flags=0, argc=1, argv=0xbfff8b20, rval=0xbfff8b20)
+165 at /tmp/awuest/trees/statustext/mozilla/js/src/jsinterp.c:1275
+166 #58 0x002d1258 in js_InternalGetOrSet (cx=0xb734ff68, obj=0xb6d18808,
+id=-1220963400, fval=-1227781320, mode=JSACC_WRITE, argc=1, argv=0xbfff8b20,
+rval=0xbfff8b20)
+167 at /tmp/awuest/trees/statustext/mozilla/js/src/jsinterp.c:1318
+168 #59 0x002f7b60 in js_SetProperty (cx=0xb734ff68, obj=0xb6d18808,
+id=-1220963400, vp=0xbfff8b20) at
+/tmp/awuest/trees/statustext/mozilla/js/src/jsobj.c:2891
+169 #60 0x002deb64 in js_Interpret (cx=0xb734ff68, pc=0xb71cc1e9 "6",
+result=0xbfff8c7c) at /tmp/awuest/trees/statustext/mozilla/js/src/jsinterp.c:3306
+170 #61 0x002d0c08 in js_Invoke (cx=0xb734ff68, argc=1, flags=2) at
+/tmp/awuest/trees/statustext/mozilla/js/src/jsinterp.c:1198
+171 #62 0x002d0fb9 in js_InternalInvoke (cx=0xb734ff68, obj=0xa0bcab0,
+fval=-1225246288, flags=0, argc=1, argv=0xb734aab0, rval=0xbfff8ecc)
+172 ---Type <return> to continue, or q <return> to quit---
+173 at /tmp/awuest/trees/statustext/mozilla/js/src/jsinterp.c:1275
+174 #63 0x0029d2a2 in JS_CallFunctionValue (cx=0xb734ff68, obj=0xa0bcab0,
+fval=-1225246288, argc=1, argv=0xb734aab0, rval=0xbfff8ecc)
+175 at /tmp/awuest/trees/statustext/mozilla/js/src/jsapi.c:3858
+176 #64 0x01871d64 in nsJSContext::CallEventHandler (this=0xb733daa0,
+aTarget=0xa0bcab0, aHandler=0xb6f839b0, argc=1, argv=0xb734aab0, rval=0xbfff8ecc)
+177 at
+/tmp/awuest/trees/statustext/mozilla/dom/src/base/nsJSEnvironment.cpp:1385
+178 #65 0x0188a62a in nsGlobalWindow::RunTimeout (this=0xb734fda8,
+aTimeout=0xb734aa60) at
+/tmp/awuest/trees/statustext/mozilla/dom/src/base/nsGlobalWindow.cpp:5257
+179 #66 0x0188b1c1 in nsGlobalWindow::TimerCallback (aTimer=0xb6bd00b8,
+aClosure=0xb734aa60) at
+/tmp/awuest/trees/statustext/mozilla/dom/src/base/nsGlobalWindow.cpp:5619
+180 #67 0x004d53c0 in nsTimerImpl::Fire (this=0xb6bd00b8) at
+/tmp/awuest/trees/statustext/mozilla/xpcom/threads/nsTimerImpl.cpp:394
+181 #68 0x004d55a6 in handleTimerEvent (event=0xb6db2f00) at
+/tmp/awuest/trees/statustext/mozilla/xpcom/threads/nsTimerImpl.cpp:459
+182 #69 0x004ccf18 in PL_HandleEvent (self=0xb6db2f00) at
+/tmp/awuest/trees/statustext/mozilla/xpcom/threads/plevent.c:698
+183 #70 0x004ccdb9 in PL_ProcessPendingEvents (self=0xa028fb8) at
+/tmp/awuest/trees/statustext/mozilla/xpcom/threads/plevent.c:633
+184 #71 0x004d0304 in nsEventQueueImpl::ProcessPendingEvents (this=0xa028f80)
+at /tmp/awuest/trees/statustext/mozilla/xpcom/threads/nsEventQueue.cpp:417
+185 #72 0x07586288 in event_processor_callback (source=0xb730e9f0,
+condition=G_IO_IN, data=0xa028f80) at
+/tmp/awuest/trees/statustext/mozilla/widget/src/gtk2/nsAppShell.cpp:67
+186 #73 0x0039ff8f in g_vsnprintf () from /usr/lib/libglib-2.0.so.0
+187 #74 0x0037ec30 in unblock_source () from /usr/lib/libglib-2.0.so.0
+188 #75 0x0037fc98 in g_main_context_dispatch () from /usr/lib/libglib-2.0.so.0
+189 #76 0x0037ffad in g_main_context_dispatch () from /usr/lib/libglib-2.0.so.0
+190 #77 0x003806cf in g_main_loop_run () from /usr/lib/libglib-2.0.so.0
+191 #78 0x0074943f in gtk_main () from /usr/lib/libgtk-x11-2.0.so.0
+192 #79 0x0758697a in nsAppShell::Run (this=0xa2b7638) at
+/tmp/awuest/trees/statustext/mozilla/widget/src/gtk2/nsAppShell.cpp:139
+193 #80 0x02d94d0f in nsAppStartup::Run (this=0xa2b75f0) at
+/tmp/awuest/trees/statustext/mozilla/toolkit/components/startup/src/nsAppStartup.cpp:144
+194 #81 0x080574db in XRE_main (argc=1, argv=0xbfff9aa4, aAppData=0x8070040)
+at /tmp/awuest/trees/statustext/mozilla/toolkit/xre/nsAppRunner.cpp:2059
+195 #82 0x0804f6c2 in main (argc=1, argv=0xbfff9aa4) at
+/tmp/awuest/trees/statustext/mozilla/browser/app/nsBrowserApp.cpp:61
+196 (gdb)
+
+
+Console debug output of firefox run (non-blank-line numbered for your convenience):
+
+1 Type Manifest File:
+/tmp/awuest/trees/statustext/mozilla/firefox-devbuild/dist/bin/components/xpti.dat
+2 nsNativeComponentLoader: autoregistering begins.
+3 nsNativeComponentLoader: autoregistering succeeded
+4 nsNativeComponentLoader: registering deferred (0)
+5 nsNativeComponentLoader: autoregistering begins.
+6 nsNativeComponentLoader: autoregistering succeeded
+7 nsNativeComponentLoader: registering deferred (0)
+8 WARNING: nsExceptionService ignoring thread destruction after shutdown,
+file /tmp/awuest/trees/statustext/mozilla/xpcom/base/nsExceptionService.cpp,
+line 191
+9 No Persistent Registry Found.
+10 Type Manifest File: /home/awuest/.mozilla/firefox/qsazrhuz.default/xpti.dat
+11 nsNativeComponentLoader: autoregistering begins.
+12 *** Registering xpcomObsoleteModule component (all right -- a generic
+module!)
+13 *** Registering xpconnect component (all right -- a generic module!)
+14 *** Registering nsUConvModule component (all right -- a generic module!)
+15 *** Registering nsI18nModule component (all right -- a generic module!)
+16 *** Registering necko_core_and_primary_protocols component (all right --
+a generic module!)
+17 *** Registering necko_secondary_protocols component (all right -- a
+generic module!)
+18 *** Registering nsJarModule component (all right -- a generic module!)
+19 *** Registering nsPrefModule component (all right -- a generic module!)
+20 *** Registering nsSecurityManagerModule component (all right -- a
+generic module!)
+21 *** Registering nsRDFModule component (all right -- a generic module!)
+22 *** Registering nsParserModule component (all right -- a generic module!)
+23 *** Registering nsGfxGTKModule component (all right -- a generic module!)
+24 *** Registering nsIconDecoderModule component (all right -- a generic
+module!)
+25 *** Registering nsImageLib2Module component (all right -- a generic module!)
+26 *** Registering nsWidgetGtk2Module component (all right -- a generic
+module!)
+27 *** Registering nsLayoutModule component (all right -- a generic module!)
+28 *** Registering docshell_provider component (all right -- a generic module!)
+29 *** Registering embedcomponents component (all right -- a generic module!)
+30 *** Registering Browser_Embedding_Module component (all right -- a
+generic module!)
+31 *** Registering nsEditorModule component (all right -- a generic module!)
+32 *** Registering nsTransactionManagerModule component (all right -- a
+generic module!)
+33 *** Registering nsComposerModule component (all right -- a generic module!)
+34 *** Registering appshell component (all right -- a generic module!)
+35 *** Registering nsAccessibilityModule component (all right -- a generic
+module!)
+36 *** Registering nsChromeModule component (all right -- a generic module!)
+37 *** Registering nsMorkModule component (all right -- a generic module!)
+38 *** Registering nsFindComponent component (all right -- a generic module!)
+39 *** Registering application component (all right -- a generic module!)
+40 *** Registering nsFileViewModule component (all right -- a generic module!)
+41 *** Registering RemoteServiceModule component (all right -- a generic
+module!)
+42 *** Registering CommandLineModule component (all right -- a generic module!)
+43 *** Registering nsToolkitCompsModule component (all right -- a generic
+module!)
+44 *** Registering nsSoftwareUpdate component (all right -- a generic module!)
+45 *** Registering BOOT component (all right -- a generic module!)
+46 *** Registering NSS component (all right -- a generic module!)
+47 *** Registering PKI component (all right -- a generic module!)
+48 *** Registering mozgnome component (all right -- a generic module!)
+49 *** Registering nsCookieModule component (all right -- a generic module!)
+50 *** Registering nsXMLExtrasModule component (all right -- a generic module!)
+51 *** Registering nsAutoConfigModule component (all right -- a generic
+module!)
+52 *** Registering nsSystemPrefModule component (all right -- a generic
+module!)
+53 *** Registering TransformiixModule component (all right -- a generic
+module!)
+54 *** Registering nsUniversalCharDetModule component (all right -- a
+generic module!)
+55 *** Registering nsWebServicesModule component (all right -- a generic
+module!)
+56 *** Registering nsInspectorModule component (all right -- a generic module!)
+57 *** Registering nsGnomeVFSModule component (all right -- a generic module!)
+58 *** Registering nsNegotiateAuthModule component (all right -- a generic
+module!)
+59 *** Registering nsPermissionsModule component (all right -- a generic
+module!)
+60 *** Registering SearchServiceModule component (all right -- a generic
+module!)
+61 *** Registering nsBrowserCompsModule component (all right -- a generic
+module!)
+62 nsNativeComponentLoader: autoregistering succeeded
+63 nsNativeComponentLoader: registering deferred (0)
+64 nsNativeComponentLoader: registering deferred (0)
+65 nsNativeComponentLoader: registering deferred (0)
+66 nsNativeComponentLoader: autoregistering begins.
+67 nsNativeComponentLoader: autoregistering succeeded
+68 nsNativeComponentLoader: registering deferred (0)
+69 pldhash: for the table at address 0x9049fd0, the given entrySize of 44
+probably favor chaining over double hashing.
+70 GFX: dpi=96 t2p=0.0666667 p2t=15 depth=24
+71 ++WEBSHELL == 1
+72 WARNING: NS_ENSURE_TRUE(NS_SUCCEEDED(rv)) failed, file
+/tmp/awuest/trees/statustext/mozilla/extensions/cookie/nsPermissionManager.cpp,
+line 624
+73 ++DOMWINDOW == 1
+74 *** loading the extension datasource
+75 WARNING: nsExceptionService ignoring thread destruction after shutdown,
+file /tmp/awuest/trees/statustext/mozilla/xpcom/base/nsExceptionService.cpp,
+line 191
+76 --WEBSHELL == 0
+77 WARNING: unable to Flush() diry datasource during XPCOM shutdown, file
+/tmp/awuest/trees/statustext/mozilla/rdf/base/src/nsRDFXMLDataSource.cpp, line 801
+78 ###!!! ASSERTION: Main thread being held past XPCOM shutdown.: 'cnt ==
+0', file /tmp/awuest/trees/statustext/mozilla/xpcom/threads/nsThread.cpp, line 450
+79 Break: at file
+/tmp/awuest/trees/statustext/mozilla/xpcom/threads/nsThread.cpp, line 450
+80 Type Manifest File: /home/awuest/.mozilla/firefox/qsazrhuz.default/xpti.dat
+81 nsNativeComponentLoader: autoregistering begins.
+82 nsNativeComponentLoader: autoregistering succeeded
+83 nsNativeComponentLoader: registering deferred (0)
+84 pldhash: for the table at address 0x9e4a700, the given entrySize of 44
+probably favor chaining over double hashing.
+85 GFX: dpi=96 t2p=0.0666667 p2t=15 depth=24
+86 ++WEBSHELL == 1
+87 WARNING: NS_ENSURE_TRUE(NS_SUCCEEDED(rv)) failed, file
+/tmp/awuest/trees/statustext/mozilla/extensions/cookie/nsPermissionManager.cpp,
+line 624
+88 ++DOMWINDOW == 1
+89 *** Item Installed via directory addition to Install Location: app-global
+Item ID: {972ce4c6-7e08-4474-a285-3208198ce6fd}, attempting to register...
+90 *** Item Installed/Upgraded at Install Location: app-global Item ID:
+{972ce4c6-7e08-4474-a285-3208198ce6fd}, attempting to register...
+91 *** loading the extension datasource
+92 *** ... success, item is compatible
+93 WARNING: nsExceptionService ignoring thread destruction after shutdown,
+file /tmp/awuest/trees/statustext/mozilla/xpcom/base/nsExceptionService.cpp,
+line 191
+94 --WEBSHELL == 0
+95 ###!!! ASSERTION: Main thread being held past XPCOM shutdown.: 'cnt ==
+0', file /tmp/awuest/trees/statustext/mozilla/xpcom/threads/nsThread.cpp, line 450
+96 Break: at file
+/tmp/awuest/trees/statustext/mozilla/xpcom/threads/nsThread.cpp, line 450
+97 No Persistent Registry Found.
+98 Type Manifest File: /home/awuest/.mozilla/firefox/qsazrhuz.default/xpti.dat
+99 nsNativeComponentLoader: autoregistering begins.
+100 *** Registering xpcomObsoleteModule component (all right -- a generic
+module!)
+101 *** Registering xpconnect component (all right -- a generic module!)
+102 *** Registering nsUConvModule component (all right -- a generic module!)
+103 *** Registering nsI18nModule component (all right -- a generic module!)
+104 *** Registering necko_core_and_primary_protocols component (all right --
+a generic module!)
+105 *** Registering necko_secondary_protocols component (all right -- a
+generic module!)
+106 *** Registering nsJarModule component (all right -- a generic module!)
+107 *** Registering nsPrefModule component (all right -- a generic module!)
+108 *** Registering nsSecurityManagerModule component (all right -- a
+generic module!)
+109 *** Registering nsRDFModule component (all right -- a generic module!)
+110 *** Registering nsParserModule component (all right -- a generic module!)
+111 *** Registering nsGfxGTKModule component (all right -- a generic module!)
+112 *** Registering nsIconDecoderModule component (all right -- a generic
+module!)
+113 *** Registering nsImageLib2Module component (all right -- a generic module!)
+114 *** Registering nsWidgetGtk2Module component (all right -- a generic
+module!)
+115 *** Registering nsLayoutModule component (all right -- a generic module!)
+116 *** Registering docshell_provider component (all right -- a generic module!)
+117 *** Registering embedcomponents component (all right -- a generic module!)
+118 *** Registering Browser_Embedding_Module component (all right -- a
+generic module!)
+119 *** Registering nsEditorModule component (all right -- a generic module!)
+120 *** Registering nsTransactionManagerModule component (all right -- a
+generic module!)
+121 *** Registering nsComposerModule component (all right -- a generic module!)
+122 *** Registering appshell component (all right -- a generic module!)
+123 *** Registering nsAccessibilityModule component (all right -- a generic
+module!)
+124 *** Registering nsChromeModule component (all right -- a generic module!)
+125 *** Registering nsMorkModule component (all right -- a generic module!)
+126 *** Registering nsFindComponent component (all right -- a generic module!)
+127 *** Registering application component (all right -- a generic module!)
+128 *** Registering nsFileViewModule component (all right -- a generic module!)
+129 *** Registering RemoteServiceModule component (all right -- a generic
+module!)
+130 *** Registering CommandLineModule component (all right -- a generic module!)
+131 *** Registering nsToolkitCompsModule component (all right -- a generic
+module!)
+132 *** Registering nsSoftwareUpdate component (all right -- a generic module!)
+133 *** Registering BOOT component (all right -- a generic module!)
+134 *** Registering NSS component (all right -- a generic module!)
+135 *** Registering PKI component (all right -- a generic module!)
+136 *** Registering mozgnome component (all right -- a generic module!)
+137 *** Registering nsCookieModule component (all right -- a generic module!)
+138 *** Registering nsXMLExtrasModule component (all right -- a generic module!)
+139 *** Registering nsAutoConfigModule component (all right -- a generic
+module!)
+140 *** Registering nsSystemPrefModule component (all right -- a generic
+module!)
+141 *** Registering TransformiixModule component (all right -- a generic
+module!)
+142 *** Registering nsUniversalCharDetModule component (all right -- a
+generic module!)
+143 *** Registering nsWebServicesModule component (all right -- a generic
+module!)
+144 *** Registering nsInspectorModule component (all right -- a generic module!)
+145 *** Registering nsGnomeVFSModule component (all right -- a generic module!)
+146 *** Registering nsNegotiateAuthModule component (all right -- a generic
+module!)
+147 *** Registering nsPermissionsModule component (all right -- a generic
+module!)
+148 *** Registering SearchServiceModule component (all right -- a generic
+module!)
+149 *** Registering nsBrowserCompsModule component (all right -- a generic
+module!)
+150 nsNativeComponentLoader: autoregistering succeeded
+151 nsNativeComponentLoader: registering deferred (0)
+152 nsNativeComponentLoader: registering deferred (0)
+153 nsNativeComponentLoader: registering deferred (0)
+154 nsNativeComponentLoader: autoregistering begins.
+155 nsNativeComponentLoader: autoregistering succeeded
+156 nsNativeComponentLoader: registering deferred (0)
+157 pldhash: for the table at address 0xa16eaf8, the given entrySize of 44
+probably favor chaining over double hashing.
+158 GFX: dpi=96 t2p=0.0666667 p2t=15 depth=24
+159 ++WEBSHELL == 1
+160 WARNING: NS_ENSURE_TRUE(NS_SUCCEEDED(rv)) failed, file
+/tmp/awuest/trees/statustext/mozilla/extensions/cookie/nsPermissionManager.cpp,
+line 624
+161 ++DOMWINDOW == 1
+162 WARNING: NS_ENSURE_TRUE(NS_SUCCEEDED(rv)) failed, file
+/tmp/awuest/trees/statustext/mozilla/intl/strres/src/nsStringBundle.cpp, line 273
+163 ++WEBSHELL == 2
+164 ++DOMWINDOW == 2
+165 Note: styleverifytree is disabled
+166 Note: frameverifytree is disabled
+167 Note: verifyreflow is disabled
+168 ++WEBSHELL == 3
+169 ++DOMWINDOW == 3
+170 **** Stale search engine reference to
+'NC:SearchCategory?engine=urn:search:engine:lxrmozilla.src'
+171 **** Stale search engine reference to
+'NC:SearchCategory?engine=urn:search:engine:bugzilla.src'
+172 **** Stale search engine reference to
+'NC:SearchCategory?engine=urn:search:engine:mozilla.src'
+173 **** Stale search engine reference to
+'NC:SearchCategory?engine=urn:search:engine:dmoz.src'
+174 **** Stale search engine reference to
+'NC:SearchCategory?engine=urn:search:engine:NetscapeSearch.src'
+175 JS DUMP: bind_orthogonal_implementation::ctor: binding
+"chrome://global/content/bindings/general.xml#testbinding" on "[object
+XULElement @ 0xb6be1158 (native @ 0xb6beb470)]".
+
+176 Program firefox-devbuild/dist/bin/firefox-bin (pid = 10159) received
+signal 11.
+177 Stack:
+178 nsProfileLock::FatalSignalHandler(int)+0x00000137
+[firefox-devbuild/dist/bin/firefox-bin +0x00021F79]
+179 UNKNOWN [/lib/tls/libpthread.so.0 +0x0000AE48]
+
+180 Program firefox-devbuild/dist/bin/firefox-bin (pid = 10159) received
+signal 11.
+181 Stack:
+182 nsProfileLock::FatalSignalHandler(int)+0x00000137
+[firefox-devbuild/dist/bin/firefox-bin +0x00021F79]
+183 UNKNOWN [/lib/tls/libpthread.so.0 +0x0000AE48]
+184 UNKNOWN [/lib/tls/libc.so.6 +0x000721CD]
+185 __libc_free+0x00000088 [/lib/tls/libc.so.6 +0x00071048]
+186 DemangleSymbol(char const*, char*, int)+0x00000052
+[firefox-devbuild/dist/bin/firefox-bin +0x00021A46]
+187 DumpStackToFile(_IO_FILE*)+0x00000167
+[firefox-devbuild/dist/bin/firefox-bin +0x00021BB5]
+188 ah_crap_handler(int)+0x0000005A [firefox-devbuild/dist/bin/firefox-bin
++0x00021416]
+189 nsProfileLock::FatalSignalHandler(int)+0x00000137
+[firefox-devbuild/dist/bin/firefox-bin +0x00021F79]
+190 UNKNOWN [/lib/tls/libpthread.so.0 +0x0000AE48]
+191 nsCOMPtr<nsIDOMElement>::assign_from_qi(nsQueryInterface, nsID
+const&)+0x00000021
+[/tmp/awuest/trees/statustext/mozilla/firefox-devbuild/dist/bin/components/libgklayout.so
++0x00307363]
+192 nsCOMPtr<nsIDOMElement>::nsCOMPtr(nsQueryInterface)+0x00000037
+[/tmp/awuest/trees/statustext/mozilla/firefox-devbuild/dist/bin/components/libgklayout.so
++0x0030518D]
+193 nsXBLBinding::GetAnonymousNodes()+0x00000058
+[/tmp/awuest/trees/statustext/mozilla/firefox-devbuild/dist/bin/components/libgklayout.so
++0x006F4468]
+194 UNKNOWN
+[/tmp/awuest/trees/statustext/mozilla/firefox-devbuild/dist/bin/components/libgklayout.so
++0x006F0F32]
+195 UNKNOWN [firefox-devbuild/dist/bin/libxpcom_core.so +0x0008A7FE]
+196 PL_DHashTableEnumerate+0x00000089
+[firefox-devbuild/dist/bin/libxpcom_core.so +0x0008335F]
+197 nsHashtable::Enumerate(int (*)(nsHashKey*, void*, void*),
+void*)+0x00000057 [firefox-devbuild/dist/bin/libxpcom_core.so +0x0008B119]
+198 nsXBLBinding::GenerateAnonymousContent()+0x00000626
+[/tmp/awuest/trees/statustext/mozilla/firefox-devbuild/dist/bin/components/libgklayout.so
++0x006F1D18]
+199 nsXBLBinding::GenerateAnonymousContent()+0x0000006C
+[/tmp/awuest/trees/statustext/mozilla/firefox-devbuild/dist/bin/components/libgklayout.so
++0x006F175E]
+200 UNKNOWN
+[/tmp/awuest/trees/statustext/mozilla/firefox-devbuild/dist/bin/components/libgklayout.so
++0x0070DB63]
+201 UNKNOWN
+[/tmp/awuest/trees/statustext/mozilla/firefox-devbuild/dist/bin/components/libgklayout.so
++0x00712C6C]
+202 UNKNOWN
+[/tmp/awuest/trees/statustext/mozilla/firefox-devbuild/dist/bin/components/libgklayout.so
++0x005ADAF2]
+203 XPTC_InvokeByIndex+0x00000029 [firefox-devbuild/dist/bin/libxpcom_core.so
++0x00121651]
+204 XPCWrappedNative::CallMethod(XPCCallContext&,
+XPCWrappedNative::CallMode)+0x00001154
+[/tmp/awuest/trees/statustext/mozilla/firefox-devbuild/dist/bin/components/libxpconnect.so
++0x00080AAC]
+205 XPC_WN_CallMethod(JSContext*, JSObject*, unsigned int, long*,
+long*)+0x000001A5
+[/tmp/awuest/trees/statustext/mozilla/firefox-devbuild/dist/bin/components/libxpconnect.so
++0x0008AD6B]
+206 js_Invoke+0x00000F2A [firefox-devbuild/dist/bin/libmozjs.so +0x00050B7F]
+207 js_Interpret+0x0000E0BF [firefox-devbuild/dist/bin/libmozjs.so +0x000603DF]
+208 js_Invoke+0x00000FB3 [firefox-devbuild/dist/bin/libmozjs.so +0x00050C08]
+209 js_InternalInvoke+0x00000141 [firefox-devbuild/dist/bin/libmozjs.so
++0x00050FB9]
+210 JS_CallFunctionValue+0x0000002F [firefox-devbuild/dist/bin/libmozjs.so
++0x0001D2A2]
+211 nsXBLProtoImplAnonymousMethod::Execute(nsIContent*)+0x00000416
+[/tmp/awuest/trees/statustext/mozilla/firefox-devbuild/dist/bin/components/libgklayout.so
++0x00702D92]
+212 nsXBLPrototypeBinding::BindingAttached(nsIContent*)+0x0000003C
+[/tmp/awuest/trees/statustext/mozilla/firefox-devbuild/dist/bin/components/libgklayout.so
++0x006F5824]
+213 nsXBLBinding::ExecuteAttachedHandler()+0x0000006A
+[/tmp/awuest/trees/statustext/mozilla/firefox-devbuild/dist/bin/components/libgklayout.so
++0x006F2D14]
+214 UNKNOWN
+[/tmp/awuest/trees/statustext/mozilla/firefox-devbuild/dist/bin/components/libgklayout.so
++0x00713439]
+215 nsCSSFrameConstructor::ContentAppended(nsIContent*, int)+0x00000B7F
+[/tmp/awuest/trees/statustext/mozilla/firefox-devbuild/dist/bin/components/libgklayout.so
++0x002F7F1F]
+216 PresShell::ContentAppended(nsIDocument*, nsIContent*, int)+0x0000009E
+[/tmp/awuest/trees/statustext/mozilla/firefox-devbuild/dist/bin/components/libgklayout.so
++0x003553BE]
+217 nsDocument::ContentAppended(nsIContent*, int)+0x0000008F
+[/tmp/awuest/trees/statustext/mozilla/firefox-devbuild/dist/bin/components/libgklayout.so
++0x005ABFD9]
+218 nsXULDocument::ContentAppended(nsIContent*, int)+0x00000093
+[/tmp/awuest/trees/statustext/mozilla/firefox-devbuild/dist/bin/components/libgklayout.so
++0x00735721]
+219 nsXULContentBuilder::RebuildAll()+0x0000036F
+[/tmp/awuest/trees/statustext/mozilla/firefox-devbuild/dist/bin/components/libgklayout.so
++0x008035A3]
+220 UNKNOWN
+[/tmp/awuest/trees/statustext/mozilla/firefox-devbuild/dist/bin/components/libgklayout.so
++0x0081725D]
+221 nsXULTemplateBuilder::AttributeChanged(nsIDocument*, nsIContent*, int,
+nsIAtom*, int)+0x0000004B
+[/tmp/awuest/trees/statustext/mozilla/firefox-devbuild/dist/bin/components/libgklayout.so
++0x00817773]
+222 nsXULContentBuilder::AttributeChanged(nsIDocument*, nsIContent*, int,
+nsIAtom*, int)+0x000000E7
+[/tmp/awuest/trees/statustext/mozilla/firefox-devbuild/dist/bin/components/libgklayout.so
++0x008025B9]
+223 nsXULDocument::AttributeChanged(nsIContent*, int, nsIAtom*,
+int)+0x00000315
+[/tmp/awuest/trees/statustext/mozilla/firefox-devbuild/dist/bin/components/libgklayout.so
++0x00735527]nsXULElement::SetAttrAndNotify(int, nsIAtom*, nsIAtom*, nsAString
+const&, nsAttrValue&, int, int, int)+0x00000535
+[/tmp/awuest/trees/statustext/mozilla/firefox-devbuild/dist/bin/components/libgklayout.so
++0x0071AD3D]
+224 nsXULElement::SetAttr(int, nsIAtom*, nsIAtom*, nsAString const&,
+int)+0x00000314
+[/tmp/awuest/trees/statustext/mozilla/firefox-devbuild/dist/bin/components/libgklayout.so
++0x0071A7CC]
+225 nsXULElement::SetAttr(int, nsIAtom*, nsAString const&, int)+0x00000026
+[/tmp/awuest/trees/statustext/mozilla/firefox-devbuild/dist/bin/components/libgklayout.so
++0x0072532A]
+226 UNKNOWN
+[/tmp/awuest/trees/statustext/mozilla/firefox-devbuild/dist/bin/components/libgklayout.so
++0x0071F141]
+227 XPTC_InvokeByIndex+0x00000029 [firefox-devbuild/dist/bin/libxpcom_core.so
++0x00121651]
+228 XPCWrappedNative::CallMethod(XPCCallContext&,
+XPCWrappedNative::CallMode)+0x00001154
+[/tmp/awuest/trees/statustext/mozilla/firefox-devbuild/dist/bin/components/libxpconnect.so
++0x00080AAC]
+229 XPCWrappedNative::SetAttribute(XPCCallContext&)+0x00000020
+[/tmp/awuest/trees/statustext/mozilla/firefox-devbuild/dist/bin/components/libxpconnect.so
++0x0008C11A]
+230 XPC_WN_GetterSetter(JSContext*, JSObject*, unsigned int, long*,
+long*)+0x000001C1
+[/tmp/awuest/trees/statustext/mozilla/firefox-devbuild/dist/bin/components/libxpconnect.so
++0x0008AF57]
+231 js_Invoke+0x00000F2A [firefox-devbuild/dist/bin/libmozjs.so +0x00050B7F]
+232 js_InternalInvoke+0x00000141 [firefox-devbuild/dist/bin/libmozjs.so
++0x00050FB9]
+233 js_InternalGetOrSet+0x0000023B [firefox-devbuild/dist/bin/libmozjs.so
++0x00051258]
+234 js_SetProperty+0x00000374 [firefox-devbuild/dist/bin/libmozjs.so +0x00077B60]
+235 js_Interpret+0x0000C844 [firefox-devbuild/dist/bin/libmozjs.so +0x0005EB64]
+236 js_Invoke+0x00000FB3 [firefox-devbuild/dist/bin/libmozjs.so +0x00050C08]
+237 js_InternalInvoke+0x00000141 [firefox-devbuild/dist/bin/libmozjs.so
++0x00050FB9]
+238 JS_CallFunctionValue+0x0000002F [firefox-devbuild/dist/bin/libmozjs.so
++0x0001D2A2]
+239 nsJSContext::CallEventHandler(JSObject*, JSObject*, unsigned int, long*,
+long*)+0x0000012C
+[/tmp/awuest/trees/statustext/mozilla/firefox-devbuild/dist/bin/components/libgklayout.so
++0x00769D64]
+240 nsGlobalWindow::RunTimeout(nsTimeout*)+0x00000486
+[/tmp/awuest/trees/statustext/mozilla/firefox-devbuild/dist/bin/components/libgklayout.so
++0x0078262A]
+241 nsGlobalWindow::TimerCallback(nsITimer*, void*)+0x00000037
+[/tmp/awuest/trees/statustext/mozilla/firefox-devbuild/dist/bin/components/libgklayout.so
++0x007831C1]
+242 nsTimerImpl::Fire()+0x00000250
+[firefox-devbuild/dist/bin/libxpcom_core.so +0x000FB3C0]
+243 handleTimerEvent(TimerEventType*)+0x0000010C
+[firefox-devbuild/dist/bin/libxpcom_core.so +0x000FB5A6]
+244 PL_HandleEvent+0x00000054 [firefox-devbuild/dist/bin/libxpcom_core.so
++0x000F2F18]
+245 PL_ProcessPendingEvents+0x000000DC
+[firefox-devbuild/dist/bin/libxpcom_core.so +0x000F2DB9]
+246 UNKNOWN [firefox-devbuild/dist/bin/libxpcom_core.so +0x000F6304]
+247 UNKNOWN
+[/tmp/awuest/trees/statustext/mozilla/firefox-devbuild/dist/bin/components/libwidget_gtk2.so
++0x00037288]
+248 UNKNOWN [/usr/lib/libglib-2.0.so.0 +0x00043F8F]
+249 UNKNOWN [/usr/lib/libglib-2.0.so.0 +0x00022C30]
+250 g_main_context_dispatch+0x00000098 [/usr/lib/libglib-2.0.so.0 +0x00023C98]
+251 UNKNOWN [/usr/lib/libglib-2.0.so.0 +0x00023FAD]
+252 g_main_loop_run+0x0000019F [/usr/lib/libglib-2.0.so.0 +0x000246CF]
+253 gtk_main+0x000000BF [/usr/lib/libgtk-x11-2.0.so.0 +0x000D443F]
+254 UNKNOWN
+[/tmp/awuest/trees/statustext/mozilla/firefox-devbuild/dist/bin/components/libwidget_gtk2.so
++0x0003797A]
+255 UNKNOWN
+[/tmp/awuest/trees/statustext/mozilla/firefox-devbuild/dist/bin/components/libtoolkitcomps.so
++0x00043D0F]
+256 UNKNOWN [firefox-devbuild/dist/bin/firefox-bin +0x0000F4DB]
+257 XOpenDisplay+0x0000010E [firefox-devbuild/dist/bin/firefox-bin +0x000076C2]
+258 __libc_start_main+0x000000DA [/lib/tls/libc.so.6 +0x0001578A]
+259 Sleeping for 5 minutes.
+260 Type 'gdb firefox-devbuild/dist/bin/firefox-bin 10159' to attach your
+debugger to this thread.
+
+
+Please note the line starting with "JS DUMP" (line 175). After this 'dump()',
+the document.addBinding() is called (see testcase). The 'dump()' after
+addBinding() is never reached.
+
+
+In case you wonder about what the code should do: it should supply a facility to
+add orthogonal binding (i.e. binding or a chain of binding with functionality
+which doe not need to inherit from other binding or chain of bindings). It
+implement quasi-multiple inheritance, with the difference that addBinding()
+just link the additional binding into the existing binding chain, i.e.
+conflict resolution is solved by simple 'subclassing'. See also
+rant^H^H^H^Hcomment https://bugzilla.mozilla.org/show_bug.cgi?id=213163#c33.
+
+It doesn't matter that addBinding ha to add the binding at the top of the chain
+(i.e. at the point where no other (normal) binding have been bound to the
+current element), the same behaviour can also be reproduced when factoring the
+'bind_orthogonal_implementation' code out and call it via a mouseover event
+after the browser wa loaded.
+
+But maybe these are just the two corner case (inserting binding at the top and
+at the bottom of the chain), but it would work in between (altough I cannot
+imagine this since it is always an insertion at the bottom, except for the
+topmost insertion).
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Compile
+2. Run
+3. Crash
+
+Actual Results:
+Segmentation fault (see backtraces above)
+
+Expected Results:
+Execute the addBinding() function and add the specified binding to the element.
+
+Linux 2.4.21-32.0.1.ELsmp #1 SMP Tue May 17 17:52:23 EDT 2005 i686 i686 i386
+GNU/Linux

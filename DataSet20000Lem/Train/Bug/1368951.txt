@@ -1,0 +1,10 @@
+Sync test server doesn't support x-if-unmodified-since
+The sync server probably should do this, both for completeness, and for other random bug that might want it (eg, bug 1355766)
+
+This is a test-only patch (with an additional log call in engines.js) - I thought I'd discovered a sync bug, but it turn out that the issue were all due to how the test run.
+
+The test change are somewhat unfortunate, but I can't really think of a better option - most of these would be unnecessary if the engine tracked this.lastModified for writes, but they don't, and doing that only for test seem wrong. It could also be argued that advancing this.lastModified *at all* during the sync is wrong - it should start a the time from info/collections, and the incoming phase shouldn't move it - but I'm not going to explore that :)
+
+Typically, the test change are where |engine._sync()| is called (rather than |service.sync()|. When the sync GETs records, we can get away with setting engine.lastModified to null - but if it only POSTs, we set engine.lastModified to the collection lastModified (which would normally happen via the info/collections call done a part of the service.sync.
+
+I also got sick of the SQlite log noise everywhere, so silenced that globally.

@@ -1,0 +1,47 @@
+Link error when doing "make profiledbuild"
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7b) Gecko/20040411 Firefox/0.8.0+
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7b) Gecko/20040411 Firefox/0.8.0+
+
+I tried to do a Firefox profiledbuild with GCC 3.4.0 20040407 (prerelease) and I
+get this.
+
+gcc -I/usr/X11R6/include -Wall -W -Wno-unused -Wpointer-arith-Wcast-align
+-Wno-long-long -pedantic -pthread -pipe -DNDEBUG -DTRIMMED-ffunction-sections
+-O2 -pipe -march=pentium2 -o xpt_dump xpt_dump.o -L../../../../dist/bin
+-L../../../../dist/lib../../../../dist/lib/libxpt.a -ldl -lm
+xpt_dump.o(.data+0x264): undefined reference to
+`__gcov_merge_add'xpt_dump.o(.text._GLOBAL__I_param_problems_GCOV+0xe): In
+function`global constructor keyed to param_problems_GCOV':: undefined reference
+to `__gcov_init'collect2: ld returned 1 exit statusgmake[7]: *** [xpt_dump] Error 1
+
+E-mail correspondence with Brian Ryner suggested that -fprofile-generate need
+to be passed to gcc during the link of profiled build with GCC 3.4. This will
+apparently cause -lgcov to be passed to ld so we link against libgcov.
+
+Reproducible: Always
+Steps to Reproduce:
+1. If you don't have GCC 3.4, download
+ftp://gcc.gnu.org/pub/gcc/snapshots/3.4-20040407/gcc-3.4-20040407.tar.bz2
+2. ./configure --prefix=/usr/gcc34-20040407 --enable-shared
+--enable-threads=posix --enable-__cxa_atexit --enable-long-long
+--with-system-zlib --enable-languages=c,c++ && make bootstrap
+3. su -c "make install"
+4. I usually have to run ldconfig /usr/gcc34-20040407/lib before the firefox
+binary will run
+5. I have a shell script that does:
+export PATH=/usr/gcc34-20040407/bin:$PATH and then runs:
+
+make -f client.mk checkout
+make -f client.mk profiledbuild
+Actual Results:
+gcc -I/usr/X11R6/include -Wall -W -Wno-unused -Wpointer-arith-Wcast-align
+-Wno-long-long -pedantic -pthread -pipe -DNDEBUG -DTRIMMED-ffunction-sections
+-O2 -pipe -march=pentium2 -o xpt_dump xpt_dump.o -L../../../../dist/bin
+-L../../../../dist/lib../../../../dist/lib/libxpt.a -ldl -lm
+xpt_dump.o(.data+0x264): undefined reference to
+`__gcov_merge_add'xpt_dump.o(.text._GLOBAL__I_param_problems_GCOV+0xe): In
+function`global constructor keyed to param_problems_GCOV':: undefined reference
+to `__gcov_init'collect2: ld returned 1 exit statusgmake[7]: *** [xpt_dump] Error 1
+
+Expected Results:
+Expect binary to link and build to finish

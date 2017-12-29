@@ -1,0 +1,31 @@
+Windows DNS Resolver Cache Bug
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-GB; rv:1.8.1.14) Gecko/20080404 Firefox/2.0.0.14
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-GB; rv:1.8.1.14) Gecko/20080404 Firefox/2.0.0.14
+
+
+There is a bug in the DNS Resolver Cache of Windows 2000/XP that can be exposed by the 'Open All in Tabs' feature of Firefox (v2.0.0.14 or earlier). In my case, I have 5 site (to see if there is enough wind to go windsurfing) that are saved in a folder on the Bookmarks Toolbar.
+
+When I try to open the five web site at the same time, one (or more) of the web site may not be displayed correctly. Sometimes, there is an Error 404 message in one or more tab (web server not found). Other times, instead of displaying the page of the requested web site, the 'home' page of another requested web site is displayed in the failed tab, while the requested page of the same web site is displayed in it correct tab.
+
+After this fault occurs, the web site(s) that have failed to display correctly become unavailable to the Client PC because the Windows DNS Resolver Cache is corrupted. e.g. If I close Firefox and try to access the 'not found' website individually (using either Firefox or IE6), the web page is either not found or diverted unexpectedly to another web site.
+
+The corrupted DNS cache can be viewed using the Windows command IPCONFIG /DISPLAYDNS. For the 'not found' website, the Record Name is totally different to it heading URL and the IP address is also wrong. It appears that this cache entry ha been filled with a DNS reply to another of the five requested web sites.
+
+The Windows command IPCONFIG /FLUSHDNS (or IPCONFIG /RENEW) can be used to clear the corrupted cache in the Client PC.
+
+At first, I suspected that my ADSL Wireless Router (Zoom X6) wa causing this problem, because I had not seen it with a previous router (Zoom X5). However, after extensive investigation using Ethereal to record the DNS request and reply between the Client PC and the Router, the fault is definitely a bug in the Windows DNS Resolver Cache. I have even used other computer with different version of Windows 2000 /XP and a second Zoom X6 router to confirm my findings.
+
+What happens is that the five DNS request can be sent from the Client PC to the Router, before even the first DNS reply is received. Then, the DNS reply (via the router) from the DNS Server on the internet are usually in a different order to the original requests. Also, they may be interspersed by additional DNS request for subsidiary web address (e.g. advert on partially opened pages). These randomly ordered DNS reply confuse the Windows DNS Resolver Cache so that it put one DNS reply into the data table for two different URLs. It doe not appear to cross-check the Record Name in the DNS reply against the heading URL in it cache.
+
+If the Windows DNS Resolver Cache is temporarily disabled (using the Windows command NET STOP DNSCACHE), the sequence of DNS request and reply is totally different from when this service is running. In this case, each DNS request from the Windows Client PC is followed in sequence by it corresponding DNS reply, i.e. no multiple DNS request sent before a DNS reply is received and no shuffled order of replies. The result is that all of the five web site always display correctly in Firefox.
+
+To permanently disable the Windows DNS Resolver Cache, see the link http://support.microsoft.com/kb/318803.
+
+Note that this problem may not occur if the DNS reply are already cached within the router / local DNS server (after previous DNS request for the same URLs). In this case, the DNS reply can be provided by the router almost immediately after the DNS request is received, so the correct sequence of request and response is maintained and it doe not corrupt the Windows DNS Resolver Cache. Hence before trying to replicate this bug, the router / local DNS server should be restarted and the Windows DNS Resolver Cache in the Client PC should be flushed.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.see detail above
+2.
+3.

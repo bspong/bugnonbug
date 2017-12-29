@@ -1,0 +1,33 @@
+With Acceleration in X disabled, scrolling using mouse wheel is very slow. Dragging scrollbar is ok
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.7) Gecko/2009030503 Fedora/3.0.7-1.fc10 Firefox/3.0.7
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.7) Gecko/2009030503 Fedora/3.0.7-1.fc10 Firefox/3.0.7
+
+Due to a buggy Intel i810 chipset on my computer, I had to switch off Acceleration in X (Option "Accel" "Off" in /etc/X11/xorg.conf). This resolved the display problem that I had on that buggy chipset, but ha the unfortunate side effect of making mouse wheel scrolling in Firefox excessively slow.
+You may think that this is expected after switching off acceleration, but:
+1. It only affect Firefox and only happens when using the mousewheel.
+2. Scrolling by dragging the scrollbar ha adequate speed.
+3. Scrolling in other application (such a konqueror, or even thunderbird!) is acceptably fast, even when using the mouse wheel.
+
+The weirdest thing is that the page continues scrolling for a while, even after I stopped manipulating the mouse wheel. It really look a if Firefox wa trying to do some cute (but GPU intensive) animation while scrolling (such a showing each intermediary position of scroll), and doesn't notice that the GPU doesn't follow. Other apps apparently scroll directly to the target position when they notice that the graphic engine doesn't follow. And even Firefox apparently doe that when using the scrollbar rather than the wheel.
+
+Or is this because dragging the scrollbar directly give Firefox the requested _position_ whereas the mousewheel only sends deltas? But it can't be exactly hard to have an internal counter that integrates these delta (without trying to display the page at each step, if engine is too slow)
+
+Addressing this issue will not only help people with broken hardware, but also people using older computers, which might not have any graphic acceleration to begin with.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Disable X acceleration in /etc/X11/xorg.conf by inserting the following line into the "Device" section:
+Option "Accel" "Off"
+2. Restart X
+3. Go to any page long enough to need scrolling (such a this one here: https://bugzilla.mozilla.org/enter_bug.cgi?product=Firefox&format=guided)
+4. Scroll using the mouse wheel.
+5. Stop scrolling
+
+Actual Results:
+It very slowly start scrolling, showing each intermediary scrolled position. Scrolling continues even after stopping to manipulate the mouse wheel.
+
+Expected Results:
+If Firefox notice that the GPU doesn't follow with scrolling, it should skip intermediary frames, and directly scroll to the final target.
+
+Or at least, this should be a config option, if such optimization bother user on fast displays.

@@ -1,0 +1,40 @@
+eval, in javacript, when executed, causes a GET/POST request to the page being currently viewed
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.1) Gecko/2008070208 Firefox/3.0.1
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.1) Gecko/2008070208 Firefox/3.0.1
+
+suppose the page is start.php which contains a script-X
+
+"var dummy = eval ('some text')"
+
+and suppose the page is called as follows
+
+"GET /start.php"
+
+The problem is that after the first "GET /start.php" request, as soon as the script-X is executed for the FIRST time, the browser resends the request "GET /start.php", even though the page is not reloaded or refreshed. NOTE that the contents of the page aren't refreshed , the browser only sends a request.
+( Live HTTP headers was used to see these requests )
+Also, even if the script-X is changed with another script-Y
+
+"var dummy = eval('()');"
+
+the behavior remains the same.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.Create any page "start.php" with a script having eval function like 
+<script type="text/javascript">
+   var dummy = eval ('');
+</script>
+
+2. Open the page in the browser. Simultaneously, monitor the http requests being sent by the browser.
+
+3.It'll be observed that "GET /start.php" is sent twice, even though the page is loaded only once. The first execution of any eval statement causes the page request to be sent again
+
+Actual Results:  
+It'll be observed that "GET /start.php" is sent twice, even though the page is loaded only once. The first execution of any eval statement causes the page request to be sent again
+
+Expected Results:  
+"GET /start.php"
+should be sent only once.
+
+I was using the default theme.

@@ -1,0 +1,48 @@
+invalid html causes innerHTML and DOM manipulating to not work properly
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; cs; rv:1.9) Gecko/2008052906 Firefox/3.0
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; cs; rv:1.9) Gecko/2008052906 Firefox/3.0
+
+I made a bookmarklet for geocaching, just to find a particular link (leading to an online map) on the page and embed it in an iframe.
+
+The link is in a SPAN element with ID attribute set, so I extract the link from document.getElementById('span_id').innerHTML. This worked in Firefox 2, works in IE and Opera, but not in Firefox 3.
+
+I found that the page html is invalid, validator shows several hundreds errors, but this is caused by one missing  </A> closing tag. So if it hadn't worked in FF2, I would never consider this a Firefox bug.
+I extracted the crucial part of the html to reproduce the problem.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Save this code as ab.html:
+
+<p>
+  <a href='aaa'>aaa</li> <!--missing /a before /li-->
+</p>
+<p>
+  <span id="span_id">
+    <a href="bbb">bbb</a>
+  </span>
+</p>
+
+
+2. Open the ab.html in Firefox 3 and paste this to address bar (and press Enter):
+javascript:alert(document.getElementById('span_id').innerHTML)
+
+Actual Results:  
+Alert window will pop up, showing that innerHTML is empty.
+
+Expected Results:  
+The pop up window should contain this:
+<a href="bbb">bbb</a>
+
+My further investigation with Web Developer Toolbar showed that the generated source is
+
+<p>
+  <a href="aaa">aaa
+</a></p>
+<p>
+<a href="aaa">  <span id="span_id">
+    </span></a><a href="bbb">bbb</a>
+  
+</p>
+
+So the span is really empty. Now I am not sure if this is correct way of dealing with broken html and I am just making a fool of myself. Sorry if this is a duplicate report.

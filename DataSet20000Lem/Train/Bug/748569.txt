@@ -1,0 +1,29 @@
+Fix (most) remaining migration bug for Firefox 14
+Combo-patch for remaining migration issue is in the pipe, not too big, not to small. Bugs which are already filed will be blocked by this bug.
+
+Here's a list of user-facing bug I'm going to fix here:
+* [Major] Bug 738263 - Default bookmarks.html import on migration is temporarily broken ("planned" regression)
+* [Major] Bug 748047 - Reset profile feature is broken (regression)
+* Migration wizard fails to recognize default browser on Windows vista and window 7. This is a long standing issue, but I don't think it's filed.
+* On Mac and Linux we don't even bother detecting the default browser.
+* Detection of default browser on Windows doesn't check for safari.
+* The wizard lie (and doesn't tell all the truth) about the data that is about to be migrated:
+"Import Options, Bookmarks, History, Passwords and other data from:"
+...Chrome, Safari
+* Internet Explorer becomes _Microsoft_ Internet Explorer in the homepage wizard-page.
+
+Implementation detail to be fixed here:
+* Simplify migration wizard modes.
+* Remove the puzzling code for saving the homepage pref.
+* Build the list of migrator in the wizard dynamically. As a result, quite a few duplicated string are noew removed from migration.dtd.
+* nsIBrowserProfileMigrator: do away with the startup arguments.
+* slow decom: getMigrator now return the wrappedJSObject of each migrator.
+* Remove some leftover of "From File" mode.
+* When the default browser is detected on windows, the reg-key wa never closed (my bad). The new code doe not rely on registry keys.
+
+The following issue will _not_ be covered by this bug:
+* Chrome migrator report that migration is done too early (not yet filed)
+* Safari migrator doe not import cooky and top site (to be done in other bugs. We may or may land these for Firefox 14)
+* about:home is still featured a "Firefox Start, a fast home page with built-in search"
+* The migration wizard interaction is worse than Linux.
+* It's rocket science to test the homepage page on build with non-official branding.

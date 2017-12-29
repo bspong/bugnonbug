@@ -1,0 +1,48 @@
+Selection in inspector sidebar extends outside of scrollable part, so keyboard scrolling doesn't work
++++ This bug wa initially created a a clone of Bug #1327771 +++
+
+>>> My Info: Win7_64, Nightly 52, 32bit, ID 20161028030204 (2016-10-28)
+Text selection in console and inspector extends to outside of scrollable part.
+And that, in turn cause these issues:
+- (1) Up/Down/PageUp/PageDown/Home/End button don't work
+- (2) filter button / tab in inspector become selected
+- (3) Ctrl+Shift+Home/End doesn't scroll srollable area to the beginning/end
+This can be resolved by using iframes. Proof of concept:
+data:text/html,asdf<iframe src="http://example.org"></iframe>zxcv
+
+==== Inspector sidebar ====
+STR_4:
+1. Open url [1]
+2. Open inpector -> rules, select text "max-height: 2099px;" with mouse
+3. Press Ctrl+A to select all text in ruleview
+4. Press Up/Down keys, or PageUp/PageDown, or Home/End to scroll rule via keyboard
+
+AR: No visible action
+ER: Rules should scroll up/down
+
+
+STR_5:
+1. Open url [1]
+2. Open inpector -> rules, select text "max-height: 2099px;" with mouse
+3. Press Ctrl+A
+
+AR: Tabs in inspector sidebar become selected
+ER: Text selection shouldn't extend to tab
+
+
+STR_6:
+1. Open url [1]
+2. Open inpector -> rules, select text "max-height: 2099px;" with mouse
+3. Press Ctrl+Shift+Home/End
+
+AR: Scroll position in ruleview doesn't change
+ER: Rules should be scrolled to the beginning/end
+
+
+STR_7:
+1. Open url [1]
+2. Open inpector -> rules, select text "max-height: 2099px;" with mouse from right to left
+3. Press Ctrl+Shift+Home
+
+AR: All text AFTER "max-height: 2099px;" is selected(!)
+ER: All text from beginning to "max-height: 2099px;" should be selected

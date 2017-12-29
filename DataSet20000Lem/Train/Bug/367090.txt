@@ -1,0 +1,68 @@
+JavaScript XPath fails with mixed-caps in element name
+User-Agent: Mozilla/5.0 (Macintosh; U; PPC Mac OS X Mach-O; en-US; rv:1.8.1.1) Gecko/20061204 Firefox/2.0.0.1
+Build Identifier: Mozilla/5.0 (Macintosh; U; PPC Mac OS X Mach-O; en-US; rv:1.8.1.1) Gecko/20061204 Firefox/2.0.0.1
+
+Running XPath query on XML document where all element name are all lower case work fine. However, XML document with mixed case fail.
+
+Works: "//person/personid"
+<people>
+<person>
+<personid>1</personid>
+. . .
+</person>
+. . .
+</people>
+
+Fails: "//Person/PersonID"
+<People>
+<Person>
+<PersonID>1</PersonID>
+. . .
+</Person>
+. . .
+</People>
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Setup xpath method:
+
+xpath = function (doc, path, asString) {
+var type = XPathResult.ANY_TYPE;
+if (asString) {
+type = XPathResult.STRING_TYPE;
+}
+if (!doc) {
+return null;
+}
+var rValue = document.evaluate(path, doc, NSResolver, type, null);
+if (asString) {
+return rValue.stringValue;
+} else {
+return rValue;
+}
+};
+
+2. AJAX application query XML document
+
+3. XML document with mixed case tag name is returned to callback function a doc
+
+4. var pid = xpath(doc, "//Person/PersonID", true);
+
+5. Try with "//person/personid"
+
+6. Return XML with all lower case element name
+Actual Results:
+#4 return an empty string to pid
+
+#5 return an empty string to pid
+
+#6 return "1" to pid - correct
+
+Expected Results:
+Expected "1" for both #4 and #6.
+
+Expected empty string for #5.
+
+Using FireBug, I see that tag name (localName, tagName, nodeName properties) are in mixed case for the various node in the result XML document. However, it show the node for PersonID a "<personid>" in the debugger. I don't know if that is something that FireBug display or if it's something in the Mozilla DOM.

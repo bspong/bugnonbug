@@ -1,0 +1,435 @@
+Android crash on MarkArraySlots when creating an Array
+I hit the following crash on tinderbox today, which seems to indicate a real, un-filed bug. Somewhere in these 96 stack frames, someone is using an AutoGCRooter to root an Array that contains an invalid (uninitialized?) Value. Tracking this down should be easy, but lot of work, so I'm filing it to do later.
+
+Operating system: Android
+0.0.0 Linux 2.6.32.9-00002-gd8084dc-dirty #1 SMP PREEMPT Wed Feb 2 11:32:06 PST 2011 armv7l nvidia/harmony/harmony/harmony:2.2/FRF91/20110202.102810:eng/test-keys
+CPU: arm
+0 CPUs
+
+Crash reason: SIGSEGV
+Crash address: 0x4
+
+Thread 4 (crashed)
+0 libxul.so!js::gc::MarkArraySlots(JSTracer*, unsigned int, js::HeapSlot*, char const*) + 0x3c
+r4 = 0x50225114 r5 = 0x00000000 r6 = 0x00000000 r7 = 0x54407418
+r8 = 0x00000000 r9 = 0xffffff87 r10 = 0x00000121 fp = 0x000000ba
+sp = 0x4e103eb8 lr = 0x5402a138 pc = 0x5402fab4
+Found by: given a instruction pointer in context
+1 libxul.so!JS::AutoGCRooter::traceAll(JSTracer*) [RootMarking.cpp : 648 + 0x12]
+r4 = 0x4e104124 r5 = 0x50225114 r6 = 0x50225000 r7 = 0x5a8e26e8
+r8 = 0x54595f58 r9 = 0x502251c0 r10 = 0x5a8e26e8 fp = 0x000000ba
+sp = 0x4e103ee0 pc = 0x5402a138
+Found by: call frame info
+2 libxul.so!js::gc::MarkRuntime(JSTracer*, bool) [RootMarking.cpp : 708 + 0x6]
+r4 = 0x50225114 r5 = 0x5a8e26e8 r6 = 0x50225000 r7 = 0x5a8e26e8
+r8 = 0x54595f58 r9 = 0x502251c0 r10 = 0x5a8e26e8 fp = 0x000000ba
+sp = 0x4e103f20 pc = 0x5402a290
+Found by: call frame info
+3 libxul.so!IncrementalCollectSlice [jsgc.cpp : 2634 + 0xa]
+r4 = 0x50225000 r5 = 0x548ed8cc r6 = 0x00000000 r7 = 0x50225000
+r8 = 0x5a8e26e8 r9 = 0x502251c0 r10 = 0x5a8e26e8 fp = 0x000000ba
+sp = 0x4e103f70 pc = 0x53ebb684
+Found by: call frame info
+4 libxul.so!GCCycle [jsgc.cpp : 4160 + 0x1e]
+r4 = 0x50225000 r5 = 0x543fedb0 r6 = 0x00000000 r7 = 0x50225a50
+r8 = 0x50225000 r9 = 0x00000000 r10 = 0x00000000 fp = 0x00000000
+sp = 0x4e104000 pc = 0x53ebd174
+Found by: call frame info
+5 libxul.so!Collect [jsgc.cpp : 4278 + 0x16]
+r4 = 0x50225000 r5 = 0x502251c0 r6 = 0x00000004 r7 = 0x00000000
+r8 = 0x00000002 r9 = 0x00000000 r10 = 0x00000000 fp = 0x547ea710
+sp = 0x4e104038 pc = 0x53ebd570
+Found by: call frame info
+6 libxul.so!js::gc::ArenaLists::refillFreeList(JSContext*, js::gc::AllocKind) [jsgc.cpp : 4301 + 0x16]
+r4 = 0x00000003 r5 = 0x52318000 r6 = 0x54595f58 r7 = 0x52318024
+r8 = 0x50225000 r9 = 0x57b03000 r10 = 0x50b651a0 fp = 0x547ea710
+sp = 0x4e104068 pc = 0x53ebdaa0
+Found by: call frame info
+7 libxul.so!js::NewDenseCopiedArray(JSContext*, unsigned int, JS::Value const*, JSObject*) [jsgcinlines.h : 527 + 0xe]
+r4 = 0x00000000 r5 = 0x547ea710 r6 = 0x50239b38 r7 = 0x00000000
+r8 = 0x00000121 r9 = 0x57b03000 r10 = 0x50b651a0 fp = 0x50b71e80
+sp = 0x4e1040c0 pc = 0x53e76b30
+Found by: call frame info
+8 libxul.so!JS_NewArrayObject(JSContext*, int, JS::Value*) [jsapi.cpp : 4741 + 0x2]
+r4 = 0x00000000 r5 = 0x00000121 r6 = 0x547ea710 r7 = 0x00000121
+r8 = 0x00000007 r9 = 0x547ea710 r10 = 0x4e1041f0 fp = 0x00000121
+sp = 0x4e104120 pc = 0x53e67f34
+Found by: call frame info
+9 libxul.so!XPCConvert::NativeArray2JS(XPCLazyCallContext&, JS::Value*, void const**, nsXPTType const&, nsID const*, unsigned int, tag_nsresult*) [XPCConvert.cpp : 1415 + 0xe]
+r4 = 0x4e104368 r5 = 0x4e104204 r6 = 0x4e104438 r7 = 0x00000121
+r8 = 0x00000007 r9 = 0x547ea710 r10 = 0x4e1041f0 fp = 0x00000121
+sp = 0x4e104148 pc = 0x536b189c
+Found by: call frame info
+10 libxul.so!XPCWrappedNative::CallMethod(XPCCallContext&, XPCWrappedNative::CallMode) [XPCWrappedNative.cpp : 2607 + 0x16]
+r4 = 0x00000001 r5 = 0x00000001 r6 = 0x00000000 r7 = 0x00000121
+r8 = 0x4e104368 r9 = 0x00000094 r10 = 0x00000001 fp = 0x00000002
+sp = 0x4e1041c8 pc = 0x536cce30
+Found by: call frame info
+11 libxul.so!XPC_WN_CallMethod(JSContext*, unsigned int, JS::Value*) [XPCWrappedNativeJSOps.cpp : 1488 + 0xa]
+r4 = 0x547ea710 r5 = 0x5a669520 r6 = 0x00000001 r7 = 0x504002f0
+r8 = 0x00000001 r9 = 0x00000000 r10 = 0x5a669520 fp = 0x4e104998
+sp = 0x4e104410 pc = 0x536d1b88
+Found by: call frame info
+12 libxul.so!js::InvokeKernel(JSContext*, JS::CallArgs, js::MaybeConstruct) [jscntxtinlines.h : 373 + 0xa]
+r4 = 0x50400300 r5 = 0x547ea710 r6 = 0x00000000 r7 = 0x4e1044c8
+r8 = 0x545ebd48 r9 = 0x00000000 r10 = 0x5a669520 fp = 0x4e104998
+sp = 0x4e1044b8 pc = 0x53ee3fc8
+Found by: call frame info
+13 libxul.so!js::Interpret(JSContext*, js::StackFrame*, js::InterpMode) [jsinterp.cpp : 2368 + 0x6]
+r4 = 0x00000001 r5 = 0x54595f58 r6 = 0x00000000 r7 = 0xffffff87
+r8 = 0x00000001 r9 = 0x00038102 r10 = 0xffffffe8 fp = 0x4e104998
+sp = 0x4e104548 pc = 0x53ed9218
+Found by: call frame info
+14 libxul.so!js::RunScript(JSContext*, JS::Handle<JSScript*>, js::StackFrame*) [jsinterp.cpp : 348 + 0xa]
+r4 = 0x547ea710 r5 = 0x50400040 r6 = 0x00000000 r7 = 0x4e104a0c
+r8 = 0x4e104a44 r9 = 0x00000001 r10 = 0x00000000 fp = 0x54624278
+sp = 0x4e1049c0 pc = 0x53ee3e28
+Found by: call frame info
+15 libxul.so!js::InvokeKernel(JSContext*, JS::CallArgs, js::MaybeConstruct) [jsinterp.cpp : 406 + 0xe]
+r4 = 0x00000001 r5 = 0x547ea710 r6 = 0x00000000 r7 = 0x4e104a00
+r8 = 0x4e104a44 r9 = 0x00000001 r10 = 0x00000000 fp = 0x54624278
+sp = 0x4e1049f0 pc = 0x53ee3f84
+Found by: call frame info
+16 libxul.so!js::Invoke [jsinterp.h : 112 + 0x2]
+r4 = 0x00000001 r5 = 0x50400038 r6 = 0x547ea710 r7 = 0x50400028
+r8 = 0x4e104a98 r9 = 0x50e15000 r10 = 0x50400018 fp = 0x54624278
+sp = 0x4e104a80 pc = 0x53ee4634
+Found by: call frame info
+17 libxul.so!js::BaseProxyHandler::call(JSContext*, JSObject*, unsigned int, JS::Value*) [jsproxy.cpp : 266 + 0x12]
+r4 = 0x50400010 r5 = 0x55e5e010 r6 = 0x547ea710 r7 = 0x00000001
+r8 = 0x50400010 r9 = 0x50e15000 r10 = 0x55e5e010 fp = 0x54624278
+sp = 0x4e104ad0 pc = 0x53f234d4
+Found by: call frame info
+18 libxul.so!js::Wrapper::call(JSContext*, JSObject*, unsigned int, JS::Value*) [jswrapper.cpp : 298 + 0x16]
+r4 = 0x54624278 r5 = 0x55e5e010 r6 = 0x547ea710 r7 = 0x00000001
+r8 = 0x50400010 r9 = 0x50e15000 r10 = 0x55e5e010 fp = 0x54624278
+sp = 0x4e104b08 pc = 0x53f8995c
+Found by: call frame info
+19 libxul.so!js::CrossCompartmentWrapper::call(JSContext*, JSObject*, unsigned int, JS::Value*) [jswrapper.cpp : 631 + 0x16]
+r4 = 0x547ea710 r5 = 0x50400028 r6 = 0x00000001 r7 = 0x00000001
+r8 = 0x50400010 r9 = 0x50e15000 r10 = 0x55e5e010 fp = 0x54624278
+sp = 0x4e104b30 pc = 0x53f8aea0
+Found by: call frame info
+20 libxul.so!proxy_Call [jsproxy.cpp : 2438 + 0x16]
+r4 = 0x54624278 r5 = 0x547ea710 r6 = 0x00000000 r7 = 0x4e104b88
+r8 = 0x545ebd48 r9 = 0x4e104e18 r10 = 0x55e5e010 fp = 0x00000001
+sp = 0x4e104b60 pc = 0x53f24144
+Found by: call frame info
+21 libxul.so!js::InvokeKernel(JSContext*, JS::CallArgs, js::MaybeConstruct) [jscntxtinlines.h : 373 + 0xa]
+r4 = 0x50400020 r5 = 0x547ea710 r6 = 0x00000000 r7 = 0x4e104b88
+r8 = 0x545ebd48 r9 = 0x4e104e18 r10 = 0x55e5e010 fp = 0x00000001
+sp = 0x4e104b78 pc = 0x53ee3fc8
+Found by: call frame info
+22 libxul.so!js::Invoke [jsinterp.h : 112 + 0x2]
+r4 = 0x00000001 r5 = 0x50400020 r6 = 0x547ea710 r7 = 0x4e104e20
+r8 = 0x4e104c20 r9 = 0x4e104e18 r10 = 0x4e104c68 fp = 0x00000001
+sp = 0x4e104c08 pc = 0x53ee4634
+Found by: call frame info
+23 libxul.so!JS_CallFunctionValue(JSContext*, JSObject*, JS::Value, unsigned int, JS::Value*, JS::Value*) [jsapi.cpp : 5804 + 0x22]
+r4 = 0x547ea710 r5 = 0x80004005 r6 = 0x00000001 r7 = 0x4e5e0050
+r8 = 0x547ea710 r9 = 0x4e104e18 r10 = 0x00102008 fp = 0x00000001
+sp = 0x4e104c58 pc = 0x53e645e4
+Found by: call frame info
+24 libxul.so!nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS*, unsigned short, XPTMethodDescriptor const*, nsXPTCMiniVariant*) [XPCWrappedJSClass.cpp : 1432 + 0x32]
+r4 = 0x54944d00 r5 = 0x80004005 r6 = 0x00000001 r7 = 0x4e5e0050
+r8 = 0x547ea710 r9 = 0x4e104e18 r10 = 0x00102008 fp = 0x00000001
+sp = 0x4e104c80 pc = 0x536c74c8
+Found by: call frame info
+25 libxul.so!nsXPCWrappedJS::CallMethod(unsigned short, XPTMethodDescriptor const*, nsXPTCMiniVariant*) [XPCWrappedJS.cpp : 580 + 0x1a]
+r4 = 0x5608dd40 r5 = 0x4e5e0050 r6 = 0x00000003 r7 = 0x4e104f48
+r8 = 0x4e104fec r9 = 0x549c1c08 r10 = 0x00000001 fp = 0x4e105108
+sp = 0x4e104f10 pc = 0x536c2a4c
+Found by: call frame info
+26 libxul.so!PrepareAndDispatch [xptcstubs_arm.cpp : 105 + 0x1e]
+r4 = 0x4e104f48 r5 = 0x56073670 r6 = 0x00000003 r7 = 0x4e104f48
+r8 = 0x4e104fec r9 = 0x549c1c08 r10 = 0x00000001 fp = 0x4e105108
+sp = 0x4e104f40 pc = 0x53b0dc98
+Found by: call frame info
+27 libxul.so + 0xe923ce
+r4 = 0x56073670 r5 = 0x58884310 r6 = 0x00000000 r7 = 0x4e105118
+r8 = 0x524616f0 r9 = 0x549c1c08 r10 = 0x56566f60 fp = 0x4e105108
+sp = 0x4e104fe8 pc = 0x53b0d3d0
+Found by: call frame info
+28 libxul.so!nsEventListenerManager::HandleEventSubType(nsListenerStruct*, nsIDOMEventListener*, nsIDOMEvent*, nsIDOMEventTarget*, nsCxPusher*) [nsEventListenerManager.cpp : 922 + 0xa]
+r4 = 0x56073670 r5 = 0x58884310 r6 = 0x00000000 r7 = 0x4e105118
+r8 = 0x524616f0 r9 = 0x549c1c08 r10 = 0x56566f60 fp = 0x4e105108
+sp = 0x4e104ff8 pc = 0x532f0094
+Found by: call frame info
+29 libxul.so!nsEventListenerManager::HandleEventInternal(nsPresContext*, nsEvent*, nsIDOMEvent**, nsIDOMEventTarget*, nsEventStatus*, nsCxPusher*) [nsEventListenerManager.cpp : 989 + 0x16]
+r4 = 0x58d7c800 r5 = 0x549c1d08 r6 = 0x00000010 r7 = 0x4e105118
+r8 = 0x524616f0 r9 = 0x549c1c08 r10 = 0x56566f60 fp = 0x4e105108
+sp = 0x4e105008 pc = 0x532f029c
+Found by: call frame info
+30 libxul.so!nsEventTargetChainItem::HandleEvent(nsEventChainPostVisitor&, bool, nsCxPusher*) [nsEventListenerManager.h : 279 + 0xe]
+r4 = 0x56566f60 r5 = 0x4e105110 r6 = 0x00000004 r7 = 0x4e105108
+r8 = 0x00000000 r9 = 0x00000000 r10 = 0x00000ad6 fp = 0x5027f080
+sp = 0x4e105068 pc = 0x5330626c
+Found by: call frame info
+31 libxul.so!nsEventTargetChainItem::HandleEventTargetChain(nsEventChainPostVisitor&, nsDispatchingCallback*, bool, nsCxPusher*) [nsEventDispatcher.cpp : 286 + 0xe]
+r4 = 0x4e105110 r5 = 0x5027f160 r6 = 0x4e105108 r7 = 0x545fe95c
+r8 = 0x00000000 r9 = 0x00000000 r10 = 0x00000ad6 fp = 0x5027f080
+sp = 0x4e105090 pc = 0x5330650c
+Found by: call frame info
+32 libxul.so!nsEventDispatcher::Dispatch(nsISupports*, nsPresContext*, nsEvent*, nsIDOMEvent*, nsEventStatus*, nsDispatchingCallback*, nsCOMArray<nsIDOMEventTarget>*) [nsEventDispatcher.cpp : 681 + 0x16]
+r4 = 0x58d7c800 r5 = 0x00000000 r6 = 0x00000000 r7 = 0x5027f100
+r8 = 0x00000000 r9 = 0x4e105108 r10 = 0x5027f080 fp = 0x4e105100
+sp = 0x4e1050c8 pc = 0x53307094
+Found by: call frame info
+33 libxul.so!nsEventDispatcher::DispatchDOMEvent(nsISupports*, nsEvent*, nsIDOMEvent*, nsPresContext*, nsEventStatus*) [nsEventDispatcher.cpp : 742 + 0x1a]
+r4 = 0x4e655fa8 r5 = 0x58884310 r6 = 0x00000000 r7 = 0x00000000
+r8 = 0x58d7c800 r9 = 0x4e655fa8 r10 = 0x00000000 fp = 0x54bf5c30
+sp = 0x4e105178 pc = 0x533073a8
+Found by: call frame info
+34 libxul.so!nsDocument::DispatchPageTransition(nsIDOMEventTarget*, nsAString_internal const&, bool) [nsDocument.cpp : 7402 + 0x16]
+r4 = 0x4e1051c0 r5 = 0x00000001 r6 = 0x553c5000 r7 = 0x00000000
+r8 = 0x00000000 r9 = 0x4e655fa8 r10 = 0x00000000 fp = 0x54bf5c30
+sp = 0x4e1051b0 pc = 0x532561fc
+Found by: call frame info
+35 libxul.so!nsDocument::OnPageShow(bool, nsIDOMEventTarget*) [nsDocument.cpp : 7461 + 0xe]
+r4 = 0x4e105204 r5 = 0x553c5000 r6 = 0x00000001 r7 = 0x4e1051f7
+r8 = 0x54b29984 r9 = 0x54bf5c30 r10 = 0x00000000 fp = 0x54bf5c30
+sp = 0x4e1051f0 pc = 0x53258624
+Found by: call frame info
+36 libxul.so!nsDocumentViewer::LoadComplete(tag_nsresult) [nsDocumentViewer.cpp : 1060 + 0xe]
+r4 = 0x4e53a710 r5 = 0x580f8e20 r6 = 0x4e655f40 r7 = 0x00000001
+r8 = 0x54b29984 r9 = 0x54bf5c30 r10 = 0x00000000 fp = 0x54bf5c30
+sp = 0x4e105238 pc = 0x530a9690
+Found by: call frame info
+37 libxul.so!nsDocShell::EndPageLoad(nsIWebProgress*, nsIChannel*, tag_nsresult) [nsDocShell.cpp : 6504 + 0xe]
+r4 = 0x54b29800 r5 = 0x00000000 r6 = 0x54bf5c30 r7 = 0x00000001
+r8 = 0x54b29984 r9 = 0x54bf5c30 r10 = 0x00000000 fp = 0x54bf5c30
+sp = 0x4e105298 pc = 0x53728334
+Found by: call frame info
+38 libxul.so!nsDocShell::OnStateChange(nsIWebProgress*, nsIRequest*, unsigned int, tag_nsresult) [nsDocShell.cpp : 6332 + 0x1a]
+r4 = 0x54b29800 r5 = 0x4e1054f0 r6 = 0x4e1054f4 r7 = 0x00000000
+r8 = 0x56548ad0 r9 = 0x54bf5c30 r10 = 0x54b29814 fp = 0x54bf5c30
+sp = 0x4e1054a0 pc = 0x5372d608
+Found by: call frame info
+39 libxul.so!nsDocLoader::DoFireOnStateChange(nsIWebProgress*, nsIRequest*, int&, tag_nsresult) [nsDocLoader.cpp : 1305 + 0x1e]
+r4 = 0x4e1055c0 r5 = 0x00000000 r6 = 0x54b29834 r7 = 0x4e105580
+r8 = 0x56548ad0 r9 = 0x54bf5c30 r10 = 0x54b29814 fp = 0x00000002
+sp = 0x4e105570 pc = 0x53734470
+Found by: call frame info
+40 libxul.so!nsDocLoader::doStopDocumentLoad(nsIRequest*, tag_nsresult) [nsDocLoader.cpp : 885 + 0x16]
+r4 = 0x00000000 r5 = 0x54bf5c30 r6 = 0x00000000 r7 = 0x4e1055c0
+r8 = 0x54b29800 r9 = 0x00000000 r10 = 0x54b29814 fp = 0x00297f20
+sp = 0x4e1055b8 pc = 0x5373560c
+Found by: call frame info
+41 libxul.so!nsDocLoader::DocLoaderIsEmpty(bool) [nsDocLoader.cpp : 775 + 0xe]
+r4 = 0x54b29800 r5 = 0x4e105614 r6 = 0x00000000 r7 = 0x4e105620
+r8 = 0x00000000 r9 = 0x00000000 r10 = 0x00000000 fp = 0x00297f20
+sp = 0x4e105610 pc = 0x53735878
+Found by: call frame info
+42 libxul.so!nsDocLoader::OnStopRequest(nsIRequest*, nsISupports*, tag_nsresult) [nsDocLoader.cpp : 659 + 0xa]
+r4 = 0x54b29800 r5 = 0x4e105650 r6 = 0x5bad7160 r7 = 0x00000000
+r8 = 0x00000000 r9 = 0x00000000 r10 = 0x00000000 fp = 0x00297f20
+sp = 0x4e105648 pc = 0x53735aa0
+Found by: call frame info
+43 libxul.so!nsLoadGroup::RemoveRequest(nsIRequest*, nsISupports*, tag_nsresult) [nsLoadGroup.cpp : 676 + 0x16]
+r4 = 0x54b1c500 r5 = 0x5bad7160 r6 = 0x00000000 r7 = 0x4e105698
+r8 = 0x00000000 r9 = 0x00000000 r10 = 0x00000000 fp = 0x00297f20
+sp = 0x4e105680 pc = 0x52f356b0
+Found by: call frame info
+44 libxul.so!nsDocument::DoUnblockOnload() [nsDocument.cpp : 7361 + 0x16]
+r4 = 0x553c5000 r5 = 0x55f02000 r6 = 0x543522c0 r7 = 0x5427f7d0
+r8 = 0x5427ff10 r9 = 0x00000000 r10 = 0x58d7bec0 fp = 0x00297f20
+sp = 0x4e1056d0 pc = 0x53257f6c
+Found by: call frame info
+45 libxul.so!nsDocument::DispatchContentLoadedEvents() [nsDocument.cpp : 4280 + 0x12]
+r4 = 0x553c5000 r5 = 0x55f02000 r6 = 0x543522c0 r7 = 0x5427f7d0
+r8 = 0x5427ff10 r9 = 0x00000000 r10 = 0x58d7bec0 fp = 0x00297f20
+sp = 0x4e1056e0 pc = 0x53257de0
+Found by: call frame info
+46 libxul.so!nsRunnableMethodImpl<tag_nsresult (mozilla::net::BackgroundFileSaver::*)(), true>::Run() + 0x2a
+r4 = 0x4e651460 r5 = 0x00000000 r6 = 0x4e105774 r7 = 0x00000001
+r8 = 0x00000001 r9 = 0x4e65148c r10 = 0x4e1057a7 fp = 0x00297f20
+sp = 0x4e105758 pc = 0x52f25a0c
+Found by: call frame info
+47 libxul.so!nsThread::ProcessNextEvent(bool, bool*) [nsThread.cpp : 627 + 0xa]
+r4 = 0x4e651460 r5 = 0x00000000 r6 = 0x4e105774 r7 = 0x00000001
+r8 = 0x00000001 r9 = 0x4e65148c r10 = 0x4e1057a7 fp = 0x00297f20
+sp = 0x4e105760 pc = 0x53af9fe0
+Found by: call frame info
+48 libxul.so!NS_ProcessNextEvent_P(nsIThread*, bool) [nsThreadUtils.cpp : 237 + 0x12]
+r4 = 0x00000001 r5 = 0x00000000 r6 = 0x5a0e8700 r7 = 0x00000000
+r8 = 0x00000001 r9 = 0x4e65148c r10 = 0x4e10581f fp = 0x00297f20
+sp = 0x4e1057a0 pc = 0x53ac9254
+Found by: call frame info
+49 libxul.so!nsThread::Shutdown() [nsThread.cpp : 474 + 0xa]
+r4 = 0x58a368e0 r5 = 0x00000000 r6 = 0x5a0e8700 r7 = 0x00000000
+r8 = 0x00000001 r9 = 0x4e65148c r10 = 0x4e10581f fp = 0x00297f20
+sp = 0x4e1057b0 pc = 0x53afa848
+Found by: call frame info
+50 libxul.so!nsRunnableMethodImpl<tag_nsresult (mozilla::net::BackgroundFileSaver::*)(), true>::Run() + 0x2a
+r4 = 0x4e651460 r5 = 0x00000000 r6 = 0x4e1057ec r7 = 0x00000000
+r8 = 0x00000001 r9 = 0x4e65148c r10 = 0x4e10581f fp = 0x00297f20
+sp = 0x4e1057d0 pc = 0x52f25a0c
+Found by: call frame info
+51 libxul.so!nsThread::ProcessNextEvent(bool, bool*) [nsThread.cpp : 627 + 0xa]
+r4 = 0x4e651460 r5 = 0x00000000 r6 = 0x4e1057ec r7 = 0x00000000
+r8 = 0x00000001 r9 = 0x4e65148c r10 = 0x4e10581f fp = 0x00297f20
+sp = 0x4e1057d8 pc = 0x53af9fe0
+Found by: call frame info
+52 libxul.so!NS_ProcessNextEvent_P(nsIThread*, bool) [nsThreadUtils.cpp : 237 + 0x12]
+r4 = 0x00000000 r5 = 0x4e6870c0 r6 = 0x4e636500 r7 = 0x00000001
+r8 = 0x00000000 r9 = 0x4e1058a4 r10 = 0x00000000 fp = 0x00297f20
+sp = 0x4e105818 pc = 0x53ac9254
+Found by: call frame info
+53 libxul.so!mozilla::ipc::MessagePump::Run(base::MessagePump::Delegate*) [MessagePump.cpp : 82 + 0xa]
+r4 = 0x4e6364f0 r5 = 0x4e6870c0 r6 = 0x4e636500 r7 = 0x00000001
+r8 = 0x00000000 r9 = 0x4e1058a4 r10 = 0x00000000 fp = 0x00297f20
+sp = 0x4e105828 pc = 0x5392939c
+Found by: call frame info
+54 libxul.so!MessageLoop::RunInternal() [message_loop.cc : 215 + 0xa]
+r4 = 0x4e6870c0 r5 = 0x4e64f6b0 r6 = 0x4e651460 r7 = 0x4e1058a8
+r8 = 0x4e105add r9 = 0x4e1058a4 r10 = 0x00000000 fp = 0x00297f20
+sp = 0x4e105850 pc = 0x53b2d4b8
+Found by: call frame info
+55 libxul.so!MessageLoop::Run() [message_loop.cc : 208 + 0x6]
+r4 = 0x4e6870c0 r5 = 0x4e64f6b0 r6 = 0x4e651460 r7 = 0x4e1058a8
+r8 = 0x4e105add r9 = 0x4e1058a4 r10 = 0x00000000 fp = 0x00297f20
+sp = 0x4e105858 pc = 0x53b2d634
+Found by: call frame info
+56 libxul.so!nsBaseAppShell::Run() [nsBaseAppShell.cpp : 163 + 0x6]
+r4 = 0x00000000 r5 = 0x4e64f6b0 r6 = 0x4e651460 r7 = 0x4e1058a8
+r8 = 0x4e105add r9 = 0x4e1058a4 r10 = 0x00000000 fp = 0x00297f20
+sp = 0x4e105870 pc = 0x53876cf4
+Found by: call frame info
+57 libxul.so!nsAppStartup::Run() [nsAppStartup.cpp : 288 + 0xa]
+r4 = 0x5029d970 r5 = 0x4e1059ec r6 = 0x4e1058b8 r7 = 0x4e1058a8
+r8 = 0x4e105add r9 = 0x4e1058a4 r10 = 0x00000000 fp = 0x00297f20
+sp = 0x4e105880 pc = 0x53781e5c
+Found by: call frame info
+58 libxul.so!XREMain::XRE_mainRun() [nsAppRunner.cpp : 3823 + 0xa]
+r4 = 0x4e105944 r5 = 0x4e1059ec r6 = 0x4e1058b8 r7 = 0x4e1058a8
+r8 = 0x4e105add r9 = 0x4e1058a4 r10 = 0x00000000 fp = 0x00297f20
+sp = 0x4e105888 pc = 0x52f0bb7c
+Found by: call frame info
+59 libxul.so!XREMain::XRE_main(int, char**, nsXREAppData const*) [nsAppRunner.cpp : 3890 + 0x6]
+r4 = 0x4e1059ec r5 = 0x4e1059c3 r6 = 0x00000000 r7 = 0x4e661048
+r8 = 0x4e662000 r9 = 0x44938f88 r10 = 0x00005000 fp = 0x00297f20
+sp = 0x4e1059c0 pc = 0x52f0d568
+Found by: call frame info
+60 libxul.so!XRE_main [nsAppRunner.cpp : 4093 + 0x2]
+r4 = 0x80c33a58 r5 = 0x4e661048 r6 = 0x0000000c r7 = 0x00000000
+r8 = 0x541ceea8 r9 = 0x44938f88 r10 = 0x44938f74 fp = 0x00297f20
+sp = 0x4e1059e8 pc = 0x52f0d7b4
+Found by: call frame info
+61 libxul.so!GeckoStart [nsAndroidStartup.cpp : 73 + 0x16]
+r4 = 0x54603f78 r5 = 0x00298400 r6 = 0x80c33a58 r7 = 0x00000000
+r8 = 0x541ceea8 r9 = 0x44938f88 r10 = 0x44938f74 fp = 0x00297f20
+sp = 0x4e105af8 pc = 0x52f12808
+Found by: call frame info
+62 libmozglue.so!Java_org_mozilla_gecko_GeckoAppShell_nativeRun [APKOpen.cpp : 669 + 0x6]
+r4 = 0x00298400 r5 = 0x0000017e r6 = 0x52f1271c r7 = 0x000bffa0
+r8 = 0x4846cf50 r9 = 0x44938f88 r10 = 0x44938f74 fp = 0x00297f20
+sp = 0x4e105b28 pc = 0x80c16980
+Found by: call frame info
+63 libdvm.so + 0x16e36
+r4 = 0x4e105b68 r5 = 0x00000000 r6 = 0x483d99c0 r7 = 0x44938f90
+r8 = 0x4e105b48 r9 = 0x44938f88 r10 = 0x44938f74 fp = 0x00297f20
+sp = 0x4e105b48 pc = 0x80816e38
+Found by: call frame info
+64 dalvik-LinearAlloc (deleted) + 0x21821e
+sp = 0x4e105b50 pc = 0x432e4220
+Found by: stack scanning
+65 2 (deleted) + 0x539be
+sp = 0x4e105b54 pc = 0x483d99c0
+Found by: stack scanning
+66 libdvm.so + 0x16ffe
+sp = 0x4e105b5c pc = 0x80817000
+Found by: stack scanning
+67 libdvm.so + 0x45199
+sp = 0x4e105b68 pc = 0x8084519b
+Found by: stack scanning
+68 data@app@org.mozilla.fennec-1.apk@classes.dex + 0x193dcd
+sp = 0x4e105b70 pc = 0x4dcc1dcf
+Found by: stack scanning
+69 libmozglue.so!report_mapping [APKOpen.cpp : 416 + 0x2a]
+sp = 0x4e105b74 pc = 0x80c168fc
+Found by: stack scanning
+70 0x44938f86
+r4 = 0x00000004 r5 = 0x44938f88 r6 = 0x00000001 r7 = 0x4e105c28
+r8 = 0x0005b788 r9 = 0x4e105c28 r10 = 0x432e4220 fp = 0x00297f20
+sp = 0x4e105b9c pc = 0x44938f88
+Found by: call frame info
+71 libdvm.so + 0x3dbb7
+sp = 0x4e105ba0 pc = 0x8083dbb9
+Found by: stack scanning
+72 dalvik-LinearAlloc (deleted) + 0x21821e
+sp = 0x4e105ba4 pc = 0x432e4220
+Found by: stack scanning
+73 libdvm.so + 0xa23f2
+sp = 0x4e105ba8 pc = 0x808a23f4
+Found by: stack scanning
+74 2 (deleted) + 0x539be
+sp = 0x4e105bac pc = 0x483d99c0
+Found by: stack scanning
+75 libmozglue.so!report_mapping [APKOpen.cpp : 416 + 0x2a]
+sp = 0x4e105bb0 pc = 0x80c168fc
+Found by: stack scanning
+76 data@app@org.mozilla.fennec-1.apk@classes.dex + 0xdd7b6
+r4 = 0x8084a86d r5 = 0x00000001 r6 = 0x0012e748 r7 = 0x00002968
+r8 = 0x44938f88 r9 = 0x4e105c28 r10 = 0x00297f20 fp = 0x44938e80
+sp = 0x4e105bd8 pc = 0x4dc0b7b8
+Found by: call frame info
+77 2 (deleted) + 0x539be
+sp = 0x4e105be4 pc = 0x483d99c0
+Found by: stack scanning
+78 libdvm.so + 0x1bd9a
+sp = 0x4e105be8 pc = 0x8081bd9c
+Found by: stack scanning
+79 0 (deleted) + 0x1df6ffd
+sp = 0x4e105bec pc = 0x41dfffff
+Found by: stack scanning
+80 libdvm.so + 0x2271a
+sp = 0x4e105bf8 pc = 0x8082271c
+Found by: stack scanning
+81 libdvm.so + 0xa6f96
+sp = 0x4e105c00 pc = 0x808a6f98
+Found by: stack scanning
+82 libdvm.so + 0x4f8fb
+sp = 0x4e105c04 pc = 0x8084f8fd
+Found by: stack scanning
+83 libdvm.so + 0x2278e
+sp = 0x4e105c10 pc = 0x80822790
+Found by: stack scanning
+84 libdvm.so + 0x21622
+sp = 0x4e105c18 pc = 0x80821624
+Found by: stack scanning
+85 system@framework@framework.jar@classes.dex + 0x21fb04
+sp = 0x4e105c24 pc = 0x44264b06
+Found by: stack scanning
+86 dalvik-LinearAlloc (deleted) + 0x218b42
+sp = 0x4e105c34 pc = 0x432e4b44
+Found by: stack scanning
+87 libdvm.so + 0x1bae2
+sp = 0x4e105c78 pc = 0x8081bae4
+Found by: stack scanning
+88 libdvm.so + 0x1bb1e
+sp = 0x4e105c7c pc = 0x8081bb20
+Found by: stack scanning
+89 libdvm.so + 0x1ba06
+sp = 0x4e105c80 pc = 0x8081ba08
+Found by: stack scanning
+90 libdvm.so + 0x1ba2e
+sp = 0x4e105c84 pc = 0x8081ba30
+Found by: stack scanning
+91 libdvm.so + 0x1ba5e
+sp = 0x4e105c88 pc = 0x8081ba60
+Found by: stack scanning
+92 libdvm.so + 0x1ba82
+sp = 0x4e105c8c pc = 0x8081ba84
+Found by: stack scanning
+93 libdvm.so + 0x7b5ef
+sp = 0x4e105c90 pc = 0x8087b5f1
+Found by: stack scanning
+94 system@framework@core.jar@classes.dex + 0xf7cea
+sp = 0x4e105c9c pc = 0x438d2cec
+Found by: stack scanning
+95 system@framework@core.jar@classes.dex + 0xf7cea
+sp = 0x4e105ca0 pc = 0x438d2cec
+Found by: stack scanning
+96 system@framework@core.jar@classes.dex + 0xf7cf2
+sp = 0x4e105cac pc = 0x438d2cf4
+Found by: stack scanning

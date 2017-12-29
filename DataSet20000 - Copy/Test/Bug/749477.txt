@@ -1,0 +1,24 @@
+Searching from about:home broken if chromeappsstore.sqlite is deleted from profile folder.
+Someone complained on a forum that their about:home search box had been hijacked by Yahoo, wanting it to go back to the default Google search.
+Knowing that the chromeappsstore.sqlite file is where that setting is stored and that the file would be regenerated on the next startup, I recommended that the person move the file out of the profile folder to their desktop while Firefox was not running, then restart Firefox to regenerate the file.
+
+The file WAS regenerated, but now the search box stopped working entirely.
+
+I tried to reproduce this with my profile, and saw this error in the error console when I loaded about:home after deleting the file and restarting Firefox:
+
+Timestamp: 4/26/2012 8:02:47 PM
+Error: SyntaxError: JSON.parse: unexpected character
+Source File: chrome://browser/content/abouthome/aboutHome.js
+Line: 181
+
+
+The affected line of code is: 
+  gSearchEngine = JSON.parse(localStorage["search-engine"]);
+
+
+This is probably related to bug 637561, bug 645189, bug 637639, and/or bug 615785 (would this error go away if I waited for Firefox to upgrade to a newer version?).
+
+Expected results: Reset DOM storage when chromeappsstore.sqlite gets regenerated (or just revert back to a default engine when that JSON.parse() fails).
+
+
+I can upload both the original chromeappsstore.sqlite and the regenerated one if that'd help.

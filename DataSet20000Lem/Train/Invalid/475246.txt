@@ -1,0 +1,78 @@
+Not displayable ascii character (\t, \r, \n...) are displayed a a single white space
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; fr; rv:1.9.0.5) Gecko/2008122011 Firefox/3.0.3 (Debian-3.0.5-1)
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; fr; rv:1.9.0.5) Gecko/2008122011 Firefox/3.0.3 (Debian-3.0.5-1)
+
+For example:
+----------------------------------
+Test1
+Test2<br/>
+
+Test1 Test2 Test3<br/>
+
+Test1
+Test2<br/>
+----------------------------------
+
+(Test1\nTest2<br/>
+Test1\tTest2\t\tTest3<br/>
+Test1\n\tTest2<br/> in ascii)
+
+is rendering like
+----------------------------------
+Test1 Test2
+Test1 Test2 Test3
+Test1 Test2
+----------------------------------
+
+(Test1\0x20Test2\n
+Test1\0x20Test2\0x20Test3\n
+Test1\0x20Test2 in ascii)
+
+This strange display requires Web designer to code all the HTML on a single line without tab to get a correct/desired display.
+
+In my case, I must write
+----------------------------------
+<div class="menu center">
+<a href="?action=categories">Categories</a>&nbsp;&mdash;&nbsp;<a href="?action=tests">Tests</a>&nbsp;&mdash;&nbsp;<a href="?action=versions">Versions</a>&nbsp;&mdash;&nbsp;<a href="?action=results">Results</a>
+</div>
+----------------------------------
+instead of
+----------------------------------
+<div class="menu center">
+<a href="?action=categories">Categories</a>&nbsp;&mdash;&nbsp;
+<a href="?action=tests">Tests</a>&nbsp;&mdash;&nbsp;
+<a href="?action=versions">Versions</a>&nbsp;&mdash;&nbsp;
+<a href="?action=results">Results</a>
+</div>
+----------------------------------
+if I want to display
+----------------------------------
+Categories — Tests — Versions — Results
+----------------------------------
+and not
+----------------------------------
+Categories — Tests — Versions — Results
+----------------------------------
+(double white space after "—")
+
+This behaviour is on Linux and Windows Firefox version
+
+Reproducible: Always
+
+Steps to Reproduce:
+Display this HTML page:
+----------------------------------
+<div class="menu center">
+<a href="?action=categories">Categories</a>&nbsp;&mdash;&nbsp;
+<a href="?action=tests">Tests</a>&nbsp;&mdash;&nbsp;
+<a href="?action=versions">Versions</a>&nbsp;&mdash;&nbsp;
+<a href="?action=results">Results</a>
+</div>
+----------------------------------
+Actual Results:
+Categories — Tests — Versions — Results
+(double white space after "—", the wanted non-breakable space + one unwanted space from \t and \n in HTML code)
+
+Expected Results:
+Categories — Tests — Versions — Results
+(only one white space, the wanted non-breakable)

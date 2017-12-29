@@ -1,0 +1,185 @@
+Use After Free in CanonicalizeXPCOMParticipant() with dedicated worker
+Created attachment 8613166
+Uaf_CanonicalizeXPCOMParticipant_DedicatedWorker_repro.js
+
+Using XMLHttpRequest in dedicated worker can trigger a Use After Free. It's kind of a variant of Bug 1166924 (a similar use after free in shared worker), however,this bug wa found after Bug 1166924 wa fixed.
+
+
+Firefox version: 41.0a1 (2015-05-29)
+
+Steps to reproduce:
+1. Run server side script Uaf_CanonicalizeXPCOMParticipant_DedicatedWorker_repro.js in Node.js (node Uaf_CanonicalizeXPCOMParticipant_DedicatedWorker_repro.js).
+2. Enter http://localhost:12345 in Firefox browser.
+3. If it crash in other places, just restore the tab.
+
+
+Result in Asan build:
+
+
+=================================================================
+==8659==ERROR: AddressSanitizer: heap-use-after-free on address 0x61100026b3c0 at pc 0x7ff5728da512 bp 0x7ff55298a7d0 sp 0x7ff55298a7c8
+READ of size 8 at 0x61100026b3c0 thread T22 (DOM Worker)
+#0 0x7ff5728da511 in CanonicalizeXPCOMParticipant /builds/slave/m-cen-l64-asan-000000000000000/build/src/xpcom/base/nsCycleCollector.cpp:930
+#1 0x7ff5728da511 in CCGraphBuilder::NoteXPCOMChild(nsISupports*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/xpcom/base/nsCycleCollector.cpp:2332
+#2 0x7ff5728cd446 in mozilla::CycleCollectedJSRuntime::TraverseGCThing(mozilla::CycleCollectedJSRuntime::TraverseSelect, JS::GCCellPtr, nsCycleCollectionTraversalCallback&) /builds/slave/m-cen-l64-asan-000000000000000/build/src/xpcom/base/CycleCollectedJSRuntime.cpp:664
+#3 0x7ff5728ccfe8 in mozilla::JSGCThingParticipant::Traverse(void*, nsCycleCollectionTraversalCallback&) /builds/slave/m-cen-l64-asan-000000000000000/build/src/xpcom/base/CycleCollectedJSRuntime.cpp:353
+#4 0x7ff5728d8ba4 in CCGraphBuilder::BuildGraph(js::SliceBudget&) /builds/slave/m-cen-l64-asan-000000000000000/build/src/xpcom/base/nsCycleCollector.cpp:2239
+#5 0x7ff5728dddf7 in nsCycleCollector::MarkRoots(js::SliceBudget&) /builds/slave/m-cen-l64-asan-000000000000000/build/src/xpcom/base/nsCycleCollector.cpp:2839
+#6 0x7ff5728e2ca7 in nsCycleCollector::Collect(ccType, js::SliceBudget&, nsICycleCollectorListener*, bool) /builds/slave/m-cen-l64-asan-000000000000000/build/src/xpcom/base/nsCycleCollector.cpp:3603
+#7 0x7ff5728e629a in nsCycleCollector_collect(nsICycleCollectorListener*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/xpcom/base/nsCycleCollector.cpp:4098
+#8 0x7ff5728d0bac in mozilla::CycleCollectedJSRuntime::OnGC(JSGCStatus) /builds/slave/m-cen-l64-asan-000000000000000/build/src/xpcom/base/CycleCollectedJSRuntime.cpp:1266
+#9 0x7ff57be5916c in js::gc::GCRuntime::collect(bool, js::SliceBudget, JS::gcreason::Reason) /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/jsgc.cpp:6178
+#10 0x7ff57be59b09 in js::gc::GCRuntime::gc(JSGCInvocationKind, JS::gcreason::Reason) /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/jsgc.cpp:6234
+#11 0x7ff57bd54531 in js::DestroyContext(JSContext*, js::DestroyContextMode) /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/jscntxt.cpp:185
+#12 0x7ff57791eea8 in (anonymous namespace)::WorkerThreadPrimaryRunnable::Run() /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/workers/RuntimeService.cpp:2823
+#13 0x7ff5729df784 in nsThread::ProcessNextEvent(bool, bool*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/xpcom/threads/nsThread.cpp:846
+#14 0x7ff572a585ba in NS_ProcessNextEvent(nsIThread*, bool) /builds/slave/m-cen-l64-asan-000000000000000/build/src/xpcom/glue/nsThreadUtils.cpp:265
+#15 0x7ff57329a378 in mozilla::ipc::MessagePumpForNonMainThreads::Run(base::MessagePump::Delegate*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/ipc/glue/MessagePump.cpp:355
+#16 0x7ff573226a0c in RunInternal /builds/slave/m-cen-l64-asan-000000000000000/build/src/ipc/chromium/src/base/message_loop.cc:233
+#17 0x7ff573226a0c in RunHandler /builds/slave/m-cen-l64-asan-000000000000000/build/src/ipc/chromium/src/base/message_loop.cc:226
+#18 0x7ff573226a0c in MessageLoop::Run() /builds/slave/m-cen-l64-asan-000000000000000/build/src/ipc/chromium/src/base/message_loop.cc:200
+#19 0x7ff5729dc2c8 in nsThread::ThreadFunc(void*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/xpcom/threads/nsThread.cpp:359
+#20 0x7ff57f4b0135 in _pt_root /builds/slave/m-cen-l64-asan-000000000000000/build/src/nsprpub/pr/src/pthreads/ptthread.c:212
+#21 0x7ff57faf0181 in start_thread (/lib/x86_64-linux-gnu/libpthread.so.0+0x8181)
+#22 0x7ff57058b30c (/lib/x86_64-linux-gnu/libc.so.6+0xfb30c)
+
+0x61100026b3c0 is located 0 byte inside of 232-byte region [0x61100026b3c0,0x61100026b4a8)
+freed by thread T22 (DOM Worker) here:
+#0 0x474a01 in free /builds/slave/moz-toolchain/src/llvm/projects/compiler-rt/lib/asan/asan_malloc_linux.cc:64
+#1 0x7ff5728dd99d in SnowWhiteKiller::~SnowWhiteKiller() /builds/slave/m-cen-l64-asan-000000000000000/build/src/xpcom/base/nsCycleCollector.cpp:2639
+#2 0x7ff5728dd5ce in nsCycleCollector::FreeSnowWhite(bool) /builds/slave/m-cen-l64-asan-000000000000000/build/src/xpcom/base/nsCycleCollector.cpp:2807
+#3 0x7ff5728e367e in nsCycleCollector::BeginCollection(ccType, nsICycleCollectorListener*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/xpcom/base/nsCycleCollector.cpp:3774
+#4 0x7ff5728e2c95 in nsCycleCollector::Collect(ccType, js::SliceBudget&, nsICycleCollectorListener*, bool) /builds/slave/m-cen-l64-asan-000000000000000/build/src/xpcom/base/nsCycleCollector.cpp:3599
+#5 0x7ff5728e629a in nsCycleCollector_collect(nsICycleCollectorListener*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/xpcom/base/nsCycleCollector.cpp:4098
+#6 0x7ff5728d0bac in mozilla::CycleCollectedJSRuntime::OnGC(JSGCStatus) /builds/slave/m-cen-l64-asan-000000000000000/build/src/xpcom/base/CycleCollectedJSRuntime.cpp:1266
+#7 0x7ff57be5916c in js::gc::GCRuntime::collect(bool, js::SliceBudget, JS::gcreason::Reason) /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/jsgc.cpp:6178
+#8 0x7ff57be59b09 in js::gc::GCRuntime::gc(JSGCInvocationKind, JS::gcreason::Reason) /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/jsgc.cpp:6234
+#9 0x7ff57bd54531 in js::DestroyContext(JSContext*, js::DestroyContextMode) /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/jscntxt.cpp:185
+#10 0x7ff57791eea8 in (anonymous namespace)::WorkerThreadPrimaryRunnable::Run() /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/workers/RuntimeService.cpp:2823
+#11 0x7ff5729df784 in nsThread::ProcessNextEvent(bool, bool*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/xpcom/threads/nsThread.cpp:846
+#12 0x7ff572a585ba in NS_ProcessNextEvent(nsIThread*, bool) /builds/slave/m-cen-l64-asan-000000000000000/build/src/xpcom/glue/nsThreadUtils.cpp:265
+#13 0x7ff57329a378 in mozilla::ipc::MessagePumpForNonMainThreads::Run(base::MessagePump::Delegate*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/ipc/glue/MessagePump.cpp:355
+#14 0x7ff573226a0c in RunInternal /builds/slave/m-cen-l64-asan-000000000000000/build/src/ipc/chromium/src/base/message_loop.cc:233
+#15 0x7ff573226a0c in RunHandler /builds/slave/m-cen-l64-asan-000000000000000/build/src/ipc/chromium/src/base/message_loop.cc:226
+#16 0x7ff573226a0c in MessageLoop::Run() /builds/slave/m-cen-l64-asan-000000000000000/build/src/ipc/chromium/src/base/message_loop.cc:200
+#17 0x7ff5729dc2c8 in nsThread::ThreadFunc(void*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/xpcom/threads/nsThread.cpp:359
+#18 0x7ff57f4b0135 in _pt_root /builds/slave/m-cen-l64-asan-000000000000000/build/src/nsprpub/pr/src/pthreads/ptthread.c:212
+#19 0x7ff57faf0181 in start_thread (/lib/x86_64-linux-gnu/libpthread.so.0+0x8181)
+
+previously allocated by thread T22 (DOM Worker) here:
+#0 0x474c01 in __interceptor_malloc /builds/slave/moz-toolchain/src/llvm/projects/compiler-rt/lib/asan/asan_malloc_linux.cc:74
+#1 0x4921cd in moz_xmalloc /builds/slave/m-cen-l64-asan-000000000000000/build/src/memory/mozalloc/mozalloc.cpp:83
+#2 0x7ff5779aab85 in operator new /builds/slave/m-cen-l64-asan-000000000000000/build/src/obj-firefox/dom/workers/../../dist/include/mozilla/mozalloc.h:186
+#3 0x7ff5779aab85 in mozilla::dom::workers::XMLHttpRequest::Constructor(mozilla::dom::GlobalObject const&, mozilla::dom::MozXMLHttpRequestParameters const&, mozilla::ErrorResult&) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/workers/XMLHttpRequest.cpp:1655
+#4 0x7ff575e21b70 in mozilla::dom::XMLHttpRequestBinding_workers::_constructor(JSContext*, unsigned int, JS::Value*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/obj-firefox/dom/bindings/./XMLHttpRequestBinding.cpp:3175
+#5 0x7ff57b2dcb4e in CallJSNative /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/jscntxtinlines.h:235
+#6 0x7ff57b2dcb4e in CallJSNativeConstructor /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/jscntxtinlines.h:268
+#7 0x7ff57b2dcb4e in js::InvokeConstructor(JSContext*, JS::CallArgs) /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/vm/Interpreter.cpp:822
+#8 0x7ff57b2b935f in Interpret(JSContext*, js::RunState&) /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/vm/Interpreter.cpp:2953
+#9 0x7ff57b28ca69 in js::RunScript(JSContext*, js::RunState&) /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/vm/Interpreter.cpp:677
+#10 0x7ff57b2de0dd in js::ExecuteKernel(JSContext*, JS::Handle<JSScript*>, JSObject&, JS::Value const&, js::ExecuteType, js::AbstractFramePtr, JS::Value*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/vm/Interpreter.cpp:903
+#11 0x7ff57b2de724 in js::Execute(JSContext*, JS::Handle<JSScript*>, JSObject&, JS::Value*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/vm/Interpreter.cpp:942
+#12 0x7ff57bd755fa in Evaluate(JSContext*, JS::Handle<JSObject*>, JS::ReadOnlyCompileOptions const&, JS::SourceBufferHolder&, JS::MutableHandle<JS::Value>) /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/jsapi.cpp:4257
+#13 0x7ff577916121 in (anonymous namespace)::ScriptExecutorRunnable::WorkerRun(JSContext*, mozilla::dom::workers::WorkerPrivate*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/workers/ScriptLoader.cpp:1638
+#14 0x7ff57799b3a4 in mozilla::dom::workers::WorkerRunnable::Run() /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/workers/WorkerRunnable.cpp:357
+#15 0x7ff5729df784 in nsThread::ProcessNextEvent(bool, bool*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/xpcom/threads/nsThread.cpp:846
+#16 0x7ff572a585ba in NS_ProcessNextEvent(nsIThread*, bool) /builds/slave/m-cen-l64-asan-000000000000000/build/src/xpcom/glue/nsThreadUtils.cpp:265
+#17 0x7ff577984817 in mozilla::dom::workers::WorkerPrivate::RunCurrentSyncLoop() /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/workers/WorkerPrivate.cpp:6022
+#18 0x7ff5778ff324 in Run /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/workers/WorkerPrivate.h:1461
+#19 0x7ff5778ff324 in (anonymous namespace)::LoadAllScripts(JSContext*, mozilla::dom::workers::WorkerPrivate*, nsTArray<(anonymous namespace)::ScriptLoadInfo>&, bool, mozilla::dom::workers::WorkerScriptType) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/workers/ScriptLoader.cpp:1719
+#20 0x7ff5778fed35 in mozilla::dom::workers::scriptloader::LoadMainScript(JSContext*, nsAString_internal const&, mozilla::dom::workers::WorkerScriptType) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/workers/ScriptLoader.cpp:1814
+#21 0x7ff5779db5e1 in (anonymous namespace)::CompileScriptRunnable::WorkerRun(JSContext*, mozilla::dom::workers::WorkerPrivate*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/workers/WorkerPrivate.cpp:1057
+#22 0x7ff57799b3a4 in mozilla::dom::workers::WorkerRunnable::Run() /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/workers/WorkerRunnable.cpp:357
+#23 0x7ff5729df784 in nsThread::ProcessNextEvent(bool, bool*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/xpcom/threads/nsThread.cpp:846
+#24 0x7ff572a585ba in NS_ProcessNextEvent(nsIThread*, bool) /builds/slave/m-cen-l64-asan-000000000000000/build/src/xpcom/glue/nsThreadUtils.cpp:265
+#25 0x7ff57797b363 in mozilla::dom::workers::WorkerPrivate::DoRunLoop(JSContext*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/workers/WorkerPrivate.cpp:5200
+#26 0x7ff57791edf2 in (anonymous namespace)::WorkerThreadPrimaryRunnable::Run() /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/workers/RuntimeService.cpp:2803
+#27 0x7ff5729df784 in nsThread::ProcessNextEvent(bool, bool*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/xpcom/threads/nsThread.cpp:846
+#28 0x7ff572a585ba in NS_ProcessNextEvent(nsIThread*, bool) /builds/slave/m-cen-l64-asan-000000000000000/build/src/xpcom/glue/nsThreadUtils.cpp:265
+#29 0x7ff57329a378 in mozilla::ipc::MessagePumpForNonMainThreads::Run(base::MessagePump::Delegate*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/ipc/glue/MessagePump.cpp:355
+#30 0x7ff573226a0c in RunInternal /builds/slave/m-cen-l64-asan-000000000000000/build/src/ipc/chromium/src/base/message_loop.cc:233
+#31 0x7ff573226a0c in RunHandler /builds/slave/m-cen-l64-asan-000000000000000/build/src/ipc/chromium/src/base/message_loop.cc:226
+#32 0x7ff573226a0c in MessageLoop::Run() /builds/slave/m-cen-l64-asan-000000000000000/build/src/ipc/chromium/src/base/message_loop.cc:200
+#33 0x7ff5729dc2c8 in nsThread::ThreadFunc(void*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/xpcom/threads/nsThread.cpp:359
+#34 0x7ff57f4b0135 in _pt_root /builds/slave/m-cen-l64-asan-000000000000000/build/src/nsprpub/pr/src/pthreads/ptthread.c:212
+#35 0x7ff57faf0181 in start_thread (/lib/x86_64-linux-gnu/libpthread.so.0+0x8181)
+
+Thread T22 (DOM Worker) created by T0 (Web Content) here:
+#0 0x461475 in pthread_create /builds/slave/moz-toolchain/src/llvm/projects/compiler-rt/lib/asan/asan_interceptors.cc:175
+#1 0x7ff57f4acabd in _PR_CreateThread /builds/slave/m-cen-l64-asan-000000000000000/build/src/nsprpub/pr/src/pthreads/ptthread.c:453
+#2 0x7ff57f4ac63a in PR_CreateThread /builds/slave/m-cen-l64-asan-000000000000000/build/src/nsprpub/pr/src/pthreads/ptthread.c:544
+#3 0x7ff5729dd74b in nsThread::Init() /builds/slave/m-cen-l64-asan-000000000000000/build/src/xpcom/threads/nsThread.cpp:469
+#4 0x7ff5779a54aa in mozilla::dom::workers::WorkerThread::Create(mozilla::dom::workers::WorkerThreadFriendKey const&) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/workers/WorkerThread.cpp:90
+#5 0x7ff5778f30e6 in mozilla::dom::workers::RuntimeService::ScheduleWorker(JSContext*, mozilla::dom::workers::WorkerPrivate*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/workers/RuntimeService.cpp:1751
+#6 0x7ff5778f0844 in mozilla::dom::workers::RuntimeService::RegisterWorker(JSContext*, mozilla::dom::workers::WorkerPrivate*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/workers/RuntimeService.cpp:1605
+#7 0x7ff577979d2d in mozilla::dom::workers::WorkerPrivate::Constructor(JSContext*, nsAString_internal const&, bool, mozilla::dom::WorkerType, nsACString_internal const&, mozilla::dom::workers::WorkerLoadInfo*, mozilla::ErrorResult&) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/workers/WorkerPrivate.cpp:4774
+#8 0x7ff577979536 in Constructor /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/workers/WorkerPrivate.cpp:4709
+#9 0x7ff577979536 in mozilla::dom::workers::WorkerPrivate::Constructor(mozilla::dom::GlobalObject const&, nsAString_internal const&, mozilla::ErrorResult&) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/workers/WorkerPrivate.cpp:4650
+#10 0x7ff575e55586 in mozilla::dom::WorkerBinding::_constructor(JSContext*, unsigned int, JS::Value*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/obj-firefox/dom/bindings/./WorkerBinding.cpp:747
+#11 0x7ff57b2dcb4e in CallJSNative /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/jscntxtinlines.h:235
+#12 0x7ff57b2dcb4e in CallJSNativeConstructor /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/jscntxtinlines.h:268
+#13 0x7ff57b2dcb4e in js::InvokeConstructor(JSContext*, JS::CallArgs) /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/vm/Interpreter.cpp:822
+#14 0x7ff57b2b935f in Interpret(JSContext*, js::RunState&) /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/vm/Interpreter.cpp:2953
+#15 0x7ff57b28ca69 in js::RunScript(JSContext*, js::RunState&) /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/vm/Interpreter.cpp:677
+#16 0x7ff57b2de0dd in js::ExecuteKernel(JSContext*, JS::Handle<JSScript*>, JSObject&, JS::Value const&, js::ExecuteType, js::AbstractFramePtr, JS::Value*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/vm/Interpreter.cpp:903
+#17 0x7ff57b2de724 in js::Execute(JSContext*, JS::Handle<JSScript*>, JSObject&, JS::Value*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/vm/Interpreter.cpp:942
+#18 0x7ff57bd755fa in Evaluate(JSContext*, JS::Handle<JSObject*>, JS::ReadOnlyCompileOptions const&, JS::SourceBufferHolder&, JS::MutableHandle<JS::Value>) /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/jsapi.cpp:4257
+#19 0x7ff57bd75d5f in Evaluate /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/jsapi.cpp:4284
+#20 0x7ff57bd75d5f in JS::Evaluate(JSContext*, JS::AutoVectorRooter<JSObject*>&, JS::ReadOnlyCompileOptions const&, JS::SourceBufferHolder&, JS::MutableHandle<JS::Value>) /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/jsapi.cpp:4339
+#21 0x7ff574d5816a in nsJSUtils::EvaluateString(JSContext*, JS::SourceBufferHolder&, JS::Handle<JSObject*>, JS::CompileOptions&, nsJSUtils::EvaluateOptions const&, JS::MutableHandle<JS::Value>, void**) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/base/nsJSUtils.cpp:265
+#22 0x7ff574d5909b in nsJSUtils::EvaluateString(JSContext*, JS::SourceBufferHolder&, JS::Handle<JSObject*>, JS::CompileOptions&, void**) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/base/nsJSUtils.cpp:337
+#23 0x7ff574ddc312 in nsScriptLoader::EvaluateScript(nsScriptLoadRequest*, JS::SourceBufferHolder&, void**) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/base/nsScriptLoader.cpp:1146
+#24 0x7ff574dd9a31 in nsScriptLoader::ProcessRequest(nsScriptLoadRequest*, void**) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/base/nsScriptLoader.cpp:975
+#25 0x7ff574dd3177 in nsScriptLoader::ProcessScriptElement(nsIScriptElement*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/base/nsScriptLoader.cpp:764
+#26 0x7ff574dce7de in nsScriptElement::MaybeProcessScript() /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/base/nsScriptElement.cpp:141
+#27 0x7ff5742079c4 in operator-> /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/base/nsIScriptElement.h:221
+#28 0x7ff5742079c4 in nsHtml5TreeOpExecutor::RunScript(nsIContent*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/parser/html/nsHtml5TreeOpExecutor.cpp:662
+#29 0x7ff574205eb1 in nsHtml5TreeOpExecutor::RunFlushLoop() /builds/slave/m-cen-l64-asan-000000000000000/build/src/parser/html/nsHtml5TreeOpExecutor.cpp:487
+#30 0x7ff57420c8eb in nsHtml5ExecutorFlusher::Run() /builds/slave/m-cen-l64-asan-000000000000000/build/src/parser/html/nsHtml5StreamParser.cpp:127
+#31 0x7ff5729df784 in nsThread::ProcessNextEvent(bool, bool*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/xpcom/threads/nsThread.cpp:846
+#32 0x7ff572a585ba in NS_ProcessNextEvent(nsIThread*, bool) /builds/slave/m-cen-l64-asan-000000000000000/build/src/xpcom/glue/nsThreadUtils.cpp:265
+#33 0x7ff573299399 in mozilla::ipc::MessagePump::Run(base::MessagePump::Delegate*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/ipc/glue/MessagePump.cpp:95
+#34 0x7ff573226a0c in RunInternal /builds/slave/m-cen-l64-asan-000000000000000/build/src/ipc/chromium/src/base/message_loop.cc:233
+#35 0x7ff573226a0c in RunHandler /builds/slave/m-cen-l64-asan-000000000000000/build/src/ipc/chromium/src/base/message_loop.cc:226
+#36 0x7ff573226a0c in MessageLoop::Run() /builds/slave/m-cen-l64-asan-000000000000000/build/src/ipc/chromium/src/base/message_loop.cc:200
+#37 0x7ff577e045f7 in nsBaseAppShell::Run() /builds/slave/m-cen-l64-asan-000000000000000/build/src/widget/nsBaseAppShell.cpp:165
+#38 0x7ff579bdf662 in XRE_RunAppShell /builds/slave/m-cen-l64-asan-000000000000000/build/src/toolkit/xre/nsEmbedFunctions.cpp:745
+#39 0x7ff573226a0c in RunInternal /builds/slave/m-cen-l64-asan-000000000000000/build/src/ipc/chromium/src/base/message_loop.cc:233
+#40 0x7ff573226a0c in RunHandler /builds/slave/m-cen-l64-asan-000000000000000/build/src/ipc/chromium/src/base/message_loop.cc:226
+#41 0x7ff573226a0c in MessageLoop::Run() /builds/slave/m-cen-l64-asan-000000000000000/build/src/ipc/chromium/src/base/message_loop.cc:200
+#42 0x7ff579bded5b in XRE_InitChildProcess /builds/slave/m-cen-l64-asan-000000000000000/build/src/toolkit/xre/nsEmbedFunctions.cpp:581
+#43 0x48d292 in content_process_main(int, char**) /builds/slave/m-cen-l64-asan-000000000000000/build/src/ipc/app/../contentproc/plugin-container.cpp:236
+#44 0x7ff5704b1ec4 (/lib/x86_64-linux-gnu/libc.so.6+0x21ec4)
+
+SUMMARY: AddressSanitizer: heap-use-after-free /builds/slave/m-cen-l64-asan-000000000000000/build/src/xpcom/base/nsCycleCollector.cpp:930 CanonicalizeXPCOMParticipant
+Shadow byte around the buggy address:
+0x0c2280045620: fa fa fa fa fa fa fa fa fd fd fd fd fd fd fd fd
+0x0c2280045630: fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd
+0x0c2280045640: fd fd fd fd fd fd fd fd fa fa fa fa fa fa fa fa
+0x0c2280045650: fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd
+0x0c2280045660: fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd
+=>0x0c2280045670: fa fa fa fa fa fa fa fa[fd]fd fd fd fd fd fd fd
+0x0c2280045680: fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd
+0x0c2280045690: fd fd fd fd fd fa fa fa fa fa fa fa fa fa fa fa
+0x0c22800456a0: fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd
+0x0c22800456b0: fd fd fd fd fd fd fd fd fd fd fd fa fa fa fa fa
+0x0c22800456c0: fa fa fa fa fa fa fa fa fd fd fd fd fd fd fd fd
+Shadow byte legend (one shadow byte represents 8 application bytes):
+Addressable: 00
+Partially addressable: 01 02 03 04 05 06 07
+Heap left redzone: fa
+Heap right redzon==8659==ABORTING
+
+###!!! [Parent][MessageChannel] Error: (msgtype=0x200079,name=PBrowser::Msg_Destroy) Channel error: cannot send/recv
+
+[Parent 8482] WARNING: pipe error (49): Connection reset by peer: file /builds/slave/m-cen-l64-asan-000000000000000/build/src/ipc/chromium/src/chrome/common/ipc_channel_posix.cc, line 459
+
+
+
+The stack above show that it's dedicated worker instead of shared worker:
+
+#10 0x7ff575e55586 in mozilla::dom::WorkerBinding::_constructor(JSContext*, unsigned int, JS::Value*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/obj-firefox/dom/bindings/./WorkerBinding.cpp:747
+
+The line number indicates that the fix for Bug 1166924 wa already in it:
+
+#3 0x7ff5779aab85 in mozilla::dom::workers::XMLHttpRequest::Constructor(mozilla::dom::GlobalObject const&, mozilla::dom::MozXMLHttpRequestParameters const&, mozilla::ErrorResult&) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/workers/XMLHttpRequest.cpp:1655

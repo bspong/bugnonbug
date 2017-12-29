@@ -1,0 +1,980 @@
+@font-face(?) related crashes
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.1.2) Gecko/20090730 SUSE/3.5.2-2.1 Firefox/3.5.2
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.1.2) Gecko/20090730 SUSE/3.5.2-2.1 Firefox/3.5.2
+
+Getting crashes on http://jimmac.musichall.cz/log most of the time. Just scrolling around the page, entering a particular entry in a new tab or refreshing the page.
+
+I'm only guessing from the backtrace this has to do with font rendering and that I'm using a custom created OTF font with @font-face on my blog. I'm using openSUSE 11.1. None of these crashes happen on 3.5.x on Mac OS X.
+
+As cairo appears on the backtrace quite often, I'm using version 1.8.6.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Enter http://jimmac.musichall.cz/log
+2. Scroll the page around.
+3. If you don't get a crash, open up one of the articles in another tab and scroll around, refresh page.
+
+Actual Results:  
+Crash
+
+Expected Results:  
+No crash.
+
+Here's the backtrace:
+
+[?1034hGNU gdb (GDB; openSUSE 11.1) 6.8.50.20081120-cvs
+Copyright (C) 2008 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.  Type "show copying"
+and "show warranty" for details.
+This GDB was configured as "i586-suse-linux".
+For bug reporting instructions, please see:
+<http://bugs.opensuse.org/>...
+(gdb) run
+Starting program: /usr/lib/firefox/firefox 
+[Thread debugging using libthread_db enabled]
+[New Thread 0xb4befb90 (LWP 9872)]
+[New Thread 0xb43eeb90 (LWP 9873)]
+[New Thread 0xb3bddb90 (LWP 9874)]
+[New Thread 0xb31ffb90 (LWP 9875)]
+[Thread 0xb31ffb90 (LWP 9875) exited]
+[New Thread 0xb31ffb90 (LWP 9876)]
+[New Thread 0xb18ffb90 (LWP 9877)]
+*** nss-shared-helper: Shared database disabled (set NSS_USE_SHARED_DB to enable).
+[New Thread 0xb09ffb90 (LWP 9878)]
+[New Thread 0xaffffb90 (LWP 9879)]
+[New Thread 0xaf7feb90 (LWP 9880)]
+[New Thread 0xaeffdb90 (LWP 9881)]
+[New Thread 0xae4ffb90 (LWP 9882)]
+[Thread 0xae4ffb90 (LWP 9882) exited]
+[New Thread 0xae4ffb90 (LWP 9884)]
+[New Thread 0xac2ffb90 (LWP 9885)]
+[Thread 0xac2ffb90 (LWP 9885) exited]
+[New Thread 0xac2ffb90 (LWP 9887)]
+[Thread 0xac2ffb90 (LWP 9887) exited]
+[New Thread 0xac2ffb90 (LWP 9888)]
+
+Program received signal SIGSEGV, Segmentation fault.
+0xb63220d9 in FT_Set_Transform () from /usr/lib/libfreetype.so.6
+(gdb) thread apply all backtrace full 
+
+Thread 16 (Thread 0xac2ffb90 (LWP 9888)):
+#0  0xffffe430 in __kernel_vsyscall ()
+No symbol table info available.
+#1  0xb7fb0c35 in pthread_cond_wait@@GLIBC_2.3.2 () from /lib/libpthread.so.0
+No symbol table info available.
+#2  0xb7658e87 in PR_WaitCondVar ()
+   from /usr/lib/xulrunner-1.9.2a1pre/libnspr4.so
+No symbol table info available.
+#3  0xb7658f07 in PR_Wait () from /usr/lib/xulrunner-1.9.2a1pre/libnspr4.so
+No symbol table info available.
+#4  0xb6b90a3e in nsMediaCacheStream::Read (this=0xab5f0028, 
+    aBuffer=0xab5f92ed "Â\002\203\001\001A\201Â\002\203\004\001A\201Â\002\203\004\004\001\201Â\002\203\004\004\004\001Â\002\203\004\004\004\006\002\002\203\004\004\004\006\b\002\203\004\004\004\006\b\b\003âü·Ð\r3\023ŸB\215àê\211œ¹f\"ÝG\033à?r\211\"^àØÉ}j©\032fWbìB\004ä`ö\216ŠKç0ÚÕ\206ÆU)^}»\207ä\235Ä4Ì®ÅØ\202\027È£ÃUš62^?9w1+£Ú<\223\204ûª€ ÅsTûª€WcA\031ÊiAí\036uÜ\220àek1·Î\037Åx^\tyÛþ\023\216Ó\017hó©\"c\001uk3)š5ß\f\226\220£û@œ\nxØ"..., aCount=8192, aBytes=0xac2ff150)
+    at ../../../../dist/include/xpcom/nsAutoLock.h:340
+	rv = <value optimized out>
+	streamBlock = 2
+	offsetInStreamBlock = 0
+	bytes = 0
+	size = 4096
+	cacheBlock = -1
+	mon = {<nsAutoLockBase> = {<No data fields>}, mMonitor = 0xab8ccd60, 
+  mLockCount = 1}
+	count = 0
+#5  0xb6b9401e in nsChannelReader::io_read (this=0xab5ef490, 
+    aBuffer=0xab5f92ed "Â\002\203\001\001A\201Â\002\203\004\001A\201Â\002\203\004\004\001\201Â\002\203\004\004\004\001Â\002\203\004\004\004\006\002\002\203\004\004\004\006\b\002\203\004\004\004\006\b\b\003âü·Ð\r3\023ŸB\215àê\211œ¹f\"ÝG\033à?r\211\"^àØÉ}j©\032fWbìB\004ä`ö\216ŠKç0ÚÕ\206ÆU)^}»\207ä\235Ä4Ì®ÅØ\202\027È£ÃUš62^?9w1+£Ú<\223\204ûª€ ÅsTûª€WcA\031ÊiAí\036uÜ\220àek1·Î\037Åx^\tyÛþ\023\216Ó\017hó©\"c\001uk3)š5ß\f\226\220£û@œ\nxØ"..., aCount=8192) at nsChannelReader.cpp:65
+	bytes = 0
+	rv = <value optimized out>
+#6  0xb6ba7002 in oggz_io_read (oggz=0xab7d4800, buf=0xab5f92ed, n=128)
+    at oggz_io.c:71
+	io = (OggzIO *) 0xfffffe00
+	bytes = <value optimized out>
+#7  0xb6ba7b74 in oggz_read (oggz=0xab7d4800, n=8192) at oggz_read.c:595
+	buffer = 0xfffffe00 <Address 0xfffffe00 out of bounds>
+	bytes = 8192
+	bytes_read = <value optimized out>
+	remaining = 8192
+	nread = 0
+	cb_ret = -404
+#8  0xb6b9e34a in oggplay_step_decoding (me=0xac3e1700) at oggplay.c:691
+	r = <value optimized out>
+	info = (OggPlayCallbackInfo **) 0xb6f00121
+	num_records = <value optimized out>
+	r = <value optimized out>
+	i = 1
+	chunk_count = 3
+#9  0xb6b97799 in nsOggDecodeStateMachine::Run (this=0xac319d30)
+    at nsOggDecoder.cpp:732
+	r = E_OGGPLAY_TIMEOUT
+	frame = <value optimized out>
+	metadataLoadedEvent = {<nsCOMPtr_base> = {
+    mRawPtr = 0xb4d20390}, <No data fields>}
+	mon = {<nsAutoLockBase> = {<No data fields>}, mMonitor = 0xab8cccf0, 
+  mLockCount = 0}
+	reader = (nsChannelReader *) 0xab5ef490
+#10 0xb6f2ea58 in nsThread::ProcessNextEvent (this=0xb24b3d80, mayWait=1, 
+    result=0xac2ff344) at nsThread.cpp:510
+	notifyGlobalObserver = 1
+	obs = {<nsCOMPtr_base> = {mRawPtr = 0x0}, <No data fields>}
+	event = {<nsCOMPtr_base> = {mRawPtr = 0xac319d30}, <No data fields>}
+	rv = 0
+#11 0xb6eff5d8 in NS_ProcessNextEvent_P (thread=0x80, mayWait=1)
+    at nsThreadUtils.cpp:227
+	val = <value optimized out>
+#12 0xb6f2f1a1 in nsThread::ThreadFunc (arg=0xb24b3d80) at nsThread.cpp:253
+	event = {<nsCOMPtr_base> = {mRawPtr = 0x0}, <No data fields>}
+#13 0xb765f1b1 in ?? () from /usr/lib/xulrunner-1.9.2a1pre/libnspr4.so
+No symbol table info available.
+#14 0xb7fad1b5 in start_thread () from /lib/libpthread.so.0
+No symbol table info available.
+#15 0xb7d163be in clone () from /lib/libc.so.6
+No symbol table info available.
+
+Thread 13 (Thread 0xae4ffb90 (LWP 9884)):
+#0  0xffffe430 in __kernel_vsyscall ()
+No symbol table info available.
+#1  0xb7fb0f62 in pthread_cond_timedwait@@GLIBC_2.3.2 ()
+   from /lib/libpthread.so.0
+No symbol table info available.
+#2  0xb7657fee in ?? () from /usr/lib/xulrunner-1.9.2a1pre/libnspr4.so
+No symbol table info available.
+#3  0xb7658e10 in PR_WaitCondVar ()
+   from /usr/lib/xulrunner-1.9.2a1pre/libnspr4.so
+No symbol table info available.
+#4  0xb678ee23 in nsHostResolver::GetHostToLookup (this=0xb5432a80, 
+    result=0xae4ff378) at nsHostResolver.cpp:773
+	timedOut = 128
+	epoch = 413094812
+	now = 38
+	timeout = 300000
+#5  0xb678f790 in nsHostResolver::ThreadFunc (arg=0xb5432a80)
+    at nsHostResolver.cpp:877
+	rec = (nsHostRecord *) 0xa9e196a0
+	ai = (PRAddrInfo *) 0xa9e27a90
+#6  0xb765f1b1 in ?? () from /usr/lib/xulrunner-1.9.2a1pre/libnspr4.so
+No symbol table info available.
+#7  0xb7fad1b5 in start_thread () from /lib/libpthread.so.0
+No symbol table info available.
+#8  0xb7d163be in clone () from /lib/libc.so.6
+No symbol table info available.
+
+Thread 11 (Thread 0xaeffdb90 (LWP 9881)):
+#0  0xffffe430 in __kernel_vsyscall ()
+No symbol table info available.
+#1  0xb7fb0c35 in pthread_cond_wait@@GLIBC_2.3.2 () from /lib/libpthread.so.0
+No symbol table info available.
+#2  0xb7658e87 in PR_WaitCondVar ()
+   from /usr/lib/xulrunner-1.9.2a1pre/libnspr4.so
+No symbol table info available.
+#3  0xb7658f07 in PR_Wait () from /usr/lib/xulrunner-1.9.2a1pre/libnspr4.so
+No symbol table info available.
+#4  0xb6f2dc91 in nsEventQueue::GetEvent (this=0xb216ad00, mayWait=1, 
+    result=0xaeffd304) at ../../dist/include/xpcom/nsAutoLock.h:340
+No locals.
+#5  0xb6f2ea2c in nsThread::ProcessNextEvent (this=0xb216ace0, mayWait=1, 
+    result=0xaeffd344) at nsThread.h:112
+	notifyGlobalObserver = 1
+	obs = {<nsCOMPtr_base> = {mRawPtr = 0x0}, <No data fields>}
+	event = {<nsCOMPtr_base> = {mRawPtr = 0x0}, <No data fields>}
+	rv = 3060843177
+#6  0xb6eff5d8 in NS_ProcessNextEvent_P (thread=0x80, mayWait=1)
+    at nsThreadUtils.cpp:227
+	val = <value optimized out>
+#7  0xb6f2f1a1 in nsThread::ThreadFunc (arg=0xb216ace0) at nsThread.cpp:253
+	event = {<nsCOMPtr_base> = {mRawPtr = 0x0}, <No data fields>}
+#8  0xb765f1b1 in ?? () from /usr/lib/xulrunner-1.9.2a1pre/libnspr4.so
+No symbol table info available.
+#9  0xb7fad1b5 in start_thread () from /lib/libpthread.so.0
+No symbol table info available.
+#10 0xb7d163be in clone () from /lib/libc.so.6
+No symbol table info available.
+
+Thread 10 (Thread 0xaf7feb90 (LWP 9880)):
+#0  0xffffe430 in __kernel_vsyscall ()
+No symbol table info available.
+#1  0xb7fb0c35 in pthread_cond_wait@@GLIBC_2.3.2 () from /lib/libpthread.so.0
+No symbol table info available.
+#2  0xb7658e87 in PR_WaitCondVar ()
+   from /usr/lib/xulrunner-1.9.2a1pre/libnspr4.so
+No symbol table info available.
+#3  0xb6d6de72 in nsCertVerificationThread::Run (this=0xb216ac90)
+    at nsCertVerificationThread.cpp:138
+No locals.
+#4  0xb6d6c70e in nsPSMBackgroundThread::nsThreadRunner (arg=0xb216ac90)
+    at nsPSMBackgroundThread.cpp:44
+No locals.
+#5  0xb765f1b1 in ?? () from /usr/lib/xulrunner-1.9.2a1pre/libnspr4.so
+No symbol table info available.
+#6  0xb7fad1b5 in start_thread () from /lib/libpthread.so.0
+No symbol table info available.
+#7  0xb7d163be in clone () from /lib/libc.so.6
+No symbol table info available.
+
+Thread 9 (Thread 0xaffffb90 (LWP 9879)):
+#0  0xffffe430 in __kernel_vsyscall ()
+No symbol table info available.
+#1  0xb7fb0c35 in pthread_cond_wait@@GLIBC_2.3.2 () from /lib/libpthread.so.0
+No symbol table info available.
+#2  0xb7658e87 in PR_WaitCondVar ()
+   from /usr/lib/xulrunner-1.9.2a1pre/libnspr4.so
+No symbol table info available.
+#3  0xb6d6cdda in nsSSLThread::Run (this=0xb0b987a0) at nsSSLThread.cpp:964
+	threadLock = {<nsAutoLockBase> = {<No data fields>}, 
+  mLock = 0xb0bf6e80, mLocked = 1}
+	pending_work = <value optimized out>
+	busy_socket_ssl_state = nsSSLSocketThreadData::ssl_invalid
+	needToSetPollableEvent = -1306766560
+	socketToDestroy = (class nsNSSSocketInfo *) 0xb21c5320
+#4  0xb6d6c70e in nsPSMBackgroundThread::nsThreadRunner (arg=0xb0b987a0)
+    at nsPSMBackgroundThread.cpp:44
+No locals.
+#5  0xb765f1b1 in ?? () from /usr/lib/xulrunner-1.9.2a1pre/libnspr4.so
+No symbol table info available.
+#6  0xb7fad1b5 in start_thread () from /lib/libpthread.so.0
+No symbol table info available.
+#7  0xb7d163be in clone () from /lib/libc.so.6
+No symbol table info available.
+
+Thread 8 (Thread 0xb09ffb90 (LWP 9878)):
+#0  0xffffe430 in __kernel_vsyscall ()
+No symbol table info available.
+#1  0xb7fb0f62 in pthread_cond_timedwait@@GLIBC_2.3.2 ()
+   from /lib/libpthread.so.0
+No symbol table info available.
+#2  0xb7657fee in ?? () from /usr/lib/xulrunner-1.9.2a1pre/libnspr4.so
+No symbol table info available.
+#3  0xb7658e10 in PR_WaitCondVar ()
+   from /usr/lib/xulrunner-1.9.2a1pre/libnspr4.so
+No symbol table info available.
+#4  0xb678ee23 in nsHostResolver::GetHostToLookup (this=0xb5432a80, 
+    result=0xb09ff378) at nsHostResolver.cpp:773
+	timedOut = 128
+	epoch = 413094814
+	now = 40
+	timeout = 300000
+#5  0xb678f790 in nsHostResolver::ThreadFunc (arg=0xb5432a80)
+    at nsHostResolver.cpp:877
+	rec = (nsHostRecord *) 0xac34eba0
+	ai = (PRAddrInfo *) 0xa9e27eb0
+#6  0xb765f1b1 in ?? () from /usr/lib/xulrunner-1.9.2a1pre/libnspr4.so
+No symbol table info available.
+#7  0xb7fad1b5 in start_thread () from /lib/libpthread.so.0
+No symbol table info available.
+#8  0xb7d163be in clone () from /lib/libc.so.6
+No symbol table info available.
+
+Thread 7 (Thread 0xb18ffb90 (LWP 9877)):
+#0  0xffffe430 in __kernel_vsyscall ()
+No symbol table info available.
+#1  0xb7fb0c35 in pthread_cond_wait@@GLIBC_2.3.2 () from /lib/libpthread.so.0
+No symbol table info available.
+#2  0xb7658e87 in PR_WaitCondVar ()
+   from /usr/lib/xulrunner-1.9.2a1pre/libnspr4.so
+No symbol table info available.
+#3  0xb7658f07 in PR_Wait () from /usr/lib/xulrunner-1.9.2a1pre/libnspr4.so
+No symbol table info available.
+#4  0xb6f2dc91 in nsEventQueue::GetEvent (this=0xb4d6ef80, mayWait=1, 
+    result=0xb18ff304) at ../../dist/include/xpcom/nsAutoLock.h:340
+No locals.
+#5  0xb6f2ea2c in nsThread::ProcessNextEvent (this=0xb4d6ef60, mayWait=1, 
+    result=0xb18ff344) at nsThread.h:112
+	notifyGlobalObserver = 1
+	obs = {<nsCOMPtr_base> = {mRawPtr = 0x0}, <No data fields>}
+	event = {<nsCOMPtr_base> = {mRawPtr = 0x0}, <No data fields>}
+	rv = 3060843177
+#6  0xb6eff5d8 in NS_ProcessNextEvent_P (thread=0x80, mayWait=1)
+    at nsThreadUtils.cpp:227
+	val = <value optimized out>
+#7  0xb6f2f1a1 in nsThread::ThreadFunc (arg=0xb4d6ef60) at nsThread.cpp:253
+	event = {<nsCOMPtr_base> = {mRawPtr = 0x0}, <No data fields>}
+#8  0xb765f1b1 in ?? () from /usr/lib/xulrunner-1.9.2a1pre/libnspr4.so
+No symbol table info available.
+#9  0xb7fad1b5 in start_thread () from /lib/libpthread.so.0
+No symbol table info available.
+#10 0xb7d163be in clone () from /lib/libc.so.6
+No symbol table info available.
+
+Thread 6 (Thread 0xb31ffb90 (LWP 9876)):
+#0  0xffffe430 in __kernel_vsyscall ()
+No symbol table info available.
+#1  0xb7fb0f62 in pthread_cond_timedwait@@GLIBC_2.3.2 ()
+   from /lib/libpthread.so.0
+No symbol table info available.
+#2  0xb7657fee in ?? () from /usr/lib/xulrunner-1.9.2a1pre/libnspr4.so
+No symbol table info available.
+#3  0xb7658e10 in PR_WaitCondVar ()
+   from /usr/lib/xulrunner-1.9.2a1pre/libnspr4.so
+No symbol table info available.
+#4  0xb7658f07 in PR_Wait () from /usr/lib/xulrunner-1.9.2a1pre/libnspr4.so
+No symbol table info available.
+#5  0xb6f307a6 in nsThreadPool::Run (this=0xb3254c00)
+    at ../../dist/include/xpcom/nsAutoLock.h:340
+	now = <value optimized out>
+	timeout = 113
+	mon = {<nsAutoLockBase> = {<No data fields>}, mMonitor = 0xb3250190, 
+  mLockCount = 1}
+	event = {<nsCOMPtr_base> = {mRawPtr = 0x0}, <No data fields>}
+	current = {<nsCOMPtr_base> = {mRawPtr = 0xb324d7e0}, <No data fields>}
+	shutdownThreadOnExit = 0
+	exitThread = 0
+	wasIdle = 0
+	idleSince = 413094313
+	listener = {<nsCOMPtr_base> = {mRawPtr = 0x0}, <No data fields>}
+#6  0xb6f2ea58 in nsThread::ProcessNextEvent (this=0xb324d7e0, mayWait=1, 
+    result=0xb31ff344) at nsThread.cpp:510
+	notifyGlobalObserver = 1
+	obs = {<nsCOMPtr_base> = {mRawPtr = 0x0}, <No data fields>}
+	event = {<nsCOMPtr_base> = {mRawPtr = 0xb3254c04}, <No data fields>}
+	rv = 0
+#7  0xb6eff5d8 in NS_ProcessNextEvent_P (thread=0x80, mayWait=1)
+    at nsThreadUtils.cpp:227
+	val = <value optimized out>
+#8  0xb6f2f1a1 in nsThread::ThreadFunc (arg=0xb324d7e0) at nsThread.cpp:253
+	event = {<nsCOMPtr_base> = {mRawPtr = 0x0}, <No data fields>}
+#9  0xb765f1b1 in ?? () from /usr/lib/xulrunner-1.9.2a1pre/libnspr4.so
+No symbol table info available.
+#10 0xb7fad1b5 in start_thread () from /lib/libpthread.so.0
+No symbol table info available.
+#11 0xb7d163be in clone () from /lib/libc.so.6
+No symbol table info available.
+
+Thread 4 (Thread 0xb3bddb90 (LWP 9874)):
+#0  0xffffe430 in __kernel_vsyscall ()
+No symbol table info available.
+#1  0xb7fb0f62 in pthread_cond_timedwait@@GLIBC_2.3.2 ()
+   from /lib/libpthread.so.0
+No symbol table info available.
+#2  0xb7657fee in ?? () from /usr/lib/xulrunner-1.9.2a1pre/libnspr4.so
+No symbol table info available.
+#3  0xb7658e10 in PR_WaitCondVar ()
+   from /usr/lib/xulrunner-1.9.2a1pre/libnspr4.so
+No symbol table info available.
+#4  0xb6f32164 in TimerThread::Run (this=0xb7906900) at TimerThread.cpp:345
+	waitFor = 4294966780
+#5  0xb6f2ea58 in nsThread::ProcessNextEvent (this=0xb4db78d0, mayWait=1, 
+    result=0xb3bdd344) at nsThread.cpp:510
+	notifyGlobalObserver = 1
+	obs = {<nsCOMPtr_base> = {mRawPtr = 0x0}, <No data fields>}
+	event = {<nsCOMPtr_base> = {mRawPtr = 0xb7906900}, <No data fields>}
+	rv = 0
+#6  0xb6eff5d8 in NS_ProcessNextEvent_P (thread=0x80, mayWait=1)
+    at nsThreadUtils.cpp:227
+	val = <value optimized out>
+#7  0xb6f2f1a1 in nsThread::ThreadFunc (arg=0xb4db78d0) at nsThread.cpp:253
+	event = {<nsCOMPtr_base> = {mRawPtr = 0x0}, <No data fields>}
+#8  0xb765f1b1 in ?? () from /usr/lib/xulrunner-1.9.2a1pre/libnspr4.so
+No symbol table info available.
+#9  0xb7fad1b5 in start_thread () from /lib/libpthread.so.0
+No symbol table info available.
+#10 0xb7d163be in clone () from /lib/libc.so.6
+No symbol table info available.
+
+Thread 3 (Thread 0xb43eeb90 (LWP 9873)):
+#0  0xffffe430 in __kernel_vsyscall ()
+No symbol table info available.
+#1  0xb7fb0f62 in pthread_cond_timedwait@@GLIBC_2.3.2 ()
+   from /lib/libpthread.so.0
+No symbol table info available.
+#2  0xb7657fee in ?? () from /usr/lib/xulrunner-1.9.2a1pre/libnspr4.so
+No symbol table info available.
+#3  0xb7658e10 in PR_WaitCondVar ()
+   from /usr/lib/xulrunner-1.9.2a1pre/libnspr4.so
+No symbol table info available.
+#4  0xb67230ba in XPCJSRuntime::WatchdogMain (arg=0xb7924000)
+    at xpcjsruntime.cpp:823
+	cx = (JSContext *) 0x0
+#5  0xb765f1b1 in ?? () from /usr/lib/xulrunner-1.9.2a1pre/libnspr4.so
+No symbol table info available.
+#6  0xb7fad1b5 in start_thread () from /lib/libpthread.so.0
+No symbol table info available.
+#7  0xb7d163be in clone () from /lib/libc.so.6
+No symbol table info available.
+
+Thread 2 (Thread 0xb4befb90 (LWP 9872)):
+#0  0xffffe430 in __kernel_vsyscall ()
+No symbol table info available.
+#1  0xb7d0c6a7 in poll () from /lib/libc.so.6
+No symbol table info available.
+#2  0xb765ad74 in ?? () from /usr/lib/xulrunner-1.9.2a1pre/libnspr4.so
+No symbol table info available.
+#3  0xb6785a0b in nsSocketTransportService::Poll (this=0xb4d01800, wait=1, 
+    interval=0xb4bef1e8) at nsSocketTransportService2.cpp:355
+	pollList = (PRPollDesc *) 0xb4d01ce4
+	pollCount = 14
+	pollTimeout = 65535000
+	ts = 413095126
+	rv = <value optimized out>
+	passedInterval = <value optimized out>
+#4  0xb6785f00 in nsSocketTransportService::DoPollIteration (this=0xb4d01800, 
+    wait=1) at nsSocketTransportService2.cpp:660
+	i = -1
+	pollInterval = <value optimized out>
+	n = <value optimized out>
+#5  0xb67861aa in nsSocketTransportService::OnProcessNextEvent (
+    this=0xb4d01800, thread=0xb79f4b50, mayWait=1, depth=1)
+    at nsSocketTransportService2.cpp:539
+	val = 0
+#6  0xb6f2e9fa in nsThread::ProcessNextEvent (this=0xb79f4b50, mayWait=1, 
+    result=0xb4bef294) at nsThread.cpp:497
+	notifyGlobalObserver = 1
+	obs = {<nsCOMPtr_base> = {mRawPtr = 0xb4d01808}, <No data fields>}
+	event = {<nsCOMPtr_base> = {mRawPtr = 0xb4d01800}, <No data fields>}
+	rv = <value optimized out>
+#7  0xb6eff5d8 in NS_ProcessNextEvent_P (thread=0xe, mayWait=1)
+    at nsThreadUtils.cpp:227
+	val = <value optimized out>
+#8  0xb6785c23 in nsSocketTransportService::Run (this=0xb4d01800)
+    at nsSocketTransportService2.cpp:581
+	thread = (class nsIThread *) 0xb79f4b50
+	threadInt = {<nsCOMPtr_base> = {
+    mRawPtr = 0xb79f4b50}, <No data fields>}
+	i = <value optimized out>
+#9  0xb6f2ea58 in nsThread::ProcessNextEvent (this=0xb79f4b50, mayWait=1, 
+    result=0xb4bef344) at nsThread.cpp:510
+	notifyGlobalObserver = 0
+	obs = {<nsCOMPtr_base> = {mRawPtr = 0x0}, <No data fields>}
+	event = {<nsCOMPtr_base> = {mRawPtr = 0xb4d0180c}, <No data fields>}
+	rv = 0
+#10 0xb6eff5d8 in NS_ProcessNextEvent_P (thread=0xe, mayWait=1)
+    at nsThreadUtils.cpp:227
+	val = <value optimized out>
+#11 0xb6f2f1a1 in nsThread::ThreadFunc (arg=0xb79f4b50) at nsThread.cpp:253
+	event = {<nsCOMPtr_base> = {mRawPtr = 0x0}, <No data fields>}
+#12 0xb765f1b1 in ?? () from /usr/lib/xulrunner-1.9.2a1pre/libnspr4.so
+No symbol table info available.
+#13 0xb7fad1b5 in start_thread () from /lib/libpthread.so.0
+No symbol table info available.
+#14 0xb7d163be in clone () from /lib/libc.so.6
+No symbol table info available.
+
+Thread 1 (Thread 0xb7c396d0 (LWP 9869)):
+#0  0xb63220d9 in FT_Set_Transform () from /usr/lib/libfreetype.so.6
+No symbol table info available.
+#1  0xb63ea923 in _cairo_ft_unscaled_font_set_scale ()
+   from /usr/lib/libcairo.so.2
+No symbol table info available.
+#2  0xb63ee73e in _cairo_ft_scaled_font_create () from /usr/lib/libcairo.so.2
+No symbol table info available.
+#3  0xb63eecb3 in _cairo_ft_font_face_scaled_font_create ()
+   from /usr/lib/libcairo.so.2
+No symbol table info available.
+#4  0xb63c238f in cairo_scaled_font_create () from /usr/lib/libcairo.so.2
+No symbol table info available.
+#5  0xb6f7163c in CreateScaledFont (aPattern=0xab66a8d0)
+    at gfxPangoFonts.cpp:3077
+	face = (cairo_font_face_t *) 0xab7494c0
+	downloadedFontEntry = <value optimized out>
+	size = 12
+	fontMatrix = {xx = 12, yx = 0, xy = 0, yy = 12, x0 = 0, y0 = 0}
+	fcMatrix = (FcMatrix *) 0x40540000
+	identityMatrix = {xx = 1, yx = 0, xy = 0, yy = 1, x0 = 0, y0 = 0}
+	fontOptions = (cairo_font_options_t *) 0xa9fd9c60
+	hinting = 1
+	hint_style = <value optimized out>
+	rgba = 1
+	subpixel_order = <value optimized out>
+	fc_antialias = 1
+	antialias = <value optimized out>
+	scaledFont = <value optimized out>
+	sFontEntryKey = {unused = 0}
+#6  0xb6f7190a in gfxFcFont::GetOrMakeFont (aPattern=0xab66a8d0)
+    at gfxPangoFonts.cpp:2245
+	cairoFont = (cairo_scaled_font_t *) 0xb7b39040
+#7  0xb6f75f7b in gfxPangoFcFont::GfxFont(gfxPangoFcFont*) ()
+   from /usr/lib/xulrunner-1.9.1.2/libxul.so
+	pixmap_free_key = {unused = 0}
+#8  0xb6f7455b in gfxPangoFontGroup::GetFontAt (this=0xab9142e0, i=0)
+    at gfxPangoFonts.cpp:1987
+	pangoFont = (PangoFont *) 0xab8cc660
+#9  0xb6e9461c in nsThebesFontMetrics::GetMetrics (this=0xab9feb00)
+    at nsThebesFontMetrics.cpp:113
+No locals.
+#10 0xb6e94dc2 in nsThebesFontMetrics::GetExternalLeading (this=0xab9feb00, 
+    aLeading=@0xbfff9348) at nsThebesFontMetrics.cpp:191
+No locals.
+#11 0xb68da8bb in nsHTMLReflowState::CalcLineHeight (aStyleContext=0xab968c78)
+    at nsHTMLReflowState.cpp:2010
+	lineHeight = <value optimized out>
+#12 0xb68bcf54 in nsBlockReflowState (this=0xbfff940c, 
+    aReflowState=@0xbfff9614, aPresContext=0xac467000, aFrame=0xab9046ec, 
+    aMetrics=@0xbfff9788, aTopMarginRoot=0, aBottomMarginRoot=0, 
+    aBlockNeedsFloatManager=0) at nsHTMLReflowState.h:406
+No locals.
+#13 0xb68ba36d in nsBlockFrame::Reflow (this=0xab9046ec, 
+    aPresContext=0xac467000, aMetrics=@0xbfff9788, aReflowState=@0xbfff9614, 
+    aStatus=@0xbfff9844) at nsBlockFrame.cpp:927
+	autoFloatManager = {mReflowState = @0xbfff9614, mNew = 0x0, mOld = 0x0}
+	needFloatManager = 0
+	marginRoot = <value optimized out>
+	state = {mBlock = 0xab9046ec, mPresContext = 0xac467000, 
+  mReflowState = @0xbfff9614, mFloatManager = 0xaca48520, mFloatManagerX = 0, 
+  mFloatManagerY = 0, mReflowStatus = 0, mOutsideBulletX = -1073769400, 
+  mBottomEdge = 1073741824, mContentArea = {width = 45120, 
+    height = 1073741824}, mOverflowPlaceholders = {mFirstChild = 0x0}, 
+  mOverflowTracker = {mOverflowContList = 0x0, mPrevOverflowCont = 0x0, 
+    mSentry = 0x0, mParent = 0xab9046ec, mSkipOverflowContainerChildren = 1, 
+    mWalkOOFFrames = 0}, mCurrentLine = {mCurrent = 0xab904728}, 
+  mLineAdjacentToTop = {mCurrent = 0xbfff9478}, mY = 0, mAvailSpaceRect = {
+    x = 0, y = 0, width = 0, height = 0}, mFloatCombinedArea = {x = 0, y = 0, 
+    width = 0, height = 0}, mFloatCacheFreeList = {<nsFloatCacheList> = {
+      mHead = 0x0}, mTail = 0x0}, mPrevChild = 0x0, mPrevBottomMargin = {
+    mMostPos = 0, mMostNeg = 0}, mNextInFlow = 0x0, 
+  mCurrentLineFloats = {<nsFloatCacheList> = {mHead = 0x0}, mTail = 0x0}, 
+  mBelowCurrentLineFloats = {<nsFloatCacheList> = {mHead = 0x0}, mTail = 0x0}, 
+  mMinLineHeight = 0, mLineNumber = 0, mFlags = 17, mFloatBreakType = 0 '\0', 
+  mBandHasFloats = 0 '\0'}
+	rv = <value optimized out>
+	overflowContainerBounds = {x = -1289578632, y = 2, width = 1, 
+  height = 2}
+	bottomEdgeOfChildren = <value optimized out>
+#14 0xb68bb7fd in nsBlockReflowContext::ReflowBlock (this=0xbfff9764, 
+    aSpace=@0xbfff97fc, aApplyTopMargin=1, aPrevMargin=@0xbfff9abc, 
+    aClearance=0, aIsAdjacentWithTop=1, aLine=0xab96a3a8, 
+    aFrameRS=@0xbfff9614, aFrameReflowStatus=@0xbfff9844, aState=@0xbfff9a3c)
+    at nsBlockReflowContext.cpp:310
+	rv = <value optimized out>
+	tx = 0
+	ty = 0
+#15 0xb68b8403 in nsBlockFrame::ReflowBlockFrame (this=0xac483428, 
+    aState=@0xbfff9a3c, aLine={mCurrent = 0xab96a3a8}, 
+    aKeepReflowGoing=0xbfff99cc) at nsBlockFrame.cpp:3011
+	topMargin = 0
+	blockHtmlRS = {<nsCSSOffsetState> = {frame = 0xab9046ec, 
+    rendContext = 0xa9e30940, mComputedMargin = {top = 0, right = 0, 
+      bottom = 0, left = 0}, mComputedBorderPadding = {top = 0, right = 0, 
+      bottom = 0, left = 0}, mComputedPadding = {top = 0, right = 0, 
+      bottom = 0, left = 0}}, parentReflowState = 0xbfff9c18, 
+  availableWidth = 45120, availableHeight = 1073741824, mFrameType = 2, 
+  mFloatManager = 0xaca48520, mBlockDelta = 0, mLineLayout = 0x0, 
+  mCBReflowState = 0xbfff9c18, mComputedWidth = 45120, 
+  mComputedHeight = 1073741824, mComputedOffsets = {top = 0, right = 0, 
+    bottom = 0, left = 0}, mComputedMinWidth = 0, 
+  mComputedMaxWidth = 1073741824, mComputedMinHeight = 0, 
+  mComputedMaxHeight = 1073741824, mStyleDisplay = 0xab8f72b8, 
+  mStyleVisibility = 0xab8f7cbc, mStylePosition = 0xab85d90c, 
+  mStyleBorder = 0xab923d30, mStyleMargin = 0xab933808, 
+  mStylePadding = 0xab85dd28, mStyleText = 0xab9337e0, 
+  mPercentHeightObserver = 0x0, mDiscoveredClearance = 0x0, mReflowDepth = 4, 
+  mFlags = {mSpecialHeightReflow = 0, mNextInFlowUntouched = 0, 
+    mIsTopOfPage = 0, mBlinks = 0, mHasClearance = 0, mAssumingHScrollbar = 0, 
+    mAssumingVScrollbar = 0, mHResize = 0, mVResize = 1, 
+    mTableIsSplittable = 0, mHeightDependsOnAncestorCell = 0}}
+	mayNeedRetry = 0
+	isImpacted = <value optimized out>
+	availSpace = {x = 0, y = 0, width = 45120, height = 1073741824}
+	floatManagerState = {mFloatInfoCount = 134610932, mX = 101, 
+  mY = -1419337728}
+	frameReflowStatus = 0
+	rv = 2147500035
+	frame = (class nsIFrame *) 0xab9046ec
+	display = (const nsStyleDisplay *) 0xab8f72b8
+	brc = {mPresContext = 0xac467000, mOuterReflowState = @0xbfff9c18, 
+  mFrame = 0xab9046ec, mSpace = {x = 0, y = 0, width = 45120, 
+    height = 1073741824}, mX = 0, mY = 0, mMetrics = {width = 0, height = 0, 
+    ascent = 1073741824, mBoundingMetrics = {leftBearing = 0, 
+      rightBearing = 0, ascent = 0, descent = 0, width = 0}, 
+    mCarriedOutBottomMargin = {mMostPos = 0, mMostNeg = 0}, mOverflowArea = {
+      x = 0, y = 0, width = 0, height = 0}, mFlags = 0}, mTopMargin = {
+    mMostPos = 0, mMostNeg = 0}}
+	breakType = <value optimized out>
+	applyTopMargin = 1
+	treatWithClearance = 0
+	mightClearFloats = <value optimized out>
+	replacedBlock = (class nsIFrame *) 0x0
+	clearanceFrame = (class nsIFrame *) 0x0
+	startingY = 0
+	clearance = 0
+#16 0xb68b9082 in nsBlockFrame::ReflowLine (this=0xac483428, 
+    aState=@0xbfff8d88, aLine={mCurrent = 0xab96a3a8}, 
+    aKeepReflowGoing=0xbfff99cc) at nsBlockFrame.cpp:2283
+	oldBounds = {x = 0, y = 0, width = 45120, height = 905766}
+	oldCombinedArea = {x = -16763, y = 0, width = 61883, height = 905766}
+	newBounds = {x = -1415584000, y = 0, width = -1073768184, 
+  height = -1226226140}
+	lineCombinedArea = {x = -1416103888, y = -1416779896, 
+  width = -1300017184, height = -1218449420}
+	rv = <value optimized out>
+#17 0xb68b9633 in nsBlockFrame::ReflowDirtyLines (this=0xac483428, 
+    aState=@0xbfff9a3c) at nsBlockFrame.cpp:1911
+	oldY = 0
+	replacedBlock = (class nsIFrame *) 0x0
+	rv = 0
+	keepGoing = 1
+	repositionViews = 0
+	foundAnyClears = 0
+	willReflowAgain = 0
+	deltaY = 0
+	needToRecoverState = 0
+	reflowedFloat = 0
+	lastLineMovedUp = 0
+	inlineFloatBreakType = 0 '\0'
+	skipPull = <value optimized out>
+#18 0xb68ba3d7 in nsBlockFrame::Reflow (this=0xac483428, 
+    aPresContext=0xac467000, aMetrics=@0xbfff9cc0, aReflowState=@0xbfff9c18, 
+    aStatus=@0xbfff9ed8) at nsBlockFrame.cpp:955
+	autoFloatManager = {mReflowState = @0xbfff9c18, mNew = 0xaca48520, 
+  mOld = 0x0}
+	needFloatManager = 1
+	marginRoot = <value optimized out>
+	state = {mBlock = 0xac483428, mPresContext = 0xac467000, 
+  mReflowState = @0xbfff9c18, mFloatManager = 0xaca48520, mFloatManagerX = 0, 
+  mFloatManagerY = 0, mReflowStatus = 0, mOutsideBulletX = 0, 
+  mBottomEdge = 1073741824, mContentArea = {width = 45120, 
+    height = 1073741824}, mOverflowPlaceholders = {mFirstChild = 0x0}, 
+  mOverflowTracker = {mOverflowContList = 0x0, mPrevOverflowCont = 0x0, 
+    mSentry = 0x0, mParent = 0xac483428, mSkipOverflowContainerChildren = 1, 
+    mWalkOOFFrames = 0}, mCurrentLine = {mCurrent = 0xab96a3a8}, 
+  mLineAdjacentToTop = {mCurrent = 0xbfff9aa8}, mY = 0, mAvailSpaceRect = {
+    x = 0, y = 0, width = 45120, height = 1073741824}, mFloatCombinedArea = {
+    x = 0, y = 0, width = 0, height = 0}, 
+  mFloatCacheFreeList = {<nsFloatCacheList> = {mHead = 0x0}, mTail = 0x0}, 
+  mPrevChild = 0x0, mPrevBottomMargin = {mMostPos = 0, mMostNeg = 0}, 
+  mNextInFlow = 0x0, mCurrentLineFloats = {<nsFloatCacheList> = {mHead = 0x0}, 
+    mTail = 0x0}, mBelowCurrentLineFloats = {<nsFloatCacheList> = {
+      mHead = 0x0}, mTail = 0x0}, mMinLineHeight = 1140, mLineNumber = 0, 
+  mFlags = 95, mFloatBreakType = 0 '\0', mBandHasFloats = 0 '\0'}
+	rv = <value optimized out>
+	overflowContainerBounds = {x = 0, y = 2, width = 1, height = 0}
+	bottomEdgeOfChildren = <value optimized out>
+#19 0xb68c199a in nsContainerFrame::ReflowChild (this=0xac4837b4, 
+    aKidFrame=0xac483428, aPresContext=0xac467000, aDesiredSize=@0xbfff9cc0, 
+    aReflowState=@0xbfff9c18, aX=0, aY=0, aFlags=0, aStatus=@0xbfff9ed8, 
+    aTracker=0x0) at nsContainerFrame.cpp:821
+	result = <value optimized out>
+#20 0xb68d92c9 in CanvasFrame::Reflow (this=0xac4837b4, 
+    aPresContext=0xac467000, aDesiredSize=@0xbfff9f20, 
+    aReflowState=@0xbfff9e10, aStatus=@0xbfff9ed8) at nsHTMLFrame.cpp:669
+	kidReflowState = {<nsCSSOffsetState> = {frame = 0xac483428, 
+    rendContext = 0xa9e30940, mComputedMargin = {top = 0, right = 0, 
+      bottom = 0, left = 0}, mComputedBorderPadding = {top = 0, right = 0, 
+      bottom = 0, left = 0}, mComputedPadding = {top = 0, right = 0, 
+      bottom = 0, left = 0}}, parentReflowState = 0xbfff9e10, 
+  availableWidth = 45120, availableHeight = 1073741824, mFrameType = 2, 
+  mFloatManager = 0xaca48520, mBlockDelta = 0, mLineLayout = 0x0, 
+  mCBReflowState = 0xbfff9e10, mComputedWidth = 45120, 
+  mComputedHeight = 1073741824, mComputedOffsets = {top = 0, right = 0, 
+    bottom = 0, left = 0}, mComputedMinWidth = 0, 
+  mComputedMaxWidth = 1073741824, mComputedMinHeight = 0, 
+  mComputedMaxHeight = 1073741824, mStyleDisplay = 0xab85f568, 
+  mStyleVisibility = 0xab8f7cbc, mStylePosition = 0xab85d90c, 
+  mStyleBorder = 0xab923d30, mStyleMargin = 0xab8e0b78, 
+  mStylePadding = 0xab85dd5c, mStyleText = 0xab9337e0, 
+  mPercentHeightObserver = 0x0, mDiscoveredClearance = 0x0, mReflowDepth = 3, 
+  mFlags = {mSpecialHeightReflow = 0, mNextInFlowUntouched = 0, 
+    mIsTopOfPage = 0, mBlinks = 0, mHasClearance = 0, mAssumingHScrollbar = 0, 
+    mAssumingVScrollbar = 0, mHResize = 0, mVResize = 1, 
+    mTableIsSplittable = 0, mHeightDependsOnAncestorCell = 0}}
+	styleDisp = <value optimized out>
+	prevCanvasFrame = (CanvasFrame *) 0x0
+	kidDesiredSize = {width = 0, height = 0, ascent = 1073741824, 
+  mBoundingMetrics = {leftBearing = 0, rightBearing = 0, ascent = 0, 
+    descent = 0, width = 0}, mCarriedOutBottomMargin = {mMostPos = 0, 
+    mMostNeg = 0}, mOverflowArea = {x = 0, y = 0, width = 0, height = 0}, 
+  mFlags = 0}
+#21 0xb68c199a in nsContainerFrame::ReflowChild (this=0xac483928, 
+    aKidFrame=0xac4837b4, aPresContext=0xac467000, aDesiredSize=@0xbfff9f20, 
+    aReflowState=@0xbfff9e10, aX=0, aY=0, aFlags=1, aStatus=@0xbfff9ed8, 
+    aTracker=0x0) at nsContainerFrame.cpp:821
+	result = <value optimized out>
+#22 0xb68d61d8 in nsHTMLScrollFrame::ReflowScrolledFrame (this=0xac483928, 
+    aState=0xbfff9fd0, aAssumeHScroll=0, aAssumeVScroll=1, 
+    aMetrics=0xbfff9f20, aFirstPass=1) at nsGfxScrollFrame.cpp:528
+	availWidth = 45120
+	computedHeight = 55860
+	computedMinHeight = 0
+	computedMaxHeight = 1073741824
+	presContext = (class nsPresContext *) 0xac467000
+	kidReflowState = {<nsCSSOffsetState> = {frame = 0xac4837b4, 
+    rendContext = 0xa9e30940, mComputedMargin = {top = 0, right = 0, 
+      bottom = 0, left = 0}, mComputedBorderPadding = {top = 0, right = 0, 
+      bottom = 0, left = 0}, mComputedPadding = {top = 0, right = 0, 
+      bottom = 0, left = 0}}, parentReflowState = 0xbfffa1b4, 
+  availableWidth = 45120, availableHeight = 1073741824, mFrameType = 2, 
+  mFloatManager = 0x0, mBlockDelta = 0, mLineLayout = 0x0, 
+  mCBReflowState = 0xbfffa1b4, mComputedWidth = 45120, 
+  mComputedHeight = 55860, mComputedOffsets = {top = 0, right = 0, bottom = 0, 
+    left = 0}, mComputedMinWidth = 0, mComputedMaxWidth = 1073741824, 
+  mComputedMinHeight = 0, mComputedMaxHeight = 1073741824, 
+  mStyleDisplay = 0xab911ca0, mStyleVisibility = 0xab9f3b30, 
+  mStylePosition = 0xab85d90c, mStyleBorder = 0xab923d30, 
+  mStyleMargin = 0xab8e0b78, mStylePadding = 0xab85dd00, 
+  mStyleText = 0xab85dc84, mPercentHeightObserver = 0x0, 
+  mDiscoveredClearance = 0x0, mReflowDepth = 2, mFlags = {
+    mSpecialHeightReflow = 0, mNextInFlowUntouched = 0, mIsTopOfPage = 0, 
+    mBlinks = 0, mHasClearance = 0, mAssumingHScrollbar = 0, 
+    mAssumingVScrollbar = 1, mHResize = 0, mVResize = 0, 
+    mTableIsSplittable = 0, mHeightDependsOnAncestorCell = 0}}
+	status = 0
+	rv = <value optimized out>
+#23 0xb68d66c6 in nsHTMLScrollFrame::ReflowContents (this=0xac483928, 
+    aState=0xbfff9fd0, aDesiredSize=@0xbfffa25c) at nsGfxScrollFrame.cpp:622
+	kidDesiredSize = {width = 0, height = 0, ascent = 1073741824, 
+  mBoundingMetrics = {leftBearing = 0, rightBearing = 0, ascent = 0, 
+    descent = 0, width = 0}, mCarriedOutBottomMargin = {mMostPos = 0, 
+    mMostNeg = 0}, mOverflowArea = {x = 0, y = 0, width = 0, height = 0}, 
+  mFlags = 0}
+	rv = <value optimized out>
+	newVScrollbarState = <value optimized out>
+#24 0xb68d69d0 in nsHTMLScrollFrame::Reflow (this=0xac483928, 
+    aPresContext=0xac467000, aDesiredSize=@0xbfffa25c, 
+    aReflowState=@0xbfffa1b4, aStatus=@0xbfffa408) at nsGfxScrollFrame.cpp:823
+	state = {mReflowState = @0xbfffa1b4, mBoxState = {
+    mPresContext = {<nsCOMPtr_base> = {
+        mRawPtr = 0xac467000}, <No data fields>}, 
+    mRenderingContext = 0xa9e30940, mLayoutFlags = 0, mReflowDepth = 0, 
+    mPaintingDisabled = 0 '\0'}, mStyles = {mHorizontal = 3 '\003', 
+    mVertical = 3 '\003'}, mComputedBorder = {top = 0, right = 0, bottom = 0, 
+    left = 0}, mReflowedContentsWithHScrollbar = 72 'H', 
+  mReflowedContentsWithVScrollbar = 160 ' ', mScrollPortRect = {x = 0, y = 0, 
+    width = 0, height = 0}, mInsideBorderSize = {width = -1231666448, 
+    height = -1416554592}, mShowHScrollbar = 0 '\0', mShowVScrollbar = 0 '\0'}
+	reflowHScrollbar = 1
+	reflowVScrollbar = 1
+	reflowScrollCorner = 1
+	oldScrollAreaBounds = {x = 0, y = 0, width = 45120, height = 55860}
+	oldScrolledAreaBounds = {x = 0, y = 0, width = 45120, height = 905766}
+	rv = <value optimized out>
+	newScrollAreaBounds = {x = 46800, y = 55860, width = -1416621344, 
+  height = -1404800000}
+	newScrolledAreaBounds = {x = -1073766336, y = -1404553508, width = 0, 
+  height = 0}
+#25 0xb68c199a in nsContainerFrame::ReflowChild (this=0xac4836dc, 
+    aKidFrame=0xac483928, aPresContext=0xac467000, aDesiredSize=@0xbfffa25c, 
+    aReflowState=@0xbfffa1b4, aX=0, aY=0, aFlags=0, aStatus=@0xbfffa408, 
+    aTracker=0x0) at nsContainerFrame.cpp:821
+	result = <value optimized out>
+#26 0xb6909248 in ViewportFrame::Reflow (this=0xac4836dc, 
+    aPresContext=0xac467000, aDesiredSize=@0xbfffa3a4, 
+    aReflowState=@0xbfffa2fc, aStatus=@0xbfffa408) at nsViewportFrame.cpp:282
+	kidDesiredSize = {width = 0, height = 0, ascent = 1073741824, 
+  mBoundingMetrics = {leftBearing = 0, rightBearing = 0, ascent = 0, 
+    descent = 0, width = 0}, mCarriedOutBottomMargin = {mMostPos = 0, 
+    mMostNeg = 0}, mOverflowArea = {x = 0, y = 0, width = 0, height = 0}, 
+  mFlags = 0}
+	availableSpace = {width = 46800, height = 1073741824}
+	kidReflowState = {<nsCSSOffsetState> = {frame = 0xac483928, 
+    rendContext = 0xa9e30940, mComputedMargin = {top = 0, right = 0, 
+      bottom = 0, left = 0}, mComputedBorderPadding = {top = 0, right = 0, 
+      bottom = 0, left = 0}, mComputedPadding = {top = 0, right = 0, 
+      bottom = 0, left = 0}}, parentReflowState = 0xbfffa2fc, 
+  availableWidth = 46800, availableHeight = 1073741824, mFrameType = 2, 
+  mFloatManager = 0x0, mBlockDelta = 0, mLineLayout = 0x0, 
+  mCBReflowState = 0xbfffa2fc, mComputedWidth = 46800, 
+  mComputedHeight = 55860, mComputedOffsets = {top = 0, right = 0, bottom = 0, 
+    left = 0}, mComputedMinWidth = 0, mComputedMaxWidth = 1073741824, 
+  mComputedMinHeight = 0, mComputedMaxHeight = 1073741824, 
+  mStyleDisplay = 0xab90fc4c, mStyleVisibility = 0xab9f3b30, 
+  mStylePosition = 0xab85d90c, mStyleBorder = 0xab923d30, 
+  mStyleMargin = 0xab8e0b78, mStylePadding = 0xab85dd5c, 
+  mStyleText = 0xab85dc84, mPercentHeightObserver = 0x0, 
+  mDiscoveredClearance = 0x0, mReflowDepth = 1, mFlags = {
+    mSpecialHeightReflow = 0, mNextInFlowUntouched = 0, mIsTopOfPage = 0, 
+    mBlinks = 0, mHasClearance = 0, mAssumingHScrollbar = 0, 
+    mAssumingVScrollbar = 0, mHResize = 0, mVResize = 0, 
+    mTableIsSplittable = 0, mHeightDependsOnAncestorCell = 0}}
+	kidHeight = <value optimized out>
+	rv = <value optimized out>
+	reflowState = {<nsCSSOffsetState> = {frame = 0xb6961755, 
+    rendContext = 0xb75feff4, mComputedMargin = {top = -1404669952, 
+      right = -1073766088, bottom = -1231666868, left = -1416238804}, 
+    mComputedBorderPadding = {top = -1415786284, right = -1073766024, 
+      bottom = -1232230982, left = -1404553508}, mComputedPadding = {top = 0, 
+      right = -1073766024, bottom = -1232231028, left = -1419338272}}, 
+  parentReflowState = 0xbfffa324, availableWidth = -1073765992, 
+  availableHeight = -1231672923, mFrameType = 3076517876, 
+  mFloatManager = 0xbfffa2fc, mBlockDelta = -1073766024, 
+  mLineLayout = 0xb6966edc, mCBReflowState = 0xab923d30, 
+  mComputedWidth = -1404669952, mComputedHeight = -1073766008, 
+  mComputedOffsets = {top = -1231666910, right = -1416238804, 
+    bottom = -1404669952, left = -1073765928}, 
+  mComputedMinWidth = -1232227583, mComputedMaxWidth = -1404553508, 
+  mComputedMinHeight = -1, mComputedMaxHeight = -1073765928, 
+  mStyleDisplay = 0xb68db489, mStyleVisibility = 0x80000000, 
+  mStylePosition = 0x1000, mStyleBorder = 0xbfffa1c8, 
+  mStyleMargin = 0xb63a8eaa, mStylePadding = 0x0, mStyleText = 0xbfffa314, 
+  mPercentHeightObserver = 0x0, mDiscoveredClearance = 0x0, 
+  mReflowDepth = 7580, mFlags = {mSpecialHeightReflow = 0, 
+    mNextInFlowUntouched = 1, mIsTopOfPage = 0, mBlinks = 0, 
+    mHasClearance = 1, mAssumingHScrollbar = 0, mAssumingVScrollbar = 0, 
+    mHResize = 1, mVResize = 1, mTableIsSplittable = 1, 
+    mHeightDependsOnAncestorCell = 0}}
+	offset = {x = 0, y = 3}
+#27 0xb68a2f52 in PresShell::DoReflow (this=0xac467800, target=0xac4836dc)
+    at nsPresShell.cpp:6711
+	rootFrame = (class nsIFrame *) 0xac4836dc
+	rcx = {<nsCOMPtr_base> = {mRawPtr = 0xa9e30940}, <No data fields>}
+	rv = <value optimized out>
+	reflowSize = {width = 46800, height = 1073741824}
+	reflowState = {<nsCSSOffsetState> = {frame = 0xac4836dc, 
+    rendContext = 0xa9e30940, mComputedMargin = {top = 0, right = 0, 
+      bottom = 0, left = 0}, mComputedBorderPadding = {top = 0, right = 0, 
+      bottom = 0, left = 0}, mComputedPadding = {top = 0, right = 0, 
+      bottom = 0, left = 0}}, parentReflowState = 0x0, availableWidth = 46800, 
+  availableHeight = 1073741824, mFrameType = 2, mFloatManager = 0x0, 
+  mBlockDelta = 0, mLineLayout = 0x0, mCBReflowState = 0x0, 
+  mComputedWidth = 46800, mComputedHeight = 55860, mComputedOffsets = {
+    top = 0, right = 0, bottom = 0, left = 0}, mComputedMinWidth = 0, 
+  mComputedMaxWidth = 1073741824, mComputedMinHeight = 0, 
+  mComputedMaxHeight = 1073741824, mStyleDisplay = 0xab921d9c, 
+  mStyleVisibility = 0xab9f3b30, mStylePosition = 0xab85d90c, 
+  mStyleBorder = 0xab923d30, mStyleMargin = 0xab8e0b78, 
+  mStylePadding = 0xab85dd5c, mStyleText = 0xab85dc84, 
+  mPercentHeightObserver = 0x0, mDiscoveredClearance = 0x0, mReflowDepth = 0, 
+  mFlags = {mSpecialHeightReflow = 0, mNextInFlowUntouched = 0, 
+    mIsTopOfPage = 0, mBlinks = 0, mHasClearance = 0, mAssumingHScrollbar = 0, 
+    mAssumingVScrollbar = 0, mHResize = 0, mVResize = 0, 
+    mTableIsSplittable = 0, mHeightDependsOnAncestorCell = 0}}
+	status = 0
+	desiredSize = {width = 0, height = 0, ascent = 1073741824, 
+  mBoundingMetrics = {leftBearing = 0, rightBearing = 0, ascent = 0, 
+    descent = 0, width = 0}, mCarriedOutBottomMargin = {mMostPos = 0, 
+    mMostNeg = 0}, mOverflowArea = {x = 0, y = 0, width = 0, height = 0}, 
+  mFlags = 0}
+#28 0xb68a6c72 in PresShell::ProcessReflowCommands (this=0xac467800, 
+    aInterruptible=1) at nsPresShell.cpp:6817
+	idx = <value optimized out>
+	deadline = 413096126
+#29 0xb68a6e11 in PresShell::DoFlushPendingNotifications (this=0xac467800, 
+    aType=Flush_Layout, aInterruptibleReflow=1) at nsPresShell.cpp:4864
+	kungFuDeathGrip = {<nsCOMPtr_base> = {
+    mRawPtr = 0xac467800}, <No data fields>}
+	batch = {mRootVM = {<nsCOMPtr_base> = {
+      mRawPtr = 0xac447400}, <No data fields>}}
+	updateFlags = <value optimized out>
+	isSafeToFlush = 1
+	viewManagerDeathGrip = {<nsCOMPtr_base> = {
+    mRawPtr = 0xac447400}, <No data fields>}
+#30 0xb68a6ea8 in PresShell::ReflowEvent::Run (this=0xab8a89a0)
+    at nsPresShell.cpp:6588
+	viewManager = {<nsCOMPtr_base> = {
+    mRawPtr = 0xac447400}, <No data fields>}
+#31 0xb6f2ea58 in nsThread::ProcessNextEvent (this=0xb79f41a0, mayWait=1, 
+    result=0xbfffa524) at nsThread.cpp:510
+	notifyGlobalObserver = 1
+	obs = {<nsCOMPtr_base> = {mRawPtr = 0xb4d5e244}, <No data fields>}
+	event = {<nsCOMPtr_base> = {mRawPtr = 0xab8a89a0}, <No data fields>}
+	rv = 0
+#32 0xb6eff5d8 in NS_ProcessNextEvent_P (thread=0x0, mayWait=1)
+    at nsThreadUtils.cpp:227
+	val = <value optimized out>
+#33 0xb6e800cc in nsBaseAppShell::Run (this=0xb4d5e240)
+    at nsBaseAppShell.cpp:170
+	thread = (class nsIThread *) 0xb79f41a0
+#34 0xb6d4bae8 in nsAppStartup::Run (this=0xb4d8bdc0) at nsAppStartup.cpp:193
+	rv = <value optimized out>
+#35 0xb6701f88 in XRE_main (argc=1, argv=0xbfffec74, aAppData=0xb7921980)
+    at nsAppRunner.cpp:3321
+	remoteService = {<nsCOMPtr_base> = {
+    mRawPtr = 0xb28af240}, <No data fields>}
+	appStartup = {<nsCOMPtr_base> = {
+    mRawPtr = 0xb4d8bdc0}, <No data fields>}
+	shuttingDown = 0
+	cmdLine = {<nsCOMPtr_base> = {mRawPtr = 0xb4cb5ec0}, <No data fields>}
+	workingDir = {<nsCOMPtr_base> = {
+    mRawPtr = 0xb4c44100}, <No data fields>}
+	xpcom = {mServiceManager = 0xb7930344}
+	desktopStartupIDEnv = <value optimized out>
+	updRoot = {<nsCOMPtr_base> = {mRawPtr = 0xb7956480}, <No data fields>}
+	persistent = 1
+	profLD = {<nsCOMPtr_base> = {mRawPtr = 0xb7957280}, <No data fields>}
+	dirProvider = {<nsIDirectoryServiceProvider2> = {<nsIDirectoryServiceProvider> = {<nsISupports> = {
+        _vptr.nsISupports = 0xb7542648}, <No data fields>}, <No data fields>}, <nsIProfileStartup> = {<nsISupports> = {
+      _vptr.nsISupports = 0xb754266c}, <No data fields>}, 
+  mAppProvider = {<nsCOMPtr_base> = {mRawPtr = 0x0}, <No data fields>}, 
+  mGREDir = {<nsCOMPtr_base> = {mRawPtr = 0xb7956500}, <No data fields>}, 
+  mXULAppDir = {<nsCOMPtr_base> = {mRawPtr = 0xb7956480}, <No data fields>}, 
+  mProfileDir = {<nsCOMPtr_base> = {mRawPtr = 0xb7957200}, <No data fields>}, 
+  mProfileLocalDir = {<nsCOMPtr_base> = {
+      mRawPtr = 0xb7957280}, <No data fields>}, mProfileNotified = 1 '\001', 
+  mExtensionsLoaded = 1 '\001', mAppBundleDirectories = {<nsCOMArray_base> = {
+      mArray = {mImpl = 0x0}}, <No data fields>}, 
+  mExtensionDirectories = {<nsCOMArray_base> = {mArray = {
+        mImpl = 0xb79f2670}}, <No data fields>}, 
+  mThemeDirectories = {<nsCOMArray_base> = {mArray = {
+        mImpl = 0xb79f2850}}, <No data fields>}}
+	desktopStartupIDPtr = 0x0
+	nativeApp = {<nsCOMPtr_base> = {
+    mRawPtr = 0xb79c2370}, <No data fields>}
+	startOffline = 0
+	profileName = {<nsFixedCString> = {<nsCString> = {<nsACString_internal> = {mData = 0xb79f5188 "Blank", mLength = 5, 
+        mFlags = 65541}, <No data fields>}, mFixedCapacity = 63, 
+    mFixedBuf = 0xbfffa964 ""}, 
+  mStorage = "\000\000\000\000\210©ÿ¿œr\005\b\000\000\000\000\000\000\000\000\230©ÿ¿ôoì·x\000\000\000\016\000\a\200ž©ÿ¿í\236d·\be\225·ôï_·ž©ÿ¿€^ò¶\be\225·"}
+	upgraded = 0
+	versionOK = <value optimized out>
+	appInitiatedRestart = <value optimized out>
+	desktopStartupID = {<nsFixedCString> = {<nsCString> = {<nsACString_internal> = {mData = 0xbfffa9b8 "", mLength = 0, 
+        mFlags = 65553}, <No data fields>}, mFixedCapacity = 63, 
+    mFixedBuf = 0xbfffa9b8 ""}, 
+  mStorage = "\000©ÿ¿è\230ô¶\000e\225·ôÿ\005\bè©ÿ¿ì\210ô¶D»ÿ¿\001\000\000\000ð8ò¶ôÿ\005\b€\031\222·(«ÿ¿\bªÿ¿ŒÝ\004\b(«ÿ¿\000\000\000"}
+	display_name = 0xbffffe76 ":0.0"
+	xremotearg = <value optimized out>
+	canRun = 1
+	profileLock = {<nsCOMPtr_base> = {
+    mRawPtr = 0xb79f2610}, <No data fields>}
+	profD = {<nsCOMPtr_base> = {mRawPtr = 0xb7957200}, <No data fields>}
+	version = {<nsFixedCString> = {<nsCString> = {<nsACString_internal> = {
+        mData = 0xbfffa910 "3.5.2_2009073000/2009073000", mLength = 27, 
+        mFlags = 65553}, <No data fields>}, mFixedCapacity = 63, 
+    mFixedBuf = 0xbfffa910 "3.5.2_2009073000/2009073000"}, 
+  mStorage = "3.5.2_2009073000/2009073000\000ÙÅï¶\200d\225·D»ÿ¿\002\000\000\000\000\000\000\000@\220³·\200\000\000\000\000e\225·\000\000\000"}
+	needsRestart = 0
+	display = (GdkDisplay *) 0xb7991110
+	osABI = {<nsCString> = {<nsACString_internal> = {
+      mData = 0xb6f9bfc0 "Linux_x86-gcc3", mLength = 14, 
+      mFlags = 1}, <No data fields>}, <No data fields>}
+	rv = 0
+	ar = <value optimized out>
+	gtkModules = <value optimized out>
+	override = 0x0
+	appData = {<nsXREAppData> = {size = 56, 0xb7956480, 
+    vendor = 0xb791f0f0 "Mozilla", name = 0xb791f0f8 "Firefox", 
+    version = 0xb791f100 "3.5.2", buildID = 0xb79112f0 "2009073000", 
+    ID = 0xb7913be0 "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}", 
+    copyright = 0xb7913c10 "Copyright (c) 1998 - 2009 mozilla.org", flags = 6, 
+    xreDirectory = 0xb7956500, minVersion = 0xb791f108 "1.9.1.2", 
+    maxVersion = 0xb791f110 "1.9.1.2", 
+    crashReporterURL = 0xb7913c40 "https://crash-reports.mozilla.com/submit", 
+    profile = 0x0}, <No data fields>}
+	iniFile = {<nsCOMPtr_base> = {mRawPtr = 0xb7956580}, <No data fields>}
+	localIniFile = {<nsCOMPtr_base> = {
+    mRawPtr = 0xb7956580}, <No data fields>}
+	parser = {
+  mSections = {<nsBaseHashtable<nsDepCharHashKey, nsAutoPtr<nsINIParser_internal::INIValue>, nsINIParser_internal::INIValue*>> = {<nsTHashtable<nsBaseHashtableET<nsDepCharHashKey, nsAutoPtr<nsINIParser_internal::INIValue> > >> = {
+        mTable = {ops = 0xb762493c, data = 0x0, hashShift = 28, 
+          maxAlphaFrac = 192 'À', minAlphaFrac = 64 '@', entrySize = 12, 
+          entryCount = 1, removedCount = 0, generation = 0, 
+          entryStore = 0xb7906480 ""}}, <No data fields>}, <No data fields>}, 
+  mFileContents = {mRawPtr = 0xb7913ca0 "[Build"}}
+	i = <value optimized out>
+#36 0x08049f1f in main (argc=1, argv=0xbfffec74) at nsXULStub.cpp:482
+	iniFile = {<nsCOMPtr_base> = {mRawPtr = 0xb7956400}, <No data fields>}
+	appData = {mAppData = 0xb7921980}
+	rv = <value optimized out>
+	lastSlash = <value optimized out>
+	iniPath = "/usr/lib/firefox/application.ini", '\0' <repeats 4063 times>
+	tmpPath = '\0' <repeats 4095 times>
+	greDir = "/usr/lib/xulrunner-1.9.1.2\000libxpcom.so", '\0' <repeats 4057 times>
+	greFound = 0
+	fileStat = {st_dev = 2049, __pad1 = 0, st_ino = 1917100, 
+  st_mode = 33261, st_nlink = 1, st_uid = 0, st_gid = 0, st_rdev = 0, 
+  __pad2 = 0, st_size = 96252, st_blksize = 4096, st_blocks = 200, st_atim = {
+    tv_sec = 1250248565, tv_nsec = 0}, st_mtim = {tv_sec = 1249341187, 
+    tv_nsec = 0}, st_ctim = {tv_sec = 1249382606, tv_nsec = 0}, __unused4 = 0, 
+  __unused5 = 0}
+	appDataFile = 0x0
+	parser = {
+  mSections = {<nsBaseHashtable<nsDepCharHashKey, nsAutoPtr<nsINIParser::INIValue>, nsINIParser::INIValue*>> = {<nsTHashtable<nsBaseHashtableET<nsDepCharHashKey, nsAutoPtr<nsINIParser::INIValue> > >> = {mTable = {ops = 0x806012c, 
+          data = 0x0, hashShift = 28, maxAlphaFrac = 192 'À', 
+          minAlphaFrac = 64 '@', entrySize = 12, entryCount = 4, 
+          removedCount = 0, generation = 0, 
+          entryStore = 0xb79060c0 ""}}, <No data fields>}, <No data fields>}, 
+  mFileContents = {mRawPtr = 0xb7909800 "; ***** BEGIN LICENSE BLOCK *****"}}
+	retval = <value optimized out>
+	kXULFuncs = {{functionName = 0x8059d54 "XRE_CreateAppData", 
+    function = 0x80601a8}, {functionName = 0x8059d66 "XRE_FreeAppData", 
+    function = 0x80601ac}, {functionName = 0x8059d76 "XRE_main", 
+    function = 0x80601b0}, {functionName = 0x0, function = 0x0}}
+	kProperties = {{property = 0x8059d45 "xulrunner", 
+    value = 0x8059d4f "true"}}

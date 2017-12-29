@@ -1,0 +1,77 @@
+Using 3d animations and negative text indent causes Firefox v34 to crash on Windows
+User Agent: Mozilla/5.0 (Windows NT 6.0; WOW64; rv:34.0) Gecko/20100101 Firefox/34.0
+Build ID: 20141126041045
+
+Steps to reproduce:
+
+This bug causes Firefox to crash if css contains both negative ident and 3d transform rules which Firefox is not happy about. The but crashes Firefox on page load, it's not necessary to execute any 3d transform.
+
+This is example of page which crashes browser:
+http://www.nivas.hr/pub/ff-crash/
+
+This is example of same page which does not crash browser (as a proof that we isolated and pinpointed the issue) 
+http://www.nivas.hr/pub/ff-norm/
+
+Browser crashes every time, in normal and safe mode, on both Windows Vista, 7 and 8. It works in Ubuntu for eg.
+
+
+Actual results:
+
+The issue as we pintpointed it, is connected to 3d animations on objects with negative text indent.
+
+Imagine following link (in demo above it's a part of social buttons in main navigation which show only when you scroll the page):
+<a href="#" class="fb facebook_post" title="Facebook"><span>Facebook</span></a>
+
+This link has text "hidden" via text-indent: -9999em;
+
+To rotation via css, we use this
+nav#navigation {
+	height: 4.25em;
+	perspective: 400px;
+	-webkit-perspective: 400px;
+	transition: all .07s linear;
+	-webkit-transition: all .07s linear;
+	position: relative; cursor: pointer; width: 750px; left: 150px;
+}
+	/* complete the animation! */
+	nav#navigation.flip .flip_3d,
+	nav#navigation.flip_alt .flip_3d {
+		height: 4.25em;
+		transform: translateZ(-34px) rotateX(90deg);
+		-webkit-transform: translateZ(-34px) rotateX(90deg);
+	}
+	nav#navigation.flip_out .flip_3d {
+		height: 4.25em;
+		transform: translatez(-34px) rotatex(0deg) ;
+		-webkit-transform: translatez(-34px) rotatex(0deg);
+	}
+
+
+nav#navigation .flip_3d {
+	transition: all .3s ease-out;
+	transform: translatez(-34px);
+	transform-style: preserve-3d;
+	-webkit-transition: all .3s ease-out;
+	-webkit-transform: translatez(-34px);
+	-webkit-transform-style: preserve-3d;
+	/*pointer-events: none;*/
+	position: absolute; top: 0; left: 0; display: block; width: 100%; height: 100%;
+}
+nav#navigation .flip_content {
+	transform: rotatex(0deg) translatez(34px);
+	-webkit-transform: rotatex(0deg) translatez(34px);
+}
+
+nav#navigation .flip_page {
+	transform: rotatex(-90deg) translatez(34px);
+	-webkit-transform: rotatex(-90deg) translatez(34px);
+}
+
+example located at:
+http://www.nivas.hr/pub/ff-crash/css/advanced.css
+nav#navigation .share_nav a
+
+
+Expected results:
+
+Browser should not crash by any means. Items should rotate and text should be hidden.

@@ -1,0 +1,107 @@
+FireFox crash (OOM) on Windows 7
+User Agent: Mozilla/5.0 (Windows NT 6.1; rv:32.0) Gecko/20100101 Firefox/32.0
+Build ID: 20140923175406
+
+Steps to reproduce:
+
+Keeping firefox open for some day with 20-25 tab reproduces the issue. The crash is consistent and reproduces every 2-3 day
+
+This is a windbg analysis of the crash:
+
+FAULTING_IP:
+mozalloc!mozalloc_abort+2d [c:\builds\moz2_slave\rel-m-rel-w32_bld-000000000000\build\memory\mozalloc\mozalloc_abort.cpp @ 30]
+73da141e c705000000007b000000 mov dword ptr ds:[0],7Bh
+
+EXCEPTION_RECORD: ffffffff -- (.exr 0xffffffffffffffff)
+ExceptionAddress: 73da141e (mozalloc!mozalloc_abort+0x0000002d)
+ExceptionCode: c0000005 (Access violation)
+ExceptionFlags: 00000000
+NumberParameters: 2
+Parameter[0]: 00000001
+Parameter[1]: 00000000
+Attempt to write to address 00000000
+
+DEFAULT_BUCKET_ID: NULL_POINTER_WRITE
+
+PROCESS_NAME: firefox.exe
+
+ERROR_CODE: (NTSTATUS) 0xc0000005 - The instruction at 0x%08lx referenced memory at 0x%08lx. The memory could not be %s.
+
+EXCEPTION_CODE: (NTSTATUS) 0xc0000005 - The instruction at 0x%08lx referenced memory at 0x%08lx. The memory could not be %s.
+
+EXCEPTION_PARAMETER1: 00000001
+
+EXCEPTION_PARAMETER2: 00000000
+
+WRITE_ADDRESS: 00000000
+
+FOLLOWUP_IP:
+mozalloc!mozalloc_abort+2d [c:\builds\moz2_slave\rel-m-rel-w32_bld-000000000000\build\memory\mozalloc\mozalloc_abort.cpp @ 30]
+73da141e c705000000007b000000 mov dword ptr ds:[0],7Bh
+
+NTGLOBALFLAG: 0
+
+APPLICATION_VERIFIER_FLAGS: 0
+
+APP: firefox.exe
+
+FAULTING_THREAD: 000027cc
+
+PRIMARY_PROBLEM_CLASS: NULL_POINTER_WRITE
+
+BUGCHECK_STR: APPLICATION_FAULT_NULL_POINTER_WRITE
+
+LAST_CONTROL_TRANSFER: from 73da1496 to 73da141e
+
+STACK_TEXT:
+13e2f838 73da1496 13e2f850 001bcc1c 72186159 mozalloc!mozalloc_abort+0x2d
+13e2f888 73da1321 001bcc1c 031c1c70 0006f305 mozalloc!mozalloc_handle_oom+0x5f
+13e2f898 01b756f2 001bcc1c 13e2f8ec 0006f305 mozalloc!moz_xmalloc+0x1b
+WARNING: Stack unwind information not available. Following frame may be wrong.
+13e2f8b8 01c41cbe 13e2f8e0 0006f305 00000004 xul!NS_CycleCollectorSuspect3+0x8ad2
+00000000 00000000 00000000 00000000 00000000 xul!NS_Alloc+0x131d8
+
+
+FAULTING_SOURCE_LINE: c:\builds\moz2_slave\rel-m-rel-w32_bld-000000000000\build\memory\mozalloc\mozalloc_abort.cpp
+
+FAULTING_SOURCE_FILE: c:\builds\moz2_slave\rel-m-rel-w32_bld-000000000000\build\memory\mozalloc\mozalloc_abort.cpp
+
+FAULTING_SOURCE_LINE_NUMBER: 30
+
+FAULTING_SOURCE_CODE:
+No source found for 'c:\builds\moz2_slave\rel-m-rel-w32_bld-000000000000\build\memory\mozalloc\mozalloc_abort.cpp'
+
+
+SYMBOL_STACK_INDEX: 0
+
+SYMBOL_NAME: mozalloc!mozalloc_abort+2d
+
+FOLLOWUP_NAME: MachineOwner
+
+MODULE_NAME: mozalloc
+
+IMAGE_NAME: mozalloc.dll
+
+DEBUG_FLR_IMAGE_TIMESTAMP: 54221b67
+
+STACK_COMMAND: ~19s; .ecxr ; kb
+
+FAILURE_BUCKET_ID: NULL_POINTER_WRITE_c0000005_mozalloc.dll!mozalloc_abort
+
+BUCKET_ID: APPLICATION_FAULT_NULL_POINTER_WRITE_mozalloc!mozalloc_abort+2d
+
+WATSON_STAGEONE_URL: http://watson.microsoft.com/StageOne/firefox_exe/32_0_3_5379/54224e2c/mozalloc_dll/32_0_3_5379/54221b67/c0000005/0000141e.htm?Retriage=1
+
+Followup: MachineOwner
+---------
+
+
+
+Actual results:
+
+-
+
+
+Expected results:
+
+-

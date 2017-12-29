@@ -1,0 +1,99 @@
+window.open will only open 19 windows, opening the 20th window will throw a javascript error
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7b) Gecko/20040325 Firefox/0.8.0+
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7b) Gecko/20040325 Firefox/0.8.0+
+
+I use javascript to open sets of webpages using window.open. After 19 windows
+have been opened the 20th window.open fails and the next javascript command to
+access the opened window fails.
+
+In the status bar the "blocked popups" logo is displayed and clicking on it
+shows that the page was prevented from displaying the popup window.
+
+This happens even if popup blocking has been turned off.
+
+Here is the javascript code that I am using to open the windows. The function is
+passed a list of webpages seperated by semi-colons.
+
+function openwin(url_list)
+{
+     var browser=navigator.appName;
+     var version=navigator.appVersion;
+     var re = /^UNQ[0-9]?[0-9]?/;
+     var re2 = /^SET[0-9]?[0-9]?:/;
+     var mywin = new Array();
+
+     all_urls = url_list.options[url_list.selectedIndex].value;
+     all_urls = all_urls.replace( re, '' );
+     all_urls = all_urls.replace( re2, '' );
+
+     if (all_urls == "NONE") {
+          title = url_list.options[url_list.selectedIndex].text;
+          alertText = "Invalid Selection: \"" + title + "\"\n\nPlease choose a
+valid selection.";
+          alert(alertText);
+          return;
+     }
+
+     site_list = all_urls.split(";");
+
+     url_list.selectedIndex = 0;
+     url_list.blur();
+
+	countwindow = window.open("","countwindow","left=10,top=10,width=300,height=100");
+	countwindow.document.write("<HTML><HEAD>");
+	countwindow.document.write("<TITLE>Opening Sites</TITLE>");
+	countwindow.document.write("</HEAD><BODY bgcolor=008888>");
+	countwindow.document.write("<H3 ID=TitleHead><center>Opening Requested
+Sites</center></H3>");
+	countwindow.document.write("<center><b><DIV ID=CountLine></DIV></b></center>");
+	countwindow.document.write("</BODY></HTML>");
+	
+     //This launches a new window for each site in site_list
+     for (var site = 0; site < site_list.length; site++) {
+        sitenum = site + 1;
+        countwindow.document.getElementById("CountLine").innerHTML = 'Opening
+window ' + sitenum + ' of ' + site_list.length;
+        mywin[site] = window.open("", "",
+"left=100,top=100,status,menubar,location,reesizable,scrollbars,toolbar");
+        mywin[site].blur();
+        mywin[site].location = site_list[site];
+        countwindow.focus();
+     }
+     
+     countwindow.close();
+
+     for (var site = site_list.length - 1; site >= 0; site--) {
+        mywin[site].focus();
+     }
+}
+
+
+The above code worked in the official Firefix .8 release. The last nightly build
+that worked was
+
+Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.6) Gecko/20040208 Firebird/0.7+
+
+from the firefox nightly build directory.
+
+The first build to exhibit the problem is
+
+Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7a) Gecko/20040210
+Firebird/0.8.0+
+
+In searching bugzilla and looking at bonsai this may be related to the fixes for
+Bug 198846.
+
+Reproducible: Always
+Steps to Reproduce:
+1. goto page using javascript in details section.
+2. select sets of pages to open
+
+
+Actual Results:  
+browser will fail to open more than the first 19 pages
+
+Expected Results:  
+open all request pages.
+
+If an actual webpage is necessary I can provide a link and login to test with
+the actual webpage that I use.

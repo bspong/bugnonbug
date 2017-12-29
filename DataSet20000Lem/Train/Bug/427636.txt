@@ -1,0 +1,32 @@
+Not displaying image correctly
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9b5) Gecko/2008032620 Firefox/3.0b5
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9b5) Gecko/2008032620 Firefox/3.0b5
+
+Firefox wount display PHP imagecreate() die() messages, instead it display the image (script) path. for example;
+in IE, invalid imagecreate() with 'or die("error 9");' on the line with the invalid code would display 'error 9' but in firefox i just get 'http://path/to/script.php'
+
+I am going to include the code that caused this 'error', just to be on the safe side. (I actually dont know why this script don't work. it wa working and now it's not and i havnt touched it. but thats not for discussion here.)
+
+$string="RTFM!";
+$filename = 'images/thin1.jpg';
+
+list($width, $height) = getimagesize($filename) or die("Error 1");
+
+$im = imagecreatetruecolor(599, 21) or die("Error 2");
+$source = imagecreatefromjpeg($filename) or die("Error 3");
+
+imagecopyresampled($im, $source, 0, 0, 0, 0, 599, 21, $width, $height) or die("Error 4");
+
+$px = (imagesx($im) - 7.5 * strlen($string)) / 2;
+$fontsize=4;
+$top=1;
+$shadow=$top+1;
+$color1 = imagecolorallocate($im, 128, 128, 128) or die("Error 5");
+$color2 = imagecolorallocate($im, 255, 255, 255) or die("Error 6");
+
+imagestring($im, $fontsize, $px+1, $shadow, $string, $color1) or die("Error 7");
+imagestring($im, $fontsize, $px, $top, $string, $color2) or die("Error 8");
+header('Content-type: image/jpeg') or die("Error 9");
+imagejpeg($im, null, 100) or die("Error 10"); imagedestroy($im) or die("Error 11");
+
+Reproducible: Always

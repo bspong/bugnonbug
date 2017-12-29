@@ -1,0 +1,112 @@
+[e10s] "View Page|Frame Source" in remote browser causes unsafe CPOW usage warnings
++++ This bug was initially created as a clone of Bug #1133577 +++
+
+STR:
+
+1) Visit a site in an e10s window
+2) Right-click on the page, and choose "View Page Source"
+
+or
+
+1) Visit a site with a frame in it in an e10s window
+2) Right-click in the frame, and choose "This Frame " > "View Frame Source"
+
+This causes some "unsafe CPOW usage" warnings in the Browser Console.
+
+
+In toolkit/content/widgets/remote-browser.xml:
+
+      <property name="contentDocumentAsCPOW" <- Causes CPOW warning
+                onget="return this.contentWindowAsCPOW ? this.contentWindowAsCPOW.document : null"
+                readonly="true"/>
+
+
+In browser/base/content/browser.js
+
+function BrowserViewSourceOfDocument(aDocument)
+{
+  var pageCookie;
+  var webNav;
+
+  // Get the document charset
+  var docCharset = "charset=" + aDocument.characterSet; <- Causes CPOW warning
+
+  // Get the nsIWebNavigation associated with the document
+  try {
+      var win;
+      var ifRequestor;
+
+      // Get the DOMWindow for the requested document.  If the DOMWindow
+      // cannot be found, then just use the content window...
+      //
+      // XXX:  This is a bit of a hack...
+      win = aDocument.defaultView; <- Causes CPOW warning
+      if (win == window) {
+        win = content;
+      }
+      ifRequestor = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor); <- Causes CPOW warning
+
+      webNav = ifRequestor.getInterface(nsIWebNavigation); <- Causes CPOW warning
+  } catch(err) {
+      // If nsIWebNavigation cannot be found, just get the one for the whole
+      // window...
+      webNav = gBrowser.webNavigation;
+  }
+  //
+  // Get the 'PageDescriptor' for the current document. This allows the
+  // view-source to access the cached copy of the content rather than
+  // refetching it from the network...
+  //
+  try {
+
+    // Workaround for bug 988133, which causes a crash if we attempt to load
+    // the document from the cache when the document is a CPOW (which occurs
+    // if we're using remote tabs). This causes us to reload the document from
+    // the network in this case, so it's not a permanent solution, hence hiding
+    // it behind the E10S_TESTING_ONLY ifdef. This is just a band-aid fix until
+    // we can find something better - see bug 1025146.
+    if (!Cu.isCrossProcessWrapper(aDocument)) {
+      var PageLoader = webNav.QueryInterface(Components.interfaces.nsIWebPageDescriptor);
+
+      pageCookie = PageLoader.currentDescriptor;
+    }
+  } catch(err) {
+    // If no page descriptor is available, just use the view-source URL...
+  }
+
+  top.gViewSourceUtils.viewSource(webNav.currentURI.spec, pageCookie, aDocument); <- Causes CPOW warning
+}
+
+
+In toolkit/components/viewsource/content/viewSourceUtils.js
+
+  // Opens the interval view source viewer
+  openInInternalViewer: function(aURL, aPageDescriptor, aDocument, aLineNumber)
+  {
+    // try to open a view-source window while inheriting the charset (if any)
+    var charset = null;
+    var isForcedCharset = false;
+    if (aDocument) {
+      charset = "charset=" + aDocument.characterSet; <- Causes CPOW warning
+      try { 
+        isForcedCharset =
+          aDocument.defaultView <- Causes CPOW warning
+                   .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                   .getInterface(Components.interfaces.nsIDOMWindowUtils)
+                   .docCharsetIsForced;
+      } catch (ex) {
+      }
+    }
+    openDialog("chrome://global/content/viewSource.xul",
+               "_blank",
+               "all,dialog=no",
+               aURL, charset, aPageDescriptor, aLineNumber, isForcedCharset);
+  },
+
+
+In browser/base/content/nsContextMenu.js
+
+  // Open new "view source" window with the frame's URL.
+  viewFrameSource: function() {
+    BrowserViewSourceOfDocument(this.target.ownerDocument); <- Causes CPOW warning [frame]
+  },

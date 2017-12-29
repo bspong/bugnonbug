@@ -1,0 +1,50 @@
+Firefox in-place update fails
+For app-update instead of downloading standard .xpis Firefox is attempting to
+install via xpi-wrapped native installer (smaller size, for one).
+
+Running Firefox launch the installer, put entry in xpicleanup.dat to get rid
+of the installer.exe eventually.
+
+Scenario I:
+----------
+If you leave Firefox running the installer eventually get to a point where it
+asks you to click OK to shut down Firefox. If you click the OK button to shut it
+down (comes up twice, see bug 283672) then Firefox shuts down, apparently
+without launching xpicleanup.exe
+
+[On the side: the shutdown code attempt to pas the "-kill" option to shut down
+turbo mode, neither of which is supported by Firefox. A new browser window open
+instead, which is a bit counter-productive if you're trying to shut it down.
+Simply need to remove the turbo-killing line from [Check Instance0] in config.ini]
+
+At the end of the install the new Firefox is launched. It notice the entry in
+xpicleanup.dat, give a shut down/restart message, and launch xpicleanup.exe.
+
+You should be able to restart Firefox now, it's just a bit ugly getting here.
+
+Scenario II:
+------------
+As above, but instead of letting the installer kill Firefox shut it down
+cleanly. xpicleanup.exe is launched to deal with the installer entry in
+xpicleanup.dat, but because the installer is still running it hang around
+trying every polling interval.
+
+During the install it find xpicleanup.exe is in use, so another entry is made
+in xpicleanup.dat to finish installing that when the install is over. I don't
+think the installer launch another copy of xpicleanup.exe at the end though.
+
+[At this point the xpi script should have returned a "999" status code to the
+native installer because the xpicleanup.exe hangup mean it couldn't complete,
+and the native installer should have put up a message about needing to restart
+to complete the install. Not seeing that in Firefox.]
+
+At the end you launch Firefox, which give the incomplete install message
+because xpicleanup.dat exists. It launch another copy of xpicleanup.exe. The
+installer go away so that part of the cleanup can be accomplished, but
+xpicleanup can't delete itself so it just hang around never able to finish. At
+this point it should have put a startup entry in the window registry--if you
+reboot everything get straightened out, but if you keep starting Firefox you
+just get the message and more copy of xpicleanup.exe all waiting for each
+other to die.
+
+Scenario II is uglier than Scenario I.

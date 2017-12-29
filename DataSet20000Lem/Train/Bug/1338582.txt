@@ -1,0 +1,28 @@
+implement debug server actor to draw paused overlay with control
+We need a new debug server Actor / API for toggling an overlay that indicates to the user / developer that the current page is paused in the debugger and give the user some controls.
+
+Here's the design from helen:
+https://cloud.githubusercontent.com/assets/2134/22383567/2ffd2ce6-e47f-11e6-984b-d3f5a0ac2e53.png
+
+Coming from this original doc:
+https://projects.invisionapp.com/share/AY8OEG3C6#/screens/117937554_Debugger
+
+The main component are an Overlay + Toolbar which are shown whenever the debugger is paused.
+
+The overlay is always present except when a user chooses the Inspector we should hide the overlay but persist the toolbar. I think helen's design had this overlay only showing when on the debugger tab but I don't think other tab actually need access to the page and would be better served a a notification that the page is paused because the toolbar could be missed. If someone were using the inspector and the page paused it might be nice to show the overlay and animate it away in the same way it would dissolve when you tab into the inspector.
+
+The toolbar is always present on the page when the page is paused to help people control the paused state of the page.
+
+Here are the component of the control toolbar:
+
++---------------------------------------------------+
+| Message | Continue | Step(Over|In|Out) | Close |
++---------------------------------------------------+
+
+Message: is a display message that can be passed by the debugger client with a default message of ("paused in debugger"). This allows the debugger to be more specific by saying "Paused on Exception"; meaning the debugger will likely update this message a user step or a new pause event happen. Clicking on this message should open the debugger panel.
+
+Continue + Step Controls are the standard debugger command that should be passed directly to the debug server.
+
+Close: This button should be considered the HALP! option. I believe this likely mean "Continue to the end" a opposed to the regular continue button would could just get you back into another paused state.
+
+The debugger.html is tracking the client side work required to call this API here: https://github.com/devtools-html/debugger.html/issues/1743

@@ -1,0 +1,58 @@
+Why are my pixels changed on some computers
+Created attachment 770960
+Image with bug.png
+
+User Agent: Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/27.0.1453.116 Safari/537.36
+
+Steps to reproduce:
+
+I send attached image from server as base64 datauri.
+
+Then I load it and extract pixels from it using Canvas
+
+var img = new Image();
+
+img.onload = function () {
+                var imageData;
+                 
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0);
+                imageData = ctx.getImageData(0, 0, img.width, img.height).data;
+
+                for (var i = 0; i < imageData.length; i = i + 4) {
+                  //This is where i check pixels
+                  //imageData[i],imageData[i+1],imageData[i+2]
+                }
+                
+            };
+
+ img.src =...datauri
+
+As you can see picture from attached file has only required chunks (IHDR, IDATA, IEND), no color correction information or anything like that and no alpha channel.
+            
+
+
+Actual results:
+
+On a few PCs some pixels from this picture has R,G or B raised or lowered by 1.
+Just for viewing this wouldn't be such a problem, but I have encoded data in this picture so every byte has to be the same. 
+We got report from one of our customers.
+We have managed to reproduce this issue on one of our laptops and one pc.
+
+
+Expected results:
+
+On almost every pc I get exactly the same pixel as from the original picture.
+This is expected result.
+As I could get from specification, image should be rendered (and should return exactly the same data) like the original picture if there is no color correction information embedded into it.
+
+Important notes:
+On our pc this was resolved when we updated graphics driver ???
+On other pc this had no efect on result.
+We used same versions of firefox on few PCs. On some works excellent, on some not.
+Even on PCs with problem almost every other picture returns same pixels except this one.
+Also, every pc with problem has some low budget graphics card.
+
+We tested it on version 21 because client who reported it has that version.
+I have to say that on those PCs image returns correct result on Chrome, but not on IE

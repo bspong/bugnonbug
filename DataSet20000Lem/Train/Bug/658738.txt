@@ -1,0 +1,18 @@
+[meta] We seem to be leaking hundred of window until shutdown during browser-chrome test
+I wa looking at http://tinderbox.mozilla.org/Firefox/1305941364.1305945463.28696.gz for unrelated reasons, and noticed that at the end of the test there are about 500 DOMWINDOW object around, and only a few docshells. So I grabbed the log and looked at the url of the window being destroyed _after_ the hidden window. The top offender of the 500 or so window left at that point are:
+
+339 about:blank
+96 chrome://browser/content/browser.xul
+84 about:addons
+
+I tried a quick test of just opening and closing window locally and the browser.xul window go away.
+
+Oh, during that whole test run about 186 chrome://browser/content/browser.xul window go away.
+
+And window are going away through the run a we go, so it's not like _all_ window leak. Just a bunch of them. Looking at the log, we seem to have both inner and outer browser.xul window around at the end there.
+
+The big question: is this just test code holding on to windows? Or is this test code calling code that would normally run in our UI and hold on to windows?
+
+Again, all the window are _closed_ (no docshell) but the inner and outer window object are hanging around at shutdown.
+
+It'd be nice if someone familiar with the browser test took a look at which test are opening the window that leak or something. Do we have any other way of finding their allocation points?

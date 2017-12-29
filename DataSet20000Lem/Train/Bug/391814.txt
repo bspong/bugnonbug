@@ -1,0 +1,36 @@
+Text in TextArea and Input element should be saved on page load to prevent data loss
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.6) Gecko/20070725 Firefox/2.0.0.6
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.6) Gecko/20070725 Firefox/2.0.0.6
+
+Currently SessionStore clear out a tab's text saved data (__SS_text variable) when the tab loads. It then save the tab's text data any time there is a change to the textarea or input (of type text) element.
+
+I realize that the SesssionStore code is trying to be efficient such that is won't save input or textarea text unless the user actually type something into that field, which is good. The problem occurs on site with a preview function that pre-populates a user's typed text into the fields. Once the page loads, SessionStore will clear out the __SS_text variable and if the browser crash or restarts, the previously typed in text is lost which is completely unexpected.
+
+The problem is made worse if there are lot of text input/areas. In this case say there are 5 field and the user type 100 word in 5 of the field and the preview the page and then make a few change to the 5th field and save the page. Well only the 5th field will be saved since the first 4 field never changed since the page loaded.
+
+Also because the _saveTextData function is not called from with the _collectWindowData function (or any function other than sss_onTabInput), the data will also be lost if the user close the tab, close the browser or save the session using an extension that call the getBrowserState function.
+
+This can be worked around by enabling the saving of POSTDATA, but there are danger with having that enabled and the recommended and default setting are to not save POSTDATA. So by default the textarea data will be lost in this case.
+
+
+There are a few change that would be useful here:
+
+1. Call _saveTextData for each non-empty textarea in the page from within sss_onTabLoad. .
+
+2. Call saveTextData for each non-empty textarea in the page either from within _updateTextAndScrollData or from it's callers. It seems like if the test and scroll data is being retrieved and stored, it should also retrieve the textarea data a well.
+
+I'm not sure how much of a performance hit either of these would be, but then the textarea pre-filled in data wouldn't be lost if the user doesn't modify the text before saving or crashing.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Go to www.google.com
+2. Search for a term so you get a result page.
+3. Type in a search term (the text input with id of "q" will be saved).
+4. Click to search.
+5. Notice on new result page that the text entered in step 3 is in the "q" text input box.
+Actual Results:
+Text in "q" is not saved in session. (ie: __SS_text for q is null)
+
+Expected Results:
+The search term in the text box should have been saved this there is text in the input text box.

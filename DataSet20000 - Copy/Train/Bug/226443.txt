@@ -1,0 +1,55 @@
+Failure code returned on closing popup, popups not exiting cleanly.
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.5) Gecko/20031007 Firebird/0.7
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.5) Gecko/20031007 Firebird/0.7
+
+Please see the attached testcase for this one.
+
+There are two columns on the test page.  The first column is an onMouseOver
+test, the second an onClick test.
+
+In both cases, the popup is closed on an onMouseOut event.  Quickly moving the
+mouse over the links in the first column, or clicking then immediately moving
+the mouse in the second column, will cause an error in browser.js.
+
+The error in question is:
+Error: uncaught exception: [Exception... "Component returned failure code:
+0x80004005 (NS_ERROR_FAILURE) [nsIObserverService.removeObserver]"  nsresult:
+"0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame ::
+chrome://browser/content/browser.js :: Shutdown :: line 445"  data: no]
+
+The offending line is 445, service = null;
+
+A small traceback of what is going on to get to that point:
+1) The Startup() function gets called (line 181).
+2) Line 237: setTimeout(delayedStartup, 0);
+3) delayedStartup() function called (line: 301).
+4) Line 377: observerService.addObserver(dlObserver, "dl-start", false);
+5) Shutdown() function called (line: 424)
+6) Line right before the error happens: service.removeObserver(dlObserver,
+"dl-start"); (line: 444)
+
+On top of this, the popups in this case case do not completely close.  Move the
+mouse over the entire left column twice (down over the 5 links, then up over the
+5 links), there will be a delay, and then several windows will spawn.  Most will
+close immediately, but a few will be left open.  I've experienced anywhere from
+1 to 4 remaining open windows, out of 10 produced.  All windows should be
+closed, as I've called the close() method for each opened window.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.  Load the testcase
+2.  Move mouse over links in the left column, click and move mouse on the links
+in the right column.
+
+Actual Results:  
+Windows will open, an error will occur on the JavaScript console, and most (but
+sometimes not all) windows will close.
+
+Expected Results:  
+The exception error should be caught, and the popup windows should all close.
+
+I haven't yet tested this on Mac & Linux, but I can do that later today.  The
+speed of the window creation is unfortunately much slower in Firebird than in IE
+(Tested on a P3 733 Mhz & P4 2 Ghz, delay was much shorter on the P4, but still
+lagged behind IE.  I'll get some numbers on this to back it up later)

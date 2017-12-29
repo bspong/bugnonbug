@@ -1,0 +1,31 @@
+Firefox 4 and 5 strip cookies when "Accept third-party cookies" is disabled
+User Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.2.18) Gecko/20110614 Firefox/3.6.18
+Build ID: 20110614230723
+
+Steps to reproduce:
+
+This bug is similar to this one:  https://bugzilla.mozilla.org/show_bug.cgi?id=585997
+
+I work for Yahoo! Mail.  We have a component called OpenMail which allows developers to build applications on top of Mail.  Because of the security issues around third party applications, these apps run in an iframe not in the yahoo.com domain.  (Instead, they are hosted in the yom.mail.yahoo.net domain).  Inlined images in emails are links to a url of the form: 
+
+http://us.f323.mail.yahoo.com/ya/download?<various parameters>
+
+On the server side, the URL is validated against XSRF by using the cookies and volatile signature in the URL.  In FF 3.6, these types of urls were requested with the yahoo.com cookies in the yahoo.net iframe.  Starting in Firefox 4 and up, if "Accept third-party cookies" is unchecked, the cookies are stripped.  This causes these requests to be rejected by the server.  It would be nice to continue to send up the cookies.
+
+To reproduce, 
+
+1.  Uncheck "Accept third-party cookies"
+2.  Log into the new Yahoo! Mail and read any email with inline images.
+3.  Observe that the inline images aren't rendered.
+
+Please feel free to directly contact me.
+
+
+Actual results:
+
+The image request went out without the appropriate cookies.
+
+
+Expected results:
+
+The cookies appropriate to the request should have been sent up.

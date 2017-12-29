@@ -1,0 +1,56 @@
+X protocol error when running through lbxproxy kill browser
+User-Agent: Mozilla/5.0 (X11; U; Linux sparc64; en-US; rv:1.7.10) Gecko/20050907 Firefox/1.0.6
+Build Identifier: Mozilla/5.0 (X11; U; Linux sparc64; en-US; rv:1.7.10) Gecko/20050907 Firefox/1.0.6
+
+At times, when opening multiple tabs, clicking on a link in the various tabs,
+and resizing font via control-alt-<keypad-+>, the browser will die with what
+look like a gdk error, but not sure:
+
+inevitable/defeat:inevitable: The program 'Gecko' received an X Window System error.
+This probably reflects a bug in the program.
+The error wa 'BadLength (poly request too large or internal Xlib length erro'.
+(Details: serial 131628 error_code 16 request_code 72 minor_code 0)
+(Note to programmers: normally, X error are reported asynchronously;
+that is, you will receive the error a while after causing it.
+To debug your program, run it with the --sync command line
+option to change this behavior. You can then get a meaningful
+backtrace from your debugger if you break on the gdk_x_error() function.)
+
+I tried running it via firefox -g --sync, but gdb puked and said it hit an
+internal error, so can't get a reliable backtrace.
+
+Debian/stable for both host and client, host is sun4u, client is i686, built
+from 1.0.6 tarball via the following ~/.mozconfig:
+
+MOZ_PHOENIX=1
+export MOZ_PHOENIX
+. $topsrcdir/browser/config/mozconfig
+ac_add_options --disable-debug
+ac_add_options --enable-optimize=-O2
+ac_add_options --disable-freetype2
+ac_add_options --enable-view-source
+ac_add_options --enable-default-toolkit=gtk2
+ac_add_options --enable-crypto
+ac_add_options --disable-oji
+#ac_add_options --enable-strip
+ac_add_options --disable-strip
+ac_add_options --disable-shared
+ac_add_options --enable-static
+
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+1. ssh into a remote host.
+2. lbxproxy &
+3. DISPLAY=:63 export DISPLAY
+4. firefox &
+5. Go to slashdot and control-clicking link to open lot of tabs.
+6. Start going to the various tab and clicking a link on them.
+7. Go to one of the tab and resize the font via control-alt-keypad+/-.
+
+Actual Results:
+Err message pasted above.
+
+Expected Results:
+Works :)

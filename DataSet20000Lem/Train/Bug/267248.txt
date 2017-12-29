@@ -1,0 +1,41 @@
+[GC] image added via CSS content in userContent.css is not displayed
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.3) Gecko/20041027 Firefox/1.0RC1
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.3) Gecko/20041027 Firefox/1.0RC1
+
+I have the following in userContent.css
+
+a[target~="_blank"]:after
+{
+content: url(new.png);
+}
+
+When I load a local file that ha <a href="" target="_blank">, the image
+"new.png" is placed just after the linked text. However, the same remote page
+doe not load the image and throw a security error in the JS console.
+
+Reproducible: Always
+Steps to Reproduce:
+1. Place the above code into userContent.css (and get a suitably named new.png file)
+2. load a local HTML file with a link having target="blank"
+3. watch the little image show up after the link
+4. now load a similar remote HTML file
+5. watch the missing icon and notice an extra space where the image would go.
+
+
+
+
+The following error show up in the JS console.
+
+Security Error: Content at https://bugzilla.mozilla.org/show_bug.cgi?id=151249
+may not load or link to
+file:///C:/Documents%20and%20Settings/nieder/Application%20Data/Mozilla/Firefox/Profiles/profilename/chrome/new.png.
+
+The error indicates that the image wa not loaded to prevent remote file from
+loading local files. While this make 100% sense for a remote page doing
+something like <img src="file://image.png">, it doe not make sense that this
+logic get applied to content generated via userContent.css.
+
+This worked fine until about 2 week ago, and then it stopped. Searching
+suggests the fix for Bug 69070 caused this. This is not a dupe of that bug
+because that bug deal with http: document loading file: images, while this
+report is specifically for userContent.css being able to load file: images.

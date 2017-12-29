@@ -1,0 +1,34 @@
+abuse of bind(this) with add/removeEventListener in downloads.js
+(In reply to :Gijs Kruitbosch from bug 1185893 comment #8)
+> It looks like we're still missing this one:
+> 
+> https://dxr.mozilla.org/mozilla-central/source/browser/components/downloads/
+> content/downloads.js#374
+
+Specifically:
+
+  _attachEventListeners() {
+    // Handle keydown to support accel-V.
+    this.panel.addEventListener("keydown", this._onKeyDown.bind(this), false);
+    // Handle keypress to be able to preventDefault() events before they reach
+    // the richlistbox, for keyboard navigation.
+    this.panel.addEventListener("keypress", this._onKeyPress.bind(this), false);
+  },
+
+  /**
+   * Unattach event listeners that were added in _attachEventListeners. This
+   * is called automatically on panel termination.
+   */
+  _unattachEventListeners() {
+    this.panel.removeEventListener("keydown", this._onKeyDown.bind(this),
+                                   false);
+    this.panel.removeEventListener("keypress", this._onKeyPress.bind(this),
+                                   false);
+  },
+
+
+This is clearly not going to work. A patch should ensure that we remove exactly what we added, not call bind several times.
+
+A technique that I've seen used here by e.g. the devtools is to replace the handler with its bound version when init() or the constructor of the object is called, which means you can avoid calling bind() individually for adding/removing the listener, and stuff Just Works because you pass the same function reference all the time.
+
+Nazim, do you want to pick this up as well?

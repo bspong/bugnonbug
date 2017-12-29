@@ -1,0 +1,54 @@
+Middle-click on empty folder in Bookmarks Toolbar or Library creates empty new tab
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.1) Gecko/2008070208 Firefox/3.0.1
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.1) Gecko/2008070208 Firefox/3.0.1
+
+This is very minor, but for thoroughness, I'll file it.
+I also provided the (short) code to fix it below.
+
+Points:
+1. For the toolbar, this also occurs for any other kind of click that should produce a new tab, depending on how one's prefs are set up: Ctrl-left-click, Shift-left-click, Ctrl-shift-left-click.
+2. For the library, only middle-clicks apply since Ctrl/Shift left-clicks are used for selection.
+3. This includes folder that contain only other folders.
+4. There is already code in the sidebar to prevent this from happening, so the toolbar and library should be consistent.
+
+In fact, here is the self-tested code (in extension form). I just did what the bookmark sidebar doe and put in a "hasChildURIs()" check before "openContainerNodeInTabs()" is called for each case. Alternatively, you could put the check in "openContainerNodeInTabs()" itself (utils.js) which would take care of all the case at once, though I haven't tried this.
+
+1. For the Bookmarks Toolbar, change browser.js:
+
+eval("BookmarksEventHandler.onClick ="+BookmarksEventHandler.onClick.toString().replace(
+/var target = aEvent.originalTarget;/,
+<><![CDATA[
+var target = aEvent.originalTarget;
+
+//RC Do not open blank new tab if container ha nothing to open
+if (PlacesUtils.nodeIsContainer(target.node) && !PlacesUtils.hasChildURIs(target.node))
+return;
+]]></>
+));
+
+
+2. For the Library, change places.js:
+
+eval("PlacesOrganizer.onTreeClick ="+PlacesOrganizer.onTreeClick.toString().replace(
+/else if \(PlacesUtils.nodeIsContainer\(selectedNode\)\) {/,
+<><![CDATA[
+else if (PlacesUtils.nodeIsContainer(selectedNode)) {
+
+//RC Do not open blank new tab if container ha nothing to open
+if (!PlacesUtils.hasChildURIs(selectedNode))
+return;
+]]></>
+));
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Create empty folder (or contains only other folders), in BM toolbar or Library
+2. Middle-click on it
+
+Actual Results:
+Blank tab created.
+
+Expected Results:
+Nothing should happen.

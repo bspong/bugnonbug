@@ -1,0 +1,31 @@
+non-default charset in meta tag ending with ";" reloads page
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 6.0; hu; rv:1.9.0.10) Gecko/2009042316 Firefox/3.0.10 (.NET CLR 3.5.30729)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 6.0; hu; rv:1.9.0.10) Gecko/2009042316 Firefox/3.0.10 (.NET CLR 3.5.30729)
+
+When there is no charset information in the Response header, I assume the charset is beeing determined by location (IP) or Firefox localization and after these the META tags in the HTML code.
+
+In my case the browser guesses that ISO-8891-2 should be good for me (i'm from Hunagry, Localization: huHU) and then comes the META tag, which was like this:
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1250;" />
+
+The browser loads the page twice, and just in the 2nd time displays the content. We did a little testing on the case and found that it only happens if the meta tag content property contains more then one values (CSV), the second must be the charset, it should end with a ";" and it should differ from the one charset the browser offers. So the following cases don't produce the bug:
+
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1250" />
+<meta http-equiv="Content-Type" content="charset=windows-1250;" />
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-2;" />
+
+Also no problem if we set a default server charset, which has precedece over the case mentioned above.
+
+Not a major bug, but we had a hard time figuring out why our pages reloaded, giving the server double load on the script side.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. no default server charset
+2. meta tag content is "text/html; charset=<NOT THE ONE SNIFFED>;"
+Actual Results:  
+the page reloads once and shows properly on 2nd load
+
+Expected Results:  
+One load.
+
+I don't really know what are the methods on Firefox to determine the charset, so much of our case study is based on speculation, but it seems to fit the case. Hope It helps!

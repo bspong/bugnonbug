@@ -1,0 +1,30 @@
+Windows localized installers don't honor CHARSET/FONTSIZE/FONTNAME for the main dialog.
+The Windows localized installers are not honoring the CHARSET/FONTSIZE/FONTNAME
+directives from install.ini. This means that in many cases improper fonts are
+being used to display the installer dialogs.
+
+The directives can be found here:
+http://lxr.mozilla.org/aviarybranch/source/toolkit/locales/en-US/installer/windows/install.it#2
+
+However, they don't affect anything useful. Instead, the fonts are taken from
+the setup resource DLL
+http://lxr.mozilla.org/aviarybranch/source/toolkit/mozapps/installer/windows/wizard/setuprsc/setuprsc.rc#60
+
+The Japanese team has been hacking around this problem by using a resource
+editor to change the font name prior to release. But this obviously sucks for
+automated releases.
+
+I *think* that a simple solution involves sending a WM_SETFONT message when we
+initialize each dialog, but I'm not sure exactly where this call should be made;
+I feel like I'm wandering through a spaghetti of win32 API, so if anyone else
+understands this code better than I, please step forward.
+
+An alternative hack is to rebuild setuprsrc.dll for each locale, and use
+preprocessor defines to hardcode the font settings into the resource DLL. It
+might be easier, but it kinda sucks.
+
+As a sidenote that might also need fixing, the title font is hardcoded to
+Trebuchet MS Bold at
+http://lxr.mozilla.org/aviarybranch/source/toolkit/mozapps/installer/windows/wizard/setup/dialogs.c#226
+
+This should be configurable as well.

@@ -1,0 +1,153 @@
+window.open() fails to open
+User-Agent:       No javascript
+Build Identifier: Firefox 0.8 Windows and Linux
+
+javascript:window.open(dest_link, 'foo777', '') fails under certain circumstances.
+
+Two browser configurations:
+   Firefox 0.8 Windows XP
+       Tabbrowser extensions
+
+   Firefox 0.8 Linux                      
+      http://gorgias.de/mfe/abhere.xpi # Add bookmark Here
+      http://downloads.mozdev.org/editcss/editcss.xpi  #  Edit CSS
+      http://downloads.mozdev.org/imagezoomer/imageZoomer-v0.1.xpi # image zoomer
+     http://downloads.mozdev.org/clav/toolbarext/toolbarext.xpi # Toolbar
+nhancements
+     (disabled) http://www.cosmicat.com/software/textzoom/textzoom.xpi # text zoom
+     http://fls.moo.jp/moz/rssreader/rssreader_170.xpi # feed reeder
+     http://gorgias.de/mfe/flst.xpi  # Focus last selected tab
+     http://downloads.mozdev.org/clav/flowtabs.xpi # Flowing Tabs
+     http://downloads.mozdev.org/macroeditor/MacroEditor.xpi  # Macro Editor
+     http://downloads.mozdev.org/livehttpheaders/livehttpheaders.xpi # Live HTTP
+headers
+     http://gratisdei.com/mtypes.xpi # Mozilla MIME type Editor
+     http://downloads.mozdev.org/mozedit/mozedit-11-21-03.xpi  # MozEdit
+     http://www.pikey.me.uk/mozilla/extensions/popupcount.xpi # Popup Count
+     http://downloads.mozdev.org/preferential/preferential.xpi
+     http://downloads.mozdev.org/mozedit/mozedit-11-21-03.xpi  # MozEdit
+     http://downloads.mozdev.org/adblock/sessionsaver-02-dev.xpi # Session Saver
+     http://downloads.mozdev.org/cdn/x/x.xpi # x - adds paranoia but to clear
+private info
+     http://www.cosmicat.com/software/scriptstatus/scriptstatus.xpi
+     http://downloads.mozdev.org/spiderzilla/spiderzilla.xpi
+
+The problem appears to be related to extensions but I am filing it against
+firefox because the two different systems I tested it on have no overlap
+in the extensions used.
+
+It is VERY common for criminally incompetent webmasters to write something like
+    <A HREF="javascript:showDoc('http://....');">
+Which is a violation of the Americans with Disabilities Act, instead of:
+    <A HREF="http://....">
+
+Now, if I disable all extensions, disable popup blocking, and fully enable
+javascript, this works on both browser configurations.
+
+But If I enable extensions, it fails silently.   Thing is, it isn't the same
+extensions on the two browsers.   It is the window.open() call which is 
+failing; the alert() dialog boxes I have added prove that javascript is being
+run.   However, when the window.open() call fails, the following javascript
+does not get executed.
+
+I tried, unsuccessfully, to determine which extension on the linux side was
+responsible by selectively enabling and disabling extensions.  Instead, I
+mannaged to end up with a user profile that wouldn't let firefox start up.
+Also, it is very difficult to restore the browser to its prior state
+after having to create a new profile.
+
+None of the extensions involved are pop-up blockers.
+
+Also, this problem seems to infect the 
+   Firefox -> Tools-> Options -> Extensions -> get newbutton as well.
+
+Even if the two extensions are making the same coding error, this still points
+to some problems in firefox.   There are no features to allow debugging of
+extensions.  Where is the tool that would show me which methods are invoked
+when I press a button and which extensions or built in functions are executed
+as a result?   Short of riding the full mozilla/firefox developer learning
+curve, there doesn't seem to be a reasonable way to diagnose extension problems.
+When I tried the venkman debugger (on windows), the problem disappeared
+after I selected Debug ->  Error Trigger -> Trace errors, even when I
+subsequently set it back to "Ignore errors".   So, it may be that the
+debugger changes the error handling behavior of firefox once you first
+select this.  However, if you select "stop on error" mode, it doesn't
+stop for the error below though it does intermittently stop in various other
+places that aren't related to the problem being reported, as those bugs are
+excited by activity.
+
+The following error appears at approximately the time the program would
+malfunction as outlined in this report:
+Error: ``this.docShell has no properties`` [xs] in file
+``chrome://global/content/bindings/browser.xml``, line 0, character 0.
+
+
+
+Other Problems I noticed while trying to debug this one:
+ - If a javascript <script> section has a parsing error, all functions in that
+   section cease to function, even those which occur before the syntax error.
+   For example, omiting a closing quote or closing parenthisis on a function
+   call at the bottom of this section renders the whole section unusable.
+   It is likely that this will make for even more pages that run on
+   other browsers but not firebird.
+   However, no error is reported on the javscript console.
+ - Javascript console:
+    - Does not display syntax errors when loading file
+    - Many javascript commands silently fail with no error
+    - Needs options to
+        [ ] Evaluate command with remote privileges
+        [ ] Evaluate command with local privileges
+        [ ] Evaluate command within context of current page.  I.E. window,
+            document, and other objects set appropriately 
+        [ ] Evaluate command in separate context
+
+
+
+
+Reproducible: Always
+Steps to Reproduce:
+0. Create a new user profile with no extensions initially loaded.
+   (kinda hard to do if you installed your extensions system wide)
+   or disable all extensions.
+1. Load either tab browser extension or longer list of extensions above.
+2. Copy html/javascript snippet below to file and open in browser
+3. click on the "click here" link.
+4. Wait for Godot   (literary reference)
+5. Disable all extensions
+6. Try again
+
+
+Actual Results:  
+Nothing happens.   No error messages in javascript console.
+
+Expected Results:  
+Open document in new tab.
+
+<html>
+<head>
+   <title>CIA FOIA - Search Results</title>
+   <base href='http://www.foia.cia.gov/' />
+</head>
+<body>
+
+    <script language="javascript">
+       // Note: an unterminated string or a missing ) will cause all of
+       // the javascript to be rejected.	document.write('Hello, World');
+	alert('loaded script');
+	function bzzt(text)    {
+	   alert('bzzt: '+text);
+	}
+        bzzt('test');
+        function showDoc(dest_link) {
+          alert('Got Here!');
+          // this works:
+          //window.location=dest_link;
+          // this doesn't
+          window.open(dest_link, 'foo777', '');        // <------BUG!!!
+          alert('Got Here too!');
+       }
+    </script>  
+<P>
+<A HREF="javascript:showDoc('http://www.foia.cia.gov/');">Click Hera!</A>
+</P>
+</html>

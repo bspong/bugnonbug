@@ -1,0 +1,38 @@
+OJI/MRJ: JSObject method fail when called from DragNDrop function on Firefox Mac
+User-Agent: Mozilla/5.0 (Macintosh; U; Intel Mac OS X; fr; rv:1.8.1.5) Gecko/20070713 Firefox/2.0.0.5
+Build Identifier: Mozilla/5.0 (Macintosh; U; Intel Mac OS X; fr; rv:1.8.1.5) Gecko/20070713 Firefox/2.0.0.5
+
+In a Java applet, a component that implement DropTargetListener cannot use JSObject method in his drop() function to call Javascript methods, because they all fail.
+
+E.g., in a JApplet object I have:
+public void drop(DropTargetDropEvent dropTargetDropEvent) {
+result = JSObject.getWindow(this).call("testFx", null);
+}
+With a javascript function testFx() that just return true (in the page where the applet is loaded).
+
+When I drop something in the drop target, I get a NullPointerException because JSObject.getWindow(this) doe not work on Firefox2/Mac (works Safari andFF2/win).
+And if I use a pre-defined JSObject.getWindow(this) (defined in the init() method), the JS function is not called and the call() function return null.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Create an applet with a DropTargetListener and a test j function
+2. Use JSObject.getWindow(this).call() in the drop() function
+3. Run the applet in FF2/Mac
+Actual Results:
+NullPointerException : JSObject.getWindow(this) is null
+
+Expected Results:
+result = the result of j test function, no exception
+
+Works on Firefox2/Windows and Safari2/Mac.
+
+Workaround : lanch the JSObject call in a new Thread :
+
+public void drop(DropTargetDropEvent dropTargetDropEvent) {
+new Thread() {
+public void run() {
+result = JSObject.getWindow(this).call("testFx", null);
+}
+}.start();
+}

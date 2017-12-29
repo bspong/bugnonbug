@@ -1,0 +1,38 @@
+With Firefox 2, New Window fails quietly when an existing enabled extension depends on a disabled one
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.0.5) Gecko/20060731 Firefox/1.5.0.5 Flock/0.7.4.1
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1) Gecko/20061010 Firefox/2.0
+
+The Komodo jsdbgp extension us this overlay:
+<?xml-stylesheet href="chrome://jsdbgp/skin/jsdbgp.css" type="text/css"?>
+
+<!DOCTYPE overlay PUBLIC "-//MOZILLA//DTD XUL V1.0//EN"
+"http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<overlay id="jsdbgpTasksOverlay"
+xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<script src="chrome://jslib/content/jslib.js"
+type="application/x-javascript"/>
+<script src="chrome://jsdbgp/content/winger-logger.js"
+type="application/x-javascript"/>
+... More jsdbgp script loaded
+
+It seems that in FF 1.*, if an overlay failed to load, the failure
+wa caught and ignored. In FF 2.0, the failure in the overlay
+stop loading (in this case triggered by the New Window action).
+The bug is that no message is emitted, either to the Error Console
+or via dump() (dump is enabled, FF 2 started with -console).
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Install jslib and ActiveState's jsdbgp extension (part of Komodo 4, in beta)
+2. Restart Firefox, verify New Window work
+3. Disable jslib extension
+4. Restart Firefox, verify New Window quietly fails
+
+Actual Results:
+See above
+
+Expected Results:
+New Window should work.

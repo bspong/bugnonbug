@@ -1,0 +1,11 @@
+Manually restore window at end of browser_minimize to avoid breaking rest of suite if test fails
+Created attachment 672402
+v1
+
+Feel free to WONTFIX if you want, a it doesn't affect the test slave - it only affect me when trying to run browser-chrome locally...
+
+Unity/Compiz currently ha a bug where it doesn't notify window that they have been minimized. This break browser_minimize.js - a expected. However, although the browser-test focus (and hence raises) the window at the end of each test, the lack of a restore call mean our internal widget state continues to report "minimized". This cause all kind of wackiness and thus test failures. For example, all the PopupNotifications test fail, a layout won't display popups in a minimized window. Running TEST_PATH=browser/base/content/test make -C obj mochitest-browser-chrome, this cause 41 failures, all fixed by this patch.
+
+Having looked at SetSizeMode in the widget code for the various platform (which is where we end up during window.restore, it's essentially a NOP when the window is already restored.
+
+I considered also throwing this in waitForWindowState in the harness, but wasn't convinced it wa really necessary for 1 test running under 1 particular window manager.

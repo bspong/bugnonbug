@@ -1,0 +1,27 @@
+Firefox (and Thunderbird) Singleton causes multi-platform usage problems
+User Agent: Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20100101 Firefox/10.0
+Build ID: 2012012900
+
+Steps to reproduce:
+
+Attempt to open Firefox (or Thunderbird, or Chromium) on a different machine with a shared filesystem.
+
+
+Actual results:
+
+Firefox tells me the Firefox application is still open and has to be closed down prior to opening a Firefox instance.  It then provides a nice link to the location of the Singleton task ID in the user's login account so it can be removed from a "crash" situation (which isn't this situation, as there is a separate task running perfectly fine using this task ID on another system).
+
+
+Expected results:
+
+Firefox (Thunderbird, Chromium) should handle multiple instances running on different physical platforms with a common shared user filesystem login space to either allow multiple instances, or perform a safe and silent shutdown of the remote application.
+
+What I have is a large disk array on one powerful machine sharing /home to other Linux desktops over a high speed network.  This means that when a user logs in, they have the same file system (and their work) available on all desktops.  Current Firefox/Thunderbird/Chromium design doesn't allow bringing up these applications on the second desktop if they are still running on what is likely a locked desktop on a different system/CPU sharing the same filesystem.
+
+I personally believe a user should be able to bring up a second instance of Firefox/Thunderbird/Chromium on another CPU/Desktop without having to remote login to the other machine and kill off Firefox/Thunderbird/Chromium tasks.  My suggestion to perform a silent shutdown of the remote application is not ideal, but might at least allow the illusion of unimpeded access to the application.  As a user, it don't care if the two instances communicate to each other over an IP pipe if this might be a solution to the problem.
+
+To reproduce this problem, use NFS file sharing to share /home with another physical (or virtual) computer and try to run Firefox, Thunderbird, and Chromium on this second system using the same login account UID/GID.
+
+This is not a code problem, it will require a change to the current design of these applications.
+
+As shared resources become more prevalent (cloud computing anyone?) this may become a real problem for adoption of these tools we've all come to know and love.

@@ -1,0 +1,21 @@
+Implement more useful timeout semantics for geoip lookup in the search service
+Created attachment 8542454
+0001-Bug-XXXXXXX-better-timeout-semantics-for-search-serv.patch
+
+Currently the geoip lookup done by the search service use a relatively short XHR timeout in an effort to balance getting data from the service with the jank that would be caused if the search service end up doing a sync initialization while waiting for the XHR to complete.
+
+There are 2 problem with this that can be solved by changing the timeout strategy:
+
+* We can get telemetry on how long request that don't timeout take, but can't get insight into how long the actual response time would be for user that see a timeout.
+
+* We lose the opportunity to save the country-code even if the request doe take longer than our timeout.
+
+A strategy that would fix these issue is to use a timer and stop waiting for the value when this timer fire - but still let the request complete. This allows u to report the actual time the request took, and still set the pref with the country code so it can be used next startup.
+
+This attachment works, but outstanding question are:
+
+* In the case where a success response come in after the timeout, should we report *both* SEARCH_SERVICE_COUNTRY_FETCH_TIMEOUT and SEARCH_SERVICE_COUNTRY_SUCCESS? The patch doesn't (ie, the telemetry semantics should be unchanged) but it's fairly easy to make a case that we should report both (as we did manage to see a success response and wrote the pref).
+
+* Can we tweak the existing probe to change the n_buckets and high attributes?
+
+(Note this patch also ha a comment fix for one of the other location test - doesn't seem worth a new bug just for that)

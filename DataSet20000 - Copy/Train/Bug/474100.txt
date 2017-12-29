@@ -1,0 +1,23 @@
+FF 3.0.5 not honoring must-revalidate Cache-Control header for javascripts over HTTPS
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.0.5) Gecko/2008120122 Firefox/3.0.5
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.0.5) Gecko/2008120122 Firefox/3.0.5
+
+When a https page includes a js file that comes with a "Cache-Control: public, must-revalidate" header, on subsequent requests for the page the js is fetched from the cache without sending a request to check validity. In my understanding, the browser should send a request with "If-Modified-Since" to verify the file.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Create a html page that includes a js file
+2. Create the js file and see that it is served with a "Cache-Control: max-age=xxx, public, must-revalidate" header, where xxx is a reasonably big value
+3. Surf to the page via https
+4. Go to a different site
+5. Go back to the page via clicking on a link (clicking 'refresh' or hitting F5 forces a reload with the correct If-Modified-Since)
+Actual Results:  
+No request for the js file is made, the HTTPFox plugin also shows a direct cache hit.
+
+Expected Results:  
+FF should send a request with If-Modified-Since header, which should result in the server answering with a 304 Not Modified response.
+
+browser.cache.check_doc_frequency is set to 3, which - I believe - should be the default and correct setting.
+
+The problem arises irrespectively of the browser.cache.disk_cache_ssl setting.

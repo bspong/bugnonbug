@@ -1,0 +1,35 @@
+Remove use of for-each from browser/.
+Need to replace non-standard for-each with one of:
+  * for-of
+  * for-in
+  * array.map/array.filter for array-comprehension
+as a part of bug 1083470.
+
+converting rules are follwing:
+  * for-each
+    * for each (let x in array) { ... }
+      -> for (let x of array) { ... }
+    * for each (let x in object) { ... }
+      -> for (let key in object) { let x = object[key]; ... }
+    * for each (let [key, value] in Iterator(object)) { ... }
+      -> for (let key in object) { let value = object[key]; ... }
+    * for each (let x in array) { ... }
+      where array can be null or undefined
+      -> if (array) { for (let x of array) { ... } }
+
+  * legacy array comprehension with for-each
+    * [f(x) for each (x in array)]
+      -> array.map(x => f(x))
+    * [f(x) for each (x in array) if (g(x)]
+      -> array.filter(x => g(x)).map(x => f(x))
+    * [x for each (x in array) if (g(x)]
+      -> array.filter(x => g(x))
+    * [f(x) for each ([i, x] in Iterator(array)) if (g(x, i)]
+      -> array.filter((x, i) => g(x, i)).map((x => f(x))
+    * [f(x) for each (x in arraylike)]
+      -> Array.from(arraylike).map(x => f(x))
+    * [f(x) for each (x in string)]
+      -> Array.prototype.slice.call(arraylike).map(x => f(x))
+         // Array.from behaves differently for surrogate-pair
+
+I have draft patches for all files in m-c except under js/src.

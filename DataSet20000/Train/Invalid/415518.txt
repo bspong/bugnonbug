@@ -1,0 +1,46 @@
+firefox has problems with webservers that do chunked encoding only (e.g. publicfile)
+User-Agent:       Default
+Build Identifier: any version
+
+firefox has problems with webservers that do chunked encoding only (e.g. publicfile) and misses to read e.g. css style files like in this example
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.visit http://nn7.de/pics/photos/bled08/002-CIMG3681.JPG.html using firefox
+2.do the same with i.e. IE6/7, opera: firefox misses to load the css
+Actual Results:  
+page misses style files and is plainly displayed, although there should be a grey border around the small images
+
+
+it seems to be that publicfile does only chunked encoding and never uses content-length:
+
+I think the problem here about 'YUM' is exactly the same that hits firefox:
+https://lists.dulug.duke.edu/pipermail/yum/2004-March/004047.html , quote follows:
+
+
+> > The issue is not that publicfile is violating the rfc.  As far as I
+> > can tell, it isn't.  It is, however, behaving in a way that's
+> > different from most other servers.  We were using that common (but
+> > not rfc-mandated) behavior to deal with a complex issue.
+> 
+> Just for clarification, it seems the rfc, in fact, _forbids_ the
+> http/1.1 server to send content-length if transfer-encoding is sent.
+> And it also says that if a client sees both transfer-encoding and
+> content-length, it must ignore content-length.
+
+I agree.  What makes publicfile different is that it seems to use
+chunked encoding all the time.  There's no rule against this, but most
+servers only use chunked encoding when they "need to".  The chunked
+encoding is intended largely to deal with dynamic data for which the
+content-length is not known at the time the transaction begins.
+Othwerwise, it would not be possible to do keepalive because the
+client would have no way to locate message boundaries.  For most
+static files with an obvious (from stat) file size, most servers send
+the file with "identity" encoding and provide a content-length.
+
+Again, the issue is not that publicfile is wrong.  It's just a little
+different from how most servers behave.  Neither it nor the other
+servers are incorrect.  This is not a protocol-violation issue.  The
+issue in yum is above the protocol layer.
+[...]

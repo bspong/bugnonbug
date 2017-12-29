@@ -1,0 +1,41 @@
+Site identity data is not updated in some case of weird certificate
+This wa reported by Jakub Wilk a Debian bug #776439 ( http://bugs.debian.org/776439 )
+
+Original report:
+1) Go to https://jwilk.net/software/ and accept the self-signed certificate.
+
+2) Click on the site identity button. The popup say say "This website doe
+not supply identity information".
+
+3) Open https://www.debian.org/ in another tab.
+
+4) Go back to the original tab.
+
+5) Click on the site button identity. Now the popup say "Verified by: Gandi",
+which is incorrect.
+
+My analysis:
+With the self-signed certificate being validated by the user, we end up in this case:
+http://hg.mozilla.org/mozilla-central/file/b2b10231606b/browser/base/content/browser.js#l7007
+7007 } else if (state & nsIWebProgressListener.STATE_IS_SECURE) {
+7008 this.setMode(this.IDENTITY_MODE_DOMAIN_VERIFIED);
+
+Then, sin setMode, http://hg.mozilla.org/mozilla-central/file/b2b10231606b/browser/base/content/browser.js#l7113
+7113 this.setIdentityMessages(newMode);
+
+And in setIdentityMessages, we end up here:
+http://hg.mozilla.org/mozilla-central/file/b2b10231606b/browser/base/content/browser.js#l7136
+7136 let iData = this.getIdentityData();
+
+Which brings u in getIdentityData, until an Exception is thrown here:
+http://hg.mozilla.org/mozilla-central/file/b2b10231606b/browser/base/content/browser.js#l6953
+6953 if (cert.subjectName) {
+
+The thrown exception is:
+"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIX509Cert.subjectName]"
+
+The exception lead the doorhanger to be left with data it had the last time it wa displayed.
+
+Actually, now that I'm switching tab between bugzilla and that self-signed site, I see it's actually worse than only the doorhanger: it also display the EV name in the urlbar. So currently, I see (lock) Mozilla Foundation (US) https://jwilk.net/software/, but the lock and Mozilla Foundation (US) are not in green.
+
+Putting this a security-sensitive because that last part is not mentioned in the original bug, and I think there's more to it than this. Specifically, this may not be limited to self-signed certificates, considering how weird that certificate actually is: it actually ha no subject name, and except from the add exception dialog, trying to view that certificate fails. I'm left to wonder if there are case where "legitimate" certificate (as in, signed by root in our store) that could be weird enough to trigger an uncaught exception in some of that UI code.

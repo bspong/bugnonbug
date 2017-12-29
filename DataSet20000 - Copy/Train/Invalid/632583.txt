@@ -1,0 +1,63 @@
+Crash on Windows Media Player Plug-in Dynamic Link Library | Possible Integer overflow
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; es-AR; rv:1.9.2.13) Gecko/20101203 Firefox/3.6.13
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; es-AR; rv:1.9.2.13) Gecko/20101203 Firefox/3.6.13
+
+
+The failure is caused when reload a lot of times a malformed AVI file with "Windows Media Player Plug-in Dynamic Link Library" using firefox). This causes an integer overflow.The failure occurs in the library npdsplay.dll.
+
+Reproducible: Always
+
+Steps to Reproduce:
+
+1.Open the poc
+2.Wait 60 seconds (In this time the firts frame reaload the video a lot of times )
+3.After it, firefox Crash!
+Actual Results:  
+
+when you open firefox normally nothing happened.
+ 
+when you open firefox with a debugger, this crashes when writting FFFFFFFF address.
+
+Expected Results:  
+
+Nothing, keep working.
+
+
+Error details
+--------------
+
+
+npdsplay.dll:5F792303 ; ---------------------------------------------------------------------------
+npdsplay.dll:5F792303 mov     [eax], ebx < - CRASH!
+npdsplay.dll:5F792305 push    ebx
+npdsplay.dll:5F792306 lea     eax, [ebp+10h]
+npdsplay.dll:5F792309 push    ebx
+npdsplay.dll:5F79230A push    eax
+npdsplay.dll:5F79230B push    800h
+npdsplay.dll:5F792310 push    dword ptr [ecx+8]
+npdsplay.dll:5F792313 push    ebx
+npdsplay.dll:5F792314 push    1100h
+npdsplay.dll:5F792319 call    ds:off_5F79721C
+npdsplay.dll:5F79231F test    eax, eax
+npdsplay.dll:5F792321 jnz     short loc_5F79232C
+npdsplay.dll:5F792323 mov     eax, [ebp+8]
+npdsplay.dll:5F792326 mov     [eax], bl
+npdsplay.dll:5F792328 xor     eax, eax
+npdsplay.dll:5F79232A jmp     short loc_5F792347
+npdsplay.dll:5F79232C ; ---------------------------------------------------------------------------
+npdsplay.dll:5F79232C
+npdsplay.dll:5F79232C loc_5F79232C:                           ; CODE XREF: npdsplay.dll:5F792321j
+npdsplay.dll:5F79232C push    dword ptr [ebp+0Ch]
+npdsplay.dll:5F79232F push    dword ptr [ebp+10h]
+npdsplay.dll:5F792332 push    dword ptr [ebp+8]
+npdsplay.dll:5F792335 call    ds:off_5F797214
+npdsplay.dll:5F79233B push    dword ptr [ebp+10h]
+npdsplay.dll:5F79233E call    ds:off_5F797220
+npdsplay.dll:5F792344 push    1
+npdsplay.dll:5F792346 pop     eax
+npdsplay.dll:5F792347
+npdsplay.dll:5F792347 loc_5F792347:                           ; CODE XREF: npdsplay.dll:5F79232Aj
+npdsplay.dll:5F792347 pop     ebx
+npdsplay.dll:5F792348 pop     ebp
+npdsplay.dll:5F792349 retn    0Ch
+npdsplay.dll:5F792349 ; ---------------------------------------------------------------------------

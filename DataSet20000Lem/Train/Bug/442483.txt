@@ -1,0 +1,30 @@
+nsiShellService.openApplication() Fails Reading Registry
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9) Gecko/2008052906 Firefox/3.0
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9) Gecko/2008052906 Firefox/3.0
+
+I have written an addon (ThunderbirdBiff) that make use of the openApplication() method for starting the default mail client. This ha worked well enough on FF2 but FF3 break it.
+
+I have found that under FF3 and using Sysinternals RegMonitor, the registry entry being read to find the default mail client are just dead wrong. In FF3, the code attempt to open HKCU\Mail followed by HKCR\Mail.
+
+The correct location are HKCU\Software\Clients\Mail followed by HKLM\Software\Clients\Mail. Using RegMonitor, I have been able to confirm that FF2 is doing the right thing. In looking at the CPP code online, it appears that the FF2 code is far more robust in addition to being CORRECT (in this issue anyhow). I cannot understand why this ha been lost in moving to FF3.
+
+Finally, I have seen some bug listed here suggesting that the class should be removed. This would break my addon and several others.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.In error console
+2.Place the following in the JS evaluation area:
+
+Components.classes["@mozilla.org/browser/shell-service;1"].getService(Components.interfaces.nsIShellService).openApplication(Components.interfaces.nsIShellService.APPLICATION_MAIL);
+
+3.Press Evaluate key
+4.An exception is tossed - NOT AVAILABLE
+5.The exception come from OpenKeyForReading() inside the class. This is because the sought registry key is not (and should not) be found.
+Actual Results:
+Get exception thrown. Wrong registry key(s) being sought.
+
+Expected Results:
+Should succeed in starting the default mail/news client.
+
+Code should look for correct registry keys. See FF2 version of the class for correct usage.

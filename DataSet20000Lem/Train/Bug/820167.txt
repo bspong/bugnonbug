@@ -1,0 +1,35 @@
+Enable performance measurement of tab animation
+1. Motivation:
+- Enable measurement of tab animation performance which can be used for relative comparison (before/after specific changes).
+
+2. Generalized goal:
+- Create a facility which collect discrete performance data of frame-intervals and paint-processing (inc. layout flush) duration over determined period of time (TBD exact collections).
+
+3. Method:
+- When enabled, a client trigger a start, the refresh driver collect {frame-interval, processing-duration} pairs.
+- When a client trigger a stop, the ordered collection is returned to the client for further processing (stats, telemetry, display, etc).
+
+4. Constraints:
+- Negligible performance impact when not in enabled, minimal impact when enabled/used.
+- The refresh driver shouldn't be modified when more client use this facility.
+- Some performance penalty is acceptable when returning the collected data.
+
+5. Implementation:
+- Accessible from javascript (start/stop/data-collection).
+- A single cyclic buffer of pair (possibly triplet - with timestamps) which serf a many client a required.
+- Storage space isn't an issue: Even an hour worth of buffer @max-60-fps with 128 byte per entry (2 double and a timestamp) is 60*60*60*128 = 27MB of data. Much smaller buffer can probably be used, and entry size would probably be smaller.
+- When a client trigger a start, it get a "handle" which is actually the index of current buffer position, combined with some other data which will later allow to verify that the initial position wasn't overwritten at the stop trigger (e.g. overall number of measured frames, from which start position and isOverwritten can be deduced).
+- When a client trigger a stop, it provides it handle, and the refresh driver return the chunk of pair collected since the start position indicated by this handle.
+- When the system is enabled, the buffer is used constantly, even if no client triggered a start (simpler - stateless, and better performance since no state should be managed when triggering a start).
+
+6. Control:
+- A global pref to enable this refresh driver functionality (and also allocation and usage of the buffer). E.g. toolkit.telemetry.collectFrameInfo.enabled
+- Each client us it own pref to enable itself, preferably with the same prefix a the global one, e.g. toolkit.telemetry.collectFrameInfo.tabAnimation.enabled
+
+7. Tab specific:
+- When enabled, tabbrowser.xml will collect frame info performance for tab open and tab close animations.
+- Once each specific animation is done, it will print to the error console a summary of the performance (TBD, possibly discrete frame times, average FPS, average paint-processing duration).
+- Possibly collect aggregate data, possibly into telemetry. TBD.
+
+8. UI:
+- Possibly an addon will be provided to control this functionality for easier usage of the UX team (instead of enabling 2 prefs).

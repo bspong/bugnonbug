@@ -1,0 +1,63 @@
+Script variable can not be used in frames located in a upper directory
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 6.0; fr; rv:1.9.0.10) Gecko/2009042316 Firefox/3.0.10 (.NET CLR 3.5.30729)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 6.0; fr; rv:1.9.0.10) Gecko/2009042316 Firefox/3.0.10 (.NET CLR 3.5.30729)
+
+If you define a javascript variable in a HTML page and if this page calls a frame in a upper directory, the variable cannot be used.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Create the following first HTML page and save it as c:\test\main\index.htm
+
+<html>
+
+<SCRIPT LANGUAGE="JavaScript">
+var testvar;
+testvar=1;
+</SCRIPT>
+
+<frameset rows="100,*" frameborder="NO" border="0" framespacing="0"> 
+<frame src="test2.htm" scrolling="NO" name="TOPFRAME" frameborder="NO" noresize>
+<frame src="../test2.htm" scrolling="NO" name="TOPFRAME" frameborder="NO" noresize>
+</frameset>
+
+</html>
+
+2. Create the following second HTML page and save it as C:\test\test2.htm and as C:\test\main\test2.htm
+
+<html>
+
+<SCRIPT LANGUAGE="JavaScript">
+window.alert("You are in the second page");
+window.alert(parent.testvar);
+</SCRIPT>
+
+<body>
+<script>
+document.write("before - ");
+document.write("Value of testvar variable : " + parent.testvar);
+
+
+document.write(" - After");
+
+
+
+
+</script>
+OK !
+</body>
+</html>
+
+3. Open c:\test\main\index.htm
+Actual Results:  
+before - Value of testvar variable : 1 - After OK ! 
+
+before - OK ! 
+
+Expected Results:  
+before - Value of testvar variable : 1 - After OK ! 
+
+before - Value of testvar variable : 1 - After OK ! 
+
+
+FireFox 3.0.10

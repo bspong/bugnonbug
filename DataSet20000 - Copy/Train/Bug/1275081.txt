@@ -1,0 +1,18 @@
+browser_rules_completion-new-property_02.js has a hardcoded expected number of "display" values, which is incompatible with having preffable "display" values
+Bug 1260419 has this line:
+> 20   ["d", {}, "display", 1, 3, false],
+> 21   ["VK_TAB", {}, "", -1, 41, true],
+> 22   ["VK_DOWN", {}, "block", 0, 41, true],
+
+As I understand it, "41" here is the number of expected values that the "display" property can take.   (That sounds like a lot, but it's including "initial" and "unset", and a bunch of moz-prefixed values, and all the various ruby & table parts, and a few webkit prefixed aliases.)
+
+This is bad because:
+ (1) Some of these display values (e.g. "grid", "inline-grid") are guarded by prefs which get switched off in release builds:
+http://mxr.mozilla.org/mozilla-central/source/modules/libpref/init/all.js?rev=830a12b195de#2474
+     Such values will require us to backport a hardcoded-number-fixup every merge day :-/ (as long as we have pref-controlled display values, at least).
+
+ (2) Whenever we add new "display" values, we'll have to remember to update the hardcoded count in this one particular devtools test.
+
+ (3) If those new "display" values are pref-controlled (and the prefs aren't shipping to release yet), they'll create more trouble for merge-day-fixup.
+
+This is unsustainable; we shouldn't place this sort of a burden on CSS-engine hackers & merge-day sheriffs just so that this one random devtools test can have a hardcoded number.

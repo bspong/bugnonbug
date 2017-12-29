@@ -1,0 +1,36 @@
+Document from DOMParser or XHR with responseType="document" breaking debugging functionality.
+User Agent: Mozilla/5.0 (Windows NT 6.3; WOW64; rv:29.0) Gecko/20100101 Firefox/29.0 (Beta/Release)
+Build ID: 20140506152807
+
+Steps to reproduce:
+
+Running this Javascript code, after DOMContentLoaded and served from a webserver, observing with the developer tools:
+
+var parser = new DOMParser();
+var doc = parser.parseFromString("<html><head></head><body></body></html>", "text/html");
+
+console.dir(doc);
+console.dir(doc.body);
+
+debugger;
+
+console.log("done");
+
+
+Actual results:
+
+For "console.dir(doc);" nothing is displayed in the console. (Not even an error.)
+For "console.dir(doc.body);" the text "<body>" is shown but the box underneath is empty, no properties are visible.
+
+The "debugger;" statement is ignored, also manual breakpoints in the debug view are ignored.
+
+The string "done" is displayed correctly even if above breakpoints are ignored.
+
+
+Expected results:
+
+The first call to console.dir should display the HTMLDocument and all its properties that are available, like a normal "console.dir(document);" does and should not display nothing at all.
+
+The second call to console.dir should include all properties of the body of the parsed Document.
+
+The debugger of the developer tools should break at the debugger statement and also manual breakpoints should be available in order to inspect the "doc" variable.

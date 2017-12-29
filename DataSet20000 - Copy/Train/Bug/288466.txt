@@ -1,0 +1,38 @@
+Page Info fails to show a form's name and/or method when there are input fields named as thes attributes
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.6) Gecko/20050317 Firefox/1.0.2
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.6) Gecko/20050317 Firefox/1.0.2
+
+The 'Forms' tab on the 'Page Info' window shows, on the first panel, a form's
+name, method and action. However, if a form has an input field named 'name' or
+'method', the string "[object HTMLInputElement]" is shown instead.
+
+I believe this due to a flaw in the file
+[browser.jar]content/browser.pageInfo.js (line 520 on my build (1.02))
+
+formView.addRow([elem.name, elem.method,
+getAbsoluteURL(elem.getAttribute("action"), elem), elem]);  // use
+getAttribute() because of bug 122128
+
+Here, the 'elem' variable is the form. Instead of doing elem.name, and
+elem.method,  it should use DOM's getAttribute() method, just like it does with
+the form's action. Indeed, the Page Info window doesn't fail do show the form's
+action.
+
+The fixed line would be:
+
+formView.addRow([elem.getAttribute("name"), elem.getAttribute("method"),
+getAbsoluteURL(elem.getAttribute("action"), elem), elem]);  // use
+getAttribute() because of bug 122128
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.Go to http://www.stallman.org/
+2.Open Tools -> Page Info, then Forms tab.
+3.See the value show for the form's method
+
+Actual Results:  
+value shown is [object HTMLInputElement]
+
+Expected Results:  
+value should be "post"

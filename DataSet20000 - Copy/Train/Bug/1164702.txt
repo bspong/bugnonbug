@@ -1,0 +1,16 @@
+Investigate Reusing ProfilerMarker entry points for TimelineMarkers
+Right now, the profiler instruments probes around many parts of Gecko to report "markers" in a similar way to TimelineMarkers, except these are only fetched when we fetch the profiler data.
+
+Take the TimelineMarkers "Styles" markers, compared to GeckoProfiler's "Styles" markers: http://mxr.mozilla.org/mozilla-central/source/layout/base/nsRefreshDriver.cpp#1661
+
+Same exact place, except GeckoProfiler prefers one event over many (this may not be a concrete case, and maybe just how this was implemented), resulting in tracing code for two separate resources.
+
+Also, this leaves us with contrasting markers -- TimelineMarkers Reflow marker occurs in PresShell::DoReflow, whereas the GeckoProfilerMarker occurs in PresShell::Flush (Flush_Layout). If TimelineMarkers could use the same entry points as GeckoProfilerMarkers, then we also get way more instrumentation coverage.
+
+AFAICT, the markers[1][2] are rather similar, both having tracing meta, name, optional stack. Just TimelineMarkers require a DocShell, so that can be optional. 
+
+Wouldn't it be possible to have a general marker probe where all these `profiler_tracing()` calls are, that would both call the same thing as `profiler_tracing()` now, as well as a DocShell's `AddProfileTimelineMarker()`, letting us reduce duplicate code, cover more area, and be consistent in markers?
+
+
+[1] http://mxr.mozilla.org/mozilla-central/source/tools/profiler/GeckoProfilerImpl.h#246
+[2] http://mxr.mozilla.org/mozilla-central/source/docshell/base/TimelineMarker.h

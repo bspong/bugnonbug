@@ -1,0 +1,27 @@
+Bookmark 'location' field may be incorrectly encoded after Firefox Sync causing 'Bookmarklets' (javascript:) to be trashed
+User Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.11; rv:53.0) Gecko/20100101 Firefox/53.0
+Build ID: 20161219030207
+
+Steps to reproduce:
+
+I added a Keyword search 'bookmark' that contains space and apostrophe (amongst other things) a a javascript based 'bookmarklet'. This ha worked until now, and I've used Firefox/Mozilla sync for some time.
+
+This might not actually be the Firefox Sync issue... maybe it's just the nightly build doing something odd?
+
+Here's the raw entry...
+
+javascript:var s='%s'; url='https://jira.blah.blah.com/secure/QuickSearch.jspa?searchString='; t=''; qc=0; chunks=url.split('%s'); for(i=0; i<s.length; i++){if(s.charAt(i)=='\"')qc=qc^1; t+=((s.charAt(i)==' '&&qc)?'^':s.charAt(i)); }args=t.split(/\s/); nurl=''; for(i=0; i<chunks.length; i++){nurl+=chunks[i]; if(args[i]!=undefined) {args[i]=args[i].replace(/\^/g,' '); nurl+=args[i]; }}location.replace(nurl,'< BR>');
+
+But then, once the bookmark seems to be saved, it end up urlencoded and then it doe not seem to work...
+
+javascript:var%20s='%s';%20url='https://jira.blah.blah.com/secure/QuickSearch.jspa?searchString=%27;%20t=%27%27;%20qc=0;%20chunks=url.split(%27%s%27);%20for(i=0;%20i%3Cs.length;%20i++){if(s.charAt(i)==%27\%22%27)qc=qc^1;%20t+=((s.charAt(i)==%27%20%27&&qc)?%27^%27:s.charAt(i));%20}args=t.split(/\s/);%20nurl=%27%27;%20for(i=0;%20i%3Cchunks.length;%20i++){nurl+=chunks[i];%20if(args[i]!=undefined)%20{args[i]=args[i].replace(/\^/g,%27%20%27);%20nurl+=args[i];%20}}location.replace(nurl,%27%3C%20BR%3E%27);
+
+
+Actual results:
+
+Typed associated 'keyword' into awesome bar with appropriate text for the search to the service associated with the bookmarklet - hit return. Awesome bar showed the url-encoded javascript and then failed to submit anything, nothing happened. No request made.
+
+
+Expected results:
+
+Typed associated 'keyword' into awesome bar with appropriate text for the search to the service associated with the bookmarklet - hit return. Awesome bar should show something and request is made a per the javascript 'location.replace'.

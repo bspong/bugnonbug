@@ -1,0 +1,42 @@
+recreating a destroyed widget after a CustomizableUI.reset() call causes the new widget to go in the customize palette
+Created attachment 8372324
+reset gSeenWidgets
+
+This bug is the reason for the test failures I had in bug 965265 comment 6.
+
+A reduced testcase for this (paste in the scratchpad) is:
+
+var id = "foo";
+Components.utils.import("resource:///modules/CustomizableUI.jsm");
+
+function create() {
+  CustomizableUI.createWidget({
+    id: id,
+    type: 'custom',
+    removable: true,
+    defaultArea: CustomizableUI.AREA_NAVBAR,
+    onBuild: function(aDocument) {
+      let node = aDocument.createElement('toolbarbutton');
+      node.id = this.id;
+      node.setAttribute("label", "foo");
+      node.setAttribute("tooltiptext", "foo");
+      node.style.listStyleImage = "url('about:logo')";
+
+      node.setAttribute("oncommand", "alert('hello');");
+
+      return node;
+    }
+  });
+}
+
+create();
+CustomizableUI.destroyWidget(id);
+CustomizableUI.reset();
+create();
+
+
+
+Executed this way, the widget ends up in the customize palette. If the "CustomizableUI.reset();" line is removed, the widget ends up in the browser toolbar.
+
+
+I think the fix is simply to reset gSeenWidgets from CustomizableUI.reset.

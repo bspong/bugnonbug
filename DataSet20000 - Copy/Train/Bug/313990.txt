@@ -1,0 +1,33 @@
+Firefox crashes on startup if bookmarkbackups/ is unreadable [@nsBookmarksService::ArchiveBookmarksFile]
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8) Gecko/20051026 Firefox/1.5
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8) Gecko/20051026 Firefox/1.5
+
+If the bookmarkbackups/ directory in your profile is unreadable (not chmod +r), Firefox will crash on startup.
+
+If it is readable, even if it's not writable or executable, it won't crash.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. chmod 000 bookmarkbackups/
+2. Start Firefox
+Actual Results:  
+Firefox crashes
+
+Expected Results:  
+Firefox would start up normally, though it certainly wouldn't make a backup of bookmarks.html.
+
+Standard Firefox nightly, empty profile.
+
+It was also confirmed on a trunk CVS build by Mook in #firefox.
+
+Here's what he had to say about what causes it:
+
+<Mook> http://lxr.mozilla.org/mozilla/source/browser/components/bookmarks/src/nsBookmarksService.cpp#4395 backupFileNames.mImpl is null
+<Mook> strange, hasMoreElements is 0...
+<Mook> hmm, existingBackups->mRawPtr is null
+<Mook> Peng: file it as http://lxr.mozilla.org/mozilla/source/browser/components/bookmarks/src/nsBookmarksService.cpp#4377 existingBackups needs a null check.
+<Mook> Of course, you probably know better than I do :)
+<Mook> well, existingBackups is null, so http://lxr.mozilla.org/mozilla/source/browser/components/bookmarks/src/nsBookmarksService.cpp#4383 crashes due to dereferencing a null nsCOMPtr.
+
+That's mostly over my head, of course. :P

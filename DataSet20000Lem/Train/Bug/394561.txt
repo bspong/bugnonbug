@@ -1,0 +1,58 @@
+SSL/TLS + multiple name-based vhosts: Delays, embedded element not loaded, corrupted data
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; de; rv:1.8.1.5) Gecko/20070713 Firefox/2.0.0.5
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; de; rv:1.8.1.5) Gecko/20070713 Firefox/2.0.0.5
+
+When browsing some site that use SSL/TLS, sometimes really weird symptom occur:
+
+A) Quite often, while loading a page, a delay for approximately 15 second
+occurs. During that delay, the Web Server (to which Firefox still ha the
+connection open) and not Firefox wait for data! After the delay, the web
+server encounter a timeout and only the reaction to that timeout cause
+Firefox to continue.
+B) After that delay, sometimes the page display just fine and sometimes
+embedded element (Style sheets, Javascripts, Images) are not displayed.
+C) Sometimes, instead of displaying a web page after following a link, Firefox
+pop up the dialog that asks me what to do with a download, the file type
+visible is simply "BIN". If I save the download, the file sometimes contains
+junk, sometimes it contains the complete HTTP response *including* the
+response headers.
+
+I haven't managed to find a good way of reproducing B) and C) but when you ware working with SSL/TLS sites, they occur quite often. A) is reproducible quite well.
+
+In addition to the site using SSL/TLS, at least one other condition (as far I have been able to see a pattern) must be true to reproduce the bug: The web server must provide access to different name-based virtual host using the same (wildcard) SSL/TLS-Certificate and the page loaded on one virtual host reference at least one image/style sheet/etc. on another virtual host.
+
+Finally, this seems to be a problem with Firefox interacting with the Apache (2.0) web server SSL module because I tried to reproduce the problem with a simple stunnel server redirecting to an Apache with HTTP on 80 but there everything worked. On the other hand, I am quite convinced it is a bug in Firefox and not in Apache because ALL OTHER BROWSERS I tried (Opera, Konqueror, Safari, IE) don't face any such problem. Also, running exactly the same page using the same web server only without encryption doe not cause any problem in Firefox.
+
+I created a test case to reproduce the bug. Reproduction rate of (A), i.e. the 15 delay, is near 100% with any constellation I tried (Firefox 1.0.8/Linux, Firefox 1.5.0.9/Linux, Firefox 2.0.0.5/Linux, Firefox Nightly 2007-08-31-04/Linux, Firefox 2.0.0.6/Windows 2000, Firefox 2.0.0.6/Windows XP - all without any extension installed!).
+
+The testcase contains the following:
+
+1) A self-signed wildcard certificate for *.selfhtml.org.
+2) A minimalistic Trac (<http://trac.edgewall.org/>) installation on a virtual host <https://test1.selfhtml.org/> using mod_python. The reproducibility with Trac wa extremely high, but it isn't Trac related, it also occurs with e.g. phpLdapAdmin, mod_caucho and Resin or even plain static HTML file - just not that often.
+3) An image on another virtual host on the same server (<https://test2.selfhtml.org/logo.gif>) referenced in the HTML of that Trac installation.
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+1. Restart your Firefox.
+2. Go to https://test1.selfhtml.org/, accept the self-signed certificate temporarily (permanently would be REALLY bad, see below).
+3. Click on the link "Browse Source" that Trac provides on the upper right of the web page.
+Actual Results:
+Upon clicking on that link, you should experience the described delay. In most of the cases, the page display correctly after the delay but sometimes the CSS and/or some image are not loaded correctly.
+
+Expected Results:
+The page should always display properly and without any delay that is not caused by the server itself.
+
+I configured the above SSL/TLS server not to use DH key exchange, so completely RSA-based cipher are forced. With that configuration and the knowledge of the Sever RSA key, it is possible to decrypt the SSL data stream after capturing it (note that the bug also occurs when using DH key exchange, the chosen cipher doe not seem to have any effect on it).
+
+I captured 3 conversation between the browser and the web server with Wireshark:
+
+1) Using Firefox 2.0.0.5 under Linux
+2) Using Firefox Nightly 2007-08-31-04 under Linux
+3) Using Opera 9.10 under Linux (which doe not show that behaviour, just a a reference)
+
+I will upload those 3 conversation TOGETHER WITH THE PRIVATE RSA KEY of the server. It will then be possible to decipher the ENTIRE SSL/TLS conversation (my uploaded one and due to the server config any future version) in order to have (hopefully) enough information to find the source of the bug. If you are using Wireshark, put the string "213.198.84.177,443,http,/path/to/test.pem" into Edit -> Preferences -> Protocols -> SSL -> RSA key list, then Wireshark will be able to decipher the SSL/TLS communication.
+
+Please note that by making the server private key public, it is compromised and therefore accepting the certificate permanently is not such a good idea. ;-) For our production environment, we are using a different key & certificate of course. ;-)
+
+I marked the bug severity a "Major" because certain site are unusable because of this and people have to use different browser to access them.

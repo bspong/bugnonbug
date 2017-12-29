@@ -1,0 +1,161 @@
+Firefox 3 fails unless running on X.org server :0.1
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9) Gecko/2008052912 Firefox/3.0
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9) Gecko/2008052912 Firefox/3.0
+
+SuSE 10.3 workstation with two video cards. Firefox 3 run fine on X.org server :0 but dy unexpected on server :1. When run on server :1, it will run for a random (<10) number of page then die (vanish) with no error message window (but will display an error in a terminal if run from there).
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Launch from either icon on desktop or from terminal window of 'display 1'
+2. Firefox will come up and display the home page
+3. Browse a couple of pages, the window will vanish with no further warning and the process will end.
+Actual Results:
+agd@agdserver:~/bin/firefox> ./firefox
+The application 'firefox-bin' lost it connection to the display :0.0;
+most likely the X server wa shut down or you killed/destroyed
+the application.
+agd@agdserver:~/bin/firefox>
+
+Expected Results:
+Since running on display :1, did not expect to see attempt to access display :0
+
+==snipped from /etc/xorg.conf ==
+
+Section "Monitor"
+Identifier "Monitor[0]"
+VendorName "ViewSonic"
+ModelName "VA903b"
+UseModes "Modes[0]"
+DisplaySize 305 230
+HorizSync 30.0 - 40.0
+VertRefresh 60
+Option "CalcAlgorithm" "XServerPool"
+Option "DPMS"
+EndSection
+
+Section "Monitor"
+Identifier "Monitor[1]"
+VendorName "--> LCD"
+ModelName "1280X1024@60HZ"
+UseModes "Modes[1]"
+DisplaySize 305 230
+HorizSync 30.0 - 82.0
+VertRefresh 50.0 - 60.0
+Option "CalcAlgorithm" "XServerPool"
+Option "DPMS"
+EndSection
+
+Section "Monitor"
+Identifier "Monitor0"
+VendorName "Unknown"
+ModelName "ViewSonic VA903 SERIES"
+HorizSync 30.0 - 82.0
+VertRefresh 60
+EndSection
+
+Section "Monitor"
+Identifier "Monitor1"
+VendorName "Unknown"
+ModelName "Acer X223W"
+HorizSync 31.0 - 84.0
+VertRefresh 56.0 - 77.0
+EndSection
+
+Section "Device"
+Identifier "Device[0]"
+Driver "nvidia"
+VendorName "NVIDIA"
+BoardName "GeForce 8600 GT"
+BusID "1:0:0"
+Screen 0
+EndSection
+
+Section "Device"
+Identifier "Device[1]"
+Driver "nvidia"
+VendorName "NVIDIA"
+BoardName "GeForce 7300 SE/7200 GS"
+BusID "2:0:0"
+Screen 0
+EndSection
+
+Section "Device"
+Identifier "Videocard0"
+Driver "nvidia"
+VendorName "NVIDIA Corporation"
+BoardName "GeForce 7300 SE/7200 GS"
+BusID "PCI:2:0:0"
+EndSection
+
+Section "Device"
+Identifier "Videocard1"
+Driver "nvidia"
+VendorName "NVIDIA Corporation"
+BoardName "GeForce 8600 GT"
+BusID "PCI:1:0:0"
+EndSection
+
+Section "Screen"
+Identifier "Screen[0]"
+Device "Device[0]"
+Monitor "Monitor[0]"
+DefaultDepth 24
+SubSection "Display"
+Depth 15
+Modes "1680x1050" "1600x1024" "1600x1000" "1400x1050" "1280x1024" "1440x900" "1280x960" "1366x768" "1280x800" "1152x864" "1280x768" "1024x768" "1280x600" "1024x600" "800x600" "768x576" "640x480"
+EndSubSection
+SubSection "Display"
+Depth 16
+Modes "1680x1050" "1600x1024" "1600x1000" "1400x1050" "1280x1024" "1440x900" "1280x960" "1366x768" "1280x800" "1152x864" "1280x768" "1024x768" "1280x600" "1024x600" "800x600" "768x576" "640x480"
+EndSubSection
+SubSection "Display"
+Depth 24
+Modes "1680x1050" "1600x1024" "1600x1000" "1400x1050" "1280x1024" "1440x900" "1280x960" "1366x768" "1280x800" "1152x864" "1280x768" "1024x768" "1280x600" "1024x600" "800x600" "768x576" "640x480"
+EndSubSection
+SubSection "Display"
+Depth 8
+Modes "1680x1050" "1600x1024" "1600x1000" "1400x1050" "1280x1024" "1440x900" "1280x960" "1366x768" "1280x800" "1152x864" "1280x768" "1024x768" "1280x600" "1024x600" "800x600" "768x576" "640x480"
+EndSubSection
+EndSection
+
+Section "Screen"
+Identifier "Screen[1]"
+Device "Device[1]"
+Monitor "Monitor[1]"
+DefaultDepth 24
+SubSection "Display"
+Depth 15
+Modes "1280x1024" "1280x960" "1280x800" "1152x864" "1280x768" "1024x768" "1280x600" "1024x600" "800x600" "768x576" "640x480"
+EndSubSection
+SubSection "Display"
+Depth 16
+Modes "1280x1024" "1280x960" "1280x800" "1152x864" "1280x768" "1024x768" "1280x600" "1024x600" "800x600" "768x576" "640x480"
+EndSubSection
+SubSection "Display"
+Depth 24
+Modes "1280x1024" "1280x960" "1280x800" "1152x864" "1280x768" "1024x768" "1280x600" "1024x600" "800x600" "768x576" "640x480"
+EndSubSection
+SubSection "Display"
+Depth 8
+Modes "1280x1024" "1280x960" "1280x800" "1152x864" "1280x768" "1024x768" "1280x600" "1024x600" "800x600" "768x576" "640x480"
+EndSubSection
+EndSection
+
+Section "Screen"
+Identifier "Screen0"
+Device "Videocard0"
+Monitor "Monitor0"
+DefaultDepth 24
+Option "TwinView" "1"
+Option "metamodes" "CRT-0: 1280x1024 +0+0, CRT-1: nvidia-auto-select +1280+0; CRT-0: 1280x960 +0+0, CRT-1: nvidia-auto-select +1280+0; CRT-0: 1152x864 +0+0, CRT-1: nvidia-auto-select +1152+0; CRT-0: 1024x768 +0+0, CRT-1: nvidia-auto-select +1024+0; CRT-0: 800x600 +0+0, CRT-1: nvidia-auto-select +800+0; CRT-0: 640x480 +0+0, CRT-1: nvidia-auto-select +640+0"
+EndSection
+
+Section "Screen"
+Identifier "Screen1"
+Device "Videocard1"
+Monitor "Monitor1"
+DefaultDepth 24
+Option "TwinView" "0"
+Option "metamodes" "1680x1050 +0+0; 1600x1024 +0+0; 1400x1050 +0+0; 1280x1024 +0+0; 1440x900 +0+0; 1280x960 +0+0; 1152x864 +0+0; 1024x768 +0+0; 800x600 +0+0; 640x480 +0+0"
+EndSection

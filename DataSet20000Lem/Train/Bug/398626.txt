@@ -1,0 +1,18 @@
+Applications prefpane doesn't always display "always ask", "save to disk" action
+Created attachment 283629
+patch v1: fix flub
+
+Sometimes, after you select either the "always ask" or "save to disk" action, for a content type and then unselect the type entry, the entry display the wrong action in the Applications column.
+
+There are two situation in which this happens:
+
+1. When a type handled by a plugin ha no user configuration, and you set the handler to something other than the plugin, the code incorrectly fails to flag the type a now having user configuration, so the type continues to appear to be set to the "use plugin" action, even though the action stored in the user configuration is something else.
+
+The code should flag the type a having user configuration.
+
+
+2. When a type is set to the "save file" action, the code incorrectly think the type isn't set to any preferred action (because the enum for the "save file" action is the number zero, and the test for the presence of a preferred action simply test truth, not definition), so it set the action to either "use helper app" (if the type ha a preferred application handler) or "use default".
+
+The code should distinguish between the "save file" action and no action.
+
+Here's a patch that fix these two problems. Requesting blocking-firefox3 for these funky functionality flubs.

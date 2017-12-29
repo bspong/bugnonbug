@@ -1,0 +1,71 @@
+Segmentation Fault when starting firefox
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US) AppleWebKit/533.4 (KHTML, like Gecko) Chrome/5.0.375.70 Safari/533.4
+Build Identifier: Ubuntu 3.6.6+nobinonly-0ubuntu0.10.04.1
+
+Seg Fault on starting.
+
+Program received signal SIGSEGV, Segmentation fault.
+0xb703a250 in NewOrRecycledNode (tc=0xbfffe638) at jsparse.cpp:468
+468	jsparse.cpp: No such file or directory.
+	in jsparse.cpp
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Browser randomly quit while changing to a new tab.
+2. Now cannot start. Seg Fault
+
+
+
+(gdb) bt
+#0  0xb703a250 in NewOrRecycledNode (tc=0xbfffe638) at jsparse.cpp:468
+#1  0xb7046652 in NewParseNode (cx=0xb2fa0800, fun=0xb3026ea8, principals=0x0, 
+    chars=0xb7e23084, length=33, 
+    filename=0xb7e22efe "javascript:return new XPCNativeWrapper(arg);", 
+    lineno=1) at jsparse.cpp:555
+#2  JSCompiler::compileFunctionBody (cx=0xb2fa0800, fun=0xb3026ea8, 
+    principals=0x0, chars=0xb7e23084, length=33, 
+    filename=0xb7e22efe "javascript:return new XPCNativeWrapper(arg);", 
+    lineno=1) at jsparse.cpp:1485
+#3  0xb6fad545 in JS_CompileUCFunctionForPrincipals (cx=0xb2fa0800, 
+    obj=0xb31ea0e0, principals=0x0, name=0xb7e22f2b "_XPCNativeWrapperCtor", 
+    nargs=1, argnames=0xbfffe9f8, chars=0xb7e23084, length=33, 
+    filename=0xb7e22efe "javascript:return new XPCNativeWrapper(arg);", 
+    lineno=1) at jsapi.cpp:4862
+#4  0xb6fad63d in JS_CompileUCFunction (cx=0xb2fa0800, obj=0xb31ea0e0, 
+    name=0xb7e22f2b "_XPCNativeWrapperCtor", nargs=1, argnames=0xbfffe9f8, 
+    chars=0xb7e23084, length=33, 
+    filename=0xb7e22efe "javascript:return new XPCNativeWrapper(arg);", 
+    lineno=1) at jsapi.cpp:4819
+#5  0xb7706322 in nsJSContext::FindXPCNativeWrapperClass (this=0xb2505d00, 
+    aHolder=0xb2547c10) at nsJSEnvironment.cpp:3041
+#6  0xb770721a in nsJSContext::InitContext (this=0xb2505d00, 
+    aGlobalObject=0xb5c53ff0) at nsJSEnvironment.cpp:2600
+#7  0xb7718640 in nsGlobalWindow::SetScriptContext (this=0xb5c53fc0, 
+    lang_id=2, aScriptContext=0xb2505d00) at nsGlobalWindow.cpp:1207
+#8  0xb771fba1 in nsGlobalWindow::EnsureScriptEnvironment (this=0xb5c53fc0, 
+    aLangID=2) at nsGlobalWindow.cpp:1259
+#9  0xb792438d in nsDocShell::EnsureScriptEnvironment (this=0xb4bb5950)
+    at nsDocShell.cpp:9920
+#10 0xb7929cdc in nsDocShell::GetInterface (this=0xb4bb5950, aIID=..., 
+    aSink=0xbfffec0c) at nsDocShell.cpp:851
+#11 0xb7bf7b15 in nsGetInterface::operator() (this=0xbfffec38, 
+    aIID=<value optimized out>, aInstancePtr=0xbfffec0c)
+    at nsIInterfaceRequestorUtils.cpp:52
+#12 0xb7bf664f in nsCOMPtr_base::assign_from_helper (this=0xbfffec48, 
+    helper=..., iid=...) at nsCOMPtr.cpp:150
+#13 0xb797e3d2 in nsCOMPtr (this=0xb2fd2240, aWindow=0xbfffec94, 
+    aJSContext=0xbfffec90) at ../../../dist/include/nsCOMPtr.h:621
+#14 nsAppShellService::GetHiddenWindowAndJSContext (this=0xb2fd2240, 
+    aWindow=0xbfffec94, aJSContext=0xbfffec90) at nsAppShellService.cpp:430
+#15 0xb797e8de in nsAppShellService::SetXPConnectSafeContext (this=0xb2fd2240)
+    at nsAppShellService.cpp:122
+#16 0xb797ea05 in nsAppShellService::CreateHiddenWindow (this=0xb2fd2240, 
+    aAppShell=0xb4b311f0) at nsAppShellService.cpp:199
+#17 0xb798e034 in nsAppStartup::CreateHiddenWindow (this=0xb4bfae50)
+    at nsAppStartup.cpp:152
+#18 0xb72d5d70 in XRE_main (argc=1, argv=0xbffff294, aAppData=0xb5c18380)
+    at nsAppRunner.cpp:3373
+#19 0x001119e3 in main (argc=1, argv=0xbffff294) at nsBrowserApp.cpp:158
+(gdb)

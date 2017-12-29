@@ -1,0 +1,70 @@
+API for code evaluation in different processes for Jetpack addons
+We are looking into implementing the new developer tools as Jetpack addons. For this purpose, we need to be able to evaluate code in a sandbox within the desired context/process.
+
+The initial prototype of a jetpack addon, implemented in bug 636723 tries to do this, but the result is not yet e10s-ready. We are now trying to define an e10s-ready API.
+
+--- Proposed spec ---
+
+Problem:
+
+We need to be able to evaluate scripts in the context of chrome and content window objects, sandboxed. In XUL land we do:
+
+let chromeWindow = Services.wm.getMostRecentWindow("navigator:browser");
+let contentWindow = chromeWindow.gBrowser.selectedBrowser.contentWindow;
+
+Then we can make a sandbox for the chrome or content window:
+
+let sandbox = Cu.Sandbox(chromeWindow, {sandboxPrototype: chromeWindow});
+let result = Cu.evalInSandbox(code, sandbox);
+
+Requirements:
+
+We need to be able to retrieve some kind of "thread-safe" window objects that represent the real chrome/content window objects.
+
+We also need a "thread-safe" way to evaluate code in a given SafeWindow object.
+
+Ideal API:
+
+let tabs = require("tabs");
+
+let win = tabs.activeTab.window; // SafeWindow object
+
+// to get a chrome window we can do:
+let chromeWin = require("windows").activeWindow.window; // SafeWindow object
+
+let Sandbox = require("sandbox").Sandbox;
+let s = new Sandbox(win);
+s.eval(code, function callback(result, error) {
+    console.log(result, error);
+});
+
+SafeWindow API
+
+getProperty(propertyName) - retrieve a window property, synchronously.
+
+known properties:
+innerID - the unique innerWindowId coming from the platform,
+outerID - the unique outerWindowId coming from the platform,
+iframes - array of sub-SafeWindows
+title, location, so on
+
+Sandbox API
+
+constructor Sandbox(securityContext[, sandboxPrototype])
+
+    - securityContext: like in the current Cu.Sandbox(), you can provide a URI to have your script execute in the context of the given URI. Cu.Sandbox() takes nsIPrincipals and nsIDOMWindows, but we can't have this in e10s. So, we should allow SafeWindows. this argument also tells the sandbox in which process you want to execute the script. I would expect that the Sandbox implementation injects a "content script" of some sorts into the target "process" and evaluate the given code in there, then bounce the result back.
+    - sandboxPrototype: optional argument, just like the current Cu.Sandbox() allows one to give it a JS object as the sandbox prototype, the global JS object. You can use any JS object that can be sent to the target process as JSON. If you don't give this argument, then the real window object represented by the SafeWindow object is used as the global object, within the evaluated script.
+
+Sandbox.eval(string, callback)
+
+The given string is evaluated in the sandbox, async. The callback is invoked once execution completes. The callback function receives two arguments: result and error.
+
+--- spec end ---
+
+This API needs to be thought out of in the big picture:
+
+- jetpack API changes that are upcoming for e10s land. see http://etherpad.mozilla.com:9000/jetpack-e10s-issues
+- ways we'll call methods across different processes, see bug 636151.
+- how we'll access private methods and properties across different modules, see bug 638142.
+
+Feedback is very much welcome!

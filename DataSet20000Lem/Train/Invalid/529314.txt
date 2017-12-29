@@ -1,0 +1,95 @@
+OSCP / SSL certificate validation error
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.8) Gecko/2009032609 Firefox/3.0.8 FBSMTWB
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.8) Gecko/2009032609 Firefox/3.0.8 FBSMTWB
+
+HTTPS connection to plesk managed hostingcontrol panel cause the error:
+Secure Connection Failed
+
+
+
+
+
+
+
+
+
+
+
+
+
+An error occurred during a connection to www.sinful-flesh.com:8443.
+
+Peer's Certificate ha been revoked.
+
+(Error code: sec_error_revoked_certificate)
+
+
+
+
+
+
+
+
+* The page you are trying to view can not be shown because the authenticity of the received data could not be verified.
+
+* Please contact the web site owner to inform them of this problem. Alternatively, use the command found in the help menu to report this broken site.
+
+Problem is PERSISTANT. Problem span multiple machine
+[WinXP, Vista, Win7 CentOS 5.4]
+
+
+Steps taken to resolve the issue:
+
+1) Deleted all cerficates from server
+2) created CSR and private key
+3) created certificate from CSR @ Cacert.org
+4a) added Cacert root certificate to CA section of plesk
+4b) added certificate generated from my CSR by CaCert.org
+
+5) Tested https: Result -- Failure -- (Error code: sec_error_revoked_certificate)
+
+6) removed all CaCert.org certificate from firefox, re-installed them from thier site pem's
+
+7) tested https: Result -- Failure -- (Error code: sec_error_revoked_certificate)
+
+-------------------------------------------------------------------------------
+IE Has similar problem, but is relegated to untrusted CA, but allows the user to continue forward to the website. Firefox however doe NOT allow the user to continue to the website.
+
+Conclusion:
+
+With valid, non-revoked SSL certificate installed properly on the server, and proper CaCert root certificate installed in firefox. I can only assume that Firefox is doing one of the following things:
+
+A) Flagging CaCert certificate a revoked automatically
+B) Trying to connect to ocsp.cacert.org and not being able to thus revoking the certificate locally
+C) Confusing expired / revoked certificate with renewed, new, valid certificate
+
+Or, CaCert ha inadvertently added valid cert to their OSCP responder, or creating invalid response wich firefox is interpreting a revoked certificate
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.Re-create server certificate using CaCert.org a CA
+2.attempt to access HTTPS site
+3.
+Actual Results:
+Issue still prevalent
+
+Expected Results:
+Successful request to accept / review certificate in question or availability for client to proceed to site ignoring security concern
+
+This is a fairly new issue. Latest update of firefox may have been the culprit, or perhaps issue with CaCert's OCSP responses.
+
+I feel that SOMETHING is severely wrong. As client may chose to disreguard / disable OCSP setting in the future to gain access to thier favorite site again. This may not be a large issue to some, but to others such a myself, this issue could be detrimental to doing business, or securing user / user information digitally.
+
+The server ha been fully functional for several years, this is a recent occurrence. No major change have been done to the software / hardware for over 6 months, issue presented itself 1 week ago, and ha continued.
+
+HTTPS section of the site may not be accessable to client outside of the LAN. This is a security precaution, and should not interfere with SSL communications.
+
+Server software:
+CentOS 5.4
+Plesk 9.3.3
+
+Server Hardware:
+4x Intel P4 2.8ghz
+4gb DDR memory
+11.6TB storage space

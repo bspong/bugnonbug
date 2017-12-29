@@ -1,0 +1,24 @@
+same origin policy is incorrectly applied to connection error page
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.11) Gecko/20071201 (Debian-1.8.1.11-1) Galeon/2.0.2 (Debian package 2.0.2-4)
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.11) Gecko/20071201 (Debian-1.8.1.11-1) Galeon/2.0.2 (Debian package 2.0.2-4)
+
+If a http request fails because for instance the web server is down, the user get to see a "Unable to connect" error page. However I think the "same origin policy" is incorrectly applied to this error page. This page did not come from anywhere, so Javascript should be able to update the document.location.url property (for instance).
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Create a page with a embedded frame. The main page should update the embedded frame through Javascript.
+2. Open the page in the browser, and make sure the embedded frame is also opened.
+3. Stop the web server that is server the embedded frame.
+4. You now have the "Unable to connect" error page in the embedded frame.
+5. Start the web server again.
+6. Make sure the javascript again try to open the embedded frame.
+Actual Results:
+Javascript is not allowed to open a page in the embedded frame, you get a "Permission denied to get HTMLDocument.location".
+
+Expected Results:
+Javascript should be allowed to open a page in the embedded frame.
+
+The same origin policy for error page should probably still be restricted to update error page that have resulted from request that match the same origin policy.
+
+In Internet Explorer 7 a similar error page is shown. In that case however, Javascript is still able to update the document.location.url of the page.

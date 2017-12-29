@@ -1,0 +1,10 @@
+StartupPerformance.jsm can record remoteness flips as eager tab loads.
+For context, please see bug 1259770 comment 9.
+
+Essentially, anytime a browser tab goes from a non-remote-friendly page (like about:newtab!) to a remote-friendly page (like any webpage!), or vice versa, we fire an SSTabRestored event, and if it's been less than 10 seconds since the last remoteness flip like that, we'll reset the timer in StartupPerformance.jsm and consider that SSTabRestored an eager tab load off of the main session restore.
+
+This was initially discovered during my investigations into the strange discrepancy between e10s and non-e10s in bug 1259770. It's not at all user facing, but it means that our Telemetry data for FX_SESSION_RESTORE_NUMBER_OF_EAGER_TABS_RESTORED, FX_SESSION_RESTORE_NUMBER_OF_TABS_RESTORED, FX_SESSION_RESTORE_NUMBER_OF_WINDOWS_RESTORED, FX_SESSION_RESTORE_AUTO_RESTORE_DURATION_UNTIL_EAGER_TABS_RESTORED_MS and FX_SESSION_RESTORE_MANUAL_RESTORE_DURATION_UNTIL_EAGER_TABS_RESTORED_MS are probably untrustworthy, since I imagine it's probably a pretty common use-case to open a new tab and browse to a website within the first 10 seconds of opening the browser.
+
+Instead of monkeying with the talos test to try to avoid the erroneous SSTabRestore recording, I think we actually want to correct it in StartupPerformance.jsm so that our probes are more accurate.
+
+What I propose is that the SSTabRestored event gets a detail that says whether or not the event is the result of a remoteness flip, and then have StartupPerformance.jsm ignore that event.

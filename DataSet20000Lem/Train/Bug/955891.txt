@@ -1,0 +1,18 @@
+Fix some JS warning in Cleopatra profiler
+Created attachment 8355049
+part-1-warnings.patch
+
+Enabling pref javascript.options.strict=true (or when running any debug build of Firefox, where javascript.options.strict.debug is true by default) report a number of JS warning (in the Browser Console, not the Web Console) when running the Cleopatra profiler:
+
+TypeError: function TreeView__getReverseSelectionSnapshot doe not always return a value tree.js:158
+TypeError: variable queryData redeclares argument ui.js:1885
+ReferenceError: assignment to undeclared variable gLightMode devtools.js:98
+ReferenceError: assignment to undeclared variable gVideoCapture ui.js:1451
+ReferenceError: reference to undefined property this._initSelection tree.js:132
+ReferenceError: reference to undefined property this._allowNonContigous ui.js:275
+ReferenceError: reference to undefined property snapshot[0] tree.js:181
+TypeError: gSampleBar is null ui.js:496
+
+* In tree.js, TreeView check `this._initSelection === true` to select _horizontalScrollbox.firstChild, but _initSelection is never initialized to true. Is this dead code or should _initSelection be initialized elsewhere?
+
+* In ui.js, HistogramView_histogramClick() us gSampleBar, which is always undefined because gSampleBar is never initialized!

@@ -1,0 +1,58 @@
+on local machine, script doesn't work in restricted xp account
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.11) Gecko/2009060215 Firefox/3.0.11 (.NET CLR 3.5.30729)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.11) Gecko/2009060215 Firefox/3.0.11 (.NET CLR 3.5.30729)
+
+The following page demonstrates the problems. I have only tested on my local machine, i.e. opening an html file that exists on my desktop in firefox. I'm not using a web server. (It's important to me to be able to put script in local html files). The problem occurs only when I'm running Firefox in my usual *limited* XP account--in an administrative account the page works fine.
+The first snippet attempts to cancel navigation by ending the onclick event with "return false". The second snippet attempts to set the innerHTML property to an empty string in the onload event.  Both these worked in the previous version of Firefox, both fail in present version unless run as administrator. Both work in IE.
+
+To fully demonstrate the problem, you also need an image "temp.jpg" in the same directory with the html file. 
+
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!-- saved from url=(0014)about:internet -->
+ <!-- previous comment necessary for IE not to complain-->
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <!-- READER -->
+    <title>Illustrate Firefox bug</title>
+    <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
+
+</head>
+
+<body  onload = 'document.getElementById("testit").innerHTML = ""'> 
+<h3>First problem</h3>
+<p>This problem arises when opening a file on my own computer; I have not tested whether it also happens when opening a file on the Web.
+Clicking the link below should display an alert, but not navigate anywhere. This works in IE and in the previous version of Firefox. It only works in Firefox 
+3.0.11 when running in an administrative account. It does not work in my normal limited XP account.</p>
+<p>Note the comment "saved from url=(0014)about:internet". This keeps IE from complaining. Otherwise, IE displays a warning, and the user has to click
+to allow blocked content. </p>
+<p><a id='p0000' href='temp.jpg' onclick="alert('message');return false">0000</a></p>
+<h3>Second problem</h3>
+<p>The content below should disappear once the page is loaded--nothing should be visible. This works in IE, but it 
+only works in Firefox if I run Firefox from an administrative account. Again, this problem only tested on local files on my computer, not on the Web.
+But that's important for me, since I use Firefox to view files on my computer.</p>
+<div id = "testit">This text should disappear once page loads--it should not be visible.</div>
+
+
+</body>
+</html>
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.Save the html page included above as temp.html (or whatever) The file should be *on your computer*, in a limited xp account, not on a website.
+2. Put an image called temp.jpg in the same folder as temp.html
+3. From a *limited* XP account, open the file in Firefox.
+Actual Results:  
+1. If you click the link "0000", the image temp.jpg appears.
+2. Also, the following text appears: "This text should disappear once page loads--it should not be visible." 
+
+Expected Results:  
+1. If you click the link "0000", an alert should appear, but Firefox should not navigate to the image. This DOES happen if you run Firefox from an administrative account.
+2. the following text should not appear on the page: "This text should disappear once page loads--it should not be visible." AGAIN, this works if Firefox is run from an administrative account.
+
+For the page to work smoothly in IE, it's necessary to include the comment 
+<!-- saved from url=(0014)about:internet -->
+Otherwise IE prompts user to allow blocked content. This IE feature, IMHO, is an unfortunate hack...I hope Firefox is not heading in a similar direction.
+
+Thanks!

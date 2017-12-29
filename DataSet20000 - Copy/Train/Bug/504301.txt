@@ -1,0 +1,33 @@
+Handling <canvas> operations without a current point.
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686 (x86_64); en-US) AppleWebKit/532.0 (KHTML, like Gecko) Chrome/3.0.195.0 Safari/532.0
+Build Identifier: 
+
+The <canvas> tag has the concept of the current point.  For example, if you call lineTo(), it will make a line starting at the current point.
+
+There is the case when there is no current point, for example, you haven't called moveTo().  The canvas spec:
+
+http://dev.w3.org/html5/spec/Overview.html#the-canvas-element
+
+The lineTo(x, y) method must do nothing if the context has no subpaths.
+
+However, Mozilla doesn't follow this spec, so many people have written canvas code that does not use moveTo().  Instead, it just does lineTo(), lineTo(), lineTo().  The Mozilla behavior (which comes from directly calling cairo) is that if there is no current point, a current point is added and the first line in zero length.
+
+The behavior gets more strange for curves, since it follows the cairo behavior of adding the control point as the current point.  Since Bezier curve control points don't lie on the path, this is generally not what you'd ever want.
+
+You can see a discussion of the Cairo behavior here:
+
+http://lists.freedesktop.org/archives/cairo/2008-June/014262.html
+
+I believe that correct behavior would be to not emit a line or curve when there is no current point.  This would mean changing the Mozilla code to call cairo_has_current_point(), and the case there isn't, to only emit a moveTo(), and not emit a line or curve.  This is the behavior that I'm hoping will be implemented in WebKit, see:
+
+https://bugs.webkit.org/show_bug.cgi?id=27292
+
+Both of these behaviors are technically against the spec, but since a lot of code has been written this way, perhaps the spec should be revised. 
+
+Reproducible: Always
+
+Actual Results:  
+...
+
+
+...

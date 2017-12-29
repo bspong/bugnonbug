@@ -1,0 +1,61 @@
+[e10s] Back/forward gesture causes "unsafe CPOW usage" warning
+STR:
+
+1) In a remote browser, do some browsing so that you have some session history
+2) Use the "back" gesture to go back a page. On my MacBook, that's 3-finger swipe left, but it might be different for other folk.
+3) Use the "forward" gesture to go forward to where you came from.
+
+This causes some "unsafe CPOW usage" warnings in the Browser Console at the following locations:
+
+in browser/base/content/browser.js:
+
+  /**
+   * Starts the swipe animation and handles fast swiping (i.e. a swipe animation
+   * is already in progress when a new one is initiated).
+   *
+   * @param aIsVerticalSwipe
+   *        Whether we're dealing with a vertical swipe or not.
+   */
+  startAnimation: function HSA_startAnimation(aIsVerticalSwipe) {
+    this._direction = aIsVerticalSwipe ? "vertical" : "horizontal";
+
+    if (this.isAnimationRunning()) {
+      // If this is a horizontal scroll, or if this is a vertical scroll that
+      // was started while a horizontal scroll was still running, handle it as
+      // as a fast swipe. In the case of the latter scenario, this allows us to
+      // start the vertical animation without first loading the final page, or
+      // taking another snapshot. If vertical scrolls are initiated repeatedly
+      // without prior horizontal scroll we skip this and restart the animation
+      // from 0.
+      if (this._direction == "horizontal" || this._lastSwipeDir != "") {
+        gBrowser.stop();
+        this._lastSwipeDir = "RELOAD"; // just ensure that != ""
+        this._canGoBack = this.canGoBack();
+        this._canGoForward = this.canGoForward();
+        this._handleFastSwiping();
+      }
+    }
+    else {
+      this._startingIndex = gBrowser.webNavigation.sessionHistory.index; <-- Causes CPOW warning
+      this._historyIndex = this._startingIndex;
+      this._canGoBack = this.canGoBack();
+      this._canGoForward = this.canGoForward();
+      if (this.active) {
+        this._addBoxes();
+        this._takeSnapshot();
+        this._installPrevAndNextSnapshots();
+        this._lastSwipeDir = "";
+      }
+    }
+    this.updateAnimation(0);
+  },
+
+and later in the same file:
+
+  /**
+   * Stops the swipe animation.
+   */
+  stopAnimation: function HSA_stopAnimation() {
+    gHistorySwipeAnimation._removeBoxes();
+    this._historyIndex = gBrowser.webNavigation.sessionHistory.index; <-- Causes CPOW warning
+  },

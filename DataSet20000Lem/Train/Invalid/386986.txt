@@ -1,0 +1,98 @@
+Cleanup SELECT query in nsAnnotationService
+Don't know if this could be useful to you, but i have quickly reviewed select query in nsAnnotationService, and they could be cleaned up a bit.
+
+I'm CC-ing Dietrich because i've seen that he ha worked (is working) on this file recently for expire, so maybe he could check and eventually use these for his work.
+I have not made a patch for the same reason, these file are changing too much in these day and annotation support is in early stage.
+
+Feel free to INVALID this if you find it useless.
+
+Here is my report:
+
+
+mDBGetAnnotation
+================
+Use a JOIN instead of a subselect
+
+before
+SELECT *
+FROM moz_annos
+WHERE place_id = ?1 AND anno_attribute_id =
+(SELECT id FROM moz_anno_attributes WHERE name = ?2)
+
+after
+SELECT a.*
+FROM moz_annos a
+JOIN moz_anno_attributes n ON a.anno_attribute_id = n.id
+WHERE a.place_id = ?1 AND n.name = ?2
+
+
+mDBGetItemAnnotation
+====================
+Use a JOIN instead of a subselect
+
+before
+SELECT *
+FROM moz_items_annos
+WHERE place_id = ?1 AND anno_attribute_id =
+(SELECT id FROM moz_anno_attributes WHERE name = ?2)
+
+after
+SELECT a.*
+FROM moz_items_annos a
+JOIN moz_anno_attributes n ON a.anno_attribute_id = n.id
+WHERE a.place_id = ?1 AND n.name = ?2
+
+
+mDBGetAnnotationNames
+=====================
+Cleanup, LEFT JOIN goto next line
+
+before
+SELECT n.name
+FROM moz_items_annos a LEFT JOIN moz_anno_attributes n ON a.anno_attribute_id = n.id
+WHERE a.item_id = ?1
+
+after
+SELECT n.name
+FROM moz_items_annos a
+LEFT JOIN moz_anno_attributes n ON a.anno_attribute_id = n.id
+WHERE a.item_id = ?1
+
+
+mDBGetAnnotationFromURI
+=======================
+Use a JOIN instead of a subselect, so bindparam not needed in field list
+
+before
+SELECT a.id, a.place_id, ?2, a.mime_type, a.content, a.flags,
+a.expiration, a.type
+FROM moz_places h JOIN moz_annos a ON h.id = a.place_id
+WHERE h.url = ?1 AND a.anno_attribute_id =
+(SELECT id FROM moz_anno_attributes WHERE name = ?2)
+
+after
+SELECT a.id, a.place_id, n.name, a.mime_type, a.content, a.flags,
+a.expiration, a.type
+FROM moz_places h
+JOIN moz_annos a ON h.id = a.place_id
+JOIN moz_anno_attributes n ON n.id = a.anno_attribute_id
+WHERE h.url = ?1 AND n.name = ?2
+
+
+mDBGetAnnotationFromItemId
+==========================
+Use a JOIN instead of a subselect, so bindparam not needed in field list
+
+before
+SELECT a.id, a.item_id, ?2, a.mime_type, a.content, a.flags,
+a.expiration, a.type
+FROM moz_items_annos a
+WHERE a.item_id = ?1 AND a.anno_attribute_id =
+(SELECT id FROM moz_anno_attributes WHERE name = ?2)
+
+after
+SELECT a.id, a.item_id, n.name, a.mime_type, a.content, a.flags,
+a.expiration, a.type
+FROM moz_items_annos a
+JOIN moz_anno_attributes n ON n.id = a.anno_attribute_id
+WHERE a.item_id = ?1 AND n.name = ?2

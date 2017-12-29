@@ -1,0 +1,70 @@
+Inspecting proxy object with ownKeys trap throws internal error
+User Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:49.0) Gecko/20100101 Firefox/49.0
+Build ID: 20160516030211
+
+Steps to reproduce:
+
+Open web console and enter
+    new Proxy({}, {ownKeys: () => ['a', 'b']});
+
+Click the returned object to inspect it.
+
+
+Actual results:
+
+Object inspector only shows the property `a` but not `b`.
+
+Browser console shows this error:
+    Handler function DebuggerClient.requester request callback threw an exception: TypeError: descriptor is undefined
+    Stack: Scope.prototype.addItems@resource://devtools/client/shared/widgets/VariablesView.jsm:1373:9
+    VariablesViewController.prototype._populateProperties/<@resource://devtools/client/shared/widgets/VariablesViewController.jsm:396:7
+    DebuggerClient.requester/</<@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/shared/client/main.js:296:9
+    exports.makeInfallible/<@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/shared/ThreadSafeDevToolsUtils.js:101:14
+    emitOnObject@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/commonjs/sdk/event/core.js:112:9
+    emit@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/commonjs/sdk/event/core.js:89:38
+    Request.prototype.emit@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/shared/client/main.js:1234:29
+    DebuggerClient.prototype.onPacket/emitReply@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/shared/client/main.js:1018:29
+    DevTools RDP*DebuggerClient.prototype.request@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/shared/client/main.js:724:5
+    DebuggerClient.requester/<@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/shared/client/main.js:284:12
+    exports.makeInfallible/<@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/shared/ThreadSafeDevToolsUtils.js:101:14
+    VariablesViewController.prototype._populateProperties@resource://devtools/client/shared/widgets/VariablesViewController.jsm:376:5
+    VariablesViewController.prototype._populateFromObject@resource://devtools/client/shared/widgets/VariablesViewController.jsm:369:12
+    VariablesViewController.prototype.populate@resource://devtools/client/shared/widgets/VariablesViewController.jsm:624:7
+    VariablesViewController.prototype.setSingleVariable@resource://devtools/client/shared/widgets/VariablesViewController.jsm:761:21
+    JSTerm.prototype._updateVariablesView@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/client/webconsole/jsterm.js:768:34
+    JSTerm.prototype.openVariablesView/onContainerReady@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/client/webconsole/jsterm.js:585:7
+    Handler.prototype.process@resource://gre/modules/Promise.jsm -> resource://gre/modules/Promise-backend.js:937:23
+    this.PromiseWalker.walkerLoop@resource://gre/modules/Promise.jsm -> resource://gre/modules/Promise-backend.js:816:7
+    Promise*this.PromiseWalker.scheduleWalkerLoop@resource://gre/modules/Promise.jsm -> resource://gre/modules/Promise-backend.js:747:11
+    this.PromiseWalker.schedulePromise@resource://gre/modules/Promise.jsm -> resource://gre/modules/Promise-backend.js:779:7
+    this.PromiseWalker.completePromise@resource://gre/modules/Promise.jsm -> resource://gre/modules/Promise-backend.js:714:7
+    JSTerm.prototype._addVariablesViewSidebarTab/onTabReady@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/client/webconsole/jsterm.js:647:7
+    EventEmitter_once/handler@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/shared/event-emitter.js:108:9
+    EventEmitter_emit@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/shared/event-emitter.js:163:11
+    ToolSidebar.prototype.addTab/onIFrameLoaded@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/client/framework/sidebar.js:248:7
+    EventListener.handleEvent*ToolSidebar.prototype.addTab@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/client/framework/sidebar.js:251:5
+    JSTerm.prototype._addVariablesViewSidebarTab@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/client/webconsole/jsterm.js:660:7
+    JSTerm.prototype.openVariablesView@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/client/webconsole/jsterm.js:616:21
+    ConsoleOutput.prototype.openVariablesView@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/client/webconsole/console-output.js:360:5
+    Widgets.JSObject.prototype<.openObjectInVariablesView@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/client/webconsole/console-output.js:2555:5
+    Widgets.JSObject.prototype<._onClick@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/client/webconsole/console-output.js:2587:5
+    WebConsoleFrame.prototype._addMessageLinkCallback/<@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/client/webconsole/webconsole.js:2710:7
+    EventListener.handleEvent*WebConsoleFrame.prototype._addMessageLinkCallback@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/client/webconsole/webconsole.js:2688:5
+    Messages.BaseMessage.prototype._addLinkCallback@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/client/webconsole/console-output.js:551:5
+    Widgets.JSObject.prototype<._anchor@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/client/webconsole/console-output.js:2540:5
+    Widgets.JSObject.prototype<._renderObjectPrefix@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/client/webconsole/console-output.js:2408:5
+    .render@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/client/webconsole/console-output.js:3469:5
+    Widgets.JSObject.prototype<.render@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/client/webconsole/console-output.js:2375:7
+    Messages.Extended.prototype<._renderObjectActor@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/client/webconsole/console-output.js:1329:20
+    Messages.Extended.prototype<._renderValueGrip@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/client/webconsole/console-output.js:1209:16
+    Messages.Extended.prototype<._renderBodyPiece@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/client/webconsole/console-output.js:1173:12
+    Messages.Extended.prototype<.render@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/client/webconsole/console-output.js:1139:26
+    ConsoleOutput.prototype._onFlushOutputMessage@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/client/webconsole/console-output.js:244:12
+    WebConsoleFrame.prototype._outputMessageFromQueue@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/client/webconsole/webconsole.js:2220:16
+    WebConsoleFrame.prototype._flushMessageQueue@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/client/webconsole/webconsole.js:2109:20
+    Line: 1373, column: 9
+
+
+Expected results:
+
+I'm not sure what exactly should happen when inspecting a proxy which says it has some own properties but the target doesn't have them. But no error, of course.

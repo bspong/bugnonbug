@@ -1,0 +1,25 @@
+Null deref crash [@ nsjseventlistener.cpp @ 159]
+User Agent: Mozilla/5.0 (Windows NT 6.0) AppleWebKit/535.1 (KHTML, like Gecko) Chrome/13.0.782.112 Safari/535.1
+
+Steps to reproduce:
+
+I think I was trying to scroll down a page. There have been lots of crashes recently (5 or so today), mostly happening while I'm AFK. Maybe some periodic JS handler in the background is causing a problem - I do have roughly a jillion tabs open and it makes it hard to track down (sorry :/).
+
+
+Actual results:
+
+Firefox crashes and the crash reporter pops up. This time, I launched it from WinDbg and used the exception analysis thingy to get some information. Note that a couple of debugging breakpoints seem to be set by default, so they spam the first 40% of the log.
+The "real" crash starts at around line 780:
+
+xul!nsJSEventListener::HandleEvent+0x4d:
+5e0ed77d 8b31            mov     esi,dword ptr [ecx]  ds:0023:00000000=????????
+
+With the analysis on line 1315:
+
+FAULTING_IP: 
+xul!nsJSEventListener::HandleEvent+4d [e:\builds\moz2_slave\rel-rel-w32-bld\build\dom\src\events\nsjseventlistener.cpp @ 159]
+5e0ed77d 8b31            mov     esi,dword ptr [ecx]
+
+There's a stack trace from line 1361.
+
+HTH, sorry I couldn't give useful hints about problem tabs because there are so many open, if there's an easy way to narrow this down please let me know and I'll dig in.

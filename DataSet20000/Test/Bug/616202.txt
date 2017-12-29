@@ -1,0 +1,54 @@
+Firefox 3.6 SETS w.globalStorage even if it is disabled, but throws a security exception on any kind of access to the object.
+User-Agent:       Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_5; en-us) AppleWebKit/533.19.4 (KHTML, like Gecko) Version/5.0.3 Safari/533.19.4
+Build Identifier: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; en-US; rv:1.9.2.12) Gecko/20101026 Firefox/3.6.12
+
+When testing for localStorage,  normally one would do  this:
+
+	if (window.localStorage) {
+	    storageMode = MODE_HTML5;
+	} else if (window.globalStorage) {
+	    storageMode = MODE_GECKO;
+	} else if (window.openDatabase && navigator.userAgent.indexOf('Chrome') === -1) {
+	    storageMode = MODE_DB;
+	} else if (Y.UA.ie >= 5) {
+	    storageMode = MODE_USERDATA;
+	} else {
+	    storageMode = MODE_NOOP;
+	}
+
+However, in firefox 3.6, this won't work, because window.globalStorage is truthy, even when it is disabled. What happens is that when you actually try to read or write to window.globalStorage FF thows a security exception. The work around is simple of course:
+
+try{
+	if (w.localStorage) {		
+	    storageMode = MODE_HTML5;
+	} else if (w.globalStorage) {
+	    storageMode = MODE_GECKO;
+		//this will throw an exception if dom storage is disabled on firefox 3.0
+		var test = w.globalStorage[w.location.hostname];
+	} else if (w.openDatabase && navigator.userAgent.indexOf('Chrome') === -1) {
+	    storageMode = MODE_DB;
+	} else if (Y.UA.ie >= 5) {
+	    storageMode = MODE_USERDATA;
+	} else {
+	    storageMode = MODE_NOOP;
+	}
+}catch(e){
+	storageMode = MODE_NOOP;
+}
+
+Nevertheless, in my opinion FF is doing this wrong. If the feature is disabled, it should not be there.
+
+Reproducible: Always
+
+Steps to Reproduce:
+In firefox about:config set dom.storage.enabled to false. Go to any flickr page
+
+
+Actual Results:  
+Security error" code: "1000
+[Break on this error] var localStorage = Y.config.win.localStorage, 
+
+Expected Results:  
+No op.
+
+I am a Sr. Frontend Eng at flickr.

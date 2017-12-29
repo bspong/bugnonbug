@@ -1,0 +1,85 @@
+Javascript code is reloaded unexpectedly during recursive calls
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.7.5) Gecko/20041107 Firefox/1.0
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.7.5) Gecko/20041107 Firefox/1.0
+
+Let's consider this code :
+//////////////////////////////////
+<HTML>
+<HEAD>
+<TITLE> New Document </TITLE>
+</HEAD>
+<BODY>
+<SCRIPT LANGUAGE="JavaScript">
+<!--
+var myimg;
+
+var j=0;
+var nbMaxDisplayedItems = 1000;
+
+function dumpPropsOnScreen(objstr, maxlevel) {
+	if (maxlevel==0) { document.write("****** Reached maximum search level
+******<BR>"); return;}
+	maxlevel--;
+	obj = eval(objstr);
+	for (var i in obj) {
+		type = typeof(obj[i]);
+		msg = objstr + "." + i;
+		printmsg = msg+"="+obj[i]+"<br>   - NbElements = "+j;
+		document.write(printmsg+'<BR>');//(1)
+		j++;
+		if (j>nbMaxDisplayedItems) { document.write("****** Reached maximum displayed
+items ******<BR>"); return;}
+		if (type == "object" && obj[i]!=null && isNaN(i)) { 
+			dumpPropsOnScreen(msg, maxlevel);
+			obj = eval(objstr);
+		}
+	}
+}
+
+myimg = new Image();
+
+if (confirm('Start scripting...'))
+{
+	alert("Confirm is OK");
+	dumpPropsOnScreen("myimg",15);
+}
+
+//-->
+</SCRIPT>
+</BODY>
+</HTML>
+///////////////////////////////////
+
+This javascript code writes on the screen all the properties of the "myimg" object
+At the 330th "document.write" (1), this javascript code restarts from the
+beginning ?!??
+We can see the confirm msgbox 'Start scripting...' appearing again
+I suppose that this is a software stack issue - If I remove the "maxlevel"
+parameter from my function, I can go up to 3000 items.
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.Load the web page in Firefox
+2.Answer 'OK' to the confirm msgbox 'Start scripting'
+3.You will see the msgbox 'Confirm is OK'
+4.You will see again the confirm msgbox 'Start scripting' (the code is being
+reloaded)
+
+Actual Results:  
+If you answer 'Cancel', you will see again the confirm msgbox 'Start scripting'
+After 15 times answering 'Cancel', the page will finish loading because it stops
+on an exception :
+Error: uncaught exception: [Exception... "Component returned failure code:
+0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOM3Document.domConfig]"  nsresult:
+"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)"  location: "JS frame ::
+file:///I:/Mozilla%20Page%20Restart%20Bug.html :: dumpPropsOnScreen :: line 25"
+ data: no]
+This exception is another issue : please note that the access to
+"myimg.textContent" and "myimg.ownerDocument.domConfig" return an error.
+
+
+
+Expected Results:  
+Not restart the javascript code - exception because of a software stack limitation.

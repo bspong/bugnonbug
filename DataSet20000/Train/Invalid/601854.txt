@@ -1,0 +1,96 @@
+Firefox crashes upon "one click" downloads, before opening the "save as" popup, or after the download completed upon right-click "save as" downloads of compressed files
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US) AppleWebKit/534.3 (KHTML, like Gecko) Chrome/6.0.472.55 Safari/534.3
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.2.11) Gecko/20101001 Firefox/3.6.11
+
+Downloading compressed files causes crashes. Other types of files don't have any unexpected results. When left-clicking on the download link, firefox immediately crashes. When right-click->save as-> wait fow download finishes, firefox crashes.
+ 
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. left click on download link of any compressed file
+
+or 
+
+1. right click on file link
+2. click enter on "save as" dialog 
+3. wait until download finishes download 
+Actual Results:  
+on left click on download link, firefox crashes when download begins.
+on right-click save as steps, firefox crashes after download ends.
+
+Expected Results:  
+on left click downloads, download dialog should have opened.
+on right-click downloads download should have finished successfully and dialog should have closed.
+
+gdb output:
+
+(gdb) continue
+Continuing.
+[Thread 0x442d7b70 (LWP 32441) exited]
+[New Thread 0x442d7b70 (LWP 32456)]
+[New Thread 0x46f00b70 (LWP 32459)]
+[Thread 0x46f00b70 (LWP 32459) exited]
+[New Thread 0x46f00b70 (LWP 32460)]
+[New Thread 0x47101b70 (LWP 32461)]
+[Thread 0x47101b70 (LWP 32461) exited]
+[New Thread 0x47101b70 (LWP 32462)]
+[Thread 0x47101b70 (LWP 32462) exited]
+[New Thread 0x47101b70 (LWP 32463)]
+[Thread 0x47101b70 (LWP 32463) exited]
+[New Thread 0x47101b70 (LWP 32464)]
+[Thread 0x47101b70 (LWP 32464) exited]
+
+Program received signal SIGSEGV, Segmentation fault.
+0x41a7de0d in strncmp () from /lib/libc.so.6
+(gdb) bt
+#0  0x41a7de0d in strncmp () from /lib/libc.so.6
+#1  0x425a9977 in __xmlParserInputBufferCreateFilename (URI=0x47a16e80 "/usr/local/share/mime/application/x-gzip.xml", enc=XML_CHAR_ENCODING_UTF8) at xmlIO.c:2412
+#2  0x425a9a12 in xmlParserInputBufferCreateFilename__internal_alias (URI=0x47a16e80 "/usr/local/share/mime/application/x-gzip.xml", enc=XML_CHAR_ENCODING_NONE) at xmlIO.c:2446
+#3  0x42630952 in xmlNewTextReaderFilename__internal_alias (URI=0x47a16e80 "/usr/local/share/mime/application/x-gzip.xml") at xmlreader.c:2125
+#4  0x426f6c83 in load_mime_entry (mime_type=<value optimized out>) at gnome-vfs-mime-info.c:404
+#5  get_entry (mime_type=<value optimized out>) at gnome-vfs-mime-info.c:492
+#6  0x426f7275 in gnome_vfs_mime_get_value (mime_type=0x479aa588 "application/x-gzip", key=0x42721112 "icon_filename") at gnome-vfs-mime-info.c:545
+#7  0x426f62e7 in gnome_vfs_mime_get_icon (mime_type=0x479aa588 "application/x-gzip") at gnome-vfs-mime-handlers.c:208
+#8  0x421d5316 in gnome_icon_lookup () from /opt/gnome2/lib/libgnomeui-2.so.0
+#9  0x421375a5 in ?? () from /opt/Mozilla/FireFox35b4/components/libimgicon.so
+#10 0x42137a71 in ?? () from /opt/Mozilla/FireFox35b4/components/libimgicon.so
+#11 0x42136795 in ?? () from /opt/Mozilla/FireFox35b4/components/libimgicon.so
+#12 0x402de9ae in ?? () from /opt/Mozilla/FireFox/libxul.so
+#13 0x402d1c39 in ?? () from /opt/Mozilla/FireFox/libxul.so
+#14 0x403c64dc in ?? () from /opt/Mozilla/FireFox/libxul.so
+#15 0x403c8dcc in ?? () from /opt/Mozilla/FireFox/libxul.so
+#16 0x4053f166 in ?? () from /opt/Mozilla/FireFox/libxul.so
+#17 0x40517cf9 in ?? () from /opt/Mozilla/FireFox/libxul.so
+#18 0x40517fe7 in ?? () from /opt/Mozilla/FireFox/libxul.so
+#19 0x403dcb12 in ?? () from /opt/Mozilla/FireFox/libxul.so
+#20 0x40417b5b in ?? () from /opt/Mozilla/FireFox/libxul.so
+#21 0x4057eda4 in ?? () from /opt/Mozilla/FireFox/libxul.so
+#22 0x405765a0 in ?? () from /opt/Mozilla/FireFox/libxul.so
+#23 0x4057675d in ?? () from /opt/Mozilla/FireFox/libxul.so
+#24 0x40572f68 in ?? () from /opt/Mozilla/FireFox/libxul.so
+#25 0x407d8bf6 in ?? () from /opt/Mozilla/FireFox/libxul.so
+#26 0x402acad8 in ?? () from /opt/Mozilla/FireFox/libxul.so
+#27 0x40fdfd69 in ?? () from /opt/Mozilla/FireFox/libmozjs.so
+#28 0x40fe5b1f in js_Invoke () from /opt/Mozilla/FireFox/libmozjs.so
+#29 0x40fe60d6 in ?? () from /opt/Mozilla/FireFox/libmozjs.so
+#30 0x40f9c8a0 in JS_CallFunctionValue () from /opt/Mozilla/FireFox/libmozjs.so
+
+seems that xml parser fails somehow. below is my /usr/local/share/mime/application/x-gzip.xml file for inspection:
+
+<?xml version="1.0" encoding="utf-8"?>
+<mime-type xmlns="http://www.freedesktop.org/standards/shared-mime-info" type="application/x-gzip">
+  <!--Created automatically by update-mime-database. DO NOT EDIT!-->
+  <comment>gzip archive</comment>
+  <comment xml:lang="de">gzip-Archiv</comment>
+  <comment xml:lang="fi">gzip-arkisto</comment>
+  <comment xml:lang="no">gzip-arkiv</comment>
+  <comment xml:lang="sv">gzip-arkiv</comment>
+</mime-type>
+
+latest 2 crash-stats: 
+http://crash-stats.mozilla.com/report/index/bp-5dfe77ae-5f68-4153-848f-857ba2101004
+http://crash-stats.mozilla.com/report/index/bp-e915e578-9dd1-49fa-8d02-b815b2101004
+
+even on -safe-mode crash occurs, with no difference in reproducing steps.
+I'm having this problem since many versions back in 3.6 branch.

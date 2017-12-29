@@ -1,0 +1,38 @@
+[SessionStore] about:blank shows up in back arrow history of restored blank tabs
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.1) Gecko/20061204 Firefox/2.0.0.1
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.1) Gecko/20061204 Firefox/2.0.0.1
+
+I emailed Zeniko and he said this may be a duplicate, but he couldn't find the original bug and since I recreated it in the latest Minefield nightly I decided to file it.  
+
+If a session that contains blank tabs is restored then when the blank tabs are used to go to web sites, the user can use the back arrow on those tabs to go back to the original "about:blank" page.  In addition if the tabs that started out as blank are closed, they are not saved and cannot be restored.  
+
+The "about:blank" does not show up under the History menu, only in the back arrow menu.
+
+The not saving on close problem appears to be because SessionStore believes that the tab's URL is still "about:blank" even though it no longer is so it doesn't save the tab.
+http://bonsai.mozilla.org/cvsblame.cgi?file=mozilla/browser/components/sessionstore/src/nsSessionStore.js&rev=1.58&mark=554#541
+
+I think the real problem is that the "about:blank" should not be being saved in the history.  This only occurs when a session is restored and only for restored tabs that are blank (about:blank).
+
+The Session Manager extension can also be used to save and restore sessions manually and they have the same problem so the problem appears to be on the restore.  For some reason the restored blank tabs aren't being treated as such.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Open Firefox
+2. Change browser.sessionstore.resume_session_once preference to true.
+3. Close all tabs and open 3 blank tabs.
+4. On one of the blank tabs go to a web site (eg: www.google.com) and leave other 2 blank.
+5. Close Browser and open it again
+6. Use the 2 blank tabs to surf to sites.
+7. Close the two previously blank tabs.
+Actual Results:  
+After step 6 tabs had "about:blank" in their back arrow menu list.
+Tabs not in recently closed tab list in history menu. 
+
+Expected Results:  
+After step 6 tabs should not have "about:blank" in their back arrow menu list.
+Tabs should be in recently closed tab list in history menu. 
+
+The problem does not occur if the Tab Mix Plus extension is installed.
+
+Problem also occurred in Minefield version (Gecko/20070115 Minefield/3.0a2pre)

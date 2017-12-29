@@ -1,0 +1,30 @@
+crash in ssl_FreeSocket() in Firefox 3.0.5 after upgrade to NSS 3.12.2?
+crash in ssl_FreeSocket() in Firefox 3.0.5 after upgrade to NSS 3.12.2?
+
+david: you might start seeing these with tbird 2.0.0.20 with imap over ssl, if 2.0.0.20 also us NSS 3.12.2
+
+I did a search, and found two report for 3.0.5 with ssl_FreeSocket:
+
+http://crash-stats.mozilla.com/report/index/4b93eaa0-38a7-42cf-b56e-cfbe12081223
+http://crash-stats.mozilla.com/report/index/39a15cad-614c-4918-a059-576752081222
+
+the stack were both:
+
+0 ssl3.dll ssl_FreeSocket
+mozilla/security/nss/lib/ssl/sslsock.c:451
+1 ssl3.dll ssl_DefClose
+mozilla/security/nss/lib/ssl/ssldef.c:233
+2 nspr4.dll PR_DestroyLock
+3 xul.dll nsSSLIOLayerClose
+mozilla/security/manager/ssl/src/nsNSSIOLayer.cpp:1477
+4 xul.dll nsSocketTransport::OnSocketDetached
+mozilla/netwerk/base/src/nsSocketTransport2.cpp:1590
+5 xul.dll nsSocketTransportService::DetachSocket
+mozilla/netwerk/base/src/nsSocketTransportService2.cpp:179
+6 xul.dll nsSocketTransportService::DoPollIteration
+mozilla/netwerk/base/src/nsSocketTransportService2.cpp:634
+7 xul.dll XPCPerThreadData::GetDataImpl
+mozilla/js/src/xpconnect/src/xpcthreadcontext.cpp:601
+8 xul.dll nsThread::ProcessNextEvent
+mozilla/xpcom/threads/nsThread.cpp:497
+9 nspr4.dll PR_CallOnceWithArg

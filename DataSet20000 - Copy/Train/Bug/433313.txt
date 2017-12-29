@@ -1,0 +1,37 @@
+Excessive memory usage by XmlHttpRequest
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; da; rv:1.8.1.13) Gecko/20080311 Firefox/2.0.0.13
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; da; rv:1.8.1.13) Gecko/20080311 Firefox/2.0.0.13
+
+Using xmlhttp.responseText when xmlhttp.readystate = 3 causes Firefox to claim between 2 and 10mb's of memory for each use of xmlhttp.responseText 
+
+I speculate that the XmlHttpRequest object is copied, and not updated for each use.
+
+This page demonstrates the problem (though I am not the author and have no control of the page):
+
+http://www.treebuilder.de/svg/progress/progressbar.svg
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.
+Request a reasonably large file (+200kb) using XmlHttpRequest.open (async mode)
+2.
+in the onreadystatechange event handler use the following lines (here we suppose the XmlHttpRequest is called xmlhttp:
+
+if (xmlhttp.readystate == 3) {
+     t = xmlhttp.responseText;
+}
+
+Actual Results:  
+For each call to the eventhandler Firefox uses between 2 and 10mb of extra memory,  eventually sending the machine to a crawling halt because of writes to the pagefile.
+
+Expected Results:  
+no extra memory usage. the xmlhttprequest object should just have an updated value.
+
+I have tested this on different files, and tinkered with the lines so I am reasonably sure that I got it right. 
+
+The problem makes it impossible to create at download progress bar because of the large amount of memory used.
+
+Also I really don't know this, but I guess bad guys could use this to do bad stuff.

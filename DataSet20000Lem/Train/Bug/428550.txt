@@ -1,0 +1,36 @@
+Crashed after typing in an URL and the page opened [@ syncJournal]
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9b5) Gecko/2008032620 Firefox/3.0b5
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9b5) Gecko/2008032620 Firefox/3.0b5
+
+Although crash reporter didn't appear, windbg attached to the process and I created a dump of this exception. The exception occurs within sqlite module.
+
+Reproducible: Couldn't Reproduce
+
+
+
+
+Stack trace from windbg
+
+0:000> kb n
+*** Stack trace for last set context - .thread/.cxr reset it
+# ChildEBP RetAddr Args to Child
+00 0012f7b8 6021a7ed 014b2358 00fa8448 0012f834 sqlite3!syncJournal+0xc5 [e:\fx19rel\winnt_5.2_depend\mozilla\db\sqlite3\src\sqlite3.c @ 23118]
+01 0012f7d8 6021d82e 00000000 00000000 003f5f08 sqlite3!sqlite3PagerCommitPhaseOne+0xdd [e:\fx19rel\winnt_5.2_depend\mozilla\db\sqlite3\src\sqlite3.c @ 24832]
+02 0012f7f4 60225d07 00000000 00000000 03c14488 sqlite3!sqlite3BtreeCommitPhaseOne+0x7e [e:\fx19rel\winnt_5.2_depend\mozilla\db\sqlite3\src\sqlite3.c @ 28730]
+03 0012f834 60225eff 003f5f08 03c14488 003f5f08 sqlite3!vdbeCommit+0x607 [e:\fx19rel\winnt_5.2_depend\mozilla\db\sqlite3\src\sqlite3.c @ 35585]
+04 0012f860 6022cb21 03c14488 003f5f08 003f5f08 sqlite3!sqlite3VdbeHalt+0x13f [e:\fx19rel\winnt_5.2_depend\mozilla\db\sqlite3\src\sqlite3.c @ 35902]
+05 0012fb28 6022750a 03c14488 0012fb6c 00290040 sqlite3!sqlite3VdbeExec+0x4201 [e:\fx19rel\winnt_5.2_depend\mozilla\db\sqlite3\src\sqlite3.c @ 40272]
+06 0012fb48 60227628 00000000 00000001 03c14488 sqlite3!sqlite3Step+0x13a [e:\fx19rel\winnt_5.2_depend\mozilla\db\sqlite3\src\sqlite3.c @ 37032]
+07 0012fb6c 60241d46 03c14488 0012fbec 0012fc30 sqlite3!sqlite3_step+0x48 [e:\fx19rel\winnt_5.2_depend\mozilla\db\sqlite3\src\sqlite3.c @ 37099]
+08 0012fba8 605c0b8b 003f5f08 60cda414 00000000 sqlite3!sqlite3_exec+0x116 [e:\fx19rel\winnt_5.2_depend\mozilla\db\sqlite3\src\sqlite3.c @ 55877]
+09 0012fbd8 605e433c 01467e80 0012fbec 00fb2ce8 xul!mozStorageConnection::ExecuteSimpleSQL+0x5b [e:\fx19rel\winnt_5.2_depend\mozilla\storage\src\mozstorageconnection.cpp @ 300]
+0a 0012fbf8 605ace41 01467e80 6061b020 60637241 xul!mozStorageConnection::CommitTransaction+0x33 [e:\fx19rel\winnt_5.2_depend\mozilla\storage\src\mozstorageconnection.cpp @ 427]
+0b 0012fc00 6061b020 60637241 03d9f490 00000002 xul!mozStorageTransaction::~mozStorageTransaction+0x24 [e:\fx19rel\winnt_5.2_depend\mozilla\obj-fx-trunk\dist\include\storage\mozstoragehelper.h @ 84]
+0c 0012fc40 605668fc 03d9f490 00fb2c00 0031b3c0 xul!nsNavHistory::CommitLazyMessages+0xc8 [e:\fx19rel\winnt_5.2_depend\mozilla\toolkit\components\places\src\nsnavhistory.cpp @ 4651]
+0d 0012fc58 60566873 00000000 00000001 604ddd5d xul!nsTimerImpl::Fire+0x7c [e:\fx19rel\winnt_5.2_depend\mozilla\xpcom\threads\nstimerimpl.cpp @ 400]
+0e 0012fc64 604ddd5d 0532fd30 00f4e600 00319470 xul!nsTimerEvent::Run+0x1f [e:\fx19rel\winnt_5.2_depend\mozilla\xpcom\threads\nstimerimpl.cpp @ 492]
+0f 0012fc88 604af56a 00000001 00000001 0012fca8 xul!nsThread::ProcessNextEvent+0x29d [e:\fx19rel\winnt_5.2_depend\mozilla\xpcom\threads\nsthread.cpp @ 510]
+10 0012fca0 6063e990 00000001 80000000 6057a06a xul!nsBaseAppShell::Run+0x4a [e:\fx19rel\winnt_5.2_depend\mozilla\widget\src\xpwidgets\nsbaseappshell.cpp @ 169]
+11 0012fcac 6057a06a 00f4d970 0031c0b0 00000000 xul!nsAppStartup::Run+0x1e [e:\fx19rel\winnt_5.2_depend\mozilla\toolkit\components\startup\src\nsappstartup.cpp @ 182]
+12 0012fcb4 0031c0b0 00000000 0031c0a8 00300518 xul!XRE_main+0xdac [e:\fx19rel\winnt_5.2_depend\mozilla\toolkit\xre\nsapprunner.cpp @ 3158]
+WARNING: Frame IP not in any known module. Following frame may be wrong.

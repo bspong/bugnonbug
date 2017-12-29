@@ -1,0 +1,31 @@
+Ungraceful total rendering failure if some unknown resource is exhausted
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.8.1.19) Gecko/20081201 Firefox/2.0.0.19
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.9.0.8) Gecko/2009032609 Firefox/3.0.8 
+
+Sorry that this is not going to be a very precise bug report, and possibly hard to replicate, but it looks as if it is unreported thus far.  This probably pertains only to windows 2000 (sp4).
+
+If I open enough tabs in enough windows, when firefox tries to render the final window, a nearly total rendering failure occurs.  What I mean by this is that if a window needs to be redrawn, either because it was minimized or obscured, almost nothing is rendered in any window.  A few icons (such as folder symbols in bookmarks sidebar) are drawn, but no text is drawn.  Components which are drawn on mouseover, however, do get drawn when the mouse passes over.  If a window is restored from being minimized, only the graphic components of the decoration are drawn, not, e.g. the bar where it says "File" ... "Help".
+
+This problem did not occur with the last released stable version of Firefox 2, drawing the exact same windows.  (2.0.0.19).  The total amount of memory being used when this problem occurs with FF 3.0.0.8 is about 300MB, on a machine with 1GB of physical memory.  FF2.0.0.9 would use about 500BM of memory for the same set of url's.  I am currently generating this problem when I open the 11th window, with something like 70 - 100 total tabs open.
+
+I see this problem reliably when I stress FF3 this way.  Problem also occurred with at least 2 prior release versions of FF3.
+
+Also, I can tell you that at the moment FF is using 914 USER objects and 1958 GDI objects.  I have seen other resource shortage failures in win2k, and that is what this smells like to me.  I don't think it's a GDI shortage, because other applications' windows perform just fine.
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.open FF with no add-ons
+2.open a multi-url bookmark folder in tabs, with say 8 tabs. (I will attach a bookmark snippet for exact urls and folder structure.)
+3.create a new window (e.g. with ctrl-N)
+4.goto 2.
+5.repeat steps 2-3 opening 11 windows total.
+Actual Results:  
+Once the 11th window tries to render enough stuff, most rendering disappears and no normal method refreshes it in any window.  Sometimes FF also hangs, or appears to hang.
+
+Expected Results:  
+Normal rendering of all windows.
+
+I will attach a piece of bookmarks.html which contains a folder with subfolders which causes the problem on my machine.  (This is a bookmark folder which renders fine on 2.0.0.19.)

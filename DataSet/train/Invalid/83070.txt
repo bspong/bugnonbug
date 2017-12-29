@@ -1,0 +1,412 @@
+style blobs not fully initialized?
+These types of UMRs are showing up over a thousand times just in loading the
+browser.  There are 3 different complete stack traces below, as well as some
+snapshots of each of the particular Style*Blob::CalcDifference() methods that
+were having UMRs.  All of this just looks like it results from something not
+getting initialized.
+
+      UMR: Uninitialized memory read
+      This is occurring while in:
+            StyleTableBlob::CalcDifference(const nsStyleStruct*)const [nsStyleCont
+ext.cpp:1399]
+                     (mCaptionSide == other->mCaptionSide) &&
+                     (mCols == other->mCols) &&
+                     (mSpan == other->mSpan) &&
+            =>       (mSpanWidth == other->mSpanWidth)) {
+                   if (mEmptyCells == other->mEmptyCells) {
+                     return NS_STYLE_HINT_NONE;
+                   }
+            StyleContextImpl::CalcStyleDifference(nsIStyleContext*,int&,int)const
+[nsStyleContext.cpp:3578]
+            CaptureChange(nsIStyleContext*,nsIStyleContext*,nsIFrame*,nsIContent*,
+nsStyleChangeList&,int) [nsFrameManager.cpp:1538]
+            FrameManager::ReResolveStyleContext(nsIPresContext*,nsIFrame*,nsIStyle
+Context*,nsIContent*,int,nsIAtom*,nsStyleChangeList&,int,int&) [nsFrameManager.cpp
+:1628]
+            FrameManager::ReResolveStyleContext(nsIPresContext*,nsIFrame*,nsIStyle
+Context*,nsIContent*,int,nsIAtom*,nsStyleChangeList&,int,int&) [nsFrameManager.cpp
+:1771]
+            FrameManager::ReResolveStyleContext(nsIPresContext*,nsIFrame*,nsIStyle
+Context*,nsIContent*,int,nsIAtom*,nsStyleChangeList&,int,int&) [nsFrameManager.cpp
+:1771]
+            FrameManager::ReResolveStyleContext(nsIPresContext*,nsIFrame*,nsIStyle
+Context*,nsIContent*,int,nsIAtom*,nsStyleChangeList&,int,int&) [nsFrameManager.cpp
+:1771]
+            FrameManager::ReResolveStyleContext(nsIPresContext*,nsIFrame*,nsIStyle
+Context*,nsIContent*,int,nsIAtom*,nsStyleChangeList&,int,int&) [nsFrameManager.cpp
+:1771]
+            FrameManager::ComputeStyleChangeFor(nsIPresContext*,nsIFrame*,int,nsIA
+tom*,nsStyleChangeList&,int,int&) [nsFrameManager.cpp:2016]
+            nsCSSFrameConstructor::AttributeChanged(nsIPresContext*,nsIContent*,in
+t,nsIAtom*,int) [nsCSSFrameConstructor.cpp:9969]
+            StyleSetImpl::AttributeChanged(nsIPresContext*,nsIContent*,int,nsIAtom
+*,int) [nsStyleSet.cpp:1289]
+            PresShell::AttributeChanged(nsIDocument*,nsIContent*,int,nsIAtom*,int)
+ [nsPresShell.cpp:4814]
+            nsDocument::AttributeChanged(nsIContent*,int,nsIAtom*,int) [nsDocument
+.cpp:1675]
+            nsHTMLDocument::AttributeChanged(nsIContent*,int,nsIAtom*,int) [nsHTML
+Document.cpp:1283]
+            nsXULElement::SetAttribute(nsINodeInfo*,const nsAString&,int) [nsXULEl
+ement.cpp:3055]
+            nsXULElement::SetAttribute(int,nsIAtom*,const nsAString&,int) [nsXULEl
+ement.cpp:3076]
+            nsGfxScrollFrameInner::SetScrollbarVisibility(nsIBox*,int) [nsGfxScrol
+lFrame.cpp:1484]
+            nsGfxScrollFrameInner::AddRemoveScrollbar(nsBoxLayoutState&,nsRect&,in
+t,int,int) [nsGfxScrollFrame.cpp:979]
+            nsGfxScrollFrameInner::RemoveHorizontalScrollbar(nsBoxLayoutState&,nsR
+ect&,int) [nsGfxScrollFrame.cpp:955]
+            nsGfxScrollFrameInner::Layout(nsBoxLayoutState&) [nsGfxScrollFrame.cpp
+:1226]
+            nsGfxScrollFrame::DoLayout(nsBoxLayoutState&) [nsGfxScrollFrame.cpp:10
+46]
+            nsBox::Layout(nsBoxLayoutState&) [nsBox.cpp:983]
+            nsBoxFrame::Reflow(nsIPresContext*,nsHTMLReflowMetrics&,const nsHTMLRe
+flowState&,unsigned int&) [nsBoxFrame.cpp:778]
+            nsGfxScrollFrame::Reflow(nsIPresContext*,nsHTMLReflowMetrics&,const ns
+HTMLReflowState&,unsigned int&) [nsGfxScrollFrame.cpp:735]
+            nsContainerFrame::ReflowChild(nsIFrame*,nsIPresContext*,nsHTMLReflowMe
+trics&,const nsHTMLReflowState&,int,int,unsigned int,unsigned int&) [nsContainerFr
+ame.cpp:722]
+      Reading 4 bytes from 0x72c330 in the heap (1 byte at 0x72c330 uninit).
+      Address 0x72c330 is at the beginning of a malloc'd block of 56 bytes.
+      This block was allocated from:
+            malloc         [rtlib.o]
+            __bUiLtIn_nEw  [libxpcom.so]
+            __builtin_new  [rtlib.o]
+            nsStyleContextData::AllocateOneBlob(nsStyleStructID,nsIPresContext*) [
+nsStyleContext.cpp:2186]
+                   case eStyleStruct_Position:       result = new STYLEBLOB(Positi
+on);      break;
+                   case eStyleStruct_Text:           result = new STYLEBLOB(Text);
+          break;
+                   case eStyleStruct_Display:        result = new STYLEBLOB(Displa
+y);       break;
+            =>     case eStyleStruct_Table:          result = new STYLEBLOB(Table)
+;         break;
+                   case eStyleStruct_Content:        result = new STYLEBLOB(Conten
+t);       break;
+                   case eStyleStruct_UserInterface:  result = new STYLEBLOB(UserIn
+terface); break;
+                   case eStyleStruct_Print:          result = new STYLEBLOB(Print)
+;         break;
+            nsStyleContextData::AllocateStyleBlobs(nsIStyleContext*,nsIPresContext
+*) [nsStyleContext.cpp:2261]
+            StyleContextImpl::EnsureStyleData(nsIPresContext*) [nsStyleContext.cpp
+:3610]
+            StyleContextImpl::RemapStyle(nsIPresContext*,int) [nsStyleContext.cpp:
+3342]
+            NS_NewStyleContext(nsIStyleContext**,nsIStyleContext*,nsIAtom*,nsISupp
+ortsArray*,nsIPresContext*) [nsStyleContext.cpp:4201]
+            StyleSetImpl::GetContext(nsIPresContext*,nsIStyleContext*,nsIAtom*,nsI
+SupportsArray*,int,int&) [nsStyleSet.cpp:856]
+            StyleSetImpl::ResolvePseudoStyleFor(nsIPresContext*,nsIContent*,nsIAto
+m*,nsIStyleContext*,int,nsICSSPseudoComparator*) [nsStyleSet.cpp:1034]
+            nsPresContext::ResolvePseudoStyleWithComparator(nsIContent*,nsIAtom*,n
+sIStyleContext*,int,nsICSSPseudoComparator*,nsIStyleContext**) [nsPresContext.cpp:
+738]
+            nsPresContext::ResolvePseudoStyleContextFor(nsIContent*,nsIAtom*,nsISt
+yleContext*,int,nsIStyleContext**) [nsPresContext.cpp:716]
+            nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*,nsIPresContext
+*,nsIContent*,nsIFrame*&) [nsCSSFrameConstructor.cpp:3688]
+            StyleSetImpl::ConstructRootFrame(nsIPresContext*,nsIContent*,nsIFrame*
+&) [nsStyleSet.cpp:1218]
+            PresShell::InitialReflow(int,int) [nsPresShell.cpp:2547]
+            HTMLContentSink::StartLayout() [nsHTMLContentSink.cpp:3487]
+            HTMLContentSink::OpenBody(const nsIParserNode&) [nsHTMLContentSink.cpp
+:2864]
+            CNavDTD::OpenBody(const nsCParserNode*) [CNavDTD.cpp:3122]
+            CNavDTD::OpenContainer(const nsCParserNode*,nsHTMLTag,int,nsEntryStack
+*) [CNavDTD.cpp:3376]
+            CNavDTD::HandleDefaultStartToken(CToken*,nsHTMLTag,nsCParserNode*) [CN
+avDTD.cpp:1314]
+            CNavDTD::HandleStartToken(CToken*) [CNavDTD.cpp:1723]
+            CNavDTD::HandleToken(CToken*,nsIParser*) [CNavDTD.cpp:887]
+            CNavDTD::BuildModel(nsIParser*,nsITokenizer*,nsITokenObserver*,nsICont
+entSink*) [CNavDTD.cpp:539]
+            nsParser::BuildModel() [nsParser.cpp:1990]
+            nsParser::ResumeParse(int,int) [nsParser.cpp:1871]
+
+
+
+
+
+StyleUserInterfaceBlob::CalcDifference(const nsStyleStruct*)const [nsStyleContext.
+cpp:1705]
+                 if ((mUserInput == other->mUserInput) &&
+                     (mResizer == other->mResizer)) {
+                   if ((mUserModify == other->mUserModify) &&
+            =>         (mUserSelect == other->mUserSelect)) {
+                     if ((mKeyEquivalent == other->mKeyEquivalent) &&
+                         (mUserFocus == other->mUserFocus) &&
+                         (mResizer == other->mResizer)) {
+
+
+
+            StylePrintBlob::CalcDifference(const nsStyleStruct*)const [nsStyleCont
+ext.cpp:1831]
+                       && (mOrphans == other->mOrphans)
+                       && (mMarks == other->mMarks)
+                       && (mSizeWidth == other->mSizeWidth)
+            =>         && (mSizeHeight == other->mSizeHeight)) {
+                       return NS_STYLE_HINT_NONE;
+                       }
+
+
+
+
+            StyleDisplayBlob::CalcDifference(const nsStyleStruct*)const [nsStyleCo
+ntext.cpp:1271]
+                       (mBreakAfter == other->mBreakAfter)) {
+                     if ((mVisible == other->mVisible) &&
+                         (mClipFlags == other->mClipFlags) &&
+            =>           (mClip == other->mClip)) {
+                       return NS_STYLE_HINT_NONE;
+                     }
+                     if ((mVisible != other->mVisible) &&
+
+
+
+            StyleTextBlob::CalcDifference(const nsStyleStruct*)const [nsStyleConte
+xt.cpp:1125]
+               #ifdef IBMBIDI
+                     (mUnicodeBidi == other->mUnicodeBidi) &&
+               #endif // IBMBIDI
+            =>       (mVerticalAlign == other->mVerticalAlign)) {
+                   if (mTextDecoration == other->mTextDecoration) {
+                     return NS_STYLE_HINT_NONE;
+                   }
+
+
+            StyleColorBlob::CalcDifference(const nsStyleStruct*)const [nsStyleCont
+ext.cpp:358]
+                     (mBackgroundImage == other->mBackgroundImage) &&
+                     (mCursor == other->mCursor) &&
+                     (mCursorImage == other->mCursorImage) &&
+            =>       (mOpacity == other->mOpacity)) {
+                   return NS_STYLE_HINT_NONE;
+                 }
+                 return NS_STYLE_HINT_VISUAL;
+
+
+      UMR: Uninitialized memory read (6 times)
+      This is occurring while in:
+            nsCSSRendering::PaintBackground(nsIPresContext*,nsIRenderingContext&,n
+sIFrame*,const nsRect&,const nsRect&,const nsStyleColor&,const nsStyleBorder&,int,
+int) [nsCSSRendering.cpp:2121]
+                 NS_ASSERTION(aForFrame, "Frame is expected to be provided to Pain
+tBackground");
+
+                 // consider it transparent if transparent is set, or if it is pro
+pagated to the parent
+            =>   PRBool        transparentBG =
+                                 (NS_STYLE_BG_COLOR_TRANSPARENT == (aColor.mBackgr
+oundFlags & NS_STYLE_BG_COLOR_TRANSPARENT)) ||
+                                 (aColor.mBackgroundFlags & NS_STYLE_BG_PROPAGATED
+_TO_PARENT);
+                 float         percent;
+            nsBoxFrame::Paint(nsIPresContext*,nsIRenderingContext&,const nsRect&,n
+sFramePaintLayer) [nsBoxFrame.cpp:1303]
+            nsSliderFrame::Paint(nsIPresContext*,nsIRenderingContext&,const nsRect
+&,nsFramePaintLayer) [nsSliderFrame.cpp:312]
+            PresShell::Paint(nsIView*,nsIRenderingContext&,const nsRect&) [nsPresS
+hell.cpp:5242]
+            nsView::Paint(nsIRenderingContext&,const nsRect&,unsigned int,int&) [n
+sView.cpp:273]
+            nsViewManager::RenderDisplayListElement(DisplayListElement2*,nsIRender
+ingContext&) [nsViewManager.cpp:1436]
+            nsViewManager::RenderViews(nsIView*,nsIRenderingContext&,const nsRect&
+,int&) [nsViewManager.cpp:1360]
+            nsViewManager::Refresh(nsIView*,nsIRenderingContext*,const nsRect*,uns
+igned int) [nsViewManager.cpp:898]
+            nsViewManager::DispatchEvent(nsGUIEvent*,nsEventStatus*) [nsViewManage
+r.cpp:1955]
+            HandleEvent(nsGUIEvent*) [nsView.cpp:67]
+            nsWidget::DispatchEvent(nsGUIEvent*,nsEventStatus&) [nsWidget.cpp:1380
+]
+            nsWidget::DispatchWindowEvent(nsGUIEvent*) [nsWidget.cpp:1271]
+            nsWindow::DoPaint(int,int,int,int,nsIRegion*) [nsWindow.cpp:750]
+            nsWindow::Update() [nsWindow.cpp:796]
+            nsWindow::UpdateIdle(void*) [nsWindow.cpp:664]
+            g_idle_dispatch [gmain.c:1365]
+            g_main_dispatch [gmain.c:656]
+            g_main_iterate [gmain.c:877]
+            g_main_run     [gmain.c:935]
+            gtk_main       [gtkmain.c:476]
+            nsAppShell::Run() [nsAppShell.cpp:360]
+            nsNativeViewerApp::Run() [nsGtkMain.cpp:59]
+            main           [nsGtkMain.cpp:181]
+            _start         [crt1.o]
+      Reading 4 bytes from 0x723618 in the heap (1 byte at 0x72361b uninit).
+      Address 0x723618 is 8 bytes into a malloc'd block at 0x723610 of 84 bytes.
+      This block was allocated from:
+            malloc         [rtlib.o]
+            __bUiLtIn_nEw  [libxpcom.so]
+            __builtin_new  [rtlib.o]
+            nsStyleContextData::AllocateOneBlob(nsStyleStructID,nsIPresContext*) [
+nsStyleContext.cpp:2181]
+                       result = new STYLEBLOB(Font);
+                     }
+                     break;
+            =>     case eStyleStruct_Color:          result = new STYLEBLOB(Color)
+;         break;
+                   case eStyleStruct_List:           result = new STYLEBLOB(List);
+          break;
+                   case eStyleStruct_Position:       result = new STYLEBLOB(Positi
+on);      break;
+                   case eStyleStruct_Text:           result = new STYLEBLOB(Text);
+          break;
+            StyleContextImpl::WrapRemapStyle(nsIPresContext*,int) [nsStyleContext.
+cpp:3320]
+            StyleContextImpl::RemapStyle(nsIPresContext*,int) [nsStyleContext.cpp:
+3504]
+            NS_NewStyleContext(nsIStyleContext**,nsIStyleContext*,nsIAtom*,nsISupp
+ortsArray*,nsIPresContext*) [nsStyleContext.cpp:4201]
+            StyleSetImpl::GetContext(nsIPresContext*,nsIStyleContext*,nsIAtom*,nsI
+SupportsArray*,int,int&) [nsStyleSet.cpp:856]
+            StyleSetImpl::ResolveStyleFor(nsIPresContext*,nsIContent*,nsIStyleCont
+ext*,int) [nsStyleSet.cpp:940]
+            nsPresContext::ResolveStyleContextFor(nsIContent*,nsIStyleContext*,int
+,nsIStyleContext**) [nsPresContext.cpp:698]
+            FrameManager::ReResolveStyleContext(nsIPresContext*,nsIFrame*,nsIStyle
+Context*,nsIContent*,int,nsIAtom*,nsStyleChangeList&,int,int&) [nsFrameManager.cpp
+:1623]
+            FrameManager::ReResolveStyleContext(nsIPresContext*,nsIFrame*,nsIStyle
+Context*,nsIContent*,int,nsIAtom*,nsStyleChangeList&,int,int&) [nsFrameManager.cpp
+:1771]
+            FrameManager::ComputeStyleChangeFor(nsIPresContext*,nsIFrame*,int,nsIA
+tom*,nsStyleChangeList&,int,int&) [nsFrameManager.cpp:2016]
+            nsCSSFrameConstructor::AttributeChanged(nsIPresContext*,nsIContent*,in
+t,nsIAtom*,int) [nsCSSFrameConstructor.cpp:9969]
+            StyleSetImpl::AttributeChanged(nsIPresContext*,nsIContent*,int,nsIAtom
+*,int) [nsStyleSet.cpp:1289]
+            PresShell::AttributeChanged(nsIDocument*,nsIContent*,int,nsIAtom*,int)
+ [nsPresShell.cpp:4814]
+            nsDocument::AttributeChanged(nsIContent*,int,nsIAtom*,int) [nsDocument
+.cpp:1675]
+            nsHTMLDocument::AttributeChanged(nsIContent*,int,nsIAtom*,int) [nsHTML
+Document.cpp:1283]
+            nsXULElement::UnsetAttribute(int,nsIAtom*,int) [nsXULElement.cpp:3310]
+            nsGfxScrollFrameInner::SetScrollbarVisibility(nsIBox*,int) [nsGfxScrol
+lFrame.cpp:1486]
+            nsGfxScrollFrameInner::AddRemoveScrollbar(nsBoxLayoutState&,nsRect&,in
+t,int,int) [nsGfxScrollFrame.cpp:972]
+            nsGfxScrollFrameInner::AddHorizontalScrollbar(nsBoxLayoutState&,nsRect
+&,int) [nsGfxScrollFrame.cpp:943]
+            nsGfxScrollFrameInner::Layout(nsBoxLayoutState&) [nsGfxScrollFrame.cpp
+:1200]
+            nsGfxScrollFrame::DoLayout(nsBoxLayoutState&) [nsGfxScrollFrame.cpp:10
+46]
+            nsBox::Layout(nsBoxLayoutState&) [nsBox.cpp:983]
+
+
+
+
+      UMR: Uninitialized memory read (2 times)
+      This is occurring while in:
+            nsFrameImageLoader::DamageRepairFrames(const nsRect*) [nsFrameImageLoa
+der.cpp:623]
+
+                     if ((color->mBackgroundFlags & NS_STYLE_BG_IMAGE_NONE) ||
+                         (color->mBackgroundFlags & NS_STYLE_BG_PROPAGATED_TO_PARE
+NT) ||
+            =>           (color->mBackgroundRepeat == NS_STYLE_BG_REPEAT_OFF)) {
+                       // The frame does not have a background image so we are fre
+e
+                       // to invalidate only the intersection of the damage rect a
+nd
+                       // the frame's bounds.
+            nsFrameImageLoader::Notify(nsIImageRequest*,nsIImage*,nsImageNotificat
+ion,int,int,void*) [nsFrameImageLoader.cpp:515]
+            ns_observer_proc(void*,long,void*,void*) [nsImageRequest.cpp:134]
+            XP_NotifyObservers [obs.c:254]
+            il_frame_complete_notify(il_container_struct*) [if.cpp:347]
+            ImgDCallbk::ImgDCBHaveImageFrame() [if.cpp:160]
+            il_gif_write(il_container_struct*,const unsigned char*,int) [gif.cpp:1
+505]
+            GIFDecoder::ImgDWrite(const unsigned char*,int) [nsGIFDecoder.cpp:103]
+            IL_StreamWrite(il_container_struct*,const unsigned char*,int) [if.cpp:
+996]
+            NetReaderImpl::Write(const unsigned char*,int) [ilNetReader.cpp:108]
+            ImageConsumer::OnDataAvailable(nsIRequest*,nsISupports*,nsIInputStream
+*,unsigned int,unsigned int) [nsImageNetContextAsync.cpp:442]
+            nsDocumentOpenInfo::OnDataAvailable(nsIRequest*,nsISupports*,nsIInputS
+tream*,unsigned int,unsigned int) [nsURILoader.cpp:237]
+            nsJARChannel::OnDataAvailable(nsIRequest*,nsISupports*,nsIInputStream*
+,unsigned int,unsigned int) [nsJARChannel.cpp:607]
+            nsOnDataAvailableEvent::HandleEvent() [nsStreamListenerProxy.cpp:173]
+            nsARequestObserverEvent::HandlePLEvent(PLEvent*) [nsRequestObserverPro
+xy.cpp:63]
+            PL_HandleEvent [plevent.c:590]
+            PL_ProcessPendingEvents [plevent.c:520]
+            nsEventQueueImpl::ProcessPendingEvents() [nsEventQueue.cpp:374]
+            event_processor_callback(void*,int,GdkInputCondition) [nsAppShell.cpp:
+168]
+            our_gdk_io_invoke(_GIOChannel*,GIOCondition,void*) [nsAppShell.cpp:61]
+            g_io_unix_dispatch [giounix.c:135]
+            g_main_dispatch [gmain.c:656]
+            g_main_iterate [gmain.c:877]
+            g_main_run     [gmain.c:935]
+            gtk_main       [gtkmain.c:476]
+      Reading 4 bytes from 0x724b90 in the heap (1 byte at 0x724b93 uninit).
+      Address 0x724b90 is 8 bytes into a malloc'd block at 0x724b88 of 84 bytes.
+      This block was allocated from:
+            malloc         [rtlib.o]
+            __bUiLtIn_nEw  [libxpcom.so]
+            __builtin_new  [rtlib.o]
+            nsStyleContextData::AllocateOneBlob(nsStyleStructID,nsIPresContext*) [
+nsStyleContext.cpp:2181]
+                       result = new STYLEBLOB(Font);
+                     }
+                     break;
+            =>     case eStyleStruct_Color:          result = new STYLEBLOB(Color)
+;         break;
+                   case eStyleStruct_List:           result = new STYLEBLOB(List);
+          break;
+                   case eStyleStruct_Position:       result = new STYLEBLOB(Positi
+on);      break;
+                   case eStyleStruct_Text:           result = new STYLEBLOB(Text);
+          break;
+            StyleContextImpl::WrapRemapStyle(nsIPresContext*,int) [nsStyleContext.
+cpp:3320]
+            StyleContextImpl::RemapStyle(nsIPresContext*,int) [nsStyleContext.cpp:
+3504]
+            NS_NewStyleContext(nsIStyleContext**,nsIStyleContext*,nsIAtom*,nsISupp
+ortsArray*,nsIPresContext*) [nsStyleContext.cpp:4201]
+            StyleSetImpl::GetContext(nsIPresContext*,nsIStyleContext*,nsIAtom*,nsI
+SupportsArray*,int,int&) [nsStyleSet.cpp:856]
+            StyleSetImpl::ResolveStyleFor(nsIPresContext*,nsIContent*,nsIStyleCont
+ext*,int) [nsStyleSet.cpp:940]
+            nsPresContext::ResolveStyleContextFor(nsIContent*,nsIStyleContext*,int
+,nsIStyleContext**) [nsPresContext.cpp:698]
+            FrameManager::ReResolveStyleContext(nsIPresContext*,nsIFrame*,nsIStyle
+Context*,nsIContent*,int,nsIAtom*,nsStyleChangeList&,int,int&) [nsFrameManager.cpp
+:1623]
+            FrameManager::ReResolveStyleContext(nsIPresContext*,nsIFrame*,nsIStyle
+Context*,nsIContent*,int,nsIAtom*,nsStyleChangeList&,int,int&) [nsFrameManager.cpp
+:1771]
+            FrameManager::ComputeStyleChangeFor(nsIPresContext*,nsIFrame*,int,nsIA
+tom*,nsStyleChangeList&,int,int&) [nsFrameManager.cpp:2016]
+            nsCSSFrameConstructor::AttributeChanged(nsIPresContext*,nsIContent*,in
+t,nsIAtom*,int) [nsCSSFrameConstructor.cpp:9969]
+            StyleSetImpl::AttributeChanged(nsIPresContext*,nsIContent*,int,nsIAtom
+*,int) [nsStyleSet.cpp:1289]
+            PresShell::AttributeChanged(nsIDocument*,nsIContent*,int,nsIAtom*,int)
+ [nsPresShell.cpp:4814]
+            nsDocument::AttributeChanged(nsIContent*,int,nsIAtom*,int) [nsDocument
+.cpp:1675]
+            nsHTMLDocument::AttributeChanged(nsIContent*,int,nsIAtom*,int) [nsHTML
+Document.cpp:1283]
+            nsXULElement::UnsetAttribute(int,nsIAtom*,int) [nsXULElement.cpp:3310]
+            nsGfxScrollFrameInner::SetScrollbarVisibility(nsIBox*,int) [nsGfxScrol
+lFrame.cpp:1486]
+            nsGfxScrollFrameInner::AddRemoveScrollbar(nsBoxLayoutState&,nsRect&,in
+t,int,int) [nsGfxScrollFrame.cpp:991]
+            nsGfxScrollFrameInner::AddVerticalScrollbar(nsBoxLayoutState&,nsRect&,
+int) [nsGfxScrollFrame.cpp:949]
+            nsGfxScrollFrameInner::Layout(nsBoxLayoutState&) [nsGfxScrollFrame.cpp
+:1169]
+            nsGfxScrollFrame::DoLayout(nsBoxLayoutState&) [nsGfxScrollFrame.cpp:10
+46]
+            nsBox::Layout(nsBoxLayoutState&) [nsBox.cpp:983]

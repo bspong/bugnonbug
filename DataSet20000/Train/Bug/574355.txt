@@ -1,0 +1,54 @@
+Frequent hangs with Minefield
+I've been getting frequent hangs with Minefield over the past few weeks.
+
+strace says:
+strace -p 21056
+Process 21056 attached - interrupt to quit
+futex(0x7fbc7b0ef040, FUTEX_WAIT_PRIVATE, 2, NULL'
+
+gdb says:
+
+(gdb) where
+#0  __lll_lock_wait () at ../nptl/sysdeps/unix/sysv/linux/x86_64/lowlevellock.S:136
+#1  0x00007fbc7adf911f in _L_lock_1172 () from /lib/libpthread.so.0
+#2  0x00007fbc7adf906a in __pthread_mutex_lock (mutex=0x7fbc7b0ef040)
+    at pthread_mutex_lock.c:101
+#3  0x0000000000407aeb in free ()
+#4  0x00007fbc79eefb1b in ?? () from /home/catlee/minefield/libxul.so
+#5  0x00007fbc7901a379 in JS_DHashTableEnumerate ()
+   from /home/catlee/minefield/libmozjs.so
+#6  0x00007fbc79eef93e in ?? () from /home/catlee/minefield/libxul.so
+#7  0x00007fbc79ca5ee6 in ?? () from /home/catlee/minefield/libxul.so
+#8  0x00007fbc7904049c in ?? () from /home/catlee/minefield/libmozjs.so
+#9  0x00007fbc79edc7f0 in ?? () from /home/catlee/minefield/libxul.so
+#10 0x00007fbc7a21f4f5 in ?? () from /home/catlee/minefield/libxul.so
+#11 0x00007fbc79ca6f19 in ?? () from /home/catlee/minefield/libxul.so
+#12 0x00007fbc79ca6f63 in ?? () from /home/catlee/minefield/libxul.so
+#13 0x00007fbc79ca71fe in ?? () from /home/catlee/minefield/libxul.so
+#14 0x00007fbc7a1f28b4 in ?? () from /home/catlee/minefield/libxul.so
+#15 0x00007fbc7a1f2bc6 in ?? () from /home/catlee/minefield/libxul.so
+#16 0x00007fbc79bc76e1 in ?? () from /home/catlee/minefield/libxul.so
+#17 0x00007fbc7a21735c in ?? () from /home/catlee/minefield/libxul.so
+#18 0x00007fbc7a217476 in ?? () from /home/catlee/minefield/libxul.so
+#19 0x00007fbc7a214bb4 in ?? () from /home/catlee/minefield/libxul.so
+#20 0x00007fbc7a1e894e in ?? () from /home/catlee/minefield/libxul.so
+#21 0x00007fbc7a190bbf in ?? () from /home/catlee/minefield/libxul.so
+#22 0x00007fbc7a248afe in ?? () from /home/catlee/minefield/libxul.so
+#23 0x00007fbc7a0f4dc5 in ?? () from /home/catlee/minefield/libxul.so
+#24 0x00007fbc79fcea79 in ?? () from /home/catlee/minefield/libxul.so
+#25 0x00007fbc798d2470 in XRE_main () from /home/catlee/minefield/libxul.so
+#26 0x0000000000401c28 in ?? ()
+#27 0x00007fbc75a4cc4d in __libc_start_main (main=<value optimized out>, 
+    argc=<value optimized out>, ubp_av=<value optimized out>, 
+    init=<value optimized out>, fini=<value optimized out>, 
+    rtld_fini=<value optimized out>, stack_end=0x7fff11d97068) at libc-start.c:228
+#28 0x00000000004019e9 in ?? ()
+#29 0x00007fff11d97068 in ?? ()
+#30 0x000000000000001c in ?? ()
+#31 0x0000000000000001 in ?? ()
+#32 0x00007fff11d97802 in ?? ()
+#33 0x0000000000000000 in ?? ()
+
+neither kill -ABRT nor kill -SEGV cause the crash reporter dialog to be brought up.
+
+This is Build ID 20100622030948 built from revision ce18b4287791.

@@ -1,0 +1,26 @@
+setting window.status through javascript sometimes doe not work a expected
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.8.1.13) Gecko/20080311 Firefox/2.0.0.13
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.8.1.13) Gecko/20080311 Firefox/2.0.0.13
+
+In certain situation, if I try to set the text on the status through window.status, the text is not changed.
+
+I have enabled javascript access to the status bar through Options -> Content -> Enable JavaScript -> Advanced -> Change Status Bar Text.
+
+I've traced down the problem to the following:
+- after I load a page, I can use window.status to change the status bar text a many time a possible; it work fine all the time;
+- if at some point intead of "window.status = 'text';" I say just "status = 'text';", then the status bar text is not changed;
+- from this moment on, even if I use the original call to "window.status = 'text';" the status bar text is not changed anymore.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Take the HTML file attached, open it in the browser and start clicking on the first two buttons. As you click the buttons, you should see alert with the current value of the status text and then you should see the status text change.
+2. Click the third button. You will see an alert with the current status text, and then nothing will happen.
+3. Click again on the first two buttons. You will see the current status text a expected, but in the status bar there will be no change anymore. You need to reload the page in order for the first two button to work again.
+Actual Results:
+It seems that if I set the "status" property, without explicitly saying "window.status", something go on with refreshing the status bar. Behind the scenes, the status seems to be changed, but no refresh happens on the screen.
+
+Expected Results:
+I would expect the changed text to be displayed in the status bar. I could live with the fact that a call to "status = 'text';" is ignored and that I have to specify all the time "window.status = 'text';", but I would expect such a call to not interfere with other call that change the status text.
+
+This problem also appears if I use Apache Wicket. It seems that somewhere in their code they set a "status" property in the scope of "window", which block all subsequent change of the status bar text.

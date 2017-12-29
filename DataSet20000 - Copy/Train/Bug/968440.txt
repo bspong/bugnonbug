@@ -1,0 +1,38 @@
+"getApp" webapps actor method responds for certified apps even when forbidden
+As part of expanding test coverage in bug 966039, I discovered the webapps actor's "getApp" method uses an incorrect check for whether certified apps are allowed or not, such that it always allows responding about certified apps, even when "devtools.debugger.forbid-certified-apps" is true (as it is by default).
+
+I don't believe this leaks any useful private information, however, so I've left this as a public issue.  It's not possible to debug the apps or anything like that, as the "getAppActor" method checks correctly.  The main thing is if you know the manifestURL of a certified app, now you could check to see if it is installed, and get information back like the following example:
+
+{
+  "app": {
+    "name": "Certified app",
+    "installOrigin": "app://test-certified-id",
+    "origin": "app://test-certified-id",
+    "receipts": {},
+    "installTime": 1391635240790,
+    "manifestURL": "app://test-certified-id/manifest.webapp",
+    "appStatus": 3,
+    "removable": true,
+    "id": "test-certified-id",
+    "localId": 1002,
+    "basePath": "/var/folders/j6/jhbppx_x1050lwg8bmjxkt240000gp/T/tmpdAwMBV/webapps",
+    "progress": 0,
+    "installState": "installed",
+    "downloadSize": 0,
+    "installerAppId": 0,
+    "installerIsBrowser": false,
+    "storeId": "",
+    "storeVersion": 0,
+    "role": "",
+    "redirects": null,
+    "manifest": {
+      "name": "Certified app",
+      "description": "Testing webapps actor",
+      "launch_path": "/index.html",
+      "type": "certified"
+    }
+  },
+  "from": "conn0.webapps10"
+}
+
+This issue affects B2G 1.2+.

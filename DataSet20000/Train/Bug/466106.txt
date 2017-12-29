@@ -1,0 +1,29 @@
+extension install silently fails because of NTFS filename length limit
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.4) Gecko/2008111317 Ubuntu/8.04 (hardy) Firefox/3.0.4
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.4) Gecko/2008111317 Ubuntu/8.04 (hardy) Firefox/3.0.4
+
+When installing an extension that would create files with pathnames longer than the 256 character limit on NTFS on Windows XP, the install silently fails.  When turning on extensions.logging.enabled, the following message is displayed in the log:
+
+extractExtensionsFiles: failed to create target file for extraction
+file = C:\Documents and Settings\Administrator\Application
+Data\Mozilla\Firefox\Profiles\2y6xplno.libxrestructuring\extensions\{d75de36c-af0d-4dc2-b63a-0d482d4b9815}\chrome\libx\content\libx\doc\symbols\src\base_chrome_libx_content_libx_catalogs_centralsearch.js.html,
+exception = [Exception... "Component returned failure code: 0x80520012
+(NS_ERROR_FILE_NOT_FOUND) [nsIFile.create]"  nsresult: "0x80520012
+(NS_ERROR_FILE_NOT_FOUND)"  location: "JS frame ::
+file:///C:/Program%20Files/Mozilla%20Firefox3RC/components/nsExtensionManager.js
+:: extractExtensionFiles :: line 1631"  data: no]
+
+
+The same .xpi file installs just fine on Linux or Vista.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Create an extension with filenames longer than 256 characters
+2. Try to install it.
+3.
+Actual Results:  
+The extension doesn't install. The staged xpi is stuck in staged-xpis/tmp.xi
+
+Expected Results:  
+A meaningful error message should be displayed to the user, such as "install failed"; better yet, the reason for the failure should be displayed.

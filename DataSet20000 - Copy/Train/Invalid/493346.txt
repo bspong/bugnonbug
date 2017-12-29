@@ -1,0 +1,53 @@
+Consistent memory leak & eventual crash, even in safe mode with all add-ons & plug-ins disabled
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.10) Gecko/2009042316 Firefox/3.0.10
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.10) Gecko/2009042316 Firefox/3.0.10
+
+I am running WinXP SP3, with Firefox 3.09 at this time.  The only extension is Java QuickStarter, but I have a number of plug-ins.  Firefox keeps crashing on me, and nothing seems to make any difference, even disabling all add-ons, extensions, & plug-ins, or even starting in "Safe" mode.
+
+These are the problems I've been having:
+
+- Firefox has a severe memory leak problem that seems related to the number of pages (tabs) that you have open at any one time, but even occurs with only a single blank tab.
+- With many tabs open, CPU utilization goes to 100% and stays there until it crashes.  This is not always the case, especially if only a few tabs are open.
+- Problems with crashing have been happening consistently since v3.0 came out, and is still a problem with v3.10.  It may have existed before, but I never noticed it.
+- The Crash Report utility doesn't come up most of the time when Firefox crashes.
+- The Crash Report utility couldn't send crash reports when it DID come up (it says something about how it encountered a problem sending the report).  This seemed to change only once I had created a Bugzilla account (I can't verify this because the Crash Report utility has only tried to send a report once since then).
+- Crashes continue even with all extensions disabled, or starting in "Safe" mode.
+- Complete removal and reinstallation makes no difference; it still develops the memory leak and crashes.
+- Monitoring my system using the "Windows Task Manager", I can see the Page File continually increasing in size, and with "Process Explorer" I can see an ever increasing number of Page Faults.  This is all while there does not appear to be any read/write activity (either to the hard drive or the Internet).  "Process Explorer" also reports an ever increasing number of "context switches" (until, of course, when it crashes).
+- This problem in repeatable EVERY time I run Firefox, on my main system or on either of 2 other computers (1 with XP Home SP3, the other with XP MCE SP3)
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Open Windows Task Manager
+2. Open Firefox.  It doesn't matter if you have only a single blank tab or not, but the more tabs open the faster the memory leak.
+3. Windows Task Manager can be used to watch how memory usage increases continually.  This applies to the Page File usage as well.  Usage continues until it can't handle it any more, then it crashes.
+Actual Results:  
+Many times when it had crashed in the past, I got a pop-up with the following error message:
+
+  Microsoft Visual C++ Runtime Library
+  X   Runtime Error!
+      Program: C:\Program Files\Mozilla Firefox\firefox.exe
+
+      This application has requested the Runtime to terminate in an unusual way.
+      Please contact the application's support team for more information.
+
+
+
+Expected Results:  
+It will ALWAYS crash.  It's only a matter of how fast.
+
+about:buildconfig
+
+Build platform
+target
+i686-pc-mingw32
+
+Build tools
+Compiler 	Version 	Compiler flags
+cl 	14.00.50727.762 	-GL -wd4624 -wd4952 -TC -nologo -W3 -Gy -Fd$(PDBFILE)
+cl 	14.00.50727.762 	-GR- -GL -wd4624 -wd4952 -TP -nologo -Zc:wchar_t- -W3 -Gy -Fd$(PDBFILE)
+
+Configure arguments
+--enable-application=browser --enable-update-channel=release --enable-optimize --disable-debug --disable-tests --enable-update-packaging --enable-official-branding --enable-jemalloc --with-crashreporter-enable-percent=10

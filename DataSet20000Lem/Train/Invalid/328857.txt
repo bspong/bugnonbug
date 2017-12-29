@@ -1,0 +1,43 @@
+Nested CSS counter don't go out of scope at end of tag
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.0.1) Gecko/20060111 Firefox/1.5.0.1
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.0.1) Gecko/20060111 Firefox/1.5.0.1
+
+Using this CSS...
+
+ol { list-style-type: none;
+display: list-item;
+counter-reset: item }
+
+
+li { display: block }
+
+
+li:before { content: counters(item, ".", decimal) ".\0020";
+counter-increment: item }
+
+... with this nested, ordered list ...
+
+<ol> <li>Should have &quot;1. &quot;</li>
+<li>Should have &quot;2. &quot;</li>
+<ol> <li>Should have &quot;2.1 &quot;</li>
+<ol> <li>Should have &quot;2.1.1 &quot;</li>
+</ol>
+</ol>
+<li>Should have &quot;3 &quot;</li>
+<ol> <li>Should have &quot;3.1 &quot;</li>
+<li>Should have &quot;3.2 &quot;</li>
+</ol>
+</ol>
+
+... I get the following output ...
+
+1. Should have "1. "
+2. Should have "2. "
+2.1. Should have "2.1 "
+2.1.1. Should have "2.1.1 "
+2.2. Should have "3 "
+2.1. Should have "3.1 "
+2.2. Should have "3.2 "
+
+
+Reproducible: Always

@@ -1,0 +1,14 @@
+[Mac] Tab drag-scrolling stops being painted (no visual scroll while dragging) on trunk
+On the Mac trunk (3.0) only. If you have enough tabs open that the tab scroll arrows appear, drag a tab over one of the arrows. The scrolling effect may work for a brief time, or not at all, i.e. the tabs won't appear to move. But the actual scrolling calculations *have* worked, as when you release the tab, it'll be dropped at the very end and the scroll will be moved to that position. Sometimes just moving the drag from over the arrow is enough to force an update, too.
+
+STR:
+1. Open a couple of tabs with different content.
+2. Open a large number of blank tabs, until the scroll arrows appear, and then some.
+3. In the final tab, load something else, so you can easily recognize that it's the last tab
+4. Scroll back to the first tab. Scrolling will work fine.
+5. Grab the first or second tab and drag over the top of the right scroll arrow.
+6. Hold it there. The tabs are meant to scroll all the way to the last tab, but they probably won't.
+7. Having observed the lack of scrolling, drop the tab over the scroll arrow.
+8. Observe that the dragged tab has now been dropped after the previous last tab (assuming you dragged it for long enough). And the scroll has been updated to that position.
+
+I'm pretty sure this isn't the fault of the tab D&D or scrolling code, but rather a reflow/repaint bug related to bug 325455. In fact, if I change the drag indicator code so that it's moved to a slightly different location on each iteration of onDragOver, it forces a repaint that also removes the symptoms of this bug (as well as bug 325455).

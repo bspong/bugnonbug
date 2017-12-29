@@ -1,0 +1,23 @@
+browser_*_behavior.js fails when run a a standalone directory
+we are close to changing our mochitests to run one directory at a time. Unfortunately while doing this we run into case where test fail, usually because they accidentally depend on the state of the browser being set by a previous test.
+
+In this case we have a consistent set of bc1 failures:
+https://treeherder.mozilla.org/ui/#/jobs?repo=try&revision=6d8041d9592d
+
+running this locally, I can reproduce the problem easily:
+./mach mochitest-browser browser/components/search/test
+
+775 INFO TEST-UNEXPECTED-FAIL | chrome://mochitests/content/browser/browser/components/search/test/browser_bing_behavior.js | uncaught exception - NotFoundError: The operation failed because the requested database object could not be found. For example, an object store did not exist but wa being opened. at chrome://browser/content/abouthome/aboutHome.js:256
+Stack trace:
+chrome://mochikit/content/tests/SimpleTest/SimpleTest.js:simpletestOnerror:1317
+null:null:0
+776 INFO TEST-UNEXPECTED-FAIL | chrome://mochitests/content/browser/browser/components/search/test/browser_google_behavior.js | uncaught exception - NotFoundError: The operation failed because the requested database object could not be found. For example, an object store did not exist but wa being opened. at chrome://browser/content/abouthome/aboutHome.js:256
+Stack trace:
+chrome://mochikit/content/tests/SimpleTest/SimpleTest.js:simpletestOnerror:1317
+null:null:0
+777 INFO TEST-UNEXPECTED-FAIL | chrome://mochitests/content/browser/browser/components/search/test/browser_yahoo_behavior.js | uncaught exception - NotFoundError: The operation failed because the requested database object could not be found. For example, an object store did not exist but wa being opened. at chrome://browser/content/abouthome/aboutHome.js:256
+Stack trace:
+chrome://mochikit/content/tests/SimpleTest/SimpleTest.js:simpletestOnerror:1317
+
+
+If there are any pointer for me to hack on this, please speak up.

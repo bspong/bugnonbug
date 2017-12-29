@@ -1,0 +1,23 @@
+Docshell leak after choosing "update later"
+Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.3a1pre) Gecko/20090914 Minefield/3.7a1pre ID:20090914031022
+
+If you select "Help > Check for Updates", Firefox finds an update, and you then click "update later", it will leak a docshell.  The leak-gauge.pl report of nspr.log says "Leaked docshell at address b278dc60", and searching nspr.log for that gets this (with b278dc60 marked with stars):
+
+-1241303344[b5d17060]: DOCSHELL b278d8a0 created
+-1241303344[b5d17060]: DOCUMENT 98144800 created
+-1241303344[b5d17060]: DOCUMENT 98144800 ResetToURI about:blank
+-1241303344[b5d17060]: DOCSHELL b278d8a0 SetCurrentURI about:blank
+-1241303344[b5d17060]: DOCSHELL b278d8a0 InternalLoad chrome://mozapps/content/update/updates.xul
+-1241303344[b5d17060]: DOCUMENT 9a296000 created
+-1241303344[b5d17060]: DOCSHELL b278d8a0 SetCurrentURI chrome://mozapps/content/update/updates.xul
+-1241303344[b5d17060]: DOCUMENT 9c190000 created
+-1241303344[b5d17060]: DOCUMENT 9c190000 StartDocumentLoad jar:file:///usr/home/matt/graze/browsers/firefox/chrome/toolkit.jar!/content/global/bindings/wizard.xml
+-1241303344[b5d17060]: DOCUMENT 9c190000 ResetToURI chrome://global/content/bindings/wizard.xml
+-1241303344[b5d17060]: DOCUMENT 9c195800 created
+-1241303344[b5d17060]: DOCUMENT 9c195800 StartDocumentLoad jar:file:///usr/home/matt/graze/browsers/firefox/chrome/toolkit.jar!/content/mozapps/update/updates.xml
+-1241303344[b5d17060]: DOCUMENT 9c195800 ResetToURI chrome://mozapps/content/update/updates.xml
+-1241303344[b5d17060]: DOCSHELL b278dc60 created ***************
+-1241303344[b5d17060]: DOCSHELL b278e7a0 created
+-1241303344[b5d17060]: DOCSHELL b278e5c0 created
+
+That's the only place in nspr.log that b278dc60 is referenced.

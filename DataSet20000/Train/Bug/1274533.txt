@@ -1,0 +1,39 @@
+Move legacy behaviour change from text-link binding to handle-xul-text-link observer
+(In reply to tabmix.onemen from bug 1268943 comment #23)
+> The "Preserve legacy behavior" part in text.js#text-link prevents any one
+> that observes "handle-xul-text-link" from getting the real event data.
+> 
+> >          if (!shiftKey && !altKey) {
+> >            // Preserve legacy behavior of non-modifier left-clicks
+> >            // opening in a new selected tab.
+> >            let {AppConstants} =
+> >              Components.utils.import("resource://gre/modules/AppConstants.jsm", {});
+> >            if (AppConstants.platform == "macosx") {
+> >              metaKey = true;
+> >            } else {
+> >              ctrlKey = true;
+> >            }
+> >          }
+> 
+> Tab mix add option to inverse the behavior of
+> "browser.tabs.loadInBackground" when user middle-click on links, to one can
+> click open the link and stay on the current page.
+> 
+> Is it possible to move the "Preserve legacy behavior" to
+> "handle-xul-text-link" observer
+> >        if (!linkHandled.data) {
+> >          let win = RecentWindow.getMostRecentBrowserWindow();
+> >          if (win) {
+> >            data = JSON.parse(data);
+> >            let where = win.whereToOpenLink(data);
+> >+           // Preserve legacy behavior of non-modifier left-clicks
+> >+           // opening in a new selected tab.
+> >+           if (where == "current") {
+> >+             where = "tab";
+> >+           }
+> >            win.openUILinkIn(data.href, where);
+> >            linkHandled.data = true;
+> >          }
+> >        }
+
+This seems reasonable to me.

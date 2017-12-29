@@ -1,0 +1,44 @@
+Console logging is slow
+Created attachment 593077
+Simple test to show the speed difference
+
+Along the way, a couple of people had told me that "logging to the web console is slow", so I thought I'd see if that's true/quantifiable. This might be related to bug 597461, or those may be two different problems.
+
+See the attached file for a simple, stupid benchmark but I think it highlights an issue. How the results are computed:
+
+1. With console not visible: 1000 iterations of console.log called with a string
+2. With console not visible: 1000 iterations of console.log with a single %s replacement
+3. With console visible: 1000 iterations of console.log called with a string
+4. With console visible: 1000 iterations of console.log with a single %s replacement  
+
+With Nightly (2012-01-30) on my Mac, I get the following results (times in ms):
+
+Closed Console
+
+Simple string: 335
+Interpolation: 259
+
+(the last 200 results were saved and displayed on open)
+
+Open Console
+
+Simple string: 3797
+Interpolation: 3820
+
+
+Contrast with Chrome 18.0.1017.2 dev
+
+Closed Console
+
+Simple string: 42
+Interpolation: 39
+
+(the last 900 results were saved and displayed on open)
+
+Open Console
+
+Simple string: 186
+Interpolation: 198
+
+
+I noticed that Chrome's display of console output when the console was open was asynchronous.

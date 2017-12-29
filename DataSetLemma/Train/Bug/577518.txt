@@ -1,0 +1,183 @@
+Stack exhaustion on startup with accessibility enabled and default browser dialog not yet answered
+(This all is with the official binary of firefox 4.0beta1 on x86-64 linux ; filing on general because i'm unsure what would be best)
+Here is how I could reproduce:
+- Make sure to enable a11y on the gnome desktop
+- Make sure firefox is not the default browser on the gnome desktop
+- Make sure there is no $HOME/.mozilla directory
+- When starting firefox 4.0b1 for the first time, the "ffx is not your default browser dialog" show up, choose "No" without unchecking the box. Ffx then start up normally, close it.
+- Start ffx again, the dialog show up again, when clicking either yes or no, the crash occurs by stack exhaustion.
+
+Here is the corresponding stack trace (it go up to #70000+, so here is only the first few lines):
+#0 0x00007ffff6884277 in nsStyleSet::FileRules (this=0x7fffe1373d60, aCollectorFunc=0x7ffff68834b3 <EnumRulesMatching<PseudoElementRuleProcessorData>>, aData=0x7fffff7ff060, aContent=0x7fffdd4ba4c0,
+aRuleWalker=0x7fffff7ff0f0) at /builds/slave/linux64_build/build/layout/style/nsStyleSet.cpp:579
+#1 0x00007ffff6884ae0 in nsStyleSet::ProbePseudoElementStyle (this=0x7fffe1373d60, aParentElement=0x7fffdd4ba4c0, aType=nsCSSPseudoElements::ePseudo_after, aParentContext=0x7fffdd49c728)
+at /builds/slave/linux64_build/build/layout/style/nsStyleSet.cpp:939
+#2 0x00007ffff67902c4 in nsLayoutUtils::HasPseudoStyle (aContent=0x7fffff7ff0f0, aStyleContext=<value optimized out>, aPseudoElement=4286574688, aPresContext=<value optimized out>)
+at /builds/slave/linux64_build/build/layout/base/nsLayoutUtils.h:352
+#3 0x00007ffff6784443 in AdjustAppendParentForAfterContent (aPresContext=<value optimized out>, aContainer=0x7fffe1373d60, aParentFrame=0x7fffdd49c960, aAfterFrame=0x7fffff7ff310)
+at /builds/slave/linux64_build/build/layout/base/nsCSSFrameConstructor.cpp:5618
+#4 0x00007ffff678e46e in nsCSSFrameConstructor::ContentAppended (this=0x7fffe5097000, aContainer=0x7fffdd4ba4c0, aFirstNewContent=<value optimized out>, aNewIndexInContainer=0, aAllowLazyConstruction=1)
+at /builds/slave/linux64_build/build/layout/base/nsCSSFrameConstructor.cpp:6665
+#5 0x00007ffff67bd261 in PresShell::ContentAppended (this=0x7fffe4a8cc00, aDocument=<value optimized out>, aContainer=0x7fffdd4ba4c0, aFirstNewContent=0x7fffda8104c0, aNewIndexInContainer=0)
+at /builds/slave/linux64_build/build/layout/base/nsPresShell.cpp:4975
+#6 0x00007ffff69266d5 in nsNodeUtils::ContentAppended (aContainer=0x7fffdd4ba4c0, aFirstNewContent=0x7fffda8104c0, aNewIndexInContainer=0)
+at /builds/slave/linux64_build/build/content/base/src/nsNodeUtils.cpp:139
+#7 0x00007ffff691b9bf in nsINode::doInsertChildAt (this=0x7fffdd4ba4c0, aKid=0x7fffda8104c0, aIndex=0, aNotify=1, aChildArray=...)
+at /builds/slave/linux64_build/build/content/base/src/nsGenericElement.cpp:3580
+#8 0x00007ffff691afed in nsINode::ReplaceOrInsertBefore (this=0x7fffdd4ba4c0, aReplace=0, aNewChild=0x7fffda8104c0, aRefChild=<value optimized out>)
+at /builds/slave/linux64_build/build/content/base/src/nsGenericElement.cpp:4266
+#9 0x00007ffff691a746 in nsINode::ReplaceOrInsertBefore (this=0x7fffdd4ba4c0, aReplace=0, aNewChild=0x7fffda810518, aRefChild=0x0, aReturn=0x7fffff7ff690)
+at /builds/slave/linux64_build/build/content/base/src/nsGenericElement.cpp:553
+#10 0x00007ffff6adff06 in InsertElementTxn::DoTransaction (this=0x7fffda811bc0) at /builds/slave/linux64_build/build/editor/libeditor/base/InsertElementTxn.cpp:127
+#11 0x00007ffff6ad5115 in nsEditor::DoTransaction (this=0x7fffda80a5e0, aTxn=0x7fffda811bc0) at /builds/slave/linux64_build/build/editor/libeditor/base/nsEditor.cpp:645
+#12 0x00007ffff6ad4a8f in nsEditor::InsertNode (this=0x7fffda80a5e0, aNode=0x7fffda810518, aParent=0x7fffdd4ba518, aPosition=0) at /builds/slave/linux64_build/build/editor/libeditor/base/nsEditor.cpp:1336
+#13 0x00007ffff6ac9b16 in nsTextEditRules::CreateBogusNodeIfNeeded (this=0x7fffda803a80, aSelection=0x7fffdd4b9b30) at /builds/slave/linux64_build/build/editor/libeditor/text/nsTextEditRules.cpp:1346
+#14 0x00007ffff6acb977 in nsTextEditRules::Init (this=0x7fffda803a80, aEditor=<value optimized out>) at /builds/slave/linux64_build/build/editor/libeditor/text/nsTextEditRules.cpp:153
+#15 0x00007ffff6ac46d0 in nsPlaintextEditor::EndEditorInit (this=0x7fffe1373d60) at /builds/slave/linux64_build/build/editor/libeditor/text/nsPlaintextEditor.cpp:229
+#16 0x00007ffff6ac8ad9 in ~nsAutoEditInitRulesTrigger (this=0x7fffe1373d60, __in_chrg=<value optimized out>) at /builds/slave/linux64_build/build/editor/libeditor/text/nsTextEditUtils.cpp:133
+#17 0x00007ffff6ac8408 in nsPlaintextEditor::Init (this=0x7fffda80a5e0, aDoc=0x7fffdd5c3960, aPresShell=<value optimized out>, aRoot=0x7fffdd4ba4c0, aSelCon=0x7fffe1492b10, aFlags=515)
+at /builds/slave/linux64_build/build/editor/libeditor/text/nsPlaintextEditor.cpp:156
+#18 0x00007ffff6992bcf in nsTextEditorState::PrepareEditor (this=0x7fffdd46c5f0, aValue=0x0) at /builds/slave/linux64_build/build/content/html/content/src/nsTextEditorState.cpp:1157
+#19 0x00007ffff6992f39 in nsTextEditorState::GetEditor (this=0x7fffdd46c5f0) at /builds/slave/linux64_build/build/content/html/content/src/nsTextEditorState.cpp:960
+#20 0x00007ffff69891d9 in nsGenericHTMLElement::GetEditorInternal (this=<value optimized out>, aEditor=0x7fffff7ffc70)
+at /builds/slave/linux64_build/build/content/html/content/src/nsGenericHTMLElement.cpp:3169
+#21 0x00007ffff6ef1905 in nsHTMLTextFieldAccessible::GetAssociatedEditor (this=<value optimized out>, aEditor=0x7fffff7ffc70)
+at /builds/slave/linux64_build/build/accessible/src/html/nsHTMLFormControlAccessible.cpp:579
+#22 0x00007ffff6efb539 in nsHyperTextAccessible::GetSelections (this=0x7fffdbf80f70, aType=1, aSelCon=0x0, aDomSel=0x7fffff7ffd00, aRanges=0x0)
+at /builds/slave/linux64_build/build/accessible/src/html/nsHyperTextAccessible.cpp:1721
+#23 0x00007ffff6efd6fa in nsHyperTextAccessible::GetCaretOffset (this=0x7fffdbf80f70, aCaretOffset=0x7fffff7ffd68) at /builds/slave/linux64_build/build/accessible/src/html/nsHyperTextAccessible.cpp:1605
+#24 0x00007ffff6eee969 in nsCaretAccessible::NormalSelectionChanged (this=0x7fffdd5bc500, aDoc=<value optimized out>, aSel=<value optimized out>)
+at /builds/slave/linux64_build/build/accessible/src/base/nsCaretAccessible.cpp:254
+#25 0x00007ffff6eeeb2b in nsCaretAccessible::NotifySelectionChanged (this=0x7fffdd5bc500, aDoc=0x7fffdd5c3960, aSel=0x7fffdd4b9b30, aReason=<value optimized out>)
+at /builds/slave/linux64_build/build/accessible/src/base/nsCaretAccessible.cpp:223
+#26 0x00007ffff680c28a in nsTypedSelection::NotifySelectionListeners (this=0x7fffdd4b9b30) at /builds/slave/linux64_build/build/layout/generic/nsSelection.cpp:5652
+#27 0x00007ffff680c300 in nsTypedSelection::EndBatchChanges (this=<value optimized out>) at /builds/slave/linux64_build/build/layout/generic/nsSelection.cpp:5672
+#28 0x00007ffff6ad4f58 in nsEditor::DoTransaction (this=0x7fffda80a480, aTxn=0x7fffda811ac0) at /builds/slave/linux64_build/build/editor/libeditor/base/nsEditor.cpp:651
+#29 0x00007ffff6ad4a8f in nsEditor::InsertNode (this=0x7fffda80a480, aNode=0x7fffda8104b8, aParent=0x7fffdd4ba518, aPosition=0) at /builds/slave/linux64_build/build/editor/libeditor/base/nsEditor.cpp:1336
+#30 0x00007ffff6ac9b16 in nsTextEditRules::CreateBogusNodeIfNeeded (this=0x7fffda803a00, aSelection=0x7fffdd4b9b30) at /builds/slave/linux64_build/build/editor/libeditor/text/nsTextEditRules.cpp:1346
+#31 0x00007ffff6acb977 in nsTextEditRules::Init (this=0x7fffda803a00, aEditor=<value optimized out>) at /builds/slave/linux64_build/build/editor/libeditor/text/nsTextEditRules.cpp:153
+#32 0x00007ffff6ac46d0 in nsPlaintextEditor::EndEditorInit (this=0x7fffe1373d60) at /builds/slave/linux64_build/build/editor/libeditor/text/nsPlaintextEditor.cpp:229
+#33 0x00007ffff6ac8ad9 in ~nsAutoEditInitRulesTrigger (this=0x7fffe1373d60, __in_chrg=<value optimized out>) at /builds/slave/linux64_build/build/editor/libeditor/text/nsTextEditUtils.cpp:133
+#34 0x00007ffff6ac8408 in nsPlaintextEditor::Init (this=0x7fffda80a480, aDoc=0x7fffdd5c3960, aPresShell=<value optimized out>, aRoot=0x7fffdd4ba4c0, aSelCon=0x7fffe1492b10, aFlags=515)
+at /builds/slave/linux64_build/build/editor/libeditor/text/nsPlaintextEditor.cpp:156
+#35 0x00007ffff6992bcf in nsTextEditorState::PrepareEditor (this=0x7fffdd46c5f0, aValue=0x0) at /builds/slave/linux64_build/build/content/html/content/src/nsTextEditorState.cpp:1157
+#36 0x00007ffff6992f39 in nsTextEditorState::GetEditor (this=0x7fffdd46c5f0) at /builds/slave/linux64_build/build/content/html/content/src/nsTextEditorState.cpp:960
+#37 0x00007ffff69891d9 in nsGenericHTMLElement::GetEditorInternal (this=<value optimized out>, aEditor=0x7fffff8003f0)
+at /builds/slave/linux64_build/build/content/html/content/src/nsGenericHTMLElement.cpp:3169
+#38 0x00007ffff6ef1905 in nsHTMLTextFieldAccessible::GetAssociatedEditor (this=<value optimized out>, aEditor=0x7fffff8003f0)
+
+at /builds/slave/linux64_build/build/accessible/src/html/nsHTMLFormControlAccessible.cpp:579
+#39 0x00007ffff6efb539 in nsHyperTextAccessible::GetSelections (this=0x7fffdbf80f70, aType=1, aSelCon=0x0, aDomSel=0x7fffff800480, aRanges=0x0)
+at /builds/slave/linux64_build/build/accessible/src/html/nsHyperTextAccessible.cpp:1721
+#40 0x00007ffff6efd6fa in nsHyperTextAccessible::GetCaretOffset (this=0x7fffdbf80f70, aCaretOffset=0x7fffff8004e8) at /builds/slave/linux64_build/build/accessible/src/html/nsHyperTextAccessible.cpp:1605
+#41 0x00007ffff6eee969 in nsCaretAccessible::NormalSelectionChanged (this=0x7fffdd5bc500, aDoc=<value optimized out>, aSel=<value optimized out>)
+at /builds/slave/linux64_build/build/accessible/src/base/nsCaretAccessible.cpp:254
+#42 0x00007ffff6eeeb2b in nsCaretAccessible::NotifySelectionChanged (this=0x7fffdd5bc500, aDoc=0x7fffdd5c3960, aSel=0x7fffdd4b9b30, aReason=<value optimized out>)
+at /builds/slave/linux64_build/build/accessible/src/base/nsCaretAccessible.cpp:223
+#43 0x00007ffff680c28a in nsTypedSelection::NotifySelectionListeners (this=0x7fffdd4b9b30) at /builds/slave/linux64_build/build/layout/generic/nsSelection.cpp:5652
+#44 0x00007ffff680c300 in nsTypedSelection::EndBatchChanges (this=<value optimized out>) at /builds/slave/linux64_build/build/layout/generic/nsSelection.cpp:5672
+#45 0x00007ffff6ad4f58 in nsEditor::DoTransaction (this=0x7fffda80a320, aTxn=0x7fffda8119c0) at /builds/slave/linux64_build/build/editor/libeditor/base/nsEditor.cpp:651
+#46 0x00007ffff6ad4a8f in nsEditor::InsertNode (this=0x7fffda80a320, aNode=0x7fffda810458, aParent=0x7fffdd4ba518, aPosition=0) at /builds/slave/linux64_build/build/editor/libeditor/base/nsEditor.cpp:1336
+#47 0x00007ffff6ac9b16 in nsTextEditRules::CreateBogusNodeIfNeeded (this=0x7fffda803980, aSelection=0x7fffdd4b9b30) at /builds/slave/linux64_build/build/editor/libeditor/text/nsTextEditRules.cpp:1346
+#48 0x00007ffff6acb977 in nsTextEditRules::Init (this=0x7fffda803980, aEditor=<value optimized out>) at /builds/slave/linux64_build/build/editor/libeditor/text/nsTextEditRules.cpp:153
+#49 0x00007ffff6ac46d0 in nsPlaintextEditor::EndEditorInit (this=0x7fffe1373d60) at /builds/slave/linux64_build/build/editor/libeditor/text/nsPlaintextEditor.cpp:229
+#50 0x00007ffff6ac8ad9 in ~nsAutoEditInitRulesTrigger (this=0x7fffe1373d60, __in_chrg=<value optimized out>) at /builds/slave/linux64_build/build/editor/libeditor/text/nsTextEditUtils.cpp:133
+#51 0x00007ffff6ac8408 in nsPlaintextEditor::Init (this=0x7fffda80a320, aDoc=0x7fffdd5c3960, aPresShell=<value optimized out>, aRoot=0x7fffdd4ba4c0, aSelCon=0x7fffe1492b10, aFlags=515)
+at /builds/slave/linux64_build/build/editor/libeditor/text/nsPlaintextEditor.cpp:156
+#52 0x00007ffff6992bcf in nsTextEditorState::PrepareEditor (this=0x7fffdd46c5f0, aValue=0x0) at /builds/slave/linux64_build/build/content/html/content/src/nsTextEditorState.cpp:1157
+#53 0x00007ffff6992f39 in nsTextEditorState::GetEditor (this=0x7fffdd46c5f0) at /builds/slave/linux64_build/build/content/html/content/src/nsTextEditorState.cpp:960
+#54 0x00007ffff69891d9 in nsGenericHTMLElement::GetEditorInternal (this=<value optimized out>, aEditor=0x7fffff800b70)
+at /builds/slave/linux64_build/build/content/html/content/src/nsGenericHTMLElement.cpp:3169
+#55 0x00007ffff6ef1905 in nsHTMLTextFieldAccessible::GetAssociatedEditor (this=<value optimized out>, aEditor=0x7fffff800b70)
+at /builds/slave/linux64_build/build/accessible/src/html/nsHTMLFormControlAccessible.cpp:579
+#56 0x00007ffff6efb539 in nsHyperTextAccessible::GetSelections (this=0x7fffdbf80f70, aType=1, aSelCon=0x0, aDomSel=0x7fffff800c00, aRanges=0x0)
+at /builds/slave/linux64_build/build/accessible/src/html/nsHyperTextAccessible.cpp:1721
+#57 0x00007ffff6efd6fa in nsHyperTextAccessible::GetCaretOffset (this=0x7fffdbf80f70, aCaretOffset=0x7fffff800c68) at /builds/slave/linux64_build/build/accessible/src/html/nsHyperTextAccessible.cpp:1605
+#58 0x00007ffff6eee969 in nsCaretAccessible::NormalSelectionChanged (this=0x7fffdd5bc500, aDoc=<value optimized out>, aSel=<value optimized out>)
+at /builds/slave/linux64_build/build/accessible/src/base/nsCaretAccessible.cpp:254
+#59 0x00007ffff6eeeb2b in nsCaretAccessible::NotifySelectionChanged (this=0x7fffdd5bc500, aDoc=0x7fffdd5c3960, aSel=0x7fffdd4b9b30, aReason=<value optimized out>)
+at /builds/slave/linux64_build/build/accessible/src/base/nsCaretAccessible.cpp:223
+#60 0x00007ffff680c28a in nsTypedSelection::NotifySelectionListeners (this=0x7fffdd4b9b30) at /builds/slave/linux64_build/build/layout/generic/nsSelection.cpp:5652
+#61 0x00007ffff680c300 in nsTypedSelection::EndBatchChanges (this=<value optimized out>) at /builds/slave/linux64_build/build/layout/generic/nsSelection.cpp:5672
+#62 0x00007ffff6ad4f58 in nsEditor::DoTransaction (this=0x7fffda80a1c0, aTxn=0x7fffda8118c0) at /builds/slave/linux64_build/build/editor/libeditor/base/nsEditor.cpp:651
+#63 0x00007ffff6ad4a8f in nsEditor::InsertNode (this=0x7fffda80a1c0, aNode=0x7fffda8103f8, aParent=0x7fffdd4ba518, aPosition=0) at /builds/slave/linux64_build/build/editor/libeditor/base/nsEditor.cpp:1336
+#64 0x00007ffff6ac9b16 in nsTextEditRules::CreateBogusNodeIfNeeded (this=0x7fffda803900, aSelection=0x7fffdd4b9b30) at /builds/slave/linux64_build/build/editor/libeditor/text/nsTextEditRules.cpp:1346
+#65 0x00007ffff6acb977 in nsTextEditRules::Init (this=0x7fffda803900, aEditor=<value optimized out>) at /builds/slave/linux64_build/build/editor/libeditor/text/nsTextEditRules.cpp:153
+#66 0x00007ffff6ac46d0 in nsPlaintextEditor::EndEditorInit (this=0x7fffe1373d60) at /builds/slave/linux64_build/build/editor/libeditor/text/nsPlaintextEditor.cpp:229
+#67 0x00007ffff6ac8ad9 in ~nsAutoEditInitRulesTrigger (this=0x7fffe1373d60, __in_chrg=<value optimized out>) at /builds/slave/linux64_build/build/editor/libeditor/text/nsTextEditUtils.cpp:133
+#68 0x00007ffff6ac8408 in nsPlaintextEditor::Init (this=0x7fffda80a1c0, aDoc=0x7fffdd5c3960, aPresShell=<value optimized out>, aRoot=0x7fffdd4ba4c0, aSelCon=0x7fffe1492b10, aFlags=515)
+at /builds/slave/linux64_build/build/editor/libeditor/text/nsPlaintextEditor.cpp:156
+#69 0x00007ffff6992bcf in nsTextEditorState::PrepareEditor (this=0x7fffdd46c5f0, aValue=0x0) at /builds/slave/linux64_build/build/content/html/content/src/nsTextEditorState.cpp:1157
+#70 0x00007ffff6992f39 in nsTextEditorState::GetEditor (this=0x7fffdd46c5f0) at /builds/slave/linux64_build/build/content/html/content/src/nsTextEditorState.cpp:960
+#71 0x00007ffff69891d9 in nsGenericHTMLElement::GetEditorInternal (this=<value optimized out>, aEditor=0x7fffff8012f0)
+at /builds/slave/linux64_build/build/content/html/content/src/nsGenericHTMLElement.cpp:3169
+#72 0x00007ffff6ef1905 in nsHTMLTextFieldAccessible::GetAssociatedEditor (this=<value optimized out>, aEditor=0x7fffff8012f0)
+at /builds/slave/linux64_build/build/accessible/src/html/nsHTMLFormControlAccessible.cpp:579
+#73 0x00007ffff6efb539 in nsHyperTextAccessible::GetSelections (this=0x7fffdbf80f70, aType=1, aSelCon=0x0, aDomSel=0x7fffff801380, aRanges=0x0)
+at /builds/slave/linux64_build/build/accessible/src/html/nsHyperTextAccessible.cpp:1721
+#74 0x00007ffff6efd6fa in nsHyperTextAccessible::GetCaretOffset (this=0x7fffdbf80f70, aCaretOffset=0x7fffff8013e8) at /builds/slave/linux64_build/build/accessible/src/html/nsHyperTextAccessible.cpp:1605
+#75 0x00007ffff6eee969 in nsCaretAccessible::NormalSelectionChanged (this=0x7fffdd5bc500, aDoc=<value optimized out>, aSel=<value optimized out>)
+at /builds/slave/linux64_build/build/accessible/src/base/nsCaretAccessible.cpp:254
+#76 0x00007ffff6eeeb2b in nsCaretAccessible::NotifySelectionChanged (this=0x7fffdd5bc500, aDoc=0x7fffdd5c3960, aSel=0x7fffdd4b9b30, aReason=<value optimized out>)
+at /builds/slave/linux64_build/build/accessible/src/base/nsCaretAccessible.cpp:223
+#77 0x00007ffff680c28a in nsTypedSelection::NotifySelectionListeners (this=0x7fffdd4b9b30) at /builds/slave/linux64_build/build/layout/generic/nsSelection.cpp:5652
+#78 0x00007ffff680c300 in nsTypedSelection::EndBatchChanges (this=<value optimized out>) at /builds/slave/linux64_build/build/layout/generic/nsSelection.cpp:5672
+#79 0x00007ffff6ad4f58 in nsEditor::DoTransaction (this=0x7fffda80a060, aTxn=0x7fffda8117c0) at /builds/slave/linux64_build/build/editor/libeditor/base/nsEditor.cpp:651
+
+#80 0x00007ffff6ad4a8f in nsEditor::InsertNode (this=0x7fffda80a060, aNode=0x7fffda810398, aParent=0x7fffdd4ba518, aPosition=0) at /builds/slave/linux64_build/build/editor/libeditor/base/nsEditor.cpp:1336
+#81 0x00007ffff6ac9b16 in nsTextEditRules::CreateBogusNodeIfNeeded (this=0x7fffda803880, aSelection=0x7fffdd4b9b30) at /builds/slave/linux64_build/build/editor/libeditor/text/nsTextEditRules.cpp:1346
+#82 0x00007ffff6acb977 in nsTextEditRules::Init (this=0x7fffda803880, aEditor=<value optimized out>) at /builds/slave/linux64_build/build/editor/libeditor/text/nsTextEditRules.cpp:153
+#83 0x00007ffff6ac46d0 in nsPlaintextEditor::EndEditorInit (this=0x7fffe1373d60) at /builds/slave/linux64_build/build/editor/libeditor/text/nsPlaintextEditor.cpp:229
+#84 0x00007ffff6ac8ad9 in ~nsAutoEditInitRulesTrigger (this=0x7fffe1373d60, __in_chrg=<value optimized out>) at /builds/slave/linux64_build/build/editor/libeditor/text/nsTextEditUtils.cpp:133
+#85 0x00007ffff6ac8408 in nsPlaintextEditor::Init (this=0x7fffda80a060, aDoc=0x7fffdd5c3960, aPresShell=<value optimized out>, aRoot=0x7fffdd4ba4c0, aSelCon=0x7fffe1492b10, aFlags=515)
+at /builds/slave/linux64_build/build/editor/libeditor/text/nsPlaintextEditor.cpp:156
+#86 0x00007ffff6992bcf in nsTextEditorState::PrepareEditor (this=0x7fffdd46c5f0, aValue=0x0) at /builds/slave/linux64_build/build/content/html/content/src/nsTextEditorState.cpp:1157
+#87 0x00007ffff6992f39 in nsTextEditorState::GetEditor (this=0x7fffdd46c5f0) at /builds/slave/linux64_build/build/content/html/content/src/nsTextEditorState.cpp:960
+#88 0x00007ffff69891d9 in nsGenericHTMLElement::GetEditorInternal (this=<value optimized out>, aEditor=0x7fffff801a70)
+at /builds/slave/linux64_build/build/content/html/content/src/nsGenericHTMLElement.cpp:3169
+#89 0x00007ffff6ef1905 in nsHTMLTextFieldAccessible::GetAssociatedEditor (this=<value optimized out>, aEditor=0x7fffff801a70)
+at /builds/slave/linux64_build/build/accessible/src/html/nsHTMLFormControlAccessible.cpp:579
+#90 0x00007ffff6efb539 in nsHyperTextAccessible::GetSelections (this=0x7fffdbf80f70, aType=1, aSelCon=0x0, aDomSel=0x7fffff801b00, aRanges=0x0)
+at /builds/slave/linux64_build/build/accessible/src/html/nsHyperTextAccessible.cpp:1721
+#91 0x00007ffff6efd6fa in nsHyperTextAccessible::GetCaretOffset (this=0x7fffdbf80f70, aCaretOffset=0x7fffff801b68) at /builds/slave/linux64_build/build/accessible/src/html/nsHyperTextAccessible.cpp:1605
+#92 0x00007ffff6eee969 in nsCaretAccessible::NormalSelectionChanged (this=0x7fffdd5bc500, aDoc=<value optimized out>, aSel=<value optimized out>)
+at /builds/slave/linux64_build/build/accessible/src/base/nsCaretAccessible.cpp:254
+#93 0x00007ffff6eeeb2b in nsCaretAccessible::NotifySelectionChanged (this=0x7fffdd5bc500, aDoc=0x7fffdd5c3960, aSel=0x7fffdd4b9b30, aReason=<value optimized out>)
+at /builds/slave/linux64_build/build/accessible/src/base/nsCaretAccessible.cpp:223
+#94 0x00007ffff680c28a in nsTypedSelection::NotifySelectionListeners (this=0x7fffdd4b9b30) at /builds/slave/linux64_build/build/layout/generic/nsSelection.cpp:5652
+#95 0x00007ffff680c300 in nsTypedSelection::EndBatchChanges (this=<value optimized out>) at /builds/slave/linux64_build/build/layout/generic/nsSelection.cpp:5672
+#96 0x00007ffff6ad4f58 in nsEditor::DoTransaction (this=0x7fffda809f00, aTxn=0x7fffda8116c0) at /builds/slave/linux64_build/build/editor/libeditor/base/nsEditor.cpp:651
+#97 0x00007ffff6ad4a8f in nsEditor::InsertNode (this=0x7fffda809f00, aNode=0x7fffda810338, aParent=0x7fffdd4ba518, aPosition=0) at /builds/slave/linux64_build/build/editor/libeditor/base/nsEditor.cpp:1336
+#98 0x00007ffff6ac9b16 in nsTextEditRules::CreateBogusNodeIfNeeded (this=0x7fffda803800, aSelection=0x7fffdd4b9b30) at /builds/slave/linux64_build/build/editor/libeditor/text/nsTextEditRules.cpp:1346
+#99 0x00007ffff6acb977 in nsTextEditRules::Init (this=0x7fffda803800, aEditor=<value optimized out>) at /builds/slave/linux64_build/build/editor/libeditor/text/nsTextEditRules.cpp:153
+#100 0x00007ffff6ac46d0 in nsPlaintextEditor::EndEditorInit (this=0x7fffe1373d60) at /builds/slave/linux64_build/build/editor/libeditor/text/nsPlaintextEditor.cpp:229
+#101 0x00007ffff6ac8ad9 in ~nsAutoEditInitRulesTrigger (this=0x7fffe1373d60, __in_chrg=<value optimized out>) at /builds/slave/linux64_build/build/editor/libeditor/text/nsTextEditUtils.cpp:133
+#102 0x00007ffff6ac8408 in nsPlaintextEditor::Init (this=0x7fffda809f00, aDoc=0x7fffdd5c3960, aPresShell=<value optimized out>, aRoot=0x7fffdd4ba4c0, aSelCon=0x7fffe1492b10, aFlags=515)
+at /builds/slave/linux64_build/build/editor/libeditor/text/nsPlaintextEditor.cpp:156
+#103 0x00007ffff6992bcf in nsTextEditorState::PrepareEditor (this=0x7fffdd46c5f0, aValue=0x0) at /builds/slave/linux64_build/build/content/html/content/src/nsTextEditorState.cpp:1157
+#104 0x00007ffff6992f39 in nsTextEditorState::GetEditor (this=0x7fffdd46c5f0) at /builds/slave/linux64_build/build/content/html/content/src/nsTextEditorState.cpp:960
+#105 0x00007ffff69891d9 in nsGenericHTMLElement::GetEditorInternal (this=<value optimized out>, aEditor=0x7fffff8021f0)
+at /builds/slave/linux64_build/build/content/html/content/src/nsGenericHTMLElement.cpp:3169
+#106 0x00007ffff6ef1905 in nsHTMLTextFieldAccessible::GetAssociatedEditor (this=<value optimized out>, aEditor=0x7fffff8021f0)
+at /builds/slave/linux64_build/build/accessible/src/html/nsHTMLFormControlAccessible.cpp:579
+#107 0x00007ffff6efb539 in nsHyperTextAccessible::GetSelections (this=0x7fffdbf80f70, aType=1, aSelCon=0x0, aDomSel=0x7fffff802280, aRanges=0x0)
+at /builds/slave/linux64_build/build/accessible/src/html/nsHyperTextAccessible.cpp:1721
+#108 0x00007ffff6efd6fa in nsHyperTextAccessible::GetCaretOffset (this=0x7fffdbf80f70, aCaretOffset=0x7fffff8022e8) at /builds/slave/linux64_build/build/accessible/src/html/nsHyperTextAccessible.cpp:1605
+#109 0x00007ffff6eee969 in nsCaretAccessible::NormalSelectionChanged (this=0x7fffdd5bc500, aDoc=<value optimized out>, aSel=<value optimized out>)
+at /builds/slave/linux64_build/build/accessible/src/base/nsCaretAccessible.cpp:254
+#110 0x00007ffff6eeeb2b in nsCaretAccessible::NotifySelectionChanged (this=0x7fffdd5bc500, aDoc=0x7fffdd5c3960, aSel=0x7fffdd4b9b30, aReason=<value optimized out>)
+at /builds/slave/linux64_build/build/accessible/src/base/nsCaretAccessible.cpp:223
+#111 0x00007ffff680c28a in nsTypedSelection::NotifySelectionListeners (this=0x7fffdd4b9b30) at /builds/slave/linux64_build/build/layout/generic/nsSelection.cpp:5652
+#112 0x00007ffff680c300 in nsTypedSelection::EndBatchChanges (this=<value optimized out>) at /builds/slave/linux64_build/build/layout/generic/nsSelection.cpp:5672
+#113 0x00007ffff6ad4f58 in nsEditor::DoTransaction (this=0x7fffda809da0, aTxn=0x7fffda8115c0) at /builds/slave/linux64_build/build/editor/libeditor/base/nsEditor.cpp:651
+#114 0x00007ffff6ad4a8f in nsEditor::InsertNode (this=0x7fffda809da0, aNode=0x7fffda8102d8, aParent=0x7fffdd4ba518, aPosition=0)
+at /builds/slave/linux64_build/build/editor/libeditor/base/nsEditor.cpp:1336
+#115 0x00007ffff6ac9b16 in nsTextEditRules::CreateBogusNodeIfNeeded (this=0x7fffda803780, aSelection=0x7fffdd4b9b30) at /builds/slave/linux64_build/build/editor/libeditor/text/nsTextEditRules.cpp:1346
+#116 0x00007ffff6acb977 in nsTextEditRules::Init (this=0x7fffda803780, aEditor=<value optimized out>) at /builds/slave/linux64_build/build/editor/libeditor/text/nsTextEditRules.cpp:153
+#117 0x00007ffff6ac46d0 in nsPlaintextEditor::EndEditorInit (this=0x7fffe1373d60) at /builds/slave/linux64_build/build/editor/libeditor/text/nsPlaintextEditor.cpp:229
+#118 0x00007ffff6ac8ad9 in ~nsAutoEditInitRulesTrigger (this=0x7fffe1373d60, __in_chrg=<value optimized out>) at /builds/slave/linux64_build/build/editor/libeditor/text/nsTextEditUtils.cpp:133
+#119 0x00007ffff6ac8408 in nsPlaintextEditor::Init (this=0x7fffda809da0, aDoc=0x7fffdd5c3960, aPresShell=<value optimized out>, aRoot=0x7fffdd4ba4c0, aSelCon=0x7fffe1492b10, aFlags=515)
+at /builds/slave/linux64_build/build/editor/libeditor/text/nsPlaintextEditor.cpp:156
+#120 0x00007ffff6992bcf in nsTextEditorState::PrepareEditor (this=0x7fffdd46c5f0, aValue=0x0) at /builds/slave/linux64_build/build/content/html/content/src/nsTextEditorState.cpp:1157
+#121 0x00007ffff6992f39 in nsTextEditorState::GetEditor (this=0x7fffdd46c5f0) at /builds/slave/linux64_build/build/content/html/content/src/nsTextEditorState.cpp:960
+#122 0x00007ffff69891d9 in nsGenericHTMLElement::GetEditorInternal (this=<value optimized out>, aEditor=0x7fffff802970)

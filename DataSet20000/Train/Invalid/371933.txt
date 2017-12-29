@@ -1,0 +1,97 @@
+Select elements created in an onclick callback aren't mousable
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.2) Gecko/20070219 Firefox/2.0.0.2
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.2) Gecko/20070219 Firefox/2.0.0.2
+
+Using the JavaScript same code to create a select element, if the code is called in-line in a <script> tag, the options in the select can be chosen with the mouse but if the code is invoked in an onclick callback, the value of the select cannot be changed with the mouse.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. View the web page included below
+2. Click on "click here"
+3. Drag to the non-current option.
+4. Release the mouse button.
+
+Actual Results:  
+The new value is not used.
+
+Expected Results:  
+The new select's value should be changed.
+
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.1//EN'
+    'http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml' xml:lang='en' >
+
+<head>
+<meta http-equiv='Content-Type' content='application/xhtml+xml; charset=UTF-8' />
+</head>
+
+<body>
+<h1>Unmousable select</h1>
+
+<p>A select element created by an in-line script is mousable, a select
+element created by the same code in an onclick callback is not.</p>
+
+<p>To reproduce:</p>
+
+<ol>
+<li>Click on the element.</li>
+<li>Drag to the non-current value.</li>
+<li>Release the mouse button</li>
+</ol>
+
+<p>In the element created by the in-line script, the value of the
+select will change.  In the element create by the callback, the value
+will remain the same.</p>
+
+<table>
+<tr><th>Broswer</th><th>Notes</th></tr>
+<tr><td>Firefox 1.5</td><td>Fails</td></tr>
+
+<tr><td>Firefox 2.0</td><td>Fails</td></tr>
+<tr><td>Opera 9.1</td><td>Works</td></tr>
+<tr><td>IE 7</td><td>In-line element requires and extra click.  Callback element fails.</td></tr>
+</table>
+
+<h2>In-line</h2>
+
+
+<div id='works'>something to replace</div>
+
+<h2>Callback</h2>
+
+<div id='fails'>click here</div>
+
+<script language='JavaScript'>
+  function createSelect(div) {
+    var editor=document.createElement('select');
+    var labels = [ 'false', 'true' ];
+    editor.name=div.id+'_edit';
+    editor.size='1';
+    for (var i = 0; i < 2; ++i) {
+      var opt=document.createElement('option');
+      opt.value=i;
+      opt.appendChild(document.createTextNode(labels[i]));
+      if (i == 0) opt.selected = true;
+      editor.appendChild(opt);
+    }
+    div.replaceChild(editor,div.firstChild);
+    return editor;
+  }
+
+  function initEdit() {
+    var div=this;
+    var editor=createSelect(div);
+    return true;
+  }
+
+  var div=document.getElementById('works');
+  var editor=createSelect(div);
+
+  var div=document.getElementById('fails');
+  div.onclick=initEdit;
+
+</script>
+</body>
+</html>

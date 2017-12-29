@@ -1,0 +1,19 @@
+Add telemetry probe for tab animation smoothness
+Tab animation smoothness data should be collected.
+
+Smoothness is ultimately measured in frame per second (FPS) of the animation, however, measuring also paint time can be useful for further analysis (especially on faster system where frame time are not always affected by change in paint times). Frame interval and paint time can be measured using the system from bug 826383.
+
+I think we should have 2 main probe (and per probe, record average FPS and average paint time for each animation):
+
+1. A case with minimal variance and controlled variables:
+- E.g. newtab page open when other tab stay put (e.g. only the 2nd or 3rd tab in a window).
+
+2. Any tab animation - to get an overall view of the experience.
+- E.g. All tab open/close, regardless if other tab are shrunk/expanded, regardless of the URI of the tab gaining focus, etc.
+
+
+Concerns raised by vladan:
+
+A. (only applies to scenario 1) With newtab page opening together with tab animation, first/some intervals/paints would be longer than when tab animation is unaffected by other intensive computations. He suggested to trim the first few frame out of the averages.
+
+B. To get accurate results, frame recording should not include frame which are unrelated to the tab animation. I currently think this should never happen a animation should be rendered on each presented frame, but I'll look into it to make sure.

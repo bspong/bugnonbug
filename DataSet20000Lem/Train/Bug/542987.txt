@@ -1,0 +1,138 @@
+proxy-authorization header is re-sent on authenticated socket
+User-Agent: Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 5.1; Trident/4.0; .NET CLR 2.0.50727; .NET CLR 1.1.4322; .NET CLR 3.0.4506.2152; .NET CLR 3.5.30729; InfoPath.2)
+Build Identifier: User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.1.3) Gecko/20090824 Firefox/3.5.3 (.NET CLR 3.5.30729)
+
+It seems that when Firefox get a 3xx HTTP status code back, it re-sends the previous proxy-authorization header with the NTLMSSP_NEGOTIATE (type 1) message.
+
+This is incorrect behavior, once a proxy connection is authenticated (NEGOTIATE, CHALLENGE, AUTH), no further NTLMSSP header should be sent on this connection.
+
+Its maybe somewhat similar or related to the bug "tree" 475053, but I believe this specific behavior ha not been discussed yet.
+
+The packet flow look like this (simplified/anonymized)
+
+GET http://de.start3.mozilla.com/firefox?client=firefox-a&rls=org.mozilla:de:official HTTP/1.1
+Host: de.start3.mozilla.com
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.1.3) Gecko/20090824 Firefox/3.5.3 (.NET CLR 3.5.30729)
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Accept-Language: de-de,de;q=0.8,en-us;q=0.5,en;q=0.3
+Accept-Encoding: gzip,deflate
+Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7
+Keep-Alive: 300
+Proxy-Connection: keep-alive
+Cookie: cookiedata
+Proxy-Authorization: NTLM (negotiate/1)
+
+(OK so far)
+
+HTTP/1.1 407 Proxy Authentication Required
+Mime-Version: 1.0
+Date: Fri, 29 Jan 2010 07:10:09 CET
+Content-Type: text/html
+Proxy-Authenticate: NTLM (challenge/2)==
+Proxy-Connection: keep-alive
+Content-Length: 0
+
+(OK so far)
+
+GET http://de.start3.mozilla.com/firefox?client=firefox-a&rls=org.mozilla:de:official HTTP/1.1
+Host: de.start3.mozilla.com
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.1.3) Gecko/20090824 Firefox/3.5.3 (.NET CLR 3.5.30729)
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Accept-Language: de-de,de;q=0.8,en-us;q=0.5,en;q=0.3
+Accept-Encoding: gzip,deflate
+Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7
+Keep-Alive: 300
+Proxy-Connection: keep-alive
+Cookie: cookiedata
+Proxy-Authorization: NTLM (auth/3)
+
+(OK so far)
+
+HTTP/1.1 301 Moved Permanently
+Location: http://www.google.com/firefox?client=firefox-a&rls=org.mozilla:de:official
+Content-Type: text/html; charset=UTF-8
+Date: Fri, 29 Jan 2010 06:10:09 GMT
+Expires: Sun, 28 Feb 2010 06:10:09 GMT
+Cache-Control: public, max-age=2592000
+Server: gws
+X-XSS-Protection: 0
+Content-Length: 275
+Via: 1.1 xyz
+Connection: keep-alive
+Proxy-Connection: keep-alive
+X-Junk: xxxxxxxxxxxxx
+
+(OK so far)
+
+GET http://www.google.com/firefox?client=firefox-a&rls=org.mozilla:de:official HTTP/1.1
+Host: www.google.com
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.1.3) Gecko/20090824 Firefox/3.5.3 (.NET CLR 3.5.30729)
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Accept-Language: de-de,de;q=0.8,en-us;q=0.5,en;q=0.3
+Accept-Encoding: gzip,deflate
+Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7
+Keep-Alive: 300
+Proxy-Connection: keep-alive
+Cookie: cookie data
+Proxy-Authorization: NTLM (negotiate/1)
+
+(broken, browser is sending NTLM_NEGOTIATE again)
+
+HTTP/1.1 302 Found
+Location: http://www.google.de/firefox?client=firefox-a&rls=org.mozilla:de:official
+Cache-Control: private
+Content-Type: text/html; charset=UTF-8
+Date: Fri, 29 Jan 2010 06:10:09 GMT
+Server: gws
+X-XSS-Protection: 0
+Content-Length: 274
+Via: 1.1 proxy.oz-bpv.rhf:80 (IronPort-WSA/6.3.1-025)
+Connection: keep-alive
+Proxy-Connection: keep-alive
+X-Junk: xx
+
+(OK so far)
+
+GET http://www.google.de/firefox?client=firefox-a&rls=org.mozilla:de:official HTTP/1.1
+Host: www.google.de
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.1.3) Gecko/20090824 Firefox/3.5.3 (.NET CLR 3.5.30729)
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Accept-Language: de-de,de;q=0.8,en-us;q=0.5,en;q=0.3
+Accept-Encoding: gzip,deflate
+Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7
+Keep-Alive: 300
+Proxy-Connection: keep-alive
+Cookie: cookiedata
+Proxy-Authorization: NTLM (negotiate/1)
+
+(broken, browser is sending NTLM_NEGOTIATE again)
+
+
+HTTP/1.1 200 OK
+Date: Fri, 29 Jan 2010 06:10:09 GMT
+Expires: -1
+Cache-Control: private, max-age=0
+Content-Type: text/html; charset=UTF-8
+Content-Encoding: gzip
+Server: gws
+X-XSS-Protection: 0
+Content-Length: 2851
+Via: 1.1 xyz
+Connection: keep-alive
+Proxy-Connection: keep-alive
+X-Junk: xxxxxxxxx
+
+(OK, note that negotiate is not sent again)
+
+<data follows>
+
+PS. I will attach the "ntlm" paramater setting from about:config shortly for reference.
+
+Reproducible: Always
+
+
+
+Expected Results:
+firefox shouldn't send proxy-auth NTLM header after connection ha been authenticated
+
+could cause incompatibility with proxies.

@@ -1,0 +1,28 @@
+style element contains cdata - firefox parses it verbatim
+User-Agent:       Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.8.0.6) Gecko/20060728 Firefox/1.5.0.6 (Debian-1.5.dfsg+1.5.0.6-4)
+Build Identifier: Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.8.0.6) Gecko/20060728 Firefox/1.5.0.6 (Debian-1.5.dfsg+1.5.0.6-4)
+
+the content model of <style> elements is CDATA, whcih requires parsing and expansion of entities.
+
+Yet firefox ignores entities at elast for text/css styles, e.g.:
+
+<style type="text/css">
+   td > div.a { background: blue; }
+   td &gt; div.b { background: blue; }
+}
+
+The first rule is correctly applied, the second isn't, althought &gt; is equivalent to > in CDATA sections.
+
+Tested in standards-compliant mode, if that makes a difference.
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+use &gt; instead of a verbatim > character in style elements.
+Actual Results:  
+rules using &gt; are not being applied, rules using > are
+
+Expected Results:  
+&gt; is equivalent to >, so the rules should apply regardless of encoding

@@ -1,0 +1,34 @@
+File protocol with UNC path is misparsed, so that one can not open a file described by a UNC path.
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.6) Gecko/20050317 Firefox/1.0.2
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.7.7) Gecko/20050414 Firefox/1.0.3
+
+A link posted a file:\\server\share\file.xls get parsed by the browser a
+file:///\\server\share\file.xls and will not load. Typing
+file:\\server\share\file.xls directly into the location bar access the file a
+expected. This problem exhibit itself in both Linux and Windows version of
+Firefox at least a early a 1.0 and through the latest release for Windows.
+Clearly I only expect it to actually load the page using UNC path with
+backslashes on a Windows system.
+
+If the link is posted on a Wiki, a in [file:\\server\share\file.xls Click this
+file], FireFox try to load file:///\\server\share\file.xls. If it is posted in
+html with href="file:\\server\share\file.xls," the browser add
+//localsystemlocation/ between file: and \\server\share\file.xls. This behavior
+can be eliminated by specifying href="file:/\\server\share\file.xls," which
+lead the browser to believe the link is a full pathname, but FireFox still
+try to load, then, file:///\\server\share\file.xls.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Create an HTML file or Wiki post with a link to file:\\server\share\file.xls
+2. Load the page.
+3. Click on or hover your mouse over the link to see the destination.
+
+Actual Results:
+The link appears to be misparsed. No page attempt to load.
+
+Expected Results:
+On a Windows system, it should access the UNC path of the file. On other
+operating systems, the address should at least be parsed correctly, and then the
+file should not load due to the "malformatted" path for that operating system.

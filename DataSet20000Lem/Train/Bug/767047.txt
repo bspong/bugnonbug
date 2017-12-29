@@ -1,0 +1,14 @@
+User's original network proxy setting can be overwritten by dialog
+We make an effort to save the user's original FTP/HTTPS/etc proxy setting when we (possibly temporarily) overwrite them while the "use this [HTTP] proxy for all protocols" checkbox is set. We save them into 'backup' prefs, so we can restore them if/when the checkbox get unset. However our storage logic blindly back up the pref every time the dialog is opened/closed, so it will overwrite the backed-up user value with the HTTP proxy value if you open/close the dialog again.
+
+Steps to reproduce:
+
+1) Go to Prefs | Advanced | Network | "Configure how Firefox connects to Internet"
+
+2) Set "manual proxy settings", and enter different value for HTTP (http.com) and FTP (ftp.com). Save.
+
+3) Open dialog again and select "use this proxy for all protocols". FTP is greyed out and set to HTTP proxy value now (correct). Hit OK. Look in about:config and you'll see 'network.proxy.backup.ftp' is set to 'ftp.com' (also correct).
+
+4) Enter the dialog again: change nothing, just hit "OK". The backup setting for FTP ha now been overwritten to "http.com" (BUG), and that's what is restored if you open the dialog again and uncheck "use this proxy for all protocols".
+
+I believe the fix here is to only set/restore the backup value during the checkbox onChange.

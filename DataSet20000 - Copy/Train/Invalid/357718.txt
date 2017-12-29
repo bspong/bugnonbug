@@ -1,0 +1,74 @@
+counter-reset appears to be order-dependent and dependent on unclosed <a> tag
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.0.7) Gecko/20060909 Firefox/1.5.0.7
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.0.7) Gecko/20060909 Firefox/1.5.0.7
+
+     <head>
+                <title>
+                        subtle CSS counter reset bug demonstration
+                </title>
+                <style type="text/css">
+                        body {
+                                /* 
+                                the order of these two must
+                                be swtiched to have 1,2,3 in maincount
+                                -- how inexplicable! --
+                                 */
+                                counter-reset: maincount 0;
+                                counter-reset: appendix 0;
+                        }
+                        h2 {
+                                counter-reset: h3 0;
+                        }
+                        h2.maincount {
+                                counter-increment: maincount 1;
+                        }
+                        h2.maincount:before {
+                                content: counter(maincount, decimal) ") ";
+                        }
+                        h2.appendix {
+                                counter-increment: appendix 1;
+                        }
+                        h2.appendix:before {
+                                content: counter(appendix, upper-latin) ") ";
+                        }
+                        h3.maincount {
+                                counter-increment: h3 1;
+                        }
+                        h3.maincount:before {
+                                content: counter(appendix, upper-latin) "." counter(h3, decimal) ") ";
+                        }
+                </style>
+        </head>
+        <body>
+                <h1>Bug Demonstration Page</h1>
+                <a name="uris">
+
+                        <h2 class="maincount">ONE</h2>
+                </a> <!-- removing the closing tag on the anchor will cause normality -->
+                <a name="mappings">
+                        <h2 class="maincount">TWO</h2>
+                </a>
+                <a name="transfer">
+                        <h2 class="maincount">THREE</h2>
+                </a>
+                <a name="examples" id="examples">
+                        <h2 class="appendix">Examples</h2>
+                </a>
+        </body>
+</html>
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+create a page with a multiple CSS counters as seen in the example.
+
+Actual Results:  
+the counters are 1, 1, 1
+
+Expected Results:  
+1, 2, 3
+
+our working theory is that the </a> tag is somehow returning the interpreter
+to "body context" and running the reset --- but how that interacts with
+the order of the reset statements is beyond us

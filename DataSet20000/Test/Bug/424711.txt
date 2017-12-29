@@ -1,0 +1,45 @@
+main browser window bg image not drawn until star clicked
+In NASA Night Launch, I'm trying to change the appearance of the background of the window element for the main browser window, but only when an attribute is present on that element to trigger the relevant CSS rule.  (The attribute is applied by a binding in the theme.)  The problem is, the background image doesn't show up until after you click the star button.  If I don't make the CSS test for the attribute, then it works as expected (drawing the background image as soon as the window opens).
+
+This CSS rule exhibits the problem:
+
+window[windowtype="navigator:browser"][theme="nasanightlaunch"] {
+    background:
+      url("chrome://global/skin/subskins/window-picture-4/sts116-s-021.png")
+      top right no-repeat #232323 !important;
+}
+
+This version of the same rule works all the time:
+
+window[windowtype="navigator:browser"] {
+    background:
+      url("chrome://global/skin/subskins/window-picture-4/sts116-s-021.png")
+      top right no-repeat #232323 !important;
+}
+
+This code is used in both cases:
+
+window[windowtype="navigator:browser"] {
+  -moz-binding: url("chrome://global/skin/subskinWindowOverlay.xml#theme");
+}
+
+<bindings id="windowBindings"
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="theme">
+    <content themer="mcdavis941" theme="nasanightlaunch"
+      subskin=""/>
+  </binding>
+</bindings>
+
+Both versions of the above bg-image rule work on Fx2, but not Fx3.
+
+In both cases, DOM Inspector reports that the [theme] attribute is present both after and before pressing the star button.
+
+The CSS, binding and image are in the theme but the CSS is @imported in userChrome.css.  I'm trying to use the attribute so the background change only applies when the relevant theme is the current and active theme (and not after the user has switched to a different theme).
+
+I'll be glad to work up a reduced test case if someone can give me a hint as to what that would be.
+
+In terms of importance to NASA Night Launch users, it would be great if this can be fixed but I can also just remove the attribute test from my CSS selector as a work-around (forcing users to edit their userChrome.css when they switch themes).  I realize I'm exploring pretty far off the beaten path with some of this custom styling.

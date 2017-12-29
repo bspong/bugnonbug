@@ -1,0 +1,22 @@
+Search suggestions prompt breaks accessibility of location bar suggestions
+(Spun off bug 1190368 comment 27.)
+
+STR:
+1. In about:config, ensure that browser.urlbar.userMadeSearchSuggestionsChoice is false.
+2. Focus the location bar.
+3. Type anything that will cause search suggestions to appear.
+4. Press down arrow to focus a suggestion.
+5. Observe that an accessibility focus event is fired.
+6. Retrieve the accessible for this event.
+Expected: The accessible for the suggestion list item focused in step 4.
+Actual: A broken oleacc client accessible.
+
+The list appears in a separate MozillaDropShadowWindowClass HWND. However, when the search suggestions prompt is displayed, WM_GETOBJECT returns the label for the search suggestions prompt and accChild for the search list items fails on this label accessible.
+
+When the search suggestions prompt is *not* displayed, the list works as expected. In that case, WM_GETOBJECT on the MozillaDropShadowWindowClass returns the list (as expected) and therefore accChild works.
+
+:Gijs noted, "The prompt is inside the listbox because that makes visual sense." As far as accessibility is concerned, the label isn't inside the richlistbox; it is a sibling of it. It certainly makes sense that accChild on this label would fail for the list items.
+
+The question is why WM_GETOBJECT is returning the label; i.e. why the label is considered the root accessible for this HWND. I'm guessing there should really be a parent of both the label and the list which is considered the root accessible for the HWND. accChild on this parent should work to retrieve any of its descendants.
+
+Marking as a regression because although this search suggestions stuff is new functionality, it effectively breaks the location bar autocomplete for users who haven't dismissed the search suggestions prompt.

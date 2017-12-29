@@ -1,0 +1,203 @@
+Feedback on Places query from a DBA
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.1b4pre) Gecko/20090416 Shiretoko/3.5b4pre
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.1b4pre) Gecko/20090416 Shiretoko/3.5b4pre
+
+Whilst chatting with a DBA I used to work with in Chicago, I got some feedback on a query sdwilsh wa hammering on...
+
+Comedy Gold:
+
+2009-04-09
+
+SQL DBA discussion:
+
+
+
+
+I just showed my colleague, a very talented DBA, (in Chicago) one of our Places queries:
+===============================
+SELECT id, url, title, rev_host, visit_count, MAX(visit_date), favicon_url, session, empty
+FROM (
+SELECT id, url, title, rev_host, visit_count, visit_date, favicon_url, session, empty
+FROM (
+SELECT h.id AS id, h.url AS url, h.title AS title, h.rev_host AS rev_host, h.visit_count AS visit_count, MAX(v.visit_date) AS visit_date, f.url AS favicon_url, v.session AS session, null AS empty
+FROM moz_places h
+JOIN moz_historyvisits v
+ON h.id = v.place_id
+LEFT JOIN moz_favicons f
+ON h.favicon_id = f.id
+WHERE h.hidden <> 1
+AND v.visit_type NOT IN (0,4)
+AND (( SUBSTR(h.url, 0, LENGTH( "http://foo.com" )) = "http://foo.com" ))
+GROUP BY h.id
+)
+UNION ALL
+SELECT id, url, title, rev_host, visit_count, visit_date, favicon_url, session, empty
+FROM (
+SELECT h.id AS id, h.url AS url, h.title AS title, h.rev_host AS rev_host, h.visit_count AS visit_count, MAX(v.visit_date) AS visit_date, f.url AS favicon_url, v.session AS session, null AS empty
+FROM moz_places_temp h
+JOIN moz_historyvisits v
+ON h.id = v.place_id
+LEFT JOIN moz_favicons f
+ON h.favicon_id = f.id
+WHERE h.hidden <> 1
+AND v.visit_type NOT IN (0,4)
+AND (( SUBSTR(h.url, 0, LENGTH( "http://foo.com" )) = "http://foo.com" ))
+AND h.id NOT IN (SELECT id FROM moz_places_temp)
+GROUP BY h.id
+)
+UNION ALL
+SELECT id, url, title, rev_host, visit_count, visit_date, favicon_url, session, empty
+FROM (
+SELECT h.id AS id, h.url AS url, h.title AS title, h.rev_host AS rev_host, h.visit_count AS visit_count, MAX(v.visit_date) AS visit_date, f.url AS favicon_url, v.session AS session, null AS empty
+FROM moz_places h
+JOIN moz_historyvisits_temp v
+ON h.id = v.place_id
+LEFT JOIN moz_favicons f
+ON h.favicon_id = f.id
+WHERE h.hidden <> 1
+AND v.visit_type NOT IN (0,4)
+AND (( SUBSTR(h.url, 0, LENGTH( "http://foo.com" )) = "http://foo.com" ))
+AND h.id NOT IN (SELECT id FROM moz_places_temp)
+GROUP BY h.id
+)
+UNION ALL
+SELECT id, url, title, rev_host, visit_count, visit_date, favicon_url, session, empty
+FROM (
+SELECT h.id AS id, h.url AS url, h.title AS title, h.rev_host AS rev_host, h.visit_count AS visit_count, MAX(v.visit_date) AS visit_date, f.url AS favicon_url, v.session AS session, null AS empty
+FROM moz_places_temp h
+JOIN moz_historyvisits_temp v
+ON h.id = v.place_id
+LEFT JOIN moz_favicons f
+ON h.favicon_id = f.id
+WHERE h.hidden <> 1
+AND v.visit_type NOT IN (0,4)
+AND (( SUBSTR(h.url, 0, LENGTH( "http://foo.com" )) = "http://foo.com" ))
+GROUP BY h.id
+)
+)
+GROUP BY id ORDER BY 6 ASC
+================================
+
+(11:53:52 AM) ********shaun: The hilarious part is that I just simplified that query, and it turn out all you need is the first part of the deepest subselect, and add the final order-by clause.
+(11:54:10 AM) ddahl: OH?
+(11:54:25 AM) ddahl: crazy
+(11:54:33 AM) ********shaun: It just selects the same thing 4 times, but 2 of them restrict the temp places.
+(11:54:34 AM) ddahl: i'd like to see that
+(11:55:19 AM) ********shaun: Then it get the unique id pair of that, and then add the second subselect on top because the author wa trying to keep the union-alls from stepping on namespaces.
+(11:55:29 AM) ********shaun: The top level just roll it all together.
+(11:55:52 AM) ********shaun: SELECT h.id, h.url, h.title, h.rev_host, h.visit_count,
+MAX(v.visit_date) AS visit_date, f.url AS favicon_url,
+v.session, null AS empty
+FROM moz_places h
+JOIN moz_historyvisits v ON (h.id = v.place_id)
+LEFT JOIN moz_favicons f ON (h.favicon_id = f.id)
+WHERE h.hidden != 1
+AND v.visit_type NOT IN (0, 4)
+AND SUBSTR(h.url, 0, LENGTH( "http://foo.com" )) = "http://foo.com"
+GROUP BY h.id
+ORDER BY 6 ASC
+(11:56:14 AM) ********shaun: I can't say that'd work, but it's what I could see with only the query and no test data.
+(11:57:00 AM) ********shaun: And that's assuming you can't just say "AND h.url LIKE 'http://foo.com%' " instead of... that weird thing they did.
+(11:57:29 AM) ********shaun: So, it that's what pass for code over there, I feel for you. ;)
+(11:58:20 AM) ddahl: so my colleague just told me that the query are programatically generated
+(11:58:48 AM) ********shaun: Haha. That's no excuse. They should still be optimized.
+(11:58:55 AM) ddahl: YEAH!
+(11:58:59 AM) ddahl: i like that idea
+(11:59:06 AM) ********shaun: Esp. if they're being committed to your source control, a is.
+(11:59:29 AM) ********shaun: On the fly? Maybe not so much. Generated and saved? Definitely.
+(12:00:01 PM) ddahl: i thin k the "queryAPI" generates query like that, and the funny thing is that everyone's mind is on performance first, but this would negate that, no?
+(12:00:44 PM) ddahl: i have been trying to get them to take a few step back and think about the maintainability of code like this. it's scary
+(12:00:50 PM) ********shaun: Yeah. I'm guessing the sqlite engine doesn't have the smartest optimizer, so it would probably run that query a is. Generating like 4-10x a much work a necessary.
+(12:01:12 PM) ddahl: oh christ
+(12:01:35 PM) ddahl: i wonder about that - would running that query through explain tell me that?
+(12:01:47 PM) ********shaun: 4 queries, 4 query on those queries, a union operation, and a final query on everything together. Heh.
+(12:01:59 PM) ********shaun: It should.
+(12:03:17 PM) ********shaun: The thing is, since they're using max on the visit date, and the temp place reduces that, but it get added back in by the union anyway (twice!), the first query would give you the same output.
+(12:03:52 PM) ********shaun: Since the group-by throw all the extra row they're generating away.
+(12:04:20 PM) ddahl: so here is the schema:
+(12:04:21 PM) ddahl: http://pastebin.mozilla.org/641172
+
+
+
+
+CREATE TABLE moz_anno_attributes ( id INTEGER PRIMARY KEY, name VARCHAR(32) UNIQUE NOT NULL);
+
+CREATE TABLE moz_annos ( id INTEGER PRIMARY KEY, place_id INTEGER NOT NULL, anno_attribute_id INTEGER, mime_type VARCHAR(32) DEFAULT NULL, content LONGVARCHAR, flag INTEGER DEFAULT 0, expiration INTEGER DEFAULT 0, type INTEGER DEFAULT 0, dateAdded INTEGER DEFAULT 0, lastModified INTEGER DEFAULT 0);
+
+CREATE TABLE moz_bookmarks ( id INTEGER PRIMARY KEY, type INTEGER, fk INTEGER DEFAULT NULL, parent INTEGER, position INTEGER, title LONGVARCHAR, keyword_id INTEGER, folder_type TEXT, dateAdded INTEGER, lastModified INTEGER);
+
+CREATE TABLE moz_bookmarks_roots ( root_name VARCHAR(16) UNIQUE, folder_id INTEGER);
+
+CREATE TABLE moz_favicons ( id INTEGER PRIMARY KEY, url LONGVARCHAR UNIQUE, data BLOB, mime_type VARCHAR(32), expiration LONG);
+
+CREATE TABLE moz_historyvisits ( id INTEGER PRIMARY KEY, from_visit INTEGER, place_id INTEGER, visit_date INTEGER, visit_type INTEGER, session INTEGER);
+
+CREATE TABLE moz_inputhistory ( place_id INTEGER NOT NULL, input LONGVARCHAR NOT NULL, use_count INTEGER, PRIMARY KEY (place_id, input));
+
+CREATE TABLE moz_items_annos ( id INTEGER PRIMARY KEY, item_id INTEGER NOT NULL, anno_attribute_id INTEGER, mime_type VARCHAR(32) DEFAULT NULL, content LONGVARCHAR, flag INTEGER DEFAULT 0, expiration INTEGER DEFAULT 0, type INTEGER DEFAULT 0, dateAdded INTEGER DEFAULT 0, lastModified INTEGER DEFAULT 0);
+
+CREATE TABLE moz_keywords ( id INTEGER PRIMARY KEY AUTOINCREMENT, keyword TEXT UNIQUE);
+
+CREATE TABLE moz_places ( id INTEGER PRIMARY KEY, url LONGVARCHAR, title LONGVARCHAR, rev_host LONGVARCHAR, visit_count INTEGER DEFAULT 0, hidden INTEGER DEFAULT 0 NOT NULL, typed INTEGER DEFAULT 0 NOT NULL, favicon_id INTEGER, frecency INTEGER DEFAULT -1 NOT NULL);
+
+CREATE UNIQUE INDEX moz_annos_placeattributeindex ON moz_annos (place_id, anno_attribute_id);
+
+CREATE INDEX moz_bookmarks_itemindex ON moz_bookmarks (fk, type);
+
+CREATE INDEX moz_bookmarks_itemlastmodifiedindex ON moz_bookmarks (fk, lastModified);
+
+CREATE INDEX moz_bookmarks_parentindex ON moz_bookmarks (parent, position);
+
+CREATE INDEX moz_historyvisits_dateindex ON moz_historyvisits (visit_date);
+
+CREATE INDEX moz_historyvisits_fromindex ON moz_historyvisits (from_visit);
+
+CREATE INDEX moz_historyvisits_placedateindex ON moz_historyvisits (place_id, visit_date);
+
+CREATE UNIQUE INDEX moz_items_annos_itemattributeindex ON moz_items_annos (item_id, anno_attribute_id);
+
+CREATE INDEX moz_places_faviconindex ON moz_places (favicon_id);
+
+CREATE INDEX moz_places_frecencyindex ON moz_places (frecency);
+
+CREATE INDEX moz_places_hostindex ON moz_places (rev_host);
+
+CREATE UNIQUE INDEX moz_places_url_uniqueindex ON moz_places (url);
+
+CREATE INDEX moz_places_visitcount ON moz_places (visit_count);
+
+CREATE TRIGGER moz_bookmarks_beforedelete_v1_trigger BEFORE DELETE ON moz_bookmarks FOR EACH ROW WHEN OLD.keyword_id NOT NULL BEGIN DELETE FROM moz_keywords WHERE id = OLD.keyword_id AND NOT EXISTS ( SELECT id FROM moz_bookmarks WHERE keyword_id = OLD.keyword_id AND id <> OLD.id LIMIT 1 );END;
+
+
+
+
+
+
+(12:05:14 PM) ********shaun: Could be worse. I sure hope it's not actually in your source control like that. Bleh.
+(12:06:17 PM) ddahl: hey, you wanna hack on firefox?:)
+(12:06:38 PM) ********shaun: Hah! I love the trigger at the end. Does sqlite not have ON DELETE CASCADE?
+(12:06:45 PM) ddahl: hmm'
+(12:06:53 PM) ddahl: IT MUST
+(12:08:14 PM) ddahl: "I've found the ondelete="cascade" is only used to generate the rule
+in the dialect... so if sqlite support creating a FK constraint with
+cascading deletes, including ondelete="cascade" in your metadata when
+you create the database will add that rule to the database definition. "
+(12:08:26 PM) ddahl: (sqlalchemy thread)
+(12:08:54 PM) ********shaun: So it just translates it to that trigger. Hah.
+(12:09:34 PM) ddahl: that trigger wa written by u - ther eis no native support
+(12:09:40 PM) ddahl: i just heard
+(12:09:56 PM) ********shaun: And no, I don't want to hack firefox. If that's an example of what's in there, I'd likely rather have an eye-fight with a mellon-baller.
+(12:09:59 PM) ddahl: SQLite want a pony
+(12:10:30 PM) ddahl: "eye-fight with a melon baller"
+(12:10:35 PM) ddahl: LOL
+(12:10:53 PM) ddahl: classic
+(12:11:06 PM) ddahl: open source is messy:)
+(12:11:14 PM) ********shaun: Apparently.
+
+
+Reproducible: Always
+
+
+
+
+This is mainly an observation about the place query that are generated by an experienced DBA.

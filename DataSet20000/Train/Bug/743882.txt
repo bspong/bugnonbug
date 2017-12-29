@@ -1,0 +1,16 @@
+Fix session restore tests for compartment-per-global
+This is one of the last two test failures blocking compartment-per-global. The test fails when run standalone with both trunk and c-p-g. However, the entire suite collectively passes on trunk (but not with c-p-g). 
+
+STR: TEST_PATH=browser/components/sessionstore/test/browser_705597.js make -C $OBJDIR mochitest-browser-chrome
+
+about:home is throwing here, because localStorage['search-engine'] hasn't been set up, and JSON.parse doesn't expect that: http://mxr.mozilla.org/mozilla-central/source/browser/base/content/abouthome/aboutHome.js#181
+
+This seems to be set up in loadDefaultSearchEngine, which is only called by the defaultArgs getter:
+
+http://mxr.mozilla.org/mozilla-central/source/browser/components/nsBrowserContentHandler.js#865
+
+When Jared ran the whole subdirectory, the failures went away. So one of the previous tests is probably triggering the necessary setup here.
+
+Presumably the failure on trunk and the failure with c-p-g are linked: we're relying on some sort of lazy setup of localStorage['search-engine'] that isn't guaranteed to happen. But either way, this bug is about making things worth with c-p-g.
+
+Dolske, can you make sure this bug gets traction?

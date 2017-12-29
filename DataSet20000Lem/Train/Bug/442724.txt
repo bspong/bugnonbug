@@ -1,0 +1,41 @@
+dialogArguments not always passed to new window in showModalDialog
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.8.1.14) Gecko/20080404 Firefox/2.0.0.14
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.9) Gecko/2008052906 Firefox/3.0
+
+The value of dialogArguments is sometimes null even when a valid array is passed to showModalDialog in it's second parameter. This is intermittent and not 100% reproducible. The most common scenario is the first call to showModalDialog yield a null dialogArguments variable in the new window, but on the second and subsequent attempt the dialogArguments value is available a passed. This seems to indicate a timing issue or possibly related to or influenced by page caching, or dependency on an internal structure that is not initialized by the first call.
+
+Note: we have tested a large variety of potential workarounds, one being to use setTimeout to wait for the dialogArguments variable to be passed. In each case, if it's not available in the javascript in the page header, it never becomes available regardless of the wait time.
+
+
+Observed in both FFv3.0 on Win2000 and Linux Debian - Testing (Lenny).
+
+Calling code example:
+
+
+var vArray = new Array();
+vArray[1] = "1";
+vArray[2] = "2";
+
+if (window.showModalDialog)
+win = window.showModalDialog (vURL, vArray);
+
+
+The caller is the left-hand frame of a two frame window.
+
+
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+1. Call to showModalDialog, passing an array. The caller is one of a two frame window.
+2. Check for null value of window.dialogArguments in the newly created window, at either the header script or at window.onload (results are the same either way).
+3.
+Actual Results:
+Fails intermittently on the first call, usually succeeds on subsequent calls.
+
+Expected Results:
+Should always see an initialized window.dialogArguments within the newly created window.
+
+This code ha been in production for several year and ha been solid on the Internet Explorer version of showModalDialog for this period. On that platform, window.dialogArguments is always passed.
+
+We've found no workaround a the test for null dialogArguments occurs inside the new window, and thus come too late to take defensive action the user would not notice. Current solution is to inform user that the window must be closed and reopened whenever the test for dialgArguments yield null.

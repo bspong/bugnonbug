@@ -1,0 +1,57 @@
+Plugin Finder Service cannot find plugin when installed via <object codebase="">
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; rv:1.7.3) Gecko/20040913 Firefox/0.10
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; rv:1.7.3) Gecko/20040913 Firefox/0.10
+
+When trying to load a plugin via the codebase attribute in the <object> tag, the
+Plugin Finder Service does not find the plugin.
+
+Reproducible: Always
+Steps to Reproduce:
+1. Launch an HTML page that contains an <object> tag that has a "codebase"
+attribute pointing to an xpi file.
+
+2. At the top of the page, you get button "Install Missing Plugins...". Click on
+the button.
+
+3. Plugin Finder Service comes back with the following message: No suitable
+plugins were found.
+
+
+Actual Results:  
+Dialog box with message "No suitable plugins were found."
+
+Expected Results:  
+Installed the plugin and informed the user that the software has been installed.
+
+Here is the object tag:
+<object id="abc" type="application/x-xstandard" width="100%" height="300"
+codebase="http://localhost/mozilla/xstandard.xpi">
+</object>
+
+
+Here is the install.js:
+
+/////////////////////////////////////////////////////////////////////////////
+var X_SOFTWARE_NAME = "XStandard XHTML WYSIWYG Editor";
+var X_VERSION = "1.3.6.0";
+var X_PACKAGE = "/XStandard";
+var X_PLUG_IN_UNICODE = "NPXStandard.dll";
+var X_PLUG_IN_FOLDER = "plugins";
+/////////////////////////////////////////////////////////////////////////////
+
+var err;
+var folder;
+err = initInstall(X_SOFTWARE_NAME, X_PACKAGE, X_VERSION);
+folder = getFolder(X_PLUG_IN_FOLDER);
+setPackageFolder(folder);
+addFile(X_PLUG_IN_UNICODE);
+err = getLastError();
+if (err == 0) {
+	performInstall();
+} else {
+	cancelInstall(err);
+}
+
+
+You can download xstandard.xpi from this location:
+http://xstandard.com/misc/mozilla/xstandard.xpi

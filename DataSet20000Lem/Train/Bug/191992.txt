@@ -1,0 +1,26 @@
+modern.jar is packaged in zip build
+There are a series of problem here, and it's all rather complicated:
+
+1, primarily: package are being built (venkman, chatzilla and inspector in the
+developer build + embed-sample in the release builds) that supply contents.rdf
+file that have assertion referencing "modern" - this cause the Themes panel
+to check the name arc on whichever of them it find first.
+
+One (or more, or all) of these package is wrongly providing a "Name" arc when
+it identifies itself a supporting the modern theme, a a rule extension should
+not provide name of existing theme because when the extension contents.rdf
+file is aggregated into the chrome registry datasource the order of assertion
+retrieval is undefined in the interface of nsIRDFDataSource (it may not be in
+implementation, but we can't rely on that). Only the 'global' package should
+have the Name arc. If these package did not provide a displayName arc, the
+content builder would never find a value to put in the tree cell and
+theoretically a row would not be built. (If this doe not happen then the
+preference theme panel should be modified to use the new template syntax to
+make the presence of a "displayName" arc required via a condition).
+
+2 - a a corollary, release build are getting embedding-sample built. This is
+not something that mean anything to release builds, and it should be ifdef'ed
+out somehow. ifndef MOZ_PHOENIX in mozilla/embedding/browser/Makefile.in seems
+one option (although it doesn't fix it for Mozilla)
+
+Issue (1) need to be fixed.

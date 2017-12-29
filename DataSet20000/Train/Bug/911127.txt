@@ -1,0 +1,31 @@
+B2G Desktop error loading dbg-server.jsm -> main.js -> transport.js: Components not available in context
+Jan Jongboom says in <https://groups.google.com/d/topic/mozilla.dev.b2g/BObPh_lSMCQ/discussion> that B2G Desktop is reporting this error on startup:
+
+--------------------------------------------------------------------------------
+Error loading: resource://gre/modules/devtools/server/transport.js: ReferenceError: `Components` is not available in this context.
+Functionality provided by Components may be available in an SDK
+module: https://jetpack.mozillalabs.com/sdk/latest/docs/
+
+However, if you still need to import Components, you may use the
+`chrome` module's properties for shortcuts to Component properties:
+
+Shortcuts:
+    Cc = Components.classes
+    Ci = Components.interfaces
+    Cu = Components.utils
+    CC = Components.Constructor
+Example:
+    let { Cc, Ci } = require('chrome');
+ - Loader/load/descriptors<.Components@resource://gre/modules/commonjs/toolkit/loader.js:243
+@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/main.js -> resource://gre/modules/devtools/server/transport.js:8
+loadSubScript@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/main.js:29
+@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/main.js:59
+evaluate@resource://gre/modules/commonjs/toolkit/loader.js:223
+load@resource://gre/modules/commonjs/toolkit/loader.js:257
+require@resource://gre/modules/commonjs/toolkit/loader.js:359
+@resource://gre/modules/devtools/dbg-server.jsm:23
+--------------------------------------------------------------------------------
+
+dbg-server.jsm line 23 calls devtools.require("devtools/server/main"); main.js line 59 loads transport.js as a subscript; and transport.js line 8 references Components, which is presumably the reference that the CommonJS module loader is complaining about.
+
+Although it isn't clear which context the loader thinks is missing Components, given that dbg-server.jsm is a JavaScript Module, which should have such a reference by default.  And main.js explicitly imports it from the "chrome" pseudo-module.

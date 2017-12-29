@@ -1,0 +1,46 @@
+DevTools Net Panel: cannot inspect contents of some POST messages
+User Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:24.0) Gecko/20130718 Firefox/24.0 (Nightly/Aurora)
+Build ID: 20130718111352
+
+Steps to reproduce:
+
+Run the following JS snippets, then inspect them in the Net Panel's "Params" pane.
+
+** Snippet 1: **
+(function() {
+	var xhr = new XMLHttpRequest();
+	xhr.open('POST', '/foo?a', true);
+	xhr.setRequestHeader('content-type', 'application/x-www-form-urlencoded');
+	xhr.send(JSON.stringify({foo: 'bar'}));
+})();
+
+** Snippet 2: **
+(function() {
+	var xhr = new XMLHttpRequest();
+	xhr.open('POST', '/foo?a=b', true);
+	xhr.setRequestHeader('content-type', 'application/x-www-form-urlencoded');
+	xhr.send(JSON.stringify({foo: 'bar'}));
+})();
+
+** Snippet 3: **
+(function() {
+	var xhr = new XMLHttpRequest();
+	xhr.open('POST', '/foo?a=b', true);
+	xhr.send(JSON.stringify({foo: 'bar'}));
+})();
+
+
+Actual results:
+
+Snippet 1: Params reads "No parameters for this request".
+
+Snippet 2: Params correctly shows the query parameters, but not the body.
+
+Snippet 3: Params correctly shows both the query parameters and the JSON body.
+
+
+Expected results:
+
+In all three cases, the Params panel should show both the query parameters and the JSON body. MooTools by default sets the "content-type" header as above.
+
+Firebug's net panel works beautifully for these XHRs.

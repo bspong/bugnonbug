@@ -1,0 +1,80 @@
+No way to ID troublesome "pseudo-sub-processes"...w/extensions (or w/o)
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3
+
+There seems to be no way to identify which web-page or plugin is hanging a FF session -- sometimes, it is important to identify what is going on "right now" -- not to "reboot" FF, in safe mode and bring up a different environment -- or NOT even a "Reboot w/tabs" (assuming that's available).
+
+I had opened several tab off of one site's index -- one of those page had an auto-play flash video. The flash player *slowly* indicated a download of the content (unusually slow due to problem, not link speed) -- with the light-grey bar filling the width (indicating local buffer full) -- but the dark black bar not starting at all. Instead I just get 100% usage of the CPU -- which even affected my entire desktop, a FF kept locking up the UI (even though I had 3 free CPU's). I tried rebooting with tab (twice) and got the same problem -- so saved tab to a bookmark and tried in safemode. Problem not duplicable. Then tried non-safemode again -- and it didn't hang, BUT, FF is still using 100% of a CPU -- even though it is doing *nothing* (other than accepting my typing for this report).
+
+I don't believe it is acceptable to require user to reboot in safemode to duplicate a problem anymore than it would be acceptable to require user to reboot to safemode in Windows and duplicate problems. Safemode is just _"too far"_ from the problem state and completely reinitializes everything -- destroying the cause of the problem. But "rebooting" FF is NOT an acceptable way to solve FF problem any more than requiring Windows to be rebooted a "standard usage practice" to get rid of Windows problems.
+
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+I saved all the bookmark into a bookmark -- and opening it, with my extension loaded doe reproduce the CPU usage problem -- even though FF isn't doing anything.
+The URL's involved:
+Test-folder
+http://io9.com/5062476/nicole-riche-uses-her-feminine-wiles-++-and-her-fists-++-on-chuck?autoplay=true
+http://io9.com/5062369/5-ways-to-make-star-trek-more-like-star-wars
+http://io9.com/5062374/lightning-joins-all-the-other-things-striking-in-mortal-kombat-vs-dc
+http://io9.com/5062578/roam-the-wastelands-in-your-very-own-interceptor
+http://io9.com/5062446/female+dominated-societies-are-violent-say-anthropologists
+http://gawker.com/5062683/leave-new-york-alone
+http://io9.com/5062470/nerds-vs-jocks-vs-droids-vs-padme-vs-pigeons-vs-serial-killers-on-this-weeks-tv
+http://io9.com/5062476/nicole-riche-uses-her-feminine-wiles-++-and-her-fists-++-on-chuck
+----
+I do have script block and adblock+ running, though adblock claim to be
+blocking nothing on any of the pages.
+
+I'm 14-minutes into this bug report and the CPU usage ha not gone below 100% of 1 of my 4 CPU's. The UI is behaving *this time*, but I stress, that the first time it hit, the entire desktop wa locking up and getting nearly no CPU -- I wasn't even able to click the "X" on the FF window to close it, but had process-explorer running and killed it from there.
+
+The property of FF show it FF using _19_ thread for the 7 tabs. Thread "1" is using nearly all of the cpu. A 2nd thread (shows about 80% a many context switches, but is showing 0% cpu usage (only thread1 show cpu usage).
+
+Thread 1's stack, which ha "firefox+0x15a0" a the start address shows:
+ntkrnlpa.exe+0x6dd2b
+ntkrnlpa.exe+0x2b592
+hal.dll+0x2ef2
+hal.dll+0x299a
+ntkrnlpa.exe+0x699ac
+ntdll.dll!KiFastSystemCallRet+0x4
+ntdll.dll!KiFastSystemCallRet
+ntdll.dll!ZwQueryVirtualMemory+0xc
+kernel32.dll!VirtualQueryEx+0x1d
+kernel32.dll!VirtualQuery+0x15
+kernel32.dll!SetThreadContext+0x44
+kernel32.dll!SetUnhandledExceptionFilter+0x2b
+NPSWF32.dll!native_ShockwaveFlash_TCallLabel+0x743d
+xul.dll!gfxWindowsFontGroup::GetFontAt+0x178c
+
+the 2nd thread (showing high context switches, but no measurable CPU (to 100's of a percent), say it start at WINMM.dll.time Thread and ha stack:
+ntkrnlpa.exe+0x6dd2b
+ntkrnlpa.exe+0x2b592
+ntkrnlpa.exe+0x2be74
+ntkrnlpa.exe+0xe84a9
+ntkrnlpa.exe+0x699ac
+ntdll.dll!KiFastSystemCallRet+0x4
+ntdll.dll!KiFastSystemCallRet
+ntdll.dll!ZwWaitForMultipleObjects+0xc
+WINMM.dll!timeThread+0x3a
+---
+The problem is I can't really tell which tab, or which plugin in which tab is causing the problem.
+Since FF hide separate tab all in 1 process or thread (and because there is no mapping from threads->tabs (or vice versa)), I can't tell what's going on.
+
+As long a FF is creating it's own "internal" task scheduler -- it seems imperative to provide some "top" or "ps" functionality to allow user & developer to see what tabs, function or process are hogging the CPU -- and,
+obviously, IMO, FF shouldn't let one tab or function dominate all thread (ideally, unless by choice -- say for video -- or if not specifically detectable, maybe for plugins in general).
+
+As it is, I have 1 big "blob" of 19-threads with no way to determine which tab is causing the problem or why a flash-video show it is downloading and buffering (at about 1/3rd normal speed), but not starting to play.
+Actual Results:
+Random behavior, including, up to, freezing the desktop for second at a time and disallowing desktop control of FF (like closing it by clicking on the frame's "X" box). I had to kill it with a 3rd party program (task explorer might have worked, but I already had process explorer (sysinterals.com) already up and running, so it wa easy to access.
+
+
+Expected Results:
+Ability to see what extension on what tab are causing the problem (
+currently accumlated 33:55 (MM:SS) while I typed this report.
+
+I don't see this a an "RFE", since if you are implementing your own multi-task "OS" within FF, I feel that the original design of the "FF" "OS" wa deficient in design in not having this functionality.
+
+Related, but not exactly the same -- would it be possible to, at least, put the OS-calls and UI handling into a separate process and make call to the common UI interface through locking mechanisms? This could allow multiple invocation of FF to launch in different processes, spreading the load, yet all remaining "coherent" through call to 1-"resource" handling thread.
+
+Remember -- that Linux's transition to fully SMP wasn't in 1 step, but wa through a long series of parallelization efforts.

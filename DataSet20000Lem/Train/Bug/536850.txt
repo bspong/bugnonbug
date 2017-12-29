@@ -1,0 +1,41 @@
+Firefox hang on Mochitest test_bug345339.html under 86_64 Build on Mac OS X 10.6.2
+User-Agent: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_2; en-us) AppleWebKit/531.21.8 (KHTML, like Gecko) Version/4.0.4 Safari/531.21.10
+Build Identifier: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; en-US; rv:1.9.3a1pre) Gecko/20091226 Minefield/3.7a1pre
+
+Firefox (MinefieldDebug.app) hang when running mocotests with the following output to the python console.
+
+4422 INFO Running /tests/content/base/test/test_bug345339.html...
+++DOMWINDOW == 28 (0x1255686d8) [serial = 149] [outer = 0x1205e90e0]
+++DOCSHELL 0x1256aace0 == 8
+++DOMWINDOW == 29 (0x125416298) [serial = 150] [outer = 0x0]
+++DOMWINDOW == 30 (0x11f5a1448) [serial = 151] [outer = 0x125416240]
+WARNING: Losing track of existing primary frame: '!aFrame || !mPrimaryFrame || aFrame == mPrimaryFrame', file ../../dist/include/nsIContent.h, line 869
+++DOMWINDOW == 31 (0x12398feb8) [serial = 152] [outer = 0x125416240]
+WARNING: Losing track of existing primary frame: '!aFrame || !mPrimaryFrame || aFrame == mPrimaryFrame', file ../../dist/include/nsIContent.h, line 869
+###!!! ASSERTION: constructing frame in the middle of reflow: 'mPresContext->mLayoutPhaseCount[eLayoutPhase_Reflow] == 0', file /Users/ctempleton3/Development/lizard/mozilla-central/layout/base/nsPresContext.h, line 1203
+Bad output from otool at /Users/ctempleton3/Development/lizard/mozilla-central/obj-dir/browser/dist/bin/fix-macosx-stack.pl line 73, <OTOOL> line 6.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Build from mozilla-central using the following .mozconfig:
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-dir/
+mk_add_options MOZ_BUILD_PROJECTS=browser
+mk_add_options MOZ_CO_PROJECT=browser
+ac_add_app_options browser --enable-application=browser
+mk_add_options MOZ_MAKE_FLAGS="-s -j4"
+ac_add_options --enable-debug
+ac_add_options --disable-optimize
+ac_add_options --with-macos-sdk=/Developer/SDKs/MacOSX10.5.sdk
+
+CC="ccache gcc-4.2"
+CXX="ccache g++-4.2"
+
+2. Run mochitest using the following command: make -C obj-dir/browser/ mochitest-plain
+Actual Results:
+Firefox hanges are requires for force quit.
+
+Expected Results:
+User expects a pass/fail result.
+
+There is not talkback crash ID associated. I don't know why the crash reporter isn't appearing.

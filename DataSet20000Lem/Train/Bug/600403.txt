@@ -1,0 +1,227 @@
+After updating Minefield it deadlocks, seems to be caused by authentication tab being restored
+User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:2.0b7pre) Gecko/20100928 Firefox/4.0b7pre
+Build Identifier: Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:2.0b7pre) Gecko/20100927 Firefox/4.0b7pre
+
+I start my computer from sleep.
+A Minefield prompt asks me to close and open again to install the newer version.
+I say "ok".
+It open up, I can see the tab I had open (but page is blank), and everything is frozen.
+Title in visual studio attach to process is "Authentication Required".
+There's two tab out of five that do require authentication.
+These two site have their password saved.
+The entire UI is frozen, including the close and minimize buttons.
+Right-clicking on the taskbar I can go to private browsing and use it, but going back to the regular browser it re-freezes. I can open new window of minefield and use them, but that one stay frozen.
+Interestingly if I start a new window, type "reader" (for Google Reader), I can switch to that tab in the frozen window, but I can't interact with it (it doe draw properly, though).
+If I open a new window, go to the page that wa authenticating then I can't load it, it simply won't do anything. It open fine in Chrome.
+I can't close the window that's frozen.
+I eventually went to the new window to look at the Minefield version, and noticed I could install yet another update. I did so and now everything seems ok. Maybe the bug is fixed, maybe I hit a race.
+
+I saved a minidump without heap, I can forward it to cdleary.
+
+
+Breaking from MSVC here's the stopped thread:
+> user32.dll!ZwUserWaitMessage() + 0xa byte
+xul.dll!000007fee931ca6f()
+[Frames below may be incorrect and/or missing, no symbol loaded for xul.dll]
+xul.dll!000007fee934caf4()
+xul.dll!000007fee934cfd0()
+xul.dll!000007fee93f48f7()
+xul.dll!000007fee8ba3690()
+xul.dll!000007fee8a4450a()
+xul.dll!000007fee8a3f88c()
+xul.dll!000007fee92b0ad5()
+xul.dll!000007fee92b10c7()
+xul.dll!000007fee93ff302()
+xul.dll!000007fee91dbd79()
+xul.dll!000007fee91df77d()
+xul.dll!000007fee9531f52()
+xul.dll!000007fee9529cb2()
+xul.dll!000007fee952bbdd()
+xul.dll!000007fee952be74()
+xul.dll!000007fee945947d()
+xul.dll!000007fee9271cd1()
+xul.dll!000007fee926d3bf()
+xul.dll!000007fee93ff257()
+xul.dll!000007fee93fe509()
+xul.dll!000007fee93ff302()
+xul.dll!000007fee91dbd79()
+xul.dll!000007fee91df77d()
+xul.dll!000007fee9531f52()
+xul.dll!000007fee9529cb2()
+xul.dll!000007fee952bbdd()
+xul.dll!000007fee952be74()
+xul.dll!000007fee945947d()
+xul.dll!000007fee9271cd1()
+xul.dll!000007fee926d3bf()
+xul.dll!000007fee93ff257()
+xul.dll!000007fee93fe509()
+xul.dll!000007fee93f493f()
+xul.dll!000007fee8ba3690()
+xul.dll!000007fee8b5709c()
+xul.dll!000007fee940c3d6()
+xul.dll!000007fee940c6e3()
+xul.dll!000007fee934cb3b()
+xul.dll!000007fee92d1ba3()
+xul.dll!000007fee89f8981()
+firefox.exe!000000013f1d140f()
+firefox.exe!000000013f1d159f()
+firefox.exe!000000013f1d17a0()
+kernel32.dll!BaseThreadInitThunk() + 0xd byte
+ntdll.dll!RtlUserThreadStart() + 0x21 byte
+
+
+Here's the list of other threads:
+Unflagged > 6872 0 Main Thread Main Thread ZwUserWaitMessage Normal
+Unflagged 5180 0 Worker Thread Win64 Thread ZwRemoveIoCompletion Normal
+Unflagged 1732 0 Worker Thread Win64 Thread NtWaitForSingleObject Normal
+Unflagged 2228 0 Worker Thread SockAsyncThread ZwRemoveIoCompletion Above Normal
+Unflagged 6812 0 Worker Thread Win64 Thread NtWaitForSingleObject Normal
+Unflagged 6468 0 Worker Thread Win64 Thread ZwWaitForMultipleObjects Normal
+Unflagged 4164 0 Worker Thread TppWaiterpThread ZwWaitForMultipleObjects Normal
+Unflagged 3092 0 Worker Thread Win64 Thread NtWaitForSingleObject Normal
+Unflagged 4400 0 Worker Thread Win64 Thread NtWaitForSingleObject Normal
+Unflagged 3704 0 Worker Thread Win64 Thread NtWaitForSingleObject Normal
+Unflagged 2764 0 Worker Thread Win64 Thread NtWaitForSingleObject Normal
+Unflagged 4312 0 Worker Thread CBatchFilterI::LHBatchWorkerThread NtWaitForSingleObject Normal
+Unflagged 5980 0 Worker Thread SIMD_VMM_WORD::SIMD_VMM_WORD NtWaitForSingleObject Normal
+Unflagged 6924 0 Worker Thread SIMD_VMM_WORD::SIMD_VMM_WORD NtWaitForSingleObject Normal
+Unflagged 7052 0 Worker Thread SIMD_VMM_WORD::SIMD_VMM_WORD NtWaitForSingleObject Normal
+Unflagged 5612 0 Worker Thread SIMD_VMM_WORD::SIMD_VMM_WORD NtWaitForSingleObject Normal
+Unflagged 4768 0 Worker Thread SIMD_VMM_WORD::SIMD_VMM_WORD NtWaitForSingleObject Normal
+Unflagged 6308 0 Worker Thread SIMD_VMM_WORD::SIMD_VMM_WORD NtWaitForSingleObject Normal
+Unflagged 5832 0 Worker Thread SIMD_VMM_WORD::SIMD_VMM_WORD NtWaitForSingleObject Normal
+Unflagged 3332 0 Worker Thread Win64 Thread NtWaitForSingleObject Normal
+Unflagged 5556 0 Worker Thread Win64 Thread NtWaitForSingleObject Normal
+Unflagged 1660 0 Worker Thread Win64 Thread NtWaitForSingleObject Normal
+Unflagged 6496 0 Worker Thread Win64 Thread NtWaitForSingleObject Normal
+Unflagged 4880 0 Worker Thread Win64 Thread NtWaitForSingleObject Normal
+Unflagged 4352 0 Worker Thread Win64 Thread NtWaitForSingleObject Normal
+Unflagged 4488 0 Worker Thread mciwindow NtUserGetMessage Highest
+Unflagged 1676 0 Worker Thread Win64 Thread NtWaitForSingleObject Normal
+Unflagged 2648 0 Worker Thread Win64 Thread NtWaitForSingleObject Normal
+Unflagged 5460 0 Worker Thread Win64 Thread NtWaitForSingleObject Normal
+Unflagged 5924 0 Worker Thread Win64 Thread ZwWaitForMultipleObjects Normal
+Unflagged 4496 0 Worker Thread Win64 Thread NtWaitForSingleObject Idle
+Unflagged 4340 0 Worker Thread Win64 Thread NtWaitForSingleObject Idle
+Unflagged 6216 0 Worker Thread Win64 Thread NtWaitForSingleObject Idle
+Unflagged 5940 0 Worker Thread Win64 Thread NtWaitForSingleObject Idle
+Unflagged 6356 0 Worker Thread Win64 Thread NtWaitForSingleObject Idle
+Unflagged 5572 0 Worker Thread Win64 Thread NtWaitForSingleObject Idle
+Unflagged 6796 0 Worker Thread Win64 Thread NtWaitForSingleObject Idle
+Unflagged 6664 0 Worker Thread Win64 Thread NtWaitForSingleObject Idle
+Unflagged 4952 0 Worker Thread TppWorkerThread ZwWaitForWorkViaWorkerFactory Normal
+Unflagged 1328 0 Worker Thread TppWorkerThread ZwWaitForWorkViaWorkerFactory Normal
+
+
+
+Reproducible: Couldn't Reproduce
+
+Steps to Reproduce:
+1. Update
+2. Restart with previous tab having authentication
+3. Freeze
+Actual Results:
+Freeze
+
+Expected Results:
+Interwebs
+
+
+
+Application Basics
+
+Name
+Firefox
+
+Version
+4.0b7pre
+
+User Agent
+Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:2.0b7pre) Gecko/20100928 Firefox/4.0b7pre
+
+Profile Directory
+
+Open Containing Folder
+
+Enabled Plugins
+
+about:plugins
+
+Build Configuration
+
+about:buildconfig
+
+Extensions
+
+Name
+
+Version
+
+Enabled
+
+ID
+
+Modified Preferences
+
+Name
+
+Value
+
+accessibility.typeaheadfind.flashBar
+0
+
+browser.places.smartBookmarksVersion
+2
+
+browser.startup.homepage_override.buildID
+20100928021041
+
+browser.startup.homepage_override.mstone
+rv:2.0b7pre
+
+extensions.lastAppVersion
+4.0b7pre
+
+network.cookie.prefsMigrated
+true
+
+places.history.expiration.transient_current_max_pages
+192994
+
+privacy.sanitize.migrateFx3Prefs
+true
+
+security.warn_viewing_mixed
+false
+
+Graphics
+
+Adapter Description
+NVIDIA GeForce GTX 260
+
+Vendor ID
+10de
+
+Device ID
+05e2
+
+Adapter RAM
+896
+
+Adapter Drivers
+nvd3dumx,nvwgf2umx,nvwgf2umx nvd3dum,nvwgf2um,nvwgf2um
+
+Driver Version
+8.16.11.9107
+
+Driver Date
+9-27-2009
+
+Direct2D Enabled
+true
+
+DirectWrite Enabled
+true
+
+GPU Accelerated Windows
+1/1 Direct3D 9

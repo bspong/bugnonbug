@@ -1,0 +1,56 @@
+Enhancement: Search across multiple tabs
+See bug 185916, from which this was spun off.
+
+Use case (1)
+I have 100 tabs open in one Firefox window.  The tab titles are truncated
+because of space constraints, and only ~7 characters of each title are visible.
+ 20 of these tabs contain the results Google searches, 5 contain Google Docs
+documents, 1 contains Google Mail.  I want to switch to the Google Mail tab.
+
+Use case (2)
+I have 100 tabs open in one Firefox window.  The tab titles are truncated
+because of space constraints, and only ~7 characters of each title are visible. 
+80 of 100 open tabs contain Bugzilla pages.  A colleague asks, "How's the work
+on that [foo] rewrite bug going?"  I know which bug he's referring to, but I
+don't remember the bug number or the title.  But since I'm working on that bug,
+I'm pretty sure it's open somewhere in my 80 bugzilla tabs.  I want to switch
+to that tab.
+
+Use case (3)
+I'm reading up on the [foo] of [bar].  It's an obscure topic (one that PageRank
+fails on), and most pages I've found through Google searches have been useless;
+I've only found 20 worthwhile ones.  Problem is, it takes exploration to decide
+whether a page is useful or useless: sometimes a useless page links to a useful
+one, and exploring this link graph requires a lot of tabs for each exploration.
+ If I encounter a familiar-looking page while traversing that link graph, I
+want to quickly find out if I've already come across it.  In this case, that
+means determining whether I already have it open in a tab.
+
+
+I don't think that the Firefox UI can efficiently handle these cases today, but
+I also don't claim to be an expert.
+
+I propose the following UI addition
+  (1) user presses Ctrl-Shift-F/Cmd-Shift-F
+  (2) window dims, search box appears in the middle
+  (3) after 3-5 character have been entered into search box, a textual search
+is done on each tab.  This could proceed as
+      (a) search titles of all tabs: tab titles matching all search terms get,
+say, 100 points
+      (b) render tabs on top of darkened background according to points, in a
+"weighted map"-style display
+      (c) search content text of all tabs: a tab gets, say, 1 point for each
+search term that's found.  Refresh weighted map of relevant tabs after
+searching each tab's content text.
+
+The search algorithm is very basic, there are lots of ways to tune it.  (For
+example, searching all subset "phrases" of search words might give better
+results.)
+
+I think the visual part of this UI could be a good use case for
+hardware-accelerated rendering.  There's some interesting animation one could
+do with this feature.
+
+Yes, it's true that an add-on could be written to do this, but it seems to me
+that the performance requirements of such a feature are pretty high, and I'm
+not sure an add-on could cut the mustard.  But only experimentation can tell.

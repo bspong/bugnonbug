@@ -1,0 +1,29 @@
+Sync always overwrites change to FxAccounts password
+STR:
+* Have an *incorrect* FxA password remembered locally and synced (ie, so the wrong password is saved locally and remotely)
+* Disconnect from Sync.
+* Login to sync, note the incorrect password is filled. Enter the correct password.
+* Note you are prompted if you want to update the password - say yes.
+* Let sync complete.
+* Check what the local password is:
+
+Expected:
+* The local password is the same a you recently entered and re-saved.
+Actual:
+* The incorrect password is still saved. It also remains incorrect on the server.
+
+The problem is that because this is a reconnection to Sync, all engine are reset. This in turn mean that we ignore the last-modified of local item and treat them a modified long ago. This mean the incoming record is preferred and the incoming item with the incorrect password is applied, overwriting the just changed locally record.
+
+This seems a significant problem a it may cause people to forget their FxA password, forcing a password reset and possible data loss.
+
+Also confusingly, the log in this case writes:
+
+> 1484887350906 Sync.Engine.Passwords DEBUG First sync, uploading all item
+
+which is wrong and misleading - all record are *not* uploaded, but instead the exact opposite actually happens - all record are *downloaded*. Identical item are removed from the list to upload, while not identical item overwrite the local version with the local one. If a non-identical item also ha local modification it actually *is* uploaded - but after the local modification are overwritten by the incoming items. IIUC, that log message is correct exactly once - the very first sync for an account when there are no server records.
+
+I don't quite understand why we ignore the local lastModified time in this case - IIUC, all local change made to existing item between the disconnection and reconnection, for all collections, are lost. Using our local timestamp would mean that all item are *considered* for upload (and thus should still repair item missing remotely) but would have le risk of data loss when an item wa changed locally between the disconnect and reconnect.
+
+I don't see how clock skew would be an issue here (well, why it would be more of an issue than it already is for normal syncs)
+
+Richard, what's the reason for the current behaviour, and why would it be bad to consider our locally recorded time instead of assuming remote record must be more recent?

@@ -1,0 +1,16 @@
+getShortcutOrURIAndPostData callback should be asynchronous
+To be able to convert getShortcutOrURIAndPostData to async keywords (that is, to PlacesUtils.promiseHrefAndPostDataForKeyword), we need its callback to be made really asynchronous.
+
+During the conversion to original promises (that were resolving in the same tick) it was onky made fake-async, but it was still synchronous in reality. Then when we moved to Promises.jsm that were resolving on the next tick, it was decided to convert it from promises to a callback due to the high number of tests to fix. It was thus kept synchronous (see bug 989984).
+
+Now, to proceed with the conversion, we need the callback to be really invoked on the next tick, that means we must fix the tests to do the right thing.
+
+this is the tests that are currently failing:
+
+INFO TEST-UNEXPECTED-FAIL | chrome://mochitests/content/browser/browser/base/content/test/general/browser_getshortcutoruri.js
+INFO TEST-UNEXPECTED-FAIL | chrome://mochitests/content/browser/browser/base/content/test/general/browser_locationBarCommand.js
+INFO TEST-UNEXPECTED-FAIL | chrome://mochitests/content/browser/browser/base/content/test/general/browser_urlbarEnter.js
+INFO TEST-UNEXPECTED-FAIL | chrome://mochitests/content/browser/browser/base/content/test/general/browser_urlbarStop.js
+INFO TEST-UNEXPECTED-FAIL | chrome://mochitests/content/browser/browser/base/content/test/general/browser_bug1064280_changeUrlInPinnedTab.js
+INFO TEST-UNEXPECTED-FAIL | chrome://mochitests/content/browser/docshell/test/browser/browser_search_notification.js
+INFO TEST-UNEXPECTED-FAIL | chrome://mochitests/content/browser/docshell/test/browser/browser_uriFixupIntegration.js

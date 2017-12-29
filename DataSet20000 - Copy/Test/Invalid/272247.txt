@@ -1,0 +1,50 @@
+Crash When an Iframe relocates its parent page when page has a javascript alert up
+User-Agent:       Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.0.3705; .NET CLR 1.1.4322)
+Build Identifier: Mozilla/5.0 (windows; U; WindowsNT 5.1; en-US; rv:1.7.5) Gecko/20041107 Firefox/1.0
+
+I have an iframe that does some work, and returns a y/n value to a function on 
+the calling page.  This function then relocates the page to somewhere else.  
+the catch is, the function that starts this process also brings up an alert 
+like this
+
+function GoDoWork()
+{
+obj = document.getElementById("IframeToDoWork");
+obj.src="workdoer.htm";
+alert('its working on it');
+}
+
+the iframe does its work then it calls:
+
+parent.iframeWorkSuccess()
+ which looks liek this
+
+function iframeWorkSuccess(){
+document.location.href = 'elsewhere.htm'
+}
+
+
+which relocates our page to a new url (i.e. a success message)
+
+The alert box has no time to close, since the processing is so fast.  So the 
+page relocates and the alertbox is hanging there waiting to be "ok"d.  once 
+the alertbox is "ok"d.  Firefox goes down in a ball of flames.  And the 
+reporting agent doesnt work btw...
+
+
+
+Reproducible: Always
+Steps to Reproduce:
+1.Create a page with an iframe on it, id it, and put the above functions on 
+the page
+2.on page2, make a js call to parent.iframeWorkDone();
+3.Click a link on page 1 that will fire your GoDoWork function and watch the 
+carnage
+
+Actual Results:  
+alert box stays on top of the relocated page.  and when it is closed, the 
+browser dies.
+
+Expected Results:  
+When the browser is relocated, it should either destroy the alert boxes, or 
+wait for them to be cleared until relocating.

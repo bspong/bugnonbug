@@ -1,0 +1,93 @@
+CSS formatted content shift when a period(.) is inserted into the text of an anchor inside one of the columns.
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.6) Gecko/20040206 Firefox/0.8
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.6) Gecko/20040206 Firefox/0.8
+
+On this URL, if you select "Science" on the left-hand list of categories, it
+brings up an entry on the right that contains a string that contains a period
+(.), which cause the table width to shift slightly. If you take out the
+period, the column don't shift. If you put in longer text (replace the period
+with the word "dot", for instance), the column don't shift. If the width of
+the text to the left of the period is le than a specific amount, the column
+don't shift (even if the text to the right of the period increase by the same
+amount or more). This is very strange and hard to believe, but I will give the
+step I took to test this.
+
+1) The page structure:
+This part of the page contains a table with two <td>'s. The left <td> contains
+an <h1>, an <h2>, a <p> with some text, and a <ul> with several <li>'s. The
+right <td> contains several <dl>'s, each with a <dt> and one or more <dd>'s.
+Each <dd> contains an anchor surrounding one or more word of text. All of the
+<dl>'s on the right have style="display: none;" set, to keep them from being
+displayed. Each <li> on the left contains an anchor which invokes a JavaScript
+that set the style for each <dl> to display:none, and then remove that style
+from the appropriate dl, causing it to be displayed. The layout of the column
+is controlled using CSS, and all of the <dl>'s use the same class to control how
+they are displayed. All of this work a expected.
+
+2)The unexpected behavior:
+Clicking on each of the anchor on the left cause the appropriate <dl> to
+display on the right, and the layout is consistent, except for one of them -
+"Science". When Science is selected, the column shift so that the left side is
+slightly narrower, causing the content of the <p> on the left side to line-break
+differently.
+
+3)The cause:
+I traced the cause of the problem to the text "Space.com" in an <a> in the <dd>
+under the <dl> for science on the right side. I did numerous test and found
+that if I removed the period, or shortened the amount of text to the left of the
+period, the unexpected shift did not occur.
+
+3) Tests:
+3a)Changing the text inside the <a>:
+"Spacedotcom" or "Spaceisreallygreat" doe not produce the shift, so it is not
+the width of the text overall that cause the shift.
+"Spac.com" doe not produce the shift, so reducing the amount of text to the
+left of the period prevents the problem from occurring.
+"Spac.com web site" doe not produce the shift, but "Space.com web site" does,
+so the amount of text on the right side ha no effect.
+"Spjce.com web site" doe not produce the shift, so it is not the number of
+character to the left of the period that cause the shift, but rather the width
+of that text.
+"iiiii.com" doe not produce the shift, but "SSSSS.com" does, confirming that it
+is the width of the text to the left of the period that cause the shift.
+Replacing "." with &#46; ha no effect. The behavior is the same in the above
+tests.
+Removing the anchor prevents the shift from occurring.
+Changing the content of the anchor doe not have any effect.
+Moving the <dd> and it content into a different <dl> doe not have any effect
+on the behavior (they are all controlled by the same class, so I expected there
+not to be a difference).
+I removed all <dl>'s on the right side, and the JavaScript, so that all I had on
+the right side is one <dl> with one <dd> inside, with one <a> inside containing
+the string "Space.com" and all the variation above. Same behavior.
+
+
+Reproducible: Always
+Steps to Reproduce:
+1. Open http://www.the-noodle.com/links.htm
+2. Click Science on the list on the left side
+
+
+Actual Results:
+Columns shift to the left, causing the left column to be narrower, causing the
+content of the <p> to line-break differently. Click any of the other links, and
+the column shift back.
+
+Expected Results:
+There should be no shift in the columns.
+
+I have replicated this on two PC's running Firefox 0.8, one in Windows2000 Pro,
+the other in WindowsXP. The font & color setting are the default:
+
+Fonts for: Western
+Proportional: Serif, Size: 16
+Serif: Times New Roman
+Sans Serif: Arial
+Monospace: Courier New, Size: 13
+Display Resolution: 96dpi
+Minimum Font Size: none
+The only other box that is checked is for underline link (neither Always use
+box are checked).
+I had a friend try to replicate the problem on Firefox 0.7, but he could not.
+
+The style sheet is avalable at http://the-noodle.com/includes/noodle_basic.css

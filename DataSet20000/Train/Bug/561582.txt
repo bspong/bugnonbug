@@ -1,0 +1,47 @@
+Firefox leaks memory intermittently
+User-Agent:       Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.2.3) Gecko/20100424 Gentoo Firefox/3.6.3
+Build Identifier: Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.2.3) Gecko/20100424 Gentoo Firefox/3.6.3
+
+for some time now (and a few versions actually), firefox on my computer is presenting a weird behavior, if I close the program, I to open it again I have to open on safe-mode, then after closing the safe-mode window and trying the normal mode, it works, but if I close it only open again on safe-mode and so on... I compiled it (I'm using gentoo) with debug on and notice the following messages when I try to open and is unsuccessful:
+".... 
+*** Registering components in: mozSpellCheckerModule
+** Registering components in: nsUnixProxyModule                             
+*** Registering components in: jsctypes                            
+WARNING: preserving unexpected JS escape sequence: file prefread.cpp, line 425
+WARNING: preserving unexpected JS escape sequence: file prefread.cpp, line 425 
+WARNING: preserving unexpected JS escape sequence: file prefread.cpp, line 425  
+WARNING: preserving unexpected JS escape sequence: file prefread.cpp, line 425  
+WARNING: preserving unexpected JS escape sequence: file prefread.cpp, line 425  
+WARNING: preserving unexpected JS escape sequence: file prefread.cpp, line 425  
+WARNING: preserving unexpected JS escape sequence: file prefread.cpp, line 425  
+WARNING: preserving unexpected JS escape sequence: file prefread.cpp, line 425
+###!!! ASSERTION: This is not supposed to fail!: 'Error', file nsXPConnect.cpp, line 1016 
+###!!! ASSERTION: Failed to initialize nsScriptSecurityManager: 'NS_SUCCEEDED(rv)', file nsScriptSecurityManager.cpp, line 3455
+WARNING: Cannot create startup observer : @downthemall.net/contenthandling;1: file nsAppStartupNotifier.cpp, line 113   
+###!!! ASSERTION: This is not supposed to fail!: 'Error', file nsXPConnect.cpp, line 1016
+###!!! ASSERTION: Failed to initialize nsScriptSecurityManager: 'NS_SUCCEEDED(rv)', file nsScriptSecurityManager.cpp, line 3455                                  
+....a lot of similar error messages...
+WARNING: NS_ENSURE_SUCCESS(rv, 1) failed with result 0x8007000E: file nsAppRunner.cpp, line 3405
+###!!! ASSERTION: This is not supposed to fail!: 'Error', file nsXPConnect.cpp, line 1016
+--DOCSHELL 0x7f6849094800 == 0
+nsXPConnect::CommenceShutdown()
+nsStringStats
+ => mAllocCount:           4850
+ => mReallocCount:          676
+ => mFreeCount:            4840  --  LEAKED 10 !!!
+ => mShareCount:           2903
+ => mAdoptCount:            649
+ => mAdoptFreeCount:        649
+"
+so it appears to be leaking memory, but only if I try to open the program after closing it in normal mode, not if it has been closed in safe-mode
+
+I guess it is some add-on fault, but I can pinpoint which.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.close the program in normal mode
+2.try to open in normal mode (it doesn't open)
+3.open the program in safe-mode and close the program
+4.try to open in normal mode, this time it works!
+5.rinse and repeat.

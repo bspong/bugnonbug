@@ -1,0 +1,57 @@
+high heap-unclassified at news.yahoo.com
+Created attachment 580123
+Verbose about:memory after 1500 click
+
+User Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.2.24) Gecko/20111103 Firefox/3.6.24
+Build ID: 20111103063747
+
+Steps to reproduce:
+
+1. Create a new profile and start Firefox using it. Make sure NO extension are installed.
+2. Open about:memory.
+3. Open news.yahoo.com in a different window.
+4. Click on an active story.
+5. Scroll to the comment section of the story by searching for "all comments".
+6. Open Process Explorer & locate the Firefox process.
+7. Click "minimize memory usage" in the "about:memory" window, noting the resulting value for heap-unclassified and the "private bytes" value in Process Explorer.
+8. Click "shared on Facebook", then "all comments", then "shared on Facebook" again, then "all comments", etc., clicking 1500 time total. This will take awhile.
+9. Measure the memory size value each 100 clicks. Measure the "about:memory" memory size value by refreshing the "about:memory" window.
+10. Click "minimize memory usage" and measure the final value again.
+
+
+
+Actual results:
+
+Total private byte grows by ~200 KB/click and heap-unclassified grows by ~100 KB/click:
+
+# click heap-unclassified (MB) private byte (MB)
+
+0 21.1 140.2
+100 45.4 184.8
+200 50.0 215.9
+300 67.4 233.3
+400 77.0 249.3
+500 89.6 270.4
+600 95.7 283.2
+700 100.4 293.6
+800 111.4 307.5
+900 120.4 329.2
+1000 125.4 351.3
+1100 138.3 365.6
+1200 152.9 389.9
+1300 155.2 400.2
+1400 171.5 423.3
+1500 182.1 441.6
+
+1500 172.3 441.9
+(after clicking "minimize memory usage")
+
+
+
+
+
+Expected results:
+
+1. heap-unclassified should not have grown significantly from it initial value.
+
+2. It's unclear whether other contributor to private byte should have grown significantly. Comments by Justin Lebar in https://bugzilla.mozilla.org/show_bug.cgi?id=703952 contend that the news.yahoo.com compartment (see attached verbose about:memory dump) -- which contained 141.4MB after 1500 click -- grew because of an unidentified bug in news.yahoo.com, not a bug in Firefox. He note that Chrome show indication of similar unbounded memory usage growth under testing similar to (but briefer than) the above.

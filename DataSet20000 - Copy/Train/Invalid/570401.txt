@@ -1,0 +1,66 @@
+fancy DOM error display dumping on svg content.
+User-Agent:       Opera/9.80 (X11; Linux i686; U; en) Presto/2.5.24 Version/10.53
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.2) Gecko/20100212
+
+<tr align="center" height="95%">
+An html page , including some js, starts with a table. This first visible element is an embedded svgz.
+
+	<td>
+          <embed width="600" height="480" src="data_images/200tank-monitor.svgz" type="image/svg+xml" onload="svgloaded(event);" name="svg" id="svg">&nbsp;
+	</td>
+</tr>
+
+
+A js function communicates with the server and receives a 403 string in responseText. This is correctly displayed in another control on the page by the sscript. However, FF then decides to display this error to the user by replacing the INNER content of the embedded element. This then seems to trigger some more DOM fancy work in FF and it displays a "content encoding error" and a retry button. 
+
+It would seem the content encoding error is entirely the fault of FF messing with the page and putting html into an embedded object. 
+
+Pressing retry reloads the svg content which is still there and valid. 
+
+
+function display_response() {                                                                 
+   if (xmlhttp.readyState==4) {                                                               
+//     alert(xmlhttp.responseText);                                                           
+     refresh_svg()                                                                            
+     document.forms[0].elements['resp'].value=xmlhttp.responseText                            
+   }                                                                                          
+}                                                                                             
+                                                                                              
+                                                                                              
+function callplot() {                                                                         
+  if (delay)                                                                                  
+    url="/cgi-bin/post.cgi?fn="+delay;                                                        
+  else                                                                                        
+    url="/cgi-bin/post.cgi?fn=*.gnu";                                                         
+  xmlhttp.open("GET",url,true);                                                               
+  xmlhttp.onreadystatechange=display_response;                                                
+  xmlhttp.setRequestHeader('Accept','message/x-jl-formresult')                                
+  xmlhttp.send(null)                                                                          
+  return false;                                                                               
+}                                                                                             
+              
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.embed a non html object (possibly to be the first visible elememt)
+2.trigger a 403
+3.
+Actual Results:  
+valid svg contents removed. 
+presumed attempt to insert a 403 error message
+non svg inserted into svg object triggers more DOM magic that then whines about the mess it made.
+
+
+Expected Results:  
+Don't blow out the SVG graphic. 
+
+Insert a message in an appropriate way in an appropriate format.
+
+Inspect element menu option shows the heirarchy with inserted DOM code in place of the svg graphic code INSIDE the <embed></embed>.
+
+It has totally replaced the svg content despite the embed still defining type="image/svg+xml"
+
+Messing around inside an emdedded object is almost certainly going to screw up. This would seem a fundementally bad place to try to disply the 403.
+
+I will open a second bug about why it even did that for this error which does not appear linked to an attempt to load the svg.

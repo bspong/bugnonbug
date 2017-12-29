@@ -1,0 +1,16 @@
+Updater/uninstaller helper.exe deletes Firefox AppCompatFlags registry entry during upgrade
+During the Firefox update process the program "C:\Program Files (x86)\Mozilla Firefox\uninstall\helper.exe" runs. One of the action this program take is to delete the registry value located at: "HKCU\Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers\C:\Program Files (x86)\Mozilla Firefox\firefox.exe".
+
+If performing an uninstall or reinstall of Firefox this action make sense. It will help "fix" problem associated with the user or another program changing the application compatibility flag to one that break Firefox. Thus a reinstall would "fix" the problem.
+
+However, when this action is taken during an upgrade of Firefox it cause any flag intentionally set by the user to be removed. Several of the flag are useful, but the one I'm most interested in is HIGHDPIAWARE (Disable display scaling on high DPI settings).
+
+Due to a bug in Firefox/Flash (bug 697369), the Windows taskbar is not hidden when viewing full-screen Flash on a Windows system with the system-wide DPI setting changed to be larger than normal (see http://windows.microsoft.com/en-US/windows7/Make-the-text-on-your-screen-larger-or-smaller).
+
+To work around this bug you can the AppCompatFlags to mark Firefox a not being high-DPI aware, which fix the problem. However, because the updater remove this registry value, the user ha to reset the flag every time Firefox updates. Given the increased rate of Firefox release this is becoming a significant annoyance; on my home-theater PC watching full-screen Flash video (such a YouTube) mean re-applying this setting every couple of weeks. Other browser do not have this problem.
+
+I would suggest modifying helper.exe so that it doe NOT remove this registry value during a Firefox upgrade. The program is currently run with the command-line argument "/PostUpdate", which suggests it should already know when an update is being performed.
+
+I'm not sure when this issue wa introduced, but I first noticed it during the Firefox 12/13 timeframe. It is still present a of the Firefox 18 upgrade.
+
+Thanks.

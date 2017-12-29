@@ -1,0 +1,73 @@
+SVG display the same object n time with xml/xsl
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; fr; rv:1.9.2.7) Gecko/20100713 Ant.com Toolbar 2.0.1 Firefox/3.6.7
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; fr; rv:1.9.2.7) Gecko/20100713 Ant.com Toolbar 2.0.1 Firefox/3.6.7
+
+If I use xml/xsl to display data with an SVG image, the first image is reproduced n time instead of displaying each SVG image.
+Or, with Firebug, the generated code is correct. Each SVG image is different.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.make a file (XML) with 3-4 similar lines. example :
+<tablespace name="TBS_SG2_BQH_201004_PAR" value="250" max="1000"/>
+<tablespace name="TBS_SG2_BQH_201001_PAR" value="500" max="1000"/>
+<tablespace name="TBS_SG2_BQH_201002_PAR" value="6000" max="6000"/>
+<tablespace name="TBS_SG2_BQH_201003_PAR" value="0" max="6000"/>
+2. make an XSL file which produce SVG image (like a disk for occupied space)
+3. make an XSL file to produce (X)HTML file
+4. call step 3 stylesheet from XML, like
+<?xml-stylesheet type="text/xsl" href="rapport.xsl"?>
+5. open xml file with Firefox.
+Actual Results:
+the code :
+<xsl:for-each select="/rapport/tablespaces/tablespace">
+
+
+<tr>
+<td>
+<xsl:variable name="mesure">
+<xsl:choose>
+<xsl:when test="@max > 0"><xsl:value-of select="(@value div @max) * 100"/></xsl:when>
+<xsl:otherwise>0</xsl:otherwise>
+</xsl:choose>
+</xsl:variable>
+
+<xsl:call-template name="jauge">
+<xsl:with-param name="mesure" select="$mesure"/>
+</xsl:call-template>
+</td>
+</tr>
+</xsl:for-each>
+display the first SVG image produce by template name="jauge", even the parameter are different (n time SVG image at 25%)
+
+Expected Results:
+Each SVG image be different (25%, 50%, 50%, 0%)
+
+to produce SVG, I use :
+<svg:svg width="60px" height="60px">
+
+<svg:title>jauge 7 <xsl:value-of select="$angle"/></svg:title>
+<svg:desc>Une jauge circulaire <xsl:value-of select="$angle"/> degrés</svg:desc>
+<svg:defs>
+<svg:g id="disque">
+<svg:circle cx="0" cy="0" r="25px" stroke="#dedede" stroke-width="1" fill="none"/>
+<svg:circle cx="0" cy="0" r="5px" stroke="#ffffff" stroke-width="1" fill="#ffffff"/>
+</svg:g>
+
+<svg:path>
+<xsl:attribute name="id">occupation</xsl:attribute>
+<xsl:attribute name="d">M 0,0 24,0 A24,24 0,<xsl:value-of select="$large-arc-flag"/>,1,<xsl:value-of select="round(24 * $cos)"/>,<xsl:value-of select="round(24 * $sin)"/> Z</xsl:attribute>
+<xsl:attribute name="fill">#ffcccc</xsl:attribute>
+<xsl:attribute name="stroke">#ffcccc</xsl:attribute>
+<xsl:attribute name="stroke-width">1</xsl:attribute>
+</svg:path>
+
+</svg:defs>
+
+<svg:use xlink:href="#disque" transform="translate(30,30)"/>
+<svg:use xlink:href="#occupation" transform="translate(30,30)"/>
+
+</svg:svg>
+
+and the sin/cos function from :
+http://fxsl.sourceforge.net/articles/xslCalculator/The%20FXSL%20Calculator.html

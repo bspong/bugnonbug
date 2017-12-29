@@ -1,0 +1,16 @@
+_renderSourceText should update internal state for sources that are loading
+This doesn't really come up in practice, and it only came up in 1 test. But we should fix it. The function `_renderSourceText` on the DebuggerView is called whenever a source is selected or some `sourcesText` state was changed. A state change could be "finished loading" and it will hide the loading message and show the text contents.
+
+The DebuggerView internally keeps state in the `_editorSource` variable about what is currently displayed in the editor. This allows it to check if it's displaying a new source or not; if it isn't displaying a new source, all it does it update a few properties like cursor position and which line is highlighted. If it is displaying a new source, it will set the editor text and emit a SOURCE_SHOWN event.
+
+The problem is that if the text is in a loading state, all we do it set the loading message and return. We don't update the `_editorSource` variable, so this can happen:
+
+1. `_renderSourceText` is called with loaded text from actor1, and it updated `_editorSource` and shows the test
+2. `_renderSourceText` is called with "currently loading" status from actor2, it shows the loading message and returns
+3. `_renderSourceText` is called with loaded text from actor1 again (to move the cursor or something), and it thinks it's still the current source because in #2 we didn't update `_editorSource`. It doesn't do anything but try to move the cursor.
+
+What should have happened in #3 is it should have dumped the actor1 text into the editor and emitted SOURCE_SHOWN, but it still shows the "loading" message.
+
+For those reading this, don't worry about understanding this. I'm just filing bugs for me to fix after I land my refactor.
+
+Soon I'm going to play with a React interface to CodeMirror and we don't have to mess with any of this.

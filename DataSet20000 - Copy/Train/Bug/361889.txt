@@ -1,0 +1,28 @@
+Extensions blocking nsIDocShell on addProgressListener callbacks
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1) Gecko/20061010 Firefox/2.0
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1) Gecko/20061010 Firefox/2.0
+
+When one of those extensions is installed (Noscript, Google Browser Sync, Google Notebook, FlashGot, MediaPlayerConnectivity, Stumbleupon 2.89, Tab Mix Plus or Infolister) addProgressListener ceases to pass nsIDocShell to its callback functions. aRequest passed to the callback does not contain nsIDocShell in the notificationCallbacks even for root documents. 
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Install Noscript, Google Browser Sync, Google Notebook, FlashGot, MediaPlayerConnectivity, Stumbleupon 2.89, Tab Mix Plus or Infolister
+2. addProgressListener
+3. Inspect aWebProgress passed to onStateChange
+
+
+
+Disable the extensions (on the list) and aWebProgress returns to be a valid nsIDocShell (and notificationCallbacks returns to contain nsIDocShell)
+
+Actual Results:  
+aWebProgress is never nsIDocShell
+aWebProgress.documentCharsetInfo is always null.
+aRequest.notificationCallbacks never contains nsIDocShell
+
+Expected Results:  
+aWebProgress is nsIDocShell for root documents.
+aWebProgress.documentCharsetInfo is nsIDocumentCharsetInfo for root documents.
+aRequest.notificationCallbacks contains nsIDocShell
+
+Once those extensions are disabled, Firefox returns to behave as expected.

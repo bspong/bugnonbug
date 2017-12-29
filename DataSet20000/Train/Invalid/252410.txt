@@ -1,0 +1,38 @@
+Wrong referrer with "Load URLs typed into the address bar in new tabs"
+User-Agent:       Firefox/0.9.2 (Windoze XP; U) [en]
+Build Identifier: Firefox/0.9.2 (Windows XP; U) [en]
+
+"Load URLs typed into the address bar in new tabs" is selected (not sure if this
+is part of Tabbrowser Preferences 0.6.5 extension or native to Firefox. When I 
+type in a new URL, it will load the page in a new tab as expected. However, the
+remote web will receive the href as URL of the previous tab, regardless of their
+relation.
+
+Reproducible: Always
+Steps to Reproduce:
+1. load www.one.com into tab
+2. type www.two.com into address bar
+3. check web log of site two.com and notice href of hit shows one.com as referrer
+
+Actual Results:  
+forced ~# tail -f /home/admin/access_log | grep spleh
+216.38.219.236 - - [21/Jul/2004:04:50:49 -0400] "GET /spleh HTTP/1.1" 404 1932
+"http://arbitrary.net/" "Firefox/0.9.2 (Windoze XP; U) [en]"
+
+Notice that "arbitrary.net" shows in the HREF field here, even though that site
+(changed for this report) does not link to the site with this log. it is
+inhereting the href from the previous tab in firefox that i was looking at.
+
+Expected Results:  
+if i manually type a URL into the address bar, it should show no href, just a
+direct page load.
+
+forced ~# tail -f /home/admin/access_log | grep spleh
+216.38.219.236 - - [21/Jul/2004:05:10:43 -0400] "GET /spleh HTTP/1.1" 404 1906
+"-" "Opera/6.03 (Windows 2000; U)  [en]"
+
+I flagged this as 'security' related because in some instances, there is a chance
+a user may disclose sensitive information from one tab to a remote site without
+realizing it. If the URL/HREF carries any sensitive information such as session
+ID, login names, private web space, etc... it would be disclosed to the remote
+site.

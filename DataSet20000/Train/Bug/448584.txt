@@ -1,0 +1,17 @@
+Don't save invalid uri nodes while doing a JSON backup (don't stop while saving data)
+Created attachment 331780
+broken json backup file
+
+Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.5; en-US; rv:1.9.1a2pre) Gecko/2008073003 Minefield/3.1a2pre ID:2008073003 and Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.5; en-US; rv:1.9.0.2pre) Gecko/2008072704 GranParadiso/3.0.2pre ID:2008072704
+
+Today I tried to re-import all my bookmarks in using the JSON backup feature. I made a backup but failed while restoring the bookmarks with the following error message: Unable to process the backup file.
+
+I checked what happens and found that the root cause of this is bug 429350. I have some tags left which don't have any children. Making a backup of such a places file the backup script will stop immediately while writing the data to the json file. Have a look at the attached json file.
+
+While doing the backup following error is shown in the Error Console:
+
+Error: uncaught exception: [Exception... "Component returned failure code: 0x804b000a (NS_ERROR_MALFORMED_URI) [nsIIOService.newURI]"  nsresult: "0x804b000a (NS_ERROR_MALFORMED_URI)"  location: "JS frame :: file:///Users/henrik/Desktop/Minefield.app/Contents/MacOS/modules/utils.js :: PU__uri :: line 154"  data: no]
+
+The backup script shouldn't fail in such cases when no child nodes are available, no URIs are set or something else. We should always make sure that we write correct backup files otherwise probably lost bookmarks cannot be restored. Perhaps we could also run a syntax check after the creation of the json file?
+
+This is a major issue where a lot of people can run into. All of them could run into this dataloss bug and won't be able to restore their bookmarks.

@@ -1,0 +1,20 @@
+Form syncing increment score for change it is applying
+In some user log I see:
+
+> 1471705079830 Sync.Engine.Forms DEBUG Switching local ID to incoming: 1vOTfjCxQg2wtw+y -> 0UDcvyWDQRC2dP4m
+> 1471705079965 Sync.Engine.Forms DEBUG Local item after duplication: age=null; modified=false; exists=true
+> ...
+> 1471705080352 Sync.SyncScheduler DEBUG Global Score threshold hit, triggering sync.
+> ...
+> 1471705080356 Sync.Service INFO Cannot start sync: already syncing?
+> ...
+> 1471705080391 Sync.Engine.Forms DEBUG Local item after duplication: age=null; modified=false; exists=true
+> ...
+> 1471705081181 Sync.SyncScheduler DEBUG Global Score threshold hit, triggering sync.
+> ...
+> 1471705081182 Sync.Service INFO Cannot start sync: already syncing?
+> 1471705081213 Sync.Engine.Forms DEBUG Local item after duplication: age=null; modified=false; exists=true
+
+etc. The form engine's tracker remains active during a Sync, meaning that a we apply incoming record we also increment the score and attempt Syncs. IIUC nothing really bad happens due to this other than extra work done during a Sync (making the browser slower than normal) and that at the end of the Sync we may be left with an elevated score causing the next Sync to run before it otherwise would have.
+
+I think this is a simple fix - the tracker should be looking at this.ignoreAll.

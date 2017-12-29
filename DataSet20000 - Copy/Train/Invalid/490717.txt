@@ -1,0 +1,26 @@
+Security Bug in FF 3.1b3: Apparent evasion of disabled javascript / frame and iframe jail breaking
+User-Agent:       Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.5; en-US; rv:1.9.1b3) Gecko/20090305 Firefox/3.1b3 FireShot/0.32
+Build Identifier: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.5; en-US; rv:1.9.1b3) Gecko/20090305 Firefox/3.1b3 FireShot/0.32
+
+With NoScript set to block scripts and with the security preferences set to not execute javascript, going to the site http://www.dream-bitches.com/ (careful, there's porn) results in an iframe with a frameset that shows another porn site, erotik-freunde.com.  This second site is able to break out of its frame without any interaction from the user (eg, no clicking on a link that targets _top).  
+
+Even copying the HTML, I have been unable to reproduce this on my own site so far, but there is a deep nesting of iframes, frames, and redirects in this interaction.  I've captured wireshark and tcpflow captures and can't find anything special.  At this point, as best as I can tell, the javascript is being executed.  Also of note: a base tag is being used in the final site that busts out of the frame.  
+
+Safari, Chrome, and FireFox 3.0.8 do not exhibit this behavior.  I'm using a Mac, in case that makes a difference although I doubt it will.  I can't confirm whether the problem exists in b4 or not as I am waiting for Firebug and Greasemonkey compatibility before updating.
+
+Reproducible: Always
+
+Steps to Reproduce:
+0.Go to preferences/options and disable javascript
+1.Go to the URL http://www.dream-bitches.com/
+2.Hit Escape quickly
+3.Bring up the source and click through the iframes and frames manually to see what is happening
+4.Now go to the URL http://www.dream-bitches.com/ again and don't hit escape
+5.Note how the iframe'd erotik-freunde.com breaks out of its frame (check the URL bar).
+Actual Results:  
+Iframe'd website broke out of its frame.
+
+Expected Results:  
+In other browsers including older versions of FF, the URL bar stays on dream-bitches.com and the erotik-freunde website stays in its own iframe.
+
+I put this as major because I suspect javascript is running despite the fact that it is disabled.  However, I could be wrong about the cause and this might not be as severe if it is something else.

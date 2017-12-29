@@ -1,0 +1,92 @@
+cached image are not checked for reload when setting Document.location.href
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; fr; rv:1.8.1.6) Gecko/20070725 Firefox/2.0.0.6
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; fr; rv:1.8.1.6) Gecko/20070725 Firefox/2.0.0.6
+
+Everytime problem with seaMonkey 1.1.1 and 1.1.4 and
+firefox 2.0.0.6. , but not with Mozilla 1.7.7 and IE.
+
+In a first test , I use my gecko's browser
+
+I created four page containing the same image (jpg)
+
+
+the first page is loaded using a loadURI
+the second page is loaded via a ScriptContext->EvaluateString execution of document.location.href=the second page
+The third page is loaded via a loadURI
+The fourth page is loadad via loadURI
+
+The server is jetty
+
+for the first ,third and fourth pages, int the jetty's log appears the request
+for the page and the image.
+for the second page only appears the page loading (not the request for the image)
+
+
+So I did a second test using only firefox and the jetty server (not our program)
+
+I call the first page using http://127.0.0.1/.../firstpage.html
+
+this page is loaded correctly. In the jetty's logs, appears :
+- Page loading with code 200
+- Image loading with code 304 a expected
+
+I put into the first page a <A href="javascript:test()" > </A>
+
+where test is a javascript function in the page
+
+function test(){
+document.location.href ="second_page.HTML";
+}
+
+Wen I click on the link, in the log I see only the page loading.
+The image request is not into the logs.
+
+The second page and the third page have a <A href="thrid_page.html"> and <A href="fourth_page.html"> respectivly.
+
+when I select these links, in jetty's log appear
+- request for the page with code 200
+- request for the image with code 304
+
+
+The parameter for the cache are
+
+pref("browser.cache.disk.enable", true);
+pref("browser.cache.disk.capacity", 51200);
+pref("browser.cache.memory.enable", false);
+//pref("browser.cache.memory.capacity", -1);
+// -1 = determine dynamically, 0 = none, n = memory capacity in kilobyte
+pref("browser.cache.disk_cache_ssl", false);
+// 0 = once-per-session, 1 = each-time, 2 = never, 3 = when-appropriate/automatically
+pref("browser.cache.check_doc_frequency", 1);
+// Fastback caching - if this pref is negative, then we calculate the number
+// of content viewer to cache based on the amount of available memory.
+pref("browser.sessionhistory.max_total_viewers", -1);
+
+
+
+
+
+
+
+
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.Create four page with the same image (<img src="Theimage.jpg"/>
+2.In the first page put <A href="javascript:test()" where test set document.location.href="secondpage.html"
+3.In the second page put a <A href="thirdpage.html"
+4. in the third page put a <A href="fourthpage.html"
+5. start the server and call the first page from browser
+
+Actual Results:
+There is not request sended to the server for the image if a page is loaded using document.location.href
+
+Expected Results:
+The requesthas to be send everytime, even in a javascript
+
+This is a very critical problem for our product.
+We use gecko, and the page are made by the customers.
+No restriction have to existing for the javascript usage or html usage....

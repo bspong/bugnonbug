@@ -1,0 +1,113 @@
+autoconfig , prefcalls Ldap query doesn't work
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.8) Gecko/20050513 Fedora/1.7.8-1.3.1
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.8) Gecko/20050513 Fedora/1.7.8-1.3.1
+
+firefox 1.0.3 seems to allow autoconfig to work,
+Autoconfig for firefox is VERY well documented on
+http://mit.edu/~firefox/www/maintainers/autoconfig.html
+and partialy (for mozilla 1.x) in my doc
+http://www.int-evry.fr/s2ia/user/procacci/netscape/en/mozilla-autoconfig-en.html
+
+but I still have lot of problem ... especialy with ldap query
+the getLDAPAttributes function fails :-(
+error popup message is:
+"Error: getLDAPAttributes failed: TypeError:
+Components.classes[LDAPURLContractID] ha no properties"
+Any clue on that (I did removed the --disable-ldap in compile option !)
+
+
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. ask for autoconfig:
+
+$ tail -6 /usr/lib/firefox-1.0.4/greprefs/all.js
+// autoconfig jehan
+pref('general.config.obscure_value', 0);
+pref('general.config.filename', 'firefox.cfg');
+
+
+
+
+2.
+edit the firefox.cfg file
+
+//put everything in a try/catch
+try {
+
+//simple lockpref that do work :-), just to check that autoconfig did something
+//Privacy & Security
+defaultPref("signon.rememberSignons", false);
+
+//Get username, for the ldap querie
+var env_user = getenv("USER");
+/* 2) define processLDAPValues() here (because if set after "3)" below it
+doesn't work !) processLDAPValues which is eventually called by
+getLDAPAttributes() just below,
+check getLDAPAttributes() code from
+$MOZILLA_HOME/defaults/autoconfig/prefcalls.js to see the inside call to "user
+defined" processLDAPValues
+*/
+function processLDAPValues (values) {
+if(values) {
+// set the global var with the value returned from the LDAP query
+ldap_values = values;
+var uid = getLDAPValue ( value ,"uid" );
+var cn = getLDAPValue ( value ,"cn" );
+var mail = getLDAPValue ( value ,"mail" );
+
+}
+}
+// 3) Call Ldap server to get Ldap Attributes (mail & cn) , this will finally
+call processLDAPValues , "2)" just above.
+getLDAPAttributes("ldap3.int-evry.fr","ou=people,dc=int-evry,dc=fr","uid=" +
+env_user,"uid,cn,mail");
+
+//Debug with popup error messages, that doesn't work anymore :-( !! why ??
+var env_mozdebug= getenv("MOZILLA_DEBUG");
+if (env_mozdebug) { displayError("NO ERROR , just a test, cn =" + cn); }
+// try a simple lockpref for debuugin, that one is never set :-(, code might
+crash before that line ?
+lockPref("browser.startup.homepage", "http://www.int-evry.fr/");
+
+// Close the try, and call the catch()
+} catch(e) {
+displayError("lockedPref", e);
+}
+
+
+
+3. start firefox
+
+Actual Results:
+in 1.0.3
+popup message is:
+"Error: getLDAPAttributes failed: TypeError:
+Components.classes[LDAPURLContractID] ha no properties"
+
+in 1.0.4 nothing happens :-( , the file seems to start beeing parse a the first
+lockpref is set, but not the lastone at the end of the script
+
+Expected Results:
+ldap value get retrieved so that I can set aother preference base on the email
+address of the user grabbed from ldap ! that will be more usefull in thunderbird
+actually ...
+
+Related recent buzilla:
+
+https://bugzilla.mozilla.org/show_bug.cgi?id=222973
+https://bugzilla.mozilla.org/show_bug.cgi?id=225288
+https://bugzilla.mozilla.org/show_bug.cgi?id=178685
+https://bugzilla.mozilla.org/show_bug.cgi?id=272970
+
+source code I suppose ?
+http://lxr.mozilla.org/seamonkey/source/extensions/pref/autoconfig/src/
+
+doc
+http://mit.edu/~firefox/www/maintainers/autoconfig.html
+http://www.alain.knaff.lu/howto/MozillaCustomization/
+http://thegoldenear.org/toolbox/windows/docs/mozilla-pre-config.html
+http://www.int-evry.fr/s2ia/user/procacci/netscape/en/mozilla-autoconfig-en.html

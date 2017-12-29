@@ -1,0 +1,44 @@
+tabbrowser.xml : getBrowser().removeProgressListener just reset the progressListener to null
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8b4) Gecko/20050802 Firefox/1.0+
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8b4) Gecko/20050802 Firefox/1.0+
+
+Trunk only. I don't know if this is covered by bug 297155 ...
+
+<method name="removeProgressListener">
+...
+for (var i = 0; i < this.mProgressListeners.length; i++) {
+if (this.mProgressListeners[i] == aListener) {
+this.mProgressListeners.[i] = null;
+break;
+}
+}
+...
+
+this will set the progress listener to null and
+will break '<method name="setIcon">', because there is no 'onLinkIconAvailable'
+in 'p'.
+(error message in JavaScript Console)
+
+<method name="removeProgressListener">
+...
+this.mProgressListeners.splice(i, 1);
+break;
+...
+</method>
+
+fix the problem for me. (just for testing)
+
+So, adding a progressListener and removing it will force
+the throbber to never stop, because
+'onLinkIconAvailable' in 'p' (which is null) is not present.
+
+
+
+
+
+Reproducible: Always
+
+
+
+Expected Results:
+Remove everything from "mProgressListeners"

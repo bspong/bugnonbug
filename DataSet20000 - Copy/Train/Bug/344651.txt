@@ -1,0 +1,19 @@
+Want tweaks to feed preference code to better support the new prefwindow
+The current preferences don't map well to the new UI, and patches which implement it now must go to great effort to correctly handle and save the represented preference settings.  (Such patches are also likely to be broken, as I discovered attachment 228386 was when I was not under pressure to make a b1 deadline within the day :-\ .)  The new UI (see also bug 340677) contains:
+
+- a menulist listing all the user's web readers and client readers
+- a three-option radiogroup titled "When I click on a web feed:" with the options:
+  - "Ask me what to use"
+  - "Always subscribe with a Live Bookmark"
+  - "Always subscribe using the Feed Reader"
+
+This doesn't map well to the current prefs, where the options are not-present ("ask"), "bookmarks" (live bookmark), and "client" and "web" (feed reader).  Representing "ask" as not-present is particularly problematic given how the preference bindings work.
+
+The patch I will post shortly makes the following changes:
+
+- add a fourth value to browser.feeds.handler, "ask"
+- add a preference used to store a non-default reader choice (e.g., when "ask"
+  is set and the user makes a for-this-time-only reader choice), with possible
+  values "web", "client", and "bookmarks"
+
+The "ask" value will be exposed in UI as the inverse of a new checkbox "use this as default reader" in the subscription dialog and as "ask every time" (or not-bookmarks and not-reader) in the prefwindow.  The second preference is for internal use only for communicating the selected reader between the selection dialog and the code which processes the subscription request after the user accepts the dialog.

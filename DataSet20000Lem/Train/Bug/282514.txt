@@ -1,0 +1,76 @@
+firefox report error on starting
+User-Agent: Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.7.5) Gecko/20041111 Firefox/1.0
+Build Identifier: Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.7.5) Gecko/20041111 Firefox/1.0
+
+On certain Linux platforms, e.g. FC3, firefox report these error when started
+from the console:
+
+$ firefox
+grep: error while loading shared libraries: libc.so.6: cannot open shared object
+file: No such fileor directory
+sed: error while loading shared libraries: libc.so.6: cannot open shared object
+file: No such file or directory
+cut: error while loading shared libraries: libc.so.6: cannot open shared object
+file: No such file or directory
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. See above
+Actual Results:
+grep: error while loading shared libraries: libc.so.6: cannot open shared object
+file: No such fileor directory
+sed: error while loading shared libraries: libc.so.6: cannot open shared object
+file: No such file or directory
+cut: error while loading shared libraries: libc.so.6: cannot open shared object
+file: No such file or directory
+
+
+Expected Results:
+firefox start without errors.
+
+The problem is that LD_ASSUME_KERNEL=2.2.5 break grep, sed, and cut on these
+platforms. You may not need this at all -- I don't think the 2.2 kernel ha
+been in use for about 4 years. If you do, the following seems to fix things, at
+least on my machine:
+
+$ diff -c /usr/bin/firefox.bk /usr/bin/firefox
+*** /usr/bin/firefox.bk Wed Nov 10 22:17:35 2004
+--- /usr/bin/firefox Wed Feb 16 15:04:31 2005
+***************
+*** 116,130 ****
+fi
+fi
+
+# export this temporarily - it seems to work with old and new
+# version of the JVM.
+export LD_ASSUME_KERNEL=2.2.5
+!
+! # get the version
+! JVM_VERSION=`$JVM_COMMAND -version 2>&1 | grep version | cut -f 3 -d " " |
+sed -e 's/\"//g'`
+!
+unset LD_ASSUME_KERNEL
+
+case "$JVM_VERSION" in
+(1.3.0*)
+# bad JVM
+--- 116,131 ----
+fi
+fi
+
++ # get the version
++
+# export this temporarily - it seems to work with old and new
+# version of the JVM.
+export LD_ASSUME_KERNEL=2.2.5
+! JVM_INFO=`$JVM_COMMAND -version 2>&1 `
+unset LD_ASSUME_KERNEL
+
++ JVM_VERSION=`echo $JVM_INFO | grep version | cut -f 3 -d " " | sed -e
+'s/\"//g'`
++
+case "$JVM_VERSION" in
+(1.3.0*)
+# bad JVM

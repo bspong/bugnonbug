@@ -1,0 +1,37 @@
+uninitialized variable in nsHttpNTLMAuth::ChallengeReceived - intermittent sys-ntlm authentication failure
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.0; de; rv:1.8.0.9) Gecko/20061206 Firefox/1.5.0.9
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.0; de; rv:1.8.0.9) Gecko/20061206 Firefox/1.5.0.9
+
+I am experiencing intermittent NTLM authentication problem with Firefox 1.5.0.9 and 2.0.0.6.
+
+We use squid a HTTP proxy with NTLM authentication.
+network.automatic-ntlm-auth.allow-proxies is true, the proxy is in the domain wien.gv.at, and network.automatic-ntlm-auth.trusted-uris is set to ".magwien.gv.at, .wien.gv.at".
+
+Normally thing work like expected, and I can use the proxy.
+Occasionally, however, I am prompted for user and password by Firefox and get the proxy's 407 page when I hit "cancel".
+When I push the "reload" button, I get the page I requested without having to authenticate.
+
+I ran a trace with NSPR_LOG_MODULES to nsHttp:5,nsSocketTransport:5.
+I'll attach snippet of the log file to this bug.
+
+Looking at the trace, I got the impression that the problem must be somewhere in nsHttpNTLMAuth::ChallengeReceived and examined the source code.
+
+In line 229 of mozilla/netwerk/protocol/http/src/nsHttpNTLMAuth.cpp in seamonkey an automatic variable is declared, but not initialized:
+nsCOMPtr<nsISupports> module;
+
+The log tell me that the *continuationState is nonzero, so the condition in line 246 becomes false and module is not assigned to in the next line.
+
+In the query
+if (!module) {
+in line 255 module may still be uninitialized, which (if I didn't misinterpret the trace) could lead to the observed problem.
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+1. request a page from https://metalink.oracle.com (after having logged in)
+2. repeat step 1. until the problem occurs
+Actual Results:
+A popup asks me for user-ID and password. If I enter the correct user-ID and password, the page is loaded correctly. If I hit "cancel", I get the 407 page from the proxy server.
+
+Expected Results:
+Get the correct page without having to authenticate. This is what happens normally.

@@ -1,0 +1,66 @@
+[breakdown] Allow for attribution of acquired Firefox Desktop users
+A continuous challenge that we have with Firefox desktop is that it is nearly impossible to understand how we acquire active users. I am constantly asked "Hey, we hear downloads are up, why aren't MAUs?". While we have Google Analytics on our website experiences, that only tells us how users land on www.mozilla.org and the rate that they click on the download button. What we don't know is further down the funnel and how those users become active users.
+
+This is how we are thinking about the acquisition funnel:
+
+1) Non-Firefox user floating through the web
+2) Person searches for Firefox or see a Firefox advertisement
+3) Click on result or ad
+4) Lands on a www.mozilla.org page 
+5) Clicks download button
+6) Downloads Firefox
+7) Installs Firefox
+8) Runs Firefox
+9) Uses Firefox
+
+Currently, we can understand steps 1-6 via Google Analytics and we have done a lot of optimization to ensure that top of the funnel is efficient and converts well to download. The issue is that downloads are a bit of a vanity metric and high download rates don't always translate to high product usage.
+
+The only way that we can understand the entire funnel is by using a funnelcake. A funnelcake is simply a version of Firefox that has the funnel tagged with a unique cohort number that allows for additional analysis.
+
+For example, this is how we currently use funnelcake builds to measure the efficiency of the complete funnel. This will be funnelcake cohort ID 1234.
+
+1) Non-Firefox user floating through the web
+2) Searches for Firefox or see a Firefox advertisement
+3) Click on result or ad
+4) Lands on a www.mozilla.org page (Link to download is dynamically changed to funnelcake 1234 build for a specific audience)
+5) Clicks download button
+6) Downloads Firefox (Funnelcake downloaded)
+7) Installs Firefox
+8) Runs Firefox (The /firstrun/ URL includes a ?f=1234 parameter referring to the funnelcake ID)
+9) Uses Firefox (The funnelcake cohort ID is also included in the channel as as in release-cck-mozilla1234)
+
+While funnelcakes are useful in being able to attribute product usage and retention to specific audiences, it does not scale. For all of the potential sources, mediums, and campaigns on how users are acquired, we would have to create a funnelcake build for every combination. This is not realistic and it would mean that we would have to be automatically creating hundreds of separate builds of Firefox for every language and platform. This is a bit crazy and should be avoided.
+
+We do have an idea on how to do attribution without having to create a funnelcake for every potential way a new Firefox users is acquired.
+
+Here's the idea:
+
+* Dynamically change the downloaded file name to include a cohort ID in the exe, dmg, or bz2. For example, Firefox-42.0-1234.exe. This can be for either the stub or full installer.
+
+* When Firefox is installing, parse the file name and extract the cohort ID if exists. 
+
+* Installer stores the cohort ID in the base set payload in specific key/value pair within Unified Telemetry (FHR v4)
+
+* When Unified Telemetry sends the daily payload of browser meta data, the cohort ID is passed along.
+
+As for specifically how to generate the cohort ID value, we could use the same source/medium/campaign attributes when looking at web metrics. For example.
+
+source = google.com
+medium = organic
+campaign = none
+
+or
+
+source = facebook.com
+medium = display
+campaign = fx-spring-16
+
+We could automatically take the source+medium+campaign and hash the values and come up with a short string that would uniquely describe how a visitor landed on our website. If the URL has the Google Analytics utm_(source|medium|campaign) parameters, we can manually set these three values instead of automatically trying to figure it out from the referring URL.
+
+As for privacy, we are not wrapping Google Analytics in a DNT condition via bug 1217896. We could also do the same thing with attribution and make sure we don't do attribution if we have a valid DNT signal.
+
+The most challenging part of this bug will be to do dynamic installer file names on our CDN hosted installers. 
+
+Article here related to it: https://www.quora.com/Content-Delivery-Networks/What-CDN-supports-dynamic-file-naming
+
+There is also a method on how to do it via HTML, but it is not completely cross-browser: http://www.w3schools.com/tags/att_a_download.asp (Thanks adavis for this find)

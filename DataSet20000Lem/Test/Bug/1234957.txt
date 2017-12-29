@@ -1,0 +1,32 @@
+[e10s] It's possible to accidentally make web page unresponsive and end up with browser consuming 25% CPU for nothing after closing unbeforeunload tab
+Created attachment 8701646
+testcase 1 - It's possible to accidentally end up with browser consuming 25 CPU.htm
+
+>>> My Info: Win7_64, Nightly 46, 32bit, ID 20151223030323
+STR:
+1.A) Detach this tab in a new window
+1.B) Open attached "testcase 1" in a new window
+2. Middle-click the link 'data:text/html,<body onbeforeunload="return 1">' on the page from Step 1
+to open it in a new tab.
+3. Switch to that tab with "data:" url, click on content area
+4. Open new tab
+5. Switch to the tab from Step 1
+6. Middle-click the tab with "data:" url from Steps 2-3 [tab title will become bold]
+7. Click the tab with "data:" url from Steps 2-3 [you'll switch to that tab]
+8. Click Reload button in urlbar or middle-click the tab
+9. Middle-click the tab
+
+Result:
+After Step 7 only blank confirm dialog is visible. Also, the tab from Step 1 stay visually selected
+After Step 8 the normal onbeforeunload dialog appears
+After Step 9 two tab are visually selected: the tab from Step 1 and New Tab from Step 4
+New Tab infinitely display the loading spinner at the center of content area.
+Firefox consumes 25% of CPU and stay at this rate until I close the application
+If after Step 9 I open other tab in the window from Step 1, they are initially unresponsive too.
+
+Expectations:
+(1) Normal onbeforeunload dialog (2) Only one selected tab
+(3) Normal CPU usage (4) No infinite loading spinner
+
+This happens after bug 967873
+> pushlog_url: https://hg.mozilla.org/integration/mozilla-inbound/pushloghtml?fromchange=961911623a6f2ec1d036c7b12a5117ebbeff45d8&tochange=8e0bc70119606b70d74f1aa19d84e697ac4793c7

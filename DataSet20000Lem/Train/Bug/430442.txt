@@ -1,0 +1,23 @@
+Undo and redo in the library are sometimes not correctly working
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; de; rv:1.8.1.14) Gecko/20080418 Ubuntu/7.10 (gutsy) Firefox/2.0.0.14
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9pre) Gecko/2008042303 Minefield/3.0pre
+
+Undo/ redo doe not always work a expected, sometimes undo/ redo only partly reverts a change. The undo/ redo queue for bookmark change (status of the menu entries) is also sometimes incorrect, for example redo is not available after selecting undo, or it's possible to undo the same change several times. This can lead to a loss of bookmarks.
+
+I can reliable reproduce this bug if i delete some bookmark and undo/ redo these change several times, but the step are not always identical. The test file used in the STR is for easy reproducibility.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.Replace the places.sqlite file in the profile with the attached test file
+2.Start firefox and open the library
+3.Select all entry in the "Bookmarks Menu" and delete them
+4.Select undo
+
+Actual Results:
+Some bookmark are missing, redo is not available and undo add the same bookmark again. The order of the restored bookmark is changed (Bug 407424).
+
+
+The STR above only work if the places.sqlite file is put in an already existing profile, or in an empty profile together with a prefs.js or user.js file with the line:
+user_pref("browser.places.smartBookmarksVersion", 1);
+Otherwise it's necessary to select redo after step 4 to reproduce the bug. In this case redo deletes only some bookmark and undo is not available afterwards.

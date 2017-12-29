@@ -1,0 +1,47 @@
+Animations that are removed while the animation-inspector is open cause exceptions and the UI isn't updated
+This is a recent regression. FF41 doesn't have the problem.
+I saw this occur on Nightly (fresh fx-team build, FF43).
+
+STR:
+- Open the inspector on this page: http://tympanus.net/Development/DialogEffects/ricky.html
+- Switch to the animation inspector sidebar.
+- Click on the "Open Dialog" button in the page.
+=> Animations appear in the inspector sidebar.
+- Click to close the dialog.
+=> Removed animations don't disappear as they're supposed to, and following backend exception is logged:
+
+console.error: 
+  Error sending event: mutations
+console.error: 
+  Message: TypeError: v is undefined
+  Stack:
+    types.addActorType/type<.write@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/protocol.js:298:7
+types.addDictType/<.write@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/protocol.js:233:23
+types.addArrayType/<.write/<@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/protocol.js:199:40
+types.addArrayType/<.write@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/protocol.js:199:24
+Arg<.write@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/protocol.js:450:12
+Request<.write/str<@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/protocol.js:619:1
+Request<.write@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/protocol.js:617:15
+Actor<._sendEvent@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/protocol.js:882:16
+Actor<.initialize/<@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/protocol.js:866:11
+emitOnObject@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/commonjs/sdk/event/core.js:112:9
+emit@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/commonjs/sdk/event/core.js:89:38
+exports.AnimationsActor<.onAnimationMutation@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/actors/animation.js:680:7
+MutationCallback*exports.AnimationsActor<.getAnimationPlayersForNode<@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/actors/animation.js:607:21
+actorProto/</handler@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/protocol.js:1013:19
+DSC_onPacket@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/main.js:1586:15
+ChildDebuggerTransport.prototype.receiveMessage@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/transport/transport.js:742:5
+
+This comes from when the AnimationsActor tries to send the mutations event to the front-end.
+For some reason we can't find a AnimationPlayerActor for one of the animations involved in the list of mutations, so <null> is sent instead, which the protocol doesn't like.
+
+Relevant code is in AnimationsActor.onAnimationMutation (/toolkit/devtools/server/actors/animation.js) when the following code runs:
+
+        let index = this.actors.findIndex(a => a.player === player);
+        eventData.push({
+          type: "removed",
+          player: this.actors[index]
+        });
+
+For some reason, index is -1 here.
+This didn't occur in the past.

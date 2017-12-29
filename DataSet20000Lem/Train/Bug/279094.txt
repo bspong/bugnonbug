@@ -1,0 +1,44 @@
+Bad Authorization header during HTTP POST
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.5) Gecko/20041107 Firefox/1.0
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.5) Gecko/20041107 Firefox/1.0
+
+When performing HTTP POST with Basic Authentication, the HTTP header
+"Authorization " will be ended with "\r\n\n" instead of "\r\n". It will break
+some web server, e.g. boa
+
+This is a "ethereal" capture when making a POST on the URL provided:
+
+POST /post-test/test.cgi HTTP/1.1
+Host: www.michaelchan.org
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.5)
+Gecko/20041107 Firefox/1.0
+Accept:
+text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
+Accept-Language: en-us,en;q=0.5
+Accept-Encoding: gzip,deflate
+Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7
+Keep-Alive: 300
+Connection: keep-alive
+Referer: http://www.michaelchan.org/post-test/
+Authorization: Basic YWRtaW46YWRtaW4= <-- \r\n
+<-- \n
+Content-Type: application/x-www-form-urlencoded <-- \r\n
+Content-Length: 0
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Go to http://www.michaelchan.org/post-test/
+2. Login to the page with "admin" / "admin".
+3. Start ethereal capture (refer to www.ethereal.com)
+4. Click the submit button
+5. Stop the ethereal capture and "Follow TCP Stream" on the HTTP POST packet.
+6. Switch to hex dump mode and search for "Authorization"
+
+Actual Results:
+It break the boa web server.
+
+Expected Results:
+The "\n" should be removed from Authorization line during HTTP POST.

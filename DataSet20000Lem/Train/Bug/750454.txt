@@ -1,0 +1,27 @@
+FUEL cause lot of leak until shutdown, can also cause 10+minute shutdown time
+Short story: We should nuke the gShutdown mechanism entirely. FUEL add a bunch of closure to the gShutdown array, and those closure keep their respective FUEL object alive until shutdown. For thing like pref observer this should be unnecessary (since they request to be used a weak observers). Other thing (Window, BrowserTab) should figure out some other way to clean up in a more timely fashion.
+
+Longer story: One of my favorite addons doe this:
+
+for(var window_index in Application.windows){
+if(Application.windows.hasOwnProperty(window_index)){
+var window = Application.windows[window_index];
+for(var tab_index in window.tabs){
+if(window.tabs.hasOwnProperty(tab_index)){
+var tab = window.tabs[tab_index]
+...
+
+I tend to keep a lot of tab open (though not loaded) and every time this function run I have 2N+1 call to Application.windows (where N is number of windows). Then for every window I have 2M+1 call to Window.tabs (where M is the number of tabs). Every Window object created add an item to the gShutdown array, a doe every BrowserTab object.
+
+This quickly get out of control if you have a large number of tabs. On a very short browsing session this array contained > 600k entries.
+
+And then those closure just... sit there... forever... until shutdown. DOM window cannot be cleaned up, so they hang around, get included in the CC graph, etc.
+
+And then it get even worse. At shutdown, we run this code:
+
+while (gShutdown.length) {
+gShutdown.shift()();
+
+This pull one item out of the array and then memmove's everything else, for every iteration (quadratic in number of element according to bz). This is causing me to experience 10+ minute shutdown times, and I have a very zippy machine.
+
+We _really_ need to fix this. Any addon using FUEL to access window or tab are going to hit this, a are preference observers, extension inspectors, etc.

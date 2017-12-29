@@ -1,0 +1,147 @@
+JavaScript: Length-checking of input in <TEXTAREA> locks up input for that <TEXTAREA> once it's full
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.8) Gecko/20051111 Firefox/1.5
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.8) Gecko/20051111 Firefox/1.5
+
+I have a Mini-HTTP-Server at my router, which can receive SMS (short messages for mobile phones) via a HTML page and then send it via POTS. As a SMS can contain a maximum of 160 characters, a JavaScript-function in that page checks for the length of that textfield (<TEXTAREA>), and disallows to type in more than it can handle.
+The point is, after this textfield is full, it also locks up {"BACKSPACEing"/"DELeting"/CTRL+X/mouse-selecting&DELeting/BACKSPACEing/CTRL+X/typing something else}, i.e. the textfield "locks up".
+
+This behaviour is unwanted and didn't exist in Firefox 1.0.7 - nor in any other browser I tried (Opera, IE, Netscape).
+
+For debugging purposes I will paste the HTML-page of my SMS-sending router:
+==============================
+<html>
+<!-- (c) 2002 XXX - empowered to help -->
+<!--        http://www.XXX.de/        -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta name="author" content="AUTHOR OF THIS PAGE, XXX@XXX.de">
+<title>yaps-GUI 2</title>
+<LINK REL=STYLESHEET TYPE="text/css" HREF=main.css>
+<script language="JavaScript">
+function CheckKey(){
+        var ie = document.all ? 1 : 0;
+        if (ie){
+        if (event.keyCode == 13) {
+                return false;
+        }}
+        Target = document.frmSend.Message
+        StrLen = Target.value.length
+        if (StrLen == 1 && Target.value.substring(0,1) == ' ') {
+                Target.value = ''
+                StrLen = 0 
+        }
+        if (StrLen > 160) {
+                Target.value = Target.value.substring(0,160)
+                CharsLeft = 0 
+        }else{
+                CharsLeft = 160 - StrLen 
+        }
+        document.frmSend.Remaining.value = CharsLeft
+        // delete und backspace immer erlauben
+        if (ie){
+        if (event.keyCode == 46||event.keyCode == 8){
+                return true;
+        }}
+        if (CharsLeft == 0) {
+                return false;
+        }else{
+                return true;
+        }
+}
+// setTimeout("CheckKey()", 1000);
+</script>
+</head>
+<body bgcolor="#FFFFFF" text="#000000">
+<nobr>
+<h2 align="center"><font color="#D5D5D5">_</font><font color="#AAAAAA">_</font><font color="#808080">_</font><font color="#555555">_</font><font color="#2B2B2B">_</font><font face="Verdana, Arial, Helvetica, sans-serif">yaps-Benutzerschnittstelle 
+  v.2</font><font color="#2B2B2B">_</font><font color="#555555">_</font><font color="#808080">_</font><font color="#AAAAAA">_</font><font color="#D5D5D5">_</font></h1>
+
+</nobr>
+<form name="frmSend" method="post" action=yapsGUI_send.cgi>
+  <table width="100%" border="0" cellspacing="0" cellpadding="0">
+    <tr valign="top"> 
+      <td width="1%" align="center"> 
+        <p><font face="Verdana, Arial, Helvetica, sans-serif"><b>Absender<br>
+          </b><font size="1">[<a href=yapsGUI_edit.cgi?action=edit&tb=sender>TB bearbeiten</a>]</font></font></p>
+        <p> <font face="Verdana, Arial, Helvetica, sans-serif">
+
+          <select name="Sender">
+            <option value="">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;bitte w&auml;hlen&gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</option>
+          <option value="12345" selected>12345</option>
+        </select><br><input type="text" name="SenderM" size="20">
+          </font></p>
+      </td>
+      <td width="1%" align="center"> 
+        <p><font face="Verdana, Arial, Helvetica, sans-serif"><b>Empf&auml;nger<br>
+
+          </b><font size="1">[<a href=yapsGUI_edit.cgi?action=edit&tb=recipient>TB bearbeiten</a>]</font></font></p>
+        <p> <font face="Verdana, Arial, Helvetica, sans-serif"> 
+          <select name="Recipient">
+            <option value="">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;bitte w&auml;hlen&gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</option>
+          <option value="555-1234">My girlfriend</option>
+          <option value="555-4321">My girlfriend 2</option>
+          <option value="555-3344">My girlfriend 3</option>
+          <option value="555-1865">My real girlfriend</option>
+          <option value="555-7788">;)</option>
+          <option value="911">mygirl.jpg</option>
+        </select>
+          <br>
+          <input type="text" name="RecipientM" size="20">
+          </font></p>
+
+      </td>
+      <td width="98%" align="center"> 
+        <p><font face="Verdana, Arial, Helvetica, sans-serif"><b>Nachricht</b></font></p>
+        <p> <font face="Verdana, Arial, Helvetica, sans-serif"> 
+          <textarea name="Message" cols="40" rows="4" onChange="return CheckKey()"  onKeyDown="return CheckKey()" onKeyUp="return CheckKey()" onFocus="return CheckKey()"></textarea>
+          </font></p>
+      </td>
+    </tr>
+
+    <tr valign="top"> 
+      <td align="center"><font face="Verdana, Arial, Helvetica, sans-serif"><nobr>Debuglevel 
+        <select name="Debug">
+          <option value="0" >0</option>
+          <option value="1" selected>1</option>
+          <option value="2" >2</option>
+          <option value="3" >3</option>
+          <option value="4" >4</option>
+
+        </select></nobr></font></td>
+      <td align="center"><font face="Verdana, Arial, Helvetica, sans-serif"><nobr>
+        <input type="checkbox" name="RequestConfirm" value="1">
+        Empfangsbest&auml;tigung</nobr></font></td>
+      <td align="center"> 
+        <p><font face="Verdana, Arial, Helvetica, sans-serif">Noch 
+          <input type="text" name="Remaining" disabled size="3" value="160">
+          Zeichen</font></p>
+
+      </td>
+    </tr>
+  </table>
+  <p>&nbsp;</p>
+  <center>
+    <font face="Verdana, Arial, Helvetica, sans-serif">
+    <input type="reset" name="Reset" value="Reset">
+    <input type="submit" value="Nachricht verschicken">
+    </font>
+
+  </center>
+</form>
+<p align="right"><font face="Verdana, Arial, Helvetica, sans-serif" size="1"> 
+  &copy; 2002 <a href="mailto:XXX@XXX.de">AUTHOR OF THIS PAGE</a></font></p>
+</body></html>
+==============================
+
+Hope you find it out. :)
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Fill the <TEXTAREA> with 160 characters (more are not allowed by the JavaScript)
+2. Try to kill some characters the usual way (BACKSPACE, selecting and pressing 'DEL', ... etc.
+Actual Results:  
+The textfield doesn't respond in any way thereafter.
+
+Expected Results:  
+The (selected) characters should be removed, like in FF 1.0.7, IE, Opera, Netscape, and just any other browser.

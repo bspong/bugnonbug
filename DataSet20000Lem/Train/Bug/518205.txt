@@ -1,0 +1,32 @@
+Dynamically loaded XHTML content, containing <script>, with AJAX, doe not work.
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; el; rv:1.9.1.3) Gecko/20090824 Firefox/3.5.3 (.NET CLR 3.5.30729)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; el; rv:1.9.1.3) Gecko/20090824 Firefox/3.5.3 (.NET CLR 3.5.30729)
+
+Provided URL contains the Firefox workaround.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Load dynamically with AJAX, XHTML content which contains <script> tags.
+2. Add content to document hierarchy.
+Actual Results:
+Scripts from dynamically loaded content are not working. Working on Opera and Webkit (Safari/Chrome).
+
+Expected Results:
+Scripts from dynamically loaded content must work.
+
+WORKAROUND UNTIL A FIX:
+-----------------------
+// Add 'root' xml node to 'where' element of document
+function innerDOM(where, root) {
+for (var z = 0; z < root.childNodes.length; z++) {
+var e = root.childNodes[z];
+if (e.nodeName == 'script' && navigator.userAgent.indexOf('Firefox') != -1) {
+if (e.getAttribute('src'))
+// add on <head> element a <script> element with attribute 'type' and 'src' a follow.
+createTag('script', null, document.getElementsByTagName("head")[0], [['type', 'text/javascript'], ['src', e.getAttribute('src')]]);
+else eval(e.text);
+} else where.appendChild(e.cloneNode(true));
+
+}
+}

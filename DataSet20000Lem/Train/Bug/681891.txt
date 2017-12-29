@@ -1,0 +1,40 @@
+GCLI Field.claim should be optimized
+The whole Field.claim stuff seems like there could be a better/more performant way. I like the abstraction, but I'm not sure about the implementation. How many different type of field do we expect there to be? Would it make sense to use an algorithm that isn't O(n)? Instead of checking everytime, could we just look this info up in an object a if it wa a hash table? This would require the type to have unique string representations, which I'm not sure whether or not they do (feel free to correct me here).
+
+If Field.claim were replaced by the imaginary claimField, the code might look something like this:
+
+function StringField(...) {
+...
+}
+StringField.prototype = Object.create(Field.prototype);
+
+claimField(Field.MATCH, StringType.toString(), StringField);
+claimField(Field.IF_NOTHING_BETTER, BooleanType.toString(), StringField);
+
+Not only would this move the algorithm from O(n) -> O(1), but it would make the calculation for which field is the best fit for a given type happen only when new field are claimed, not every time we are looking for the right field.
+
+Then getField and friend would need to be updated a little a well:
+
+var fieldCtors = {};
+
+function claimField(level, typeString, Ctor) {
+if (!fieldCtors[typeString] || level > fieldCtors[typeString].level) {
+fieldCtors[typeString] = { level: level, ctor: Ctor };
+}
+}
+
+function getField(...) {
+...
+var typeString = type.constructor.toString();
+if (typeString in fieldCtors) {
+return new fieldCtors[typeString].ctor(...)
+} else if ('DEFAULT_FIELD' in fieldCtors) {
+return fieldCtors.DEFAULT_FIELD.ctor(...)
+} else {
+throw new Error(...)
+}
+}
+
+...
+
+It definitely mean that le will have to be computed after initialization, and le redundant computations.

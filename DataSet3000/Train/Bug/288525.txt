@@ -1,0 +1,51 @@
+xul iframes don't execute onload handlers when if ran via chrome url from command line
+User-Agent:       Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.1.4322; .NET CLR 1.0.3705)
+Build Identifier: 
+
+It appears that an iframe load event hander, whether specified via onload= or 
+via addEventListener, doesn't work in an XUL window when run from the command 
+line with with firefox.exe -chrome
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Create xul file (test.xul):
+
+<?xml version="1.0"?>
+<window id="main-window" title="Test" orient="vertical" width="640" 
+height="480" 
+xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+	<script src="test.js"/>
+
+	<button label="Test" oncommand="testIFrame();" />
+	<textbox id="my-text" multiline="true" flex="1" value="Sample text here 
+Sample text here Sample text here" />
+	<iframe id="my-frame" src="" flex="2"  />
+
+</window>
+
+2. Create script file (test.js):
+
+function testIFrame() {
+	var my_text = document.getElementById("my-text");
+	var my_frame = document.getElementById("my-frame");
+	my_text.value = "Loading iframe";
+	my_frame.addEventListener("load", testIFrame_loaded, false);
+	my_frame.setAttribute("src", "http://www.google.com");
+}
+
+function testIFrame_loaded() {
+	var my_text = document.getElementById("my-text");
+	my_text.value = "iframe is loaded";
+}
+
+3. Set up as chrome
+
+4. Try from address bar and from command line
+Actual Results:  
+When the file is opened from the address bar, the load event handler is called
+When the file is opened from the -chrome command line, the event handler is not 
+called
+
+Expected Results:  
+Event handler should work in both cases

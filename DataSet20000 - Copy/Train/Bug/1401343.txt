@@ -1,0 +1,20 @@
+Provide ability to run privileged code in a remote tab/content scope
+Example: I want to call input.getAutocompleteInfo()[1] on an <input> that is in a tab which is remote. getAutocompleteInfo is ChromeOnly so can only be called from privileged scopes, so I can't call it from the Web Console for the tab.
+
+Prior to e10s I could simply call the method on the <input> from the Browser Toolbox or Browser Console as the <input> would exist in the same tree as browser.xul. With e10s I can't get a reference to the input from the parent process (at least not without a CPOW).
+
+E10S has regressed my ability to debug content pages issues when it comes to using privileged APIs, not just ChromeOnly WebIDL but also passing DOM nodes to a JSM in the content process for debugging/iterating on some code.
+
+Workaround:
+1) Open the Browser Content Toolbox
+2) Switch to the debugger tab
+3) Find your favourite frame script that listens for an event you can get to fire in the context of the page you want to debug and set a breakpoint in that event listener
+4) Trigger that event in the content page.
+5) Now that the breakpoint is hit, you now have priveleged access to the event target which gives you access to the window and document of the tab you want to debug. You can now get a reference to the input and run your privileged code. e.g. 
+> event.target.ownerDocument.querySelectorAll("#myinput").getAutocompleteInfo()
+
+It would be so much nicer if the sandbox of the Browser Content Toolbox had a getter for the currently selected tab's scope or a way to enumerate all the content scopes in the process.
+
+Ideally the solution would also handle multiple content processes with e10s-multi.
+
+[1] https://dxr.mozilla.org/mozilla-central/rev/ffe6cc09ccf38cca6f0e727837bbc6cb722d1e71/dom/webidl/HTMLInputElement.webidl#184-187

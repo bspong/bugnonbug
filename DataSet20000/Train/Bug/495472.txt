@@ -1,0 +1,52 @@
+Download location incorrect and restricted when integrated into OS X default User Template
+User-Agent:       Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_4_11; en) AppleWebKit/525.28.3 (KHTML, like Gecko) Version/3.2.3 Safari/525.28.3
+Build Identifier: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.4; en-US; rv:1.9.0.10) Gecko/2009042315 Firefox/3.0.10
+
+When building a master drive image for Mac OS X 10.4.11, I utilize a custom User Template per the general steps:
+
+1) Configure an account with the preferred application settings.
+This includes configuring FireFox to always download to /Volumes/Storage/Downloads.
+
+2) From a root account, we clone the original account into the default User Template via these steps:
+rm -r /System/Library/User\ Template/English.lproj/*
+cp -R /Users/buildmaster/* /System/Library/User\ Template/English.lproj/
+
+3) The resulting User Template location is then set to owner root and group wheel and a repair of permissions is performed before any new accounts are created.
+
+4) At this point, there is 1 account on the system and that is the buildmaster which the end user does not use. From this account, new accounts are made, such as User2.
+
+
+When making a build master with an install of FireFox 3.0-3.0.8, I have no known problems. I have not tested 3.0.9. Version 3.0.10 is the only known version with issues. I have not solidly confirmed the results of updating to 3.0.10 on a User Template cloned with an older version then updated.
+
+As noted above, FireFox is set to download to /Volumes/Storage/Downloads.
+When using FireFox from ANY account other than the original buildmaster, the download process alerts me:
+
+
+Downloading /Users/buildmaster/Desktop/98MDjMzA.png.part
+
+/Users/buildmaster/Desktop/98MDjMzA.png.part could not be saved, because you cannot change the contents of that folder.
+
+Change the folder properties and try again, or try saving in a different location.
+
+
+
+1) The buildmaster was not set to download to its desktop. It was set to download to /Volumes/Storage/Downloads.
+2) /Volumes/Storage/ along with the /Volumes/Storage/Downloads are set to ignore permissions.
+3) From the User2 account, I can verify /Volumes/Storage/Downloads as the download location, I can change the config to use the User2 desktop and even set the download location to a newly created folder and still receive the same error.
+4) removing FireFox and searching the drive for firefox and removing all plists and other files then reinstalling FireFox 3.0.10 does not resolve the problem.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Install FireFox 3.0.10
+2. Clone the base account to be the default User Template.
+3. Create a new account and from the new account, try to download anything from within FireFox 3.0.10
+
+See "Details" section of bug report for steps to create a custom User Template in Mac OS X.
+Actual Results:  
+Actual results: FireFox was excluded from usability and alternate browser was required.
+
+Expected Results:  
+FireFox should have respected the settings of where I told it to always download.
+
+Enterprise setup utilities for FireFox (specifically on Mac OS X) would be a great asset.

@@ -1,0 +1,14 @@
+Network monitor should show per-connection SSL state
+For developer who are working on improving performance at the transport layer, being able to see which request are on which connections, and the property of the connections, is very useful.
+
+It would be great if there were a way to show the state of network connections. In particular, it would be great to expose:
+* Which protocol is being used (HTTP, HTTP/1.x over TLS, SPDY, HTTP/2, Websockets).
+* The TLS version negotiated (SSL 3.0, TLS 1.0, TLS 1.1, TLS 1.2), cipher suite negotiated, certificates, stapled OCSP response, etc., whether the certificate validated successfully, whether there were any SSL-related warning (e.g. weak keys, lack of support for the renegotiation extension, deprecated cipher suite in use).
+
+Some of this information is available for the document request using the Page Info UI by clicking the site identity panel -> More information -> Security (Technical details). However, the page info UI doesn't make sense on a modern web page because there are almost always multiple connection to multiple host involved.
+
+Often, when somebody is actually trying to work on configuring their SSL stuff, they'd like a view of the SSL info across all the connection on the page. Imagine that the normal view had a narrow "SSL" or "Protocol" column that indicated whether SSL is being used or which protocol is being used. Also, imagine we had an option to expand this column into a set of column that provided more details: TLS version, cipher suite, whether OCSP stapling wa used, etc. (This would be similar to how the timeline column can be toggled between compact and wide views.) This would allow somebody to quickly determine which servers/connections need to be changed to better configurations. Presumably some of the normal column would have to be collapsed when the SSL column is expanded to the multi-column view.
+
+A lot (all?) of this information is already exposed by looking at the channel.securityInfo.QueryInterface(nsITransportSecurityInfo) and channel.securityInfo.QueryInterface(nsISSLStatusProvider).SSLStatus (nsISSLStatus). I, or others on the Security Engineering team, would be happy to expose more information a needed to support this work.
+
+I think that this would be a major improvement to our developer tool that would make Firefox the best browser for investigating SSL-related configuration issues.

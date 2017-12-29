@@ -1,0 +1,122 @@
+Crash in debug FireFox build in startup
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7b) Gecko/20040404 Firefox/0.8.0+ (mmoy-O2-GL7-SSE2-crc32-quek01235)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7b) Gecko/20040407 Firefox/0.8.0+
+
+A debug build of FireFox is crashing before the browser come up. The DOS window display the following:
+
+hrome/help.jar!/content/help/
+*** Chrome Registration of skin : Checking for contents.rdf at jar:resource:/chrome/help.jar!/skin/help/
+*** Chrome Registration of locale : Checking for contents.rdf at jar:resource:/chrome/help.jar!/locale/en-US/help/
+*** Chrome Registration of package: Checking for contents.rdf at jar:resource:/chrome/toolkit.jar!/content/passwordmgr/
+*** Chrome Registration of locale : Checking for contents.rdf at jar:resource:/chrome/en-US.jar!/locale/en-US/passwordmgr/
+*** Chrome Registration of package: Checking for contents.rdf at jar:resource:/chrome/toolkit.jar!/content/mozapps/
+*** Chrome Registration of locale : Checking for contents.rdf at jar:resource:/chrome/en-US.jar!/locale/en-US/mozapps/
+*** Chrome Registration of skin : Checking for contents.rdf at jar:resource:/chrome/classic.jar!/skin/classic/mozapps/
+*** Chrome Registration of package: Checking for contents.rdf at jar:resource:/chrome/comm.jar!/content/cookie/
+*** Chrome Registration of locale : Checking for contents.rdf at jar:resource:/chrome/en-US.jar!/locale/en-US/cookie/
+*** Chrome Registration of package: Checking for contents.rdf at jar:resource:/chrome/comm.jar!/content/autoconfig/
+*** Chrome Registration of locale : Checking for contents.rdf at jar:resource:/chrome/en-US.jar!/locale/en-US/autoconfig/
+*** Chrome Registration of package: Checking for contents.rdf at jar:resource:/chrome/inspector.jar!/content/inspector/
+*** Chrome Registration of locale : Checking for contents.rdf at jar:resource:/chrome/inspector.jar!/locale/en-US/inspector/
+*** Chrome Registration of skin : Checking for contents.rdf at jar:resource:/chrome/inspector.jar!/skin/classic/inspector/
+*** Chrome Registration of skin : Checking for contents.rdf at jar:resource:/chrome/inspector.jar!/skin/modern/inspector/
+*** Chrome Registration of skin : Checking for contents.rdf at jar:resource:/chrome/classic.jar!/skin/classic/browser/
+*** Chrome Registration of package: Checking for contents.rdf at jar:resource:/chrome/browser.jar!/content/browser/
+*** Chrome Registration of package: Checking for contents.rdf at jar:resource:/chrome/browser.jar!/content/browser-region/
+*** Chrome Registration of locale : Checking for contents.rdf at jar:resource:/chrome/en-US.jar!/locale/en-US/browser/
+*** Chrome Registration of locale : Checking for contents.rdf at jar:resource:/chrome/US.jar!/locale/US/browser-region/
+++WEBSHELL == 1
+++DOMWINDOW == 1
+For application/x-java-vm found plugin C:\Program Files\Java\j2re1.4.1_06\bin\NPOJI610.dll
+++WEBSHELL == 2
+++DOMWINDOW == 2
+Note: verifyreflow is disabled
+Note: styleverifytree is disabled
+Note: frameverifytree is disabled
+=========================================================
+
+And then break in the code below. See the => for the line. The relevent
+assembler is shown below. The actual crash is in NTT.DLL a few stack frame up but this is the last FireFox routine on the stack. I haven't been able to get
+a good debug build in a few weeks. Mozilla ha the same problem.
+
+--------------------------------------------------------------------------------
+NS_IMETHODIMP
+nsStandardURL::SetSpec(const nsACString &input)
+{
+ENSURE_MUTABLE();
+
+const nsPromiseFlatCString &flat = PromiseFlatCString(input);
+const char *spec = flat.get();
+
+LOG(("nsStandardURL::SetSpec [spec=%s]\n", spec));
+
+Clear();
+
+if (!spec || !*spec)
+=> return NS_OK;
+
+// filter out unexpected char "\r\n\t" if necessary
+nsCAutoString buf1;
+if (net_FilterURIString(spec, buf1))
+spec = buf1.get();
+
+// parse the given URL...
+nsresult rv = ParseURL(spec);
+if (NS_FAILED(rv)) return rv;
+
+// finally, use the URLSegment member variable to build a normalized
+// copy of |spec|
+rv = BuildNormalizedSpec(spec);
+================================================================================
+
+
+return rv;
+0048869E jmp nsStandardURL::SetSpec+0AFh (4884EBh)
+004886A3 xor esi,esi
+return NS_OK;
+004886A5 lea ecx,[ebp-10h]
+004886A8 call dword ptr [__imp_nsACString::~nsACString (0DF423Ch)]
+004886AE pop edi
+004886AF mov eax,esi
+004886B1 pop ebx
+004886B2 pop esi
+
+
+-------
+
+.mozconfig:
+
+. $topsrcdir/browser/config/mozconfig
+GLIB_PREFIX=c:/mozilla/w32build/vc7
+LIBIDL_PREFIX=c:/mozilla/w32build/vc7
+export MOZ_PHOENIX=1
+mk_add_options MOZ_PHOENIX=1
+ac_add_options --disable-toolkit-gtk
+ac_add_options --disable-toolkit-xlib
+ac_add_options --disable-toolkit-qt
+ac_add_options --enable-crypto
+ac_add_options --disable-tests
+ac_add_options --disable-mailnews
+ac_add_options --disable-composer
+ac_add_options --enable-optimize
+ac_add_options --disable-ldap
+ac_add_options --enable-debug
+ac_add_options --disable-shared
+ac_add_options --enable-static
+ac_add_options --disable-profilesharing
+ac_add_options --disable-accessibility
+ac_add_options --disable-activex
+ac_add_options --disable-activex-scripting
+ac_add_options --disable-installer
+ac_add_options --enable-extensions=cookie,xml-rpc,xmlextras,pref,transformiix,universalchardet,typeaheadfind,webservices,inspector
+
+Reproducible: Always
+Steps to Reproduce:
+1.
+2.
+3.
+
+
+
+
+I'm trying to get a debug build so that I can debug another crash problem that's probably related to Javascript.

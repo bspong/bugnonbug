@@ -1,0 +1,48 @@
+JSON.stringify() fails on document.getElementsByTagName(sometag) objects
+User-Agent:       Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.0; Trident/4.0; SLCC1; .NET CLR 2.0.50727; Media Center PC 5.0; InfoPath.2; .NET CLR 3.5.21022; .NET CLR 3.5.30729; OfficeLiveConnector.1.4; OfficeLivePatch.1.3; .NET CLR 3.0.30729)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.9.1.3) Gecko/20090824 Firefox/3.5.3
+
+I’m writing a Firefox extension. When I try to execute the code below (in browser.xul context) to get JSON of more complex objects, the behavior of Firefox’s javascript execution is really strange. On simple objects  JSON.stringify works just fine. But it’s more complex objects, such as t.getElementsByTagName('input') or t.getElementsByTagName('a'), that cause problems.
+
+The code:
+mytag = curcontent.document.getElementsByTagName('input');
+mytagJSONtext = JSON.stringify(mytag, myreplacefunc, 5);
+
+function myreplacefunc(key, value) {
+    var tv=typeof value;
+    debugger;
+    ////allowed data
+    if (value===null) return null;
+    if (key=='') { return value; }
+
+    alert('unknown1 myreplacefunc \r\nkey: "'+key+'"\r\nvalue: "'+value+'"\r\ntypeof: '+tv);    
+    debugger;
+    if (tv==='number') return value;
+    if (tv==='string') return value;
+    if (tv==='boolean') return value;
+    if (tv==='function') return undefined; //no function allowed ---- but could be since it doesn't cause recursion
+    
+    //explicitly allowed objects
+    if (key=='a') { return value; }
+    if (key=='input') { return value; }
+    
+    //everything else is ignored
+    alert('unknown2 myreplacefunc \r\nkey: "'+key+'"\r\nvalue: "'+value+'"\r\ntypeof: '+tv);    
+    return undefined;
+}
+
+The myreplacefunc function is really simple and should always work. It allows for simple elements, such as numbers, strings and booleans to be always returned. Complex objects are returned only if explicitly named (a and input in this case). Everything else is returned as undefined (note: returning null instead of undefined causes problems even on simpler objects).
+
+What is really strange is that I can see with Chromebug 1.5.0a2 that strings, numbers and booleans are being returned with myreplacefunc, but when completed mytagJSONtext contains empty objects ( ‘{}’ in JSON notation ).
+
+Tested on number of websites. Can use simple page as .document, such as www.google.com for testing.
+
+Reproducible: Always
+
+Actual Results:  
+Plenty of empty '{}' in JSON.stringify result (mytagJSONtext).
+
+Expected Results:  
+mytagJSONtext should be non-empty: {numbers, strings, booleans ...}
+
+Proposed solution: do step by step debugging on JSON.stringify when trying to stringify more complex objects, such as those returned by .getElementsByTagName('input') function.

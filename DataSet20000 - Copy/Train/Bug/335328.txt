@@ -1,0 +1,182 @@
+data from packet BEFORE the GET request is prepended to server response AFTER GET (with embeded webserver)
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.0.2) Gecko/20060308 Firefox/1.5.0.2
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.0.2) Gecko/20060308 Firefox/1.5.0.2
+
+4/24/2006
+
+Hello,
+
+This is a bug report for Firefox 1.5.0.2 (and probably earlier versions too).
+The problem occurs when using Firefox with a lowly embedded webserver based on the
+popular Lantronix XPort (the TCP/IP engine fits inside the RJ-45 jack itself,
+which is great for small embedded instruments).
+The Lantronix embedded server device can only handle one connection at a time,
+so the browser is running with
+network.http.max-connections-per-server = 1
+as set by me in about:config.
+When a page load is interrupted and another one is started, Firefox mistakenly
+takes data from BEFORE the GET request that it issues, and prepends it to the
+server response to the GET request.  This corrupts the HTTP/1.1 header and makes
+the header visible to the end user.
+
+I captured a small packet dump using Ethereal while Firefox 1.5.0.2 was running;
+the file is attached as:
+
+firefox_bug_ethereal_libpcap_file
+
+Sorry, I didn't know which file extension to give it, so I put the info in the filename:
+it's a libpcap file.
+
+It would be great if Firefox could recognize that any data coming in from the server
+BEFORE the GET request is issued should not be prepended to the server's subsequent
+response to the request.  In this, case, the characters corrupt the HTTP/1.1 header
+and end up being visible to the end user.
+
+More details follow, including the text content of a packet dump,
+followed by the displayed webpage showing the corrupted HTTP header
+that is made visible to the end user:
+
+Thanks in advance for any attention that you can give this.
+I love using your browser.
+
+Sincerely,
+
+Michael Dorman
+President, Mosaic Industries, Inc.
+michael@mosaic-industries.com
+
+
+**********
+The following is from an Ethereal packet dump using "follow TCP Stream" on the relevant
+connection containing the Firefox GET request.
+
+Note that the wayward "tl" characters (from a prior interrupted page load)
+occur BEFORE the browser's
+	GET /form_entry.html HTTP/1.1
+request.  Yet Firefox ends up placing these 2 characters in front of the
+	HTTP/1.1 200 OK
+response from the embedded webserver.
+
+It appears to me that Firefox may be relying on the expected incrementing of the
+source port to sort the data, but in this case the embedded webserver always reports
+the same source port; the Lantronix XPort only knows one port number, which it uses
+for both source and destination port numbers.  In this case, the port number is 80.
+
+If Firefox could recognize that any data coming in from the server
+BEFORE the GET request is issued should not be prepended to the server's subsequent
+response to the request, this would solve the problem; this seems like it would be
+generally useful.
+
+*********** Packet Dump:
+
+tlGET /form_entry.html HTTP/1.1
+
+Host: 10.0.1.22
+
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.0.2) Gecko/20060308 Firefox/1.5.0.2
+
+Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
+
+Accept-Language: en-us,en;q=0.5
+
+Accept-Encoding: gzip,deflate
+
+Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7
+
+Keep-Alive: 300
+
+Connection: keep-alive
+
+Referer: http://10.0.1.22/index.html
+
+
+
+HTTP/1.1 200 OK
+
+Server: Mosaic Industries Embedded Webserver
+
+Connection: close
+
+Content-Type: text/html
+
+
+
+<html>
+
+<head><title>EtherSmart Form Entry</title></head>
+
+<body>
+
+<H3>Welcome to the EtherSmart Wildcard Personal Info Collection Page!</H3><p>
+
+This product is offered by <a href="http://www.mosaic-industries.com">Mosaic Industries</a>
+
+<p>Please take a moment to tell us some personal information about yourself.<p>
+
+<form method=GET action="/form_response.cgi">
+
+Classification:
+
+<input type=radio checked name=classification value="woman"> Woman
+
+<input type=radio name=classification value="man"> Man
+
+<input type=radio name=classification value="child"> Child
+
+<p>Name: <input type=text name=name_id size=32 maxlength=80>
+
+<p>Favorite color:
+
+<select name=color size=1>
+
+<option>red
+
+<option>blue
+
+<option>yellow
+
+<option>green
+
+</select>
+
+<p><input type=submit>
+
+</form>
+
+<p> <a href="/index.html">Go back home</a><p>
+
+</body>
+
+</html>
+
+
+
+**************** HERE IS THE RESULT AS DISPLAYED IN FIREFOX BROWSER WINDOW:
+(NOTE that HTTP header is visible to the end user due to prepended chars from a prior packet).
+
+*******************
+
+
+tlHTTP/1.1 200 OK Server: Mosaic Industries Embedded Webserver Connection: close Content-Type: text/html
+Welcome to the EtherSmart Wildcard Personal Info Collection Page!
+
+This product is offered by Mosaic Industries
+
+Please take a moment to tell us some personal information about yourself.
+
+Classification: Woman Man Child
+
+Name:
+
+Favorite color:
+
+Go back home
+
+Reproducible: Always
+
+
+
+
+If you want me to email you the zipped ethereal packet dump, send me an email that I can attach the file to: michael@mosaic-industries.com
+
+Thanks.

@@ -1,0 +1,22 @@
+Intermittent sessionstore/test/browser_248970_a.js | file should be created after setting interval to 0
+I am declaring this an intermittent problem because the only way "file should be created after setting interval to 0" gets reported, thanks to the guards in the file, is if this (correct) sequence of events happens:
+- (the decision to write the file is made because of the preference event, this ends up in saveStateDelayed which calls saveState which calls _saveStateObject which calls _writeFile)
+- sss_writeFile's call to NetUtil.asyncCopy completes, invoking the provided callback function that invokes Components.isSuccessCode(rc) to verify success, and only then calls Services.obs.notifyObservers on "sessionstore-state-write-complete"
+- waitForFileExistence's observer gets called...
+- getSessionstoreFile().exists() returns false.
+
+
+In other words, this error message looks like the very definition of a race on checking for the existence of a file because the callback is only going to get called if the stream copier declares victory.
+
+Links to the interesting code:
+http://mxr.mozilla.org/mozilla-central/source/browser/components/sessionstore/src/nsSessionStore.js#2965
+http://mxr.mozilla.org/mozilla-central/source/browser/components/sessionstore/test/browser/browser_248970_a.js#68
+
+
+http://tinderbox.mozilla.org/showlog.cgi?log=Firefox/1269422946.1269423987.24267.gz
+WINNT 5.2 mozilla-central opt test mochitest-other on 2010/03/24 02:29:06
+
+TEST-UNEXPECTED-FAIL | chrome://mochikit/content/browser/browser/components/sessionstore/test/browser/browser_248970_a.js | file should be created after setting interval to 0
+TEST-INFO | chrome://mochikit/content/browser/browser/components/sessionstore/test/browser/browser_248970_a.js | Console message: [JavaScript Error: "uncaught exception: [Exception... "Component returned failure code: 0x80520012 (NS_ERROR_FILE_NOT_FOUND) [nsIFile.remove]"  nsresult: "0x80520012 (NS_ERROR_FILE_NOT_FOUND)"  location: "JS frame :: chrome://mochikit/content/browser/browser/components/sessionstore/test/browser/browser_248970_a.js :: anonymous :: line 98"  data: no]"]
+TEST-UNEXPECTED-FAIL | chrome://mochikit/content/browser/browser/components/sessionstore/test/browser/browser_248970_a.js | Timed out
+TEST-INFO | checking window state

@@ -1,0 +1,20 @@
+missing maxversion string causes FF to mess up add-on management
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-DK; rv:1.9.0.3) Gecko/2008092700 SUSE/3.0.3-1.2 Firefox/3.0.3
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-DK; rv:1.9.0.3) Gecko/2008092700 SUSE/3.0.3-1.2 Firefox/3.0.3
+
+I created an extension that did not contain a maxversion in install.rdf for Thunderbird (!) ... and this causes Firefox to keep saying that the add-on will be installed after FF ist being restarted. Uninstalling is also not possible. The whole add-on management was broken until I manually deleted the folder containing the add-on. add-on debugging enabled showed this at startup:
+
+*** ExtensionManager:_finishOperations - failure, catching exception - lineno: 7602 - file: undefined - [Exception... "Component returned failure code: 0x80004003 (NS_ERROR_INVALID_POINTER) [nsIRDFDataSource.Assert]"  nsresult: "0x80004003 (NS_ERROR_INVALID_POINTER)"  location: "JS frame :: file:///usr/lib/xulrunner-1.9.0.3/components/nsExtensionManager.js :: anonymous :: line 7602"  data: no]                                                                    
+
+the mentioned line 7602 contains:
+        this._inner.Assert(anon, maxVersionRes, installManifest.GetTarget(newVersionInfo, maxVersionRes, true), true);
+
+which gave the ultimate hint to the missing maxversion.
+
+Firefox shouldn't be screwable like this just because a plugin misses a thing like this.
+
+A sample xpi file containing a dictionary being broken as described is here:
+http://www.j3e.de/mozilla/de-CH-20080919.xpi
+
+
+Reproducible: Always

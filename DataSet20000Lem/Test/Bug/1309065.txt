@@ -1,0 +1,34 @@
+./mach devtools-css-db depends on the file that it's attempting to generate (and a a result, it doesn't do the right thing after a property's been renamed)
+STR:
+1. Delete devtools/shared/css/generated/properties-db.js
+2. Run ./mach devtools-css-db
+
+ACTUAL RESULTS:
+{
+Error running mach:
+
+['devtools-css-db']
+
+The error occurred in code that wa called by the mach command. This is either
+a bug in the called code itself or in the way that mach is calling it.
+
+You should consider filing a bug for this issue.
+
+If filing a bug, please include the full output of mach, including this error
+message.
+
+The detail of the failure are a follows:
+
+CalledProcessError: Command '[u'/scratch/work/builds/mozilla-central/mozilla-central-11-11-01.13-56/obj/dist/bin/xpcshell', '-g', u'/scratch/work/builds/mozilla-central/mozilla-central-11-11-01.13-56/obj/dist/bin', '-a', u'/scratch/work/builds/mozilla-central/mozilla-central-11-11-01.13-56/obj/dist/bin/browser', '/scratch/work/builds/mozilla-central/mozilla-central-11-11-01.13-56/mozilla/devtools/shared/css/generated/generate-properties-db.js']' returned non-zero exit status 3
+
+File "/scratch/work/builds/mozilla-central/mozilla-central-11-11-01.13-56/mozilla/devtools/shared/css/generated/mach_commands.py", line 46, in generate_css_db
+db = self.get_properties_db_from_xpcshell()
+File "/scratch/work/builds/mozilla-central/mozilla-central-11-11-01.13-56/mozilla/devtools/shared/css/generated/mach_commands.py", line 105, in get_properties_db_from_xpcshell
+env = sub_env)
+}
+
+EXPECTED RESULTS:
+The command should complete successfully (and regenerate properties-db.js from scratch). i.e. it should not depend on the file that it generates.
+
+
+As far a I can tell, this is the partial cause of the latest set of woe on bug 1308651 -- ./mach devtools-css-db doesn't seem to be updating CSS_PROPERTIES, and I think the reason is partly because it's using the current state of this .js file a a Source Of Truth when determining the final state of this same .js file.

@@ -1,0 +1,54 @@
+Endless loop when loading new tab
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.0; fi; rv:1.9.0.8) Gecko/2009032609 Firefox/3.0.8
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.0; fi; rv:1.9.0.8) Gecko/2009032609 Firefox/3.0.8
+
+This is quite rare, but sometimes when simply loading new tab firefox staets to loop endlessly. It start to hang immediately when loading a link to new tab, but I think the new tab appears to tab strip (not sure about this), after that firefox window stop painting and firefox is completely unresponsive.
+
+This doesn't happen with any specific website and I don't think firefox even start to load the website before it hangs. But I once got this hang while browsing bugzilla.mozilla.org :)
+
+I don't have any extension and I only have installed flash plug-in plus I have some plug-in stuff from Windows Media Player (npdsplay.dll)
+
+I also catched stacktrace from Firefox with Process Explorer, but I'm not expert with this stuff so I don't know if these are any help.
+
+Here's a stack from the thread that wa looping:
+ntoskrnl.exe!KiDispatchInterrupt+0x7b
+ntoskrnl.exe!KiInterruptDispatch+0x31
+xul.dll!XRE_GetFileFromPath+0x1ec
+xul.dll!gfxWindowsPlatform::FindFontForCharProc+0x22
+xul.dll!gfxPlatform::IsCMSEnabled+0x8404
+xul.dll!NS_CycleCollectorSuspect_P+0x542d
+xul.dll!gfxFont::Release+0x46f28
+USP10.dll!ScriptBreak+0x38
+xul.dll!gfxTextRunCache::ReleaseTextRun+0x2a8e
+USP10.dll!ScriptApplyDigitSubstitution+0xa97
+xul.dll!gfxWindowsPlatform::UpdateFontList+0x2e40
+xul.dll!gfxTextRun::AddGlyphRun+0x29e
+
+Another stack from the same thread (only second and third line differ):
+ntoskrnl.exe!KiDispatchInterrupt+0x7b
+ntoskrnl.exe!KeUpdateSystemTime+0x13a
+xul.dll!gfxFont::Release+0x2b274
+xul.dll!gfxWindowsPlatform::FindFontForCharProc+0x22
+xul.dll!gfxPlatform::IsCMSEnabled+0x8404
+xul.dll!NS_CycleCollectorSuspect_P+0x542d
+xul.dll!gfxFont::Release+0x46f28
+USP10.dll!ScriptBreak+0x38
+xul.dll!gfxTextRunCache::ReleaseTextRun+0x2a8e
+USP10.dll!ScriptApplyDigitSubstitution+0xa97
+xul.dll!gfxWindowsPlatform::UpdateFontList+0x2e40
+xul.dll!gfxTextRun::AddGlyphRun+0x29e
+
+If these doesn't help, please tell me what I should do the next time it start to hang.
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+1. Load a link in some website to new tab (I use midle click or ctrl + click).
+
+
+
+Some prefs I have set that might take effect:
+browser.tabs.loadBookmarksInBackground = true
+browser.tabs.loadDivertedInBackground = true
+toolkit.scrollbox.smoothScroll = false (this one change the tabstrip behaviour)
+places.frecency.updateIdleTime = 0 (Not sure about this one, but it's quite unusual)

@@ -1,0 +1,48 @@
+Error "tabpanels has no properties" when opening a new window with Ctrl-N
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.8.1.12) Gecko/20080201 Firefox/2.0.0.12
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.8.1.12) Gecko/20080201 Firefox/2.0.0.12
+
+When opening a new window via Ctrl-N Firebug shows the following error:
+
+tabpanels has no properties
+file:///C:/Program%20Files/Mozilla%20Firefox/components/nsSessionStore.js
+Line 459
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Open a web page
+2. Open firebug console
+3. Press Ctrl-N
+Actual Results:  
+Firebug shows the following error:
+
+tabpanels has no properties
+file:///C:/Program%20Files/Mozilla%20Firefox/components/nsSessionStore.js
+Line 459
+
+Expected Results:  
+No error
+
+I fixed nsSessionStore.js like this:
+
+replace lines 456 - 466 with this code:
+
+    var tabbrowser = aWindow.getBrowser();
+    if (tabbrowser) {
+      // add tab change listeners to all already existing tabs
+      var tabpanels = tabbrowser.mPanelContainer;
+      if (tabpanels && tabpanels.childNodes) {
+        for (var i = 0; i < tabpanels.childNodes.length; i++) {
+          this.onTabAdd(aWindow, tabpanels.childNodes[i], true);
+        }
+      }
+
+      // notification of tab add/remove/selection
+      if (tabbrowser.addEventListener) {
+        tabbrowser.addEventListener("TabOpen", this, true);
+        tabbrowser.addEventListener("TabClose", this, true);
+        tabbrowser.addEventListener("TabSelect", this, true);
+      }
+    }

@@ -1,0 +1,62 @@
+Browser does not install a plugin properly if there is another plugin installed
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.4) Gecko/2008102920 Firefox/3.0.4
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.4) Gecko/2008102920 Firefox/3.0.4
+
+Our company develop Mozilla plugins for our remote support service. We have two kinds of plugin:
+1. So-called Expert, that opens a remote support session and manages it
+2. So-called Client, that connects to the Expert's session
+Ok. Everything was ok until FF 3.0 was released. It required completely different plugin installation procedure. No problem :), we created a new xpi packages with install.rdf and other stuff.
+Here is the problem: When the Client plugin is installed it prevents proper installation of the Expert plugin. This happens only when the Expert and Client plugins have different versions. If they have the same version, the problem does not occur. 
+We have also managed to fix the problem by changing the plugins order in the extensions.ini:
+Not Working Version
+[ExtensionDirs]
+Extension0=C:\Documents and Settings\TestAdmin\Application Data\Mozilla\Firefox\Profiles\8rlzj3a4.default\extensions\RemoteDesktopClient@techinline.com
+Extension1=C:\Documents and Settings\TestAdmin\Application Data\Mozilla\Firefox\Profiles\8rlzj3a4.default\extensions\RemoteDesktopExpert@techinline.com
+Working Version
+Extension0=C:\Documents and Settings\TestAdmin\Application Data\Mozilla\Firefox\Profiles\8rlzj3a4.default\extensions\RemoteDesktopExpert@techinline.com
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Open techinline.net and install the Client plugin. Version: 1.3.1.0
+2. Restart browser
+3. Open beta.techinline.net/expert (login: bugzilla@mozilla.org, pass: 4MJ3qpj) and install the Expert plugin. Version: 1.3.1.2
+4. Restart browser
+Actual Results:  
+The browser still asks to install the Expert plugin
+
+Expected Results:  
+The Expert plugin starts the Expert application
+
+install.rdf for Client:
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+  <Description about="urn:mozilla:install-manifest">
+    <em:id>RemoteDesktopClient@techinline.com</em:id>
+    <em:name>Techinline Remote Desktop Client</em:name>
+    <em:version>1.3.1.0</em:version>
+    <em:targetApplication>
+      <Description>
+        <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
+        <em:minVersion>1.5</em:minVersion>
+        <em:maxVersion>3.*.*.*</em:maxVersion>
+      </Description>
+    </em:targetApplication>
+  </Description>
+</RDF>
+
+install.rdf for Expert:
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+  <Description about="urn:mozilla:install-manifest">
+    <em:id>RemoteDesktopExpert@techinline.com</em:id>
+    <em:name>Techinline Remote Desktop Expert</em:name>
+    <em:version>1.3.1.2</em:version>
+    <em:targetApplication>
+      <Description>
+        <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
+        <em:minVersion>1.5</em:minVersion>
+        <em:maxVersion>3.*.*.*</em:maxVersion>
+      </Description>
+    </em:targetApplication>
+  </Description>
+</RDF>

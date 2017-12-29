@@ -1,0 +1,64 @@
+undefined reference to `nsHashtable::Get(nsHashKey*) when build firefox
+User-Agent:       Mozilla/5.0 (X11; U; Linux ppc; it; rv:1.8.0.3) Gecko/20060523 Ubuntu/dapper Firefox/1.5.0.3
+Build Identifier: Mozilla/5.0 (X11; U; Linux ppc; it; rv:1.8.0.3) Gecko/20060523 Ubuntu/dapper Firefox/1.5.0.3
+
+I'm trying to build firefox from source (firefox-1.5.0.4-source.tar.bz2). With gcc 4, 3.4, 3.3 the problem doesn't change.
+I tried to make static or shared build, but it's the same.
+
+I always get this error:
+
+c++  -fno-rtti -fno-exceptions -Wall -Wconversion -Wpointer-arith -Wcast-align -Woverloaded-virtual -Wsynth -Wno-ctor-dtor-privacy -Wno-non-virtual-dtor -Wno-long-long -pedantic -fshort-wchar -pthread -pipe  -DNDEBUG -DTRIMMED -O -fPIC -shared -Wl,-h -Wl,libxpcom_compat.so -o libxpcom_compat.so  nsFileSpec.o nsFileStream.o nsIFileStream.o nsFileSpecImpl.o nsSpecialSystemDirectory.o       -Wl,--whole-archive ../../dist/lib/libmozreg_s.a  -Wl,--no-whole-archive  -L../../dist/bin -lxpcom -lxpcom_core  -L../../dist/bin -L../../dist/lib -lplds4 -lplc4 -lnspr4 -lpthread -ldl -ldl -lm
+nsSpecialSystemDirectory.o: In function `nsSpecialSystemDirectory::operator=(nsSpecialSystemDirectory::SystemDirectories)':nsSpecialSystemDirectory.cpp:(.text+0x2f8): undefined reference to `nsHashtable::Get(nsHashKey*)'
+:nsSpecialSystemDirectory.cpp:(.text+0x318): undefined reference to `nsHashtable::Get(nsHashKey*)'
+:nsSpecialSystemDirectory.cpp:(.text+0x370): undefined reference to `nsHashtable::Get(nsHashKey*)'
+:nsSpecialSystemDirectory.cpp:(.text+0x390): undefined reference to `nsHashtable::Get(nsHashKey*)'
+:nsSpecialSystemDirectory.cpp:(.text+0x3e8): undefined reference to `nsHashtable::Get(nsHashKey*)'
+:nsSpecialSystemDirectory.cpp:(.text+0x454): undefined reference to `nsHashKey::~nsHashKey()'
+:nsSpecialSystemDirectory.cpp:(.text+0x460): undefined reference to `nsHashKey::~nsHashKey()'
+nsSpecialSystemDirectory.o: In function `nsSpecialSystemDirectory::Set(nsSpecialSystemDirectory::SystemDirectories, nsFileSpec*)':nsSpecialSystemDirectory.cpp:(.text+0x5c4): undefined reference to `nsHashtable::nsHashtable(unsigned int, int)'
+:nsSpecialSystemDirectory.cpp:(.text+0x5f8): undefined reference to `nsHashtable::Put(nsHashKey*, void*)'
+:nsSpecialSystemDirectory.cpp:(.text+0x608): undefined reference to `nsHashKey::~nsHashKey()'
+nsSpecialSystemDirectory.o: In function `SystemDirectoriesKey::~SystemDirectoriesKey()':nsSpecialSystemDirectory.cpp:(.gnu.linkonce.t._ZN20SystemDirectoriesKeyD1Ev[SystemDirectoriesKey::~SystemDirectoriesKey()]+0x2c): undefined reference to `nsHashKey::~nsHashKey()'
+nsSpecialSystemDirectory.o: In function `SystemDirectoriesKey::~SystemDirectoriesKey()':nsSpecialSystemDirectory.cpp:(.gnu.linkonce.t._ZN20SystemDirectoriesKeyD0Ev[SystemDirectoriesKey::~SystemDirectoriesKey()]+0x34): undefined reference to `nsHashKey::~nsHashKey()'
+collect2: ld returned 1 exit status
+make[3]: *** [libxpcom_compat.so] Error 1
+make[3]: Leaving directory `/opt/programs/mozilla/ff-opt-static/xpcom/obsolete'
+make[2]: *** [tier_2] Error 2
+make[2]: Leaving directory `/opt/programs/mozilla/ff-opt-static'
+make[1]: *** [default] Error 2
+make[1]: Leaving directory `/opt/programs/mozilla/ff-opt-static'
+make: *** [build] Error 2
+
+I tried also to use 
+ac_add_options --disable-xpcom-obsolete
+in my .mozconfig, but it doesn't solve (it compile xpcom/obsolete anyway).
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. tar xvfj firefox-1.5.0.4-source.tar.bz2
+2. make -f client.mk build   
+Actual Results:  
+nsSpecialSystemDirectory.o: In function `nsSpecialSystemDirectory::operator=(nsSpecialSystemDirectory::SystemDirectories)':nsSpecialSystemDirectory.cpp:(.text+0x2f8): undefined reference to `nsHashtable::Get(nsHashKey*)'
+:nsSpecialSystemDirectory.cpp:(.text+0x318): undefined reference to `nsHashtable::Get(nsHashKey*)'
+:nsSpecialSystemDirectory.cpp:(.text+0x370): undefined reference to `nsHashtable::Get(nsHashKey*)'
+:nsSpecialSystemDirectory.cpp:(.text+0x390): undefined reference to `nsHashtable::Get(nsHashKey*)'
+:nsSpecialSystemDirectory.cpp:(.text+0x3e8): undefined reference to `nsHashtable::Get(nsHashKey*)'
+:nsSpecialSystemDirectory.cpp:(.text+0x454): undefined reference to `nsHashKey::~nsHashKey()'
+:nsSpecialSystemDirectory.cpp:(.text+0x460): undefined reference to `nsHashKey::~nsHashKey()'
+nsSpecialSystemDirectory.o: In function `nsSpecialSystemDirectory::Set(nsSpecialSystemDirectory::SystemDirectories, nsFileSpec*)':nsSpecialSystemDirectory.cpp:(.text+0x5c4): undefined reference to `nsHashtable::nsHashtable(unsigned int, int)'
+:nsSpecialSystemDirectory.cpp:(.text+0x5f8): undefined reference to `nsHashtable::Put(nsHashKey*, void*)'
+:nsSpecialSystemDirectory.cpp:(.text+0x608): undefined reference to `nsHashKey::~nsHashKey()'
+nsSpecialSystemDirectory.o: In function `SystemDirectoriesKey::~SystemDirectoriesKey()':nsSpecialSystemDirectory.cpp:(.gnu.linkonce.t._ZN20SystemDirectoriesKeyD1Ev[SystemDirectoriesKey::~SystemDirectoriesKey()]+0x2c): undefined reference to `nsHashKey::~nsHashKey()'
+nsSpecialSystemDirectory.o: In function `SystemDirectoriesKey::~SystemDirectoriesKey()':nsSpecialSystemDirectory.cpp:(.gnu.linkonce.t._ZN20SystemDirectoriesKeyD0Ev[SystemDirectoriesKey::~SystemDirectoriesKey()]+0x34): undefined reference to `nsHashKey::~nsHashKey()'
+collect2: ld returned 1 exit status
+make[3]: *** [libxpcom_compat.so] Error 1
+make[3]: Leaving directory `/opt/programs/mozilla/ff-opt-static/xpcom/obsolete'
+make[2]: *** [tier_2] Error 2
+make[2]: Leaving directory `/opt/programs/mozilla/ff-opt-static'
+make[1]: *** [default] Error 2
+make[1]: Leaving directory `/opt/programs/mozilla/ff-opt-static'
+make: *** [build] Error 2
+
+Expected Results:  
+compile correctly

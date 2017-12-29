@@ -1,0 +1,71 @@
+Make package in objdir is broken.
+User-Agent:       Mozilla/5.0 (X11; Linux x86_64; rv:2.0b8pre) Gecko/20100101 Firefox/4.0b8pre
+Build Identifier: Mozilla/5.0 (X11; Linux x86_64; rv:2.0b8pre) Gecko/20100101 Minefield/4.0b8pre
+
+Simple to reproduce. I grabbed source code this morning, build process goes well, but when I try to package my newly build Minefield, I got this error :
+
+bin/chrome/pippki.manifest
+bin/updater
+Warning: package error or possible missing or unnecessary file: bin/components/libnkgnomevfs.so (package-manifest, 401).
+Error: destination directory "../../dist/xpt" is not a directory or is not writeable.
+See '/home/fred/logs/fox/src/xpinstall/packager/xptlink.pl --help' for more information.
+Exiting...
+make[2]: *** [stage-package] Erreur 2
+make[1]: *** [default] Erreur 2
+make: *** [package] Erreur 2
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.Grab source code
+2.Build it
+3.Go to objdir repository
+4.make package
+Actual Results:  
+bin/chrome/pippki.manifest
+bin/updater
+Warning: package error or possible missing or unnecessary file: bin/components/libnkgnomevfs.so (package-manifest, 401).
+Error: destination directory "../../dist/xpt" is not a directory or is not writeable.
+See '/home/fred/logs/fox/src/xpinstall/packager/xptlink.pl --help' for more information.
+Exiting...
+make[2]: *** [stage-package] Erreur 2
+make[1]: *** [default] Erreur 2
+make: *** [package] Erreur 2
+
+Expected Results:  
+Packaging ?!
+
+Here is my .mozconfig :
+
+#
+# See http://www.mozilla.org/build/ for build instructions.
+#
+
+export AUTOCONF=autoconf-2.13
+
+#Only need on Archlinux
+export PYTHON=python2.7
+
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/../objdir-fx
+mk_add_options MOZ_MAKE_FLAGS=-j4
+
+# Options for ‘configure’ (same as command-line options).
+ac_add_options --enable-application=browser
+ac_add_options --enable-optimize
+ac_add_options --disable-debug
+ac_add_options --disable-tests
+ac_add_options --disable-crashreporter
+ac_add_options --with-ccache
+
+Here is the hg --verbose pull -u right after I see the packaging crash :
+
+[fred@fredo-arch src]$ hg --verbose pull -u
+pulling from http://hg.mozilla.org/mozilla-central/
+searching for changes
+adding changesets
+adding manifests
+adding file changes
+added 1 changesets with 1 changes to 1 files
+resolving manifests
+getting toolkit/content/widgets/menulist.xml
+1 files updated, 0 files merged, 0 files removed, 0 files unresolved

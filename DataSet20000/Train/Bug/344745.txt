@@ -1,0 +1,17 @@
+It is possible to get past _isValidWindow check in BrowserFeedWriter.write from a non-chrome, non-about:feeds page
+about:feeds functions through use of a global property on window, BrowserFeedWriter.  It calls this property as a constructor to create a feed writer and then calls .write(window) on it, displaying the feed.  The .write(window) method begins with a check designed to ensure that the passed-in window is allowed to call .write().  The check is as follows:
+
+  _isValidWindow: function FW__isValidWindow(window) {
+    var chan = 
+        window.QueryInterface(Ci.nsIInterfaceRequestor).
+        getInterface(Ci.nsIWebNavigation).
+        QueryInterface(Ci.nsIDocShell).currentDocumentChannel;
+    const kPrefix = "jar:file:";
+    return chan.URI.spec.substring(0, kPrefix.length) == kPrefix;
+  },
+
+By specially constructing the appropriate window, it is possible to defeat this security mechanism and continue further code execution inside .write().
+
+The example code (to be posted once this bug is filed) takes the cheap approach of imitating an XPCOM object and stumbling its way through calls; it doesn't progress very far once it passes the _isValidWindow check.  (In particular it is slowed by an inability to respond to specific IIDs, since accessing Components.interfaces.* results in a security exception.  If it were to cache the passed-in IIDs, I speculate it could be more intelligent in how it responds to QueryInterfaces and getInterfaces.)  I speculate (without any evidence whatsoever) that if one were to create a hidden <iframe> which set many of the relevant properties on the window object, it would be possible to continue much further into the code.  (This might fail due to how cross-domain checks work, but I don't know for sure.)  Additionally, since even the stumbling approach manages to get _window and _document set (the interfaces through which the component fills in the preview page), that may be bad enough already.
+
+It's highly unclear to me exactly how much a malicious site could do with this access.  Most of the code is DOM manipulation, but since local preferences are read and displayed, I believe it should be possible to get the values of some of the feed preferences under the right circumstances.  I'll leave further exploration and analysis up to security people.  :-)

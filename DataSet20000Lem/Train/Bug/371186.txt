@@ -1,0 +1,152 @@
+Crash while loading webpage (sometimes)
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.1) Gecko/20061222 Firefox/2.0.0.1
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.1) Gecko/20061222 Firefox/2.0.0.1
+
+Occaisionally, Firefox will crash while loading wikipedia's main page. I have been able to get a core dump and backtrace of this. This is Firefox on Fedora Rawhide (Fedora 7 dev trunk) with the debug package in place.
+
+I am not very skilled with GDB, but I can upload the core dump (126MB!) or follow instruction to get more information from it. I appreciate anyone's help with this!
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+1. Browsing web
+2. Load Wikipedia's main page
+3. Firefox crash
+Actual Results:
+Firefox crashes.
+
+Expected Results:
+Firefox should load this webpage.
+
+(gdb) thread apply all bt
+
+Thread 9 (process 5781):
+#0 0x00df8402 in ?? ()
+#1 0x006ce693 in poll () from /lib/libc.so.6
+#2 0x06c49aa9 in PR_Poll () from /usr/lib/libnspr4.so
+#3 0x003051b5 in nsSocketTransportService::Poll (this=0x80fe9e8,
+interval=0xb7dc4368) at nsSocketTransportService2.cpp:361
+#4 0x003053d5 in nsSocketTransportService::Run (this=0x80fe9e8)
+at nsSocketTransportService2.cpp:577
+#5 0x04b73695 in nsThread::Main (arg=0x80ff1a8) at nsThread.cpp:118
+#6 0x06c4dccd in PR_JoinThread () from /usr/lib/libnspr4.so
+#7 0x007932db in start_thread () from /lib/libpthread.so.0
+#8 0x006d824e in clone () from /lib/libc.so.6
+
+Thread 8 (process 5782):
+#0 0x00df8402 in ?? ()
+#1 0x007972fc in pthread_cond_timedwait@@GLIBC_2.3.2 ()
+from /lib/libpthread.so.0
+#2 0x06c46f56 in PRP_NakedNotify () from /usr/lib/libnspr4.so
+#3 0x06c47d94 in PR_WaitCondVar () from /usr/lib/libnspr4.so
+#4 0x04b756c4 in TimerThread::Run (this=0x80ae650) at TimerThread.cpp:318
+#5 0x04b73695 in nsThread::Main (arg=0x81f3c00) at nsThread.cpp:118
+#6 0x06c4dccd in PR_JoinThread () from /usr/lib/libnspr4.so
+---Type <return> to continue, or q <return> to quit---
+#7 0x007932db in start_thread () from /lib/libpthread.so.0
+#8 0x006d824e in clone () from /lib/libc.so.6
+
+Thread 7 (process 5783):
+#0 0x00df8402 in ?? ()
+#1 0x007972fc in pthread_cond_timedwait@@GLIBC_2.3.2 ()
+from /lib/libpthread.so.0
+#2 0x06c46f56 in PRP_NakedNotify () from /usr/lib/libnspr4.so
+#3 0x06c47d94 in PR_WaitCondVar () from /usr/lib/libnspr4.so
+#4 0x002e08e5 in nsIOThreadPool::ThreadFunc (arg=0x8383ca8)
+at nsIOThreadPool.cpp:254
+#5 0x06c4dccd in PR_JoinThread () from /usr/lib/libnspr4.so
+#6 0x007932db in start_thread () from /lib/libpthread.so.0
+#7 0x006d824e in clone () from /lib/libc.so.6
+
+Thread 6 (process 5784):
+#0 0x00df8402 in ?? ()
+#1 0x007972fc in pthread_cond_timedwait@@GLIBC_2.3.2 ()
+from /lib/libpthread.so.0
+#2 0x06c46f56 in PRP_NakedNotify () from /usr/lib/libnspr4.so
+#3 0x06c47d94 in PR_WaitCondVar () from /usr/lib/libnspr4.so
+#4 0x0195b372 in nsSSLThread::Run (this=0x88dd508) at nsSSLThread.cpp:879
+#5 0x0195ad16 in nsPSMBackgroundThread::nsThreadRunner (arg=0x88dd508)
+---Type <return> to continue, or q <return> to quit---
+at nsPSMBackgroundThread.cpp:44
+#6 0x06c4dccd in PR_JoinThread () from /usr/lib/libnspr4.so
+#7 0x007932db in start_thread () from /lib/libpthread.so.0
+#8 0x006d824e in clone () from /lib/libc.so.6
+
+Thread 5 (process 5785):
+#0 0x00df8402 in ?? ()
+#1 0x007972fc in pthread_cond_timedwait@@GLIBC_2.3.2 ()
+from /lib/libpthread.so.0
+#2 0x06c46f56 in PRP_NakedNotify () from /usr/lib/libnspr4.so
+#3 0x06c47d94 in PR_WaitCondVar () from /usr/lib/libnspr4.so
+#4 0x0195c6fa in nsCertVerificationThread::Run (this=0x88dd750)
+at nsCertVerificationThread.cpp:142
+#5 0x0195ad16 in nsPSMBackgroundThread::nsThreadRunner (arg=0x88dd750)
+at nsPSMBackgroundThread.cpp:44
+#6 0x06c4dccd in PR_JoinThread () from /usr/lib/libnspr4.so
+#7 0x007932db in start_thread () from /lib/libpthread.so.0
+#8 0x006d824e in clone () from /lib/libc.so.6
+
+Thread 4 (process 5787):
+#0 0x00df8402 in ?? ()
+#1 0x00797076 in pthread_cond_wait@@GLIBC_2.3.2 () from /lib/libpthread.so.0
+#2 0x06c47e26 in PR_WaitCondVar () from /usr/lib/libnspr4.so
+---Type <return> to continue, or q <return> to quit---
+#3 0x05459326 in ProcessAsyncMessages () at mozStorageAsyncIO.cpp:1525
+#4 0x0545ae67 in AsyncWriteThread::Run (this=0x8a84a90)
+at mozStorageAsyncIO.cpp:471
+#5 0x04b73695 in nsThread::Main (arg=0x8ae13e0) at nsThread.cpp:118
+#6 0x06c4dccd in PR_JoinThread () from /usr/lib/libnspr4.so
+#7 0x007932db in start_thread () from /lib/libpthread.so.0
+#8 0x006d824e in clone () from /lib/libc.so.6
+
+Thread 3 (process 5792):
+#0 0x00df8402 in ?? ()
+#1 0x007972fc in pthread_cond_timedwait@@GLIBC_2.3.2 ()
+from /lib/libpthread.so.0
+#2 0x06c46f56 in PRP_NakedNotify () from /usr/lib/libnspr4.so
+#3 0x06c47d94 in PR_WaitCondVar () from /usr/lib/libnspr4.so
+#4 0x0030fa0b in nsHostResolver::GetHostToLookup (this=0x80ff1c8,
+result=0xb1f14384) at nsHostResolver.cpp:556
+#5 0x003100a6 in nsHostResolver::ThreadFunc (arg=0x80ff1c8)
+at nsHostResolver.cpp:641
+#6 0x06c4dccd in PR_JoinThread () from /usr/lib/libnspr4.so
+#7 0x007932db in start_thread () from /lib/libpthread.so.0
+#8 0x006d824e in clone () from /lib/libc.so.6
+
+
+Probably not relevant, but here is FC7's buildconfig:
+Build platform
+target
+i686-pc-linux-gnu
+
+Build tool
+Compiler Version Compiler flag
+gcc gcc version 4.1.1 20061220 (Red Hat 4.1.1-48) -Wall -W -Wno-unused -Wpointer-arith -Wcast-align -Wno-long-long -pedantic -pthread -pipe
+c++ gcc version 4.1.1 20061220 (Red Hat 4.1.1-48) -fno-rtti -fno-exceptions -Wall -Wconversion -Wpointer-arith -Wcast-align -Woverloaded-virtual -Wsynth -Wno-ctor-dtor-privacy -Wno-non-virtual-dtor -Wno-long-long -pedantic -fshort-wchar -pthread -pipe
+
+Configure argument
+--enable-application=browser --prefix=/usr --libdir=/usr/lib --with-system-nspr --with-system-nss --with-system-jpeg --with-system-zlib --with-system-png --with-pthreads --disable-tests --disable-debug --disable-installer '--enable-optimize=-Os -g -pipe -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector --param=ssp-buffer-size=4 -m32 -march=i386 -mtune=generic -fasynchronous-unwind-tables' --enable-xinerama --enable-default-toolkit=gtk2 --disable-xprint --disable-strip --enable-pango --enable-system-cairo --enable-svg --enable-canvas --enable-official-branding
+
+Thread 2 (process 5795):
+---Type <return> to continue, or q <return> to quit---
+#0 0x00df8402 in ?? ()
+#1 0x00797076 in pthread_cond_wait@@GLIBC_2.3.2 () from /lib/libpthread.so.0
+#2 0x06c47e26 in PR_WaitCondVar () from /usr/lib/libnspr4.so
+#3 0x06c47e87 in PR_Wait () from /usr/lib/libnspr4.so
+#4 0x04b6ff15 in PL_WaitForEvent (self=0x8f19d58) at plevent.c:808
+#5 0x04b71387 in nsEventQueueImpl::WaitForEvent (this=0x8f19d30,
+aResult=0xb1513384) at nsEventQueue.cpp:498
+#6 0x00e377c6 in EventLoop (arg=0x0) at nsUrlClassifierDBService.cpp:1142
+#7 0x06c4dccd in PR_JoinThread () from /usr/lib/libnspr4.so
+#8 0x007932db in start_thread () from /lib/libpthread.so.0
+#9 0x006d824e in clone () from /lib/libc.so.6
+
+Thread 1 (process 5774):
+#0 0x00df8402 in ?? ()
+#1 0x0079afa1 in raise () from /lib/libpthread.so.0
+#2 0x080593ba in nsProfileLock::FatalSignalHandler (signo=11)
+at nsProfileLock.cpp:206
+#3 0x00df8420 in ?? ()
+#4 0x0000000b in ?? ()
+#5 0x00000033 in ?? ()
+#6 0x00000000 in ?? ()

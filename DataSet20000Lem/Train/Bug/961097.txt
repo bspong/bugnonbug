@@ -1,0 +1,31 @@
+Very janky regular expression introduced in bug 923856
+The code introduced in bug 923856 look like this:
+
+if (/^application\/(\w+[\.-]?)+\+(xml|json)/.test(aMimeType)) {
+return true;
+}
+
+in current Firefox build this is throwing an exception because Yarr give up after 1000000 iteration in the regexp interpreter when aMimeType is "application/vnd.google.safebrowsing-chunk". Sadly, this happens a lot: every time we contact the safebrowsing database. Once per chunk. So I timed how long this regexp take to run on that string:
+
+var perf = window.performance;
+try {
+var start = perf.now();
+var result = /^application\/(\w+[\.-]?)+\+(xml|json)/.test("application/vnd.google.safebrowsing-chunk");
+} catch (e) {
+var end = perf.now();
+alert(end - start);
+}
+
+and the answer is about 50ms on current trunk before it throws.
+
+The reason this is throwing is that the regexp doesn't match (because aMimeType doesn't contain "xml" or "json" in it, or a "+" for that matter). So the regexp execution start backtracking, trying to match the (\w+[\.-]?)+ pattern against the string in various way and hoping that after that the "\+" will match.
+
+As a thought experiment, let's think about the different way (\w+[\.-]?)+ can match an alphanumeric string with n character in it. The answer is the number of partition of the string (if we ignore the optional .- bits, which add more options), which is 2^(n-1). So in this case, we're matching against "vnd.google.safebrowsing-chunk" which ha length 29, so we're going to try something like 2^28 different matches. In practice I think Yarr actually try 2^29, but in either case it take way too long. ;)
+
+And the real issue is that the regexp is wrong, in my opinion. It should be something more like this, if you want "dot or dash separated words":
+
+if (/^application\/\w+(?:[.-]\w+)*\+(xml|json)/.test(aMimeType)) {
+return true;
+}
+
+That will return false in .05ms for the "application/vnd.google.safebrowsing-chunk" case and will return true in the same amount of time for "application/vnd.google.safebrowsing-chunk+json"....

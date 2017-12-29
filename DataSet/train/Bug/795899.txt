@@ -1,0 +1,158 @@
+Heap-use-after-free in mozilla::layers::ContainerLayer::ComputeEffectiveTransformsForChildren
+Created attachment 666533
+Testcase
+
+Reproduces on trunk. To reliably reproduce, run multiple firefox instances on Xvfb screen 1280x1024x24 with this testcase on cmd line.
+
+=================================================================
+==32510== ERROR: AddressSanitizer heap-use-after-free on address 0x7fbd8c4c7880 at pc 0x7fbdd3a34512 bp 0x7fffdaa64e70 sp 0x7fffdaa64e68
+READ of size 8 at 0x7fbd8c4c7880 thread T0
+    #0 0x7fbdd3a34511 in mozilla::layers::ContainerLayer::ComputeEffectiveTransformsForChildren(gfx3DMatrix const&) src/gfx/layers/Layers.cpp:812
+    #1 0x7fbdd39bb0fd in void mozilla::layers::ContainerComputeEffectiveTransforms<mozilla::layers::BasicContainerLayer>(gfx3DMatrix const&, mozilla::layers::BasicContainerLayer*) src/gfx/layers/basic/BasicContainerLayer.h:153
+    #2 0x7fbdd39b772f in mozilla::layers::BasicContainerLayer::ComputeEffectiveTransforms(gfx3DMatrix const&) src/gfx/layers/basic/BasicContainerLayer.h:217
+    #3 0x7fbdd3a34596 in mozilla::layers::ContainerLayer::ComputeEffectiveTransformsForChildren(gfx3DMatrix const&) src/gfx/layers/Layers.cpp:812
+    #4 0x7fbdd39bb0fd in void mozilla::layers::ContainerComputeEffectiveTransforms<mozilla::layers::BasicContainerLayer>(gfx3DMatrix const&, mozilla::layers::BasicContainerLayer*) src/gfx/layers/basic/BasicContainerLayer.h:153
+    #5 0x7fbdd39b772f in mozilla::layers::BasicContainerLayer::ComputeEffectiveTransforms(gfx3DMatrix const&) src/gfx/layers/basic/BasicContainerLayer.h:217
+    #6 0x7fbdd396cb71 in mozilla::layers::BasicLayerManager::EndTransactionInternal(void (*)(mozilla::layers::ThebesLayer*, gfxContext*, nsIntRegion const&, nsIntRegion const&, void*), void*, mozilla::layers::LayerManager::EndTransactionFlags) src/gfx/layers/basic/BasicLayerManager.cpp:569
+    #7 0x7fbdd396b7b7 in mozilla::layers::BasicLayerManager::EndTransaction(void (*)(mozilla::layers::ThebesLayer*, gfxContext*, nsIntRegion const&, nsIntRegion const&, void*), void*, mozilla::layers::LayerManager::EndTransactionFlags) src/gfx/layers/basic/BasicLayerManager.cpp:509
+    #8 0x7fbdc74c55ae in mozilla::PaintInactiveLayer(nsDisplayListBuilder*, mozilla::layers::LayerManager*, nsDisplayItem*, gfxContext*, nsRenderingContext*) src/layout/base/FrameLayerBuilder.cpp:2017
+    #9 0x7fbdc74c04e3 in mozilla::FrameLayerBuilder::DrawThebesLayer(mozilla::layers::ThebesLayer*, gfxContext*, nsIntRegion const&, nsIntRegion const&, void*) src/layout/base/FrameLayerBuilder.cpp:3236
+    #10 0x7fbdd39dcbe4 in mozilla::layers::BasicThebesLayer::PaintThebes(gfxContext*, mozilla::layers::Layer*, void (*)(mozilla::layers::ThebesLayer*, gfxContext*, nsIntRegion const&, nsIntRegion const&, void*), void*, mozilla::layers::ReadbackProcessor*) src/gfx/layers/basic/BasicThebesLayer.cpp:139
+    #11 0x7fbdd39e0dfe in non-virtual thunk to mozilla::layers::BasicThebesLayer::PaintThebes(gfxContext*, mozilla::layers::Layer*, void (*)(mozilla::layers::ThebesLayer*, gfxContext*, nsIntRegion const&, nsIntRegion const&, void*), void*, mozilla::layers::ReadbackProcessor*) src/gfx/cairo/cairo/src/cairo-surface-subsurface.c:0
+    #12 0x7fbdd3974465 in mozilla::layers::BasicLayerManager::PaintSelfOrChildren(mozilla::layers::PaintContext&, gfxContext*) src/gfx/layers/basic/BasicLayerManager.cpp:823
+    #13 0x7fbdd3971bac in mozilla::layers::BasicLayerManager::PaintLayer(gfxContext*, mozilla::layers::Layer*, void (*)(mozilla::layers::ThebesLayer*, gfxContext*, nsIntRegion const&, nsIntRegion const&, void*), void*, mozilla::layers::ReadbackProcessor*) src/gfx/layers/basic/BasicLayerManager.cpp:944
+    #14 0x7fbdd3974a51 in mozilla::layers::BasicLayerManager::PaintSelfOrChildren(mozilla::layers::PaintContext&, gfxContext*) src/gfx/layers/basic/BasicLayerManager.cpp:839
+    #15 0x7fbdd3971bac in mozilla::layers::BasicLayerManager::PaintLayer(gfxContext*, mozilla::layers::Layer*, void (*)(mozilla::layers::ThebesLayer*, gfxContext*, nsIntRegion const&, nsIntRegion const&, void*), void*, mozilla::layers::ReadbackProcessor*) src/gfx/layers/basic/BasicLayerManager.cpp:944
+    #16 0x7fbdd396cfd2 in mozilla::layers::BasicLayerManager::EndTransactionInternal(void (*)(mozilla::layers::ThebesLayer*, gfxContext*, nsIntRegion const&, nsIntRegion const&, void*), void*, mozilla::layers::LayerManager::EndTransactionFlags) src/gfx/layers/basic/BasicLayerManager.cpp:588
+    #17 0x7fbdd396b7b7 in mozilla::layers::BasicLayerManager::EndTransaction(void (*)(mozilla::layers::ThebesLayer*, gfxContext*, nsIntRegion const&, nsIntRegion const&, void*), void*, mozilla::layers::LayerManager::EndTransactionFlags) src/gfx/layers/basic/BasicLayerManager.cpp:509
+    #18 0x7fbdc74c55ae in mozilla::PaintInactiveLayer(nsDisplayListBuilder*, mozilla::layers::LayerManager*, nsDisplayItem*, gfxContext*, nsRenderingContext*) src/layout/base/FrameLayerBuilder.cpp:2017
+    #19 0x7fbdc74c04e3 in mozilla::FrameLayerBuilder::DrawThebesLayer(mozilla::layers::ThebesLayer*, gfxContext*, nsIntRegion const&, nsIntRegion const&, void*) src/layout/base/FrameLayerBuilder.cpp:3236
+    #20 0x7fbdd39dcbe4 in mozilla::layers::BasicThebesLayer::PaintThebes(gfxContext*, mozilla::layers::Layer*, void (*)(mozilla::layers::ThebesLayer*, gfxContext*, nsIntRegion const&, nsIntRegion const&, void*), void*, mozilla::layers::ReadbackProcessor*) src/gfx/layers/basic/BasicThebesLayer.cpp:139
+    #21 0x7fbdd39e0dfe in non-virtual thunk to mozilla::layers::BasicThebesLayer::PaintThebes(gfxContext*, mozilla::layers::Layer*, void (*)(mozilla::layers::ThebesLayer*, gfxContext*, nsIntRegion const&, nsIntRegion const&, void*), void*, mozilla::layers::ReadbackProcessor*) src/gfx/cairo/cairo/src/cairo-surface-subsurface.c:0
+    #22 0x7fbdd3974465 in mozilla::layers::BasicLayerManager::PaintSelfOrChildren(mozilla::layers::PaintContext&, gfxContext*) src/gfx/layers/basic/BasicLayerManager.cpp:823
+    #23 0x7fbdd3971bac in mozilla::layers::BasicLayerManager::PaintLayer(gfxContext*, mozilla::layers::Layer*, void (*)(mozilla::layers::ThebesLayer*, gfxContext*, nsIntRegion const&, nsIntRegion const&, void*), void*, mozilla::layers::ReadbackProcessor*) src/gfx/layers/basic/BasicLayerManager.cpp:944
+    #24 0x7fbdd3974a51 in mozilla::layers::BasicLayerManager::PaintSelfOrChildren(mozilla::layers::PaintContext&, gfxContext*) src/gfx/layers/basic/BasicLayerManager.cpp:839
+    #25 0x7fbdd3971bac in mozilla::layers::BasicLayerManager::PaintLayer(gfxContext*, mozilla::layers::Layer*, void (*)(mozilla::layers::ThebesLayer*, gfxContext*, nsIntRegion const&, nsIntRegion const&, void*), void*, mozilla::layers::ReadbackProcessor*) src/gfx/layers/basic/BasicLayerManager.cpp:944
+    #26 0x7fbdd396cfd2 in mozilla::layers::BasicLayerManager::EndTransactionInternal(void (*)(mozilla::layers::ThebesLayer*, gfxContext*, nsIntRegion const&, nsIntRegion const&, void*), void*, mozilla::layers::LayerManager::EndTransactionFlags) src/gfx/layers/basic/BasicLayerManager.cpp:588
+    #27 0x7fbdd396b7b7 in mozilla::layers::BasicLayerManager::EndTransaction(void (*)(mozilla::layers::ThebesLayer*, gfxContext*, nsIntRegion const&, nsIntRegion const&, void*), void*, mozilla::layers::LayerManager::EndTransactionFlags) src/gfx/layers/basic/BasicLayerManager.cpp:509
+    #28 0x7fbdc74c55ae in mozilla::PaintInactiveLayer(nsDisplayListBuilder*, mozilla::layers::LayerManager*, nsDisplayItem*, gfxContext*, nsRenderingContext*) src/layout/base/FrameLayerBuilder.cpp:2017
+    #29 0x7fbdc74c04e3 in mozilla::FrameLayerBuilder::DrawThebesLayer(mozilla::layers::ThebesLayer*, gfxContext*, nsIntRegion const&, nsIntRegion const&, void*) src/layout/base/FrameLayerBuilder.cpp:3236
+    #30 0x7fbdd39e49ef in mozilla::layers::BasicThebesLayer::PaintBuffer(gfxContext*, nsIntRegion const&, nsIntRegion const&, nsIntRegion const&, bool, void (*)(mozilla::layers::ThebesLayer*, gfxContext*, nsIntRegion const&, nsIntRegion const&, void*), void*) src/gfx/layers/basic/BasicThebesLayer.h:94
+    #31 0x7fbdd39e409e in mozilla::layers::BasicShadowableThebesLayer::PaintBuffer(gfxContext*, nsIntRegion const&, nsIntRegion const&, nsIntRegion const&, bool, void (*)(mozilla::layers::ThebesLayer*, gfxContext*, nsIntRegion const&, nsIntRegion const&, void*), void*) src/gfx/layers/basic/BasicThebesLayer.cpp:400
+    #32 0x7fbdd39dd7cb in mozilla::layers::BasicThebesLayer::PaintThebes(gfxContext*, mozilla::layers::Layer*, void (*)(mozilla::layers::ThebesLayer*, gfxContext*, nsIntRegion const&, nsIntRegion const&, void*), void*, mozilla::layers::ReadbackProcessor*) src/gfx/layers/basic/BasicThebesLayer.cpp:189
+    #33 0x7fbdd39e1afa in mozilla::layers::BasicShadowableThebesLayer::PaintThebes(gfxContext*, mozilla::layers::Layer*, void (*)(mozilla::layers::ThebesLayer*, gfxContext*, nsIntRegion const&, nsIntRegion const&, void*), void*, mozilla::layers::ReadbackProcessor*) src/gfx/layers/basic/BasicThebesLayer.cpp:303
+    #34 0x7fbdd39e213e in non-virtual thunk to mozilla::layers::BasicShadowableThebesLayer::PaintThebes(gfxContext*, mozilla::layers::Layer*, void (*)(mozilla::layers::ThebesLayer*, gfxContext*, nsIntRegion const&, nsIntRegion const&, void*), void*, mozilla::layers::ReadbackProcessor*) src/gfx/cairo/cairo/src/cairo-surface-subsurface.c:0
+    #35 0x7fbdd3974465 in mozilla::layers::BasicLayerManager::PaintSelfOrChildren(mozilla::layers::PaintContext&, gfxContext*) src/gfx/layers/basic/BasicLayerManager.cpp:823
+    #36 0x7fbdd39717f5 in mozilla::layers::BasicLayerManager::PaintLayer(gfxContext*, mozilla::layers::Layer*, void (*)(mozilla::layers::ThebesLayer*, gfxContext*, nsIntRegion const&, nsIntRegion const&, void*), void*, mozilla::layers::ReadbackProcessor*) src/gfx/layers/basic/BasicLayerManager.cpp:932
+    #37 0x7fbdd3974a51 in mozilla::layers::BasicLayerManager::PaintSelfOrChildren(mozilla::layers::PaintContext&, gfxContext*) src/gfx/layers/basic/BasicLayerManager.cpp:839
+    #38 0x7fbdd39717f5 in mozilla::layers::BasicLayerManager::PaintLayer(gfxContext*, mozilla::layers::Layer*, void (*)(mozilla::layers::ThebesLayer*, gfxContext*, nsIntRegion const&, nsIntRegion const&, void*), void*, mozilla::layers::ReadbackProcessor*) src/gfx/layers/basic/BasicLayerManager.cpp:932
+    #39 0x7fbdd3974a51 in mozilla::layers::BasicLayerManager::PaintSelfOrChildren(mozilla::layers::PaintContext&, gfxContext*) src/gfx/layers/basic/BasicLayerManager.cpp:839
+    #40 0x7fbdd39717f5 in mozilla::layers::BasicLayerManager::PaintLayer(gfxContext*, mozilla::layers::Layer*, void (*)(mozilla::layers::ThebesLayer*, gfxContext*, nsIntRegion const&, nsIntRegion const&, void*), void*, mozilla::layers::ReadbackProcessor*) src/gfx/layers/basic/BasicLayerManager.cpp:932
+    #41 0x7fbdd396cee8 in mozilla::layers::BasicLayerManager::EndTransactionInternal(void (*)(mozilla::layers::ThebesLayer*, gfxContext*, nsIntRegion const&, nsIntRegion const&, void*), void*, mozilla::layers::LayerManager::EndTransactionFlags) src/gfx/layers/basic/BasicLayerManager.cpp:584
+    #42 0x7fbdd396b7b7 in mozilla::layers::BasicLayerManager::EndTransaction(void (*)(mozilla::layers::ThebesLayer*, gfxContext*, nsIntRegion const&, nsIntRegion const&, void*), void*, mozilla::layers::LayerManager::EndTransactionFlags) src/gfx/layers/basic/BasicLayerManager.cpp:509
+    #43 0x7fbdd397e1e5 in mozilla::layers::BasicShadowLayerManager::EndTransaction(void (*)(mozilla::layers::ThebesLayer*, gfxContext*, nsIntRegion const&, nsIntRegion const&, void*), void*, mozilla::layers::LayerManager::EndTransactionFlags) src/gfx/layers/basic/BasicLayerManager.cpp:1129
+    #44 0x7fbdc7786352 in nsDisplayList::PaintForFrame(nsDisplayListBuilder*, nsRenderingContext*, nsIFrame*, unsigned int) const src/layout/base/nsDisplayList.cpp:1098
+    #45 0x7fbdc7783741 in nsDisplayList::PaintRoot(nsDisplayListBuilder*, nsRenderingContext*, unsigned int) const src/layout/base/nsDisplayList.cpp:966
+    #46 0x7fbdc79113e8 in nsLayoutUtils::PaintFrame(nsRenderingContext*, nsIFrame*, nsRegion const&, unsigned int, unsigned int) src/layout/base/nsLayoutUtils.cpp:1743
+    #47 0x7fbdc7a5c136 in PresShell::Paint(nsIView*, nsRegion const&, nsIPresShell::PaintType, bool) src/layout/base/nsPresShell.cpp:5323
+    #48 0x7fbdcb35de9b in nsViewManager::ProcessPendingUpdatesForView(nsView*, bool) src/view/src/nsViewManager.cpp:436
+    #49 0x7fbdcb3713e5 in nsViewManager::ProcessPendingUpdates() src/view/src/nsViewManager.cpp:1210
+    #50 0x7fbdc7ad9845 in nsRefreshDriver::Notify(nsITimer*) src/layout/base/nsRefreshDriver.cpp:431
+    #51 0x7fbdd313aa5d in nsTimerImpl::Fire() src/xpcom/threads/nsTimerImpl.cpp:476
+    #52 0x7fbdd313be7a in nsTimerEvent::Run() src/xpcom/threads/nsTimerImpl.cpp:556
+    #53 0x7fbdd30ff580 in nsThread::ProcessNextEvent(bool, bool*) src/xpcom/threads/nsThread.cpp:612
+    #54 0x7fbdd2d91ecb in NS_ProcessNextEvent_P(nsIThread*, bool) src/objdir-ff-asan-sym/xpcom/build/nsThreadUtils.cpp:220
+    #55 0x7fbdd17db3b6 in mozilla::ipc::MessagePump::Run(base::MessagePump::Delegate*) src/ipc/glue/MessagePump.cpp:82
+    #56 0x7fbdd33b7e11 in MessageLoop::RunInternal() src/ipc/chromium/src/base/message_loop.cc:208
+    #57 0x7fbdd33b7c46 in MessageLoop::RunHandler() src/ipc/chromium/src/base/message_loop.cc:201
+    #58 0x7fbdd33b7b2b in MessageLoop::Run() src/ipc/chromium/src/base/message_loop.cc:175
+    #59 0x7fbdd0c82dda in nsBaseAppShell::Run() src/widget/xpwidgets/nsBaseAppShell.cpp:163
+    #60 0x7fbdcf8b59b4 in nsAppStartup::Run() src/toolkit/components/startup/nsAppStartup.cpp:290
+    #61 0x7fbdc5f28a4d in XREMain::XRE_mainRun() src/toolkit/xre/nsAppRunner.cpp:3782
+    #62 0x7fbdc5f2e8c5 in XREMain::XRE_main(int, char**, nsXREAppData const*) src/toolkit/xre/nsAppRunner.cpp:3848
+    #63 0x7fbdc5f31774 in XRE_main src/toolkit/xre/nsAppRunner.cpp:3923
+    #64 0x40d013 in do_main(int, char**) src/browser/app/nsBrowserApp.cpp:174
+    #65 0x40a755 in main src/browser/app/nsBrowserApp.cpp:279
+    #66 0x7fbde3e26c4c in ?? ??:0
+0x7fbd8c4c7880 is located 0 bytes inside of 616-byte region [0x7fbd8c4c7880,0x7fbd8c4c7ae8)
+freed by thread T0 here:
+    #0 0x4c4af0 in free ??:0
+    #1 0x7fbde0cb2586 in moz_free src/memory/mozalloc/mozalloc.cpp:51
+    #2 0x7fbdd39b11cd in operator delete(void*) src/../../dist/include/mozilla/mozalloc.h:224
+    #3 0x7fbdc74d055b in mozilla::layers::Layer::Release() src/gfx/layers/Layers.h:514
+    #4 0x7fbdc74df755 in ~nsRefPtr src/../../dist/include/nsAutoPtr.h:874
+    #5 0x7fbdc7490ac6 in ~nsRefPtr src/../../dist/include/nsAutoPtr.h:872
+    #6 0x7fbdd3b37410 in ~LayerPropertiesBase src/gfx/layers/LayerTreeInvalidation.cpp:89
+    #7 0x7fbdd3b3e30a in mozilla::layers::ContainerLayerProperties::~ContainerLayerProperties() src/gfx/layers/LayerTreeInvalidation.cpp:162
+    #8 0x7fbdd3b3c806 in mozilla::layers::ContainerLayerProperties::~ContainerLayerProperties() src/gfx/layers/LayerTreeInvalidation.cpp:162
+    #9 0x7fbdd3b3c93c in mozilla::layers::ContainerLayerProperties::~ContainerLayerProperties() src/gfx/layers/LayerTreeInvalidation.cpp:162
+    #10 0x7fbdd3b377ef in ~nsAutoPtr src/../../dist/include/nsAutoPtr.h:71
+    #11 0x7fbdd3b37526 in ~nsAutoPtr src/../../dist/include/nsAutoPtr.h:70
+    #12 0x7fbdd3b3f286 in nsTArrayElementTraits<nsAutoPtr<mozilla::layers::LayerPropertiesBase> >::Destruct(nsAutoPtr<mozilla::layers::LayerPropertiesBase>*) src/../../dist/include/nsTArray.h:360
+    #13 0x7fbdd3b3f101 in nsTArray<nsAutoPtr<mozilla::layers::LayerPropertiesBase>, nsTArrayDefaultAllocator>::DestructRange(unsigned int, unsigned int) src/../../dist/include/nsTArray.h:1225
+    #14 0x7fbdd3b3eb68 in nsTArray<nsAutoPtr<mozilla::layers::LayerPropertiesBase>, nsTArrayDefaultAllocator>::RemoveElementsAt(unsigned int, unsigned int) src/../../dist/include/nsTArray.h:945
+    #15 0x7fbdd3b3e882 in nsTArray<nsAutoPtr<mozilla::layers::LayerPropertiesBase>, nsTArrayDefaultAllocator>::Clear() src/../../dist/include/nsTArray.h:956
+    #16 0x7fbdd3b3e74e in ~nsTArray src/../../dist/include/nsTArray.h:442
+    #17 0x7fbdd3b3e639 in nsAutoArrayBase<nsTArray<nsAutoPtr<mozilla::layers::LayerPropertiesBase>, nsTArrayDefaultAllocator>, 1u>::~nsAutoArrayBase() src/../../dist/include/nsTArray.h:1303
+    #18 0x7fbdd3b3e529 in nsAutoTArray<nsAutoPtr<mozilla::layers::LayerPropertiesBase>, 1u, nsTArrayDefaultAllocator>::~nsAutoTArray() src/../../dist/include/nsTArray.h:1357
+    #19 0x7fbdd3b3e416 in nsAutoTArray<nsAutoPtr<mozilla::layers::LayerPropertiesBase>, 1u, nsTArrayDefaultAllocator>::~nsAutoTArray() src/../../dist/include/nsTArray.h:1357
+    #20 0x7fbdd3b3e2fd in mozilla::layers::ContainerLayerProperties::~ContainerLayerProperties() src/gfx/layers/LayerTreeInvalidation.cpp:162
+    #21 0x7fbdd3b3c806 in mozilla::layers::ContainerLayerProperties::~ContainerLayerProperties() src/gfx/layers/LayerTreeInvalidation.cpp:162
+    #22 0x7fbdd3b3c93c in mozilla::layers::ContainerLayerProperties::~ContainerLayerProperties() src/gfx/layers/LayerTreeInvalidation.cpp:162
+    #23 0x7fbdd3b377ef in ~nsAutoPtr src/../../dist/include/nsAutoPtr.h:71
+    #24 0x7fbdd3b37526 in ~nsAutoPtr src/../../dist/include/nsAutoPtr.h:70
+    #25 0x7fbdd3b3f286 in nsTArrayElementTraits<nsAutoPtr<mozilla::layers::LayerPropertiesBase> >::Destruct(nsAutoPtr<mozilla::layers::LayerPropertiesBase>*) src/../../dist/include/nsTArray.h:360
+    #26 0x7fbdd3b3f101 in nsTArray<nsAutoPtr<mozilla::layers::LayerPropertiesBase>, nsTArrayDefaultAllocator>::DestructRange(unsigned int, unsigned int) src/../../dist/include/nsTArray.h:1225
+    #27 0x7fbdd3b3eb68 in nsTArray<nsAutoPtr<mozilla::layers::LayerPropertiesBase>, nsTArrayDefaultAllocator>::RemoveElementsAt(unsigned int, unsigned int) src/../../dist/include/nsTArray.h:945
+    #28 0x7fbdd3b3e882 in nsTArray<nsAutoPtr<mozilla::layers::LayerPropertiesBase>, nsTArrayDefaultAllocator>::Clear() src/../../dist/include/nsTArray.h:956
+    #29 0x7fbdd3b3e74e in ~nsTArray src/../../dist/include/nsTArray.h:442
+previously allocated by thread T0 here:
+    #0 0x4c4bb0 in __interceptor_malloc ??:0
+    #1 0x7fbde0cb26da in moz_xmalloc src/memory/mozalloc/mozalloc.cpp:57
+    #2 0x7fbdd39b42f0 in operator new(unsigned long) src/../../dist/include/mozilla/mozalloc.h:200
+    #3 0x7fbdc74ac836 in mozilla::FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder*, mozilla::layers::LayerManager*, nsIFrame*, nsDisplayItem*, nsDisplayList const&, mozilla::FrameLayerBuilder::ContainerParameters const&, gfx3DMatrix const*) src/layout/base/FrameLayerBuilder.cpp:2797
+    #4 0x7fbdc77d8c68 in nsDisplayTransform::BuildLayer(nsDisplayListBuilder*, mozilla::layers::LayerManager*, mozilla::FrameLayerBuilder::ContainerParameters const&) src/layout/base/nsDisplayList.cpp:3737
+    #5 0x7fbdc74b5af4 in mozilla::(anonymous namespace)::ContainerState::ProcessDisplayItems(nsDisplayList const&, mozilla::FrameLayerBuilder::Clip&, unsigned int) src/layout/base/FrameLayerBuilder.cpp:2125
+    #6 0x7fbdc74ae0bb in mozilla::FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder*, mozilla::layers::LayerManager*, nsIFrame*, nsDisplayItem*, nsDisplayList const&, mozilla::FrameLayerBuilder::ContainerParameters const&, gfx3DMatrix const*) src/layout/base/FrameLayerBuilder.cpp:2870
+    #7 0x7fbdc77b68ba in nsDisplayOpacity::BuildLayer(nsDisplayListBuilder*, mozilla::layers::LayerManager*, mozilla::FrameLayerBuilder::ContainerParameters const&) src/layout/base/nsDisplayList.cpp:2574
+    #8 0x7fbdc74b5af4 in mozilla::(anonymous namespace)::ContainerState::ProcessDisplayItems(nsDisplayList const&, mozilla::FrameLayerBuilder::Clip&, unsigned int) src/layout/base/FrameLayerBuilder.cpp:2125
+    #9 0x7fbdc74ae0bb in mozilla::FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder*, mozilla::layers::LayerManager*, nsIFrame*, nsDisplayItem*, nsDisplayList const&, mozilla::FrameLayerBuilder::ContainerParameters const&, gfx3DMatrix const*) src/layout/base/FrameLayerBuilder.cpp:2870
+    #10 0x7fbdc77d8c68 in nsDisplayTransform::BuildLayer(nsDisplayListBuilder*, mozilla::layers::LayerManager*, mozilla::FrameLayerBuilder::ContainerParameters const&) src/layout/base/nsDisplayList.cpp:3737
+    #11 0x7fbdc74a2b39 in mozilla::FrameLayerBuilder::AddThebesDisplayItem(mozilla::layers::ThebesLayer*, nsDisplayItem*, mozilla::FrameLayerBuilder::Clip const&, nsIFrame*, mozilla::LayerState, nsPoint const&) src/layout/base/FrameLayerBuilder.cpp:2373
+    #12 0x7fbdc74b6f2c in mozilla::(anonymous namespace)::ContainerState::ProcessDisplayItems(nsDisplayList const&, mozilla::FrameLayerBuilder::Clip&, unsigned int) src/layout/base/FrameLayerBuilder.cpp:2200
+    #13 0x7fbdc74ae0bb in mozilla::FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder*, mozilla::layers::LayerManager*, nsIFrame*, nsDisplayItem*, nsDisplayList const&, mozilla::FrameLayerBuilder::ContainerParameters const&, gfx3DMatrix const*) src/layout/base/FrameLayerBuilder.cpp:2870
+    #14 0x7fbdc77b68ba in nsDisplayOpacity::BuildLayer(nsDisplayListBuilder*, mozilla::layers::LayerManager*, mozilla::FrameLayerBuilder::ContainerParameters const&) src/layout/base/nsDisplayList.cpp:2574
+    #15 0x7fbdc74a2b39 in mozilla::FrameLayerBuilder::AddThebesDisplayItem(mozilla::layers::ThebesLayer*, nsDisplayItem*, mozilla::FrameLayerBuilder::Clip const&, nsIFrame*, mozilla::LayerState, nsPoint const&) src/layout/base/FrameLayerBuilder.cpp:2373
+    #16 0x7fbdc74b6f2c in mozilla::(anonymous namespace)::ContainerState::ProcessDisplayItems(nsDisplayList const&, mozilla::FrameLayerBuilder::Clip&, unsigned int) src/layout/base/FrameLayerBuilder.cpp:2200
+    #17 0x7fbdc74ae0bb in mozilla::FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder*, mozilla::layers::LayerManager*, nsIFrame*, nsDisplayItem*, nsDisplayList const&, mozilla::FrameLayerBuilder::ContainerParameters const&, gfx3DMatrix const*) src/layout/base/FrameLayerBuilder.cpp:2870
+    #18 0x7fbdc77d8c68 in nsDisplayTransform::BuildLayer(nsDisplayListBuilder*, mozilla::layers::LayerManager*, mozilla::FrameLayerBuilder::ContainerParameters const&) src/layout/base/nsDisplayList.cpp:3737
+    #19 0x7fbdc74a2b39 in mozilla::FrameLayerBuilder::AddThebesDisplayItem(mozilla::layers::ThebesLayer*, nsDisplayItem*, mozilla::FrameLayerBuilder::Clip const&, nsIFrame*, mozilla::LayerState, nsPoint const&) src/layout/base/FrameLayerBuilder.cpp:2373
+    #20 0x7fbdc74b6f2c in mozilla::(anonymous namespace)::ContainerState::ProcessDisplayItems(nsDisplayList const&, mozilla::FrameLayerBuilder::Clip&, unsigned int) src/layout/base/FrameLayerBuilder.cpp:2200
+    #21 0x7fbdc74b478e in mozilla::(anonymous namespace)::ContainerState::ProcessDisplayItems(nsDisplayList const&, mozilla::FrameLayerBuilder::Clip&, unsigned int) src/layout/base/FrameLayerBuilder.cpp:2063
+    #22 0x7fbdc74ae0bb in mozilla::FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder*, mozilla::layers::LayerManager*, nsIFrame*, nsDisplayItem*, nsDisplayList const&, mozilla::FrameLayerBuilder::ContainerParameters const&, gfx3DMatrix const*) src/layout/base/FrameLayerBuilder.cpp:2870
+    #23 0x7fbdc77bc4c2 in nsDisplayOwnLayer::BuildLayer(nsDisplayListBuilder*, mozilla::layers::LayerManager*, mozilla::FrameLayerBuilder::ContainerParameters const&) src/layout/base/nsDisplayList.cpp:2670
+    #24 0x7fbdc74b5af4 in mozilla::(anonymous namespace)::ContainerState::ProcessDisplayItems(nsDisplayList const&, mozilla::FrameLayerBuilder::Clip&, unsigned int) src/layout/base/FrameLayerBuilder.cpp:2125
+Shadow byte and word:
+  0x1ff7b1898f10: fd
+  0x1ff7b1898f10: fd fd fd fd fd fd fd fd
+More shadow bytes:
+  0x1ff7b1898ef0: fa fa fa fa fa fa fa fa
+  0x1ff7b1898ef8: fa fa fa fa fa fa fa fa
+  0x1ff7b1898f00: fa fa fa fa fa fa fa fa
+  0x1ff7b1898f08: fa fa fa fa fa fa fa fa
+=>0x1ff7b1898f10: fd fd fd fd fd fd fd fd
+  0x1ff7b1898f18: fd fd fd fd fd fd fd fd
+  0x1ff7b1898f20: fd fd fd fd fd fd fd fd
+  0x1ff7b1898f28: fd fd fd fd fd fd fd fd
+  0x1ff7b1898f30: fd fd fd fd fd fd fd fd
+Stats: 245M malloced (262M for red zones) by 396542 calls
+Stats: 42M realloced by 22212 calls
+Stats: 222M freed by 288712 calls
+Stats: 90M really freed by 166126 calls
+Stats: 456M (116821 full pages) mmaped in 114 calls
+  mmaps   by size class: 8:245745; 9:32764; 10:12285; 11:14329; 12:2048; 13:1536; 14:1280; 15:384; 16:896; 17:1248; 18:144; 19:40; 20:20;
+  mallocs by size class: 8:319583; 9:38443; 10:13358; 11:16867; 12:2163; 13:1785; 14:1427; 15:340; 16:1048; 17:1307; 18:159; 19:41; 20:21;
+  frees   by size class: 8:227561; 9:29941; 10:10375; 11:13698; 12:1481; 13:1619; 14:1259; 15:302; 16:982; 17:1292; 18:145; 19:39; 20:18;
+  rfrees  by size class: 8:142838; 9:8750; 10:2094; 11:9285; 12:649; 13:516; 14:548; 15:182; 16:794; 17:441; 18:24; 19:4; 20:1;
+Stats: malloc large: 1528 small slow: 2168
+==32510== ABORTING

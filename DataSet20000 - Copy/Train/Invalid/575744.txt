@@ -1,0 +1,17 @@
+got installed addon into a state where its components were not registered
+While installing my extensions to test them on trunk:
+https://addons.mozilla.org/en-US/firefox/user/14214
+I managed to get one of the extension installs (the one for Character Identifier) into a state such that it was half-working:  the extension was displayed as installed, and its overlay code worked, but its JS component wasn't actually registered, so I got an exception thrown on line 94 of characterDialog.js.
+
+(The source for the 0.1.2 release of the extension is at http://hg.mozilla.org/users/dbaron_mozilla.com/char-identifier/rev/25ff569da00d if you're interested.)
+
+I'm not exactly sure what steps I took to get into this state, and I tried a number of things afterwards to try to repro, but they were something like
+ * create a new profile
+ * do tools -> Addons -> Get Addons and poke around in the search UI a little until I discovered it wasn't working yet
+ * go to https://addons.mozilla.org/ and search for character identifier
+ * install the extension from the "Character Identifier" page ( https://addons.mozilla.org/en-US/firefox/addon/3929 ) by clicking the "Add to Firefox" button multiple times, and cancelling some of the dialogs by closing them, but since I didn't realize anything was happening at first, clicking "Install" enough to get it listed twice in the addons manager
+ * click through from that page to my user page ( https://addons.mozilla.org/en-US/firefox/user/14214 )
+ * also install leak monitor and about:accessibilityenabled (such that they're listed once in the install dialog)
+ * restart by closing the window and running Firefox again
+
+Then, after restarting, when I selected some text and chose "Identify characters", I got a dialog with no characters listed, and an error on the JS console that I'd expect would be the result of my components not being registered.

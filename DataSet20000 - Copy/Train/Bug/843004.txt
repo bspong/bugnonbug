@@ -1,0 +1,22 @@
+Improve output for object actor grips
+With bug 783499 and bug 808370 we are switching the web console to the debugger API and we are now using the Variables View way of displaying object actors in the console output.
+
+However, the web console output had improved handling for different kinds of objects. For example instead of [object Function] we displayed either |function name(arguments, list)| or function.toSource() (the source of the function).
+
+I discussed this change with Rob and we've agreed that it's worthwhile to improve output of various kinds in the future.
+
+We should probably have two ways to display each type of object (where applicable):
+
+- for functions we can output its source (toSource()) in the console output. In vview we can display |function name(args)| only. This is what we did in the web console and its old property panel.
+
+- for Date: we can show the ISO date.
+
+- for RegExp: we can show the regex toString().
+
+- for DOM elements we could show <tag id=elemid> or <tag class="class names"> in the web console output. In vview we can simplify: tag#id or tag.class.names.
+
+- for generic JS objects we can show Class instead of [object Class] in vview (simplification to make it easier to see which kind of object you have).
+
+We should also keep in mind extensibility - addon authors will want to be able to customize how their js libs are displayed. This is most-likely something for a follow-up bug.
+
+(filing this bug in the debugger component because with bug 808370 the web console uses the vview methods for displaying objects. Marking this bug as a blocker for bug 778766 because we intend to improve how objects are displayed with the console output rewrite.)

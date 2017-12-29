@@ -1,0 +1,378 @@
+ghost windows on homedepot.com, possibly due to PerformanceTiming leak
+Created attachment 8889221
+memory-report.json.gz
+
+I was trying to find a wall organizer at homedepot.com today and later noticed my computer was using a lot of CPU.  It turns out it was this process spending a ton of time CC'ing constantly.  This was due to a number homedepot.com ghost windows.
+
+See attached memory report after closing all other tabs.  This is on mac 56.0a1 (2017-07-23) (64-bit).
+
+I took some verbose GC/CC logs.  They suggest that perhaps there is an issue with PerformanceTiming:
+
+xykon:Downloads bkelly$ /srv/heapgraph/find_roots.py cc-edges.72232.1500838230.log 0x1c4a6a400 > cc-roots.txt
+Parsing cc-edges.72232.1500838230.log. Done loading graph.
+
+0x1d4bef000 [PerformanceMainThread http://www.homedepot.com/b/Storage-Organization-Storage-Bins-Totes/N-5yc1vZcfzi]
+    --[mTiming]--> 0x1d4f4f500 [PerformanceTiming]
+    --[Preserved wrapper]--> 0x1afff1eb0 [JS Object (PerformanceTiming)]
+    --[group_global]--> 0x1ac3dbd80 [JS Object (Window)]
+    --[CLASS_OBJECT(Object), CLASS_OBJECT(Function), **UNKNOWN SLOT 153**]--> 0x1bb274cc0 [JS Object (Proxy)]
+    --[private]--> 0x1d892bd00 [JS Object (Proxy)]
+    --[group_global, private]--> 0x1ac3dbba0 [JS Object (Window)]
+    --[UnwrapDOMObject(obj)]--> 0x1c4a6a400 [nsGlobalWindow # 4294967875 inner http://www.homedepot.com/s/bin%2520shelf?NCNI-5]
+
+    Root 0x1d4bef000 is a ref counted object with 1 unknown edge(s).
+    known edges:
+       0x1bb8610e0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1ce975000 [nsGlobalWindow # 4294967800 inner http://www.homedepot.com/b/Storage-Organization-Storage-Bins-Totes/N-5yc1vZcfzi] --[mPerformanc>
+       0x1cdc3b110 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1aa78e6b0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1b98b39d0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1c1e119d0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1a2a449d0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1c55d43d0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1c043e060 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1cf7efe20 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d5208870 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1bb6fea10 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1c55d4f80 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d5db6700 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1bb861240 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d3ee7d40 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d5d1d660 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1cf686110 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1c92c4030 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1bb6fece0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d5d1c5e0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1b6782870 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1bb761470 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1bb7612c0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1c92c45b0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1a9e53550 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1bd7ac0d0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d5dd5b60 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d4a23ca0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d4187080 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1b2e61dc0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1c20336b0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1cf178500 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1ceaeef80 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1bc3c07f0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1b2e61e50 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d4f31df0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1b3004740 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d5f2f500 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d5e7e190 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d5d22320 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d5dd5690 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d4f313a0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d4f31030 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1b2ee33a0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d5dd57f0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1a2a44a60 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d4f4ed70 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d5d1cab0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1bb606240 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1b98b3940 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1cea9cc50 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1ad37cb30 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d51b05b0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d5dd5320 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1c1e10cc0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1c55d5450 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1bb6ff4c0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1c1e10950 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1b7a24fb0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1bb656110 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d5db68b0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d4427c10 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d4ab5280 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1be132110 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1bb6fe980 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d5e08480 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1b6782710 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1b98b38b0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1bdbcf710 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1c1e11c90 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1bb72d500 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d4ab50d0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d4a23b80 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d5dd2c10 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1a9e52980 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1c55d4e20 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1cede2790 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d4f4f920 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d520e040 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d4f30e20 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1cede2790 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d4f4f920 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d520e040 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d4f30e20 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1a6e79480 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1c2371f70 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1c1eca7f0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1c55d50e0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1b30ad5e0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1ae839590 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d5dd5f80 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1c55d4d70 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1bb605110 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1c55d5030 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1ccdf2b30 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d4f5f790 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1bb72d710 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1bb6ffc10 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d52087c0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1a9e52a10 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d5d22690 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d56adbe0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1a88371c0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d5db65e0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d4188e50 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1bdbcf7c0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1a2a43b30 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1bd85e860 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1b98b3820 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d52083a0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1aa78f1f0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1bb6ff040 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1c55d4ed0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d4427ca0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1cf178aa0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1c55d5190 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1bb6561c0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1be70cc50 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1cfca7cc0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1ad318430 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1cede2940 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d5207320 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1c1e10480 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d4f4ef80 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d4188820 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1be70cd70 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d5db6790 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+       0x1c043e1c0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d4510950 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d52078a0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1b2ee3240 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1c20f5e90 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d4ab5940 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d5d577d0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d4ab51f0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1a6e79ed0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1bb622710 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d4427d30 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1cea9c470 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d5db5980 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1a9e52aa0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1ccdf1ed0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1cfca80e0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1a2a43bc0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d41888b0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1cd3e03a0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d4188c10 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d520dd70 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d5207d70 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1cf178590 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d5d2aed0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d5dd5950 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1bd7ab500 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1bc96e470 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1bb7616b0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1b98b2e90 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1cf7ef320 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1be70cce0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d3c35160 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1aa78ee00 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d56adea0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d4188ee0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d5dd5ab0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1bb72dc90 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1bb7588b0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d4187e90 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d52343a0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d5db64c0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1c029db80 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1c92c4870 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d5dd3a80 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d5d1c7f0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1b6782660 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d5db5aa0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d4187e00 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1cede1590 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1bb6fe6b0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d5db5bc0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d5207c10 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1c1e115b0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d4ab5310 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d4f4fbe0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d4f4ee20 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1bb605060 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1b6781f80 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1bb6fefb0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1c1e10060 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d4f301c0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1bd85f0d0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1ca306500 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1b67827c0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1b7a24080 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d5d1ccc0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d55123a0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1cf1782c0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1a8837060 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1bb861450 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1a2a44c10 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1b2e61ee0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d4ab5550 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d5db5a10 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1a2a438f0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1b98b3ca0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1c46a2ab0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d4ab59d0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d5d22110 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1bd85e3e0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1a8612110 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1bb6fee90 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d4fb5ab0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1c95ca470 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1c023a860 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1c1e103d0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d4f30270 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1b7a4b5e0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d520dce0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d4f4f870 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1ca3065b0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1c1e11710 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d4ab55e0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x197f45860 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d4ab5670 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1bb6fed70 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1cf7f0be0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1c1e11870 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1bb861030 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1cf178350 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d5234660 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1cf178a10 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1b7a25310 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1c8fc0860 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d5d22530 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1a8837110 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1aa78f430 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1cea9c500 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1aac88b80 [JS Object (Performance)] --[UnwrapDOMObject(obj)]--> 0x1d4bef000
+       0x1cf80ad30 [PerformanceNavigation] --[mPerformance]--> 0x1d4bef000
+       0x1d520dfb0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1aa78f940 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d3c6d550 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1b7299f80 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1ad317c50 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d3886030 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1cdc3b060 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1c1e10ab0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d3c6d3a0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1c043e270 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d5d1d450 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x12e07c080 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1bc6c1c50 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1bb6fe8f0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d4f4f500 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1a2a43980 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d5db6670 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d5dd3b30 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1bb6fe590 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1ae83a0d0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1c043e110 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1b7a4b8a0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d5dd55e0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1bb657030 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1bb6fec50 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1b98b33a0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1a8837270 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d4f5f820 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d5dd6ea0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d5d1d7c0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1bb7613e0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1bb761230 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d52077f0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x111525b30 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1bb6fe860 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1a88373d0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1b2ee32f0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1be70cbc0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d4f31190 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d4f4f030 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d5db6550 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d3c6d310 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1b3005ca0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1bb6fe470 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d5dd58a0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d5511740 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d5dd5a00 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d5dd5530 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d4f4f190 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d3c6d5e0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1bb7611a0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d5207a00 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d5d1d3a0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1ca306450 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d4ab53a0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d5dd5740 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1be70d5e0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1cede2700 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1bb6fee00 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1bb656ab0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x111526160 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1c1e11df0 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000
+       0x1d4f5fee0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1d4ab5160 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1bb6febc0 [PerformanceEntry] --[mParent]--> 0x1d4bef000
+       0x1c1e10e20 [PerformanceTiming] --[mPerformance]--> 0x1d4bef000

@@ -1,0 +1,59 @@
+event propagation continues with border-collapse and a table border hidden overflows
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-GB; rv:1.8.1.5) Gecko/20061023 SUSE/2.0.0.5-1.1 Firefox/2.0.0.5
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-GB; rv:1.8.1.5) Gecko/20061023 SUSE/2.0.0.7-1.1 Firefox/2.0.0.7
+
+
+The code below illustrates the bug. When a table is created with a cell with hidden overflow and border-collapse set and a cell border then events cannot be stopped from propagating to the hidden overflowed elements. Removing the border stops the bug, removing the border-collapse attribute stops the bug. creating the table with the deprecated cellpadding and cellspacing tags set to 0 and removing the border-collapse stops the bugs.
+
+<style type="text/css">
+	table {
+	    border-collapse: collapse;
+		table-layout: fixed;
+		width: 300px;
+	}
+	
+	td  {
+		width: 100px;
+		overflow: hidden;
+		white-space: nowrap;
+		border: 1px solid black;
+	}
+</style>
+
+
+<table id="table_el">
+	<tr>
+		<td>abcdefghijklmnopqrstuvwxyx abcdefghijklmnopqrstuvwxyx abcdefghijklmnopqrstuvwxyx</td>
+		<td>b</td>
+		<td>c</td>
+	</tr>
+</table>
+
+<script language="javascript">
+
+function showThis(e){
+
+	alert(e.target.innerHTML);
+	e.stopPropagation();
+
+}
+
+table_el.onmouseover = showThis;
+
+</script>
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.create a table with collapsed borders and cells set to hide overflows put a border around the cells
+2.fire an event in the cell that is next to the overflowing cell
+3.the event propagates
+4.remove the cell border and the event does not.
+Actual Results:  
+the event propagates with the cell border, it does not in old cellpadding and cellspacing tables
+
+Expected Results:  
+the event should not propagate to a cell with hidden overflows.
+
+tested on 2.0.0.7 and 2.0.0.5 on windows and linux

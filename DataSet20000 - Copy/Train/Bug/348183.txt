@@ -1,0 +1,36 @@
+scenario where clicking cancel in the "closing window with <n> tabs open" prompt closes the window, instead of keeping it open
+scenario where clicking cancel in the "closing window with <n> tabs open" prompt closes the window, instead of keeing it open
+
+this may be related to bug #331457 or bug #327139
+
+steps to reproduce aren't perfect, but I am able to reproduce this.
+
+1)  quickly open many tabs at once, using ctrl t
+2)  hit the close [x] on the window
+3)  get the confirm to close window with open tabs prompt
+4)  hit cancel
+
+expected results:  window does not close
+actual results:    window closes
+
+in my console I see:
+
+JavaScript error: , line 0: uncaught exception: [Exception... "Component returne
+d failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMWindowInternal.focus]"  nsr
+esult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: chrome://global/c
+ontent/bindings/tabbrowser.xml :: setFocus :: line 773"  data: no]
+
+it is coming from the elemet.focus() call in setFocus() in browser.xml
+
+  function setFocus(element) {
+    document.commandDispatcher.suppressFocusScroll = true;
+
+    if (element instanceof Window ||
+        element instanceof NSHTMLElement ||
+        element instanceof XULElement) {
+        element.focus();
+    }
+    document.commandDispatcher.suppressFocusScroll = false;
+  }
+
+gavin, perhaps we should wrap that call to focus with a try / catch in addition to figuring out why it is failing?

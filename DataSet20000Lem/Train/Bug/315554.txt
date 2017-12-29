@@ -1,0 +1,73 @@
+crash when reloading page and too many get parameter and one special character are in url
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; de-DE; rv:1.7.8) Gecko/20050511 Firefox/1.0.4
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; de-DE; rv:1.7.8) Gecko/20050511 Firefox/1.0.4
+
+Mozialla crash when too many get var are set and one of them includes special character like ü. Two or three get var are working fine. The same when no special character is set.
+
+file 1 :bugframe.php
+-------------------------------------------------------------------------
+<html>
+<head>
+<frameset rows="50%,50%"><noframes></noframes>
+<frame name="bugtable" scrolling="no" src="/test/bugtable.php">
+<frame name="bug3dom" src="/test/bug3dom.php?b=77777777&b1=55555555&bn=tttü&l=2&info=x&z=22222&id=444444&b1=b1&t=000001&t1=999999&h=9999999">
+</frameset>
+</head></html>
+--------------------------------------------------------------------
+file2 : bugtable.php
+this file wa created, cause I wa searching for the bug.
+It's unimportant, however in the example it is still there.
+------------------------------------------------------------------
+<html>
+<body>
+<table id="z1" name="z1">
+<tbody id="z2" name="z2"></tbody>
+</table>
+</body>
+</html>
+-----------------------------------------------------------
+file3 called bug3com.php there's the bug!
+when you let the $_GET[bn] value away, that includes a special character, no bug will araise. The same when the number of request is only 2 or three.
+The prob is the start up. I changed the count of requested var meanwhile the page wa reloading. When the page is initialized once, it work without that bug.
+------------------------------------------------------------------
+<html>
+<head>
+<?
+if($_GET[l]==2){
+header('refresh: 2; url=bug3dom.php?bn='.$_GET[bn].'&info='.$_GET[info].'&z='.$_GET[z].'&id='.$_GET[id].'&b1='.$_GET[b1].'&t='.$_GET[t].'&t1='.$_GET[t1].'&h='.$_GET[h]); exit;}
+header('refresh: 3; url=bug3dom.php?bn='.$_GET[bn].'&info='.$_GET[info].'&z='.$_GET[z].'&id='.$_GET[id].'&b1='.$_GET[b1].'&t='.$_GET[t].'&t1='.$_GET[t1].'&h='.$_GET[h]);
+print $_GET[bn];
+?>
+</head>
+</html>
+------------------------------------------------------------------------
+
+
+
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+There's a 3 file php code example with a frameset.
+I let the bug a few day online.
+
+
+
+Expected Results:
+reloading
+
+about:buildconfig
+
+Build platform
+target
+i686-pc-cygwin
+
+Build tool
+Compiler Version Compiler flag
+$(CYGWIN_WRAPPER) cl 12.00.8804 -TC -nologo -W3 -nologo -Gy -Fd$(PDBFILE)
+$(CYGWIN_WRAPPER) cl 12.00.8804 -TP -nologo -W3 -nologo -Gy -Fd$(PDBFILE)
+
+Configure argument
+--disable-ldap --disable-mailnews --enable-extensions=cookie,xml-rpc,xmlextras,pref,transformiix,universalchardet,webservices,inspector,gnomevfs,negotiateauth --enable-crypto --disable-composer --enable-single-profile --disable-profilesharing --enable-optimize --disable-debug --disable-tests --enable-static --disable-shared --enable-official-branding

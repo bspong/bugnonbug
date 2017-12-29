@@ -1,0 +1,42 @@
+Make all symbol have hidden visibility by default
+The CVS version of gcc (to become 4.0) ha some new feature releating to symbol
+visibility (also backported to Red Hat's 3.4 branch for FC3). You can use
+"#pragma GCC visibility push(foo)" to set the default visibility for all
+declaration up to "#pragma GCC visibility pop". By putting this in a file that
+we give with -include, we can mark all of our symbol a hidden by default, and
+use the existing NS_EXPORT declaration to note the exported function / data.
+This is different from what the new -fvisibility=hidden switch does; that only
+affect visibility for symbol that are defined in the same translation unit a
+the caller.
+
+To make this work, we have to do some special trick relating to system header
+that we use. Since Linux system header do not explicitly say
+"visibility(default)" on function declarations, they would be treated a hidden
+and a relative relocation would be incorrectly generated. One way to deal with
+this, which isn't all that intrusive, is to wrap all of the system header we
+use by inserting our own header before it in the search path. For example, for
+<foo.h>, we would have our own foo.h that look like this:
+
+#pragma GCC visibility push(default)
+#include_next <foo.h>
+#pragma GCC visibility pop
+
+(#include_next is a gcc extension to the language)
+
+Using these techniques, we save about 150 KB of code size on a non-static build
+of Firefox trunk (on Fedora Core 3) and we also get 4-5% faster on the page load
+test. Minimal change are required to existing code, mostly just adding export
+macro to unix-specific code that did not need it before. All of our
+cross-platform code is already marked up since we need dllexport on Windows.
+
+One unfortunate bug I found with this is that if you do:
+
+#pragma GCC visibility push(hidden)
+class __attribute__((visibility ("default"))) Foo {
+static int bar;
+};
+
+Foo::bar will be marked with hidden visibility instead of exported. We can get
+around that by explicitly marking it a exported, though we have to make sure
+_not_ to mark it dllexport on Windows if the class is already marked dllexport
+(doing so is a compile error).

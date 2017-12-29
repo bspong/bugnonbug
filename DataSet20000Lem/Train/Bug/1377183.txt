@@ -1,0 +1,10 @@
+Audit `_followQueries` to determine if it's a broken a we think it is
+We use `_followQueries` to find the concrete record for `place:` queries. A few thing about that function stand out:
+
+* It relies on `recordMap` actually matching what's in Places. In theory, that's OK; we assume there's no cycle if the query record doesn't exist. (It's hard to determine this without a real tree, since we don't sync enough information to map numeric folder IDs in `place:` URLs to their GUIDs. The common exception are https://searchfox.org/mozilla-central/rev/152c0296f8a10f81185ee88dfb4114ec3882b4c6/toolkit/components/places/nsNavHistoryQuery.cpp#160-165).
+
+* We accidentally called `PlacesUtils.getFolderContents` with the wrong argument (bug 1119282), which might also explain the surprisingly high incidence of `clientCycles` problem in our validation data.
+
+* We loop over the query's sibling to find `queryNode`, but it's not clear to me how these two line are different, and if the loop can be removed: https://searchfox.org/mozilla-central/rev/152c0296f8a10f81185ee88dfb4114ec3882b4c6/services/sync/modules/bookmark_validator.js#239,259
+
+* This comment need to be updated: https://searchfox.org/mozilla-central/rev/152c0296f8a10f81185ee88dfb4114ec3882b4c6/services/sync/modules/bookmark_validator.js#252-253 Tag query have children; `queryNodeParent.childCount` doesn't appear to throw for them. (And `root.hasChildren === false` for left pane query and "Recent Tags", even though they're `folder=` query and appear to have child in the UI).

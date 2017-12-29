@@ -1,0 +1,46 @@
+Firebird handles a common malformed Content-Type HTTP header gracelessly
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.5a) Gecko/20030922 Mozilla Firebird/0.6.1
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.5a) Gecko/20030922 Mozilla Firebird/0.6.1
+
+On several web pages (including the one referenced in URL), my attempt to open
+the page normally fails.  Instead, it gives the "Opening" dialog box, with the
+message "The file <whatever> is of type iso-8859-1 (HyperText Markup Language),
+and Mozilla Firebird does not know how to handle this file type.  This file is
+located at: ... What should Mozilla Firebird do with this file?".  Going to the
+same page with Mozilla displays the page normally.
+
+Digging deeper, all the pages I get this message on include an HTTP header of
+"Content-Type: text/html; charset=Shift_JIS,ISO-8859-1".  According to my
+reading of RFC2616 (14.17, 3.7, 3.6, 2.2) this line is invalid HTTP (it wants a
+token or a quoted string after the =, and the comma in "Shift_JIS,ISO-8859-1"
+makes it neither).  The principle error is clearly on the side of the website,
+not on Firebird's end.
+
+However, even though it is a misformed header, it appears to be parsing it as if
+it said "Content-Type: ISO-8859-1".  My guess is it's treating the comma as a
+separator (as per RFC2616), and reading it as a list of two media types,
+"text/html; charset=Shift_JIS" and "ISO-8859-1".  Since there can be only one
+Content-Type for a page, it takes the last one.
+
+This strikes me as graceless, and not following the Principle of Least Surprise.    
+Mozilla properly displays these sites as text/html.  Could the algorithm that
+Firebird uses to parse the HTTP headers be changed to more closely match
+Mozilla's, or otherwise tweaked to use the first media type rather than the last
+for Content-Type?
+
+Thank you very much for your time, attention, and a great browser!
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.Go to (via bookmark, address box, link, whatever) any page with the
+appropriate http header
+
+Actual Results:  
+It gives the "Opening" dialog box, with the message "The file <whatever> is of
+type iso-8859-1 (HyperText Markup Language), and Mozilla Firebird does not know
+how to handle this file type.  This file is located at: ... What should Mozilla
+Firebird do with this file?".
+
+Expected Results:  
+Rendered the page as type text/html

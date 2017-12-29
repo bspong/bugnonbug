@@ -1,0 +1,34 @@
+Dialog title not updated on-screen although dialog.title DOM attribute is changed
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.12) Gecko/20050915 Firefox/1.0.7 (ax) Mnenhy/0.7.2.0
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.12) Gecko/20050915 Firefox/1.0.7 (ax) Mnenhy/0.7.2.0
+
+When changing the dialog.title attribute of an XUL-created dialog in a Firefox extension from the javascript onload methods, the internal DOM dialog.title attribute is changed but the on-screen window title isn't updated.
+
+
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+I have created a small extension, Firefox Shared Bookmarks. The problem can be reproduced by installing it (from the attached URL), signing in as "Guest" password "guest", and using the "Download (Choose)..." option.
+Actual Results:  
+The "Download (Choose)..." dialog box title is initially set in the XUL to "Choose a Bookmark Set".
+
+<dialog id="fsb-datapicker" title="&fsb.pick.title;" onload="init();"
+
+The onload event init() method contacts the remote server and retrieves data. Amongst that is the current quota limit and used bytes. The dialog.title has values appended to it:
+
+var title = document.getElementById('fsb-datapicker-title');
+title.setAttribute('title', 'Quota: ' + quotaUsed+ ' used of ' + quotaLimit+ ')' );
+
+This shows the change correctly in the DOM Inspector (chrome://fsb/content/fsb-Pick.xul)
+
+dialog.id: fsb-datapicker
+nodeName: title
+nodeValue: Choose a Bookmark Set (1672 of 25600)
+
+However, the on-screen window title is not changed. Even if the dialog is dismissed and re-opened DOM Inspector shows the dialog.title is still as above whilst the displayed title is as set in the XUL.
+
+Expected Results:  
+The dialog title should reflect the current value of dialog.title.

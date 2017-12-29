@@ -1,0 +1,19 @@
+No longer need to re-initialize "Customize Toolbar" sheet when a new tab is opened
+from browser.js:
+  /**
+   * XXXmano hack: when a new tab is added while the sheet is visible,
+   * the new tabpanel is overlaying the sheet. We workaround this issue by
+   * hiding and reopening the sheet when a new tab is added.
+   */
+  function TabOpenSheetHandler(aEvent) {
+    getBrowser().removeEventListener("TabOpen", TabOpenSheetHandler, false);
+
+    document.getElementById("customizeToolbarSheetIFrame")
+            .contentWindow.gCustomizeToolbarSheet.done();
+    document.getElementById("customizeToolbarSheetBox").hidden = true;
+    BrowserCustomizeToolbar();
+    
+  }
+  getBrowser().addEventListener("TabOpen", TabOpenSheetHandler, false);
+
+Bug 130078 fixed the underlying issue, thus we can now get rid of this workaround.

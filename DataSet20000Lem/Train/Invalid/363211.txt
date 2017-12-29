@@ -1,0 +1,54 @@
+Javascript/DOM ignores closed arbitary XML childNodes (xxx) but not HTML node (img) in a valid XHTML page
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9a1) Gecko/20061208 Minefield/3.0a1
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9a1) Gecko/20061208 Minefield/3.0a1
+
+With the following example embedded in a normal/valid XHTML page:
+
+<data><xxx n="a" /><xxx n="b" /></data>
+<data><img n="c" /><img n="d" /></data>
+<data><yyy n="e" ></yyy><yyy n="f" ></yyy></data>
+<data><zzz n="g" /><zzz n="h" /></data>
+
+A script traversing over the tree will not find the second child node of data if that child node is closed <x/> and not a recognized HTML tag.
+
+in other word (using XPATH)
+
+/data[1]/xxx[1] exists
+/data[1]/xxx[2] doe not exist
+/data[2]/img[1] exists
+/data[2]/img[2] exists
+/data[3]/yyy[1] exists
+/data[3]/yyy[2] exists
+/data[4]/zzz[1] exists
+/data[4]/zzz[2] doe not exist
+
+- - -
+
+I have created a minimal test case. This bug occurs in the public Firefox 2.0 release a well a the latest (as of now) Minefield 3.0a1.
+
+The javascript is a typical foreach parent.childNodes traversal.
+
+I am attempting to embed a small bit of XML data in an HTML page to be processed by a standard Javascript function.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. embed arbitrary XML (non-HTML) in an XHTML document
+2. write a javascript that traverse that DOM segment
+3. notice some element are missing (those that are not standard HTML tags)
+
+Actual Results:
+some child element are missing
+
+Expected Results:
+expect all child element a I would get from the equivilent XML DOM.
+
+If anyone is attempting to embed XML data in an HTML page, one work around is to use IMG tags, or make sure that all node with no child have a redundant closing tag. In other words:
+
+<xxx /> may be ignored
+
+but
+
+<xxx></xxx> is not ignored
+<img /> is not ignored
+<img></img> is not ignored

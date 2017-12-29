@@ -1,0 +1,51 @@
+AJAX does not show Greek characters, response is empty, encoding with UTF-8 or ISO8859-7
+User-Agent:       Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.5; en-US; rv:1.9.1.1) Gecko/20090715 Firefox/3.5.1
+Build Identifier: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.5; en-US; rv:1.9.1.1) Gecko/20090715 Firefox/3.5.1
+
+When submitting a form via AJAX, no response is received if there are Greek UTF-8 characters in the form. The non latin-1 characters seem not to be transmitetd correctly to the server. When using IE or Safari on teh same application there is no problem. If teh AJAX query contains only latin characters but the response conteians Greek charachers then they are correctly receipved and diisplayed. It seems FireFox cannot send properly the non english characters to the server.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Have a form that makes a mySQL query on teh addressbook
+2. If the name includes Greek characters no result is received
+3. If teh name includes latin characters (among Greek characters) a contains query on the latin characters of teh name yield steh correct results that include the Greek characters.
+Actual Results:  
+Have screen shots.
+
+
+The application works correctly on IE and Safari. This prohibits the use of FirefOx in Greece whenever AJAX is used.
+
+It seems that the encoding of teh form sent to our server is not performed correctly when doing an XMLhttpRequest:
+
+code used:
+function callNoResultPost(debug, url, params)
+{
+    if ( debug )
+        alert("AJAX Method: " + url + "?" + params);
+    var xmlObj = null;
+    if(window.XMLHttpRequest){
+        xmlObj = new XMLHttpRequest();
+        xmlObj.open ('POST', url, false); // false = sync call
+        //xmlObj.setRequestHeader("Content-type", "application/x-www-form-urlencoded;"); original, chnaged in next line to try enforce encoding
+         xmlObj.setRequestHeader("Content-type", "text/xml;charset=UTF-8");
+        xmlObj.setRequestHeader("Content-length", params.length);
+        xmlObj.setRequestHeader("Connection", "close");
+        xmlObj.send(params);
+    } else if(window.ActiveXObject){
+        xmlObj = new ActiveXObject("Microsoft.XMLHTTP");
+        xmlObj.open ('POST', url, false); // false = sync call
+        xmlObj.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        xmlObj.setRequestHeader("Content-length", params.length);
+        //xmlObj.setRequestHeader("Connection", "close"); // ie6 bug, may be removed when ie6 is gone
+        xmlObj.send(params);
+    } else {
+        alert("Browser does not support AJAX");
+        return;
+    }
+    if (debug)
+        alert("AJAX Method: "+xmlObj.responseText);
+    if (hasError(xmlObj))
+        return false;
+    return true; 
+}

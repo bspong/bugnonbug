@@ -1,0 +1,113 @@
+crash when compile and start on MIPS
+User-Agent:       Opera/9.10 (Windows NT 5.2; U; ru)
+Build Identifier: firefox-2.0.0.4
+
+Then I compile the source code of firefox (OS Linux for MIPS) compiler gcc-3.2.3 print unresolved symbols during link.
+I apply patch for file xptcstubs_asm_mips.s.m4 (from bug id: 250472). Source code Successful build.
+
+compile flags and command:
+export MOZILLA_OFFICIAL=1
+export BUILD_OFFICIAL=1
+export PATH=/tools/usr/bin:$PATH
+export LD_LIBRARY_PATH=/tools/usr/lib:$LD_LIBRARY_PATH
+export LD_RUN_PATH=/tools/usr/lib:$LD_RUN_PATH
+export PKG_CONFIG_PATH=/tools/usr/lib/pkgconfig:/usr/lib/pkgconfig
+export LDFLAGS=-L/tools/usr/lib
+export CPPFLAGS=-I/tools/usr/include
+
+./configure \
+  --prefix=/usr \
+  --exec-prefix=/usr \
+  --sysconfdir=/etc \
+  --localstatedir=/var \
+  --x-includes=/usr/X11R6/include/X11 \
+  --x-libraries=/usr/X11R6/lib \
+  --with-x \
+  --with-system-jpeg \
+  --with-system-zlib \
+  --with-system-png \
+  --with-gtk-prefix=/tools/usr \
+  --with-gtk-exec-prefix=/tools/usr \
+  --with-libIDL-prefix=/tools/usr \
+  --with-libIDL-exec-prefix=/tools/usr \
+  --with-glib-prefix=/tools/usr \
+  --with-glib-exec-prefix=/tools/usr \
+  --enable-svg \
+  --enable-default-toolkit=gtk2 \
+  --enable-application=browser \
+  --enable-cpp-rtti \
+  --enable-cpp-exceptions \
+|| exit 1
+
+make || exit 2
+
+make install || exit 3 
+
+Then I run the browser, signal SIGSEGV terminate the program.
+
+Hope for help...
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. I set debugmode=1 in file run-mozilla.sh
+2. [$sh] cd /usr/bin
+3. [$sh] firefox
+Actual Results:  
+firefox
+MOZILLA_FIVE_HOME=/usr/lib/firefox-2.0.0.4
+  LD_LIBRARY_PATH=/usr/lib/firefox-2.0.0.4:/usr/lib/firefox-2.0.0.4/plugins:/usr/lib/mre/mre-2.0.0.4
+DISPLAY=:0.0
+DYLD_LIBRARY_PATH=/usr/lib/firefox-2.0.0.4:/usr/lib/mre/mre-2.0.0.4
+     LIBRARY_PATH=/usr/lib/firefox-2.0.0.4:/usr/lib/firefox-2.0.0.4/components:/usr/lib/mre/mre-2.0.0.4
+       SHLIB_PATH=/usr/lib/firefox-2.0.0.4:/usr/lib/mre/mre-2.0.0.4
+          LIBPATH=/usr/lib/firefox-2.0.0.4:/usr/lib/mre/mre-2.0.0.4
+       ADDON_PATH=/usr/lib/firefox-2.0.0.4
+      MOZ_PROGRAM=/usr/lib/firefox-2.0.0.4/firefox-bin
+      MOZ_TOOLKIT=
+        moz_debug=1
+     moz_debugger=gdb
+/usr/bin/gdb /usr/lib/firefox-2.0.0.4/firefox-bin -x /tmp/mozargs.AwZoKy
+GNU gdb 5.2.90-0.2 (5.2.90_2002-10-03-cvs)
+Copyright 2002 Free Software Foundation, Inc.
+GDB is free software, covered by the GNU General Public License, and you are
+welcome to change it and/or distribute copies of it under certain conditions.
+Type "show copying" to see the conditions.
+There is absolutely no warranty for GDB.  Type "show warranty" for details.
+This GDB was configured as "mips-redhat-linux"...
+(gdb) run
+Starting program: /usr/lib/firefox-2.0.0.4/firefox-bin
+[New Thread 1024 (LWP 1239)]
+[New Thread 2049 (LWP 1251)]
+[New Thread 1026 (LWP 1252)]
+
+
+Program received signal SIGSEGV, Segmentation fault.
+[Switching to Thread 1024 (LWP 1239)]
+0x00000000 in ?? ()
+(gdb)
+(gdb) bt
+#0  0x00000000 in ?? ()
+(gdb) 
+
+
+cat /proc/cpuinfo
+system type             : MIPS
+processor               : 0
+cpu model               : RM7000 V5.3  FPU V5.0
+BogoMIPS                : 398.95
+wait instruction        : yes
+microsecond timers      : yes
+tlb_entries             : 48
+extra interrupt vector  : no
+hardware watchpoint     : no
+VCED exceptions         : not available
+VCEI exceptions         : not available 
+byteorder               : big endian
+
+add. info about system:
+gcc 3.2.3
+glibc-2.2.5
+kernel version 2.4.29
+glib-2.6.6
+gtk-2.6.7

@@ -1,0 +1,36 @@
+Save Link As extension not correct
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.2; en-US; rv:1.9.0.10) Gecko/2009042316 Firefox/3.0.10 (.NET CLR 3.5.30729)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.2; en-US; rv:1.9.0.10) Gecko/2009042316 Firefox/3.0.10 (.NET CLR 3.5.30729)
+
+Right clicking on a link and choosing "Save Link As" operates inconsistently.
+We have an Asp.Net site which ha an Http Handler used for downloading files. Obviously the link to this handler is .axd (e.g. /files/FileDownload.axd). Right clicking on this link and choosing "Save Link As" result in the save a dialog being populated with the .axd extension, rather than the correct extension for the file being downloaded. Left clicking on the link work a expected.
+Some thing to note on this bug:
+1. The problem is worse for .zip files. In a test it failed 100% of the time for zip files, but only failed 10% for other file (e.g. Pdf, Csv).
+2. It seems that the sequence of event is different for zip file to other files. With Pdf file a request is made to the server (to get the file type) before the save dialog appears. However, with zip file the request only happens after the dialog is shown, and hence it is too late to determine the file type.
+3. Behaviour for non zip file is inconsistent - sometimes it work and sometimes it doesn't.
+
+The problem is confusing to user a they end up saving the file with an unknown extension and then can't open it.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Create an Asp.Net site and add an Http Handler which will allow the user to download file of differing types. (I guess this might work with any download mechanism which doesn't publish the actual file's extension)
+
+2. Include in the handler ProcessRequest code to identify the file. E.g.:
+Select Case UCase(fileType)
+Case "PDF"
+context.Response.ContentType = "application/pdf"
+context.Response.AddHeader("Content-Disposition", "inline;filename=" & docId & ".pdf")
+Case "ZIP"
+context.Response.ContentType = "application/zip"
+context.Response.AddHeader("Content-Disposition", "attachment;filename=" & docId & ".zip")
+...
+
+3. Add a link to the file handler to a page.
+
+4. Right click on the link and choose "Save Link As".
+Actual Results:
+The save file dialog will appear. If the file is a zip file the dialog will have the file with the .axd extension. If the file is not a zip file the dialog will either have the correct extension or will have the .axd extension.
+
+Expected Results:
+Save dialog should open and should have the file name with the correct extension in place.

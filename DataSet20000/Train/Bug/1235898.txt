@@ -1,0 +1,14 @@
+browser_880164_customization_context_menus.js hands when running on a docker container in task cluster
+the new taskcluster environment is pretty rad, except when trying to get an image up and running with all tests passing.
+
+We get closer every week to green tests, but we still have issues, here is an issue in browser-chrome: browser/components/customizableui/test/browser_880164_customization_context_menus.js.  We actually get stuck at yield shownPromise here:
+https://dxr.mozilla.org/mozilla-central/source/browser/components/customizableui/test/browser_880164_customization_context_menus.js#209
+
+you can see the logs here:
+https://treeherder.mozilla.org/#/jobs?repo=try&revision=1d8d18bab88b&group_state=expanded&selectedJob=14958953&filter-searchStr=bc3
+
+and you can reproduce this fairly easily by following instructions in the inspect task (there is a shell script that will reproduce on linux if you add in some magic v4l2loopback modprobe hacks and --device args to docker run).  
+
+Anyway, I looked at this for a while and found that line 209 is where we hang.  I run this locally on my linux64 desktop and it works fine, but inside the docker container (and possibly the different gnome-shell window manager or other settings) yield an internal timeout from the browser-chrome harness.
+
+ideally this is something we can figure out and there is a root cause to solve the dozen or so test case timeouts we see.  Worse case scenario we can figure this out and fix this one case.

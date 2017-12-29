@@ -1,0 +1,31 @@
+Frequent call to _semwait_signal cause Minefield to constantly use some CPU
+User-Agent: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; en-US; rv:1.9.3a4pre) Gecko/20100323 Minefield/3.7a4pre
+Build Identifier: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; en-US; rv:1.9.3a4pre) Gecko/20100323 Minefield/3.7a4pre
+
+Noticed that after Minefield ha finished all launching duty that it wa continuing to take CPU (though not major, but about 3% or more), even with about:blank being the only page open. A dtruss against the process show a bunch of:
+
+__semwait_signal(0x2703, 0x7C03, 0x1) = 0 0
+__semwait_signal(0x2703, 0x7C03, 0x1) = -1 Err#60
+__semwait_signal(0x7C03, 0x2703, 0x1) = 0 0
+__semwait_signal(0x7C03, 0x2703, 0x1) = -1 Err#60
+__semwait_signal(0x2703, 0x7C03, 0x1) = 0 0
+__semwait_signal(0x2703, 0x7C03, 0x1) = 0 0
+__semwait_signal(0x2703, 0x7C03, 0x1) = -1 Err#60
+__semwait_signal(0x7C03, 0x2703, 0x1) = 0 0
+__semwait_signal(0x7C03, 0x2703, 0x1) = -1 Err#60
+
+going constantly; a sample output will also be attached.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Launch Minefield with only about:blank loaded
+2. Wait for various startup bit to be done (talking to fontd seems to be the last bits, so once that disappears from process using CPU, should be ready)
+3. firefix-bin should still be using CPU
+Actual Results:
+CPU usage continues without any page (except about:blank) loaded.
+
+Expected Results:
+CPU usage usually should be 0%.
+
+My previous nightly is definitely older (3.7a2pre 20100224) but ha much better CPU usage.

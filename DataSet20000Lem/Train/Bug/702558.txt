@@ -1,0 +1,30 @@
+FF8 break theme using default Toolbar.png file path in Mac OSX Lion (toolbar button not loading)
+With FF8 on Mac OSX Lion, toolbar button do not load properly for all existing AMO theme that use the default Toolbar.png file path "chrome://browser/skin/Toolbar.png".
+
+This is due to the fact that FF8 is remapping the path "chrome://browser/skin/Toolbar.png" to "chrome://browser/skin/lion/Toolbar.png" a a result of the following change in browser/themes/pinstripe/browser/jar.mn (https://hg.mozilla.org/releases/mozilla-beta/annotate/e1d63abd60d5/browser/themes/pinstripe/browser/jar.mn):
+
+mstange@74794
+138 skin/classic/browser/lion/keyhole-circle.png (keyhole-circle-lion.png)
+mstange@74794
+139 skin/classic/browser/lion/Toolbar.png (Toolbar-lion.png)
+mstange@74794
+140
+mstange@74794
+141% override chrome://browser/skin/keyhole-circle.png chrome://browser/skin/lion/keyhole-circle.png os=Darwin osversion>=10.7
+mstange@74794
+142% override chrome://browser/skin/Toolbar.png chrome://browser/skin/lion/Toolbar.png os=Darwin osversion>=10.7
+
+These change add the following entry to nonlocalized.manifest of FF8 for Mac OSX:
+override chrome://browser/skin/Toolbar.png chrome://browser/skin/lion/Toolbar.png os=Darwin osversion>=10.7
+
+What this doe is cause Lion to look in the wrong place for Toolbar.png.
+
+A better way to handle the desire to give Lion a different Toolbar.png file would have been to use do something along the line of what Winstripe us for Windows Aero:
+skin global classic/1.0 toolkit/skin/classic/aero/global/ os=WINNT osversion>=6
+
+To produce this bug try the following theme:
+https://addons.mozilla.org/firefox/downloads/file/130224/classic_compact-4.0.9.3-fx.jar?src=version-history
+
+This issue break all existing theme on AMO that use the default file path for their toolbar button and thus ha ha the potential to impact many Mac OSX Lion users.
+
+Thanks to Andreas Wagner who helped uncover this bug and Nils Maier who figured out what change were causing it while we were at MozCamp EU.

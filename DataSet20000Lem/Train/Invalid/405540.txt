@@ -1,0 +1,64 @@
+box element not rendering over browser.xul vbox with id 'appcontent'
+User-Agent: Mozilla/5.0 (Macintosh; U; PPC Mac OS X Mach-O 10.4; en-US; rv:1.9b2pre) Gecko/2007112604 Minefield/3.0b2pre
+Build Identifier: Mozilla/5.0 (Macintosh; U; PPC Mac OS X Mach-O 10.4; en-US; rv:1.9b2pre) Gecko/2007112604 Minefield/3.0b2pre
+
+Some Firefox extension create box in order to display content on top of the browser. In a sense, these box are used like the new panel element except that they stay visible after they lose focus (ie when the user click off of it). In FF2, these box are rendered properly over the browser (the vbox with id 'appcontent'). In FF3 though, these box are not rendered at all.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.Create a box element
+2.Inject the box element into the main-window in the browser.xul
+
+Sample code (Provided by jean.sini@gmail.com - dev-extension mailing list)
+1. define a basic XBL binding (chrome://my-ext/content/bindings/
+testbox.xml):
+<?xml version="1.0"?>
+<bindings
+id="testBindings"
+xmlns="http://www.mozilla.org/xbl"
+xmlns:html="http://www.w3.org/1999/xhtml"
+xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/
+there.is.only.xul"
+xmlns:xbl="http://www.mozilla.org/xbl">
+<binding id="testbox" extends="xul:box">
+<content>
+<xul:vbox style="position: fixed !important;bottom: 5px;left:
+5px;width: 100px;height: 100px;border:1px solid green;background-
+color: white;" pack="center" align="center" flex="1">
+<xul:label tooltiptext="Label" value="Sample label" />
+</xul:vbox>
+</content>
+</binding>
+</bindings>
+
+2. bind via CSS:
+testBox
+{
+-moz-binding: url("chrome://my-ext/content/bindings/
+testbox.xml#testbox");
+}
+
+3. define a Javascript function to create and inject the element:
+injectTestBox: function(id)
+{
+try
+{
+var box = document.createElement("testBox");
+box.id = "testBox-"+id;
+document.getElementById("main-window").appendChild(box);
+}
+catch(e)
+{
+alert("overlay.js - injectTabscope()",e);
+}
+}
+
+4. using a toolbar button defined in overlay.xul, invoke the
+Javascript function at will.
+
+Actual Results:
+The box will not render or display itself in FF3
+
+Expected Results:
+The box should render itself like in FF2.

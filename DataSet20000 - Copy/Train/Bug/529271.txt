@@ -1,0 +1,36 @@
+Binary download fails with input type=button, parent.location=URL
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.1.5) Gecko/20091102 Firefox/3.5.5 (.NET CLR 3.5.30729)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.1.5) Gecko/20091102 Firefox/3.5.5 (.NET CLR 3.5.30729)
+
+The code below downloads a file using a button, and onclick/parent.location. If the file to be downloaded is binary, then FF 3.5.5 incorrectly downloads it. Chrome and IE8 correctly download the file. I'm pretty sure this is a new problem, but I've just tried this with rv 1.8.1.20 on Linux, and it also has the problem.
+
+NOTE:
+
+1) I use a tgz file for testing. Apache on this server is set up not to compress tgz files.
+
+2) I tried this with a small hand-constructed binary file (10 bytes) and that *does* work on FF.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Put a tgz file on your favourite server
+2. Fix the URL (MYSERVER/MYFILE) in the html code to point to this file
+3. Load the html file into FF, click the button, save the file, compare
+Actual Results:  
+My original tgz was 746314 bytes; the version saved by FF is 742608 bytes. Chrome and IE8 correctly download the file. Interesting point: if I gzip the source file, it ends up as 742618 bytes. My guess is that Apache has compressed the file, so FF must somehow have defeated Apache's recognition of tgz files.
+
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head><title>Test</title></head>
+
+  <body>
+    <h1>Test</h1>
+
+    <input type="button" 
+      value="Yes" 
+      onclick="parent.location='http://MYSERVER/MYFILE'"
+      style="color: rgb(0, 0, 255); font-size: medium; font-family: arial;" />
+  <hr>
+  </body>
+</html>

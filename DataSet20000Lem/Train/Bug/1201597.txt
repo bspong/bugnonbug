@@ -1,0 +1,56 @@
+Need to be able to save heap snapshot in sandboxed child process
+Right now, ThreadSafeChromeUtil::saveHeapSnapshot open the file at the given path and writes to disk. This is not possible in sandboxed child process which do not have direct access to the file system.
+
+~~~~~~~~~~
+
+Here is a quick review of why we chose writing directly to disk when saving heap snapshots:
+
+When saving a heap snapshot we need to capture and serialize the exact heap graph that exists at that moment. This mean we need to be very careful not to touch any JS or cycle collected things, and we most definitely cannot pump the event loop. Additionally, we need to support taking heap snapshot on memory constrained device (which one is probably more likely to be interested in debugging memory consumption on) and this mean we cannot serialize the data into some blob in memory because these serialized heap snapshot are huge.
+
+~~~~~~~~~~
+
+There are a few instance of the parent opening a file and transferring ownership of the file descriptor to the child which can then write to it. This is all using IPDL. So I think we need to do this a well for heap snapshots. This is going to involve changing the saveHeapSnapshot webidl interface a well (which assumes that the process can open files).
+
+Here is a diagram of what I think the brave new world will look like:
+
++------------------------------------------------------------+
+| |
+| Client (Firefox Desktop) ^ ^ |
+| | | |
++---+------------------------------------------+-------------+
+| | | |
+|take | |gimme |here's
+|heap | |snapshot |snapshot
+|snapshot | |file |file
++------------------------------------------------------------+
+| | | | | |
+| | Remote-debugged Device | | | |
+| | | | | |
+| +------------------------------------------------------+-+ |
+| | | | | | |
+| | | Root Actor | v | |
+| | | ^ (parent process) | | |
+| | | | | | |
+| +--------------------------------------+-----------------+ |
+| | | | | |
+| | | here's a file desc| | |
+| | | (IPDL) | | |
+| | | | | |
+| | |open temp file | |id |
+| | | (IPDL) | | |
+| | | | | |
+| | | | | |
+| +-------+---------------------------------+--------------+ |
+| | | | | |
+| | v Heap Snapshot Actor v | |
+| | (child process) | |
+| | | |
+| +--------------------------------------------------------+ |
+| |
++------------------------------------------------------------+
+
+When not specified, the protocol used is the devtools' remote debugging protocol.
+
+The biggest open question I have is how to ensure we only open file in the parent and pas the file descriptor to the child process when we expect to be saving heap snapshot files. This way a rogue/compromised child process couldn't open a ton of file and write arbitrary amount of data to them and exhaust file descriptor and/or disk space. For example, when the user click the "take a heap snapshot" button in the devtools UI, we might send a "unlock open temp file ability for the child process" request along with the "take heap snapshot" request and then once we got the snapshot id response, we would lock the ability down again. If possible, it would be nice to be able to do this without an extra protocol request of some sort, but it doesn't seem to fit into the way the devtools RDP work right now.
+
+The scope of this bug is implementing the IPDL protocol support for giving the child process file descriptor for writing heap snapshot and the webidl change that will need to happen to accommodate that. Integrating with the rest of the devtools RDP will be a follow up (and is mostly implemented / implemented for non-sandboxed child process in bug 1200446).

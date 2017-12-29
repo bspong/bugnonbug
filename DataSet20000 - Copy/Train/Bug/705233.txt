@@ -1,0 +1,42 @@
+Firefox very slow and hangs for some time with warning "plugin-container: /usr/lib/libnss3.so: version `NSS_3.12.10' not found"
+User Agent: Mozilla/5.0 (X11; Linux i686; rv:8.0.1) Gecko/20100101 Firefox/8.0.1
+Build ID: 20111120135848
+
+Steps to reproduce:
+
+Open any sight with plugins etc., like java/flash
+
+
+Actual results:
+
+Firefox hung for some time.
+I started it from terminal it shows messages like
+plugin-container: /usr/lib/libnss3.so: version `NSS_3.12.10' not found
+
+After 10-20 seconds, it starts working again
+
+
+Expected results:
+
+No Hang. Infact, I know the issue.
+I do not have superuser access on my work machine RHEL5.
+Due to this reason, I have to install firefox 8 in my home directory. 
+
+Now firefox pics libnss3 from /usr/lib instead of picking it up from firefox install directory. This is seriously weird. Firefox has the latest libnss3 in its home directory, but its going to usr/lib
+
+This problem was not there in older(7.0 or older) versions of firefox, and is coming from 8.0 onwards.
+
+Its there in firefox 9(from betachannel) and also in firefox 10 (from Aurorachannel)
+
+I think a simple code fix would be to first check for all libs in firefox install directory, and then go to /usr/lib
+
+I think this is not implemented currently as many people install firefox as superuser through their package managers, which results in firefox lib in /usr/lib
+
+But this is a flawed model. First it should check where is firefox installed.
+
+For example., somebody may have stable firefox in /usr/lib and a Aurora or Beta channel firefox in home directory for testing.
+
+Hopefully, we will see the fix  in the next firefox update. 
+
+For people who install firefox from tar.gz packages, firefox executable and libs are in same directory.
+So a simple check could be to look for libs in the directory where firefox executable resides, and then go to system dirs.

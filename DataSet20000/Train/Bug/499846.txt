@@ -1,0 +1,73 @@
+Indenting a list item between two nested lists does not result in one single nested list
+User-Agent:       Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.5; en-US; rv:1.9.1b99) Gecko/20090605 Firefox/3.5b99 GTB5
+Build Identifier: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.5; en-US; rv:1.9.1b99) Gecko/20090605 Firefox/3.5b99 GTB5
+
+Indention of a list item in contenteditable region produces unexpected result if the list item is located between two other lists.  e.g.  you have
+<ol>
+<li>one</li>
+<ol><li>two</li></ol>
+<li>three</li>
+<li>four</li>
+<ol><li>five</li></ol>
+</ol>
+
+Then try indenting three and four, it results in the malformed list.
+
+Reproducible: Always
+
+Steps to Reproduce:
+Open the following HTML document:
+
+<html>
+<body>
+<div id="div" contenteditable="true">
+<ol>
+<li>one</li>
+<ol><li>two</li></ol>
+<li id="test1">three</li>
+<li id="test2">four</li>
+<ol><li>five</li></ol>
+</ol>
+</div>
+
+<ul>
+<li>Before:<span id="c1"></span></li>
+<li>After:<span id="c2"></span></li>
+</ul>
+
+<script type="text/javascript">
+
+if (window.layoutTestController) {
+    layoutTestController.dumpEditingCallbacks();
+    layoutTestController.dumpAsText();
+}
+
+var div = document.getElementById('div');
+
+document.getElementById('c1').appendChild(document.createTextNode(div.innerHTML));
+
+var s = window.getSelection();
+var r = document.createRange();
+r.setStart(document.getElementById('test1'),0);
+r.setEnd(document.getElementById('test2'),1);
+s.removeAllRanges();
+s.addRange(r);
+document.execCommand("Indent", false, "");
+
+document.getElementById('c2').appendChild(document.createTextNode(div.innerHTML));
+
+</script>
+
+Actual Results:  
+1.one
+    1.two
+    2. three
+    1. four
+    2. five
+
+Expected Results:  
+1.one
+    1.two
+    2. three
+    3. four
+    4. five

@@ -1,0 +1,33 @@
+Absolute paths in build output
+Reproduction:
+1. Build Thunderbird (trunk)
+2. Start it
+3. Move the while thing (source and build directory) to a new
+   directory, e.g. when you move a part of your files to a new partition.
+4. Try the same with Firefox trunk
+
+Actual results:
+Cannot find Shredder runtime directory. Exiting.
+
+ls -la (excerpt):
+regxpcom -> ../../xpcom/tools/registry/regxpcom
+run-mozilla.sh -> /media/foo/tb/source/mozilla/build/unix/run-mozilla.sh
+shlibsign -> /media/foo/tb/trunk/opt/mozilla/nss/shlibsign
+xpidl -> ../../xpcom/typelib/xpidl/xpidl
+
+So, most of the links are relative (which is correct), but a few are with absolute paths, which breaks the build dir when it's moved.
+
+Firefox works
+ls -la for Firefox (excerpt):
+regxpcom -> ../../xpcom/tools/registry/regxpcom
+run-mozilla.sh -> ../../build/unix/../../../source/build/unix/run-mozilla.sh
+shlibsign -> /usr/src/mozilla/firefox/trunk/opt/nss/shlibsign
+xpt_dump -> ../../xpcom/typelib/xpt/tools/xpt_dump
+
+So, in the Firefox build, the same files are relative.
+
+Note that this is TB trunk, so it should be mozilla-central, not 1.9.1, so it seems it's not a discrepancy in Mozilla source code version.
+
+Expected results:
+- Application starts after move.
+- No absolute paths *anywhere* in the build tree.

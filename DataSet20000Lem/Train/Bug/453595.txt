@@ -1,0 +1,47 @@
+Browser update fails create of searchplugins .moz-backup (ACL issue?), cycle infinitely
+User-Agent: Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0; byond_3.5; byond_4.0; SLCC1; .NET CLR 2.0.50727; Media Center PC 5.0; Tablet PC 2.0; Origami Experience 1.1; .NET CLR 3.5.21022; .NET CLR 3.0.04506; .NET CLR 1.1.4322)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.9.1b1pre) Gecko/20080903034741 Minefield/3.1b1pre
+
+I download a nightly build update and attempt to install. The update process fails part of the way through, and I am informed that it failed with a message box.
+
+Clicking OK on this box restarts the update process, which then fails. The process ha to be killed to stop the cycle. Attempting to launch the browser restarted the (failing) update.
+
+The only way to complete the update wa to elevate the browser when attempting to launch it. The problem reoccurred at a later date. After examining process logs, I renamed the searchplugins subfolder, which may have fixed it.
+
+I am uncertain a to the reproducabilty of this bug a it potentially involved ACLs being incorrectly set in my configuration (see additional information). I do not know how this situation arose. Nevertheless, the other problem it expose in handling of failed update (no detailed feedback, infinite cycling, inability to skip update) should probably be fixed.
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+1. Download update
+2. Click "restart browser" option
+3. Update attempt to apply
+Actual Results:
+Cycling update failure and restart of failing update whenever the browser is launched, until launched elevated.
+
+Expected Results:
+Update proceeds, browser launches.
+
+In the case that this cannot be achieved: More information on the failure, e.g. launching of log file, and not restarting the update when it failed. The user should be able to skip/dequeue the update if it fails.
+
+Bonus: If the updater detects that ACLs are set incorrectly on folders, and it ha the power to fix this, it should try to.
+
+If the existing searchplugins folder is renamed, the update completes with no problem and the plugins are replaced.
+
+There appears to be a single difference in the ACLs of the old and new searchplugins folder: My user (as opposed to Administrators) wa granted unelevated full access to the newly created searchplugins folder. It did not have that previously.
+
+If the browser is launched elevated, the update completes with no problems, but may fail next time ("may" probably because by that time, the browser may have bene closed and relaunched unelevated, resulting in an unelevated update process).
+
+Log file details:
+EXECUTE ADD res/ua.css
+EXECUTE ADD res/viewsource.css
+EXECUTE ADD res/wincharset.properties
+EXECUTE ADD searchplugins/amazondotcom.xml
+copy_file: failed to open: searchplugins/amazondotcom.xml.moz-backup,13
+### execution failed
+FINISH ADD .autoreg
+....
+FINISH ADD searchplugins/amazondotcom.xml
+copy_file: failed to open or stat: -1,searchplugins/amazondotcom.xml.moz-backup,2
+[repeated for other serchplugins and remaining files]
+...

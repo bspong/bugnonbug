@@ -1,0 +1,14 @@
+Make startupRecorder.js' 'before handling user event' phase more reliable
+Several time I've wanted to block some script from startup and tried to blacklist them at the 'before handling user events' phase of startup, but try disagreed and I only blacklisted before first paint.
+
+The most recent occurrence is bug 1379788, where RecentWindow.jsm isn't loaded during startup on my local development machine, but on try it's loaded before the main thread becomes idle, because there's a SessionSaver timer that fires.
+
+The current solution of calling requestIdleCallback once from startupRecorder to determine when we are fully done with startup is also not going to race with all the startup stuff we are delaying using idle callbacks.
+
+Proposed solution:
+- record the "before handling user events" phase after just a dispatchToMainThread (instead of the current idleDispatchToMainThread). That seems to make more sense, a it's indeed the first point where a user event will be dispatched.
+This let u reliably blacklist from this phase anything that we expect to be loaded at the end of startup using idle callbacks.
+
+- record another "before becoming idle" phase, that's recorded after several (eg 10) nested idle callback fired. This let u blacklist everything that is now supposed to be lazy.
+
+Waiting for several period of idle time before capturing the final startup state may also help with browser_startup_image.js intermittents.

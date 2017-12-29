@@ -1,0 +1,25 @@
+Better logging of token server error
+Created attachment 8381066
+0001-Bug-XXXXXX-ensure-authentication-errors-log-as-much-.patch
+
+Currently error from the token server result in log such as:
+
+1392924838097 Sync.BrowserIDManager ERROR Authentication error in _fetchTokenForUser: Client error.
+
+Which isn't useful for diagnostics.
+
+I'm attaching a "strawman" patch. It ha 2 parts:
+
+* tokenserverclient - have the error object implement a toString() method that includes everything relevant to the error.
+
+* browserid_identity now ha it AuthenticationError object be passed the initial error, and have it toString() also do the right thing.
+
+The end result is error in the log now look something like:
+
+1393292203547 Sync.BrowserIDManager ERROR Authentication error in _fetchTokenForUser: AuthenticationError(TokenServerClientServerError({"message":"Server error.","cause":"general","response_body":"{\"uid\": 56882, \"hashalg\": \"sha256\", \"api_endpoint\": \"https://sync-1-us-east-1.sync.services.mozilla.com/1.5/56882\", \"key\": \"qEeha1YKpg4vtS3Lz81MHAHV8bQiWgd_kW1nZmNG8-4=\", \"duration\": 300, \"id\": \"eyJub2RlIjogImh0dHBzOi8vc3luYy0xLXVzLWVhc3QtMS5zeW5jLnNlcnZpY2VzLm1vemlsbGEuY29tIiwgImV4cGlyZXMiOiAxMzkzMjkyNDk2LjY2OTkzNTksICJzYWx0IjogIjRhMzJmMiIsICJ1aWQiOiA1Njg4Mn1TJXswMSgbkgP1P_nN_-78jq0cbwXN_i-QXqJTDmGNFg==\"}","response_headers":{"access-control-allow-credentials":"true","access-control-allow-headers":"DNT,X-Mx-ReqToken,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization,X-Conditions-Accepted","access-control-allow-methods":"GET, POST, OPTIONS","access-control-max-age":"1728000","content-type":"application/json; charset=UTF-8","date":"Tue, 25 Feb 2014 01:36:36 GMT","server":"nginx/1.4.4","x-timestamp":"1393292196","content-length":"409","connection":"keep-alive"},"response_status":200}))
+
+(Note the line above wa done by instrumenting the code so a 200 response wa actually treated a an error)
+
+Another obvious alternative would be to ensure the tokenserverclient log end up in the sync log and just have them reported that way, but it's unclear that make sense longer term (ie, when there are tokenserverclient consumer other than sync)
+
+Anyway, casting a wide feedback net, and including Nick for any android-specific insights.

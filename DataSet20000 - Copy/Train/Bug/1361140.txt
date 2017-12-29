@@ -1,0 +1,8 @@
+Keeping the browser console open slows down Firefox - _findActivityObject should use a Map
+My browser became janky on a very fast macbook. I noticed I had forgotten a Browser Console window on another screen. I do expect some overhead when the console is open, but the profiler shows most of the CPU spent is wasted:
+
+- _findActivityObject dominates the profile: https://perfht.ml/2p2cjx7 45% / 1800ms of CPU spent in it. Looking at the code (http://searchfox.org/mozilla-central/rev/3dc6ceb42746ab40f1441e1e659ffb8f62ae78e3/devtools/shared/webconsole/network-monitor.js#1180) shows this is an inefficient loop that should be replaced with a map.
+
+- there is 237ms spent in QuerySelectorAll called from pruneOutputIfNecessary: https://perfht.ml/2p1ROke
+This is the code at http://searchfox.org/mozilla-central/rev/3dc6ceb42746ab40f1441e1e659ffb8f62ae78e3/devtools/client/webconsole/webconsole.js#2376
+I think this querySelectorAll call done each time a new message is appended should be avoided, instead the code should keep an array of the nodes related to messages of the category, and just remove the first message of the category whenever a new message needs to be appended (or even better, batch these updates and remove 5 or 10 old messages at once, to reduce the amount of dom manipulations).

@@ -1,0 +1,12 @@
+need a story for the service "header div"
+moved from https://github.com/mozilla/socialapi-dev/issues/18
+
+In sidebarWidget's reflow() method, we (a) look for an element with the ID of "header" then (b) set the height of that element to be the height of the toolbar we are anchored to. This has a number of problems:
+
+    The ID of the header is hard-coded; it works for facebook but may not work for other providers.
+
+    If the bookmark toolbar happens to be the bottom-most displayed toolbar, the height of this toolbar is too small for the facebook header - it gets truncated, and obviously so. Each of the toolbars has a different height! The same thing happens but is less obvious when one of the other toolbars is at the bottom.
+
+    The content may adjust the height at any time, making the above pointless. Eg, we set the height, but as soon as the facebook content fully loads (ie, after the throbber goes away and our account into is displayed), it resets the height back to what it was. This means that when the bookmark toolbar is displayed, we set the height correctly, but a few seconds later it grows back to the original size. When we next reflow the sidebar we then adjust it back.
+
+There is a comment in that code "// TODO XXX Need an API to inform the content page how big to make the header" but that doesn't quite capture all these subtle points.

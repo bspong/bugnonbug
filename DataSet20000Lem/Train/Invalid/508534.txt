@@ -1,0 +1,80 @@
+Trailing period on host-name in URL cause Additional character to be inserted into HTTP request when a link is followed
+User-Agent: Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 5.1; Trident/4.0; .NET CLR 2.0.50727; .NET CLR 3.0.04506.30; .NET CLR 3.0.04506.648; .NET CLR 3.0.4506.2152; .NET CLR 3.5.30729; .NET CLR 1.1.4322)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.1.1) Gecko/20090715 Firefox/3.5.1 (.NET CLR 3.5.30729)
+
+Firefox seems to add character "/i/sct-mid2" to the URL when I click on a link.
+Problem occurs when one us the maximally qualfiied DNS name for a host (ie explicitly include the trailing period at the end of the DNS name (e.g. www.theregister.co.uk. ) Trailing period is a valid DNS name syntax, and is maximally qualified (ensuring resolvers will not attempt to suffix local domain-name onto the host-name supplied). Not a common thing to do, but it is valid.
+
+If I hover the mouse over a given link, the URL that is displayed in the status-bar at the bottom of Firefox is correct. If I actually click on the link, then the link fails, a page-not-found message is returned and the URL shown at the top of the page (and in the failure message) show the extra character noted above have been inserted into the HTTP request. If I use "copy link location" to grab the URL of the link, and then paste it directly into the destination box at the top of Firefox and hit return, everything work fine. The issue is internal to firefox: some piece of code is being "fooled" by the presence of the extra period at the end of the host-name portion of the URL.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Go to TheRegister page: http://www.theregister.co.uk./
+2. Hover mouse over link for article titled "Windows XP Mode dig deeper into Windows 7". You will see a valid URL displayed in the status bar at bottom of the page (and made available by using "copy link location" with the right-mouse click. Here it is http://www.theregister.co.uk./2009/08/04/windows_xp_mode_release_candidate/
+3. Click on the link
+4. Receive the error message and note the following URL ha been requested:
+http://go.theregister.com/i/sct-mid2/http://www.theregister.co.uk./2009/08/04/windows_xp_mode_release_candidate/
+Actual Results:
+Forbidden
+
+You don't have permission to access /i/sct-mid2/http://www.theregister.co.uk./2009/08/04/windows_xp_mode_release_candidate/ on this server.
+Apache/2.2.3 (Debian) Server at go.theregister.com Port 80
+
+
+Expected Results:
+Contents from this page: http://www.theregister.co.uk./2009/08/04/windows_xp_mode_release_candidate/
+[sample content below: I used "copy link location" and then pasted it into the destination box at the top of Firefox in order to get this sample]
+
+Windows XP Mode dig deeper into Windows 7
+
+* Track this topic
+* Print story
+* Post comment
+
+Legacy hold out
+
+By Gavin Clarke in San Francisco • Get more from this author
+
+Posted in Operating Systems, 4th August 2009 15:02 GMT
+
+Migrate from Solaris to Red Hat on IBM
+
+Microsoft ha released polished code for desktop virtualization software to run legacy Windows XP application on machine loaded with Windows 7.
+
+
+I ran HTTP Live Headers. It appears that Firefox is indeed requesting the wrong link (even though the CORRECT link is displayed in the status-bar during hovering, and available for capture using "Copy Link Location".
+
+GENERATOR List:
+#request# GET http://go.theregister.com/i/sct-mid2/http://www.theregister.co.uk./2009/08/04/windows_xp_mode_release_candidate/
+GET /i/sct-mid2/http://www.theregister.co.uk./2009/08/04/windows_xp_mode_release_candidate/
+
+HTTP Headers:
+http://go.theregister.com/i/sct-mid2/http://www.theregister.co.uk./2009/08/04/windows_xp_mode_release_candidate/
+
+GET /i/sct-mid2/http://www.theregister.co.uk./2009/08/04/windows_xp_mode_release_candidate/ HTTP/1.1
+Host: go.theregister.com
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.1.1) Gecko/20090715 Firefox/3.5.1 (.NET CLR 3.5.30729)
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Accept-Language: en-us
+Accept-Encoding: gzip,deflate
+Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7
+Keep-Alive: 300
+Connection: keep-alive
+Referer: http://www.theregister.co.uk./
+
+HTTP/1.x 403 Forbidden
+Date: Wed, 05 Aug 2009 11:42:41 GMT
+Server: Apache/2.2.3 (Debian)
+Content-Length: 371
+Keep-Alive: timeout=3, max=100
+Connection: Keep-Alive
+Content-Type: text/html; charset=iso-8859-1
+
+SHOW SOURCE: I asked Firefox to show the source. I think this is the correct section of text relevant to the link. As you see the HREF section is properly formatted (no extra characters).
+
+<div class="story-ref last">
+
+<h3><a href="/2009/08/04/windows_xp_mode_release_candidate/"><img width="75" height="75" alt="Microsoft" src="http://regmedia.co.uk/_teaser/75x75/microsoft.gif">Windows XP Mode dig deeper into Windows 7</a></h3>
+<p class="standfirst">Legacy hold out</p>
+</div>

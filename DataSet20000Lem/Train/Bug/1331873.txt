@@ -1,0 +1,27 @@
+First run page for data choice cause JS error
+From bug 1331800:
+
+can't access lexical declaration `tab' before initialization TelemetryReportingPolicy.jsm:440
+_openFirstRunPage/progressListener.onStateChange resource://gre/modules/TelemetryReportingPolicy.jsm:440:1
+callListeners chrome://browser/content/tabbrowser.xml:490:24
+_callProgressListeners chrome://browser/content/tabbrowser.xml:511:13
+mTabProgressListener/<._callProgressListeners chrome://browser/content/tabbrowser.xml:560:22
+mTabProgressListener/<.onStateChange chrome://browser/content/tabbrowser.xml:729:15
+_loadURIWithFlags chrome://browser/content/browser.js:807:7
+loadURIWithFlags chrome://browser/content/tabbrowser.xml:7064:13
+addTab chrome://browser/content/tabbrowser.xml:2110:17
+loadOneTab chrome://browser/content/tabbrowser.xml:1523:23
+_openFirstRunPage resource://gre/modules/TelemetryReportingPolicy.jsm:462:15
+TelemetryReportingPolicyImpl.observe resource://gre/modules/TelemetryReportingPolicy.jsm:478:13
+initializeWindow resource:///modules/sessionstore/SessionStore.jsm:1050:9
+SessionStoreInternal.onBeforeBrowserWindowShown/< resource:///modules/sessionstore/SessionStore.jsm:1200:9
+Handler.prototype.process resource://gre/modules/Promise-backend.js:937:23
+this.PromiseWalker.walkerLoop resource://gre/modules/Promise-backend.js:816:7
+bound self-hosted
+bound bound self-hosted
+this.PromiseWalker.scheduleWalkerLoop/< resource://gre/modules/Promise-backend.js:750:11
+
+
+As far a I can tell from the stack, this is because we add the listener and then load a page in a tab, where we assign to the 'tab' variable when the loadOneTab call returns. However, the listener seems to be invoked synchronously while loadOneTab hasn't returned yet, so the 'tab' variable ha not been initialized yet.
+
+I don't believe there are any ill effect from this a the condition in the listener are guaranteed not to have been met yet anyway, and because it's just a progress listener it'll error out and just run properly the next time it's invoked, but we should probably still squash the error one way or another. Dão, can you take a look?

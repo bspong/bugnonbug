@@ -1,0 +1,64 @@
+Crashes / hangs when the html table have thousands of rows.
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.0; rv:1.7.3) Gecko/20041001 Firefox/0.10.1
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.0; rv:1.7.3) Gecko/20041001 Firefox/0.10.1
+
+I pull up thousands of database records using browser. While IE brings them fast
+and without any issue, Fire Fox has the following issues. 1) Often takes much
+more time but renders the webpage 2) Some times it hangs and freezes 3) When 
+very large it just crashes.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.Spit out the necessary html for 10,000 records with say 10 columns in each row.
+2.This is my java code.
+3.	pw.println("<html><head><title>SQL Service</title></head>");
+	pw.println("<body BGCOLOR=#FFFFFF><FONT FACE=\"Helvetica\">");
+	pw.println("<h1><font color=#DB1261 face=\"HELVETICA\">");
+	pw.println("SQL Service</font></h1>");
+	pw.println("<FORM METHOD=\"POST\" sql=\"./SQLServlet\">");
+	pw.println("<TABLE bgcolor=#EEEEEE cellpadding=2 border=0 align=center>");
+	pw.println("<TR><TD colspan=2>SQL Service: <font color=#0000ff
+face=\"HELVETICA\">Type in your sql.Only supports SELECT
+statements.</font></TD></TR>");
+	pw.println("<TR><TD colspan=2>&nbsp;</TD></TR>");
+	pw.println("<TR><TD>Client (DB Schema) :</TD>");
+	pw.println("<TD><select name=sourcecd>");
+	Iterator iterator = (getSourceCodeList(pw)).iterator();
+	int i = 0;
+	while (iterator.hasNext())	{
+		tempData data = (tempData) iterator.next();
+		String outStr = "<option value=" + data.getSourceCd();
+		if (data.getSourceCd().equals((String)sourceCode))	{
+			outStr+=" selected";
+		} else	if (i == 0 && sourceCode.equals("")){
+				outStr += " selected";
+				}
+		outStr += ">" + data.getOrgUnitName();
+		pw.println(outStr);
+		i++;
+	}
+	if(sourceCode.equals("ALL")){
+		pw.println("<option value=ALL selected>All");
+	}
+	else{
+		pw.println("<option value=ALL>All");
+	}
+	pw.println("</select></TD></TR>");
+	pw.println("<TR><TD colspan=2>&nbsp;</TD>");
+	pw.println("<TR><TD colspan=2> <font color=#0000ff face=\"HELVETICA\">Note: Do
+not select 'ALL' for tables in COMMON schema. This will return duplicate
+records.</font> </TD>");
+	pw.println("<TR><TD colspan=2>&nbsp;</TD>");
+	pw.println("<TR><TD>SQL </TD>");
+	pw.println("<TD><textarea name=\"sql\" cols=\"60\"
+rows=\"15\">"+sql+"</textarea></TD></TR>");
+	pw.println("<TR><TD colspan=2 align=center>");
+	pw.println("<INPUT TYPE=\"submit\" VALUE=\"submit sql\"></TD></TR>");
+	pw.println("</TABLE></FORM></FONT></BODY></HTML>");
+
+Actual Results:  
+Depending on the size of the data the performance could change as listed above.
+1) Often takes much more time but renders the webpage 
+2) Some times it hangs and freezes 
+3) When  very large it just crashes.

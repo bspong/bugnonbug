@@ -1,0 +1,39 @@
+nsIAnnotationService IDL is lying about EXPIRE_NEVER
+from Jan Odvarko's comment in dev.platform...
+
+To demonstrate the problem, I have created a simple extension, that
+can be used to reproduce the problem.
+
+Download here: http://www.janodvarko.cz/temp/testext.xpi
+
+Here are step to reproduce:
+
+1) When the extension is loaded it test two annotations. You should
+see something like a follows the first time when it's loaded (in the
+system console, using dump()):
+
+Test; initialize
+Test; annotation for: https://google.com/ -> false
+Test; annotation for: https://getfirebug.com/ -> false
+
+The false at the end is because the annotation don’t exist yet.
+
+2) When you close Firefox window, you should see following in the
+console:
+
+Test; shutdown
+Test; annotation for: https://google.com/ -> true
+Test; annotation for: https://getfirebug.com/ -> true
+
+Now there is true at the end, it’s because both annotation have been
+created and tested when the extension is unloaded. Yes, now they
+exist.
+
+3) Restart your Firefox
+Now I see following:
+
+Test; initialize
+Test; annotation for: https://google.com/ -> false
+Test; annotation for: https://getfirebug.com/ -> true
+
+The annotation for https://google.com/ is not there!

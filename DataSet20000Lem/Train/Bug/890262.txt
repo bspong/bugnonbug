@@ -1,0 +1,22 @@
+CustomizableUI.destroyWidget raise an exception after `CustomizableUI.addWidgetToArea`
+So, I'm not sure if it's a bug or I'm doing something wrong here.
+
+In the test suite for the new Button in jetpack, that are using CustomizableUI, I'm testing that the appropriate icon is displayed depends if we are in panel or in the navbar. Because by default the button is added in the navbar, from my code I call:
+
+CustomizableUI.addWidgetToArea(widgetId, CustomizableUI.AREA_PANEL);
+
+Then I test all the stuff I need, and I unload the jetpack loader – that call the `CustomizableUI.destroyWidget`, and here the exception is reaised:
+
+TypeError: buildArea is undefined
+resource://app/modules/CustomizableUI.jsm 1492
+[cut all the jetpack's module trace]
+File "resource://app/modules/CustomizableUI.jsm", line 1808, in
+CustomizableUIInternal.destroyWidget(aWidgetId);
+File "resource://app/modules/CustomizableUI.jsm", line 1492, in
+for (let buildNode of buildArea) {
+
+As workaround, currently I'm move back the the widget to it original area (NAVBAR) before destroying it:
+
+CustomizableUI.addWidgetToArea(widgetId, CustomizableUI.AREA_NAVBAR);
+
+Notice that this exception is not raised if I manually move the button from the navbar to the panel.

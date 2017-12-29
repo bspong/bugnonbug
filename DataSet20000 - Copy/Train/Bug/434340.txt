@@ -1,0 +1,43 @@
+The bookmark tags feature is broken on Firefox 3.0rc1 for OpenSolaris
+Created attachment 321497
+tag missing for the debug build
+
+I've tried on two different Firefox 3.0pre here on OpenSolaris 2008.05.
+1. Mozilla/5.0 (X11; U; SunOS i86pc; zh-CN; rv:1.9pre) Gecko/2008050801 Minefield/3.0pre. Optimized build.
+Reproduce steps:
+1) open URL: www.google.com.
+2) bookmark it with tag google.
+3) type "google" in the location bar.
+
+Firefox 3.0pre crashes with core stack below:
+ fcd490e1 mutex_trylock_adaptive (8061fd8, 1) + 141
+ fcd4a3ac mutex_lock_impl (8061fd8, 0) + dc
+ fcd4a452 mutex_lock (8061fd8) + 10
+ fe5d026c free     (8117c00) + d0
+ fd6cdff2 void nsProfileLock::FatalSignalHandler(int) (b, 0, 80466d4) + 12e
+ fcd5146f __sighndlr (b, 0, 80466d4, fd6cdec4) + f
+ fcd46312 call_user_handler (b, 0, 80466d4) + 2bf
+ fcd46546 sigacthandler (b, 0, 80466d4) + d0
+ --- called from signal handler with signal 11 (SIGSEGV) ---
+ fe5cea27 malloc   (c, fe4741be, 80469cc, fef8782a) + 307
+ fef87854 void*operator new(unsigned) (c) + 38
+ fe3f7f51 int nsStringArray::InsertStringAt(const nsAString_internal&,int) (ca69fc8, 8046a98, 
+0) + 25
+ fe29363a unsigned nsAutoCompleteSimpleResult::AppendMatch(const nsAString_internal&,const nsA
+String_internal&,const nsAString_internal&,const nsAString_internal&) (ca69fc0, 8046a98, 8046e
+1c, 804715c, 8046eb0) + 36
+ fe28cce0 unsigned nsNavHistory::AutoCompleteProcessSearch(mozIStorageStatement*,const nsNavHi
+story::QueryType,int*) (84d3000, a0d02b0, 1, 0) + aa4
+ fe2898b8 void nsNavHistory::AutoCompleteTimerCallback(nsITimer*,void*) (975d5e0, 84d3000) + 2
+b4
+ fe44ec57 void nsTimerImpl::Fire() (975d5e0) + db
+ fe44ed4b unsigned nsTimerEvent::Run() (a2416e0) + 53
+ fe44b360 unsigned nsThread::ProcessNextEvent(int,int*) (8121e70, 1, 8047370) + 114
+ fe3fa747 int NS_ProcessNextEvent_P(nsIThread*,int) (8121e70, 1) + 43
+ fe2e2613 unsigned nsBaseAppShell::Run() (81b1fb0) + 37
+ fe0cc505 unsigned nsAppStartup::Run() (8403880) + 31
+ fd6c4340 XRE_main (3, 80477bc, 81170c0) + 1de4
+ 0805175c main     (3, 80477bc, 80477cc) + 23c
+ 0805141e _start   (3, 80478d4, 0, 0, 0, 8047923) + 7a
+
+2. Mozilla/5.0 (X11; U; SunOS i86pc; en-US; rv:1.9pre) Gecko/2008051821 Minefield/3.0pre. Debug build. => Wrong behavior with the attached screenshot.

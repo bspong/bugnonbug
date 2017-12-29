@@ -1,0 +1,22 @@
+The method 'setTheme' in shared/theme.js doesn't trigger a live theme change
+STR:
+1. Open the Developer Tools
+2. Open browser console.
+3. Type following commands to the browser console:
+ let { devtools: { require } } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+ let { setTheme } = require("devtools/shared/theme");
+ setTheme("dark");
+ // OR setTheme("light") if you are using the dark theme
+
+Expected results: The theme changes for the active toolboxes.
+Actual results: The theme is not changed until you reopen the toolbox.
+
+The reason for this problem is at [1] which updates the pref first and then reads it again to the oldValue field. Then at [2] the theme switching returns early as the old value was incorrectly set to the the new value in [1].
+
+A fixed version of this method has already crept to few places around the tree [3], [4].
+
+[1] https://dxr.mozilla.org/mozilla-central/source/browser/devtools/shared/theme.js#92
+[2] https://dxr.mozilla.org/mozilla-central/source/browser/devtools/shared/theme-switching.js#24
+
+[3] https://dxr.mozilla.org/mozilla-central/source/browser/devtools/performance/test/browser_perf-theme-toggle-01.js#79-88
+[4] https://dxr.mozilla.org/mozilla-central/source/browser/devtools/webaudioeditor/test/browser_wa_graph-markers.js#66-75

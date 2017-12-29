@@ -1,0 +1,89 @@
+Very short polylines in GoogleMaps are not displayed
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.1.2) Gecko/20090729 Firefox/3.5.2
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.1.2) Gecko/20090729 Firefox/3.5.2
+
+I'll provide a little html to visualize the bug. This google-maps example come with a api key for localhost. It should display 10 Points (very short polylines) on the map.
+
+Examplecode:
+-------------------snip--------------------
+<!DOCTYPE html "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+<title>Google Maps JavaScript API Example</title>
+<script type="text/javascript" src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=ABQIAAAAnfs7bKE82qgb3Zc2YyS-oBT2yXp_ZAY8_ufC3CFXhHIE1NvwkxSySz_REpPq-4WZA27OwgbtyR3VcA&sensor=false">
+</script>
+<script type="text/javascript">
+var marker = new Array();
+
+markers[0]=[51.923,8.583,"<div title='WE'></div>","#000000"];
+markers[1]=[51.939,8.586,"<div title='WE'></div>","#ff0000"];
+markers[2]=[51.939,8.59,"<div title='WE'></div>","#00ff00"];
+markers[3]=[51.94,8.588,"<div title='WE'></div>","#0000ff0"];
+markers[4]=[51.942,8.556,"<div title='WE'></div>","#7f0000"];
+markers[5]=[51.942,8.557,"<div title='WE'></div>","#007f00"];
+markers[6]=[51.945,8.473,"<div title='WE'></div>","#00007f"];
+markers[7]=[51.948,8.581,"<div title='WE'></div>","#ffff00"];
+markers[8]=[51.948,8.582,"<div title='WE'></div>","#00ffff"];
+markers[9]=[51.948,8.583,"<div title='WE'></div>","#ff00ff"];
+markers[10]=[51.949,8.579,"<div title='WE'></div>","#7fff7f"];
+
+
+
+function initialize()
+{
+if (GBrowserIsCompatible())
+{
+var map = new GMap2(document.getElementById("map_canvas"));
+
+map.addControl(new GLargeMapControl());
+map.addControl(new GScaleControl());
+map.addControl(new GMapTypeControl());
+
+map.setCenter(new GLatLng(51.94, 8.588), 10);
+
+
+/*
+* BUG: The setting of line_length to something greater than 0.001 seems to eliminate the bug
+*/
+line_length=0.0005;
+
+
+for (var i = 0; i <= 10; i++)
+{
+var xy = new GPolyline([
+new GLatLng(markers[i][0], markers[i][1]),
+new GLatLng(markers[i][0], markers[i][1]+line_length),
+],markers[i][3],10,0.8);
+map.addOverlay(xy);
+}
+
+}
+}
+
+</script>
+</head>
+<body onload="initialize()" onunload="GUnload()">
+<div id="map_canvas" style="width: 800px; height: 600px"></div>
+Try to zoom in and out and watch the marker disappear/appear. The lower the var line_length is, the worse the bug gets.<br>
+In Firefox 3.0.11 this wa displayed correctly.<br>
+The google-api key is for localhost.
+</body>
+</html>
+----------------------snap---------------------
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Try html codelet
+2. vary line_length in html codelet
+3.
+Actual Results:
+Firefox display not all 10 Points (very short polylines) on the map depending on line_length (longer=better).
+
+Expected Results:
+Firefox should display 10 Points (very short polylines) on the map, even when line_length is set to 0.000001
+
+I saw a bug concerning flickering line in google maps... perhaps a hint/same reason.
+Firefox 3.0.11 display correct.

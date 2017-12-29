@@ -1,0 +1,33 @@
+Exception accessing Java class from Firefox extension’s Javascript
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; it; rv:1.9.1b4) Gecko/20090423 Firefox/3.5b4
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; it; rv:1.9.1b4) Gecko/20090423 Firefox/3.5b4
+
+The extension I'm going to develop get the value of <input type="file"> fields.
+This code (from overlay.js) doe the job:
+
+var fileInput = e.explicitOriginalTarget; // is an object HTMLInputElement, I get this when a file is selected
+strArray = java.lang.reflect.Array.newInstance(java.lang.Class.forName("java.net.URL"),3);
+classLoader = java.net.URLClassLoader.newInstance(strArray);
+parameter = java.lang.reflect.Array.newInstance(java.lang.Class.forName("java.lang.String"),1);
+parameters[0]= fileInput.value;
+var aClass = java.lang.Class.forName("Firefox", true, classLoader); //Firefox is my own class name
+var aStaticMethod = aClass.getMethod("main", [parameters.getClass()]); //gets the main(String[] args) method, here I get the exception
+var myJava = aStaticMethod.invoke(null, [parameters]); //invokes the main method
+
+
+On Firefox-3.5b4 and everything go fine, but when I try it on Firefox-3.0.10 I get the following exception:
+
+InternalError: Unable to convert JavaScript value class [Ljava.lang.String; to Java value of type java.lang.Class[]
+
+
+Putting the following line before the main method invokation:
+
+alert(parameters + " - " + parameters[0]);
+
+On both Firefox-3.0.10 and 3.5b4 I get an alert window which says:
+
+[Ljava.lang.String;@194ca6c - /root/demo.pdf //demo.pdf is the selected file
+
+But only on 3.0.10 I get the exception
+
+Reproducible: Always

@@ -1,0 +1,79 @@
+Sudden crash on viewing a Flash based website, subsequent program launch also fails [@ CViewSourceHTML::WriteTextInSpan]
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US) AppleWebKit/533.4 (KHTML, like Gecko) Chrome/5.0.375.70 Safari/533.4
+Build Identifier: from backtrace: /usr/lib/firefox-3.6.3/firefox-bin
+
+Firefox unexpectely disappeared while loading a (large) flash object. There wa no warning, crash dialog etc.., the process simply stopped.
+Attempting to re-launch also fails silently. I installed the debug package and got the attached output and backtrace. It seems an 'Illegal Instruction' ha crept in.
+This ha happened before. In the past, after a re-start, firefox wa able to run normally. At this stage, I havn't re-started yet this time.
+It happens very infrequently.
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+As I recall, it happens (very) occationally while a large flash object(s) is/are loading
+
+
+
+The driver for my wireless card appears to be faulty - could this be the problem? If so, I should pas it on to the linux kernel team..
+
+I gave it 'critical' severity, a any unsaved data on web forms/apps etc.. would be lost if it happened.
+
+Backtrace follows:
+
+sh /usr/lib/firefox-3.6.3/run-mozilla.sh /usr/bin/gdb /usr/lib/firefox-3.6.3/firefox-bin -x /tmp/mozargs.4dDXMz
+GNU gdb (GDB) 7.1-ubuntu
+Copyright (C) 2010 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law. Type "show copying"
+and "show warranty" for details.
+This GDB wa configured a "i486-linux-gnu".
+For bug reporting instructions, please see:
+<http://www.gnu.org/software/gdb/bugs/>...
+Reading symbol from /usr/lib/firefox-3.6.3/firefox-bin...Reading symbol from /usr/lib/debug/usr/lib/firefox-3.6.3/firefox-bin...done.
+done.
+(gdb) run
+Starting program: /usr/lib/firefox-3.6.3/firefox-bin
+[Thread debugging using libthread_db enabled]
+[New Thread 0xb53ffb70 (LWP 2617)]
+[New Thread 0xb4bfeb70 (LWP 2618)]
+[New Thread 0xb43fdb70 (LWP 2619)]
+[New Thread 0xb37ffb70 (LWP 2620)]
+[New Thread 0xb29ffb70 (LWP 2621)]
+[Thread 0xb29ffb70 (LWP 2621) exited]
+[New Thread 0xb29ffb70 (LWP 2622)]
+
+Program received signal SIGILL, Illegal instruction.
+0xb74c8fbe in CViewSourceHTML::WriteTextInSpan (this=0xb1d63b58, text=..., allocator=0xb5473820, attrName=..., attrValue=...) at nsViewSourceHTML.cpp:1092
+1092 nsViewSourceHTML.cpp: No such file or directory.
+in nsViewSourceHTML.cpp
+(gdb) backtrace
+#0 0xb74c8fbe in CViewSourceHTML::WriteTextInSpan (this=0xb1d63b58, text=..., allocator=0xb5473820, attrName=..., attrValue=...) at nsViewSourceHTML.cpp:1092
+#1 0xb75090cd in nsCSSRendering::FindCanvasBackground (aPresContext=0xb2b66c00, aForFrame=0xb1d3c628, aBackground=0xbfffe598) at nsCSSRendering.h:187
+#2 nsCSSRendering::FindBackground (aPresContext=0xb2b66c00, aForFrame=0xb1d3c628, aBackground=0xbfffe598) at nsCSSRendering.cpp:1037
+#3 0xb74fc831 in ApplyRenderingChangeToTree (aPresContext=0xb2b66c00, aFrame=0xb1d3c628, aChange=nsChangeHint_RepaintFrame) at nsCSSFrameConstructor.cpp:7631
+#4 0xb74fc8f8 in InvalidateCanvasIfNeeded (presShell=0xb5473820, node=<value optimised out>) at nsCSSFrameConstructor.cpp:7701
+#5 0xb7504a81 in nsCSSFrameConstructor::ContentInserted (this=0xb2d7d980, aContainer=0x0, aChild=0xb1d176c0, aIndexInContainer=0, aFrameState=0x0) at nsCSSFrameConstructor.cpp:6671
+#6 0xb7535e39 in PresShell::InitialReflow (this=0xb5473820, aWidth=6000, aHeight=6000) at nsPresShell.cpp:2652
+#7 0xb764c6ba in nsContentSink::StartLayout (this=0xb2b64000, aIgnorePendingSheets=0) at nsContentSink.cpp:1327
+#8 0xb7729f8e in HTMLContentSink::OpenBody (this=0xb2b64000, aNode=...) at nsHTMLContentSink.cpp:2094
+#9 0xb74b7c9c in CNavDTD::OpenBody (this=0xb1d1e540, aNode=0xb5455970) at CNavDTD.cpp:2538
+#10 0xb74b9a95 in CNavDTD::HandleDefaultStartToken (this=0xb1d1e540, aToken=0xb2da91a8, aChildTag=eHTMLTag_body, aNode=0xb5455970) at CNavDTD.cpp:1039
+#11 0xb74b9d59 in CNavDTD::HandleStartToken (this=0xb1d1e540, aToken=0xb2da91a8) at CNavDTD.cpp:1390
+#12 0xb74b9444 in CNavDTD::HandleToken (this=0xb1d1e540, aToken=0xb2da91a8) at CNavDTD.cpp:717
+#13 0xb74ba681 in CNavDTD::BuildModel (this=0xb1d1e540, aTokenizer=0xb2dc8060, aCanInterrupt=1, aCountLines=1) at CNavDTD.cpp:304
+#14 0xb74c032e in nsParser::BuildModel (this=0xb2d7c680) at nsParser.cpp:2456
+#15 0xb74c43b3 in nsParser::ResumeParse (this=0xb2d7c680, allowIteration=1, aIsFinalChunk=0, aCanInterrupt=1) at nsParser.cpp:2337
+#16 0xb74c3f1f in nsParser::OnDataAvailable (this=0xb2d7c680, request=0xb2e1ceac, aContext=0x0, pIStream=0xb2e1cf28, sourceOffset=0, aLength=117) at nsParser.cpp:2985
+#17 0xb79dd2d7 in nsDocumentOpenInfo::OnDataAvailable (this=0xb2de56a0, request=0xb2e1ceac, aCtxt=0x0, inStr=0xb2e1cf28, sourceOffset=0, count=117) at nsURILoader.cpp:306
+#18 0xb73f42e3 in nsBaseChannel::OnDataAvailable (this=0xb2e1ce80, request=0xb2bc16a0, ctxt=0x0, stream=0xb2e1cf28, offset=0, count=117) at nsBaseChannel.cpp:708
+#19 0xb73faf73 in nsInputStreamPump::OnStateTransfer (this=0xb2bc16a0) at nsInputStreamPump.cpp:508
+#20 0xb73fb084 in nsInputStreamPump::OnInputStreamReady (this=0xb2bc16a0, stream=0xb2e1cf28) at nsInputStreamPump.cpp:398
+#21 0xb7c2b37f in nsInputStreamReadyEvent::Run (this=0xb2ab61c0) at nsStreamUtils.cpp:112
+#22 0xb7c4034c in nsThread::ProcessNextEvent (this=0xb5de4970, mayWait=1, result=0xbfffed1c) at nsThread.cpp:527
+#23 0xb7c0ef0f in NS_ProcessNextEvent_P (thread=0x1, mayWait=1) at nsThreadUtils.cpp:250
+#24 0xb7b73296 in nsBaseAppShell::Run (this=0xb54303d0) at nsBaseAppShell.cpp:170
+#25 0xb7a35a40 in nsAppStartup::Run (this=0xb3a2a5b0) at nsAppStartup.cpp:183
+#26 0xb737fa84 in XRE_main (argc=1, argv=0xbffff2a4, aAppData=0xb5d18380) at nsAppRunner.cpp:3506
+#27 0x001119c3 in main (argc=1, argv=0xbffff2a4) at nsBrowserApp.cpp:158
+(gdb)

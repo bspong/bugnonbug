@@ -1,0 +1,22 @@
+libpng: Confirmation of another heap-buffer overflow not affecting mozilla
+I am not sure if glenn already informed mozilla about this issue. (Most probably he already did and i am being paranoid).
+
+The following wa fixed in libpng and in chrome a well:
+http://src.chromium.org/viewvc/chrome?view=rev&revision=125311
+
+This is similar to the previous libpng which i had reported. Glenn provided the following explanation of why moz. would not have been affected by this:
+
+"Chunks that you know you will never use should be listed in a "png_set_keep_unknown_chunks()" call with the property PNG_HANDLE_CHUNK_NEVER a demonstrated in libpng's contrib/gregbook/readpng2.c, which will prevent the listed
+chunk from being processed. Mozilla us this method to
+skip zTXt, iTXt, and other chunk that it doesn't use, and
+ha consequently not been affected by most of the CVEs involving
+libpng in recent years.
+
+You can prevent DoS by large zTXt, etc., chunk by setting
+limit on the amount of expansion allowed. Mozilla, for
+example, set a limit of 4MB on the maximum size of an iCCP
+chunk after decompression."
+
+Looking at the code, i seem to agree with the above. But since i am not an expert can someone with more knowledge please comment?
+
+Thanks.

@@ -1,0 +1,23 @@
+Tooltip.js: Improve the behavior of startTogglingOnHover
+In bug 1134073, I need to display a tooltip when user hovers over a "Cause" field in the network request list, and this tooltip is interactive, i.e., the user can click on the item inside it.
+
+When I wanted to use Tooltip.js and it startTogglingOnHover helper method, I discovered I need to make several change to the Tooltip.js class in order to make it work. These change should be incorporated into Tooltip.js or into it HTML successor.
+
+They are:
+1. When I leave the hovered element, don't close the tooltip immediately. Instead, close it only after some delay, and give me time to move the mouse inside the tooltip element.
+2. When I mouseover inside the tooltip element, don't hide it or move it until the mouse leaves. This allows the tooltip to be interactive.
+
+These two change are implemented in this patch: https://bugzilla.mozilla.org/show_bug.cgi?id=1134073#attach_8747764
+
+There are other improvement that I didn't implement yet because they are not so pressing, but would be very nice anyway:
+3. The tooltip arrow is not aligned to the center of the anchor element - it's offset by a few pixel to the right (at least on OS X)
+4. The startTogglingOnHover logic us a this._lastHovered property to track movement from one element to another. It's always set to the event.target of the "mousemove" element. It would be nice to be able to select some ancestor of the event.target a the _lastHovered element. For example, I can have markup like this:
+
+<div class="request-url">
+<img class="request-image-preview"/>
+<span class="request-url-text"></div>
+</div>
+
+When I move the mouse from the <img> to the <span> and back, startTogglingOnHover force the tooltip to be hidden and then redisplayed over the other element. I need a way to tell the tooltip to not care about this move, and track movement between the "request-url" parent <div>s instead.
+
+All these improvement would improve the UX of tooltips, and probably also simplify the code for variable bubble view in debugger, and the various swatch in the inspector rule view.

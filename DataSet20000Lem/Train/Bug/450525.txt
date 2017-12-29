@@ -1,0 +1,35 @@
+Invalid Request - this issue is present on Mac OSX & Wintel XP/Vista, and is related to improper header construction required to clear cache with sending POST form information (GET works, all others fail)
+User-Agent: Mozilla/5.0 (Macintosh; U; Intel Mac OS X; en-us) AppleWebKit/523.15.1 (KHTML, like Gecko) Version/3.0.4 Safari/523.15
+Build Identifier: Mozilla/5.0 (Macintosh; U; Intel Mac OS X; en-US; rv:1.8.1.11) Gecko/20071127 Firefox/2.0.0.11
+
+instance #1 MACOSX - POST action of a form cause "Invalid Request" in cache proxy (Squid)
+instance #2 WINXP - POST action of a form cause "Invalid Request" response from internet server when using _xmlHttpRequest_ (localhost work fine)
+
+NOTE: this issue is probably linked to the "Invalid verb" error arising from WINXP/VISTA "OneCare" family secuirty package recently attached to "enhancement" updates. They are NOT the same error, but that are both malformed header info related.
+
+http://www.mnot.net/javascript/xmlhttprequest/cache.html - see the bottom of the page. If the browser ha either of the afore mentioned "invalid Request" responses, they WILL fail the "invalidations" similar a follows:
+* Request-URI: fail (POST to Request URI did not invalidate the cache.)
+* Content-Location: fail (POST to Content-Location did not invalidate the cache.)
+* Location: fail (POST to Location did not invalidate the cache.)
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. MACOSX requires failure to POST through cache server intermediate (to isolate error)
+2. WINXP requires failure to POST to an internet server when using _xmlHttpRequest_
+3. WINXP/VISTA may require INSTALLING MS OneCare Family Securty to reproduce (will also reproduce "Invalid verb" response)
+Actual Results:
+see above.
+It is possible that the situation itself may not be able to be replicated on a different MACOSX system.
+Victoria State Library in Melbourne, Australia ha multiple machine should someone require visual confirmation or technical detail (like data capture by network administrators)
+
+Expected Results:
+MACOSX - cache info on POST data need to be correctly invalidated (ie. passed through the cache)
+WINXP - should perform POST in IDENTICAL fashion when using _xmlHttpRequest_ object via JavaScript
+
+This will need data capture to manually validate header construction, a there may just be a "false EOL" terminator present if header are valid, which is not likely, a invalidation of POST data is not supplying the correct header info to caches.
+
+I have 3 machine (MACOSX) with Safari along with 100 or so WINXP machine with IE 6 & FF 2.0.0.1 running fine through a cache server (SQUID - squid/2.7.STABLE2)
+
+FF 2.0.0.14 on WinXP fails to POST via _xmlHttpRequest_
+Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.14) Gecko/20080404 Firefox/2.0.0.14

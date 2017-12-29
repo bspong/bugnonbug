@@ -1,0 +1,47 @@
+Memory leak during display of real-time video.
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.9.0.11) Gecko/2009060215 Firefox/3.0.11 GTB5 (.NET CLR 3.5.30729)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.9.0.11) Gecko/2009060215 Firefox/3.0.11 GTB5 (.NET CLR 3.5.30729)
+
+To see this easily you will need Microsoft's Process Explorer (procexp.exe): http://technet.microsoft.com/en-us/sysinternals/bb896653.aspx.
+
+Open Firefox and enter http://67.52.75.110/axis-cgi/mjpg/video.cgi?resolution=CIF&dummy=1246850977172. This is a camera in Hawaii.
+
+Then open procexp.exe. Locate the line containing "firefox.exe". Double-click on that line. That will bring up a firefox.exe ... property window.
+Click on the "Performance" tab. Look at the box "Virtual Memory" and watch "Private Bytes". You will see it growing gradually. It should not grow over time.
+
+I discovered this when I wrote a DirectShow IP Camera filter that had this problem. I then looked to see if anyone else had the problem. Internet Explorer doe NOT have the problem but FireFox DOES have the problem.
+
+In the case of my filter, I had done a GetDC and neglected to do a ReleaseDC every time a new image wa converted/displayed. In this case, I tested using a Notebook computer. It would crash completely after about 3.5 hour (with screen showing all sort of problem typical of GDI leaks) so that I had to hold the power switch down to get it to reboot. Presumably FireFox could also cause this depending on the exact nature of the memory or GDI memory leak.
+
+Just thought you'd like to know.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.To see this easily you will need Microsoft's Process Explorer (procexp.exe): http://technet.microsoft.com/en-us/sysinternals/bb896653.aspx.
+2.Open Firefox and enter http://67.52.75.110/axis-cgi/mjpg/video.cgi?resolution=CIF&dummy=1246850977172. This is a camera in Hawaii.
+3.Then open procexp.exe.
+4.Locate the line containing "firefox.exe".
+5.Double-click on that line.
+6.That will bring up a firefox.exe ... property window.
+7.Click on the "Performance" tab.
+8.Look at the box "Virtual Memory" and watch "Private Bytes".
+9.You will see it growing gradually.
+10.It should not grow over time.
+11.This indicates a memory leak.
+
+Actual Results:
+Saw memory usage gradually climb up unbounded...
+
+Expected Results:
+You need to locate the memory leak and release whatever is not being released.
+
+I wa working with some people in Hawaii (http://www.waikikishoppingplaza.com/) who want to use my software, HandyAvi, to make a time-lapse movie of some construction they are doing. They are using an IP Camera and I wa just putting the finishing touch on a DirectShow IP Camera Filter that I wrote to allow my software to receive video image from IP Cameras. Thought everything wa OK but, during a long test period where my Notebook computer wa being used to run HandyAvi and display video continuously from one of their three camera sites, the Notebook computer started beeping and showing scrambled data on the screen. I had to hold the power button down to reboot the machine because all control had been lost...
+
+Then I started looking at other similar application to see if anybody else had the problem. FireFox did but Internet Explorer did not. So I knew there must be a solution to my problem. Finally found the answer after a two-day quest.
+
+Decided to share what I had learned with you guy at FireFox. It is a somewhat subtle bug. Probably would result in gradual degradation of a user's system over time. The more video the user watch without closing FireFox down, the more memory or GDI resource are allocated and never released.
+
+Don't know if FireFox would show this the same a my filter did before I fixed it because I do not know if the FireFox memory leak is a GDI memory leak. But it is possible that the FireFox user would notice, over time, more and more sluggish behavior of his machine until it either crashed or until he closed FireFox and restarted it.
+
+Not critical but could be puzzling for some user and, if it crashed their machine, it could be annoying. :-)

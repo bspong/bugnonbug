@@ -1,0 +1,41 @@
+iframe height style > 16384px is corrupted
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.10) Gecko/20050716 Firefox/1.0.6
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.10) Gecko/20050716 Firefox/1.0.6
+
+If you have a page that contains an iframe whichs height style is bigger then
+16384px all the 'pixels' over 16384 don't get rendered (if you move a window
+overthem there is visual corruption...no repainting.
+
+If the iframe contains a page(a page bugger than 16384px), the iframe behaves as
+if it was only 16384 pixel in height and it's scrollbars work accordingly, but
+the pixels >16384px never get repainted.
+
+Easy repro create a file with the contents below. le last 10 pixels will never
+repaint if you move a window(or minimize, maximize firefox) over the iframe.
+If you want a more drastic effect set the height to something big like 17684px.
+----------------------------------
+<html>
+	<head>
+	</head>
+	<body>
+		Here1
+		<iframe src="" style="width:600px;height:16394px"></iframe>
+		Here2
+	</body>
+</html>
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Create a t.html file containing the code detailed in the details.
+2. Open it with FireFox
+3. Minimize and maximize firefox, the last 10 pixels will not have been repainted.
+Or move a window over the last pixels, same problem.
+
+Actual Results:  
+Corruption in the last 10 pixels of the iframe.
+
+Expected Results:  
+Painted the region accordingly. If a big document is used as source, the
+scrollbar should use the extra (>16384px) pixels to display the document.

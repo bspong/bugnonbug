@@ -1,0 +1,87 @@
+[mlk] Loading a feed leak
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.7) Gecko/20070914 Firefox/2.0.0.7
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9a9pre) Gecko/2007100205 Minefield/3.0a9pre
+
+Memory leak according to leak-gauge.pl after clicking feed discovery icon then closing minefield.
+
+SET MOZ_CRASHREPORTER_DISABLE
+SET NSPR_LOG_MODULES=DOMLeak:5,DocumentLeak:5,nsDocShellLeak:5
+SET NSPR_LOG_FILE=nspr_leaks.log
+"C:\Apps\MInefield\firefox.exe"
+
+Click location bar drop down remembered location menu, left click first remembered URL, which happens to be:
+
+http://blackwhitestripes.wordpress.com/
+
+Wait for site to fully load.
+
+Left mouse click on location bar feed discovery icon.
+
+"Live Bookmark" Feed preview page/UI load a expected.
+
+Left click the red X window close 'button'.
+
+Run leak-guage.pl
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.
+
+Run batch file containing the folllowing lines:
+
+SET MOZ_CRASHREPORTER_DISABLE
+SET NSPR_LOG_MODULES=DOMLeak:5,DocumentLeak:5,nsDocShellLeak:5
+SET NSPR_LOG_FILE=nspr_leaks.log
+"C:\Apps\MInefield\firefox.exe"
+
+2.
+
+Click location bar drop down menu button
+
+3.
+
+Left click first remembered URL, which happens to be:
+
+http://blackwhitestripes.wordpress.com/
+
+Wait for site to fully load.
+
+4.
+
+Left mouse click on location bar feed discovery icon.
+
+"Live Bookmark" Feed preview page/UI load a expected.
+
+5.
+
+Left click the window red X close 'button' to close the browser.
+
+6.
+
+Run "leak-gauge.pl nspr_leaks.log"
+Actual Results:
+C:\leak-gauge.pl nspr_leaks.log
+Leaked document at address 229f5e0.
+... with URI "jar:file:///C:/Apps/MInefield/chrome/toolkit.jar!/content/global/
+bindings/menulist.xml".
+... with URI "chrome://global/content/bindings/menulist.xml".
+Leaked document at address 1791708.
+... with URI "jar:file:///C:/Apps/MInefield/chrome/toolkit.jar!/content/global/
+bindings/menu.xml".
+... with URI "chrome://global/content/bindings/menu.xml".
+Leaked document at address 17821c0.
+... with URI "jar:file:///C:/Apps/MInefield/chrome/toolkit.jar!/content/global/
+bindings/general.xml".
+... with URI "chrome://global/content/bindings/general.xml".
+Leaked document at address 227ea50.
+... with URI "chrome://global/content/bindings/checkbox.xml".
+... with URI "jar:file:///C:/Apps/MInefield/chrome/toolkit.jar!/content/global/
+bindings/checkbox.xml".
+Summary:
+Leaked 0 out of 8 DOM Windows
+Leaked 4 out of 42 document
+Leaked 0 out of 3 docshells
+
+Expected Results:
+Memory allocated a required and regained when no longer needed. i.e. no leaking.

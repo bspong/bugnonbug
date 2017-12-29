@@ -1,0 +1,22 @@
+ReferenceError when disabling add-on
+Got this in the error console when disabling my add-on.
+
+> Sat Nov 30 2013 11:31:24
+> Warning: ReferenceError: reference to undefined property this.getWidgetNode(...)[0]
+> Source file: resource://app/modules/CustomizableUI.jsm
+> Line: 1921
+
+I've finished changing the code to use the new CustomizableUI module in Australis. I've not made many tests on this (a bit of a lack of time). When disabling the add-on, I'm unregisterArea()'ing custom toolbar from it, physically removing them, and destroyWidget()'ing several custom buttons. The error only happened once, I can't reproduce it.
+
+However I'm not sure this is the fault of my own code, as it pointed to a strange place:
+
+(In isWidgetRemovable())
+> if (!widgetNode) {
+>   // Pick any of the build windows to look at.
+>   let [window,] = [...gBuildWindows][0];
+>   [, widgetNode] = this.getWidgetNode(widgetId, window);
+> }
+
+Also, maybe bug 942581 will influence this as well, if it's the call in unregisterArea() to removeWidgetFromArea() that caused this.
+
+Any clues? Maybe throw in a failsafe in that bit would be enough? When it did error, everything seemed to continue well (everything from the add-on was removed properly with no trace) and I was able to re-enable the add-on without causing conflicts or further errors.

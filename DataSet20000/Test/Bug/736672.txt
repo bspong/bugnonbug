@@ -1,0 +1,108 @@
+firefox make too many uselees connections.
+User Agent: Mozilla/5.0 (Windows; Windows NT 5.1; rv:11.0) Gecko/20100101 Firefox/11.0
+Build ID: 20120310173008
+
+
+
+Actual results:
+
+about 7-8 socket connection were created in one http request.
+but most of them turn to  TIME_WAIT quickly(close by firefox).
+here is a "netstat -ano" while reloading https://encryped.google.com/ 
+
+  TCP    120.33.65.96:2170      74.125.128.17:443      ESTABLISHED     24104
+  TCP    120.33.65.96:2181      74.125.128.18:443      TIME_WAIT       0
+  TCP    120.33.65.96:2183      203.208.45.211:443     TIME_WAIT       0
+  TCP    120.33.65.96:2184      203.208.45.211:443     TIME_WAIT       0
+  TCP    120.33.65.96:2185      203.208.45.211:443     TIME_WAIT       0
+  TCP    120.33.65.96:2186      203.208.45.211:443     TIME_WAIT       0
+  TCP    120.33.65.96:2187      203.208.45.211:443     TIME_WAIT       0
+  TCP    120.33.65.96:2188      203.208.45.211:443     TIME_WAIT       0
+  TCP    120.33.65.96:2213      203.208.45.211:443     TIME_WAIT       0
+  TCP    120.33.65.96:2214      203.208.45.211:443     TIME_WAIT       0
+  TCP    120.33.65.96:2215      203.208.45.211:443     TIME_WAIT       0
+  TCP    120.33.65.96:2216      203.208.45.211:443     TIME_WAIT       0
+  TCP    120.33.65.96:2217      203.208.45.211:443     TIME_WAIT       0
+  TCP    120.33.65.96:2218      203.208.45.211:443     TIME_WAIT       0
+  TCP    120.33.65.96:2219      203.208.45.211:443     TIME_WAIT       0
+  TCP    120.33.65.96:2220      74.125.128.120:443     ESTABLISHED     24104
+  TCP    120.33.65.96:2221      74.125.128.132:443     ESTABLISHED     24104
+  TCP    120.33.65.96:2222      203.208.45.211:443     TIME_WAIT       0
+  TCP    120.33.65.96:2223      203.208.45.211:443     TIME_WAIT       0
+  TCP    120.33.65.96:2224      203.208.45.211:443     TIME_WAIT       0
+  TCP    120.33.65.96:2225      203.208.45.211:443     TIME_WAIT       0
+  TCP    120.33.65.96:2226      74.125.128.106:443     ESTABLISHED     24104
+  TCP    120.33.65.96:2227      203.208.45.211:443     SYN_SENT        24104
+  TCP    120.33.65.96:2228      203.208.45.211:443     SYN_SENT        24104
+  TCP    127.0.0.1:1221         127.0.0.1:1222         ESTABLISHED     24104
+  TCP    127.0.0.1:1222         127.0.0.1:1221         ESTABLISHED     24104
+
+by using a local proxy for test, i found that firefox just do nothing before it shutdown the connection, it just connect then shutdown immediately. why?
+
+127.0.0.1:2617 - - [08:18:56] CONNECT plus.google.com:443 HTTP/1.1 200 -
+127.0.0.1:2618 - - [08:18:56] CONNECT plus.google.com:443 HTTP/1.1 200 -
+127.0.0.1:2619 - - [08:18:56] CONNECT plus.google.com:443 HTTP/1.1 200 -
+127.0.0.1:2620 - - [08:18:56] CONNECT plus.google.com:443 HTTP/1.1 200 -
+127.0.0.1:2621 - - [08:18:56] CONNECT plus.google.com:443 HTTP/1.1 200 -
+127.0.0.1:2622 - - [08:18:56] CONNECT plus.google.com:443 HTTP/1.1 200 -
+127.0.0.1:2623 - - [08:18:57] CONNECT plus.google.com:443 HTTP/1.1 200 -
+127.0.0.1:2624 - - [08:18:57] CONNECT plus.google.com:443 HTTP/1.1 200 -
+127.0.0.1:2625 - - [08:18:57] CONNECT plus.google.com:443 HTTP/1.1 200 -
+127.0.0.1:2626 - - [08:18:57] CONNECT plus.google.com:443 HTTP/1.1 200 -
+127.0.0.1:2627 - - [08:19:19] CONNECT api.twitter.com:443 HTTP/1.1 200 -
+127.0.0.1:2628 - - [08:19:19] CONNECT api.twitter.com:443 HTTP/1.1 200 -
+127.0.0.1:2629 - - [08:19:19] CONNECT api.twitter.com:443 HTTP/1.1 200 -
+127.0.0.1:2630 - - [08:19:19] CONNECT api.twitter.com:443 HTTP/1.1 200 -
+127.0.0.1:2629 - - [08:19:23] GET https://api.twitter.com:443/1/direct_messages
+json?count=200&include_entities=true&since_id=529640744 HTTP/1.0 200 -
+127.0.0.1:2627 - - [08:19:23] GET https://api.twitter.com:443/1/statuses/home_t
+meline.json?count=200&include_entities=true&since_id=180807459579887616 HTTP/1.
+ 200 -
+127.0.0.1:2630 - - [08:19:23] GET https://api.twitter.com:443/1/direct_messages
+sent.json?count=200&include_entities=true&since_id=529409170 HTTP/1.0 200 -
+127.0.0.1:2628 - - [08:19:23] GET https://api.twitter.com:443/1/statuses/mentio
+s.json?count=200&include_entities=true&since_id=91435916043747328 HTTP/1.0 200
+
+127.0.0.1:2661 - - [08:20:00] CONNECT api.twitter.com:443 HTTP/1.1 200 -
+127.0.0.1:2662 - - [08:20:00] CONNECT api.twitter.com:443 HTTP/1.1 200 -
+127.0.0.1:2663 - - [08:20:00] CONNECT api.twitter.com:443 HTTP/1.1 200 -
+127.0.0.1:2664 - - [08:20:00] CONNECT api.twitter.com:443 HTTP/1.1 200 -
+127.0.0.1:2665 - - [08:20:00] CONNECT api.twitter.com:443 HTTP/1.1 200 -
+127.0.0.1:2666 - - [08:20:00] CONNECT api.twitter.com:443 HTTP/1.1 200 -
+127.0.0.1:2667 - - [08:20:00] CONNECT api.twitter.com:443 HTTP/1.1 200 -
+127.0.0.1:2668 - - [08:20:00] CONNECT api.twitter.com:443 HTTP/1.1 200 -
+127.0.0.1:2669 - - [08:20:00] CONNECT api.twitter.com:443 HTTP/1.1 200 -
+127.0.0.1:2670 - - [08:20:00] CONNECT api.twitter.com:443 HTTP/1.1 200 -
+127.0.0.1:2671 - - [08:20:00] CONNECT api.twitter.com:443 HTTP/1.1 200 -
+127.0.0.1:2672 - - [08:20:00] CONNECT api.twitter.com:443 HTTP/1.1 200 -
+127.0.0.1:2673 - - [08:20:00] CONNECT api.twitter.com:443 HTTP/1.1 200 -
+127.0.0.1:2674 - - [08:20:00] CONNECT api.twitter.com:443 HTTP/1.1 200 -
+127.0.0.1:2675 - - [08:20:00] CONNECT api.twitter.com:443 HTTP/1.1 200 -
+127.0.0.1:2676 - - [08:20:00] CONNECT api.twitter.com:443 HTTP/1.1 200 -
+127.0.0.1:2677 - - [08:20:00] CONNECT api.twitter.com:443 HTTP/1.1 200 -
+127.0.0.1:2678 - - [08:20:00] CONNECT api.twitter.com:443 HTTP/1.1 200 -
+127.0.0.1:2679 - - [08:20:00] CONNECT api.twitter.com:443 HTTP/1.1 200 -
+127.0.0.1:2680 - - [08:20:00] CONNECT api.twitter.com:443 HTTP/1.1 200 -
+127.0.0.1:2681 - - [08:20:00] CONNECT api.twitter.com:443 HTTP/1.1 200 -
+127.0.0.1:2682 - - [08:20:00] CONNECT api.twitter.com:443 HTTP/1.1 200 -
+127.0.0.1:2683 - - [08:20:00] CONNECT api.twitter.com:443 HTTP/1.1 200 -
+127.0.0.1:2684 - - [08:20:00] CONNECT api.twitter.com:443 HTTP/1.1 200 -
+127.0.0.1:2685 - - [08:20:00] CONNECT api.twitter.com:443 HTTP/1.1 200 -
+127.0.0.1:2686 - - [08:20:00] CONNECT api.twitter.com:443 HTTP/1.1 200 -
+127.0.0.1:2687 - - [08:20:00] CONNECT api.twitter.com:443 HTTP/1.1 200 -
+127.0.0.1:2688 - - [08:20:00] CONNECT api.twitter.com:443 HTTP/1.1 200 -
+127.0.0.1:2689 - - [08:20:00] CONNECT api.twitter.com:443 HTTP/1.1 200 -
+127.0.0.1:2690 - - [08:20:00] CONNECT api.twitter.com:443 HTTP/1.1 200 -
+127.0.0.1:2691 - - [08:20:00] CONNECT api.twitter.com:443 HTTP/1.1 200 -
+127.0.0.1:2692 - - [08:20:00] CONNECT api.twitter.com:443 HTTP/1.1 200 -
+127.0.0.1:2693 - - [08:20:00] CONNECT api.twitter.com:443 HTTP/1.1 200 -
+127.0.0.1:2694 - - [08:20:00] CONNECT api.twitter.com:443 HTTP/1.1 200 -
+127.0.0.1:2695 - - [08:20:00] CONNECT api.twitter.com:443 HTTP/1.1 200 -
+127.0.0.1:2696 - - [08:20:00] CONNECT api.twitter.com:443 HTTP/1.1 200 -
+127.0.0.1:2697 - - [08:20:00] CONNECT api.twitter.com:443 HTTP/1.1 200 -
+127.0.0.1:2698 - - [08:20:00] CONNECT api.twitter.com:443 HTTP/1.1 200 -
+127.0.0.1:2699 - - [08:20:00] CONNECT api.twitter.com:443 HTTP/1.1 200 -
+127.0.0.1:2700 - - [08:20:00] CONNECT api.twitter.com:443 HTTP/1.1 200 -
+
+connection were made(i have response 200 to firefox, using a fake CA cert for ssl test), ssl handshake also succeed, but no more further data received, firefox close the connection quickly and make another connection and close and make ... 
+not only the "CONNECT", in other case, socket were closed before http request sent, so it just nothing to log but the issue still be there.

@@ -1,0 +1,46 @@
+Bad cache expiration policy for image loaded with Javascript
+User-Agent: Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0; SLCC1; .NET CLR 2.0.50727; Media Center PC 5.0; .NET CLR 3.0.04506)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 6.0; fr; rv:1.9.0.4) Gecko/2008102920 Firefox/3.0.4
+
+i am working with some caching issues. I have some javascript code which load image from various websites, and refreshes these images, by simply clearing the source of the img or by changing the background of the iframe, depending on the type of display. However, I have found that in many cases, Firefox doesn't reload the image from source but us the cached version; and this despite the fact that there is a Expires, last Modified, and Cache-control:max-age set so a to have an expiration after one second. Internet Explorer doe not have this problem. I can successfully reproduce this issue on Firefox 2 with Linux, Firefox 3.0 with Ubuntu-Linux, Firefox 3.1beta2 with a custom Linux, and Firefox 3.0.4 for Vista.
+
+
+Here is a sample html page which doesn't reload properly with firefox, but doe with IE:
+
+<html>
+<script>
+
+function clearbg(){
+document.getElementById("myframe").style.background="none";
+document.getElementById("mypic").src="";
+setTimeout("setbg()",1000);
+
+}
+
+function setbg(){
+document.getElementById("myframe").style.background="url('http://www.sytadin.equipement.gouv.fr/tempsreel/parisint.gif')";
+document.getElementById("mypic").src="http://www.sytadin.equipement.gouv.fr/tempsreel/parisint.gif";
+setTimeout("clearbg()",1000);
+}
+
+</script>
+<body onload="setbg();">
+<div id="mydiv"></div>
+<iframe id="myframe" src="">
+</iframe>
+<img src="" id="mypic">
+</body>
+</html>
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. make a webpage which us JS to show and then hide an image which shouldn't be cached for more than a second
+2. set the refresh timer to above a second
+3. observe Firefox not reloading image
+Actual Results:
+Firefox doesn't reload image where it should
+
+Expected Results:
+It should reload the image

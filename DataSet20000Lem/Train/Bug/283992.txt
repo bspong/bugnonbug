@@ -1,0 +1,38 @@
+keyword search for exactly one word with non-ASCII character (umlauts and accentuated characters) doesn't work due to punycode-conversion
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; de-DE; rv:1.7.6) Gecko/20050223 Firefox/1.0.1
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; de-DE; rv:1.7.6) Gecko/20050223 Firefox/1.0.1
+
+searching for single word from the location bar doe not work when they contain
+umlaut (äöüÄÖÜ) or accentuated character (I only tried a few but none of them
+worked) because they are converted to punycode.
+There is no problem in searching for word containing these character if there
+is more than one word that is searched for (e.g. type "à bientôt" in the
+location bar) or if the keyword-search is evoked directly by typing
+"keyword:Fahrvergnügen".
+
+It seems that whenever the content typed into the location bar might be a domain
+(that is doesn't contain any space characters) it is punycode-converted looked
+up in the DNS. When the DNS-lookup for this fails, keyword search is invoked.
+The problem is, that keyword-search should always search for what the user ha
+entered into the location bar, not only when more than one word wa entered.
+Punycode-conversion is wrong, because there are no security-concerns that user
+are spoofed into doing "unsafe" search :o)
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. type "Fahrvergnügen" into the location bar and hit enter
+
+
+
+Actual Results:
+The location bar display "keyword:xn--fahrvergngen-llb" and the page configured
+to show up for this keyword-search is loaded (for me this is google). The
+result are useless, because I didn't want to search for xn--fahrvergngen-llb
+and what I looked for is not displayed.
+
+Expected Results:
+The keyword-search should show result for "Fahrvergnügen" and the location bar
+should display "keyword:Fahrvergnügen".
+
+This bug is a regression from Firefox 1.0.

@@ -1,0 +1,45 @@
+"View/Page Source" displays the source of a document which is no longer the current one.
+User-Agent:       Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.5; en-US; rv:1.9.1.1) Gecko/20090715 Firefox/3.5.1 GTB5
+Build Identifier: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.5; en-US; rv:1.9.1.1) Gecko/20090715 Firefox/3.5.1 GTB5
+
+See below for reproducibility.
+
+The bug seems to be an incorrect handling of webpages who call history.back() when they're fully loaded.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Create a webpage at http://SERVER/LOCATION/index.html containing the following (replace SERVER and LOCATION so they match your setup):
+
+<html>
+<head>
+<title>PING!</title>
+<script type="text/javascript">
+<!--
+function run() {
+        var z=''+window.location;
+        if (z.indexOf('http://SERVER/LOCATION/?u='==0)) {
+                window.history.back();
+        }
+}
+//-->
+</script>
+</style>
+</head>
+<body onload="run()">
+<h1>PING!</h1>
+<p id="download">Drag this bookmarklet into your bookmarks toolbar: <a class="bookmarklet" href="javascript:window.location='http://SERVER/LOCATION/?u='+window.location">ping!</a></p>
+</body>
+</html>
+
+2. Surf to that page and save the 'ping' bookmarket.
+3. On any website XYZ, click on the bookmarklet.
+4. Your webpage at http://SERVER/LOCATION/ gets displayed for a second, then history.back() gets called and you're back at website XYZ.
+5. In the View menu, select Page Source.
+Actual Results:  
+The displayed HTML source is from the webpage at http://SERVER/LOCATION/
+
+Expected Results:  
+The displayed HTML source should be from website XYZ.
+
+Note that if I input "javascript:alert(location)" in the address bar and press enter, the correct URL gets reported (URL of the currently opened document).

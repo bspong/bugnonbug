@@ -1,0 +1,49 @@
+CSS Padding command add width to division rather than padding inside the specified width
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.6) Gecko/20040206 Firefox/0.8
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.6) Gecko/20040206 Firefox/0.8
+
+In the page at http://www.westportresources.com/beta the CSS padding command is
+generated somewhat incorrectly. When a width is specified and then the padding
+command is used the division end up taking, when generated, width = width +
+padding. For example, if the width wa specified a 200px with padding-left:
+15px then the page will be generated with a division box of width 215px. The
+correct version should have a width of 200px and any text should begin at 15px
+and be placed within a box of 185px. Currently FireFox give the entire division
+an extra 15px and allows the text to be contained in a box of 200px.
+
+It seems erroneous to specify a width and then have the padding command override
+that width. More logical would be to have the padding fit inside the width
+specified by the cs style.
+
+Reproducible: Always
+Steps to Reproduce:
+1. Create a CSS style (give it some class name)
+2. Specify: position: absolute; width: 200px;
+3. Also specify: padding-left: 15 px;
+4. in the HTML file specify <div class="styleName">Hello world</div>
+5. Notice the width of the division is really 215 px.
+
+6. You can see this better using the following:
+in CSS style sheet:
+div.someBox
+{
+position: absolute; left: 0px; width: 200px; padding-left: 15px;
+}
+div.otherBox
+{
+position: absolute; left: 200px; width: 200px;
+}
+
+in html:
+<div class="someBox">Enter a long string of text here so that it reach
+200px.</div>
+<div class="otherBox">Note the overlap here</div>.
+Actual Results:
+There's an overlap in the text because the original box is increased by the
+padding-left amount of pixels.
+
+Expected Results:
+Should have placed the padding within the 200px box, keeping the box absolutly
+at 200px and the amount of space for text being 15px. In other word it should
+have left a 15px white space from the start of the box to where the text or
+other HTML is generated.

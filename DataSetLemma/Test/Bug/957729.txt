@@ -1,0 +1,452 @@
+Make all mach debugging option go through the mach debug code
+I wa running some mochitests on Linux when I hit this crash:
+
+8075 INFO TEST-START | /tests/content/base/test/test_bug372964.html
+++DOMWINDOW == 34 (0x7fffbd42d8b8) [pid = 17104] [serial = 582] [outer = 0x7fffd7fb6cb8]
+8076 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8077 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8078 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8079 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8080 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (1)
+8081 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8082 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8083 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8084 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8085 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (2)
+8086 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8087 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8088 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8089 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8090 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (3)
+8091 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8092 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8093 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (1)
+8094 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8095 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8096 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (2)
+8097 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8098 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8099 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (3)
+8100 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8101 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8102 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (1)
+8103 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8104 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8105 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (2)
+8106 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8107 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8108 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (3)
+8109 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (1)
+8110 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (2)
+8111 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (3)
+8112 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8113 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8114 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8115 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8116 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (1)
+8117 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8118 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8119 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8120 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8121 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (2)
+8122 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8123 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8124 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8125 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8126 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (3)
+8127 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8128 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8129 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (1)
+8130 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8131 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8132 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (2)
+8133 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8134 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8135 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (3)
+8136 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8137 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8138 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (1)
+8139 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8140 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8141 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (2)
+8142 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8143 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8144 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (3)
+8145 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (1)
+8146 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (2)
+8147 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (3)
+8148 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8149 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8150 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (1)
+8151 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8152 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8153 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (2)
+8154 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8155 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8156 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (3)
+8157 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8158 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8159 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8160 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8161 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (1)
+8162 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8163 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8164 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8165 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8166 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (2)
+8167 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8168 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8169 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8170 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8171 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (3)
+8172 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (1)
+8173 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (2)
+8174 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (3)
+8175 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8176 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8177 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (1)
+8178 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8179 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8180 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (2)
+8181 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8182 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8183 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (3)
+8184 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8185 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8186 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (1)
+8187 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8188 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8189 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (2)
+8190 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8191 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8192 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (3)
+8193 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8194 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8195 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (1)
+8196 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8197 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8198 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (2)
+8199 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8200 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8201 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (3)
+8202 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (1)
+8203 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (2)
+8204 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (3)
+8205 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (1)
+8206 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (2)
+8207 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (3)
+8208 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8209 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8210 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8211 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8212 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (1)
+8213 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8214 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8215 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8216 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8217 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (2)
+8218 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8219 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8220 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8221 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8222 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (3)
+8223 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8224 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8225 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8226 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8227 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (1)
+8228 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8229 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8230 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8231 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8232 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (2)
+8233 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8234 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8235 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8236 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8237 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (3)
+8238 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8239 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8240 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (1)
+8241 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8242 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8243 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (2)
+8244 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8245 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8246 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (3)
+8247 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8248 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8249 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (1)
+8250 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8251 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8252 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (2)
+8253 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8254 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8255 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (3)
+8256 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8257 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8258 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (1)
+8259 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8260 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8261 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (2)
+8262 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8263 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8264 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (3)
+8265 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8266 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8267 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (1)
+8268 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8269 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8270 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (2)
+8271 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8272 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8273 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (3)
+8274 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (1)
+8275 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (2)
+8276 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (3)
+8277 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (1)
+8278 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (2)
+8279 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (3)
+8280 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8281 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8282 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8283 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8284 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (1)
+8285 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8286 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8287 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8288 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8289 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (2)
+8290 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8291 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8292 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8293 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8294 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (3)
+8295 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8296 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8297 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (1)
+8298 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8299 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8300 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (2)
+8301 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8302 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8303 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (3)
+8304 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8305 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8306 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (1)
+8307 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8308 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8309 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (2)
+8310 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8311 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8312 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (3)
+8313 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (1)
+8314 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (2)
+8315 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (3)
+8316 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8317 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8318 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8319 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8320 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (1)
+8321 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8322 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8323 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8324 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8325 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (2)
+8326 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8327 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8328 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8329 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8330 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (3)
+8331 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8332 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8333 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (1)
+8334 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8335 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8336 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (2)
+8337 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8338 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8339 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (3)
+8340 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8341 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8342 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (1)
+8343 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8344 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8345 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (2)
+8346 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8347 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8348 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (3)
+8349 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (1)
+8350 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (2)
+8351 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (3)
+8352 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8353 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8354 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (1)
+8355 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8356 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8357 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (2)
+8358 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8359 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8360 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (3)
+8361 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8362 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8363 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8364 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8365 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (1)
+8366 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8367 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8368 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8369 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8370 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (2)
+8371 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8372 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8373 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8374 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8375 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (3)
+8376 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (1)
+8377 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (2)
+8378 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (3)
+8379 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8380 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8381 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (1)
+8382 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8383 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8384 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (2)
+8385 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8386 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8387 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (3)
+8388 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8389 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8390 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (1)
+8391 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8392 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8393 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (2)
+8394 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8395 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8396 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (3)
+8397 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8398 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8399 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (1)
+8400 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8401 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8402 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (2)
+8403 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8404 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8405 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (3)
+8406 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (1)
+8407 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (2)
+8408 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (3)
+8409 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (1)
+8410 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (2)
+8411 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (3)
+8412 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8413 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8414 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8415 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8416 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (1)
+8417 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8418 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8419 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8420 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8421 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (2)
+8422 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8423 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8424 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8425 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8426 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (3)
+8427 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8428 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8429 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8430 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8431 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (1)
+8432 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8433 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8434 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8435 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8436 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (2)
+8437 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8438 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8439 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8440 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8441 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (3)
+8442 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8443 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8444 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (1)
+8445 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8446 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8447 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (2)
+8448 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8449 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8450 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (3)
+8451 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8452 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8453 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (1)
+8454 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8455 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8456 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (2)
+8457 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8458 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8459 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (3)
+8460 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8461 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8462 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (1)
+8463 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8464 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8465 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (2)
+8466 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8467 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8468 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (3)
+8469 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8470 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8471 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (1)
+8472 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8473 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8474 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (2)
+8475 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong event type
+8476 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong .isTrusted
+8477 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (3)
+8478 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (1)
+8479 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (2)
+8480 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (3)
+8481 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (1)
+8482 INFO TEST-PASS | /tests/content/base/test/test_bug372964.html | Wrong number event handler calls. (2)
+
+Program received signal SIGSEGV, Segmentation fault.
+0x00007ffff25bddf2 in JSC::X86Assembler::setInt32 (where=0x7fffd75d23ca, value=-9041) at /media/storage/moz/mozilla-central/js/src/assembler/assembler/X86Assembler.h:3382
+3382 reinterpret_cast<int32_t*>(where)[-1] = value;
+(gdb) bt full
+#0 0x00007ffff25bddf2 in JSC::X86Assembler::setInt32 (where=0x7fffd75d23ca, value=-9041) at /media/storage/moz/mozilla-central/js/src/assembler/assembler/X86Assembler.h:3382
+No locals.
+#1 0x00007ffff25bdbf4 in JSC::X86Assembler::setRel32 (from=0x7fffd75d23ca, to=0x7fffd75d0079)
+at /media/storage/moz/mozilla-central/js/src/assembler/assembler/X86Assembler.h:3329
+offset = -9041
+#2 0x00007ffff27352b7 in js::jit::PatchJump (jump=..., label=...) at /media/storage/moz/mozilla-central/js/src/jit/x64/Assembler-x64.h:684
+No locals.
+#3 0x00007ffff273522c in js::jit::JitRuntime::patchIonBackedges (this=0x7fffce1ec7a0, rt=0x7fffdf792000, target=js::jit::JitRuntime::BackedgeLoopHeader)
+at /media/storage/moz/mozilla-central/js/src/jit/Ion.cpp:423
+patchableBackedge = 0x7fffd6db5cb0
+iter = {iter = 0x7fffd6db5cb0}
+#4 0x00007ffff28c7369 in js::jit::InterruptCheck (cx=0x7fffd6d73c10) at /media/storage/moz/mozilla-central/js/src/jit/VMFunctions.cpp:470
+No locals.
+#5 0x00007ffff28c7516 in js::jit::CheckOverRecursedWithExtra (cx=0x7fffd6d73c10, frame=0x7fffffff6020, extra=0, earlyCheck=0)
+at /media/storage/moz/mozilla-central/js/src/jit/VMFunctions.cpp:163
+spDummy = 0 '\000'
+checkSp = 0x7fffffff5f9f ""
+#6 0x00007fffdfa0918d in ?? ()
+No symbol table info available.
+#7 0x00007fffffff5ff0 in ?? ()
+No symbol table info available.
+#8 0x00007fffffff5fe0 in ?? ()
+No symbol table info available.
+#9 0x00007ffff56cbad0 in sPrevHandler () from /media/storage/moz/mozilla-central/obj-ff-dbg/dist/bin/libxul.so
+No symbol table info available.
+#10 0x00007fffcdff6640 in ?? ()
+No symbol table info available.
+#11 0x00007fffd7b6c035 in ?? ()
+No symbol table info available.
+#12 0x0000000000000681 in ?? ()
+No symbol table info available.
+#13 0x00007fffffff6020 in ?? ()
+No symbol table info available.
+#14 0x0000000000000000 in ?? ()
+No symbol table info available.

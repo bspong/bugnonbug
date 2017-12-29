@@ -1,0 +1,27 @@
+add-ons that set default zoom level will give unexpected results when Firefox becomes hidpi-aware on Windows
++++ This bug was initially created as a clone of Bug #851520 +++
+
+From comment #0 there:
+
+<quote>
+
+Steps to reproduce:
+
+This is new with the latest nightly build 22.0a1 (2013-03-15).  I have a Windows 7 (x64) PC with a high-res (200dpi) monitor and therefore have set text size 200% in Window's Control Panel.  With the 200% scaling, in most applications fonts appear at the same size as they would on a 100dpi monitor under normal scaling.
+
+Therefore I would expect Firefox to work the same way, with the default zoom level (View->Zoom->Reset) giving pixel sizes twice those you'd normally get (where 'normal' is a computer with the Windows font size set at its default 100%).
+
+
+Actual results:
+
+However, in the latest nightly, the fonts are even bigger than would be expected.  For example the Google home page is rendered so large that it doesn't fit horizontally even though the screen is 2400 physical pixels wide.  I suspect that the 200% scaling is being double-counted somehow, so Firefox is now rendering everything at *four* times the number of pixels.
+
+</quote>
+
+The user there had the Default FullZoom Level add-on configured for a default zoom of 200% (as a workaround for the lack of proper resolution-dependent scaling in Firefox). With the landing of hidpi support, this suddenly leads to 400% total scaling.
+
+The patch in bug 851520 will fix this issue for the case where the zoom level is being remembered in Firefox content prefs (i.e., we normally restore the zoom when the user returns to a site where they had previously zoomed in manually). However, when an add-on such as Default FullZoom or NoSquint is used, the add-on will reimpose -its- zoom level, on top of the browser's default, and so the user still gets oversized pages.
+
+To improve the user experience, we may want to reach out to authors of such add-ons and recommend adjustments.
+
+(We could also consider "breaking" compatibility with them by modifying the API that is used to zoom, but this would disrupt valid use-cases for the zoom API in addition to fixing the problem cases.)

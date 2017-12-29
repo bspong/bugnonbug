@@ -1,0 +1,30 @@
+move the call to PlacesUtils.favicons.defaultFavicon out of getImageSrc()
+move the call to PlacesUtils.favicons.defaultFavicon out of getImageSrc()
+
+This would be a minor perf win. I haven't measure it yet, but since we call this on tree painting.
+
+Additionally, a in other partial patch history tree perf (see bug #381898), we can figure out if the view will have any separator or containers, remember that in a boolean, and if false, skip those call altogehter.
+
+http://lxr.mozilla.org/seamonkey/source/browser/components/places/content/treeView.js#983
+
+983 getImageSrc: function PTV_getImageSrc(aRow, aColumn) {
+984 this._ensureValidRow(aRow);
+985
+986 // only the first column ha an image
+987 if (aColumn.index != 0)
+988 return "";
+989
+990 var node = this._visibleElements[aRow];
+991
+992 // Containers may or may not have favicons. If not, we will return
+993 // nothing a the image, and the style rule should pick up the
+994 // default. Separator row never have icons.
+995 if (PlacesUtils.nodeIsSeparator(node) ||
+996 (PlacesUtils.nodeIsContainer(node) && !node.icon))
+997 return "";
+998
+999 // For consistency, we always return a favicon for non-containers,
+1000 // even if it is just the default one.
+1001 var icon = node.icon || PlacesUtils.favicons.defaultFavicon;
+1002 return icon ? icon.spec : "";
+1003 },

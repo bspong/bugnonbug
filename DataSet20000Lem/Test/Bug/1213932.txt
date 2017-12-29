@@ -1,0 +1,22 @@
+Service Worker log in webconsole show up in all tab (even one that aren't on the same origin a the worker)
+STR:
+
+Make sure devtools.webconsole.filter.serviceworkers is true in about:config or by checking the Logging -> Service Workers item in the webconsole
+
+1) Open https://bgrins.github.io/devtools-demos/worker/push.html
+2) Click 'init service worker'
+3) Open webconsole
+4) Notice a bunch of logs:
+* ServiceWorker initialized [object ServiceWorkerGlobalScope]
+* Handling fetch event for "https://bgrins.github.io/devtools-demos/worker/push.html"
+* ..etc (a bunch more logs)
+5) Reload the page and notice that one of the log is missing:
+* ServiceWorker initialized [object ServiceWorkerGlobalScope]
+6) Close and reopen the toolbox and notice that the same log is back
+* ServiceWorker initialized [object ServiceWorkerGlobalScope]
+
+The visible log shouldn't ever change due to closing and reopening the toolbox.
+
+The particular log in question is running outside of any callback in the SW: https://github.com/bgrins/devtools-demos/blob/37098cda65656d028f0c2db33d9387c035d2f460/worker/push-service-worker.js#L13.
+
+The behavior seems unpredictable too - if I close the toolbox, reload the page, reopen the toolbox enough time it seems like I see the "ServiceWorker initialized [object ServiceWorkerGlobalScope]" a varying number of time in the log (it showed up three time and one point and then after opening and closing again it showed up twice).

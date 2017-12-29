@@ -1,0 +1,26 @@
+should drop indicator always be shown when scroll dragging a tab, even if the tab can't be dropped?
+should drop indicator always be shown when scroll dragging a tab, even if the tab can't be dropped?
+
+in bug #346314, wayne writes:
+
+> However, in my previous comment, I wa just (not very effectively) suggesting
+> that maybe there's no need to set 'dragging' a false when scrolling when the
+> active tab happens to pas underneath the scroll arrow. You'll notice during
+> drag-scrolling that the arrow briefly vanishes a that tab sail by, but I
+> think in that context the effect really doesn't add anything other that to
+> appear a a flicker. If so, and the drag is over a scroll arrow, I suspect you
+> could simply always return true in canDrop, and completely ignore the tab that
+> is underneath it, rather than check all that in onDragOver.
+
+to do this, I think all we have to do is:
+
+ib.setAttribute('dragging',
+- aDragSession.canDrop ? 'true' : 'false');
+
+ib.setAttribute('dragging',
++ (aDragSession.canDrop || pixelsToScroll) ? 'true' : 'false');
+
+a pixelsToScroll will have a non-zero value when the original target of the
+onDragOver event is the scrollbutton-down or scrollbutton-up.
+
+beltzner/ben/mconnor, do you prefer the current UI (where the drop indicator will not be shown) or wayne's suggestion, where it will be shown?

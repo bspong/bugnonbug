@@ -1,0 +1,39 @@
+Hyphen in username prevents build at nsCookie.cpp compilation
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.6) Gecko/20070723 Iceweasel/2.0.0.6 (Debian-2.0.0.6-0etch1)
+Build Identifier: CVS Trunk
+
+If the name of the user compiling Firefox contains a hyphen, any module set to compile with -Werror will fail to build.
+
+configure.in:5958/configure:15803 call whoami to generate a -DDEBUG_[username] flag which is thus invalid and lead to missing whitespace warnings. These warning turn into lethal error for aforementioned modules, the first of which in my build cycle is nsCookie.cpp.
+
+I wa able to fix the problem for myself by applying a modified version of the username touchup regex on configure.in:5955 to 5958 followed by autoconf, but honestly I'm not a huge C++ hacker and am unsure whether this would be acceptable a a general solution. Nonetheless I will attach a diff of configure.in
+
+(Thanks to Benjamin and Peter of the dev-builds list for pointing me to the problem.)
+
+Reproducible: Always
+
+Steps to Reproduce:
+0. Login a user with a hyphenated username (e.g. shultzc-dev)
+1. Checkout Firefox from CVS trunk.
+2. Attempt a standard build
+Actual Results:
+make[6]: Entering directory `/home/shultzc-dev/mozilla-build/firefox-debug/netwerk/cookie/src'
+nsCookie.cpp
+c++ -o nsCookie.o -c -fvisibility=hidden -DMOZILLA_INTERNAL_API -DOSTYPE=\"Linux2.6\" -DOSARCH=Linux -DIMPL_NS_NET -I../../../dist/include/xpcom -I../../../dist/include/string -I../../../dist/include/pref -I../../../dist/include/storage -I../../../dist/include -I../../../dist/include/necko -I../../../dist/include/nspr -DMOZ_PNG_READ -DMOZ_PNG_WRITE -I../../../dist/sdk/include -fPIC -fno-rtti -fno-exceptions -Wall -Wconversion -Wpointer-arith -Wcast-align -Woverloaded-virtual -Wsynth -Wno-ctor-dtor-privacy -Wno-non-virtual-dtor -Wno-long-long -pedantic -fshort-wchar -pthread -pipe -DDEBUG -D_DEBUG -DDEBUG_shultzc-dev -DTRACING -g -fno-inline -Werror -DMOZILLA_CLIENT -include ../../../mozilla-config.h -Wp,-MD,.deps/nsCookie.pp /home/shultzc-dev/mozilla/netwerk/cookie/src/nsCookie.cpp
+<command line>:1:14: error: missing whitespace after the macro name
+make[6]: *** [nsCookie.o] Error 1
+make[6]: Leaving directory `/home/shultzc-dev/mozilla-build/firefox-debug/netwerk/cookie/src'
+make[5]: *** [libs] Error 2
+make[5]: Leaving directory `/home/shultzc-dev/mozilla-build/firefox-debug/netwerk/cookie'
+make[4]: *** [libs] Error 2
+make[4]: Leaving directory `/home/shultzc-dev/mozilla-build/firefox-debug/netwerk'
+make[3]: *** [libs_tier_necko] Error 2
+make[3]: Leaving directory `/home/shultzc-dev/mozilla-build/firefox-debug'
+make[2]: *** [tier_necko] Error 2
+make[2]: Leaving directory `/home/shultzc-dev/mozilla-build/firefox-debug'
+make[1]: *** [default] Error 2
+make[1]: Leaving directory `/home/shultzc-dev/mozilla-build/firefox-debug'
+make: *** [build] Error 2
+
+Expected Results:
+Build successfully

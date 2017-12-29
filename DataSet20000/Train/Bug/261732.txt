@@ -1,0 +1,52 @@
+scaling issues with multiple tabs open - widget hierachy the cause
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; rv:1.7.3) Gecko/20040914 Firefox/0.10
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; rv:1.7.3) Gecko/20040914 Firefox/0.10
+
+There are a few different scaling/redraw issues with the browser when many tabs
+are open. They all seem to stem from widget hierachy and/or control issues.
+
+To reproduce, open a large number of tabs. Bonus points for opening _just_ enough 
+to require the horizontal tab scroll bar.
+
+The first demo involves opening and closing tabs right at that boundary; as the
+scroll bar appears and reappears the whole browser clags up as it does redraw or
+relayout for _all_ the tabs, not just the visible one.
+
+The funny thing is that no relayout is needed even for the visible tab because
+its width has not changed. It only needs to be blitted down a bit.
+
+You can see the same effect if you do a find-as-you-type with the 1.0 firefox;
+it pops up this handy dialogue at the bottom of the page, and triggers the same
+redraw stuff.
+
+I think most of the inefficiency could be avoided by a simple hack to short
+circuit layout requests for background tabs. A trivial:
+
+    if (this-tab-not-displayed) return;
+
+hack at the top.
+
+However, the relayout/redraw for a change merely of _height_ for the browser
+window should also be avoided. A little size tracking would probably suffice.
+
+
+
+
+
+
+Reproducible: Always
+Steps to Reproduce:
+1. Go to a site with lots of links (big news page, gallery with lots of
+thumbnails, etc)
+2. Middle-click to open lots of the links in tabs.
+3. Perform various resizing type actions. See high power desktop machines
+   stall while pointless redraw/relayout occurs.
+
+
+Actual Results:  
+Redraw is done for every tab.
+Redraw is done when it could be avoided even for the visible tab.
+
+
+Expected Results:  
+Only the displayed page should need redraw, and often not even that.

@@ -1,0 +1,45 @@
+javascript doe not execute all code on a page. Stops about 3/4 way through page. No error is displayed.
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.2.3) Gecko/20100401 Firefox/3.6.3 ( .NET CLR 3.5.30729)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.2.3) Gecko/20100401 Firefox/3.6.3 ( .NET CLR 3.5.30729)
+
+We have a website for logged in user to update information into a database. As the page is built, we put the data to display in a hidden div. We put function to run at the end of a page load into a javascript object and have a function in the html body onload tag. That function step through each property in the object and doe an eval to perform what we have loaded. One of the properties, is a "showPageBody()" function which will display the hidden div we built and hide the interim page that we displayed while building the final page. If we do not find that function in the object, we display an error "Page did not load completely." Before upgrading to Firefox 3.6.3, I would see that happen maybe once or twice a week and it would usually be cause by a database error. Since upgrading to 3.6.3, I will get it on 8 out of 10 page loads. I tried using 3.6.4build3 beta and only got the error 4 out of 10 page loads. Example of the coding:
+
+the way we trigger the onload functions: <body onload="doOnLoad();" ...>
+
+in script tags:
+var aonLoad = Object(); (at top to initialize)
+aonLoad["getAvailable"] = "doGetAvailable();"; (lines like this scattered through page)
+aonLoad["showPage"] = "showPageBody();";
+
+function doOnLoad() {
+for (var item in aonLoad) {
+eval( aonLoad[item] );
+}
+}
+
+What we will find is some of the item will be loaded into aonLoad, but not all. If you do a view source, you will see all of the command in the page, but it will have stopped executing javascript at some point for an unknown reason.
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+1. Just click on a menu item and you will get an error instead of normal page load.
+
+I wanted to paste the entire page source of the problem page, but it exceeded that allowed number of character allowed by bugzilla. In the Actual Results section, I have pasted what I think is the problem code from inspecting using Firebug. The function pophelp doe not appear to get defined, but the dateScripts file is loaded.
+Actual Results:
+<script language="javascript" type="text/javascript">
+loadScript('webServices.php?action=library/dateScripts.js','',1000);
+</script>
+<SCRIPT LANGUAGE="javascript" type="text/javascript">
+function pophelp()
+{
+window.open('customHelp.php?PHPSESSID=e283b8580204301962028aa8e0817076&file=AcctMaint','NETViewHelp','height=500, width=775, scrollbars=yes, toolbar=no, menubar=no, location=no, directories=no, status=no, resizable=yes');
+}
+</SCRIPT>
+<div><div align="left" class="normal">
+<script language="javascript" type="text/javascript">
+loadScript('webServices.php?action=library/numberScripts.js','',1000);
+var vOrigDate;
+var batchDate;
+var vUser = "30489";
+var batchSelectedIndex;
+</script>

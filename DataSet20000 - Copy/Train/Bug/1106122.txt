@@ -1,0 +1,22 @@
+Add telemetry probe for activeTicks
+Vladan asked me to add a telemetry probe for activeTicks (currently probed for FHR).
+
+I experimented a bit with activeTicks and noticed the following:
+
+1. It's considered active as long as the mouse pointer hovers the browser (even if the user is away from the computer).
+
+2. It's considered inactive as long as the mouse pointer is not over the Firefox window.
+
+The combination of the above could result in highly biased and misleading values IMO.
+
+As for what value should be probed, I'm also not sure. Could be:
+
+1. Identical number to activeTicks which FHR collects.
+2. Percentage of activity at shutdown (probably 100 * 5 * activeTicks /  totalTime)
+3. More than one value, possibly including 1 or 2 above, or other values.
+
+As for the magic constant 5 at #2, I think it's defined at http://dxr.mozilla.org/mozilla-central/source/dom/events/EventStateManager.cpp#101 , and I'm pretty sure it's not accessible from outside this file and isn't meant to be exposed.
+
+We could either try to expose it (lots of hassle), or duplicate it at session.jsm and add appropriate comments on both places, or accumulate the [in]activity durations independently at onActivity (observer for active and inactive notifications) at session.jsm. I implemented the last approach locally and it seems to collect the values well.
+
+Vladan, thoughts on how you want to proceed here?

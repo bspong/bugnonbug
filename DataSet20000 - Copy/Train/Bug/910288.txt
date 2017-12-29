@@ -1,0 +1,35 @@
+The list of disabled commands in detached chat windows isn't correct
+Created attachment 796715
+Patch
+
+Since bug 898161, I noticed a 'document.getElementById(...) is null' error in chatWindow.xul when I detach a SocialAPI chat window on Windows or Linux.
+
+The cause is a few elements that don't exist in the DOM because they were included as part of browser-menubar.inc: 'viewToolbarsMenu', 'viewSidebarMenuMenu', 'viewFullZoomMenu', 'pageStyleMenu', 'charsetMenu'.
+
+
+I took the opportunity of patching this list of disabled elements to review the whole list of enabled keyboard shortcuts in detached chat windows, and found some commands that I think we should disable:
+
+These 2 commands open dialogs that don't seem appropriate above the chat window:
+Browser:OpenFile, Tools:Sanitize (accel,shift,VK_DELETE)
+
+These 2 are broken because window.content is undefined in chat windows.
+View:PageSource
+View:PageInfo
+I think they make sense to keep enabled, so I defined a 'content' getter to make them work (this seemed easier than getting the 'content' property we get from C++ to return the right value -- that would likely involve implementing nsIBrowserDOMWindow).
+
+
+These commands are broken because they expect gBrowser:
+Tools:DevToolbox
+key_selectTab{1,2,3,4,5,6,7,8,LastTab}
+cmd_findPrevious (ctrl+shift+g or Shift+f3)
+cmd_fullZoomReduce, cmd_fullZoomEnlarge, cmd_fullZoomReset
+
+Irrelevant for our case (and broken: 'sidebar is null' error) :
+viewBookmarksSidebar (accel+b)
+
+These 2 commands work fine on Mac (because we have the menu bar), and are broken elsewhere:
+Browser:OpenLocation
+Tools:Search
+
+
+Note: I tested this on Linux and Mac, but haven't tested on Windows yet (I expect the behavior there to be identical to Linux).

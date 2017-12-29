@@ -1,0 +1,10 @@
+is places.sqlite using a cache that is too large ?
+As far as I can see, we're using 6% of memory as the cache for the places.sqlite file (if history_cache_percentage isn't set). For 1GB of physical memory, this means 60MB ! That seems to be an awfully large cache to me.
+
+As a proof, I typed in "pragma cache_size;" in Storage explorer, and it reported a size of 62875 (I have 1GB of RAM, and page_size seems to be 1024).
+
+I know that we're currently using 180 days of history, and we will be seeing places.sqlite files that will be extremely large (dozens of MB). So the cache will really be large, possible even the maximum of 60MB. Also, the preload will actually try to load the full 60MB at startup, which will be very slow.
+
+I understand why a cache needs to be large. If it's (much) smaller than the database, access will be slow ofcourse. That why we don't use the default cache 2000 pages, which results in 2MB with our hardcoded page size of 1024. See also bug 373256. But with those large places files ...
+
+Maybe we need to reconsider the default cache-size. If there are performance problems, then we need to fix them, like in bug 373256 comment 29. Or this is just another reason to limit the default days in history ; other bugs have mentioned that 180 days seem to be excessive.

@@ -1,0 +1,36 @@
+window.open() from modal produces another modal; should be window
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.1.7) Gecko/20091221 Firefox/3.5.7 (.NET CLR 3.5.30729)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.1.7) Gecko/20091221 Firefox/3.5.7 (.NET CLR 3.5.30729)
+
+Calling window.open() from a modal (page B) that has been opened via window.showModalDialog() by a page (page A) opens another modal (page C). I would expect B to open a window C that isn't modal. You should be able to focus the calling page B. Instead page C is a modal on top of B and you can't focus B until you close C.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Implement three html pages with the following body content:
+
+A.
+A: This is the first screen. Open Modal from here.<br />
+<a href="#" onClick='window.showModalDialog("ModalTestB.html",null,"dialogWidth=300px;dialogHeight:200px;dialogLeft:10px;dialogTop:10px;edge:raised;help:no;resizable:no;status=no")'>Open Modal</a>
+
+B.
+B: This is the second screen - opened as a modal from the first screen. Open third screen from here.<br />
+<a href="#" onClick='window.open("ModalTestC.html","onLineDoc","width=250,height=150,left=20,top=20")'>Open Window</a>&nbsp;
+<a href="#" onClick='window.open("ModalTestC.html","onLineDoc")'>Open Window w/ no size</a>&nbsp;
+<a href="#" onClick='window.showModalDialog("ModalTestC.html",null,"dialogWidth=250px;dialogHeight:150px;dialogLeft:20px;dialogTop:20px;edge:raised;help:no;resizable:no;status=no")'>Open Modal</a>
+
+C.
+C: This is the third screen opened from the modal.
+
+2. Open page A in FF. Click the link. Page B opens as a modal.
+
+3. On page B, click the three links and observe the results.
+Actual Results:  
+"Open Window" on page B opens page C as a modal (wrong).
+"Open Window w/ no size" opens page C in a new tab (ok).
+"Open Modal" opens page C as a modal (right).
+
+Expected Results:  
+"Open Window" should open a window that is not modal.
+
+IE works as expected.

@@ -1,0 +1,43 @@
+Long JS RegExp character class oscillates between true and false on test('-')
+User-Agent:       Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.5; en-US; rv:1.9.1.2) Gecko/20090729 Firefox/3.5.2
+Build Identifier: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.5; en-US; rv:1.9.1.2) Gecko/20090729 Firefox/3.5.2
+
+A long JS regular expression that matches a run of characters in a character set oscillates between returning true and false when the test method is called.  The RegExp.prototype.test method is not supposed to inherit state from previous runs.
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+Run the javascript below.  This is a session from squarefree.com/shell/shell.html
+
+r = /[\t-\r -#%-\/:;?@\x5b-\x5d_{} ¡«·»¿\u037e\u0387\u055a-\u055f\u0589\u058a\u05be\u05c0\u05c3\u05f3\u05f4\u060c\u060d\u061b\u061f\u066a-\u066d\u06d4\u0700-\u070d\u0964\u0965\u0970\u0df4\u0e4f\u0e5a\u0e5b\u0f04-\u0f12\u0f3a-\u0f3d\u0f85\u104a-\u104f\u10fb\u1361-\u1368\u166d\u166e\u1680\u169b\u169c\u16eb-\u16ed\u1735\u1736\u17d4-\u17d6\u17d8-\u17da\u1800-\u180a\u180e\u1944\u1945\u2000-\u200b\u2010-\u2029\u202f-\u2043\u2045-\u2051\u2053\u2054\u2057\u205f\u207d\u207e\u208d\u208e\u2329\u232a\u23b4-\u23b6\u2768-\u2775\u27e6-\u27eb\u2983-\u2998\u29d8-\u29db\u29fc\u29fd\u3000-\u3003\u3008-\u3011\u3014-\u301f\u3030\u303d\u30a0\u30fb\ufd3e\ufd3f\ufe30-\ufe52\ufe54-\ufe61\ufe63\ufe68\ufe6a\ufe6b\uff01-\uff03\uff05-\uff0a\uff0c-\uff0f\uff1a\uff1b\uff1f\uff20\uff3b-\uff3d\uff3f\uff5b\uff5d\uff5f-\uff65]+/g, void 0
+
+[r.test('-'), r.test('-')]
+true,false
+Actual Results:  
+[true, false]
+
+Expected Results:  
+[true, true]
+
+since the regexp contains the character range [%-\/] which includes the '-' character
+
+The RegExp from which the example was derived,
+new RegExp(
+    '\\t-\\r -#%-/:;?@\\x5b-\\x5d_{}\xa0\xa1\xab\xb7\xbb\xbf'
+    + '\\u037e\\u0387\\u055a-\\u055f\\u0589\\u058a\\u05be\\u05c0\\u05c3'
+    + '\\u05f3\\u05f4\\u060c\\u060d\\u061b\\u061f\\u066a-\\u066d\\u06d4'
+    + '\\u0700-\\u070d\\u0964\\u0965\\u0970\\u0df4\\u0e4f\\u0e5a\\u0e5b'
+    + '\\u0f04-\\u0f12\\u0f3a-\\u0f3d\\u0f85\\u104a-\\u104f\\u10fb'
+    + '\\u1361-\\u1368\\u166d\\u166e\\u1680\\u169b\\u169c\\u16eb-\\u16ed'
+    + '\\u1735\\u1736\\u17d4-\\u17d6\\u17d8-\\u17da\\u1800-\\u180a\\u180e'
+    + '\\u1944\\u1945\\u2000-\\u200b\\u2010-\\u2029\\u202f-\\u2043'
+    + '\\u2045-\\u2051\\u2053\\u2054\\u2057\\u205f\\u207d\\u207e\\u208d\\u208e'
+    + '\\u2329\\u232a\\u23b4-\\u23b6\\u2768-\\u2775\\u27e6-\\u27eb'
+    + '\\u2983-\\u2998\\u29d8-\\u29db\\u29fc\\u29fd\\u3000-\\u3003\\u3008-\\u3011'
+    + '\\u3014-\\u301f\\u3030\\u303d\\u30a0\\u30fb\\ufd3e\\ufd3f\\ufe30-\\ufe52'
+    + '\\ufe54-\\ufe61\\ufe63\\ufe68\\ufe6a\\ufe6b\\uff01-\\uff03\\uff05-\\uff0a'
+    + '\\uff0c-\\uff0f\\uff1a\\uff1b\\uff1f\\uff20\\uff3b-\\uff3d\\uff3f\\uff5b'
+    + '\\uff5d\\uff5f-\\uff65',
+    'g');
+consistently and incorrectly returns false when matched against '-'.

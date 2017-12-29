@@ -1,0 +1,18 @@
+Dispatch event when find bar is initialized
+User Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:22.0) Gecko/20100101 Firefox/22.0 (Beta/Release)
+Build ID: 20130618035212
+
+
+
+
+Expected results:
+
+This is a request. Ever since landing of bug 537013, the find bar is lazily added. This mean that, for add-on like FindBar Tweak that rely on the find bar being initialized, it becomes a much harder job to follow this state.
+
+Listening to "TabSelect" event to know if the new tab ha an initialized find bar, only partly resolve the issue because, when switching to a new tab, the find bar won't be initialized. When you open the find bar on a tab for the first time, thus initializing it, we have no easy mean to know this happened. We know that the find bar wa opened only after it happened, and in this case if we modify it at this point, there will be a brief "jump" between the original find bar state and whatever state we want to induce in the newly initialized find bar. Plus, modifying the open routine in whatever way becomes impossible, because it would always open in the normal default behavior at least once.
+
+Modifying every single shortcut and command that open the find bar so we know it's going to be initialized is, in my opinion, very poor coding practice, not to mention it can easily fail if other add-on do the same.
+
+A simple "FindBarInitialized" event, dispatched at the end of gBrowser.getFindBar(), right before the return statement, with e.target defined a either the newly created find bar element or the tab element where it wa created, would easily fix this and remove the need of so many extra listener and handler to work around the current situation.
+
+I realize this kind of event could be sent from an add-on, by modifying the gBrowser.getFindBar() method itself. But in my opinion this would be a much better fix done by firefox itself, for the sake of global compatibility.

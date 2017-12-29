@@ -1,0 +1,19 @@
+sidebarheader on GNOME has a transparent background
+Created attachment 306847
+patch v1: fixes problem
+
+The sidebar header on GNOME has a transparent background because its "-moz-appearance: toolbox" rule overrides its "background-color: -moz-Dialog;" rule, which causes problems for theming engines like Personas that expect the header to have an explicit background color, as it does on Mac and Windows.
+
+The -moz-appearance rule also overrides rules specifying top and bottom borders, and it's unclear why there are these contradictory rules, but the rules are the same as in winstripe, where -moz-appearance does not override the other rules, so perhaps they were simply copied from Windows to Linux verbatim.
+
+In that case, the intent would have been for the header to have the specified background color "-moz-Dialog", which we can do by simply removing the -moz-appearance.  Nevertheless, that also causes the explicit border rules to be applied, and I looked at three other GNOME apps with sidebars (Totem, gThumb, and Evolution), and none of them give their sidebar headers borders (although Evolution gives it a different background color).
+
+Plus borders look funky with the native GTK splitter, which is borderless.  So I think the header should remain borderless while fixing the background color issue, which we can do by removing both the -moz-appearance rule and the top and bottom border rules.
+
+Here's a patch that does that.
+
+Note: there are other things I noticed while investigating this issue, like that we use a widget (sidebarheader) with no XBL binding, that we put its styles in toolkit/ instead of browser/ on Linux and Windows (it's in browser/ on Mac, although there's at least one funky rule there as well), and that we pad the header label by four pixels on the left, which causes it to be misaligned with text in the sidebar itself (f.e. the "Search" label in the Bookmarks sidebar).
+
+But I'll file those as separate bugs.
+
+Requesting wanted-firefox3 for this theme polish fix that has implications for extensibility.

@@ -1,0 +1,37 @@
+When push the close button, firefox is closed with "siganl=6" and go to sleeping mode.
+User-Agent: Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 2.0.50727; InfoPath.2)
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9b4) Gecko/2008032410 Minefield/3.0b4
+
+In the sleeping mode, we can track the call-stack by gdb.
+
+gdb) bt
+#0 0xffffe410 in __kernel_vsyscall ()
+#1 0x4c4f0036 in __nanosleep_nocancel () from /lib/libc.so.6
+#2 0x4c4efe5b in sleep () from /lib/libc.so.6
+#3 0xb7ed6179 in ah_crap_handler (signum=6) at nsSigHandlers.cpp:149
+#4 0xb7ee7ee3 in nsProfileLock::FatalSignalHandler (signo=6) at nsProfileLock.cpp:216
+#5 <signal handler called>
+#6 0xffffe410 in __kernel_vsyscall ()
+#7 0x4c48d159 in raise () from /lib/libc.so.6
+#8 0x4c48e6e3 in abort () from /lib/libc.so.6
+#9 0x4c486abd in __assert_fail () from /lib/libc.so.6
+#10 0xb789a8aa in _cairo_hash_table_destroy (hash_table=0x8883800) at cairo-hash.c:199
+#11 0xb78a46e5 in _cairo_scaled_font_map_destroy () at cairo-scaled-font.c:369
+#12 0xb78970fc in _cairo_font_reset_static_data () at cairo-font-face.c:537
+#13 0xb7896eab in cairo_debug_reset_static_data () at cairo-debug.c:64
+#14 0xb7ed76d2 in MOZ_gdk_display_close (display=0x81530e8) at nsAppRunner.cpp:2377
+#15 0xb7edae3f in XRE_main (argc=1, argv=0xbfa2a9d4, aAppData=0x8111380) at nsAppRunner.cpp:3265
+#16 0x08048c87 in main (argc=1, argv=0x804a6a8) at nsBrowserApp.cpp:158
+
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+1. surf web page (ex, move wbpages by clicking "HOME" and "Getting Started" button in tool bar and scroll several times)
+2. click the quit button
+3.
+Actual Results:
+closed with "siganl=6" and go to sleeping mode.
+
+Expected Results:
+Just closed.

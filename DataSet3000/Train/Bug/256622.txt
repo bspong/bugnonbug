@@ -1,0 +1,87 @@
+FF10PR1 crash when adding/refreshing live bookmark [@ nsBookmarksService::OnAssert] [@ nsBookmarksService::OnUnassert]
+found using 2004082308-0.9+ on linux fedora core 2.
+
+this is currently difficult to reproduce: I've only seen it once, but Marcia has
+seen it.
+
+1. go to http://del.icio.us and add the RSS feed as a livemark in your personal
+(bookmarks) toolbar.
+
+2. in the PT bring up the context menu and select "Refresh Live Bookmark"
+
+results: crash.
+
+if I get a more reliable test case, will add steps here. in the meantime, here's
+the stack info:
+
+http://talkback-reports.mozilla.org/talkback/quicksearch.jsp?search=2&type=iid&id=633318
+
+Stack Signature: nsBookmarksService::OnAssert() 81ce7a5e
+	/builds/tinderbox/firefox-1.0/Linux_2.4.20-28.8_Clobber/mozilla/browser/components/bookmarks/src/nsBookmarksService.cpp,
+line 162
+Stack Trace 	
+nsBookmarksService::OnAssert() 
+[/builds/tinderbox/firefox-1.0/Linux_2.4.20-28.8_Clobber/mozilla/browser/components/bookmarks/src/nsBookmarksService.cpp,
+line 162]
+InMemoryDataSource::Assert() 
+[/builds/tinderbox/firefox-1.0/Linux_2.4.20-28.8_Clobber/mozilla/rdf/base/src/nsInMemoryDataSource.cpp,
+line 1408]
+nsBookmarksService::CreateBookmark() 
+[/builds/tinderbox/firefox-1.0/Linux_2.4.20-28.8_Clobber/mozilla/browser/components/bookmarks/src/nsBookmarksService.cpp,
+line 2711]
+nsFeedLoadListener::HandleRDFItem() 
+[/builds/tinderbox/firefox-1.0/Linux_2.4.20-28.8_Clobber/mozilla/browser/components/bookmarks/src/nsBookmarksFeedHandler.cpp,
+line 479]
+nsFeedLoadListener::TryParseAsRDF() 
+[/builds/tinderbox/firefox-1.0/Linux_2.4.20-28.8_Clobber/mozilla/browser/components/bookmarks/src/nsBookmarksFeedHandler.cpp,
+line 112]
+nsFeedLoadListener::OnStopRequest() 
+[/builds/tinderbox/firefox-1.0/Linux_2.4.20-28.8_Clobber/mozilla/browser/components/bookmarks/src/nsBookmarksFeedHandler.cpp,
+line 248]
+nsHTTPCompressConv::OnStopRequest() 
+[/builds/tinderbox/firefox-1.0/Linux_2.4.20-28.8_Clobber/mozilla/netwerk/streamconv/converters/nsHTTPCompressConv.cpp,
+line 125]
+nsStreamListenerTee::OnStopRequest() 
+[/builds/tinderbox/firefox-1.0/Linux_2.4.20-28.8_Clobber/mozilla/netwerk/base/src/nsStreamListenerTee.cpp,
+line 66]
+nsHttpChannel::OnStopRequest() 
+[/builds/tinderbox/firefox-1.0/Linux_2.4.20-28.8_Clobber/mozilla/netwerk/protocol/http/src/nsHttpChannel.cpp,
+line 606]
+nsInputStreamPump::OnStateStop() 
+[/builds/tinderbox/firefox-1.0/Linux_2.4.20-28.8_Clobber/mozilla/netwerk/base/src/nsInputStreamPump.cpp,
+line 606]
+nsInputStreamPump::OnInputStreamReady() 
+[/builds/tinderbox/firefox-1.0/Linux_2.4.20-28.8_Clobber/mozilla/netwerk/base/src/nsInputStreamPump.cpp,
+line 339]
+nsInputStreamReadyEvent::EventHandler()
+PL_HandleEvent() 
+[/builds/tinderbox/firefox-1.0/Linux_2.4.20-28.8_Clobber/mozilla/xpcom/threads/plevent.c,
+line 674]
+PL_ProcessPendingEvents() 
+[/builds/tinderbox/firefox-1.0/Linux_2.4.20-28.8_Clobber/mozilla/xpcom/threads/plevent.c,
+line 608]
+nsEventQueueImpl::ProcessPendingEvents() 
+[/builds/tinderbox/firefox-1.0/Linux_2.4.20-28.8_Clobber/mozilla/xpcom/threads/nsEventQueue.cpp,
+line 395]
+event_processor_callback() 
+[/builds/tinderbox/firefox-1.0/Linux_2.4.20-28.8_Clobber/mozilla/widget/src/gtk2/nsAppShell.cpp,
+line 67]
+libglib-2.0.so.0 + 0x4921f (0x0021b21f)
+libglib-2.0.so.0 + 0x23e4a (0x001f5e4a)
+libglib-2.0.so.0 + 0x24f28 (0x001f6f28)
+libglib-2.0.so.0 + 0x25260 (0x001f7260)
+libglib-2.0.so.0 + 0x258a3 (0x001f78a3)
+libgtk-x11-2.0.so.0 + 0x10c403 (0x0051c403)
+nsAppShell::Run() 
+[/builds/tinderbox/firefox-1.0/Linux_2.4.20-28.8_Clobber/mozilla/widget/src/gtk2/nsAppShell.cpp,
+line 144]
+nsAppShellService::Run() 
+[/builds/tinderbox/firefox-1.0/Linux_2.4.20-28.8_Clobber/mozilla/xpfe/appshell/src/nsAppShellService.cpp,
+line 495]
+xre_main() 
+[/builds/tinderbox/firefox-1.0/Linux_2.4.20-28.8_Clobber/mozilla/toolkit/xre/nsAppRunner.cpp,
+line 692]
+main() 
+[/builds/tinderbox/firefox-1.0/Linux_2.4.20-28.8_Clobber/mozilla/browser/app/nsBrowserApp.cpp,
+line 59]
+libc.so.6 + 0x14ad4 (0x00c04ad4)

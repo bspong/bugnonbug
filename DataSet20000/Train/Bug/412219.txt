@@ -1,0 +1,59 @@
+make sure that CalculateFrecencyInternal() does not return 0 for places with at least one visit of bonus-able type
+make sure that CalculateFrecencyInternal() does not return 0 for places with at least one non-embed visit.
+
+as mentioned in https://bugzilla.mozilla.org/show_bug.cgi?id=394038#c62, if a place has frecency of 0, we do not show it in the url bar autocomplete results.
+
+additionally, because it has a frecency of zero, on idle, we will not attempt to recalculate frecency (because 0 is a low as you go, and -1 means "visible in ac results, but please recalculate me on idle".)
+
+we need to make sure that if a place has any non embed, non download, non undefined visits that it gets a non-zero frecency.
+
+here's one way this currently happen:
+
+CalculateFrecencyInternal() uses the browser.frecency.numVisits (currently 10) most recent visits.  if those are all visits with browser.frecency.*VisitBonus of zero (like embed or download), our frecency will be zero. but what if the 11th visits was a link, bookmark, or typed?
+
+we could fix this problem by excluding visits NOT IN (0,4,7) from our query to find the last 10 visits, but that makes the assumption that the bonus for embed and download are zero.
+
+here's where we'd fix the query:
+
+  // mDBVisitsForFrecency
+  // NOTE: we are not limiting to visits with "visit_type NOT IN (0,4)"
+  // because if we do that, mDBVisitsForFrecency would return no visits
+  // for places with only embed (or undefined) visits.  That would
+  // cause use to estimate a frecency based on what information we do have,
+  // see CalculateFrecencyInternal().  that would result in a 
+  // non-zero frecency for a place with only
+  // embedded visits, instead of a frececny of 0.
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT visit_date, visit_type FROM moz_historyvisits " 
+    "WHERE place_id = ?1 ORDER BY visit_date DESC LIMIT ") +
+     nsPrintfCString("%d", mNumVisitsForFrecency),
+    getter_AddRefs(mDBVisitsForFrecency));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+I guess we could avoid hard coding and programtically build up the NOT IN(...) based on the pref values.
+
+additionally, this could happen if the weights chosen for any of the buckets was zero:
+
++// weights for buckets for frecency calculations
++pref("browser.frecency.firstBucketWeight", 100);
++pref("browser.frecency.secondBucketWeight", 70);
++pref("browser.frecency.thirdBucketWeight", 50);
++pref("browser.frecency.fourthBucketWeight", 30);
++pref("browser.frecency.defaultBucketWeight", 10);
+
+note to dietrich:  put a warning about how these weights need to be > 0.
+
++
++// bonus (in percent) for visit transition types for frecency calculations
++pref("browser.frecency.embedVisitBonus", 0);
++pref("browser.frecency.linkVisitBonus", 120);
++pref("browser.frecency.typedVisitBonus", 200);
++pref("browser.frecency.bookmarkVisitBonus", 140);
++pref("browser.frecency.downloadVisitBonus", 0);
++pref("browser.frecency.permRedirectVisitBonus", 0);
++pref("browser.frecency.tempRedirectVisitBonus", 0);
++pref("browser.frecency.defaultVisitBonus", 0);
+
+note to dietrich:  
+
+are those values for permRedirectVisitBonus and tempRedirectVisitBonus correct?  should they, like embed and download, be worth nothing?

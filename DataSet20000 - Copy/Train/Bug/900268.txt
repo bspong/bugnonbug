@@ -1,0 +1,12 @@
+Trace actor collects too much information when serializing objects
+When serializing an object, the entire graph of reachable objects (via both ownProperties and the prototype) is serialized. This can result in huge amounts of data being sent over the remote debugging protocol on every function entry and exit. For example, `return {};` serializes Object.prototype and produces a 24,000 character packet: http://pastebin.mozilla.org/2696180
+
+Some proposed solutions:
+
+- Don't serialize prototypes. This shrinks packet sizes significantly for simple objects, but doesn't help with large data structure objects.
+
+- Only serialize objects to a certain depth. This prevents large trees from being serialized, but doesn't solve the problem for objects that reference the global object, DOM nodes, or long arrays.
+
+- Only serialize basic information about object parameters (like the class, possibly the list of names of ownProperties). This is similar to the previous suggestion, but with a max depth of 0. This solves the problem of individual large objects causing problematic packets, but makes the collected data not as useful.
+
+The amount of information the user wants collected in the trace could potentially be an option--you'd trade performance for greater detail. Collecting everything (like we do now) is more detail than necessary for the majority of use cases, though.

@@ -1,0 +1,37 @@
+Very strange problem in recent version of Firefox with the drag and drop
+User Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2486.0 Safari/537.36 Edge/13.10586
+
+Steps to reproduce:
+
+I have a very strange issue with Firefox 49.0.1 (it was not present in previous versions like 37.x)
+I am a C++ developer and I must code a third party product that (between other things) has to tansform uploaded files into other files. My program is an external program. It is basically a .dll library that is injected into Firefox.exe and I intercept (using hooking mechanisms) the RegisterDragDrop API. Once Firefox.exe calls (my) RegisterDragDrop, instead of returning the Firefox IDropTarget COM interface I return my own IDropTarget COM interface. So when a user drags a file into Firefox my IDropTarget COM interface is called instead.
+At this point my logic is "very simple" since I create a kind of wrapper: I have my own IDropTarget COM interface. When the user drags a file to gmail.com (to add an attachment) then my IDropTarget::DragEnter, IDropTarget::DragOver, and IDropTarget::Drop methods are called.
+What I do in them is to directly call the Firefox original IDropTarget (that's why I say it's a pretty straightforward implementation). 
+However in the Drop method I do:
+HRESULT Drop(....)
+{
+  HRESULT hr;
+  Sleep(3000); //Sleeps 3 seconds
+  return OriginalIDropTarget->Drop();
+}
+
+I really need these 3 seconds because what I do is to do some transformations to the file that will take time.
+
+It works pretty nice in hotmail, yahoo, facebook... that is, the user drops a file and the drop action takes 3 seconds and then the file is finally dropped OK.
+However in gmail.com it does not work: Most of the times nothing is attached. If I reduce this sleep to 500 or 600 milliseconds then it works.
+
+See that the only difference is this sleep of 3 seconds before calling the original IDropTarget.Drop event.
+
+Has something changed in the recent releases?
+
+Thanks in advance.
+
+
+Actual results:
+
+Nothing was attached
+
+
+Expected results:
+
+A file should be attached

@@ -1,0 +1,50 @@
+adsense fails -- attempting to access window.screen.* throws NS_ERROR_FAILURE
+User-Agent:       Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_5_3; en-us) AppleWebKit/525.18 (KHTML, like Gecko) Version/3.1.1 Safari/525.20
+Build Identifier: Mozilla/5.0 (Macintosh; U; Intel Mac OS X; en-US; rv:1.8.1.15) Gecko/20080623 Firefox/2.0.0.15
+
+I've been tracking down a bug between Firefox 2 and Google Adsense.  A search of both Google's and Firefox's sites yielded no answers to this problem.  
+
+The situation is rather difficult to reproduce outside of this company, as it depends on some of the development infrastructure here at Slide.com, in addition to proper setup as an open social application on MySpace.  It might soon be public in some form.  Contact me allan+adsense@slide.com
+
+Our OpenSocial application displays a few Flash swf files, some form elements, and an ad, on it's main Canvas view.  The ad is supplied by an iframe using a standard Google Adsense protocol.  In certain configurations, the ad rectangle displays empty white, while an error message shows up on the console:
+
+uncaught exception: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMScreen.width]" nsresult: "0x80004005 (NS_ERROR_FAILURE)" location: "JS frame :: http://pagead2.googlesyndication.com/pagead/show_ads.js :: ba :: line 3" data: no]
+
+The bug does not happen with Safari on Mac, or IE on Windows.  It happens on Firefox 2.0.0.15 on both Windows and Mac.  The ad iframe is actually embedded in another iframe which is part of the OpenSocial mechanism.  Displaying the OS frame independently tends to fail also (only 2 frames deep), but displaying the ad frame separately always seems to succeed.  A previous version of our application that did about the same thing (3 frames deep again) did not have this problem.  There has not been widespread testing to see how pervasive this bug is.  
+
+The .js file listed is actually a sort of compressed JS.  By using an edited version of the same file, I've isolated the bug to this code in show_ads.js:
+	if (m.screen)
+		e+=m.screen.width+"x"+m.screen.height+m.screen.colorDepth;
+'m' points to the window object, and so these are references to the standard DOM screen object.  As can be seen in the attached graphic adSenseFFBugInFireBug.gif, all components of screen seem to be present, but Firebug says that they are all undefined (that can be caused by other results besides undefined, such as an exception being thrown during execution).  
+
+The error message is the most general and unspecific available under the Mozilla framework.  I would recommend against its use in general because of problems like this.  
+
+
+In HTML form, the ad looks about like:
+
+		<iframe frameborder="no" scrolling="no" style="border: none; overflow: none; width:300px;height:250px;"
+		id="doubleclickBannerIFrame"
+		src="http://ad.doubleclick.net/adi/$site/$zone;sz=300x250;tile=$tile;ord=$ordn;">
+		</iframe>
+
+where the dollar sign variables are proprietary to our situation.  In a successful situation, the insides of the iframe become a textual, graphic, or animated ad, as chosen by google.  In our pathological situation, the insides became two script elements, no contents, and zero height.  
+
+Ihave not found a workaround for this bug.  Fortunately, a white rectangle appears just fine to the user, although the ad is not delivered, and this may have business implications.  
+
+
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+1.get a dev copy of my app.  Bug happens in v2; v1 should be public in a few days.  Not sure what to do about this...
+2.Create a slide show at Slide.com.  Insert it into your MySpace profile.  Click on the 'see all pics' button near the bottom.  
+3.see empty google ad.  see msg in js console. 
+Actual Results:  
+ad rectangle is white; console message uncaught exception: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMScreen.width]" nsresult: "0x80004005 (NS_ERROR_FAILURE)" location: "JS frame :: http://pagead2.googlesyndication.com/pagead/show_ads.js :: ba :: line 3" data: no]
+
+
+
+Expected Results:  
+ad shows; no message in console
+
+see description.

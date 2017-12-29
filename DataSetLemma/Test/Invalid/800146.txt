@@ -1,0 +1,53 @@
+Out of range writes in js::XDRStaticBlockObject<(js::XDRMode)0>
+m-c from about 3 hour ago (109680:aa5e3b445810), segfaults on startup
+when built -O2 but not -O (I think).
+
+There are a bunch of invalid writes leading to heap trashing just
+before it faults.
+
+Invalid write of size 4
+at 0x30E9C9AE: bool js::XDRStaticBlockObject<(js::XDRMode)0>(js::XDRState<(js::XDRMode)0>*, JS::Handle<JSObject*>, JS::Han
+dle<JSScript*>, js::StaticBlockObject**) (js/src/jsapi.h:1302)
+by 0x30E642DD: bool js::XDRScript<(js::XDRMode)0>(js::XDRState<(js::XDRMode)0>*, JS::Handle<JSObject*>, JS::Handle<JSScrip
+t*>, JS::Handle<JSFunction*>, JS::MutableHandle<JSScript*>) (js/src/jsscript.cpp:716)
+by 0x30E055A9: bool js::XDRInterpretedFunction<(js::XDRMode)0>(js::XDRState<(js::XDRMode)0>*, JS::Handle<JSObject*>, JS::H
+andle<JSScript*>, JS::MutableHandle<JSObject*>) (js/src/jsfun.cpp:412)
+by 0x30E641B5: bool js::XDRScript<(js::XDRMode)0>(js::XDRState<(js::XDRMode)0>*, JS::Handle<JSObject*>, JS::Handle<JSScrip
+t*>, JS::Handle<JSFunction*>, JS::MutableHandle<JSScript*>) (js/src/jsscript.cpp:690)
+by 0x30EEE8D9: js::XDRState<(js::XDRMode)0>::codeScript(JS::MutableHandle<JSScript*>) (js/src/vm/Xdr.cpp:147)
+by 0x30DD63AF: JS_EncodeScript (js/src/jsapi.cpp:7272)
+by 0x307D1D0D: WriteCachedScript(mozilla::scache::StartupCache*, nsACString_internal&, JSContext*, nsIPrincipal*, JSScript
+*) (js/xpconnect/loader/mozJSLoaderUtils.cpp:47)
+by 0x307D0019: mozJSComponentLoader::GlobalForLocation(nsIFile*, nsIURI*, JSObject**, char**, JS::Value*) (js/xpconnect/lo
+ader/mozJSComponentLoader.cpp:891)
+by 0x307D109B: mozJSComponentLoader::LoadModule(mozilla::FileLocation&) (js/xpconnect/loader/mozJSComponentLoader.cpp:480)
+by 0x30AD1067: nsComponentManagerImpl::KnownModule::Load() (xpcom/components/nsComponentManager.cpp:671)
+by 0x30AD1095: nsFactoryEntry::GetFactory() (xpcom/components/nsComponentManager.cpp:1662)
+by 0x30AD13E7: nsComponentManagerImpl::CreateInstanceByContractID(char const*, nsISupports*, nsID const&, void**) (xpcom/components/nsComponentManager.cpp:1002)
+by 0x30AD1CBB: nsComponentManagerImpl::GetServiceByContractID(char const*, nsID const&, void**) (xpcom/components/nsComponentManager.cpp:1398)
+by 0x30AAF151: CallGetService(char const*, nsID const&, void**) (ff-opt/xpcom/build/nsComponentManagerUtils.cpp:62)
+by 0x30AAF18D: nsGetServiceByContractID::operator()(nsID const&, void**) const (ff-opt/xpcom/build/nsComponentManagerUtils.cpp:246)
+by 0x30AAE88B: nsCOMPtr_base::assign_from_gs_contractid(nsGetServiceByContractID, nsID const&) (ff-opt/xpcom/build/nsCOMPtr.cpp:92)
+by 0x30ACFDF9: NS_CreateServicesFromCategory(char const*, nsISupports*, char const*) (ff-opt/xpcom/components/../../dist/include/nsCOMPtr.h:910)
+by 0x3015DDE3: nsXREDirProvider::DoStartup() (toolkit/xre/nsXREDirProvider.cpp:785)
+by 0x3015C7E9: XREMain::XRE_mainRun() (toolkit/xre/nsAppRunner.cpp:3686)
+by 0x3015CCEF: XREMain::XRE_main(int, char**, nsXREAppData const*) (toolkit/xre/nsAppRunner.cpp:3858)
+
+Address 0x2064eebc is 0 byte after a block of size 4 alloc'd
+at 0x480687C: malloc (/home/sewardj/Vg38BRANCH/branch38droid2/coregrind/m_replacemalloc/vg_replace_malloc.c:270)
+by 0x30DD6EFB: js::TempAllocPolicy::malloc_(unsigned int) (ff-opt/js/src/./../../dist/include/js/Utility.h:153)
+by 0x30DDA139: js::Vector<JSString*, 8u, js::TempAllocPolicy>::growStorageBy(unsigned int) (ff-opt/js/src/./../../dist/include/js/Vector.h:630)
+by 0x30E9CAD9: bool js::XDRStaticBlockObject<(js::XDRMode)0>(js::XDRState<(js::XDRMode)0>*, JS::Handle<JSObject*>, JS::Handle<JSScript*>, js::StaticBlockObject**) (ff-opt/js/src/./../../dist/include/js/Vector.h:688)
+by 0x30E642DD: bool js::XDRScript<(js::XDRMode)0>(js::XDRState<(js::XDRMode)0>*, JS::Handle<JSObject*>, JS::Handle<JSScript*>, JS::Handle<JSFunction*>, JS::MutableHandle<JSScript*>) (js/src/jsscript.cpp:716)
+by 0x30E055A9: bool js::XDRInterpretedFunction<(js::XDRMode)0>(js::XDRState<(js::XDRMode)0>*, JS::Handle<JSObject*>, JS::Handle<JSScript*>, JS::MutableHandle<JSObject*>) (js/src/jsfun.cpp:412)
+by 0x30E641B5: bool js::XDRScript<(js::XDRMode)0>(js::XDRState<(js::XDRMode)0>*, JS::Handle<JSObject*>, JS::Handle<JSScript*>, JS::Handle<JSFunction*>, JS::MutableHandle<JSScript*>) (js/src/jsscript.cpp:690)
+by 0x30EEE8D9: js::XDRState<(js::XDRMode)0>::codeScript(JS::MutableHandle<JSScript*>) (js/src/vm/Xdr.cpp:147)
+by 0x30DD63AF: JS_EncodeScript (js/src/jsapi.cpp:7272)
+by 0x307D1D0D: WriteCachedScript(mozilla::scache::StartupCache*, nsACString_internal&, JSContext*, nsIPrincipal*, JSScript*) (js/xpconnect/loader/mozJSLoaderUtils.cpp:47)
+by 0x307D0019: mozJSComponentLoader::GlobalForLocation(nsIFile*, nsIURI*, JSObject**, char**, JS::Value*) (js/xpconnect/loader/mozJSComponentLoader.cpp:891)
+by 0x307D109B: mozJSComponentLoader::LoadModule(mozilla::FileLocation&) (js/xpconnect/loader/mozJSComponentLoader.cpp:480)
+by 0x30AD1067: nsComponentManagerImpl::KnownModule::Load() (xpcom/components/nsComponentManager.cpp:671)
+by 0x30AD1095: nsFactoryEntry::GetFactory() (xpcom/components/nsComponentManager.cpp:1662)
+by 0x30AD13E7: nsComponentManagerImpl::CreateInstanceByContractID(char const*, nsISupports*, nsID const&, void**) (xpcom/components/nsComponentManager.cpp:1002)
+by 0x30AD1CBB: nsComponentManagerImpl::GetServiceByContractID(char const*, nsID const&, void**) (xpcom/components/nsComponentManager.cpp:1398)
+by 0x30AAF151: CallGetService(char const*, nsID const&, void**) (ff-opt/xpcom/build/nsComponentManagerUtils.cpp:62)

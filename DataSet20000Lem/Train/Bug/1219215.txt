@@ -1,0 +1,47 @@
+Closing tab disappears immediately, and that (for 200ms) cause mouse action to apply to parent element (<tabs>). See STR
+Created attachment 8679973
+video - scenario (A) unexpected movement of tabs.webm
+
+STR: (Win7_64, Nightly 44, 32bit, ID 20151027030239, new profile)
+1. Open new firefox window.
+2. Open enough tab to cause overflow in tab toolbar. Open ~5 more tabs. Scroll tab list to the end
+3. Move mouse pointer over the 3rd tab from the _end_ (actually you can try any tab except last one)
+4. Move mouse pointer between tab start and tab title start (there's about 5-10px)
+5.A) Middle-click where the pointer is placed, then (you've got 200ms of tab width transition)
+move pointer towards the next tab (within tab toolbar).
+5.B) Middle-click where the pointer is placed, then (you've got 200ms of tab width transition)
+middle-click again.
+
+Result: A) 3rd tab from the end closed, and tab moved to the end of scrollable area (<tabs>)
+B) 3rd tab from the end closed, and new active tab opened at the end of tab list
+
+Expectations: A) Tab from Step 3 should close, but tab shouldn't move to the end of scrollable area
+B) Tab from Step 3 should close, and no other tab should open or close
+
+Note: It worked fine in Fx28-. I wanted to file this _ANNOYING_ bug long time ago, but didn't know
+how to describe what I saw. NOW I know exactly what this bug is, and how to fix it, so filing it.
+
+Possible fix: I tested this CSS using extension "Stylish" and it wa OK.
+> .tab-background:not([pinned]):not([fadein])
+> {
+> transition: visibility 230ms ease-out 0s;
+> }
+230ms is required because of these rules:
+> .tabbrowser-tab:not([pinned])
+> {
+> transition: min-width 200ms ease-out 0s, max-width 230ms ease-out 0s;
+> }
+> .tabbrowser-tab:not([pinned]):not([fadein])
+> {
+> max-width: 0.1px;
+> min-width: 0.1px;
+> visibility: hidden;
+> }
+Tab's width smoothly change from 100px (or more) to 0.1px. The bug described above make it clear that closing tab should stay visible during that transition. So I used the same transition-duration.
+
+Fx20 worked nice, and it behavior looked exactly like this solution. I think that somewhere between 28 and 31 that visibility transition wa removed during Australis development. That wa wrong decision.
+If current mock-up strictly tell that closing tab must not look hovered - it can be fixed with by CSS:
+> .tabbrowser-tab:not([pinned]):not([fadein])
+> {
+> opacity: 0;
+> }

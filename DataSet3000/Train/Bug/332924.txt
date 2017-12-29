@@ -1,0 +1,24 @@
+appending query string in action attribute of form then submitting via javascript submit confuses mozilla/firefox
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.5) Gecko/20050729 Netscape/8.0.3.3
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.5) Gecko/20050729 Netscape/8.0.3.3
+
+e.g.:
+
+<form method="post" action="http://www.myserver.com/apps/app.script?var1=val1">
+...
+<a href=# onclick="document.forms[0].submit(); return false;">submit</a>
+
+Sends the request correctly but when hitting the back button to return to the post-submit page (or returning to it from history some other way) mozilla recalls having sent a GET request with only the parameter var1 (which it actually did not do originally). I think this is a bug, because in spite of the inadvisability of appending a query string in the action url, mozilla's behavior doesn't really make sense. But it's not an extremely critical bug, since i only include the query string for my own very specific reasons, and few other page developers probably do that.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. create a form with an action url containing a query string
+2. submit the form via an onclick handler inside an <a> tag
+3. browse away from the post-submit page, then return to the post-submit page via the back button or history. you'll observe that firefox does the right thing when submitting the form originally, but when returning to the page does not resend the form parameters, but the parameters in the action URL's query string.
+
+Actual Results:  
+reloading post-submit page from history sends the wrong parameters
+
+Expected Results:  
+reloading the post-submit page from history should resend the parameters from the form (or display a prompt to resend them), the same ones it sent when the form was originally submitted via javascript submit.

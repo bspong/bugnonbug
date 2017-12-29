@@ -1,0 +1,25 @@
+File download freezes - corrupts new download attempt
+User Agent: Mozilla/5.0 (Windows NT 5.1; rv:17.0) Gecko/20100101 Firefox/17.0
+Build ID: 20121128204232
+
+Steps to reproduce:
+
+I tried to download a file from a file hoster. The download progressed properly for some time.
+
+
+Actual results:
+
+The download froze at a random point, not loading a single byte anymore. I kept it at this state for hours. Firefox didn't abort the download apparently, although the connection seemed to be lost. This happens regularly when loading from this and also some other file hosters.
+
+
+Side effect leading to file corruption:
+When not aborting the frozen download manually before trying to redownload the file, Firefox allows to download the file with the same file name to the same folder in parallel, which should be illegal, because it results in a conflict:
+
+a) The old frozen download task awakes when the new second task finishes succesfully. It reconnects and overwrites the already completed file with the response - in my case an HTML error message, because the download link had expired.
+
+b) When aborting the frozen task while the new download task is running but has not finished yet, some bytes (maybe the flushed file cache) are 'injected' (added) into the not completed file. The second download task continues until it completes. The resulting file is then some bytes too large and corrupt of course.
+
+
+Expected results:
+
+A failed or successful download listed in the downloads list and a non corrupted file. Overwriting a file that still downloads (not completed or aborted yet) must be impossible.

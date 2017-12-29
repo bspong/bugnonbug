@@ -1,0 +1,43 @@
+"Edit and Resend" produces mangled requests
+Created attachment 8601801
+edit_and_resend_failure.pcapng
+
+User Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:37.0) Gecko/20100101 Firefox/37.0
+Build ID: 20150417180217
+
+Steps to reproduce:
+
+Opened developer tools, went to Network tab, submitted a form.
+
+Right-clicked on the POST request, picked "Edit and resend".
+
+Changed the URL, did not edit anything else, clicked "Send".
+
+
+Actual results:
+
+A request was submitted to the server, but the request was invalid. Note in particular the duplicate Content-Type and Content-Length fields. Packet dump attached; full request text below.
+
+POST /api/v1/website/william%25252Bpersona.org%2540codeforamerica.org%252Ftesting-out-preview/fnord.md HTTP/1.1
+Host: localhost:5000
+User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:37.0) Gecko/20100101 Firefox/37.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate
+Content-Type: text/plain; charset=UTF-8
+Pragma: no-cache
+Cache-Control: no-cache
+Referer: http://localhost:5000/tree/william%25252Bpersona.org%2540codeforamerica.org%252Ftesting-out-preview/edit/fnord.md
+Content-Length: 265
+Cookie: session=eyJlbWFpbCI6IndpbGxpYW0rcGVyc29uYS5vcmdAY29kZWZvcmFtZXJpY2Eub3JnIn0.CCrRyQ.TSSYPpYQdDFM5BlL0TkEIc1ESg0
+Connection: keep-alive
+
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 193
+
+en-title=Greetings&en-body=%23+down+for+markup%0D%0A%0D%0AAnd+also+up+for+*markdown*.%0D%0A%0D%0A%0D%0ABecause+it%27s+fun.&layout=&hexsha=cd76b77b0b0dd9a7498f017bc72c0d9adc0ae316&url-slug=fnord
+
+
+Expected results:
+
+A well-formed POST request with type application/x-www-form-urlencoded should have been submitted to the server.

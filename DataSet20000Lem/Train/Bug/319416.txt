@@ -1,0 +1,85 @@
+IRIX MIPSPro static build requires reordering of library and alternate archive command
+User-Agent: Mozilla/5.0 (X11; U; IRIX IP32; en-US; rv:1.8) Gecko/20051206 Firefox/1.5
+Build Identifier: Mozilla/5.0 (X11; U; IRIX IP32; en-US; rv:1.8) Gecko/20051206 Firefox/1.5
+
+A --enable-static build of firefox-1.5 release on SGI/IRIX 6.5.22 with MIPSPro 7.4.2 need the following patch to compile correctly:
+
+--- configure.save Thu Dec 1 21:45:25 2005
++++ configure Mon Dec 5 14:52:28 2005
+@@ -5801,10 +5801,10 @@
+else
+MKSHLIB_FORCE_ALL='-all'
+MKSHLIB_UNFORCE_ALL='-none'
+- AR_LIST="$AR t"
+- AR_EXTRACT="$AR x"
+- AR_DELETE="$AR d"
+- AR='$(CXX) -ar'
++ AR_LIST="ar t"
++ AR_EXTRACT="ar x"
++ AR_DELETE="ar d"
++ AR='$(CXX) -ar -WR,-suv'
+AR_FLAGS='-o $@'
+CFLAGS="$CFLAGS -woff 3262 -G 4"
+CXXFLAGS="$CXXFLAGS -woff 3262 -G 4"
+--- config/rules.mk.save Tue Dec 6 15:55:53 2005
++++ config/rules.mk Tue Dec 6 16:04:08 2005
+@@ -841,7 +841,7 @@
+$(LD) -NOLOGO -OUT:$@ -PDB:$(PDBFILE) $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(
+PROGOBJS) $(RESFILE) $(LIBS) $(EXTRA_LIBS) $(OS_LIBS)
+else
+ifeq ($(CPP_PROG_LINK),1)
+- $(CCC) -o $@ $(CXXFLAGS) $(WRAP_MALLOC_CFLAGS) $(PROGOBJS) $(RESFILE) $(
+WIN32_EXE_LDFLAGS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(BIN
+_FLAGS) $(WRAP_MALLOC_LIB) $(PROFILER_LIBS) $(EXE_DEF_FILE)
++ $(CCC) -o $@ $(CXXFLAGS) $(WRAP_MALLOC_CFLAGS) $(PROGOBJS) $(RESFILE) $(
+WIN32_EXE_LDFLAGS) $(LDFLAGS) $(LIBS_DIR) $(EXTRA_LIBS) $(LIBS) $(OS_LIBS) $(BIN
+_FLAGS) $(WRAP_MALLOC_LIB) $(PROFILER_LIBS) $(EXE_DEF_FILE)
+else # ! CPP_PROG_LINK
+$(CC) -o $@ $(CFLAGS) $(PROGOBJS) $(RESFILE) $(WIN32_EXE_LDFLAGS) $(LDFL
+AGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(BIN_FLAGS) $(EXE_DEF_FILE)
+endif # CPP_PROG_LINK
+
+The default archive for C++ code under MIPSPro should be CC -ar -WR,-suv because this is the only way MIPSPro will instantiate template in static objects. However, enabling this archiver choice for AR_LIST AR_EXTRACT and AR_DELETE will break the subsequent 'for' loop in Makefiles, when extracting an archive, because the command then read CC -ar -WR,-suv x <archive.a> which is incorrect syntax. Rather than specifying the C++ archive commands, which even if it syntax is done correctly, also break the 'for' loop in the makefile, one can simply define AR_EXTRACT a "ar x" because no template instantiation is need for extracting/listing objects. I'm not sure if AR_DELETE 'ar d' requires building a new symbol table, but i tested it and it seems to work fine.
+
+The reordering of library at link stage is a bit odd for SGI machines. Usually it want shared object defined after static object so i shifted the $(EXTRA_LIBS) two place up front.
+
+With both of these corrections, i have sucessfully compiled Firefox 1.5 statically on my IRIX systems, and am typing from it :)
+
+Yours,
+
+Frank Everdij
+
+Reproducible: Always
+
+
+
+
+build env:
+setenv CC c99
+setenv CXX CC
+setenv CFLAGS "-O3 -mips4 -n32 -INLINE -woff 1174"
+setenv CXXFLAGS "-O3 -mips4 -n32 -INLINE -woff 1110,1171,1201,1355,3201"
+setenv LDFLAGS "-L/usr/nekoware/lib"
+setenv LIBS -lfastm -lm
+setenv PERL "/usr/nekoware/bin/perl"
+setenv MOZ_PHOENIX "1"
+setenv BUILD_OFFICIAL "1"
+setenv CPPFLAGS "-I/usr/nekoware/include -I/usr/nekoware/include/glib-1.2 -I/usr
+/nekoware/lib/glib/include"
+
+.mozconfig:
+. $topsrcdir/browser/config/mozconfig
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/fb-opt-static
+ac_add_options --prefix=/usr/local/firefox-test
+ac_add_options --enable-application=browser
+ac_add_options --without-pthread
+ac_add_options --enable-optimize=-O3
+ac_add_options --disable-debug
+ac_add_options --enable-static
+ac_add_options --disable-shared
+ac_add_options --disable-tests
+ac_add_options --disable-composer
+ac_add_options --enable-default-toolkit=gtk
+ac_add_options --enable-freetype2
+ac_add_options --enable-plaintext-editor-only
+ac_add_options --disable-accessibility

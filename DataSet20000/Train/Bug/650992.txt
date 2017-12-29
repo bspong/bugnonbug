@@ -1,0 +1,22 @@
+URL spoofing by repeatedly navigating (and cancelling) the location
+Michal Zalewski reported this to security@m.o today.  See the above URL for the testcase.  Basically, we display the "new" location as soon as location.replace is called, but the "old" content is still displayed, potentially tricking the user into thinking they're on the "new" page.  An attack site could basically perform this action continuously to make the effect stronger.
+
+From his mail:
+
+-----
+No, the concern is not with navigation, but with that you update the
+contents of the address bar before the actual document is properly
+substituted and rendered. This gives the attacker the ability to
+continuously begin navigation to a slow resource (http://coredump.cx/
+in my PoC), and then abort it ahead of the time, rinse, and repeat.
+
+My example is very crude, but I am guessing it would be easy to come
+up with an example where an incorrect URL (i.e., that related to
+pending navigation) is shown almost continuously. The spinning
+throbber is an indicator of foul play, but it's not a very strong one.
+
+Since on several other counts, vendors did try to eliminate this
+possibility (i.e., address bar updates are already deferred
+substantially), seems like it may be worth fixing, but I don't really
+feel strongly.
+-----

@@ -1,0 +1,19 @@
+Sync's client.name2 string should use a curly apostrophe/quote instead of a straight quote
+As part of bug 1268159, the rest of the quote characters in strings were converted to curly quotes. However, the apostrophe in sync.properties for client.name2 seems to have some affects on other code.
+
+When the ASCII apostrophe was converted to a Unicode \u2019 character quite a few xpcshell tests failed.
+
+
+TEST-UNEXPECTED-FAIL | services/sync/tests/unit/test_service_sync_specified.js | xpcshell return code: 0
+TEST-UNEXPECTED-FAIL | services/sync/tests/unit/test_service_sync_specified.js | test_bothEnginesSpecified - [test_bothEnginesSpecified : 124] ["steam"] deepEqual ["steam","stirling"]
+TEST-UNEXPECTED-FAIL | services/sync/tests/unit/test_service_sync_specified.js | test_bothEnginesSpecified - [test_bothEnginesSpecified : 139] ["stirling"] deepEqual ["stirling","steam"]
+TEST-UNEXPECTED-FAIL | services/sync/tests/unit/test_service_sync_specified.js | test_bothEnginesDefault - [test_bothEnginesDefault : 153] ["steam"] deepEqual ["steam","stirling"]
+TEST-UNEXPECTED-FAIL | services/sync/tests/unit/test_tab_engine.js | xpcshell return code: 0
+TEST-UNEXPECTED-FAIL | services/sync/tests/unit/test_service_sync_updateEnabledEngines.js | xpcshell return code: 0
+TEST-UNEXPECTED-FAIL | services/sync/tests/unit/test_service_sync_updateEnabledEngines.js | test_disabledRemotelyTwoClients - [test_disabledRemotelyTwoClients : 316] false == true
+TEST-UNEXPECTED-FAIL | services/sync/tests/unit/test_service_sync_updateEnabledEngines.js | test_dependentEnginesEnabledLocally - [test_dependentEnginesEnabledLocally : 379] false == true
+TEST-UNEXPECTED-FAIL | services/sync/tests/unit/test_clients_engine.js | xpcshell return code: 0 
+
+My guess is that the unicode character is tripping up some other code in the mock testing server.
+
+:rnewman, any ideas here?

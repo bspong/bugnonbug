@@ -1,0 +1,47 @@
+[e10s] "View Image/Video" in remote browser cause unsafe CPOW usage warning
++++ This bug wa initially created a a clone of Bug #1133577 +++
+
+STR:
+
+1) Visit a site with images, <canvas/>, or <video/>s on it in an e10s window
+2) Right-click on an image, <canvas/> or <video/>, and choose "View Image/Video"
+
+This cause some "unsafe CPOW usage" warning in the Browser Console.
+
+In browser/base/content/nsContextMenu.js:
+
+// Change current window to the URL of the image, video, or audio.
+viewMedia: function(e) {
+var viewURL;
+
+if (this.onCanvas)
+viewURL = this.target.toDataURL(); <-- Causes CPOW warning [canvas]
+else {
+viewURL = this.mediaURL;
+urlSecurityCheck(viewURL,
+this.browser.contentPrincipal,
+Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT);
+}
+
+var doc = this.target.ownerDocument; <-- Causes CPOW warning
+openUILink(viewURL, e, { disallowInheritPrincipal: true,
+referrerURI: doc.documentURIObject }); <-- Causes CPOW warning
+},
+
+
+in toolkit/modules/RemoteWebNavigation.jsm
+
+loadURI: function(aURI, aLoadFlags, aReferrer, aPostData, aHeaders) {
+if (aPostData || aHeaders)
+throw Components.Exception("RemoteWebNavigation doesn't accept postdata or headers.", Cr.NS_ERROR_INVALID_ARGS);
+
+this._browser._contentTitle = "";
+this._sendMessage("WebNavigation:LoadURI", {
+uri: aURI,
+flags: aLoadFlags,
+referrer: aReferrer ? aReferrer.spec : null <-- Causes CPOW warning
+});
+},
+
+
+warning tagged [canvas] only occurs on a <canvas/>

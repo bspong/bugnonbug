@@ -1,0 +1,54 @@
+Reproducible NS_ERROR_OUT_OF_MEMORY error when browser.link.open_newwindow = 3
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.0.1) Gecko/20060222 Firefox/1.5.0.1
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.0.1) Gecko/20060222 Firefox/1.5.0.1
+
+I just spent hour investigating an annoying javascript problem and I am
+now able to produce a very small test case demonstrating a bug
+reproducable in Firefox 1.5 and 1.5.0.1, under both Linux and Windows.
+Basically the problem is that when javascript us the 'opener' variable
+to call a javascript function in another window, this function is able
+to easily trigger NS_ERROR_OUT_OF_MEMORY error when trying to execute
+"complex" javascript code such a using an XMLHttpRequest() object, or
+dynamically updating HTML form elements, etc.
+
+What is interesting is that the bug only appears when Firefox is
+configured to force javascript code that open new window to open
+them in new tabs. That mean the bug can be reproduced only when this
+preference is set:
+
+browser.link.open_newwindow = 3 (default value is 2)
+
+Be sure to also set browser.link.open_newwindow.restriction to it
+default value (2).
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Open page1.html in Firefox.
+2. At this point verify that the HTML drop-down menu contains only one
+option "opt0".
+3. Click on "New", this open page2.html in a new window.
+4. Click on "Save", this close page2.html and return back to page1.html,
+at this point a javascript callback function in page1.html is supposed
+to add option "opt1" to the drop-down menu.
+
+Actual Results:
+The browser's javascript console display the error below, and option
+"opt1" is NOT added to the drop-down menu.
+
+Error: uncaught exception: [Exception... "Out of Memory" nsresult:
+"0x8007000e (NS_ERROR_OUT_OF_MEMORY)" location: "JS frame ::
+http://localhost/page1.html :: cback :: line 4" data: no]
+
+
+Expected Results:
+The browser should not produce such a fatal low-level error, and option
+"opt1" should be added to the drop-down menu (if the javascript code is
+valid).
+
+
+Note #1: the bug disappears when, in page2.html, callback0() is called
+BEFORE window.close().
+
+Note #2: given the nature of the error message, this bug might be a potential security risk.

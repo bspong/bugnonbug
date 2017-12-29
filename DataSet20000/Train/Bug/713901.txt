@@ -1,0 +1,35 @@
+Startup crash je_free | PrefBranch::
+This bug was filed from the Socorro interface and is 
+report bp-b315859b-5ee9-4a06-a956-8f4412111227 .
+============================================================= 
+
+Seen while looking at 9.0.1 crash stats. https://crash-stats.mozilla.com/report/list?signature=je_free%20|%20nsPrefBranch::%60vector%20deleting%20destructor%27%27%28unsigned%20int%29 to the reports which are all Windows. Crashes increased starting in 9.0 beta 6. So far no clues in manual module and addon correlations.
+
+Frame 	Module 	Signature [Expand] 	Source
+0 	mozutils.dll 	je_free 	memory/jemalloc/jemalloc.c:6260
+1 	xul.dll 	nsPrefBranch::`vector deleting destructor' 	
+2 	xul.dll 	nsPrefBranch::Release 	modules/libpref/src/nsPrefBranch.cpp:128
+3 	xul.dll 	nsRefPtr<nsPresContext>::~nsRefPtr<nsPresContext> 	obj-firefox/xpcom/build/nsCOMPtr.cpp:81
+4 	xul.dll 	nsIDNService::~nsIDNService 	netwerk/dns/nsIDNService.cpp:162
+5 	xul.dll 	nsIDNService::`scalar deleting destructor' 	
+6 	xul.dll 	nsIDNService::Release 	netwerk/dns/nsIDNService.cpp:80
+7 	xul.dll 	nsRefPtr<nsPresContext>::~nsRefPtr<nsPresContext> 	obj-firefox/xpcom/build/nsCOMPtr.cpp:81
+8 	xul.dll 	nsDNSService::~nsDNSService 	netwerk/dns/nsDNSService2.cpp:368
+9 	xul.dll 	nsDNSService::Release 	netwerk/dns/nsDNSService2.cpp:371
+10 	xul.dll 	nsDNSPrefetch::Shutdown 	netwerk/base/src/nsDNSPrefetch.cpp:65
+11 	xul.dll 	nsNetShutdown 	netwerk/build/nsNetModule.cpp:672
+12 	xul.dll 	nsComponentManagerImpl::KnownModule::~KnownModule 	xpcom/components/nsComponentManager.h:220
+13 	xul.dll 	nsTArray<nsAutoPtr<nsComponentManagerImpl::KnownModule>,nsTArrayDefaultAllocator>::DestructRange 	obj-firefox/dist/include/nsTArray.h:1164
+14 	xul.dll 	nsTArray<nsAutoPtr<nsComponentManagerImpl::KnownModule>,nsTArrayDefaultAllocator>::RemoveElementsAt 	obj-firefox/dist/include/nsTArray.h:894
+15 	xul.dll 	nsComponentManagerImpl::Shutdown 	xpcom/components/nsComponentManager.cpp:1005
+16 	xul.dll 	xul.dll@0xc9a99b 	
+17 	xul.dll 	ScopedXPCOMStartup::~ScopedXPCOMStartup 	toolkit/xre/nsAppRunner.cpp:1084
+18 	xul.dll 	XRE_main 	
+19 	firefox.exe 	wmain 	toolkit/xre/nsWindowsWMain.cpp:107
+20 	firefox.exe 	firefox.exe@0x4033 	
+21 	firefox.exe 	__tmainCRTStartup 	crtexe.c:594
+22 	firefox.exe 	_SEH_epilog4 	
+23 	kernel32.dll 	BaseProcessStart 	
+24 	kernel32.dll 	FindAtomW 	
+25 	kernel32.dll 	BaseProcessStart 	
+26 	firefox.exe 	pre_c_init 	crtexe.c:304

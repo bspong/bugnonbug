@@ -1,0 +1,193 @@
+XPCCallContext::~XPCCallContext is still wiping out newborn root causing crash under [@ js_FinalizeObject] because AllocSlots is calling gc and causing it caller (js_NewObject)'s obj to be destroyed before it's stable
+notes:
+1. we have the fix for bug 307317
+2. i don't believe that fix fixed the problem
+3. there are still talkback report of this problem
+
+about 1, the code does:
+
+XPCCallContext::~XPCCallContext()
++ // Don't clear newborn if JS frame (compilation or execution)
++ // are active! Doing so violates ancient invariant in the JS
++ // engine, and it's not necessary to fix JS component leaks.
++ if (!mJSContext->fp)
++ JS_ClearNewbornRoots(mJSContext);
+
+The problem is that the j context that it has, which we'll see, ha a null fp.
+
+0e js3250!js_GC(struct JSContext * cx = 0x0ad188f8
+
+0:000> .frame 0x0e
+0e 0012bf38 00f3db83 js3250!js_GC+0x65b [c:\build\chs4.0\build\mozilla\js\src\jsgc.c @ 1847]
+0:000> dv
+cx = 0x0ad188f8
+0:000> dt JSContext 0x0ad188f8 fp
++0x034 fp : (null)
+
+from bug 314989 comment 1, we know that the call stack under js_GC look like this:
+
+js3250!JS_ClearNewbornRoots(JSContext * cx)
+xpc3250!XPCCallContext::~XPCCallContext(void) us cx from constructor
+xpc3250!XPCCallContext::XPCCallContext(JS_CALLER, JSContext * cx, JSObject * obj) store cx into member
+xpc3250!XPC_WN_JSOp_Enumerate(JSContext * cx, ...) see http://bonsai.mozilla.org/cvsblame.cgi?file=mozilla%2Fjs%2Fsrc%2Fxpconnect%2Fsrc%2Fxpcwrappednativejsops.cpp&rev=1.55.2.2&mark=1167-1170,1204#1166
+js3250!prop_iterator_finalize(JSContext * cx, ...)
+js3250!js_FinalizeObject(JSContext * cx, ...)
+
+So, the code call finalize which then try to decide if it's safe for it to clear roots, and it decides it is, because fp is null.
+
+The reason fp is null is because we're in
+13 js3250!JS_CompileUCFunctionForPrincipals which hasn't gotten around to running code, it's just compiling!
+
+00 ntdll!KiFastSystemCallRet
+01 ntdll!ZwWaitForMultipleObjects+0xc
+02 kernel32!WaitForMultipleObjectsEx+0x12c
+03 kernel32!WaitForMultipleObjects+0x18
+04 faultrep!StartDWException+0x5df
+05 faultrep!ReportFault+0x533
+06 kernel32!UnhandledExceptionFilter+0x4cf
+07 MSVCR71!_XcptFilter+0x15f
+08 HsEngine!WinMainCRTStartup(void)+0x1d7 [f:\vs70builds\3077\vc\crtbld\crt\src\crtexe.c @ 409]
+09 MSVCR71!_except_handler3+0x61
+0a ntdll!ExecuteHandler2+0x26
+0b ntdll!ExecuteHandler+0x24
+0c ntdll!KiUserExceptionDispatcher+0xe
+0d js3250!js_FinalizeObject(struct JSContext * cx = 0x00f3db83, struct JSObject * obj = 0x0ad188f8)+0x3a [c:\build\chs4.0\build\mozilla\js\src\jsobj.c @ 2163]
+0e js3250!js_GC(struct JSContext * cx = 0x0ad188f8, unsigned int gcflags = 5)+0x65b [c:\build\chs4.0\build\mozilla\js\src\jsgc.c @ 1847]
+0f js3250!js_NewGCThing(struct JSContext * cx = 0x0ad188f8, unsigned int flag = 4, unsigned int nbytes = 0x18)+0xf0 [c:\build\chs4.0\build\mozilla\js\src\jsgc.c @ 636]
+10 js3250!AllocSlots(struct JSContext * cx = 0x0ad188f8, long * slot = 0x00e87c90, unsigned long nslots = 5)+0x42 [c:\build\chs4.0\build\mozilla\js\src\jsobj.c @ 1900]
+11 js3250!js_NewObject(struct JSContext * cx = 0x0ad188f8, struct JSClass * clasp = 0x00f81718, struct JSObject * proto = 0x0ac53540, struct JSObject * parent = 0x0ac53538)+0x165 [c:\build\chs4.0\build\mozilla\js\src\jsobj.c @ 2018]
+12 js3250!js_NewFunction(struct JSContext * cx = 0x0ad188f8, struct JSObject * funobj = 0x00000000, <function> * native = 0x00000000, unsigned int nargs = 0, unsigned int flag = 0, struct JSObject * parent = 0x00000000, struct JSAtom * atom = 0x00e04e20)+0x7b [c:\build\chs4.0\build\mozilla\js\src\jsfun.c @ 1975]
+13 js3250!JS_CompileUCFunctionForPrincipals(struct JSContext * cx = 0x0ad188f8, struct JSObject * obj = 0x00000000, struct JSPrincipals * principal = 0x00e5d814, char * name = 0x0012c0c0 "", unsigned int nargs = 0, char ** argnames = 0x00000000, unsigned short * char = 0x0ad18ed0 ". . this.destroy();. . ", unsigned int length = 0x33, char * filename = 0x0012c118 "chrome://global/content/bindings/browser.xml", unsigned int lineno = 0x170)+0x7c [c:\build\chs4.0\build\mozilla\js\src\jsapi.c @ 3917]
+14 gklayout!nsJSContext::CompileFunction(void * aTarget = 0x0ac53600, class nsACString_internal * aName = 0x0012c0a8, unsigned int aArgCount = 0, char ** aArgArray = 0x00000000, class nsAString_internal * aBody = 0x0012c158, char * aURL = 0x0012c118 "chrome://global/content/bindings/browser.xml", unsigned int aLineNo = 0x170, int aShared = 1, void ** aFunctionObject = 0x0012c16c)+0xb9 [c:\build\chs4.0\build\mozilla\dom\src\base\nsjsenvironment.cpp @ 1369]
+15 gklayout!nsXBLProtoImplMethod::CompileMember(class nsIScriptContext * aContext = 0x097311b8, class nsCString * aClassStr = 0x096f0ce0, void * aClassObject = 0x0ac53600)+0x10b [c:\build\chs4.0\build\mozilla\content\xbl\src\nsxblprotoimplmethod.cpp @ 247]
+16 gklayout!nsXBLProtoImpl::CompilePrototypeMembers(class nsXBLPrototypeBinding * aBinding = 0x00000000)+0x94 [c:\build\chs4.0\build\mozilla\content\xbl\src\nsxblprotoimpl.cpp @ 196]
+17 gklayout!nsXBLProtoImpl::InitTargetObjects(class nsXBLPrototypeBinding * aBinding = 0x09731098, class nsIScriptContext * aContext = 0x04648210, class nsIContent * aBoundElement = 0x0a339e00, class nsIXPConnectJSObjectHolder ** aScriptObjectHolder = 0x0012c200, void ** aTargetClassObject = 0x0012c1f8)+0x27 [c:\build\chs4.0\build\mozilla\content\xbl\src\nsxblprotoimpl.cpp @ 110]
+18 gklayout!nsXBLProtoImpl::InstallImplementation(class nsXBLPrototypeBinding * aBinding = 0x09731098, class nsIContent * aBoundElement = 0x0a339e00)+0x6b [c:\build\chs4.0\build\mozilla\content\xbl\src\nsxblprotoimpl.cpp @ 82]
+19 gklayout!nsXBLPrototypeBinding::InstallImplementation(class nsIContent * aBoundElement = 0x0138db4f)+0x13 [c:\build\chs4.0\build\mozilla\content\xbl\src\nsxblprototypebinding.cpp @ 442]
+1a gklayout!nsXBLBinding::InstallImplementation(void)+0x29 [c:\build\chs4.0\build\mozilla\content\xbl\src\nsxblbinding.cpp @ 751]
+1b gklayout!nsXBLBinding::InstallImplementation(void)+0xf [c:\build\chs4.0\build\mozilla\content\xbl\src\nsxblbinding.cpp @ 746]
+1c gklayout!nsXBLService::LoadBindings(class nsIContent * aContent = 0x0a339e00, class nsIURI * aURL = 0x0533ae60, int aAugmentFlag = 0, class nsXBLBinding ** aBinding = 0x0012c2b0, int * aResolveStyle = 0x0012c2bc)+0x1d4 [c:\build\chs4.0\build\mozilla\content\xbl\src\nsxblservice.cpp @ 642]
+1d gklayout!nsCSSFrameConstructor::ConstructFrameInternal(class nsFrameConstructorState * aState = 0x0012ce14, class nsIContent * aContent = 0x00ec2e80, class nsIFrame * aParentFrame = 0x0ace3818, class nsIAtom * aTag = 0x00eaa6c0, int aNameSpaceID = 9, class nsStyleContext * aStyleContext = 0x0ace3930, struct nsFrameItems * aFrameItems = 0x0012c54c, int aXBLBaseTag = 0)+0x9e [c:\build\chs4.0\build\mozilla\layout\base\nscssframeconstructor.cpp @ 7667]
+1e gklayout!nsCSSFrameConstructor::ConstructFrame(class nsFrameConstructorState * aState = 0x0012ce14, class nsIContent * aContent = 0x00000000, class nsIFrame * aParentFrame = 0x0ace3930, struct nsFrameItems * aFrameItems = 0x0012c54c)+0xb2 [c:\build\chs4.0\build\mozilla\layout\base\nscssframeconstructor.cpp @ 7624]
+1f gklayout!nsCSSFrameConstructor::ProcessChildren(class nsFrameConstructorState * aState = 0x0012ce14, class nsIContent * aContent = 0x0a339d30, class nsIFrame * aFrame = 0x0a339e00, int aCanHaveGeneratedContent = 0, struct nsFrameItems * aFrameItems = 0x0012c54c, int aParentIsBlock = 0, struct nsTableCreator * aTableCreator = 0x0a339e00)+0xcd [c:\build\chs4.0\build\mozilla\layout\base\nscssframeconstructor.cpp @ 11977]
+20 gklayout!nsCSSFrameConstructor::ConstructXULFrame(class nsFrameConstructorState * aState = 0x0012ce14, class nsIContent * aContent = 0x0a339d30, class nsIFrame * aParentFrame = 0x00000001, class nsIAtom * aTag = 0x00eaa540, int aNameSpaceID = 1, class nsStyleContext * aStyleContext = 0x0ace37c0, struct nsFrameItems * aFrameItems = 0x0012c870, int aXBLBaseTag = 0, int aHasPseudoParent = 0, int * aHaltProcessing = 0x0ace3818)+0x7d8 [c:\build\chs4.0\build\mozilla\layout\base\nscssframeconstructor.cpp @ 6309]
+21 gklayout!nsCSSFrameConstructor::ConstructFrameInternal(class nsFrameConstructorState * aState = 0x0012ce14, class nsIContent * aContent = 0x0ace3758, class nsIFrame * aParentFrame = 0x00000000, class nsIAtom * aTag = 0x00eaa540, int aNameSpaceID = 9, class nsStyleContext * aStyleContext = 0x00000000, struct nsFrameItems * aFrameItems = 0x00000000, int aXBLBaseTag = 0)+0x255 [c:\build\chs4.0\build\mozilla\layout\base\nscssframeconstructor.cpp @ 7741]
+22 gklayout!nsCSSFrameConstructor::ConstructFrame(class nsFrameConstructorState * aState = 0x0012ce14, class nsIContent * aContent = 0x00000000, class nsIFrame * aParentFrame = 0x0ace37c0, struct nsFrameItems * aFrameItems = 0x0012c870)+0xb2 [c:\build\chs4.0\build\mozilla\layout\base\nscssframeconstructor.cpp @ 7624]
+23 gklayout!nsCSSFrameConstructor::ProcessChildren(class nsFrameConstructorState * aState = 0x0012ce14, class nsIContent * aContent = 0x0a339c08, class nsIFrame * aFrame = 0x0a339d30, int aCanHaveGeneratedContent = 0, struct nsFrameItems * aFrameItems = 0x0012c870, int aParentIsBlock = 0, struct nsTableCreator * aTableCreator = 0x0a339d30)+0xcd [c:\build\chs4.0\build\mozilla\layout\base\nscssframeconstructor.cpp @ 11977]
+24 gklayout!nsCSSFrameConstructor::ConstructXULFrame(class nsFrameConstructorState * aState = 0x0012ce14, class nsIContent * aContent = 0x0a339c08, class nsIFrame * aParentFrame = 0x00000001, class nsIAtom * aTag = 0x00eaa548, int aNameSpaceID = 1, class nsStyleContext * aStyleContext = 0x0a54d0ec, struct nsFrameItems * aFrameItems = 0x0012cb94, int aXBLBaseTag = 0, int aHasPseudoParent = 0, int * aHaltProcessing = 0x0ace3758)+0x7d8 [c:\build\chs4.0\build\mozilla\layout\base\nscssframeconstructor.cpp @ 6309]
+25 gklayout!nsCSSFrameConstructor::ConstructFrameInternal(class nsFrameConstructorState * aState = 0x0012ce14, class nsIContent * aContent = 0x0ace36f0, class nsIFrame * aParentFrame = 0x00000000, class nsIAtom * aTag = 0x00eaa548, int aNameSpaceID = 9, class nsStyleContext * aStyleContext = 0x00000000, struct nsFrameItems * aFrameItems = 0x00000000, int aXBLBaseTag = 0)+0x255 [c:\build\chs4.0\build\mozilla\layout\base\nscssframeconstructor.cpp @ 7741]
+26 gklayout!nsCSSFrameConstructor::ConstructFrame(class nsFrameConstructorState * aState = 0x0012ce14, class nsIContent * aContent = 0x00000000, class nsIFrame * aParentFrame = 0x0a54d0ec, struct nsFrameItems * aFrameItems = 0x0012cb94)+0xb2 [c:\build\chs4.0\build\mozilla\layout\base\nscssframeconstructor.cpp @ 7624]
+27 gklayout!nsCSSFrameConstructor::ProcessChildren(class nsFrameConstructorState * aState = 0x0012ce14, class nsIContent * aContent = 0x0974bb98, class nsIFrame * aFrame = 0x0a339c08, int aCanHaveGeneratedContent = 0, struct nsFrameItems * aFrameItems = 0x0012cb94, int aParentIsBlock = 0, struct nsTableCreator * aTableCreator = 0x0a339c08)+0xcd [c:\build\chs4.0\build\mozilla\layout\base\nscssframeconstructor.cpp @ 11977]
+28 gklayout!nsCSSFrameConstructor::ConstructXULFrame(class nsFrameConstructorState * aState = 0x0012ce14, class nsIContent * aContent = 0x0974bb98, class nsIFrame * aParentFrame = 0x00000001, class nsIAtom * aTag = 0x00eaa540, int aNameSpaceID = 1, class nsStyleContext * aStyleContext = 0x099dd7e8, struct nsFrameItems * aFrameItems = 0x0012cdd0, int aXBLBaseTag = 0, int aHasPseudoParent = 0, int * aHaltProcessing = 0x0ace36f0)+0x7d8 [c:\build\chs4.0\build\mozilla\layout\base\nscssframeconstructor.cpp @ 6309]
+29 gklayout!nsCSSFrameConstructor::ConstructFrameInternal(class nsFrameConstructorState * aState = 0x0012ce14, class nsIContent * aContent = 0x099dd898, class nsIFrame * aParentFrame = 0x00000000, class nsIAtom * aTag = 0x00eaa540, int aNameSpaceID = 9, class nsStyleContext * aStyleContext = 0x00000000, struct nsFrameItems * aFrameItems = 0x00000000, int aXBLBaseTag = 0)+0x255 [c:\build\chs4.0\build\mozilla\layout\base\nscssframeconstructor.cpp @ 7741]
+2a gklayout!nsCSSFrameConstructor::ConstructFrame(class nsFrameConstructorState * aState = 0x0012ce14, class nsIContent * aContent = 0x00000000, class nsIFrame * aParentFrame = 0x099dd7e8, struct nsFrameItems * aFrameItems = 0x0012cdd0)+0xb2 [c:\build\chs4.0\build\mozilla\layout\base\nscssframeconstructor.cpp @ 7624]
+2b gklayout!nsCSSFrameConstructor::ProcessChildren(class nsFrameConstructorState * aState = 0x0012ce14, class nsIContent * aContent = 0x0a003540, class nsIFrame * aFrame = 0x0974bb98, int aCanHaveGeneratedContent = 1, struct nsFrameItems * aFrameItems = 0x0012cdd0, int aParentIsBlock = 0, struct nsTableCreator * aTableCreator = 0x0974bb98)+0xcd [c:\build\chs4.0\build\mozilla\layout\base\nscssframeconstructor.cpp @ 11977]
+2c gklayout!nsCSSFrameConstructor::ConstructDocElementFrame(class nsFrameConstructorState * aState = 0x0012ce14, class nsIContent * aDocElement = 0x0a003540, class nsIFrame * aParentFrame = 0x099dd66c, class nsIFrame ** aNewFrame = 0x0012d008)+0x36b [c:\build\chs4.0\build\mozilla\layout\base\nscssframeconstructor.cpp @ 4541]
+2d gklayout!nsCSSFrameConstructor::ContentInserted(class nsIContent * aContainer = 0x00000000, class nsIFrame * aContainerFrame = 0x00000000, class nsIContent * aChild = 0x099dd898, int aIndexInContainer = 0, class nsILayoutHistoryState * aFrameState = 0x00000000, int aInReinsertContent = 0)+0x84 [c:\build\chs4.0\build\mozilla\layout\base\nscssframeconstructor.cpp @ 9121]
+2e gklayout!PresShell::InitialReflow(int aWidth = 0x2391, int aHeight = 0x1a22)+0x9f [c:\build\chs4.0\build\mozilla\layout\base\nspresshell.cpp @ 2822]
+2f gklayout!nsXULDocument::StartLayout(void)+0xe2 [c:\build\chs4.0\build\mozilla\content\xul\document\src\nsxuldocument.cpp @ 2155]
+30 gklayout!nsXULDocument::ResumeWalk(void)+0x587 [c:\build\chs4.0\build\mozilla\content\xul\document\src\nsxuldocument.cpp @ 3183]
+31 gklayout!nsXULDocument::EndLoad(void)+0x1d2 [c:\build\chs4.0\build\mozilla\content\xul\document\src\nsxuldocument.cpp @ 745]
+32 gklayout!XULContentSinkImpl::DidBuildModel(void)+0x36 [c:\build\chs4.0\build\mozilla\content\xul\document\src\nsxulcontentsink.cpp @ 408]
+33 gkparser!nsExpatDriver::DidBuildModel(unsigned int anErrorCode = <Memory access error>, int aNotifySink = <Memory access error>, class nsIParser * aParser = <Memory access error>, class nsIContentSink * aSink = <Memory access error>)+0x1c [c:\build\chs4.0\build\mozilla\parser\htmlparser\src\nsexpatdriver.cpp @ 1104]
+34 gkparser!nsParser::DidBuildModel(unsigned int anErrorCode = <Memory access error>)+0x36 [c:\build\chs4.0\build\mozilla\parser\htmlparser\src\nsparser.cpp @ 1318]
+35 gkparser!nsParser::ResumeParse(int allowIteration = <Memory access error>, int aIsFinalChunk = <Memory access error>, int aCanInterrupt = <Memory access error>)+0x14b [c:\build\chs4.0\build\mozilla\parser\htmlparser\src\nsparser.cpp @ 2053]
+36 gkparser!nsParser::OnStopRequest(class nsIRequest * request = 0x0a735708, class nsISupports * aContext = 0x00000000, unsigned int status = 0)+0x6e [c:\build\chs4.0\build\mozilla\parser\htmlparser\src\nsparser.cpp @ 2723]
+37 jar50!nsJARChannel::OnStopRequest(class nsIRequest * req = 0x00000000, class nsISupports * ctx = 0x00000000, unsigned int status = 0)+0x36 [c:\build\chs4.0\build\mozilla\modules\libjar\nsjarchannel.cpp @ 712]
+38 necko!nsInputStreamPump::OnStateStop(void)+0x55 [c:\build\chs4.0\build\mozilla\netwerk\base\src\nsinputstreampump.cpp @ 507]
+39 necko!nsInputStreamPump::OnInputStreamReady(class nsIAsyncInputStream * stream = 0x09c80948)+0x2a [c:\build\chs4.0\build\mozilla\netwerk\base\src\nsinputstreampump.cpp @ 344]
+3a xpcom_core!nsOutputStreamReadyEvent::EventHandler(struct PLEvent * plevent = 0x778b0c24)+0x20 [c:\build\chs4.0\build\mozilla\xpcom\io\nsstreamutils.cpp @ 120]
+3b xpcom_core!PL_HandleEvent(struct PLEvent * self = 0x778b0c24)+0xe [c:\build\chs4.0\build\mozilla\xpcom\threads\plevent.c @ 689]
+3c xpcom_core!PL_ProcessPendingEvents(struct PLEventQueue * self = 0x778b0c24)+0x61 [c:\build\chs4.0\build\mozilla\xpcom\threads\plevent.c @ 623]
+3d xpcom_core!_md_EventReceiverProc(struct HWND__ * hwnd = 0x0179078c, unsigned int uMsg = 0xc13f, unsigned int wParam = 0, long lParam = 0x34b9bb0)+0x1c [c:\build\chs4.0\build\mozilla\xpcom\threads\plevent.c @ 1409]
+3e USER32!InternalCallWinProc+0x28
+3f USER32!UserCallWinProcCheckWow+0x150
+40 USER32!DispatchMessageWorker+0x306
+41 USER32!DispatchMessageW+0xf
+42 gkwidget!nsAppShell::DispatchNativeEvent(int aRealEvent = 1, void * aEvent = 0x016af728)+0xa [c:\build\chs4.0\build\mozilla\widget\src\windows\nsappshell.cpp @ 221]
+43 appshell!nsXULWindow::CreateNewContentWindow(int aChromeFlags = 0x16af728, class nsIAppShell * aAppShell = 0x00e833f8, class nsIXULWindow ** _retval = 0x0012d5d4)+0x226 [c:\build\chs4.0\build\mozilla\xpfe\appshell\src\nsxulwindow.cpp @ 1804]
+44 appshell!nsXULWindow::CreateNewWindow(int aChromeFlags = 0x6ae, class nsIAppShell * aAppShell = 0x00e833f8, class nsIXULWindow ** _retval = 0x0012d5d4)+0x36 [c:\build\chs4.0\build\mozilla\xpfe\appshell\src\nsxulwindow.cpp @ 1693]
+45 appcomps!nsAppStartup::CreateChromeWindow2(class nsIWebBrowserChrome * aParent = 0x040ff950, unsigned int aChromeFlags = 0x6ae, unsigned int aContextFlags = 1, class nsIURI * aURI = 0x0a94e628, int * aCancel = 0x00000000, class nsIWebBrowserChrome ** _retval = 0x0012d754)+0x6d [c:\build\chs4.0\build\mozilla\xpfe\components\startup\src\nsappstartup.cpp @ 884]
+46 embedcomponents!nsWindowWatcher::OpenWindowJS(class nsIDOMWindow * aParent = 0x03efa118, char * aUrl = 0x00000000 "", char * aName = 0x000006ae "", char * aFeatures = 0x042a4174 "???", int aDialog = 0, unsigned int argc = 0, long * argv = 0x00000000, class nsIDOMWindow ** _retval = 0x0012d8ac)+0x36d [c:\build\chs4.0\build\mozilla\embedding\components\windowwatcher\src\nswindowwatcher.cpp @ 657]
+47 embedcomponents!nsWindowWatcher::OpenWindow(class nsIDOMWindow * aParent = 0x03efa118, char * aUrl = 0x09a8afc8 "../resources/staticpages/PersonalDetailsForm.htm", char * aName = 0x0012d820 "Form", char * aFeatures = 0x09e7dee8 "width=400, height=300, location=no, menubar=no, status=no, toolbar=yes, scrollbars=yes, resizable=yes", class nsISupports * aArguments = 0x00000000, class nsIDOMWindow ** _retval = 0x0012d8ac)+0x59 [c:\build\chs4.0\build\mozilla\embedding\components\windowwatcher\src\nswindowwatcher.cpp @ 476]
+48 gklayout!nsGlobalWindow::OpenInternal(class nsAString_internal * aUrl = 0x00ea2d28, class nsAString_internal * aName = 0x09a8afc8, class nsAString_internal * aOptions = 0x00ea2d28, int aDialog = 0, long * argv = 0x00000000, unsigned int argc = 0, class nsISupports * aExtraArgument = 0x00000000, class nsIDOMWindow ** aReturn = 0x0012db08)+0x4a8 [c:\build\chs4.0\build\mozilla\dom\src\base\nsglobalwindow.cpp @ 5851]
+49 gklayout!nsGlobalWindow::Open(class nsIDOMWindow ** _retval = 0x0012db08)+0x16a [c:\build\chs4.0\build\mozilla\dom\src\base\nsglobalwindow.cpp @ 4289]
+4a xpcom_core!XPTC_InvokeByIndex(class nsISupports * that = 0x03efa144, unsigned int methodIndex = 0xf, unsigned int paramCount = 1, struct nsXPTCVariant * params = 0x0012db08)+0x27 [c:\build\chs4.0\build\mozilla\xpcom\reflect\xptcall\src\md\win32\xptcinvoke.cpp @ 102]
+4b xpc3250!XPCWrappedNative::CallMethod(class XPCCallContext * ccx = 0x0012dcac, XPCWrappedNative::CallMode mode = CALL_METHOD (0))+0x6c4 [c:\build\chs4.0\build\mozilla\js\src\xpconnect\src\xpcwrappednative.cpp @ 2139]
+4c xpc3250!XPC_WN_CallMethod(struct JSContext * cx = 0x040e4a48, struct JSObject * obj = 0x039365f8, unsigned int argc = 3, long * argv = 0x01952db8, long * vp = 0x0012dd6c)+0x8e [c:\build\chs4.0\build\mozilla\js\src\xpconnect\src\xpcwrappednativejsops.cpp @ 1444]
+4d js3250!js_Invoke(struct JSContext * cx = 0x00000001, unsigned int argc = 3, unsigned int flag = 0)+0x556 [c:\build\chs4.0\build\mozilla\js\src\jsinterp.c @ 1177]
+4e js3250!js_Interpret(struct JSContext * cx = 0x040e4a48, unsigned char * pc = 0x05282600 ":", long * result = 0x0012dff4)+0x4fb5 [c:\build\chs4.0\build\mozilla\js\src\jsinterp.c @ 3524]
+4f js3250!js_Invoke(struct JSContext * cx = 0x00000001, unsigned int argc = 1, unsigned int flag = 2)+0x597 [c:\build\chs4.0\build\mozilla\js\src\jsinterp.c @ 1197]
+50 js3250!js_InternalInvoke(struct JSContext * cx = 0x099ef008, struct JSObject * obj = 0x04872f18, long fval = 0x489b8b8, unsigned int flag = 0, unsigned int argc = 1, long * argv = 0x0012e1a8, long * rval = 0x0012e1cc)+0x89 [c:\build\chs4.0\build\mozilla\js\src\jsinterp.c @ 1274]
+51 js3250!JS_CallFunctionValue(struct JSContext * cx = 0x040e4a48, struct JSObject * obj = 0x04872f18, long fval = 0x489b8b8, unsigned int argc = 1, long * argv = 0x0012e1a8, long * rval = 0x0012e1cc)+0x1f [c:\build\chs4.0\build\mozilla\js\src\jsapi.c @ 4183]
+52 gklayout!nsJSContext::CallEventHandler(struct JSObject * aTarget = 0x04872f18, struct JSObject * aHandler = 0x0489b8b8, unsigned int argc = 1, long * argv = 0x0012e1a8, long * rval = 0x00000000)+0xa6 [c:\build\chs4.0\build\mozilla\dom\src\base\nsjsenvironment.cpp @ 1411]
+53 gklayout!nsJSEventListener::HandleEvent(class nsIDOMEvent * aEvent = 0x049cab08)+0x28d [c:\build\chs4.0\build\mozilla\dom\src\events\nsjseventlistener.cpp @ 186]
+54 gklayout!nsEventListenerManager::HandleEventSubType(struct nsListenerStruct * aListenerStruct = 0x05bd54c8, class nsIDOMEvent * aDOMEvent = 0x049cab08, class nsIDOMEventTarget * aCurrentTarget = 0x03efa14c, unsigned int aSubType = 0x49cab10, unsigned int aPhaseFlags = 7)+0x14e [c:\build\chs4.0\build\mozilla\content\events\src\nseventlistenermanager.cpp @ 1685]
+55 gklayout!nsEventListenerManager::HandleEvent(class nsPresContext * aPresContext = 0x00000000, class nsEvent * aEvent = 0x0012e3d8, class nsIDOMEvent ** aDOMEvent = 0x0012e398, class nsIDOMEventTarget * aCurrentTarget = 0x03efa14c, unsigned int aFlags = 7, nsEventStatus * aEventStatus = 0x0012e46c)+0x241 [c:\build\chs4.0\build\mozilla\content\events\src\nseventlistenermanager.cpp @ 1786]
+56 gklayout!nsGlobalWindow::HandleDOMEvent(class nsPresContext * aPresContext = 0x09f65940, class nsEvent * aEvent = 0x0012e3d8, class nsIDOMEvent ** aDOMEvent = 0x0012e398, unsigned int aFlags = 7, nsEventStatus * aEventStatus = 0x0012e46c)+0x24a [c:\build\chs4.0\build\mozilla\dom\src\base\nsglobalwindow.cpp @ 1546]
+57 gklayout!DocumentViewerImpl::LoadComplete(unsigned int aStatus = 0)+0xa8 [c:\build\chs4.0\build\mozilla\layout\base\nsdocumentviewer.cpp @ 1012]
+58 docshell!nsDocShell::EndPageLoad(class nsIWebProgress * aProgress = 0x043fd22c, class nsIChannel * aChannel = 0x04f8d7cc, unsigned int aStatus = 0)+0x47 [c:\build\chs4.0\build\mozilla\docshell\base\nsdocshell.cpp @ 4754]
+59 docshell!nsWebShell::EndPageLoad(class nsIWebProgress * aProgress = 0x043fd22c, class nsIChannel * channel = 0x04f8d7cc, unsigned int aStatus = 0)+0x8d [c:\build\chs4.0\build\mozilla\docshell\base\nswebshell.cpp @ 664]
+5a docshell!nsDocShell::OnStateChange(class nsIWebProgress * aProgress = 0x043fd22c, class nsIRequest * aRequest = 0x04f8d7cc, unsigned int aStateFlags = 0x43fd22c, unsigned int aStatus = 0)+0x1df [c:\build\chs4.0\build\mozilla\docshell\base\nsdocshell.cpp @ 4673]
+5b docshell!nsDocLoader::FireOnStateChange(class nsIWebProgress * aProgress = 0x043fd22c, class nsIRequest * aRequest = 0x04f8d7cc, int aStateFlags = 0x20010, unsigned int aStatus = 0)+0xf5 [c:\build\chs4.0\build\mozilla\uriloader\base\nsdocloader.cpp @ 1220]
+5c docshell!nsDocLoader::doStopDocumentLoad(class nsIRequest * request = 0x018248c7, unsigned int aStatus = 0)+0x22 [c:\build\chs4.0\build\mozilla\uriloader\base\nsdocloader.cpp @ 851]
+5d docshell!nsDocLoader::DocLoaderIsEmpty(void)+0x6c [c:\build\chs4.0\build\mozilla\uriloader\base\nsdocloader.cpp @ 743]
+5e docshell!nsDocLoader::OnStopRequest(class nsIRequest * aRequest = 0x05d34158, class nsISupports * aCtxt = 0x00000000, unsigned int aStatus = 0)+0x18b [c:\build\chs4.0\build\mozilla\uriloader\base\nsdocloader.cpp @ 667]
+5f necko!nsLoadGroup::RemoveRequest(class nsIRequest * request = 0x043fd21c, class nsISupports * ctxt = 0x00000000, unsigned int aStatus = 0)+0xb6 [c:\build\chs4.0\build\mozilla\netwerk\base\src\nsloadgroup.cpp @ 732]
+60 gklayout!PresShell::RemoveDummyLayoutRequest(void)+0x57 [c:\build\chs4.0\build\mozilla\layout\base\nspresshell.cpp @ 7113]
+61 gklayout!DummyLayoutRequestEvent::HandleEvent(void)+0x21 [c:\build\chs4.0\build\mozilla\layout\base\nspresshell.cpp @ 7013]
+62 gklayout!HandleDummyLayoutRequestPLEvent(struct PLEvent * aEvent = 0x778b0c24)+0x9 [c:\build\chs4.0\build\mozilla\layout\base\nspresshell.cpp @ 7022]
+63 xpcom_core!PL_HandleEvent(struct PLEvent * self = 0x778b0c24)+0xe [c:\build\chs4.0\build\mozilla\xpcom\threads\plevent.c @ 689]
+64 xpcom_core!PL_ProcessPendingEvents(struct PLEventQueue * self = 0x778b0c24)+0x61 [c:\build\chs4.0\build\mozilla\xpcom\threads\plevent.c @ 623]
+65 xpcom_core!_md_EventReceiverProc(struct HWND__ * hwnd = 0x01220750, unsigned int uMsg = 0xc13f, unsigned int wParam = 0, long lParam = 0x9c1c360)+0x1c [c:\build\chs4.0\build\mozilla\xpcom\threads\plevent.c @ 1409]
+66 USER32!InternalCallWinProc+0x28
+67 USER32!UserCallWinProcCheckWow+0x150
+68 USER32!DispatchMessageWorker+0x306
+69 USER32!DispatchMessageW+0xf
+6a gkwidget!nsAppShell::DispatchNativeEvent(int aRealEvent = 1, void * aEvent = 0x016af728)+0xa [c:\build\chs4.0\build\mozilla\widget\src\windows\nsappshell.cpp @ 221]
+6b appshell!nsXULWindow::CreateNewContentWindow(int aChromeFlags = 0x16af728, class nsIAppShell * aAppShell = 0x00e833f8, class nsIXULWindow ** _retval = 0x0012ea64)+0x226 [c:\build\chs4.0\build\mozilla\xpfe\appshell\src\nsxulwindow.cpp @ 1804]
+6c appshell!nsXULWindow::CreateNewWindow(int aChromeFlags = 0x6ae, class nsIAppShell * aAppShell = 0x00e833f8, class nsIXULWindow ** _retval = 0x0012ea64)+0x36 [c:\build\chs4.0\build\mozilla\xpfe\appshell\src\nsxulwindow.cpp @ 1693]
+6d appcomps!nsAppStartup::CreateChromeWindow2(class nsIWebBrowserChrome * aParent = 0x040ff950, unsigned int aChromeFlags = 0x6ae, unsigned int aContextFlags = 1, class nsIURI * aURI = 0x09431668, int * aCancel = 0x00000000, class nsIWebBrowserChrome ** _retval = 0x0012ebe4)+0x6d [c:\build\chs4.0\build\mozilla\xpfe\components\startup\src\nsappstartup.cpp @ 884]
+6e embedcomponents!nsWindowWatcher::OpenWindowJS(class nsIDOMWindow * aParent = 0x03efa118, char * aUrl = 0x00000000 "", char * aName = 0x000006ae "", char * aFeatures = 0x042a4174 "???", int aDialog = 0, unsigned int argc = 0, long * argv = 0x00000000, class nsIDOMWindow ** _retval = 0x0012ed3c)+0x36d [c:\build\chs4.0\build\mozilla\embedding\components\windowwatcher\src\nswindowwatcher.cpp @ 657]
+6f embedcomponents!nsWindowWatcher::OpenWindow(class nsIDOMWindow * aParent = 0x03efa118, char * aUrl = 0x057d18d0 "../resources/staticpages/PersonalDetailsForm.htm", char * aName = 0x0012ecb0 "Form", char * aFeatures = 0x046b3448 "width=400, height=300, location=no, menubar=no, status=no, toolbar=yes, scrollbars=yes, resizable=yes", class nsISupports * aArguments = 0x00000000, class nsIDOMWindow ** _retval = 0x0012ed3c)+0x59 [c:\build\chs4.0\build\mozilla\embedding\components\windowwatcher\src\nswindowwatcher.cpp @ 476]
+70 gklayout!nsGlobalWindow::OpenInternal(class nsAString_internal * aUrl = 0x00ea2d28, class nsAString_internal * aName = 0x057d18d0, class nsAString_internal * aOptions = 0x00ea2d28, int aDialog = 0, long * argv = 0x00000000, unsigned int argc = 0, class nsISupports * aExtraArgument = 0x00000000, class nsIDOMWindow ** aReturn = 0x0012ef98)+0x4a8 [c:\build\chs4.0\build\mozilla\dom\src\base\nsglobalwindow.cpp @ 5851]
+71 gklayout!nsGlobalWindow::Open(class nsIDOMWindow ** _retval = 0x0012ef98)+0x16a [c:\build\chs4.0\build\mozilla\dom\src\base\nsglobalwindow.cpp @ 4289]
+72 xpcom_core!XPTC_InvokeByIndex(class nsISupports * that = 0x03efa144, unsigned int methodIndex = 0xf, unsigned int paramCount = 1, struct nsXPTCVariant * params = 0x0012ef98)+0x27 [c:\build\chs4.0\build\mozilla\xpcom\reflect\xptcall\src\md\win32\xptcinvoke.cpp @ 102]
+73 xpc3250!XPCWrappedNative::CallMethod(class XPCCallContext * ccx = 0x0012f13c, XPCWrappedNative::CallMode mode = CALL_METHOD (0))+0x6c4 [c:\build\chs4.0\build\mozilla\js\src\xpconnect\src\xpcwrappednative.cpp @ 2139]
+74 xpc3250!XPC_WN_CallMethod(struct JSContext * cx = 0x040e4a48, struct JSObject * obj = 0x039365f8, unsigned int argc = 3, long * argv = 0x01952db8, long * vp = 0x0012f1fc)+0x8e [c:\build\chs4.0\build\mozilla\js\src\xpconnect\src\xpcwrappednativejsops.cpp @ 1444]
+75 js3250!js_Invoke(struct JSContext * cx = 0x00000001, unsigned int argc = 3, unsigned int flag = 0)+0x556 [c:\build\chs4.0\build\mozilla\js\src\jsinterp.c @ 1177]
+76 js3250!js_Interpret(struct JSContext * cx = 0x040e4a48, unsigned char * pc = 0x0a468608 ":", long * result = 0x0012f484)+0x4fb5 [c:\build\chs4.0\build\mozilla\js\src\jsinterp.c @ 3524]
+77 js3250!js_Invoke(struct JSContext * cx = 0x00000001, unsigned int argc = 1, unsigned int flag = 2)+0x597 [c:\build\chs4.0\build\mozilla\js\src\jsinterp.c @ 1197]
+78 js3250!js_InternalInvoke(struct JSContext * cx = 0x040e4a70, struct JSObject * obj = 0x047ad648, long fval = 0x47adca8, unsigned int flag = 0, unsigned int argc = 1, long * argv = 0x0012f638, long * rval = 0x0012f65c)+0x89 [c:\build\chs4.0\build\mozilla\js\src\jsinterp.c @ 1274]
+79 js3250!JS_CallFunctionValue(struct JSContext * cx = 0x040e4a48, struct JSObject * obj = 0x047ad648, long fval = 0x47adca8, unsigned int argc = 1, long * argv = 0x0012f638, long * rval = 0x0012f65c)+0x1f [c:\build\chs4.0\build\mozilla\js\src\jsapi.c @ 4183]
+7a gklayout!nsJSContext::CallEventHandler(struct JSObject * aTarget = 0x047ad648, struct JSObject * aHandler = 0x047adca8, unsigned int argc = 1, long * argv = 0x0012f638, long * rval = 0x00000000)+0xa6 [c:\build\chs4.0\build\mozilla\dom\src\base\nsjsenvironment.cpp @ 1411]
+7b gklayout!nsJSEventListener::HandleEvent(class nsIDOMEvent * aEvent = 0x05753458)+0x28d [c:\build\chs4.0\build\mozilla\dom\src\events\nsjseventlistener.cpp @ 186]
+7c gklayout!nsEventListenerManager::HandleEventSubType(struct nsListenerStruct * aListenerStruct = 0x09b0b0d8, class nsIDOMEvent * aDOMEvent = 0x05753458, class nsIDOMEventTarget * aCurrentTarget = 0x03efa14c, unsigned int aSubType = 0x5753460, unsigned int aPhaseFlags = 7)+0x14e [c:\build\chs4.0\build\mozilla\content\events\src\nseventlistenermanager.cpp @ 1685]
+7d gklayout!nsEventListenerManager::HandleEvent(class nsPresContext * aPresContext = 0x00000000, class nsEvent * aEvent = 0x0012f868, class nsIDOMEvent ** aDOMEvent = 0x0012f828, class nsIDOMEventTarget * aCurrentTarget = 0x03efa14c, unsigned int aFlags = 7, nsEventStatus * aEventStatus = 0x0012f8fc)+0x241 [c:\build\chs4.0\build\mozilla\content\events\src\nseventlistenermanager.cpp @ 1786]
+7e gklayout!nsGlobalWindow::HandleDOMEvent(class nsPresContext * aPresContext = 0x05118128, class nsEvent * aEvent = 0x0012f868, class nsIDOMEvent ** aDOMEvent = 0x0012f828, unsigned int aFlags = 7, nsEventStatus * aEventStatus = 0x0012f8fc)+0x24a [c:\build\chs4.0\build\mozilla\dom\src\base\nsglobalwindow.cpp @ 1546]
+7f gklayout!DocumentViewerImpl::LoadComplete(unsigned int aStatus = 0)+0xa8 [c:\build\chs4.0\build\mozilla\layout\base\nsdocumentviewer.cpp @ 1012]
+80 docshell!nsDocShell::EndPageLoad(class nsIWebProgress * aProgress = 0x043fd22c, class nsIChannel * aChannel = 0x09a4cdec, unsigned int aStatus = 0)+0x47 [c:\build\chs4.0\build\mozilla\docshell\base\nsdocshell.cpp @ 4754]
+81 docshell!nsWebShell::EndPageLoad(class nsIWebProgress * aProgress = 0x043fd22c, class nsIChannel * channel = 0x09a4cdec, unsigned int aStatus = 0)+0x8d [c:\build\chs4.0\build\mozilla\docshell\base\nswebshell.cpp @ 664]
+82 docshell!nsDocShell::OnStateChange(class nsIWebProgress * aProgress = 0x043fd22c, class nsIRequest * aRequest = 0x09a4cdec, unsigned int aStateFlags = 0x43fd22c, unsigned int aStatus = 0)+0x1df [c:\build\chs4.0\build\mozilla\docshell\base\nsdocshell.cpp @ 4673]
+83 docshell!nsDocLoader::FireOnStateChange(class nsIWebProgress * aProgress = 0x043fd22c, class nsIRequest * aRequest = 0x09a4cdec, int aStateFlags = 0x20010, unsigned int aStatus = 0)+0xf5 [c:\build\chs4.0\build\mozilla\uriloader\base\nsdocloader.cpp @ 1220]
+84 docshell!nsDocLoader::doStopDocumentLoad(class nsIRequest * request = 0x018248c7, unsigned int aStatus = 0)+0x22 [c:\build\chs4.0\build\mozilla\uriloader\base\nsdocloader.cpp @ 851]
+85 docshell!nsDocLoader::DocLoaderIsEmpty(void)+0x6c [c:\build\chs4.0\build\mozilla\uriloader\base\nsdocloader.cpp @ 743]
+86 docshell!nsDocLoader::OnStopRequest(class nsIRequest * aRequest = 0x0549b8c0, class nsISupports * aCtxt = 0x00000000, unsigned int aStatus = 0)+0x18b [c:\build\chs4.0\build\mozilla\uriloader\base\nsdocloader.cpp @ 667]
+87 necko!nsLoadGroup::RemoveRequest(class nsIRequest * request = 0x043fd21c, class nsISupports * ctxt = 0x00000000, unsigned int aStatus = 0)+0xb6 [c:\build\chs4.0\build\mozilla\netwerk\base\src\nsloadgroup.cpp @ 732]
+88 gklayout!PresShell::RemoveDummyLayoutRequest(void)+0x57 [c:\build\chs4.0\build\mozilla\layout\base\nspresshell.cpp @ 7113]
+89 gklayout!DummyLayoutRequestEvent::HandleEvent(void)+0x21 [c:\build\chs4.0\build\mozilla\layout\base\nspresshell.cpp @ 7013]
+8a gklayout!HandleDummyLayoutRequestPLEvent(struct PLEvent * aEvent = 0x778b0c24)+0x9 [c:\build\chs4.0\build\mozilla\layout\base\nspresshell.cpp @ 7022]
+8b xpcom_core!PL_HandleEvent(struct PLEvent * self = 0x778b0c24)+0xe [c:\build\chs4.0\build\mozilla\xpcom\threads\plevent.c @ 689]
+8c xpcom_core!PL_ProcessPendingEvents(struct PLEventQueue * self = 0x778b0c24)+0x61 [c:\build\chs4.0\build\mozilla\xpcom\threads\plevent.c @ 623]
+8d xpcom_core!_md_EventReceiverProc(struct HWND__ * hwnd = 0x000703d8, unsigned int uMsg = 0xc13f, unsigned int wParam = 0, long lParam = 0xe77f38)+0x1c [c:\build\chs4.0\build\mozilla\xpcom\threads\plevent.c @ 1409]
+8e USER32!InternalCallWinProc+0x28
+8f USER32!UserCallWinProcCheckWow+0x150
+90 USER32!DispatchMessageWorker+0x306
+91 USER32!DispatchMessageW+0xf
+92 gkwidget!nsAppShell::Run(void)+0x10c [c:\build\chs4.0\build\mozilla\widget\src\windows\nsappshell.cpp @ 159]
+93 appcomps!nsAppStartup::Run(void)+0xd [c:\build\chs4.0\build\mozilla\xpfe\components\startup\src\nsappstartup.cpp @ 208]
+94 HsEngine!main1(int argc = 3, char ** argv = 0x002a4648, class nsISupports * nativeApp = 0x00e87c90)+0x355 [c:\build\chs4.0\build\mozilla\xpfe\bootstrap\nsapprunner.cpp @ 1264]
+95 HsEngine!main(int argc = 3, char ** argv = 0x002a4648)+0xc5 [c:\build\chs4.0\build\mozilla\xpfe\bootstrap\nsapprunner.cpp @ 1765]
+96 HsEngine!WinMain(struct HINSTANCE__ * __formal = 0x7c816d4f, struct HINSTANCE__ * __formal = 0x80000001, char * args = 0x09d7edb4 "???", int __formal = 0x7ffde000)+0x18 [c:\build\chs4.0\build\mozilla\xpfe\bootstrap\nsapprunner.cpp @ 1789]
+97 HsEngine!WinMainCRTStartup(void)+0x185 [f:\vs70builds\3077\vc\crtbld\crt\src\crtexe.c @ 390]
+98 kernel32!BaseProcessStart+0x23

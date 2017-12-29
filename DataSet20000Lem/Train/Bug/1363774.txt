@@ -1,0 +1,54 @@
+Broken awk result in an empty old-configure which break the build in a confusing way
+I wa trying to build Firefox in Artifact mode on OSX. My gawk wa out of date using 4.1.3 instead of 4.1.4.
+
+You can see a failed link to libreadline in the build output below. I'm not sure why this happened - it seems like a bug in homebrew, but I just forced gawk to upgrade with `brew upgrade gawk` and I'm getting a successful build now.
+
+We should probably just check the minimum version of gawk on OSX though.
+
+```
+$ rm -rf old-configure configure
+Victors-MacBook-Pro-2:mozilla-unified victorng$ ./mach build
+0:00.30 /usr/bin/make -f client.mk -s configure
+0:01.15 Generating /Users/victorng/dev/moz-central/mozilla-unified/configure
+0:01.16 cd /Users/victorng/dev/moz-central/mozilla-unified/obj-x86_64-apple-darwin16.5.0
+0:01.16 /Users/victorng/dev/moz-central/mozilla-unified/configure
+0:01.31 Reexecuting in the virtualenv
+0:01.47 Adding configure option from /Users/victorng/dev/moz-central/mozilla-unified/mozconfig
+0:01.47 --enable-artifact-builds
+0:01.63 checking for a shell... /bin/sh
+0:01.71 checking for host system type... x86_64-apple-darwin16.5.0
+0:01.71 checking for target system type... x86_64-apple-darwin16.5.0
+0:01.75 checking for a shell... /bin/sh
+0:01.83 checking for host system type... x86_64-apple-darwin16.5.0
+0:01.83 checking for target system type... x86_64-apple-darwin16.5.0
+0:01.87 checking for llvm-config... not found
+0:01.87 checking whether cross compiling... no
+0:01.89 checking for tar... /usr/local/bin/gtar
+0:01.89 checking for unzip... /usr/bin/unzip
+0:01.89 checking for zip... /usr/bin/zip
+0:01.89 checking for the Mozilla API key... no
+0:01.89 checking for the Google API key... no
+0:01.89 checking for the Bing API key... no
+0:01.89 checking for the Adjust SDK key... no
+0:01.89 checking for awk... /usr/local/bin/gawk
+0:01.89 checking for perl... /usr/local/bin/perl
+0:01.90 checking for minimum required perl version >= 5.006... 5.024000
+0:01.92 checking for full perl installation... yes
+0:01.92 checking for gmake... /Applications/Xcode.app/Contents/Developer/usr/bin/make
+0:01.92 checking for doxygen... not found
+0:01.92 checking for xargs... /usr/bin/xargs
+0:01.92 checking for dsymutil... /usr/bin/dsymutil
+0:01.92 checking for mkfshfs... /sbin/newfs_hfs
+0:01.92 checking for hfs_tool... not found
+0:01.92 checking for autoconf... /usr/local/bin/autoconf213
+0:01.92 Refreshing /Users/victorng/dev/moz-central/mozilla-unified/old-configure with /usr/local/bin/autoconf213
+0:02.08 dyld: Library not loaded: /usr/local/opt/readline/lib/libreadline.6.dylib
+0:02.08 Referenced from: /usr/local/bin/awk
+0:02.08 Reason: image not found
+0:02.10 Traceback (most recent call last):
+0:02.10 File "/Users/victorng/dev/moz-central/mozilla-unified/configure.py", line 124, in <module>
+0:02.10 sys.exit(main(sys.argv))
+0:02.10 File "/Users/victorng/dev/moz-central/mozilla-unified/configure.py", line 29, in main
+
+
+```

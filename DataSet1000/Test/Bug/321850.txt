@@ -1,0 +1,34 @@
+Inconsistent treatment of word-spacing in XHTML documents.
+User-Agent:       Mozilla/5.0 (Macintosh; U; PPC Mac OS X; en-us) AppleWebKit/416.12 (KHTML, like Gecko) Safari/416.13
+Build Identifier: Mozilla/5.0 (Macintosh; U; PPC Mac OS X Mach-O; en-US; rv:1.8) Gecko/20051111 Firefox/1.5
+
+This bug is hard to characterize, but it appears that the CSS "word-spacing" property is being applied differently to "ignorable" whitespace than to regular whitespace in XHTML documents, even when the xml:space option is set to preserve spaces.
+
+Because this is complicated to explain, I'm going to recount my observations in order:
+
+I was attempting to create an XML document (with a .xml extension) that had an embedded CSS stylesheet and view it in Firefox. The first symptom that I noticed was that all of the whitespace before a start element, and after an end element had been stripped from my document. At first, I thought this was the result of an improper xml:space setting, however when I added a "white-space: pre;" CSS style to the document, the whitespace returned, although now word-wrapping was disabled.
+
+I next tried "white-space: -moz-pre-wrap;" and other variations, without success. Then I noticed that the spaces weren't actually being stripped, they were just very tiny - on the order of 1 pixel in width.
+
+So then I added a "word-spacing" property to the document. This caused some interesting and rather odd results - for example, a setting of "word-spacing: 0.01em" caused the spaces to appear normally - in other words, it increased the size of the "ignorable" white-space without noticeably affecting the non-ignorable whitespace. However, "word-spacing: 0.001em" had no effect at all.
+
+Another thing I noticed was that the width of the ignorable whitespace was different depending on its exact position on the line.
+
+Reproducible: Always
+
+Steps to Reproduce:
+I will try to figure out how to attach my XML test document, but if I can't here it is:
+
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<body>
+  <p style="white-space: normal;">There is a xxx <span>xxx</span>. [white-space: normal;]</p>
+  <p style="white-space: -moz-pre-wrap;">There is a xxx <span>xxx</span>. [white-space: -moz-pre-wrap;]</p>
+  <p style="white-space: pre;">There is a xxx <span>xxx</span>. [white-space: pre;]</p>
+  <p style="white-space: normal; word-spacing: 0.01em;">There is a xxx <span>xxx</span>. [white-space: normal; word-spacing: 0.01em;]</p>
+  <p style="white-space: normal; word-spacing: 0.001em;">There is a xxx <span>xxx</span>. [white-space: normal; word-spacing: 0.001em;]</p>
+</body>
+</html>
+
+Actual Results:  
+There should be a space between "xxx xxx" in all 5 test cases, however I only see a space in cases 3 and 4. All others I see "xxxxxx".

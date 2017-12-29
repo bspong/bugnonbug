@@ -1,0 +1,214 @@
+mem leak when running JavaScript with HttpRequest
+User-Agent: Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; .NET CLR 1.1.4322; InfoPath.1)
+Build Identifier: (Mozilla/5.0 X11; U; Linux; i686; de-At; rv:1.7.8) Gecko/20050511
+
+I`m running the simple JavaScript below with high frequent httprequest(every second).After one hour I get an essentially grow-up of memory requested by the browser. When long time running script the browser stop work finally because of memory leak.
+
+------ start ---------------------
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html>
+
+<head>
+
+<meta http_equiv="Content-Type" content="text/html;charset=ISO-8859-1" />
+
+<meta http-equiv="cache-control" content="no-cache" />
+
+<title>
+
+Datum und Zeit
+
+</title>
+
+
+
+<script language="javascript" type="text/javascript">
+<!--
+/// j ist nicht fuer einen Dauerbetrieb vorgesehen?
+/// die gebauten Objekte muessen teilweise von Hand beseitigt werden?
+/// und trotzdem koennen noch MEM-LEAKs vorkommen
+
+zeitmsZEIT = 0
+;
+gTO_ZEIT = "";
+xmlhttpZEIT = null;
+
+function mClearObj()
+
+{
+clearTimeout( gTO_ZEIT )
+
+if( xmlhttpZEIT != null ){
+xmlhttpZEIT.abort();
+xmlhttpZEIT.onreadystatechange = null;
+xmlhttpZEIT = null
+}
+
+delete gTO_ZEIT
+gTO_ZEIT = ""
+delete zeitmsZEIT
+return;
+}
+
+
+function changeZeit()
+
+{
+
+if( xmlhttpZEIT.readyState == 4 )
+
+{
+
+if( xmlhttpZEIT.status == 200 )
+{
+lspanZeit = document.getElementById( "test" );
+
+
+if( lspanZeit == undefined ){
+
+return;
+
+}
+
+
+
+// 0 5 8 11 14 17 19
+// YYYY MM DD hh mm s w
+
+// 0 1 2 3 4 5 6
+
+
+lspanZeit.innerHTML = xmlhttpZEIT.responseText.substring( 8, 10 ) +"."
++xmlhttpZEIT.responseText.substring( 5, 7 ) +"."
++xmlhttpZEIT.responseText.substring( 0, 4 ) +"&nbsp; &nbsp; "
++xmlhttpZEIT.responseText.substring( 11, 13 ) +":"
++xmlhttpZEIT.responseText.substring( 14, 16 )
++":"
++
+xmlhttpZEIT.responseText.substring( 17, 19 )
+lspanZeit = null;
+xmlhttpZEIT.onreadystatechange=null;
+xmlhttpZEIT = null;
+gTO_ZEIT = setTimeout( 'mDakoZeit( zeitmsZEIT )', zeitmsZEIT );
+
+}
+else{
+alert( "Probleme mit REQUEST: " +xmlhttpZEIT.statusText );
+}
+}
+
+
+return;
+}
+
+
+
+
+
+function mDakoZeit( zykl )
+
+{
+
+zeitmsZEIT = zykl
+;
+
+if( gTO_ZEIT != "" ){
+clearTimeout( gTO_ZEIT )
+}
+
+if( xmlhttpZEIT == null
+){
+xmlhttpZEIT = GetXmlHttpObject(0);
+
+}
+
+
+if (xmlhttpZEIT == null)
+
+{
+
+alert ("Browser doe not support HTTP Request")
+
+return
+
+}
+
+
+
+var url = "/cgi-bin/provi?ZEIT=1&sid=" +Math.random()
+
+xmlhttpZEIT.onreadystatechange = changeZeit
+
+xmlhttpZEIT.open( "GET", url, true )
+
+xmlhttpZEIT.send( null )
+
+}
+
+
+
+function GetXmlHttpObject(handl)
+{
+var objXMLHttp = null
+
+if (window.XMLHttpRequest)
+{
+objXMLHttp=new XMLHttpRequest()
+}
+else if (window.ActiveXObject)
+{
+objXMLHttp=new ActiveXObject("Microsoft.XMLHTTP")
+}
+
+return objXMLHttp;
+}
+
+//-->
+</script>
+
+</head>
+
+
+
+<body onUnload="mClearObj()">
+
+
+
+<table>
+<tr><td><br /></td></tr>
+<tr>
+<td>
+<span class="test" id="test">________</span>
+</td>
+</tr>
+</table>
+
+
+</body>
+
+<script language="javascript" type="text/javascript">
+<!--
+
+/// erster Ruf zur Server-Uhr
+mDakoZeit( 400 )
+//-->
+</script>
+
+</html>
+------ end -------------------
+
+
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. start site
+2. monitoring requested memory with 'KDE system monitor'
+3.
+
+
+Expected Results:
+constant memory space requested by the browser over _many_ day

@@ -1,0 +1,29 @@
+Add an element geometry highlighter
+The very high-level requirement is for devtools users to be able to move and resize elements easily in the page, almost as if modifying a layer in Photoshop or a similar program.
+
+I think there is a significant amount of users that are left out today by browser devtools because their UIs are often too programmer-oriented or too complex.
+
+Being able to modify some elements of the design of a webpage by directly moving things around would be pretty powerful for some people.
+It would help make our tools accessible to a broader audience.
+
+Now, in order to make this a realistic bug to fix, there are various questions to be answered:
+
+- which elements should be movable/resizable?
+- how should this be activated?
+- how should the changes be made to the underlying HTML/CSS?
+
+I think there may be 2 distinct main ways to go about this:
+
+1 - either allow any element to be resized and moved without constraints, setting the appropriate position/left/top/width/height/... properties (probably on element.style) as we go,
+2 - or only allow "positioned" elements to be moved, even then, only allow those properties that are already set to be changed. For instance, an absolutely positioned element that has the properties left, bottom and width set should be movable along the x and y axis, from the bottom and left, and be resizable along the x axis only.
+
+1 is more flexible and probably more fun to play with, but the big advantage of 2 is that it would only allow modifications within the constraints of the existing CSS rules, while 1 would mess up with the CSS a lot.
+With 2, we could even make the tool update the right css property inside the right css rule (so if the element is moved to the left, the original left property would be updated).
+
+The other advantage of 2 is that it avoids breaking the layout in weird ways. For instance if an element is absolutely positioned and has both left and right defined, 1 would allow resizing but that would mess up with the style because it would add a width property.
+2 however would only allow the element to be "moved" from the left or the right. This would end up resizing it too, but keeping the original intent of the CSS code.
+
+The other question is how should this element transformer tool be activated.
+So far, the inspector is the preferred way to modify elements in the page. I think one way would be to add a button in the rule-view next to "position:absolute/relative/fixed" properties.
+
+But given requirement of trying to make our tools available to users from various background, it's a bit sad to ask them to have to select the element in the inspector, and then hunt for the little button in the rule-view panel.

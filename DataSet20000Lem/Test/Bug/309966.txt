@@ -1,0 +1,159 @@
+Builded firefox from source crashes, but precompiled work
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8b4) Gecko/20050908 Firefox/1.4
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8b4) Gecko/20050908 Firefox/1.4
+
+It is interesting that when I build firefox from sources, it crash (see
+callstack). Precompiled firefox do not crash. This problem wa introduced in
+1.0.6 and persists in 1.0.7. Previous release worked. Do you have any idea, how
+to get it work? I compiled firefox a you suggest "gmake -f client.mk build".
+I am using a default mozconfig file.
+
+Program received signal SIG32, Real-time event 32.
+0x404cdbf1 in sigpending () from /lib/libc.so.6
+
+#0 0x404cdbf1 in sigpending () from /lib/libc.so.6
+#1 0x404cdcb9 in sigsuspend () from /lib/libc.so.6
+#2 0x4029e278 in pthread_getconcurrency () from /lib/libpthread.so.0
+#3 0x4029dae4 in pthread_create () from /lib/libpthread.so.0
+#4 0x40274240 in _PR_CreateThread (type=PR_USER_THREAD, start=0x401d6884
+<nsThread::Main(void*)>, arg=0x81d9d18,
+priority=PR_PRIORITY_NORMAL, scope=PR_GLOBAL_THREAD,
+state=PR_JOINABLE_THREAD, stackSize=65536, isGCAble=0)
+at ptthread.c:442
+#5 0x40274431 in PR_CreateThread (type=PR_USER_THREAD, start=0x401d6884
+<nsThread::Main(void*)>, arg=0x81d9d18,
+priority=PR_PRIORITY_NORMAL, scope=PR_GLOBAL_THREAD,
+state=PR_JOINABLE_THREAD, stackSize=0) at ptthread.c:525
+#6 0x401d7058 in nsThread::Init(nsIRunnable*, unsigned, PRThreadPriority,
+PRThreadScope, PRThreadState) (
+this=0x81d9d18, runnable=0x81cfe48, stackSize=0,
+priority=PR_PRIORITY_NORMAL, scope=PR_GLOBAL_THREAD,
+state=PR_JOINABLE_THREAD) at nsThread.cpp:263
+#7 0x401d71bb in NS_NewThread(nsIThread**, nsIRunnable*, unsigned,
+PRThreadState, PRThreadPriority, PRThreadScope) (
+result=0x81cfe58, runnable=0x81cfe48, stackSize=0, state=PR_JOINABLE_THREAD,
+priority=PR_PRIORITY_NORMAL,
+scope=PR_GLOBAL_THREAD) at nsThread.cpp:308
+#8 0x40a4e63e in nsSocketTransportService::Init() (this=0x81cfe40) at
+nsSocketTransportService2.cpp:389
+#9 0x40a0e5a0 in nsSocketTransportServiceConstructor (aOuter=0x0,
+aIID=@0x40b0f434, aResult=0xbfffe060)
+at nsNetModule.cpp:88
+#10 0x4021068b in nsGenericFactory::CreateInstance(nsISupports*, nsID const&,
+void**) (this=0x81cfe28, aOuter=0x0,
+aIID=@0x40b0f434, aResult=0xbfffe060) at nsGenericFactory.cpp:82
+#11 0x401c240b in nsComponentManagerImpl::CreateInstance(nsID const&,
+nsISupports*, nsID const&, void**) (
+this=0x812ef38, aClass=@0x40b0f180, aDelegate=0x0, aIID=@0x40b0f434,
+aResult=0xbfffe060)
+at nsComponentManager.cpp:1918
+#12 0x401c291f in nsComponentManagerImpl::GetService(nsID const&, nsID const&,
+void**) (this=0x812ef38,
+aClass=@0x40b0f180, aIID=@0x40b0f434, result=0xbfffe140) at
+nsComponentManager.cpp:2120
+#13 0x4020fe83 in nsGetServiceByCID::operator()(nsID const&, void**) const
+(this=0xbfffe210, aIID=@0x40b0f434,
+aInstancePtr=0xbfffe140) at nsComponentManagerUtils.cpp:101
+#14 0x40a2d3c9 in
+nsCOMPtr<nsISocketTransportService>::assign_from_helper(nsCOMPtr_helper const&,
+nsID const&) (
+this=0x81c9e0c, helper=@0xbfffe210, aIID=@0x40b0f434) at nsCOMPtr.h:1050
+#15 0x40a2c1f5 in nsCOMPtr<nsISocketTransportService>::operator=(nsCOMPtr_helper
+const&) (this=0x81c9e0c,
+rhs=@0xbfffe210) at nsCOMPtr.h:642
+#16 0x40a29978 in nsIOService::Init() (this=0x81c9df0) at nsIOService.cpp:191
+#17 0x40a0e245 in nsIOServiceConstructor (aOuter=0x0, aIID=@0x40bcc694,
+aResult=0xbfffe310) at nsNetModule.cpp:74
+#18 0x4021068b in nsGenericFactory::CreateInstance(nsISupports*, nsID const&,
+void**) (this=0x81c9dd8, aOuter=0x0,
+aIID=@0x40bcc694, aResult=0xbfffe310) at nsGenericFactory.cpp:82
+#19 0x401c2590 in nsComponentManagerImpl::CreateInstanceByContractID(char
+const*, nsISupports*, nsID const&, void**) (
+this=0x812ef38, aContractID=0x40bcd9a0 "@mozilla.org/network/io-service;1",
+aDelegate=0x0, aIID=@0x40bcc694,
+aResult=0xbfffe310) at nsComponentManager.cpp:2000
+#20 0x401c3457 in nsComponentManagerImpl::GetServiceByContractID(char const*,
+nsID const&, void**) (this=0x812ef38,
+aContractID=0x40bcd9a0 "@mozilla.org/network/io-service;1",
+aIID=@0x40bcc694, result=0x40bd0498)
+at nsComponentManager.cpp:2420
+#21 0x40bc521f in CallGetService<nsIIOService> (aContractID=0x40bcd9a0
+"@mozilla.org/network/io-service;1",
+aDestination=0x40bd0498) at nsIServiceManagerUtils.h:178
+#22 0x40bc027f in nsScriptSecurityManager::Init() (this=0x81c3d00) at
+nsScriptSecurityManager.cpp:2899
+#23 0x40bc09fa in nsScriptSecurityManager::GetScriptSecurityManager() () at
+nsScriptSecurityManager.cpp:2963
+#24 0x40bcb1e2 in Construct_nsIScriptSecurityManager (aOuter=0x0,
+aIID=@0x407449e0, aResult=0xbfffe520)
+at nsSecurityManagerFactory.cpp:330
+#25 0x4021068b in nsGenericFactory::CreateInstance(nsISupports*, nsID const&,
+void**) (this=0x81c3ce8, aOuter=0x0,
+aIID=@0x407449e0, aResult=0xbfffe520) at nsGenericFactory.cpp:82
+#26 0x401c2590 in nsComponentManagerImpl::CreateInstanceByContractID(char
+const*, nsISupports*, nsID const&, void**) (
+this=0x812ef38, aContractID=0x40745920
+"@mozilla.org/scriptsecuritymanager;1", aDelegate=0x0, aIID=@0x407449e0,
+aResult=0xbfffe520) at nsComponentManager.cpp:2000
+#27 0x401c3457 in nsComponentManagerImpl::GetServiceByContractID(char const*,
+nsID const&, void**) (this=0x812ef38,
+aContractID=0x40745920 "@mozilla.org/scriptsecuritymanager;1",
+aIID=@0x407449e0, result=0xbfffe5d0)
+at nsComponentManager.cpp:2420
+#28 0x4020ffa3 in nsGetServiceByContractID::operator()(nsID const&, void**)
+const (this=0xbfffe640, aIID=@0x407449e0,
+aInstancePtr=0xbfffe5d0) at nsComponentManagerUtils.cpp:121
+#29 0x40737151 in
+nsCOMPtr<nsIScriptSecurityManager>::assign_from_helper(nsCOMPtr_helper const&,
+nsID const&) (
+this=0xbfffe650, helper=@0xbfffe640, aIID=@0x407449e0) at nsCOMPtr.h:1050
+#30 0x40736620 in nsCOMPtr (this=0xbfffe650, helper=@0xbfffe640) at nsCOMPtr.h:588
+#31 0x407340bf in mozJSComponentLoader::ReallyInit() (this=0x81568a8) at
+mozJSComponentLoader.cpp:514
+#32 0x4073524e in mozJSComponentLoader::ModuleForLocation(char const*, nsIFile*)
+(this=0x81568a8,
+registryLocation=0x81b1ad0 "rel:nsSample.js", component=0x8156918) at
+mozJSComponentLoader.cpp:908
+#33 0x40734ad7 in mozJSComponentLoader::AttemptRegistration(nsIFile*, int)
+(this=0x81568a8, component=0x8156918,
+deferred=0) at mozJSComponentLoader.cpp:755
+#34 0x407347c2 in mozJSComponentLoader::AutoRegisterComponent(int, nsIFile*,
+int*) (this=0x81568a8, when=0,
+component=0x8156918, registered=0xbfffe9e4) at mozJSComponentLoader.cpp:681
+#35 0x4073445b in mozJSComponentLoader::RegisterComponentsInDir(int, nsIFile*)
+(this=0x81568a8, when=0, dir=0x8161180)
+at mozJSComponentLoader.cpp:589
+#36 0x4073427f in mozJSComponentLoader::AutoRegisterComponents(int, nsIFile*)
+(this=0x81568a8, when=0,
+aDirectory=0x8161180) at mozJSComponentLoader.cpp:545
+#37 0x401c58ee in
+nsComponentManagerImpl::AutoRegisterNonNativeComponents(nsIFile*)
+(this=0x812ef38, spec=0x8161180)
+at nsComponentManager.cpp:3280
+#38 0x401c5700 in nsComponentManagerImpl::AutoRegisterImpl(int, nsIFile*, int)
+(this=0x812ef38, when=0,
+inDirSpec=0x0, fileIsCompDir=1) at nsComponentManager.cpp:3250
+#39 0x401c5f08 in nsComponentManagerImpl::AutoRegister(nsIFile*)
+(this=0x812ef38, aSpec=0x0)
+at nsComponentManager.cpp:3422
+#40 0x4015cce4 in NS_InitXPCOM2 (result=0xbfffee40, binDirectory=0x8121170,
+appFileLocationProvider=0xbffff650)
+at nsXPComInit.cpp:593
+#41 0x0806ed1e in ScopedXPCOMStartup::Initialize() (this=0xbfffee40) at
+nsAppRunner.cpp:794
+#42 0x08070a58 in ImportProfiles (aPService=0x812db40, aNative=0x812da68) at
+nsAppRunner.cpp:1288
+#43 0x080713b6 in SelectProfile (aResult=0xbffff5a0, aNative=0x812da68,
+aStartOffline=0xbffff594)
+at nsAppRunner.cpp:1409
+#44 0x0807253b in xre_main(int, char**, nsXREAppData const*) (argc=1,
+argv=0xbffff704, aAppData=0x811c018)
+at nsAppRunner.cpp:1714
+#45 0x0806d130 in main (argc=1, argv=0xbffff704) at nsBrowserApp.cpp:58
+#46 0x404b9d06 in __libc_start_main () from /lib/libc.so.6
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:

@@ -1,0 +1,10 @@
+Allow the browser console dialog to be opened in specified windows/tabs/others
+I'm trying to open the Browser Console in the sidebar in my add-on. However, even though the webconsole URI loads fine there, I can't use it as a DebuggerClient to listen for messages, because most of the HUDService object is closed from the outside.
+
+This means that I can't edit its methods or assign any of its _#### properties myself. So I can't immediately ensure the console functions and is destroyed properly. The only way to do this would be to write my own HUDService, which would be pretty much a copy-paste of firefox's HUDService, except for a very few lines of code.
+
+This seems to be a big overkill. So I would suggest instead changing the current HUDService, to allow passing a window reference as an argument into the toggleBrowserConsole method as HUDService.toggleBrowserConsole(aWindow). The method would use aWindow in its openWindow method instead of opening a new one (if null or nothing is passed, it will still open a new window, as is current behavior).
+
+AFAICT, this would be a very simple change, which works great for opening, working with, and closing browser consoles in windows other than the dialog opened by HUDService itself, making sure they are handled properly in all these cases by the original HUDService.
+
+Although admittedly, I'm not 100% sure if my suggestion can be implemented exactly like this, as I've read too much code today and I'm already at the stage of seeing many happily colored words when I blink... So I could be wrong, and in that case (or if I missed an incredibly obvious way to do what I want) I would greatly welcome any alternatives for my situation, if it is at all possible. :)

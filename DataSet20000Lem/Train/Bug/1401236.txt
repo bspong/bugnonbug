@@ -1,0 +1,32 @@
+Sync hang main process for multiple seconds, apparently after visiting link
+I can't seem to trigger this issue reliably, so that's not the best...
+
+In any case, I noticed in recently Nightlies that the main process would hang for multiple second occasionally.
+
+Here's a profile of the issue happening:
+
+https://perfht.ml/2hfamef
+
+The key line in the stack during hang appear to be:
+
+addChangedID (resource://services-sync/engines.js:145)
+js::RunScript
+js::InternalCallOrConstruct(JSContext*, JS::CallArgs const&, js::MaybeConstruct)
+<name omitted>
+js::ForwardingProxyHandler::call(JSContext*, JS::Handle<JSObject*>, JS::CallArgs const&) const
+js::CrossCompartmentWrapper::call(JSContext*, JS::Handle<JSObject*>, JS::CallArgs const&) const
+js::Proxy::call(JSContext*, JS::Handle<JSObject*>, JS::CallArgs const&)
+js::proxy_Call(JSContext*, unsigned int, JS::Value*)
+js::InternalCallOrConstruct(JSContext*, JS::CallArgs const&, js::MaybeConstruct)
+Interpret(JSContext*, js::RunState&)
+js::RunScript(JSContext*, js::RunState&)
+onVisit
+js::RunScript
+js::InternalCallOrConstruct(JSContext*, JS::CallArgs const&, js::MaybeConstruct)
+<name omitted>
+JS_CallFunctionValue(JSContext*, JS::Handle<JSObject*>, JS::Handle<JS::Value>, JS::HandleValueArray const&, JS::MutableHandle<JS::Value>)
+nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS*, unsigned short, XPTMethodDescriptor const*, nsXPTCMiniVariant*)
+PrepareAndDispatch
+SharedStub
+nsNavHistory::NotifyOnVisit(nsIURI*, long long, long long, long long, int, nsTSubstring<char> const&, bool, unsigned int, unsigned int, nsTSubstring<char16_t> const&)
+mozilla::places::(anonymous namespace)::NotifyVisitObservers::Run()

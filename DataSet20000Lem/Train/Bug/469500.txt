@@ -1,0 +1,48 @@
+Memory Leak when canceling the migration wizard dialog
+Memory Leak found with the recent firefox 3.1 nightly while using the migration wizard:
+
+step to reproduce:
+-> Start Firefox without any existing Firefox Profile and without any online connection (like in a plane over the atlantic ;)
+-> Migration Wizzard come up
+-> Select Cancel in the Migration Wizard
+--> Leak
+
+== BloatView: ALL (cumulative) LEAK STATISTICS
+
+|<----------------Class--------------->|<-----Bytes------>|<----------------Objects---------------->|<--------------References-------------->|
+Per-Inst Leaked Total Rem Mean StdDev Total Rem Mean StdDev
+0 TOTAL 22 2584 105900 104 ( 367.67 +/- 498.44) 276939 110 ( 330.42 +/- 495.33)
+2 BackstagePass 24 24 1 1 ( 1.00 +/- 0.00) 9096 4 ( 215.23 +/- 56.05)
+61 XPCNativeScriptableShared 108 108 1013 1 ( 14.09 +/- 5.30) 0 0 ( 0.00 +/- 0.00)
+64 XPCWrappedNative 56 392 1999 7 ( 840.92 +/- 420.94) 13298 7 ( 971.69 +/- 424.33)
+65 XPCWrappedNativeProto 32 64 518 2 ( 249.78 +/- 137.88) 0 0 ( 0.00 +/- 0.00)
+85 mozStorageConnection 84 84 2 1 ( 1.33 +/- 0.58) 103 18 ( 35.00 +/- 16.42)
+86 mozStorageFunctionGetUnreversedHost 12 12 1 1 ( 1.00 +/- 0.00) 1 1 ( 1.00 +/- 0.00)
+87 mozStorageService 20 20 1 1 ( 1.00 +/- 0.00) 10 1 ( 2.74 +/- 1.15)
+88 mozStorageStatement 44 748 77 17 ( 32.90 +/- 14.71) 186 17 ( 33.87 +/- 14.65)
+105 nsBaseAppShell 64 64 1 1 ( 1.00 +/- 0.00) 265 1 ( 6.76 +/- 1.29)
+292 nsJSID 36 36 244 1 ( 86.93 +/- 39.88) 1295 1 ( 146.35 +/- 70.62)
+304 nsLocalFile 28 28 4122 1 ( 148.23 +/- 41.76) 22294 1 ( 226.79 +/- 134.93)
+315 nsNavBookmarks 192 192 1 1 ( 1.00 +/- 0.00) 11 1 ( 3.57 +/- 1.72)
+327 nsObserverService 48 48 1 1 ( 1.00 +/- 0.00) 1226 1 ( 6.54 +/- 5.20)
+338 nsPrefBranch 56 56 10 1 ( 3.58 +/- 1.74) 72 1 ( 8.80 +/- 4.02)
+358 nsRunnable 12 12 376 1 ( 111.04 +/- 91.65) 1145 1 ( 110.78 +/- 91.96)
+386 nsStringBuffer 8 328 11053 41 ( 1086.34 +/- 988.84) 14839 41 ( 1364.37 +/- 1046.98)
+398 nsSystemPrincipal 36 36 1 1 ( 1.00 +/- 0.00) 6723 1 ( 21.06 +/- 44.90)
+399 nsTArray_base 4 4 4142 1 ( 1084.88 +/- 399.84) 0 0 ( 0.00 +/- 0.00)
+406 nsThread 72 72 4 1 ( 1.71 +/- 0.76) 5056 8 ( 710.31 +/- 502.53)
+410 nsTimerImpl 60 60 22 1 ( 9.21 +/- 4.17) 152 1 ( 12.70 +/- 10.86)
+431 nsVoidArray 4 72 1881 18 ( 457.74 +/- 176.84) 0 0 ( 0.00 +/- 0.00)
+478 nsXPCWrappedJS 60 60 121 1 ( 56.15 +/- 29.32) 1728 2 ( 146.01 +/- 54.96)
+479 nsXPCWrappedJSClass 44 44 16 1 ( 6.58 +/- 3.41) 756 1 ( 68.82 +/- 29.40)
+503 xptiInterfaceInfo 20 20 1491 1 ( 209.32 +/- 127.01) 7724 1 ( 417.12 +/- 200.63)
+
+nsTraceRefcntImpl::DumpStatistics: 505 entry
+nsStringStats
+=> mAllocCount: 10565
+=> mReallocCount: 488
+=> mFreeCount: 10524 -- LEAKED 41 !!!
+=> mShareCount: 3786
+=> mAdoptCount: 737
+=> mAdoptFreeCount: 737
+### XPCOM_MEM_LEAK_LOG defined -- logging leak to stdout

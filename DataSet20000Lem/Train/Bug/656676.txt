@@ -1,0 +1,46 @@
+Fallback to sRGB monitor profile doesn't work a documented
+User-Agent: Mozilla/5.0 (X11; Linux i686; rv:2.0.1) Gecko/20110430 Firefox/4.0.1 Iceweasel/4.0.1
+Build Identifier: Mozilla/5.0 (X11; Linux i686; rv:2.0.1) Gecko/20110430 Firefox/4.0.1 Iceweasel/4.0.1
+
+I've created two JPEG image (created with sRGB color space):
+http://dion.org.ua/uploads/2011/05/20110427_131508_00_srgb_icc.jpg
+http://dion.org.ua/uploads/2011/05/20110427_131508_00_srgb_noicc.jpg
+
+As I said, both of them are sRGB, but first of them contains embedded sRGB profile while second -- don't.
+
+As a result, first image is displayed oversaturated:
+http://dion.org.ua/uploads/2011/05/firefox_wrong_colors.jpg
+
+I've created screenshot with same (first) image rendered with different applications:
+1. GIMP: support color profile
+2. Gwenview: ha no color management at all.
+3. Bibble: it's "source", how image should look.
+
+The idea is that sRGB profile basically can be just ignored without any visible visual artifacts. So firefox try to apply something but performs it wrongly.
+
+I think that it's NOT about unsupported ICCv4 profiles, because I can't reproduce it on Windows Vista machine (same Firefox 4).
+
+gfx.color_management.enabled=2
+gfx.color_management.display_profile=""
+
+According to docs, display_profile is:
+A string containing the full path to an ICM profile for output. Default is an empty string in which case the system global profile is used. If no global profile can be found a default sRGB profile is used. "
+
+I've tried to download srgb.icc file from http://color.org/ and set it a display_profile. This fix issue on linux and image became correct.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Open link in Debian's Iceweasel or official Firefox 4 package from mozilla.org on Linux
+
+Actual Results:
+Two image are rendered with different color (grass)
+
+Expected Results:
+Images should be same
+
+Iceweasel 4.0.1 on Debian: wrong color
+Iceweasel 3.5.19 on Debian: wrong color
+Official Firefox 4.0.1 on Debian: wrong color
+Official Firefox 4.0.1 on Vista: work
+Firefox 4.0.1 using Wine: work

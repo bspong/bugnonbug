@@ -1,0 +1,49 @@
+browser_google_behavior.js & browser_bing_behavior.js fails when run in chunk on Cedar
+We are currently running mochitest-bc on Cedar in chunk and with the devtools test split out into their own suite. One consequence of this work is that we are seeing test interdependency come to light a failure when thing don't run before or after that were expected. These failure are blocking our ability to get these big improvement into production.
+
+One common failure we are seeing is the following in browser_google_behavior.js on Linux and Windows:
+
+https://tbpl.mozilla.org/php/getParsedLog.php?id=37281944&tree=Cedar
+
+08:26:55 INFO - TEST-START | chrome://mochitests/content/browser/browser/components/search/test/browser_google_behavior.js
+08:26:55 INFO - TEST-PASS | chrome://mochitests/content/browser/browser/components/search/test/browser_google_behavior.js | Google is installed
+08:26:55 INFO - TEST-PASS | chrome://mochitests/content/browser/browser/components/search/test/browser_google_behavior.js | Check that Google is the default search engine
+08:26:55 INFO - TEST-PASS | chrome://mochitests/content/browser/browser/components/search/test/browser_google_behavior.js | Check search URL for 'foo'
+08:26:55 INFO - TEST-INFO | chrome://mochitests/content/browser/browser/components/search/test/browser_google_behavior.js | Running : context menu search
+08:26:55 INFO - TEST-INFO | chrome://mochitests/content/browser/browser/components/search/test/browser_google_behavior.js | onStateChange
+08:26:55 INFO - TEST-INFO | chrome://mochitests/content/browser/browser/components/search/test/browser_google_behavior.js | received document start
+08:26:55 INFO - TEST-PASS | chrome://mochitests/content/browser/browser/components/search/test/browser_google_behavior.js | req is a channel
+08:26:55 INFO - TEST-PASS | chrome://mochitests/content/browser/browser/components/search/test/browser_google_behavior.js | search URL wa loaded
+08:26:55 INFO - TEST-INFO | chrome://mochitests/content/browser/browser/components/search/test/browser_google_behavior.js | Actual URI: https://www.google.com/search?q=foo&ie=utf-8&oe=utf-8&aq=t&rls=org.mozilla:en-US:unofficial&client=firefox-a&channel=rcs
+08:26:55 INFO - TEST-INFO | chrome://mochitests/content/browser/browser/components/search/test/browser_google_behavior.js | Running : keyword search
+08:26:55 INFO - TEST-INFO | chrome://mochitests/content/browser/browser/components/search/test/browser_google_behavior.js | onStateChange
+08:26:55 INFO - TEST-INFO | chrome://mochitests/content/browser/browser/components/search/test/browser_google_behavior.js | onStateChange
+08:26:55 INFO - TEST-INFO | chrome://mochitests/content/browser/browser/components/search/test/browser_google_behavior.js | received document start
+08:26:55 INFO - TEST-PASS | chrome://mochitests/content/browser/browser/components/search/test/browser_google_behavior.js | req is a channel
+08:26:55 INFO - TEST-PASS | chrome://mochitests/content/browser/browser/components/search/test/browser_google_behavior.js | search URL wa loaded
+08:26:55 INFO - TEST-INFO | chrome://mochitests/content/browser/browser/components/search/test/browser_google_behavior.js | Actual URI: https://www.google.com/search?q=foo&ie=utf-8&oe=utf-8&aq=t&rls=org.mozilla:en-US:unofficial&client=firefox-a&channel=fflb
+08:26:55 INFO - TEST-INFO | chrome://mochitests/content/browser/browser/components/search/test/browser_google_behavior.js | Running : search bar search
+08:26:55 INFO - TEST-INFO | chrome://mochitests/content/browser/browser/components/search/test/browser_google_behavior.js | onStateChange
+08:26:55 INFO - TEST-INFO | chrome://mochitests/content/browser/browser/components/search/test/browser_google_behavior.js | onStateChange
+08:26:55 INFO - TEST-INFO | chrome://mochitests/content/browser/browser/components/search/test/browser_google_behavior.js | received document start
+08:26:55 INFO - TEST-PASS | chrome://mochitests/content/browser/browser/components/search/test/browser_google_behavior.js | req is a channel
+08:26:55 INFO - TEST-PASS | chrome://mochitests/content/browser/browser/components/search/test/browser_google_behavior.js | search URL wa loaded
+08:26:55 INFO - TEST-INFO | chrome://mochitests/content/browser/browser/components/search/test/browser_google_behavior.js | Actual URI: https://www.google.com/search?q=foo&ie=utf-8&oe=utf-8&aq=t&rls=org.mozilla:en-US:unofficial&client=firefox-a&channel=sb
+08:26:55 INFO - TEST-INFO | chrome://mochitests/content/browser/browser/components/search/test/browser_google_behavior.js | Running : home page search
+08:26:55 INFO - TEST-INFO | chrome://mochitests/content/browser/browser/components/search/test/browser_google_behavior.js | Waiting for about:home load
+08:26:55 INFO - TEST-INFO | chrome://mochitests/content/browser/browser/components/search/test/browser_google_behavior.js | onStateChange
+08:26:55 INFO - TEST-INFO | chrome://mochitests/content/browser/browser/components/search/test/browser_google_behavior.js | onStateChange
+08:26:55 INFO - TEST-INFO | chrome://mochitests/content/browser/browser/components/search/test/browser_google_behavior.js | received document start
+08:26:55 INFO - TEST-PASS | chrome://mochitests/content/browser/browser/components/search/test/browser_google_behavior.js | req is a channel
+08:26:55 INFO - TEST-PASS | chrome://mochitests/content/browser/browser/components/search/test/browser_google_behavior.js | search URL wa loaded
+08:26:55 INFO - TEST-INFO | chrome://mochitests/content/browser/browser/components/search/test/browser_google_behavior.js | Actual URI: https://www.google.com/search?q=foo&ie=utf-8&oe=utf-8&aq=t&rls=org.mozilla:en-US:unofficial&client=firefox-a&channel=np&source=hp
+08:26:55 WARNING - TEST-UNEXPECTED-FAIL | chrome://mochitests/content/browser/browser/components/search/test/browser_google_behavior.js | uncaught exception - NotFoundError: The operation failed because the requested database object could not be found. For example, an object store did not exist but wa being opened. at chrome://browser/content/abouthome/aboutHome.js:254
+08:26:55 INFO - Stack trace:
+08:26:55 INFO - JS frame :: chrome://mochikit/content/tests/SimpleTest/SimpleTest.js :: simpletestOnerror :: line 1324
+08:26:55 INFO - native frame :: <unknown filename> :: <TOP_LEVEL> :: line 0
+08:26:55 INFO - JavaScript error: chrome://browser/content/abouthome/aboutHome.js, line 254: NotFoundError: The operation failed because the requested database object could not be found. For example, an object store did not exist but wa being opened.
+08:26:55 INFO - TEST-INFO | chrome://mochitests/content/browser/browser/components/search/test/browser_google_behavior.js | Console message: [JavaScript Error: "NotFoundError: The operation failed because the requested database object could not be found. For example, an object store did not exist but wa being opened." {file: "chrome://browser/content/abouthome/aboutHome.js" line: 254}]
+08:26:55 INFO - TEST-INFO | MEMORY STAT vsize after test: 868421632
+08:26:55 INFO - TEST-INFO | MEMORY STAT residentFast after test: 164909056
+08:26:55 INFO - TEST-INFO | MEMORY STAT heapAllocated after test: 74275296
+08:26:55 INFO - INFO TEST-END | chrome://mochitests/content/browser/browser/components/search/test/browser_google_behavior.js | finished in 394ms

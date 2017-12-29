@@ -1,0 +1,37 @@
+build/autoconf/pkg.m4 misbehaves when /bin/sh is pdksh
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.3) Gecko/20041007 Debian/1.7.3-5
+Build Identifier: http://releases.mozilla.org/pub/mozilla.org/firefox/releases/2.0rc2/source/
+
+There are some syntactic corner cases that aren't handled consistently among all shells.  backslash-doublequote inside backticks inside doublequotes is one of them.  If /bin/sh is pdksh, the ./configure commands produced from build/autoconf/pkg.m4 produce errors which are misinterpreted as missing dependency packages.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Make /bin/sh be (a symlink to) pdksh.
+2. Run ./configure && make.
+
+Actual Results:  
+The build fails when compiling elf-dynstr-gc.c:
+/package/host/code.dogmap.org/foreign/firefox-2.0rc2+spf+0/compile/tmpdir/cc3yVsln.o: In function `possibly_add_string':
+elf-dynstr-gc.c:(.text+0x793): undefined reference to `g_hash_table_lookup'
+elf-dynstr-gc.c:(.text+0x7a3): undefined reference to `g_malloc'
+elf-dynstr-gc.c:(.text+0x7b9): undefined reference to `g_strdup'
+elf-dynstr-gc.c:(.text+0x7d1): undefined reference to `g_hash_table_insert'
+/package/host/code.dogmap.org/foreign/firefox-2.0rc2+spf+0/compile/tmpdir/cc3yVsln.o: In function `fixup_string':
+elf-dynstr-gc.c:(.text+0x820): undefined reference to `g_hash_table_lookup'
+/package/host/code.dogmap.org/foreign/firefox-2.0rc2+spf+0/compile/tmpdir/cc3yVsln.o: In function `generate_new_dynstr':
+elf-dynstr-gc.c:(.text+0x101e): undefined reference to `g_hash_table_foreach'
+elf-dynstr-gc.c:(.text+0x1029): undefined reference to `g_malloc'
+elf-dynstr-gc.c:(.text+0x1053): undefined reference to `g_hash_table_foreach'
+/package/host/code.dogmap.org/foreign/firefox-2.0rc2+spf+0/compile/tmpdir/cc3yVsln.o: In function `main':
+elf-dynstr-gc.c:(.text+0x1e4f): undefined reference to `g_direct_equal'
+elf-dynstr-gc.c:(.text+0x1e5f): undefined reference to `g_direct_hash'
+elf-dynstr-gc.c:(.text+0x1e67): undefined reference to `g_hash_table_new'
+collect2: ld returned 1 exit status
+make[1]: *** [elf-dynstr-gc] Error 1
+make[1]: Leaving directory `/fs/pkgs/mount/package/host/code.dogmap.org/foreign/firefox-2.0rc2+spf+0/compile/src/mozilla/config'
+make: *** [default] Error 2
+
+
+Expected Results:  
+The build should work with any /bin/sh.

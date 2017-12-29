@@ -1,0 +1,15 @@
+Calling recreatePopup on the menu panel before it's ready leads to a computed width of 0 for the panel scroller
+Created attachment 8378828
+v.1 Don't unhide the panel in recreatePopup if it was hidden
+
+See bug 949663 comment 12 which points to recreatePopup from bug 966072 causing the menu panel layout to be broken when UITour is the first thing to open the menu panel.
+
+The problem is in PanelUI.ensureReady which lazily makes sure the panel menu is ready to use:
+* It returns a promise and if called subsequent times, it simply returns the existing promise stored as PanelUI._readyPromise.
+* recreatePopup would be called from UITour.jsm's showMenu before PanelUI.ensureReady was called. This would change PanelUI.panel.hidden to false from it's default value of true.
+* The following width would be 0 inside ensureReady's task which would lead to a tall and super narrow #PanelUI-contents-scroller:
+>         let cstyle = window.getComputedStyle(this.scroller);
+>         let widthStr = cstyle.width;
+This seems to happen because PanelUI.panel.hidden = false and that messes up the computed width of the menu panel.
+
+I don't really understand why the task needed the menu panel to be hidden in order to get the proper computed width but I understand enough to see that UITour.recreatePopup shouldn't be setting aPanel.hidden = false if it was already hidden and that fixes this issue.

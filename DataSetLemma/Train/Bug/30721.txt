@@ -1,0 +1,613 @@
+form submission crasher
+Linux build from 3/5 late morning tip with --enable-optimized --disable-debug,
+but with -g set. Playing around with the debugger, it look a though the
+assertion in line 711 of nsFormFrame.cpp:
+
+711 NS_ASSERTION(docURL, "No Base URL found in Form Submit!\n");
+
+would have fired if this had been built with --enable-debug.
+
+*mContent is set to this:
+
+{<nsISupports> = {
+_vptr. = 0x40d9f5a0 <nsHTMLFormElement::nsIHTMLContent virtual table>}, <No
+data fields>}
+
+Stack trace follows:
+
+#0 nsFormFrame::OnSubmit (this=0x8daf288, aPresContext=0x8d63d10, aFrame=0x0)
+at /u/dmose/s/browser-main/mozilla/layout/html/forms/src/nsFormFrame.cpp:710
+href = {<nsString> = {<nsStr> = {mLength = 31, mCapacity = 63,
+mCharSize = eTwoByte, mOwnsBuffer = 0, {mStr = 0xbfffdc3c "h",
+mUStr = 0xbfffdc3c}}, _vptr. = 0x4011c6a0},
+mBuffer =
+"h\000t\000t\000p\000:\000/\000/\000w\000w\000w\000.\000e\000g\000r\000o\000u\000p\000s\000.\000c\000o\000m\000/\000r\000e\000g\000i\000s\000t\000e\000r\000\000\000À¤â~\223KÓ\027º\030\000`°ñ\231¢ø\025\005\bÖ¾¹@Ø\\Ý@xå´\b0Ýÿ¿$\212ê\bÄÜÿ¿\220¼¹@xå´\b°$\217\b\000\000\000\0000Ýÿ¿"}
+docURL = {<nsCOMPtr_base> = {mRawPtr = 0x0}, <No data fields>}
+doc = {<nsCOMPtr_base> = {mRawPtr = 0x0}, <No data fields>}
+target = {<nsString> = {<nsStr> = {mLength = 2,
+mCapacity = 3221216132, mCharSize = 1074631630,
+mOwnsBuffer = -1073751060, {mStr = 0x40121a1c "D\237\b",
+mUStr = 0x40121a1c}}, _vptr. = 0xbfffdb9c},
+mBuffer =
+"ÓÎ\r@ìÛÿ¿\034\032\022@èÛÿ¿\002\000\000\000°Ûÿ¿YC\r@\034\032\022@ÌÛÿ¿rH\r@èÛÿ¿\002\000\000\000ìÛÿ¿\002\000\000\000\034\032\022@èÛÿ¿\000\000\000\000\204Üÿ¿
+\236\017@èÛÿ¿ÀY\035\bð\023\005\bôÛÿ¿NB\r@xÜÿ¿¨Y\035\b¢Â\027@ÜL\030@¢Â\027@ÜL\030@\224\025\005\b\000\000\000"}
+absURLSpec = {<nsString> = {<nsStr> = {mLength = 3221216004,
+mCapacity = 1074634610, mCharSize = 134837412,
+mOwnsBuffer = -1073751036, {mStr = 0x2a <Address 0x2a out of bounds>,
+mUStr = 0x2a}}, _vptr. = 0x0},
+mBuffer = "\034\032\022@(u\t\b\020\005\n\b*\000\000\000\\Å\021@
+Ûÿ¿\001ð\r@\214t\t\bìÛÿ¿ÿÿÿÿ\000\000\000\000\034\032\022@<Ûÿ¿÷ê\r@\214t\t\bìÛÿ¿\000\000\000\000ÿÿÿÿ\034\032\022@PÛÿ¿ÃH\r@\214t\t\bìÛÿ¿\034\032\022@dÛÿ¿NB\r@èÛÿ¿\210t\t\b¢Â\027@ÜL\030@\202
+\r@\034\032\022@"}
+postDataStream = (nsIInputStream *) 0x3f
+result = 0
+formProcessor = {<nsCOMPtr_base> = {mRawPtr = 0x0}, <No data fields>}
+data = {<nsStr> = {mLength = 134, mCapacity = 256,
+mCharSize = eTwoByte, mOwnsBuffer = 1, {mStr = 0x9302e18 "C",
+mUStr = 0x9302e18}}, _vptr. = 0x4011c6c0}
+method = 1
+enctype = 0
+isURLEncoded = 1
+isPost = 1
+fcFrame = (nsIFormControlFrame *) 0x0
+service = {<nsCOMPtr_base> = {mRawPtr = 0x810fed0}, <No data fields>}
+theTopic = {<nsStr> = {mLength = 10, mCapacity = 64,
+mCharSize = eTwoByte, mOwnsBuffer = 1, {mStr = 0x8e5c950 "f",
+mUStr = 0x8e5c950}}, _vptr. = 0x4011c6c0}
+theEnum = (nsIEnumerator *) 0x0
+multipartDataFile = (nsIFileSpec *) 0x0
+handler = {<nsCOMPtr_base> = {mRawPtr = 0x0}, <No data fields>}
+#1 0x40becf88 in nsHTMLFormElement::Submit (this=0x88f24a0)
+at
+/u/dmose/s/browser-main/mozilla/layout/html/content/src/nsHTMLFormElement.cpp:332
+context = {<nsCOMPtr_base> = {mRawPtr = 0x8d63d10}, <No data fields>}
+formMan = (nsIFormManager *) 0x8daf2cc
+frame = (nsIFrame *) 0x8daf288
+shell = (nsIPresShell *) 0x8ee1a80
+this = (nsHTMLFormElement *) 0x40d97880
+doc = (nsIDocument *) 0x8a1cef0
+re = 0
+#2 0x403a5f13 in HTMLFormElementSubmit (cx=0x8879630, obj=0x8a3dbb0, argc=0,
+argv=0x91d73c0, rval=0xbfffde10)
+at /u/dmose/s/browser-main/mozilla/dom/src/html/nsJSHTMLFormElement.cpp:471
+nativeThis = (nsIDOMHTMLFormElement *) 0x88f24a0
+result = 0
+#3 0x4006359a in js_Invoke (cx=0x8879630, argc=0, flags=0)
+at /u/dmose/s/browser-main/mozilla/js/src/jsinterp.c:665
+fp = (JSStackFrame *) 0xbfffe244
+frame = {callobj = 0x0, argsobj = 0x0, varobj = 0x0, script = 0x0,
+fun = 0x91d9860, thisp = 0x8a3dbb0, argc = 0, argv = 0x91d73c0, rval = 0,
+nvars = 0, var = 0x91d73c0, down = 0xbfffe244, annotation = 0x0,
+scopeChain = 0x86e41d0, pc = 0x0, sp = 0x91d73c0, sharpDepth = 0,
+sharpArray = 0x0, constructing = 0 '\000', override = 0 '\000',
+special = 0 '\000', reserved = 64 '@', dormantNext = 0x0}
+sp = (jsval *) 0x91d73c0
+newsp = (jsval *) 0x0
+vp = (jsval *) 0x91d73b8
+v = 144956304
+funobj = (JSObject *) 0x0
+parent = (JSObject *) 0x8a3db80
+thisp = (JSObject *) 0x8a3dbb0
+clasp = (JSClass *) 0x0
+ops = (JSObjectOps *) 0x0
+ok = 143103536
+native = 0x403a5dc4 <HTMLFormElementSubmit(JSContext *, JSObject *, unsigned
+int, long *, long *)>
+fun = (JSFunction *) 0x91d9860
+script = (JSScript *) 0x0
+minargs = 0
+nvars = 0
+mark = (void *) 0x91d73c0
+nslots = 0
+nalloc = 0
+surplus = 0
+hook = 0
+hookData = (void *) 0x0
+#4 0x40069dba in js_Interpret (cx=0x8879630, result=0xbfffe240)
+at /u/dmose/s/browser-main/mozilla/js/src/jsinterp.c:2292
+rt = (JSRuntime *) 0x814b960
+fp = (JSStackFrame *) 0xbfffe244
+script = (JSScript *) 0x8bc8340
+newvers = JSVERSION_DEFAULT
+oldvers = JSVERSION_DEFAULT
+obj = (JSObject *) 0x8a3dbb0
+obj2 = (JSObject *) 0x86e41d0
+proto = (JSObject *) 0x0
+parent = (JSObject *) 0x4
+onbranch = 0
+ok = 1
+cond = -1073749564
+depth = 2
+len = 3
+sp = (jsval *) 0x91d73c0
+newsp = (jsval *) 0x91d73b8
+mark = (void *) 0x91d73b0
+pc = (jsbytecode *) 0x8bc837e ":"
+pc2 = (jsbytecode *) 0x403665cd "[\201Ã[ê\b"
+endpc = (jsbytecode *) 0x8bc8382 ""
+op = JSOP_CALL
+op2 = 1074357088
+c = (JSCodeSpec *) 0x40096980
+atom = (JSAtom *) 0x0
+argc = 0
+slot = 4
+attrs = 1075334364
+vp = (jsval *) 0x403668ad
+lval = 144956336
+rval = 144956304
+ltmp = 0
+rtmp = 4
+id = 143240352
+withobj = (JSObject *) 0x0
+origobj = (JSObject *) 0x4
+propobj = (JSObject *) 0x0
+ida = (JSIdArray *) 0x0
+iter_state = -1073749584
+prop = (JSProperty *) 0x0
+sprop = (JSScopeProperty *) 0x0
+str = (JSString *) 0x4
+str2 = (JSString *) 0x0
+str3 = (JSString *) 0x0
+length = 1077759587
+length2 = 141443536
+length3 = 143103536
+char = (jschar *) 0x4006bf16
+i = 1074362436
+j = 141443536
+d = 5.6786050810244708
+d2 = -1.9925651867081786
+clasp = (JSClass *) 0xbfffe0fc
+funclasp = (JSClass *) 0x814bb10
+fun = (JSFunction *) 0x40097844
+type = JSTYPE_VOID
+low = 135576336
+high = 0
+off = 0
+npairs = 142668928
+match = 143103536
+getter = 0
+setter = 0x40096360 <js_ObjectOps>
+tn = (JSTryNote *) 0x40096360
+offset = 0
+#5 0x400635e5 in js_Invoke (cx=0x8879630, argc=0, flags=0)
+at /u/dmose/s/browser-main/mozilla/js/src/jsinterp.c:681
+fp = (JSStackFrame *) 0xbfffe698
+frame = {callobj = 0x0, argsobj = 0x0, varobj = 0x0,
+script = 0x8bc8340, fun = 0x8dee230, thisp = 0x86e41d0, argc = 0,
+argv = 0x91d73b0, rval = -2147483647, nvars = 0, var = 0x91d73b0,
+down = 0xbfffe698, annotation = 0x0, scopeChain = 0x86e41d0,
+pc = 0x8bc837e ":", sp = 0x91d73c0, sharpDepth = 0, sharpArray = 0x0,
+constructing = 0 '\000', override = 0 '\000', special = 0 '\000',
+reserved = 64 '@', dormantNext = 0x0}
+sp = (jsval *) 0x91d73b0
+newsp = (jsval *) 0x0
+vp = (jsval *) 0x91d73a8
+v = -2147483647
+funobj = (JSObject *) 0x0
+parent = (JSObject *) 0x86e41d0
+thisp = (JSObject *) 0x86e41d0
+clasp = (JSClass *) 0x0
+ops = (JSObjectOps *) 0x0
+ok = 142668984
+native = 0
+fun = (JSFunction *) 0x8dee230
+script = (JSScript *) 0x8bc8340
+minargs = 0
+nvars = 0
+mark = (void *) 0x91d73b0
+nslots = 0
+nalloc = 0
+surplus = 0
+hook = 0
+hookData = (void *) 0x0
+#6 0x40069dba in js_Interpret (cx=0x8879630, result=0xbfffe694)
+at /u/dmose/s/browser-main/mozilla/js/src/jsinterp.c:2292
+rt = (JSRuntime *) 0x814b960
+fp = (JSStackFrame *) 0xbfffe698
+script = (JSScript *) 0x8ef1bf0
+newvers = JSVERSION_DEFAULT
+oldvers = JSVERSION_DEFAULT
+obj = (JSObject *) 0x86e41d0
+obj2 = (JSObject *) 0x86e41d0
+proto = (JSObject *) 0x0
+parent = (JSObject *) 0x83
+onbranch = 0
+ok = 1
+cond = -1073748456
+depth = 2
+len = 3
+sp = (jsval *) 0x91d73b0
+newsp = (jsval *) 0x91d73a8
+mark = (void *) 0x91d73a0
+pc = (jsbytecode *) 0x8ef1c28 ":"
+pc2 = (jsbytecode *) 0xbfffe678 ""
+endpc = (jsbytecode *) 0x8ef1c2c "\021"
+op = JSOP_CALL
+op2 = 1074357088
+c = (JSCodeSpec *) 0x40096980
+atom = (JSAtom *) 0x0
+argc = 0
+slot = 131
+attrs = 1075334364
+vp = (jsval *) 0x16
+lval = 143679096
+rval = 143879832
+ltmp = 0
+rtmp = 131
+id = 148824592
+withobj = (JSObject *) 0x0
+origobj = (JSObject *) 0x83
+propobj = (JSObject *) 0x0
+ida = (JSIdArray *) 0x0
+iter_state = -1073748476
+prop = (JSProperty *) 0x8e87438
+sprop = (JSScopeProperty *) 0x0
+str = (JSString *) 0x83
+str2 = (JSString *) 0x0
+str3 = (JSString *) 0x0
+length = 134831372
+length2 = 1074629165
+length3 = 3221218636
+char = (jschar *) 0xbfffe660
+i = 1074362436
+j = 144956360
+d = 5.6786050810244708
+d2 = -1.9936218580750467
+clasp = (JSClass *) 0x8095cf4
+funclasp = (JSClass *) 0x86e41d0
+fun = (JSFunction *) 0x40097844
+type = JSTYPE_VOID
+low = 141443536
+high = 0
+off = 0
+npairs = 1074284722
+match = -1073748680
+getter = 0
+setter = 0x40096360 <js_ObjectOps>
+tn = (JSTryNote *) 0x40096360
+offset = 0
+#7 0x400635e5 in js_Invoke (cx=0x8879630, argc=1, flags=2)
+at /u/dmose/s/browser-main/mozilla/js/src/jsinterp.c:681
+fp = (JSStackFrame *) 0xbfffe720
+frame = {callobj = 0x0, argsobj = 0x0, varobj = 0x0,
+script = 0x8ef1bf0, fun = 0x8ef9c60, thisp = 0x8a3dbc8, argc = 1,
+argv = 0x91d739c, rval = -2147483647, nvars = 0, var = 0x91d73a0,
+down = 0xbfffe720, annotation = 0x0, scopeChain = 0x8a3dbc8,
+pc = 0x8ef1c28 ":", sp = 0x91d73b0, sharpDepth = 0, sharpArray = 0x0,
+constructing = 0 '\000', override = 0 '\000', special = 0 '\000',
+reserved = 0 '\000', dormantNext = 0x0}
+sp = (jsval *) 0x91d73a0
+newsp = (jsval *) 0x1
+vp = (jsval *) 0x91d7394
+v = -2147483647
+funobj = (JSObject *) 0x1
+parent = (JSObject *) 0x8a3dbc8
+thisp = (JSObject *) 0x8a3dbc8
+clasp = (JSClass *) 0x0
+ops = (JSObjectOps *) 0x0
+ok = 134550948
+native = 0
+fun = (JSFunction *) 0x8ef9c60
+script = (JSScript *) 0x8ef1bf0
+minargs = 1
+nvars = 0
+mark = (void *) 0x91d73a0
+nslots = 0
+nalloc = 1
+surplus = 0
+hook = 0
+hookData = (void *) 0x0
+#8 0x400637cc in js_InternalInvoke (cx=0x8879630, obj=0x8a3dbc8,
+fval=144956640, flags=0, argc=1, argv=0xbfffe840, rval=0xbfffe7d8)
+at /u/dmose/s/browser-main/mozilla/js/src/jsinterp.c:754
+argc = 1
+fp = (JSStackFrame *) 0xbfffe720
+oldfp = (JSStackFrame *) 0x0
+frame = {callobj = 0x0, argsobj = 0x0, varobj = 0x0, script = 0x0,
+fun = 0x0, thisp = 0x0, argc = 0, argv = 0x0, rval = 0, nvars = 0,
+var = 0x0, down = 0x0, annotation = 0x0, scopeChain = 0x0, pc = 0x0,
+sp = 0x91d73a0, sharpDepth = 0, sharpArray = 0x0, constructing = 0 '\000',
+override = 0 '\000', special = 0 '\000', reserved = 0 '\000',
+dormantNext = 0x0}
+oldsp = (jsval *) 0x0
+sp = (jsval *) 0x91d73a0
+mark = (void *) 0x91d7394
+i = 0
+ok = 1
+#9 0x4004b7af in JS_CallFunctionValue (cx=0x8879630, obj=0x8a3dbc8,
+fval=144956640, argc=1, argv=0xbfffe840, rval=0xbfffe7d8)
+at /u/dmose/s/browser-main/mozilla/js/src/jsapi.c:2790
+cx = (JSContext *) 0x8879630
+#10 0x4035bc9e in nsJSContext::CallEventHandler (this=0x880f400,
+aTarget=0x8a3dbc8, aHandler=0x8a3dce0, argc=1, argv=0xbfffe840,
+aBoolResult=0xbfffe844)
+at /u/dmose/s/browser-main/mozilla/dom/src/base/nsJSEnvironment.cpp:562
+aBoolResult = (PRBool *) 0x0
+rv = 0
+securityManager = {<nsCOMPtr_base> = {
+mRawPtr = 0x81d5730}, <No data fields>}
+funval = 144956640
+fun = (struct JSFunction *) 0xbfffe800
+ok = 1
+stack = {<nsCOMPtr_base> = {mRawPtr = 0x81a4298}, <No data fields>}
+kungFuDeathGrip = {<nsCOMPtr_base> = {
+mRawPtr = 0x880f400}, <No data fields>}
+val = 1077891112
+#11 0x4038a49f in nsJSEventListener::HandleEvent (this=0x8846a58,
+aEvent=0x8a47e2c)
+at /u/dmose/s/browser-main/mozilla/dom/src/events/nsJSEventListener.cpp:128
+funval = 144956640
+argv = {144956648}
+eventObj = (struct JSObject *) 0x8a3dce8
+eventChars = 0x8ef1c30 "submit"
+eventString = {<nsString> = {<nsStr> = {mLength = 8, mCapacity = 63,
+mCharSize = eTwoByte, mOwnsBuffer = 0, {mStr = 0xbfffe86c "o",
+mUStr = 0xbfffe86c}}, _vptr. = 0x4011c6a0},
+mBuffer =
+"o\000n\000c\000h\000a\000n\000g\000e\000\000\000\026@ÿÿÿÿø®\026@\230èÿ¿\037\231\027@ä¶\026@è®\026@´èÿ¿\233U\025@è®\026@\202
+\r@\034\032\022@\002\000\000\000Àèÿ¿Î\223\r@Ìéÿ¿\034\032\022@Øèÿ¿ÓÎ\r@Ìéÿ¿\034\032\022@Ù¢8@\034\032\022@ìèÿ¿o\217\020@Xj\204\bØ\\Ý@\030éÿ¿"}
+cx = (struct JSContext *) 0x8879630
+obj = (struct JSObject *) 0x8a3dbc8
+result = 0
+jsBoolResult = 1077306829
+#12 0x40b8636a in nsEventListenerManager::HandleEventSubType (this=0x8846a18,
+aListenerStruct=0x8dcb620, aDOMEvent=0x8a47e2c, aSubType=4, aPhaseFlags=7)
+at
+/u/dmose/s/browser-main/mozilla/layout/events/src/nsEventListenerManager.cpp:697
+aPhaseFlags = 0
+result = 0
+#13 0x40b86ff2 in nsEventListenerManager::HandleEvent (this=0x8846a18,
+aPresContext=0x8d63d10, aEvent=0xbfffebc8, aDOMEvent=0xbfffeb44, aFlags=7,
+aEventStatus=0xbfffebc4)
+at
+/u/dmose/s/browser-main/mozilla/layout/events/src/nsEventListenerManager.cpp:1191
+correctSubType = 0
+subType = 0
+l = (nsListenerStruct *) 0x8dcb620
+mFormListener = (nsIDOMFormListener *) 0x0
+i = 0
+aPresContext = (nsIPresContext *) 0x8dcb620
+ret = 0
+kungFuDeathGrip = {<nsCOMPtr_base> = {
+mRawPtr = 0x8846a18}, <No data fields>}
+#14 0x40d33e20 in nsGenericElement::HandleDOMEvent (this=0x88bcaec,
+aPresContext=0x8d63d10, aEvent=0xbfffebc8, aDOMEvent=0x0, aFlags=1,
+aEventStatus=0xbfffebc4)
+at /u/dmose/s/browser-main/mozilla/layout/base/src/nsGenericElement.cpp:1009
+aDOMEvent = (nsIDOMEvent **) 0xbfffeb44
+ret = 0
+domEvent = (nsIDOMEvent *) 0x8a47e2c
+#15 0x40bfed9f in nsHTMLInputElement::HandleDOMEvent (this=0x88bcac8,
+aPresContext=0x8d63d10, aEvent=0xbfffebc8, aDOMEvent=0x0, aFlags=1,
+aEventStatus=0xbfffebc4)
+at
+/u/dmose/s/browser-main/mozilla/layout/html/content/src/nsHTMLInputElement.cpp:832
+this = (nsHTMLInputElement *) 0x88bcac8
+aEventStatus = (nsEventStatus *) 0xbfffebc4
+disabled = 0
+rv = 0
+ret = 1074655233
+#16 0x40c73038 in nsEnderEventListener::Blur (this=0x88ec700, aEvent=0x88a21bc)
+at
+/u/dmose/s/browser-main/mozilla/layout/html/forms/src/nsGfxTextControlFrame.cpp:4221
+status = nsEventStatus_eIgnore
+event = {<nsGUIEvent> = {<nsEvent> = {eventStructType = 6 '\006',
+message = 1202, point = {x = 1076890320, y = -1073746940}, refPoint = {
+x = 1085853959, y = 144819928}, time = 1088249048, flag = 1},
+widget = 0x0, nativeMsg = 0xbfffec04}, isShift = 0, isControl = 0,
+isAlt = 0, isMeta = 0}
+currentValue = {<nsStr> = {mLength = 7, mCapacity = 64,
+mCharSize = eTwoByte, mOwnsBuffer = 1, {mStr = 0x8a39d70 "b",
+mUStr = 0x8a39d70}}, _vptr. = 0x4011c6c0}
+aEvent = (nsIDOMEvent *) 0x0
+uiEvent = {<nsCOMPtr_base> = {mRawPtr = 0x88a21bc}, <No data fields>}
+#17 0x40b86d78 in nsEventListenerManager::HandleEvent (this=0x8e49508,
+aPresContext=0x8a1c6d8, aEvent=0xbfffede4, aDOMEvent=0xbfffecec, aFlags=7,
+aEventStatus=0xbfffed40)
+at
+/u/dmose/s/browser-main/mozilla/layout/events/src/nsEventListenerManager.cpp:1078
+l = (nsListenerStruct *) 0x8c63668
+mFocusListener = (nsIDOMFocusListener *) 0x88ec70c
+i = 0
+aPresContext = (nsIPresContext *) 0x8c63668
+ret = 0
+kungFuDeathGrip = {<nsCOMPtr_base> = {
+mRawPtr = 0x8e49508}, <No data fields>}
+#18 0x40d26472 in nsDocument::HandleDOMEvent (this=0x88fbe48,
+aPresContext=0x8a1c6d8, aEvent=0xbfffede4, aDOMEvent=0x0, aFlags=1,
+aEventStatus=0xbfffed40)
+at /u/dmose/s/browser-main/mozilla/layout/base/src/nsDocument.cpp:2473
+aEvent = (nsEvent *) 0xbfffede4
+aDOMEvent = (nsIDOMEvent **) 0xbfffecec
+mRet = 0
+mDOMEvent = (nsIDOMEvent *) 0x88a21bc
+#19 0x40b8c8bd in nsEventStateManager::SendFocusBlur (this=0x8429618,
+aPresContext=0x8d63d10, aContent=0x88c0160)
+at
+/u/dmose/s/browser-main/mozilla/layout/events/src/nsEventStateManager.cpp:2343
+status = nsEventStatus_eIgnore
+event = {eventStructType = 1 '\001', message = 1301, point = {
+x = 1301, y = 1087585920}, refPoint = {x = 149423312, y = 148258064},
+time = 3221222068, flag = 1}
+esm = {<nsCOMPtr_base> = {mRawPtr = 0x8facf18}, <No data fields>}
+temp = {<nsCOMPtr_base> = {mRawPtr = 0x88fbe48}, <No data fields>}
+globalObject = {<nsCOMPtr_base> = {
+mRawPtr = 0x890456c}, <No data fields>}
+presShell = {<nsCOMPtr_base> = {mRawPtr = 0x8ee1a80}, <No data fields>}
+currentFocusFrame = (nsIFrame *) 0xbffff2b4
+gfxFrame = {<nsCOMPtr_base> = {mRawPtr = 0xbfffef90}, <No data fields>}
+#20 0x40b8c27f in nsEventStateManager::SetContentState (this=0x8429618,
+aContent=0x88c0160, aState=2)
+at
+/u/dmose/s/browser-main/mozilla/layout/events/src/nsEventStateManager.cpp:2161
+aContent = (nsIContent *) 0x88c0160
+notifyContent = {0x0, 0x0, 0x0, 0x0, 0x0}
+doc = (nsIDocument *) 0xbfffee5c
+from = (nsIContent **) 0x88c0160
+to = (nsIContent **) 0xbfffee58
+end = (nsIContent **) 0x0
+#21 0x40bfe9c4 in nsHTMLInputElement::SetFocus (this=0x88c0150,
+aPresContext=0x8d63d10)
+at
+/u/dmose/s/browser-main/mozilla/layout/html/content/src/nsHTMLInputElement.cpp:716
+this = (nsHTMLInputElement *) 0x88c0150
+esm = (nsIEventStateManager *) 0x8429618
+disabled = {<nsString> = {<nsStr> = {mLength = 3221221076,
+mCapacity = 3221221028, mCharSize = 1087113227, mOwnsBuffer = 145909232,
+{mStr = 0x81ebb00 "à¸\021@%\001", mUStr = 0x81ebb00}},
+_vptr. = 0xbfffeed4},
+mBuffer =
+"Ø\\Ý@t\001\214\b8ïÿ¿øîÿ¿ßù¼@Èð¼\b\000»\036\bÔîÿ¿\221\024Ö@Øîÿ¿)Ò¿@P\001\214\b\034\032\022@4ïÿ¿4ïÿ¿\001\000\000\000ôîÿ¿+\217\020@P\001\214\bp\027Ù@\020ïÿ¿\034\032\022@@ïÿ¿\024ïÿ¿ñ\217\020@4ïÿ¿p\027Ù@\030ïÿ¿ÃÌ¹@\202ÌÔ@Ø\\Ý@c\013Ö@"}
+formControlFrame = (nsIFormControlFrame *) 0x40b9aa8b
+rv = 1088103424
+#22 0x40b8b264 in nsEventStateManager::ChangeFocus (this=0x8429618,
+aFocusContent=0x88c0160, aTargetFrame=0x8e66518, aSetFocus=1)
+at
+/u/dmose/s/browser-main/mozilla/layout/events/src/nsEventStateManager.cpp:1739
+context = {<nsCOMPtr_base> = {mRawPtr = 0x90b95c8}, <No data fields>}
+aFocusContent = (nsIContent *) 0x0
+focusChange = {<nsCOMPtr_base> = {
+mRawPtr = 0x88c0168}, <No data fields>}
+#23 0x40b89c41 in nsEventStateManager::PostHandleEvent (this=0x8429618,
+aPresContext=0x8d63d10, aEvent=0xbffff2b4, aTargetFrame=0x8e66518,
+aStatus=0xbffff1c0, aView=0x8fb3558)
+at
+/u/dmose/s/browser-main/mozilla/layout/events/src/nsEventStateManager.cpp:881
+current = {<nsCOMPtr_base> = {mRawPtr = 0x88c0160}, <No data fields>}
+content = {<nsCOMPtr_base> = {mRawPtr = 0x88c0160}, <No data fields>}
+newFocus = {<nsCOMPtr_base> = {mRawPtr = 0x88c0160}, <No data fields>}
+focusable = {<nsCOMPtr_base> = {mRawPtr = 0x88c0168}, <No data fields>}
+ret = 0
+state = 52
+#24 0x40bbd590 in PresShell::HandleEvent (this=0x8ee1a80, aView=0x8fb3558,
+aEvent=0xbffff2b4, aEventStatus=0xbffff1c0)
+at /u/dmose/s/browser-main/mozilla/layout/html/base/src/nsPresShell.cpp:3029
+manager = (nsIEventStateManager *) 0x8429618
+focusContent = (nsIContent *) 0x0
+this = (PresShell *) 0x8ee1a80
+clientData = (void *) 0x8e15ef0
+frame = (nsIFrame *) 0x8e15ef0
+rv = 0
+#25 0x40e9ab04 in nsView::HandleEvent (this=0x8fb3558, event=0xbffff2b4,
+aEventFlags=8, aStatus=0xbffff1c0, aHandled=@0xbffff154)
+at /u/dmose/s/browser-main/mozilla/view/src/nsView.cpp:798
+event = (nsGUIEvent *) 0xbffff2b4
+ob = (nsIViewObserver *) 0x8ee1a84
+#26 0x40e9aab0 in nsView::HandleEvent (this=0x89b6400, event=0xbffff2b4,
+aEventFlags=8, aStatus=0xbffff1c0, aHandled=@0xbffff154)
+at /u/dmose/s/browser-main/mozilla/view/src/nsView.cpp:782
+pKid = (nsIView *) 0x8fb3558
+cnt = 0
+numkids = 1
+trect = {x = 0, y = 0, width = 10620, height = 13725}
+x = 1500
+y = 5475
+event = (nsGUIEvent *) 0xbffff2b4
+ob = (nsIViewObserver *) 0x8ee1a84
+#27 0x40e9aab0 in nsView::HandleEvent (this=0x88a7b98, event=0xbffff2b4,
+aEventFlags=28, aStatus=0xbffff1c0, aHandled=@0xbffff154)
+at /u/dmose/s/browser-main/mozilla/view/src/nsView.cpp:782
+pKid = (nsIView *) 0x89b6400
+cnt = 0
+numkids = 3
+trect = {x = 0, y = 0, width = 10575, height = 9270}
+x = 1500
+y = 5475
+event = (nsGUIEvent *) 0xbffff2b4
+ob = (nsIViewObserver *) 0x8ee1a84
+#28 0x40ea7e9a in nsViewManager2::DispatchEvent (this=0x8fba080,
+aEvent=0xbffff2b4, aStatus=0xbffff1c0)
+at /u/dmose/s/browser-main/mozilla/view/src/nsViewManager2.cpp:1214
+p2t = 15
+t2p = 0.0666666701
+handled = 0
+baseView = (nsIView *) 0x89b6400
+view = (nsIView *) 0x88a7b98
+offset = {x = 0, y = 0}
+sb = (nsIScrollbar *) 0x0
+aEvent = (nsGUIEvent *) 0xbffff2b4
+#29 0x40e9965d in HandleEvent (aEvent=0xbffff2b4)
+at /u/dmose/s/browser-main/mozilla/view/src/nsView.cpp:68
+vm = (nsIViewManager *) 0x8fba080
+aEvent = (nsGUIEvent *) 0xbffff2b4
+result = nsEventStatus_eIgnore
+view = (nsIView *) 0x40bef244
+#30 0x40497f1a in nsWidget::DispatchEvent (this=0x8e2c0f8, aEvent=0xbffff2b4,
+aStatus=@0xbffff1fc)
+at /u/dmose/s/browser-main/mozilla/widget/src/gtk/nsWidget.cpp:1416
+this = (nsWidget *) 0x8e2c0f8
+aEvent = (nsGUIEvent *) 0xbffff2b4
+#31 0x40497e45 in nsWidget::DispatchWindowEvent (this=0x8e2c0f8,
+event=0xbffff2b4)
+at /u/dmose/s/browser-main/mozilla/widget/src/gtk/nsWidget.cpp:1307
+this = (nsWidget *) 0x8e2c0f8
+status = nsEventStatus_eIgnore
+#32 0x40497fa0 in nsWidget::DispatchMouseEvent (this=0x8e2c0f8,
+aEvent=@0xbffff2b4)
+at /u/dmose/s/browser-main/mozilla/widget/src/gtk/nsWidget.cpp:1443
+this = (nsWidget *) 0x8e2c0f8
+result = 0
+#33 0x40498bca in nsWidget::OnButtonPressSignal (this=0x8e2c0f8,
+aGdkButtonEvent=0x8270370)
+at /u/dmose/s/browser-main/mozilla/widget/src/gtk/nsWidget.cpp:2077
+aGdkButtonEvent = (GdkEventButton *) 0x8270370
+event = {<nsInputEvent> = {<nsGUIEvent> = {<nsEvent> = {
+eventStructType = 8 '\b', message = 302, point = {x = 1500, y = 5475},
+refPoint = {x = 100, y = 365}, time = 3186747442, flag = 0},
+widget = 0x8e2c0f8, nativeMsg = 0x8270370}, isShift = 0, isControl = 0,
+isAlt = 0, isMeta = 0}, clickCount = 1, acceptActivation = 1078575730}
+scrollEvent = {<nsInputEvent> = {<nsGUIEvent> = {<nsEvent> = {
+eventStructType = 148 '\224', message = 3221222028, point = {
+x = 1078571012, y = 149078264}, refPoint = {x = 1078675604,
+y = -1073745164}, time = 1078559756, flag = 149078264},
+widget = 0x404b4894, nativeMsg = 0x0}, isShift = 136774512,
+isControl = 1076889280, isAlt = 365, isMeta = 0}, deltaLines = -1073806465}
+eventType = 302
+#34 0x4049c33f in nsWindow::HandleGDKEvent (this=0x8e2c0f8, event=0x8270370)
+at /u/dmose/s/browser-main/mozilla/widget/src/gtk/nsWindow.cpp:1072
+event = (GdkEvent *) 0x8270370
+#35 0x4048e5aa in handle_gdk_event (event=0x8270370, data=0x0)
+at /u/dmose/s/browser-main/mozilla/widget/src/gtk/nsGtkEventHandler.cpp:816
+window = (nsWindow *) 0x8e2c0f8
+current_grab = (GtkWidget *) 0x0
+object = (GtkObject *) 0x8e7aa60
+event_time = 0
+#36 0x405f14db in gdk_event_dispatch () from /usr/lib/libgdk-1.2.so.0
+No symbol table info available.
+#37 0x40621186 in g_main_dispatch () from /usr/lib/libglib-1.2.so.0
+No symbol table info available.
+#38 0x40621751 in g_main_iterate () from /usr/lib/libglib-1.2.so.0
+No symbol table info available.
+#39 0x406218f1 in g_main_run () from /usr/lib/libglib-1.2.so.0
+No symbol table info available.
+#40 0x405465f9 in gtk_main () from /usr/lib/libgtk-1.2.so.0
+No symbol table info available.
+#41 0x4048646a in nsAppShell::Run (this=0x8106790)
+at /u/dmose/s/browser-main/mozilla/widget/src/gtk/nsAppShell.cpp:304
+this = (nsAppShell *) 0x8106790
+#42 0x40425f62 in nsAppShellService::Run (this=0x8123d50)
+at
+/u/dmose/s/browser-main/mozilla/xpfe/appshell/src/nsAppShellService.cpp:392
+this = (nsAppShellService *) 0x0
+#43 0x804ae3c in main1 (argc=1, argv=0xbffff664, splashScreen=0x0)
+at /u/dmose/s/browser-main/mozilla/xpfe/bootstrap/nsAppRunner.cpp:769
+rv = 0
+needAutoreg = 0
+cmdLineArgs = {<nsCOMPtr_base> = {
+mRawPtr = 0x8123be0}, <No data fields>}
+appShell = {<nsCOMPtr_base> = {mRawPtr = 0x8123d50}, <No data fields>}
+profileMgr = {<nsCOMPtr_base> = {
+mRawPtr = 0x8172c98}, <No data fields>}
+currentProfileStr = {mBuf = 0x8194878 "mozProfile", mBufOwner = 1,
+_vptr. = 0x4011ceb4}
+expired = 0
+timeBomb = {<nsCOMPtr_base> = {mRawPtr = 0x81bf2e8}, <No data fields>}
+walletService = {<nsCOMPtr_base> = {
+mRawPtr = 0x8207690}, <No data fields>}
+#44 0x804b16c in main (argc=1, argv=0xbffff664)
+at /u/dmose/s/browser-main/mozilla/xpfe/bootstrap/nsAppRunner.cpp:889
+rv = 0
+splash = (nsISplashScreen *) 0x0
+dosplash = 0
+result = 134544488
+clipService = {<nsCOMPtr_base> = {
+mRawPtr = 0x401e87e0}, <No data fields>}

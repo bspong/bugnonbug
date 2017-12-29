@@ -1,0 +1,72 @@
+FF 3.5 : failure to download 4.3GB file using http. Only 0.3GB is taken.
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; ja; rv:1.9.1) Gecko/20090624 Firefox/3.5 (.NET CLR 3.5.30729)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; ja; rv:1.9.1) Gecko/20090624 Firefox/3.5 (.NET CLR 3.5.30729)
+
+FF 3.5 : failure to download 4.3GB file. Only 0.3GB is taken.
+
+FF 3.5 fails to downlod 4.3GB file.
+Only the first 0.3GB (327MB) is downloaded and
+the downloading is finished there prematurely.
+
+I wa afraid that the server side wa behaving oddly for
+a file that is larger than 4GB.
+But when I checked the downloading using "wget", it went over
+the 327MB limit without the problem and go on copying,
+I assume there is no problem on the server side, and the
+problem is that of FF3.5.
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.Try downloading a 4.3 GB file
+knoppix_v5.3.1DVD_20080326-20080523-AC.iso
+from a Japanese web site.
+
+http://ring.nict.go.jp/archives/linux/knoppix/iso
+/knoppix_v5.3.1DVD_20080326-20080523-AC.iso
+
+2. You see that the download finish prematurely at 327MB.
+Actual Results:
+The download leaf a smallish file (0.3GB, 327MB) instead of 4.3GB.
+
+Expected Results:
+FF 3.5 should be capable of downloading the full 4.3GB file a "wget" can from
+the same server.
+
+
+cf. wget run with the initial server response.
+
+Interrupted wget session: it wa copying well over 0.3GB) when
+it wa stopped by control-C.
+
+I added "-S" to show the server response.
+
+$ env LANG=C LC_ALL=C wget -S http://ring.nict.go.jp/archives/linux/knoppix/iso
+/knoppix_v5.3.1DVD_20080326-20080523-AC.iso
+--2009-07-04 02:48:04-- http://ring.nict.go.jp/archives/linux/knoppix/iso/knopp
+ix_v5.3.1DVD_20080326-20080523-AC.iso
+Resolving ring.nict.go.jp... 133.243.3.209
+Connecting to ring.nict.go.jp|133.243.3.209|:80... connected.
+HTTP request sent, awaiting response...
+HTTP/1.1 200 OK
+Date: Fri, 03 Jul 2009 17:47:44 GMT
+Server: Apache/2.2.11 (Unix)
+Last-Modified: Sat, 24 May 2008 23:37:47 GMT
+ETag: "79c9e1-114765000-44e026f0f08c0"
+Accept-Ranges: byte
+Content-Length: 4638265344
+Keep-Alive: timeout=15, max=100
+Connection: Keep-Alive
+Content-Type: application/octet-stream
+Length: 4638265344 (4.3G) [application/octet-stream]
+Saving to: `knoppix_v5.3.1DVD_20080326-20080523-AC.iso.1'
+
+8% [==> ] 385,256,176 1.68M/s eta 30m 58s
+
+ci@LENOVO-23C6C69F /cygdrive/c/download
+$
+
+
+My guess: a 32 bit unsigned entity is used to record the download file size
+where 64 bit unsigned entity is appropriate.

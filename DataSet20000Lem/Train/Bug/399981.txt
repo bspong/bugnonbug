@@ -1,0 +1,121 @@
+Slow redirects under SSL where redirect page ha content
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9a9pre) Gecko/2007101600 Minefield/3.0a9pre
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9a9pre) Gecko/2007101600 Minefield/3.0a9pre
+
+Firefox can be very slow following a HTTP-level redirect involving SSL. There are other outstanding bug report (at least 368179, 369192) that appear similar, and which may be symptom of the same underlying problem, but this one doe have distinct symptoms.
+
+It only manifest if the redirection response and the target of the response are served over SSL, and only if the redirection response message includes a body. It only manifest in the Unix version of Firefox, probably since version 2 but in at least 2.0.0.6 a distributed by Ubuntu, the current V3 build run under Ubuntu, and 2.0.0.7 direct from the download site under SuSE. Unlike other similar report it doe NOT depend on the content using the gzip content encoding.
+
+When viewed with the LiveHTTPHeaders extension, it appears that Firefox receives the redirection message but then wait anything up to 15 sec. before receiving the target page.
+
+It is very timing dependent and doe not manifest every time. Running Firefox under strace or at a lowered priority can be sufficient to prevent it happening altogether.
+
+It's is possible that this is actually a bug in Apache's SSL stack, but if so it's one that is only tickled by Linux Firefox.
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+1.Visit https://mnementh.csi.cam.ac.uk/redirection-tests/x.cgi
+2.Click 'Get - content'
+3.Observe reported delay - if more than a few second you've seen the bug
+4.Otherwise follow the 'Go to Test page' link and try again
+5.Note that following the 'Get - no content' link doe never display an increased delay
+Actual Results:
+When using 'Get - content', a non trivial number of time a redirection delay of several second
+
+Expected Results:
+Similar level of delat between using 'Get - content' and using 'Get - no content'
+
+Here are copy of the cgi script in use.
+
+x.cgi:
+
+--cut--
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+
+print <<'EOF';
+Content-type: text/html
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html>
+<head>
+<title>Test page</title>
+</head>
+<body>
+<h1>Test page</h1>
+<p><a href="https://mnementh.csi.cam.ac.uk/redirection-tests/y.cgi?content=no">Get - no content</a></p>
+<p><a href="https://mnementh.csi.cam.ac.uk/redirection-tests/y.cgi?content=yes">Get - content</a></p>
+</body>
+</html>
+EOF
+--cut--
+
+y.cgi:
+
+--cut--
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+use Time::HiRes;
+use CGI;
+
+my $dest = "https://mnementh.csi.cam.ac.uk/redirection-tests/z.cgi?time=" . Time::HiRes::time();
+my $query = CGI->new;
+
+print "Status: 302\n";
+print "Location: $dest\n";
+print "\n";
+unless ($query->param("content") and $query->param("content") eq "no") {
+print "x"x3700;
+}
+--cut--
+
+z.cgi:
+
+--cut--
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+
+use CGI;
+use Time::HiRes;
+
+my $query = CGI->new;
+
+print <<'EOF';
+Content-type: text/html
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html>
+<head>
+<title>Results page</title>
+</head>
+<body>
+<h1>Results page</h1>
+EOF
+
+if ($query->param("time")) {
+my $now = Time::HiRes::time();
+my $delay = $now-$query->param("time");
+print "<p>Delay wa $delay sec.</p>\n";
+}
+else {
+print "<p>No time supplied.</p>\n";
+}
+
+print <<'EOF';
+<p>Go to <a href="https://mnementh.csi.cam.ac.uk/redirection-tests/x.cgi">Test Page</a></p>
+</body>
+</html>
+EOF
+--cut--

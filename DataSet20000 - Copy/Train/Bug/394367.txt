@@ -1,0 +1,26 @@
+new window can be closed before initialization is completed causing leak
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.6) Gecko/20070806 Firefox/2.0.0.6
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.6) Gecko/20070806 Firefox/2.0.0.6
+
+Note that I observe this bug with the wizzRSS extension but believe it to be exposing a Firefox bug.  I believe that other extensions or Firefox itself could suffer from it.  If I am incorrect this bug is of course invalid.
+
+When a new window is opened "stuff" happens.  For example the wizzRSS extension starts an observer.  However, if the window can be closed before the "stuff" is initialized causing attempts to delete things that are not there.  Or in the words of the Leak Monitor extension "chrome windows close but leave other code pointing at their JavaScript".
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Go to http://eres.bucknell.edu/eres/coursepage.aspx?cid=1578&page=docs .
+2. Click on one of the document links.
+3.  FF opens a new window, closes it, and also opens up a "what should I do with this file" dialog.
+Actual Results:  
+Leak Monitor (https://addons.mozilla.org/en-US/firefox/addon/2490):
+[+] [leaked object] (881df20) = [Object]
+[+] observe (881df10, chrome://wizzrss/content/toolbar.js, 92-100) = [Function]
+[ ] prototype (847de20) = [Object] 
+
+
+Expected Results:  
+No leak.
+
+I discussed this with the developer already to see if it was a problem with the extentsion:
+http://www.wizzrss.com/phpBB2/viewtopic.php?p=3603

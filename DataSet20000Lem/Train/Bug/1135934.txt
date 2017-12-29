@@ -1,0 +1,36 @@
+[e10s] "View Background Image" and "View Description" in remote browser cause unsafe CPOW usage warning
++++ This bug wa initially created a a clone of Bug #1133577 +++
+
+STR:
+
+1) Visit a site with a background image on it in an e10s window
+2) Right-click on the page, and choose "View Background Image"
+
+This cause some "unsafe CPOW usage" warning in the Browser Console.
+
+In browser/base/content/nsContextMenu.js:
+
+// Change current window to the URL of the background image.
+viewBGImage: function(e) {
+urlSecurityCheck(this.bgImageURL,
+this.browser.contentPrincipal,
+Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT);
+var doc = this.target.ownerDocument; <-- Causes CPOW warning
+openUILink(this.bgImageURL, e, { disallowInheritPrincipal: true,
+referrerURI: doc.documentURIObject }); <-- Causes CPOW warning
+},
+
+
+in toolkit/modules/RemoteWebNavigation.jsm
+
+loadURI: function(aURI, aLoadFlags, aReferrer, aPostData, aHeaders) {
+if (aPostData || aHeaders)
+throw Components.Exception("RemoteWebNavigation doesn't accept postdata or headers.", Cr.NS_ERROR_INVALID_ARGS);
+
+this._browser._contentTitle = "";
+this._sendMessage("WebNavigation:LoadURI", {
+uri: aURI,
+flags: aLoadFlags,
+referrer: aReferrer ? aReferrer.spec : null <-- Causes CPOW warning
+});
+},

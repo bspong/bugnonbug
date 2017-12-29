@@ -1,0 +1,30 @@
+Notifications are incorrectly removed by subframe navigation
+We got a report in bug 844556 comment 67-69 for a page where Mixed Content is blocked by the MCB but the Shield Icon is missing. This occurs on a university page that requires login and I have a test account. Note that this mean that there is no way for the user to "disable protection" and load the content.
+
+I can reproduce this on various version of Firefox and the most recent Nightly. Note that if I open a new tab and then return to the university webpage tab, the shield show up a it should.
+
+When you go to the specific page, a youtube HTTP iframe attempt to load. MCB block the load, report the blocked load to webconsole and properly update the security state. Then browser.js read the security state and call PopupNotifications.show()
+https://mxr.mozilla.org/mozilla-central/source/browser/base/content/browser.js#6618
+
+PopupNotifications.show() then call PopupNotifications._update:
+http://mxr.mozilla.org/mozilla-central/source/toolkit/modules/PopupNotifications.jsm#275
+
+This is when thing get a little confusing. While reproducing, I've come across two scenarios:
+1) PopupNotifications.show continues to execute and _updates is called later. When it is called, the notification have disappeared:
+http://mxr.mozilla.org/mozilla-central/source/toolkit/modules/PopupNotifications.jsm#615
+
+and we end up here:
+http://mxr.mozilla.org/mozilla-central/source/toolkit/modules/PopupNotifications.jsm#654
+
+2) _update is called within PopupNotifications.show. The notification are found. But then _update is called again with no notification found and the UI ha no shield.
+
+
+The last/second call to _update is always after a terminal warning:
+WARNING: NS_ENSURE_SUCCESS(rv, rv) failed with result 0x805E0006: file /home/mozilla/dev/mozilla-central/content/base/src/nsFrameLoader.cpp, line 510
+++DOMWINDOW == 35 (0x7fc9052a88b8) [serial = 40] [outer = 0x7fc904d830b8]
+
+Which is a return value for a LoadURI - http://mxr.mozilla.org/mozilla-central/source/content/base/src/nsFrameLoader.cpp#510
+
+Do any of the folk I've cc'ed have a clue a to what might be going on here? I can't reproduce this on my own test case (or any of the other website that have mixed content). Perhaps it is something specific that this site is doing that is causing the nsFrameLoader warning and somehow interfering with the call to _updates. Any help/ideas/thoughts would be helpful.
+
+Thanks!

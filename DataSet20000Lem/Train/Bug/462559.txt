@@ -1,0 +1,35 @@
+Chrome memory leak issue on Firefox 3
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US) AppleWebKit/525.19 (KHTML, like Gecko) Chrome/0.3.154.9 Safari/525.19
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3
+
+I am working on the development of a web application that intensively use JavaScript. We mainly use jQuery (with livequery), customized ExtJS feature and custom classes.
+
+We certainly still have a few pseudo-memory leak issue (objects that could be cleared during execution, or memory that grow up when using a web page), but I am more concerned by what I think are real chrome memory leak issue that remain in Firefox 3 (high memory usage after closing all tabs).
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+1. create an account at http://itemize-dev2.kei.com:3002/
+2. make some item
+3. toggle between list view/grid view, change page etc
+4. open other tab of the application and do other action
+5. memory usage at this point should be around 300MB-1.5GB
+6. close tab
+7. memory usage is still very high, and the browser being using virtual memory, the application get slow, Firefox need to be restarted
+
+
+
+I have done testing using Leak Monitor, and it will a report of multiple memory leak after closing a window coming from the following places:
+- http://itemize-dev2.kei.com:3002/lib/nicEdit/nicEdit.js?1225149103, 237-237
+- http://itemize-dev2.kei.com:3002/javascripts/ext-2.2-custom.js?1221849595, 10-1
+- http://itemize-dev2.kei.com:3002/, 62-65
+- http://itemize-dev2.kei.com:3002/lib/nicEdit/nicEdit.js?1225149103, 240-242
+- http://itemize-dev2.kei.com:3002/lib/nicEdit/nicEdit.js?1225149103, 235-237
+
+According to David Baron, from what I understand, these report mean there are memory leak in FF.
+
+Unfortunately Leak Monitor will point me to general function call that get applied to all functions, and the lack of a call stack make it hard to find the pattern in the code.
+
+I have been trying to narrow down the memory leak issue to identify the pattern that trigger them, but without real success.
+
+I had more useful information using Drip from Joel Webber, but it is specifically designed for identifying object leaking in IE chrome, not FF.

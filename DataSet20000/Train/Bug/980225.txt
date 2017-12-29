@@ -1,0 +1,25 @@
+[rule view] Editing colors using the colorpicker tooltip in overriden rules
+Editing a color using the colorpicker in a property that is overridden will fail and the following js error will be thrown:
+
+TypeError: this.activeSwatch.nextSibling is null: SwatchColorPickerTooltip.prototype<._onSpectrumColorChange@resource://gre/modules/commonjs/toolkit/loader.js -> resource:///modules/devtools/shared/widgets/Tooltip.js:959:7
+EventEmitter_emit@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/event-emitter.js:126:11
+Spectrum.prototype.onChange@resource://gre/modules/commonjs/toolkit/loader.js -> resource:///modules/devtools/shared/widgets/Spectrum.js:271:5
+Spectrum.prototype.onDraggerMove@resource://gre/modules/commonjs/toolkit/loader.js -> resource:///modules/devtools/shared/widgets/Spectrum.js:261:5
+move@resource://gre/modules/commonjs/toolkit/loader.js -> resource:///modules/devtools/shared/widgets/Spectrum.js:172:7
+
+STR:
+- Open the inspector on this page
+- Scroll down in the rule view until you see the body {...} selector that has a background property overridden
+- Click on the #FFF color swatch in there and start changing the color by dragging the color dragger around.
+
+==> As soon as the color changed once, it doesn't change anymore
+==> Errors are being thrown in the console everytime the color is supposed to change.
+
+I already investigated a little bit this issue:
+- whenever the color changes, we try and update the textContent of the element that's right after the color swatch
+- in the case of an overridden property, for some reason, the whole property object gets re-generated every time the new color is chosen, and therefore, the colorSwatch.nextSibling doesn't exist anymore!
+
+More details:
+- the RuleView goes through all properties again, checking which ones have changed to re-generate them (dirty flag)
+- for some reason, the dirty flag of the overridden color changes
+- the property is overridden before and after the change, so the dirty flag shouldn't be set, but one of its computed prop has overriddenDirty=true

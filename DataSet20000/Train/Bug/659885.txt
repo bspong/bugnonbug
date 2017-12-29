@@ -1,0 +1,37 @@
+Create GCLI command to support restarting the debugger
+From dcamp:
+
+OK, so if you build from the remote debug repo[1], there is a
+DebuggerUI global on each navigator:browser chrome window (same scope
+you'd normally be able to get at gBrowser from).
+
+DebuggerUI has two methods of interest for you:
+
+startDebugger() will fire up a debugger on the currently-selected tab
+(due to some unfinished business, you can't start debuggers on
+arbitrary tabs - only the currently-selected one).  It will return a
+debugger pane object (I'll get to that in a minute).
+
+getDebugger(aTab) will return the debugger pane for the given browser
+tab.  I suggest calling it with gBrowser.selectedTab to get the
+debugger on the currently-selected browser.
+
+The debugger pane object[2] keeps an eye on the html debugger UI.  The
+most interesting thing it has at the moment is a property called
+"activeThread" which accesses the ThreadClient[3] object for the
+currently-running debugger.  The only interesting method the
+ThreadClient currently has on it is resume(), which will resume a
+thread already paused at a debugger; statement.  I would suggest that
+you check the ThreadClient's state property to make sure it is
+"paused" before trying to resume - it won't fail usefully right now.
+
+This is all very very rough, but hopefully it'll give you something to
+play with.  Things should tighten up over the next week or two, and I
+intend to dangle more useful commands/objects off of DebuggerUI that
+should be useful for the command line.
+
+-dave
+
+[1] http://hg.mozilla.org/users/dcamp_campd.org/remote-debug/
+[2] http://hg.mozilla.org/users/dcamp_campd.org/remote-debug/file/tip/browser/components/debugger/content/debugger-overlay.js#l45
+[3] http://hg.mozilla.org/users/dcamp_campd.org/remote-debug/file/tip/toolkit/components/debugger/dbg-client.jsm#l193

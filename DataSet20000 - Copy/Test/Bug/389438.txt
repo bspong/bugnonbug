@@ -1,0 +1,135 @@
+Quit browser while XUL dialog is showing causes seg fault
+User-Agent:       Mozilla/5.0 (Macintosh; U; PPC Mac OS X Mach-O; en-US; rv:1.8.1.5) Gecko/20070713 Firefox/2.0.0.5
+Build Identifier: Mozilla/5.0 (Macintosh; U; PPC Mac OS X Mach-O; en-US; rv:1.8.1.5) Gecko/20070713 Firefox/2.0.0.5
+
+Open an XUL dialog (part of an add-on extension) and press command-Q to quit. Dialog closes, crash dialog appears, and this appears in the console:
+
+[error occurred during error reporting, step 0, id 0xa]
+
+/Applications/firefox.app/Contents/MacOS/run-mozilla.sh: line 424: 18640 Segmentation fault      "$prog" ${1+"$@"}
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+Reproduces consistently for me:
+
+1. Install Firegoose extension
+2. Select "more" in the target drop-down on the firegoose toolbar.
+3. xul dialog pops up.
+4. command-Q to quit browser
+5. crash
+
+Actual Results:  
+segmentation fault during shutdown.
+
+Expected Results:  
+shut down browser normally
+
+
+a javascript ondialogaccept handler is registered that accesses the preference service and the console output service. What the hell, here's the XUL file:
+
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://firegoose/skin/overlay.css" type="text/css"?>
+
+<!DOCTYPE dialog SYSTEM "chrome://firegoose/locale/firegoose.dtd">
+
+<dialog id="fgEnableWebsites"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="&firegoose.enableWebsites.label;"
+        buttons="accept,cancel"
+        ondialogaccept="FG_dialogAccept();" >
+
+  <script type="application/x-javascript" src="firegoose.js"/>
+
+  <script type="application/x-javascript">
+	var windowParams = window.arguments[0];
+
+	window.addEventListener("load", function() { FG_dialogInit(); }, false);
+	
+	function FG_dialogInit() {
+		FG_trace("preferences init");
+		var prefs = Components.classes["@mozilla.org/preferences-service;1"].
+  		            getService(Components.interfaces.nsIPrefBranch);
+
+		function isVisible(name) {
+			try {
+		    	return prefs.getBoolPref(FG_fixName(name));
+		    }
+		    catch (e) {
+		    	return true;
+		    }
+		}
+
+		function createListItem(name, visible) {
+		    var item = document.createElement("richlistitem");
+		    var checkbox = document.createElement("checkbox");
+		    checkbox.setAttribute("label", name);
+		    checkbox.setAttribute("checked", visible);
+		    item.appendChild(checkbox);
+		    return item;
+		}
+
+        var websiteList = document.getElementById("websiteList");
+
+		for (var name in windowParams.websiteHandlers) {
+			if (!windowParams.websiteHandlers[name].dontDisplayInMenu)
+		    	websiteList.appendChild(createListItem(name, isVisible(name)));
+		}
+	}
+
+	function FG_dialogAccept() {
+		FG_trace("ok");
+
+        function toBoolean(value) {
+        	if ("true" == value)
+				return true;
+			else
+				return false;
+		}
+		
+		var prefs = Components.classes["@mozilla.org/preferences-service;1"].
+  		            getService(Components.interfaces.nsIPrefBranch);
+
+        var websiteList = document.getElementById("websiteList");
+        var children = websiteList.childNodes;
+
+		for (var i=0; i &lt; children.length; i++) {
+			var node = children.item(i).firstChild;
+			var checked = toBoolean(node.getAttribute("checked"));
+			var name = node.getAttribute("label");
+			prefs.setBoolPref(FG_fixName(name), checked);
+		}
+		
+		windowParams["ok"] = true;
+  	}
+  </script>
+
+  <vbox flex="1">
+	<label control="websiteList" class="dialogTitle" value="Enable Websites" />
+    <separator/>
+	<description style="width: 30em;">
+      Select the target websites that will be visible in the drop-down menu. Some
+      targets listed here are experimental.
+	</description>
+    <separator/>
+    <richlistbox id="websiteList" flex="1" tooltiptext="Enable or disable firegoose access to websites">
+    </richlistbox>
+  </vbox>
+
+  <separator/>
+
+</dialog>
+
+
+
+and here's FG_trace:
+
+
+function FG_trace(msg) {
+    Components.classes["@mozilla.org/consoleservice;1"]
+        .getService(Components.interfaces.nsIConsoleService)
+            .logStringMessage(msg);
+}

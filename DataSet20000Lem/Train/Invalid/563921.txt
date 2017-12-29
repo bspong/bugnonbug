@@ -1,0 +1,89 @@
+innerHTML bug to <form> tag
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-us; rv:1.9.1.3) Gecko/20090824 Firefox/3.5.3
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-us; rv:1.9.1.3) Gecko/20090824 Firefox/3.5.3
+
+description:
+</form> bug disable the <submit> button
+can i report bug by the below format?
+
+var html = node.innerHTML
+return:
+//bug is: ... <form ...></form><input...><input...><input...type=submit>
+you see the <form ...></form> is error, this error not exist in IE.
+innerHTML bug exist in firefox from the latest version, to old versions.i've tested.
+And i've tested to many sites, it's a true bug. not only the site i reported.
+
+for example:
+var html = document.body.innerHTML;
+/*
+[native code]
+return newhtml;
+*/
+document.body.innerHTML = newhtml;
+
+at last, <form> not work;
+click <submit> not work, visitor cannot submit anything.
+a big bug.
+
+
+for simple, the bug is that:
+
+var html = document.body.innerHTML;
+document.body.innerHTML = html;
+
+//<form> not work ???
+// yes!
+
+
+
+//------------------to show bug quick-------------------
+var doc=document.body||document.documentElement;
+var h=doc.innerHTML;
+var idx = -1;
+while( (idx = h.indexOf('<form'))>0 )
+{
+var str = h.substr(idx)
+h = str.substr(10);
+alert(str)
+}
+
+//-----------------i have to fix bug when using innerHTML------------------
+function fix_firefox_bug_innerHTML_form(html){
+if(!html)return '';
+var bugform=/<form[^>]*?>\s*<\/form>/ig;
+var fixbutton=/(<input[^>]*type\=.?submit[^>]*>)/ig;
+if(bugform.test(html)){
+return html.replace(/<\/form>/ig).replace(fixbutton,'$1</form>');
+}
+return html;
+}
+
+//-----------------------------------------------------------
+best & wish
+firefox is beautiful
+Thank you to all of Mozilla dev
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.this is a copy message from the detail
+//------------------to show bug quick-------------------
+var doc=document.body||document.documentElement;
+var h=doc.innerHTML;
+var idx = -1;
+while( (idx = h.indexOf('<form'))>0 )
+{
+var str = h.substr(idx)
+h = str.substr(10);
+alert(str)
+}
+
+Actual Results:
+at last, <form> not work;
+click <submit> not work, visitor cannot submit anything.
+sorry, but it's a big bug.
+
+Expected Results:
+innerHTML can return correct htmlcode of <form>
+
+Thank you to all Mozilla dev

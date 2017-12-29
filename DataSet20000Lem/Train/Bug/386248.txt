@@ -1,0 +1,86 @@
+Firefox doesn't want to startup. When I start it from console I get 'Bus Error'
+User-Agent: Mozilla/5.0 (Macintosh; U; Intel Mac OS X; nl-nl) AppleWebKit/419.2.1 (KHTML, like Gecko) Safari/419.3
+Build Identifier: Mozilla Firefox 2.0.0.4, Copyright (c) 1998 - 2007 mozilla.org
+
+When I start Firefox I get a 'Bus Error'.
+
+Firefox wa working fine until yesterday evening, when I got a kernel panic while browsing the web with Firefox.
+After that I'm not able to launch firefox. In the console I get 'Bus Error', even when I try to run in safe mode.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.a Open Firefox (from the Applications folder)
+OR
+1.b /Applications/Firefox.app/Contents/MacOS/firefox-bin -safe-mode
+
+Actual Results:
+Firefox doesn't start
+
+poisonbook:/Applications/Firefox.app/Contents/MacOS poison$ /Applications/Firefox.app/Contents/MacOS/firefox-bin -safe-mode
+Bus error
+
+Expected Results:
+Start Firefox
+
+poisonbook:/Applications/Firefox.app/Contents/MacOS poison$ gdb ./firefox-bin
+GNU gdb 6.3.50-20050815 (Apple version gdb-573) (Fri Oct 20 15:50:43 GMT 2006)
+Copyright 2004 Free Software Foundation, Inc.
+GDB is free software, covered by the GNU General Public License, and you are
+welcome to change it and/or distribute copy of it under certain conditions.
+Type "show copying" to see the conditions.
+There is absolutely no warranty for GDB. Type "show warranty" for details.
+This GDB wa configured a "i386-apple-darwin"...Reading symbol for shared library ................... done
+
+(gdb) r
+Starting program: /Applications/Firefox.app/Contents/MacOS/firefox-bin
+Reading symbol for shared library .................++++...............................................++...........+++++ done
+Reading symbol for shared library . done
+Reading symbol for shared library . done
+Reading symbol for shared library . done
+Reading symbol for shared library . done
+Reading symbol for shared library . done
+
+Program received signal EXC_BAD_ACCESS, Could not access memory.
+Reason: KERN_PROTECTION_FAILURE at address: 0x00038080
+0x005f1c58 in nsBoxFrame::~nsBoxFrame ()
+(gdb) bt
+#0 0x005f1c58 in nsBoxFrame::~nsBoxFrame ()
+#1 0x00425f8c in nsContainerFrame::ReflowChild ()
+#2 0x0064ad79 in ViewportFrame::AdjustReflowStateForScrollbars ()
+#3 0x00115041 in PresShellViewEventListener::HideCaret ()
+#4 0x00132805 in nsXULDocument::StartLayout ()
+#5 0x00138b07 in nsXULDocument::ResumeWalk ()
+#6 0x0013909c in nsXULDocument::ResumeWalk ()
+#7 0x00322ea2 in nsStreamLoader::WriteSegmentFun ()
+#8 0x00373e89 in nsJARInputStream::~nsJARInputStream ()
+#9 0x00330ba8 in nsInputStreamPump::OnStateStop ()
+#10 0x0033112d in nsInputStreamPump::OnStateTransfer ()
+#11 0x00e6fadd in nsInputStreamReadyEvent::EventHandler ()
+#12 0x00e44671 in PL_HandleEvent ()
+#13 0x00e4492a in PL_ProcessPendingEvents ()
+#14 0x9082d05a in CFRunLoopRunSpecific ()
+#15 0x9082cace in CFRunLoopRunInMode ()
+#16 0x92dec8d8 in RunCurrentEventLoopInMode ()
+#17 0x92debfe2 in ReceiveNextEventCommon ()
+#18 0x92f0297c in ReceiveNextEvent ()
+#19 0x00233d19 in nsAppShell::~nsAppShell ()
+#20 0x0035d769 in nsXULWindow::SetContentScrollbarVisibility ()
+#21 0x001f6554 in nsWindowWatcher::OpenWindowJSInternal ()
+#22 0x001f6bdd in nsWindowWatcher::OpenWindowJSInternal ()
+#23 0x001f0b0c in nsPromptService::~nsPromptService ()
+#24 0x001f1db4 in nsPromptService::Init ()
+#25 0x00e5a915 in XPTC_InvokeByIndex ()
+#26 0x0036eaa3 in XPCWrappedNative::CallMethod ()
+#27 0x00360d93 in XPC_WN_CallMethod ()
+#28 0x00c52aff in js_Invoke ()
+#29 0x00c4528a in js_Interpret ()
+#30 0x00c532a6 in js_Invoke ()
+#31 0x005be268 in nsXPCWrappedJSClass::CheckForException ()
+#32 0x005bb5b3 in nsXPCWrappedJS::SystemIsBeingShutDown ()
+#33 0x00e5a9ce in XPTC_InvokeByIndex ()
+#34 0x00e5ab20 in nsXPTCStubBase::Stub3 ()
+#35 0x00e126f8 in nsObserverService::nsObserverService ()
+#36 0x00006669 in XRE_main ()
+#37 0x00002598 in main ()
+(gdb)

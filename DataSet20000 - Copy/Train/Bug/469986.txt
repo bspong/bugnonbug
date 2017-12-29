@@ -1,0 +1,32 @@
+firefox hangs, sometimes needs to be killed - possibly gmail-related
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.4) Gecko/2008102920 Firefox/3.0.4
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.4) Gecko/2008102920 Firefox/3.0.4
+
+I'll attach three windbg sessions (two of which took place during the filing of this bug, which has probably taken about an hour or so), though I'm afraid they won't be of much use.
+
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+Browse a while enough tabs open (around 15 now, but it happens faster I think when I have around 100 open). Keeping Gmail open for a while and going to it every once in a while to read mails, delete mails, etc. definitely looks like it helps (or maybe it's even required?).
+
+Running in safe mode doesn't fix the problem. I've looked at getting a stracktrace, since right now I can't provide any info to fix it, but https://developer.mozilla.org/En/How_to_get_a_stacktrace_with_WinDbg doesn't help out a lot.
+
+When typing "kp", as said on the windbg page, I get results like this:
+
+0:021> kp
+ChildEBP RetAddr  
+00f3ffb0 7c90de6c ntdll!KiFastSystemCallRet
+00f3ffb4 7c9614bc ntdll!ZwTerminateThread+0xc
+00f3ffc4 7c95002e ntdll!RtlExitUserThread+0x21
+00f3fff4 00000000 ntdll!DbgUiRemoteBreakin+0x41
+
+On the windbg, there's a stacktrace result which is similar, and apparently that's because you don't attach to the child process as well - is this the case for me?
+Unfortunately, I don't have the option to attach to child processes if I attach windbg to a running process, instead of opening the exectuable through windbg.
+Do I *have* to open firefox.exe through windbg, or is there a solution which just allows me to attach?
+
+You can see two of my windbg sessions, of two different hangs (same FF session, however, the second session just happened when FF started hanging again after it was done hanging the first time).
+
+So my question basically is: how can I generate results through windbg which can be helpful to you? Just randomly typing p, then maybe t, then gu, then a few kp's, etc. isn't very helpful, I suppose. Is it really not possible to run a script which attaches itself to FF and generates all needed stuff? If not, how can I use windbg to generate decent results?
+
+(BTW, it seems that not using the mouse but only the keyboard helps to keep it from hanging).

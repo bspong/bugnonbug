@@ -1,0 +1,63 @@
+Javascript history.back() when used with a CGI script doe not retain form input element data
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.8) Gecko/20050511 Firefox/1.0.4
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.8) Gecko/20050511
+
+This one is pretty heavy duty so stick with me on this:
+
+XHTML document/form (verify.html) is submitted to (redirect.py) for processing
+and return (redirect.html). The action attribute of the "form" element in
+(redirect.html) is
+conditionally set by (a.py) to point to various CGI script URL's or (x.py ||
+y.py). (redirect.html) load an external javascript file (redirect.js) which
+sumbits (redirect.html) to the CGI script (x.py || y.py) when the onload event
+of (redirect.html) occurs. This action only occurs if the value of the
+"submitted" form field in (redirect.html) is set to "unsubmitted". The
+"submitted" field value is then set to "submitted". (x.py || y.py) then return
+document/form (result.html) which is the end of the chain.
+
+(verify.html) -> (redirect.py) -> (redirect.html (form "action" = (x.py))
+("submitted" = "unsubmitted") + (redirect.js)) -> (x.py || y.py) -> (result.html)
+
+If the browser back button is selected when viewing document/form (result.html)
+the onload event of (redirect.html) is fired again and (redirect.js) check the
+value of the "submitted" field of (redirect.html). If the value is "submitted"
+the script call the history.back() function and return to (verify.html)
+
+(verify.html) <- (redirect.html ("submitted" = "submitted") + (redirect.js)) <-
+(result.html)
+
+In this way (redirect.html) in combination with (redirect.js) act an automatic
+conditional redirector when stepping forward through the form submission
+sequence. However, the same script when stepping through the sequence backwards
+allows the user to return to (verify.html) without being automatically
+redirected again by (redirect.html) to (x.html). In addition the user is now
+prevented from using the forward button to proceed to (result.html) without
+submitting the document/form (verify.html) again.
+
+In other words:
+
+one -> many
+many -> one
+
+The problem that is occuring is that the form element of (verify.html) is not
+retaining the previously selected form input element value when it is returned
+to using the back button which trigger the history.back() function call.
+
+I have set up an example at http://66.88.142.60:86/verify.html for your review.
+
+The code for all the file can be seen at http://66.88.142.60:86/code.txt
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Select y.py from select input
+2. Submit verify.html
+3. Use the browser back button to return to verify.html
+
+Actual Results:
+The select input ha reset to x.py.
+
+Expected Results:
+The select input should still indicate y.py

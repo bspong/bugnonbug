@@ -1,0 +1,146 @@
+Private browsing flag assertion failure on debug build in devtools / page info / browser console
+Ive encountered multiple crash in the newest nightly build involving the chrome level dev tools(gloabl console) and viewing page info.
+
+First the page info problem a it is the easiest to reproduce. For me when viewing any page and trying to view page info, ff crash with the following for a stack trace:
+
+Assertion failure: pb == (doa.mPrivateBrowsingId > 0), at c:/Users/[redacted]/mozilla
+-central/netwerk/base/LoadContextInfo.cpp:146
+#01: mozilla::net::LoadContextInfoFactory::FromLoadContext (c:\users\[redacted]\mozil
+la-central\netwerk\base\loadcontextinfo.cpp:100)
+#02: _NS_InvokeByIndex (c:\Users\[redacted]\mozilla-central\xpcom\reflect\xptcall\md\
+win32\xptcinvoke_asm_x86_msvc.asm:57)
+#03: CallMethodHelper::Invoke (c:\users\[redacted]\mozilla-central\js\xpconnect\src\x
+pcwrappednative.cpp:2058)
+#04: CallMethodHelper::Call (c:\users\[redacted]\mozilla-central\js\xpconnect\src\xpc
+wrappednative.cpp:1377)
+#05: XPCWrappedNative::CallMethod (c:\users\[redacted]\mozilla-central\js\xpconnect\s
+rc\xpcwrappednative.cpp:1344)
+#06: XPC_WN_CallMethod (c:\users\[redacted]\mozilla-central\js\xpconnect\src\xpcwrapp
+ednativejsops.cpp:999)
+#07: js::CallJSNative (c:\users\[redacted]\mozilla-central\js\src\jscntxtinlines.h:23
+9)
+#08: js::InternalCallOrConstruct (c:\users\[redacted]\mozilla-central\js\src\vm\inter
+preter.cpp:457)
+#09: InternalCall (c:\users\[redacted]\mozilla-central\js\src\vm\interpreter.cpp:502)
+
+#10: js::CallFromStack (c:\users\[redacted]\mozilla-central\js\src\vm\interpreter.cpp
+:508)
+#11: Interpret (c:\users\[redacted]\mozilla-central\js\src\vm\interpreter.cpp:2928)
+#12: js::RunScript (c:\users\[redacted]\mozilla-central\js\src\vm\interpreter.cpp:403
+)
+#13: js::ExecuteKernel (c:\users\[redacted]\mozilla-central\js\src\vm\interpreter.cpp
+:684)
+#14: js::Execute (c:\users\[redacted]\mozilla-central\js\src\vm\interpreter.cpp:716)
+#15: ExecuteScript (c:\users\[redacted]\mozilla-central\js\src\jsapi.cpp:4410)
+#16: JS::CloneAndExecuteScript (c:\users\[redacted]\mozilla-central\js\src\jsapi.cpp:
+4473)
+#17: mozilla::dom::XULDocument::ExecuteScript (c:\users\[redacted]\mozilla-central\do
+m\xul\xuldocument.cpp:3523)
+#18: mozilla::dom::XULDocument::OnScriptCompileComplete (c:\users\[redacted]\mozilla-
+central\dom\xul\xuldocument.cpp:3410)
+#19: NotifyOffThreadScriptCompletedRunnable::Run (c:\users\[redacted]\mozilla-central
+\dom\xul\nsxulelement.cpp:2813)
+#20: nsThread::ProcessNextEvent (c:\users\[redacted]\mozilla-central\xpcom\threads\ns
+thread.cpp:1240)
+#21: NS_ProcessNextEvent (c:\users\[redacted]\mozilla-central\xpcom\glue\nsthreadutil
+s.cpp:390)
+#22: mozilla::ipc::MessagePump::Run (c:\users\[redacted]\mozilla-central\ipc\glue\mes
+sagepump.cpp:124)
+#23: MessageLoop::RunInternal (c:\users\[redacted]\mozilla-central\ipc\chromium\src\b
+ase\message_loop.cc:239)
+#24: MessageLoop::RunHandler (c:\users\[redacted]\mozilla-central\ipc\chromium\src\ba
+se\message_loop.cc:232)
+#25: MessageLoop::Run (c:\users\[redacted]\mozilla-central\ipc\chromium\src\base\mess
+age_loop.cc:212)
+#26: nsBaseAppShell::Run (c:\users\[redacted]\mozilla-central\widget\nsbaseappshell.c
+pp:158)
+#27: nsAppShell::Run (c:\users\[redacted]\mozilla-central\widget\windows\nsappshell.c
+pp:262)
+#28: nsAppStartup::Run (c:\users\[redacted]\mozilla-central\toolkit\components\startu
+p\nsappstartup.cpp:283)
+#29: XREMain::XRE_mainRun (c:\users\[redacted]\mozilla-central\toolkit\xre\nsapprunne
+r.cpp:4494)
+#30: XREMain::XRE_main (c:\users\[redacted]\mozilla-central\toolkit\xre\nsapprunner.c
+pp:4623)
+#31: XRE_main (c:\users\[redacted]\mozilla-central\toolkit\xre\nsapprunner.cpp:4714)
+#32: do_main (c:\users\[redacted]\mozilla-central\browser\app\nsbrowserapp.cpp:319)
+#33: NS_internal_main (c:\users\[redacted]\mozilla-central\browser\app\nsbrowserapp.c
+pp:452)
+#34: wmain (c:\users\[redacted]\mozilla-central\toolkit\xre\nswindowswmain.cpp:115)
+#35: __scrt_common_main_seh (f:\dd\vctools\crt\vcstartup\src\startup\exe_common.
+inl:253)
+#36: BaseThreadInitThunk[C:\Windows\syswow64\kernel32.dll +0x1336a]
+#37: RtlInitializeExceptionChain[C:\Windows\SysWOW64\ntdll.dll +0x39902]
+#38: RtlInitializeExceptionChain[C:\Windows\SysWOW64\ntdll.dll +0x398d5]
+
+Next, with any page open launch the global console (ctrl+shift+j) with chrome debugging enabled. Type this into the global console, then click the resulting chrome window to get a stack trace like the following:
+
+[Parent 5556] WARNING: CacheStorage ha been disabled.: file c:/Users/[redacted]/mozi
+lla-central/dom/cache/CacheStorage.cpp, line 149
+Assertion failure: (principal->GetPrivateBrowsingId() > 0) == IsPrivateBrowsing(
+), at c:/Users/[redacted]/mozilla-central/dom/base/nsGlobalWindow.cpp:10680
+#01: mozilla::dom::WindowBinding::get_sessionStorage (c:\users\[redacted]\mozilla-cen
+tral\obj-i686-pc-mingw32\dom\bindings\windowbinding.cpp:15422)
+#02: mozilla::dom::WindowBinding::genericGetter (c:\users\[redacted]\mozilla-central\
+obj-i686-pc-mingw32\dom\bindings\windowbinding.cpp:15580)
+#03: js::CallJSNative (c:\users\[redacted]\mozilla-central\js\src\jscntxtinlines.h:23
+9)
+#04: js::InternalCallOrConstruct (c:\users\[redacted]\mozilla-central\js\src\vm\inter
+preter.cpp:457)
+#05: InternalCall (c:\users\[redacted]\mozilla-central\js\src\vm\interpreter.cpp:502)
+
+#06: js::Call (c:\users\[redacted]\mozilla-central\js\src\vm\interpreter.cpp:521)
+#07: js::DebuggerObject::call (c:\users\[redacted]\mozilla-central\js\src\vm\debugger
+.cpp:10239)
+#08: js::DebuggerObject::callMethod (c:\users\[redacted]\mozilla-central\js\src\vm\de
+bugger.cpp:9323)
+#09: js::CallJSNative (c:\users\[redacted]\mozilla-central\js\src\jscntxtinlines.h:23
+9)
+#10: js::InternalCallOrConstruct (c:\users\[redacted]\mozilla-central\js\src\vm\inter
+preter.cpp:457)
+#11: InternalCall (c:\users\[redacted]\mozilla-central\js\src\vm\interpreter.cpp:502)
+
+#12: js::Call (c:\users\[redacted]\mozilla-central\js\src\vm\interpreter.cpp:521)
+#13: js::Wrapper::call (c:\users\[redacted]\mozilla-central\js\src\proxy\wrapper.cpp:
+165)
+#14: js::CrossCompartmentWrapper::call (c:\users\[redacted]\mozilla-central\js\src\pr
+oxy\crosscompartmentwrapper.cpp:333)
+#15: js::Proxy::call (c:\users\[redacted]\mozilla-central\js\src\proxy\proxy.cpp:421)
+
+#16: js::proxy_Call (c:\users\[redacted]\mozilla-central\js\src\proxy\proxy.cpp:662)
+#17: js::CallJSNative (c:\users\[redacted]\mozilla-central\js\src\jscntxtinlines.h:23
+9)
+#18: js::InternalCallOrConstruct (c:\users\[redacted]\mozilla-central\js\src\vm\inter
+preter.cpp:445)
+#19: InternalCall (c:\users\[redacted]\mozilla-central\js\src\vm\interpreter.cpp:502)
+
+#20: js::CallFromStack (c:\users\[redacted]\mozilla-central\js\src\vm\interpreter.cpp
+:508)
+#21: js::jit::DoCallFallback (c:\users\[redacted]\mozilla-central\js\src\jit\baseline
+ic.cpp:4396)
+#22: ??? (???:???)
+#23: ??? (???:???)
+#24: ??? (???:???)
+#25: EnterBaseline (c:\users\[redacted]\mozilla-central\js\src\jit\baselinejit.cpp:15
+5)
+#26: js::jit::EnterBaselineMethod (c:\users\[redacted]\mozilla-central\js\src\jit\bas
+elinejit.cpp:195)
+#27: js::RunScript (c:\users\[redacted]\mozilla-central\js\src\vm\interpreter.cpp:393
+)
+#28: js::InternalCallOrConstruct (c:\users\[redacted]\mozilla-central\js\src\vm\inter
+preter.cpp:475)
+#29: InternalCall (c:\users\[redacted]\mozilla-central\js\src\vm\interpreter.cpp:502)
+
+#30: js::CallFromStack (c:\users\[redacted]\mozilla-central\js\src\vm\interpreter.cpp
+:508)
+#31: js::jit::DoCallFallback (c:\users\[redacted]\mozilla-central\js\src\jit\baseline
+ic.cpp:4396)
+#32: ??? (???:???)
+#33: ??? (???:???)
+#34: ??? (???:???)
+[GPU 9044] WARNING: Shutting down GPU process early due to a crash!: file c:/Use
+rs/[redacted]/mozilla-central/gfx/ipc/GPUParent.cpp, line 370
+
+Making these private until someone can look at them because I haven't even begun to dig into debugging properly(have some slight issue with visual studio ugh)
+
+I'll try to bring some follow up work with this soon.

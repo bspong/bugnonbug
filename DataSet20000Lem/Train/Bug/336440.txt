@@ -1,0 +1,50 @@
+Installer engine writes different Mozilla registry data, based on update method
+User-Agent: Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; .NET CLR 1.1.4322)
+Build Identifier: 1.5.0.3
+
+Registry key written by the installer vs. the autoupdate process are different.
+
+If I install 1.5.0.3 by downloading the exe and installing it, I get
+HKEY_LOCAL_MACHINE\SOFTWARE\Mozilla\Mozilla Firefox 1.5
+
+If I install 1.5.0.3 via autoupdate, I get
+HKEY_LOCAL_MACHINE\SOFTWARE\Mozilla\Mozilla Firefox 1.5.0.3
+
+Similarly, using the full installer I get this:
+GeckoVer = 1.7.5
+
+But if I autoupdate,
+GeckVer = 1.8.0.3
+
+Note that this ha been an ongoing problem with all 1.5x versions.
+
+it appears that the full install exe package is not being modified with each release so that it writes version specific registry keys. The builder is probably using the old 1.5 packaging and simply placing the new bit in it. They should also be modifying the reg key value that are written by the installer so they match what is written by the autoupdate process (which look like it writes the key using dynamic information from the file that are deployed).
+
+By having two different set of data written depending upon which installation method is chosen (installer vs. autoupdate), it make it more difficult for system management solution to identify which version is installed. By using a consistent set of reg key regardless of installer process, customer can get a better experience and better manage future update to the product a they'll have a consistent way of seeing what version is installed.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. install 1.5.0.3 using the full installer exe
+2. review the reg key under HKLM\Software\Mozilla
+3. install 1.5.0.3 via autoupdate from a prior version, on a separate machine from above
+4. review the reg key under HKLM\Software\Mozilla
+5. Note the difference between the reg key for the Mozilla Firefox key, and the GeckoVer for the two type of installs.
+Actual Results:
+When I install 1.5.0.3 by downloading the exe and installing it, I get
+HKEY_LOCAL_MACHINE\SOFTWARE\Mozilla\Mozilla Firefox 1.5
+
+When I install 1.5.0.3 via autoupdate, I get
+HKEY_LOCAL_MACHINE\SOFTWARE\Mozilla\Mozilla Firefox 1.5.0.3
+
+When I install 1.5.0.3 by downloading the exe and installing it, I get
+GeckoVer = 1.7.5
+
+When I install 1.5.0.3 via autoupdate, I get
+GeckoVer = 1.8.0.3
+
+Expected Results:
+The reg key and the reg value between the two type of installs should be the same. They should reflect the true version
+HKEY_LOCAL_MACHINE\SOFTWARE\Mozilla\Mozilla Firefox 1.5.0.3
+and
+GeckoVer = 1.8.0.3

@@ -1,0 +1,52 @@
+Javascript context lost in sidebar
+There is a bug when a page loaded in seidebar uses javascript, it seems that all
+javascript objects and functions are lost :
+
+I've a bookmark loaded in the sidebar, which contains custom javascript
+functions. In the sidebar theses functions are losts when the page is loaded
+(but are ok during loading).
+
+Here is the complete description :
+
+- This page works well when opened with firebox in standard mode
+
+- Bug : if you put this page in your sidebar, it seems that firefox loose all
+javascript objects and functions.
+
+This little example reproduce this behaviour
+step 1 : we define a function and call it during loading -> it works !
+step 2 : we try to do the same things directly without calling our function ->
+it works (so javascript still works)
+step 3 : we call our function after the page is loaded (with a link) -> It hangs
+! The javacript console says our function is not defined.
+
+- More weird now :
+step 4 : open the same page in firefox main area (not in sidebar) AND in the
+sidebar, and retest calling the function by clicking in the sidebar-> it works !
+In fact, le sidebar page uses javascript context defined in the main area page.
+We test with more complicated objects, clicking in the sidebar changes the page
+in the main area !
+
+Here is the sample to reproduce this always (tested on 1.0PR, 1.0RC1, 1.0RC2 and
+1.0)  :
+
+<html>
+<head>
+<script language="javascript">
+   // We define a little function
+   function test(tmpString) {
+      alert(tmpString);
+   }
+   // We test our function during page loading
+   test('Alert call in function \'test\' during loading');
+</script>
+</head>
+<body>
+<!-- link to call our function -->
+Alert call in function 'test': <a href="javascript:test('Alert call in function
+\'test\'');">test</a>
+<br>
+<!-- a simple javascript test -->
+Alert call directly : <a href="javascript:alert('Alert call directly');">test</a>
+</body>
+</html>

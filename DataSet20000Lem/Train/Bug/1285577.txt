@@ -1,0 +1,8 @@
+Ensure we can distinguish auto-imported bookmark / bookmark folder from others, and remove only the auto-imported one when the user chooses 'undo' for the automatic migration
+Right now we will just remove everything, which also remove the default bookmark and mean we're not comfortable with allowing the user the 'undo' option for any length of time, because we'll also delete bookmark they've created since the import.
+
+When I talked about this with Marco, it seemed our best bet wa going to be using the annotation API.
+
+There are two issue with this:
+1) the annotation API is sync, which is potentially problematic for perf, and IIRC requires bookmark id which we might not always keep/have from the insertion, requiring a separate lookup. So it's slightly painful to integrate at the moment.
+2) similar to bug 1285575, we'd need to teach all the migrator to annotate their bookmarks. However, unlike bug 1285575, almost all the migrator support bookmark (only a few know about passwords). So this is time-consuming to write, and error-prone (what if we get a new browser migrator and we forget to do it there, etc.). It's likely a good idea to unify the "turn this JS-based data into actual bookmarks" part of the migrator in some way, which will avoid having to write (and/or potentially update/rewrite) this code N time for N migrators.

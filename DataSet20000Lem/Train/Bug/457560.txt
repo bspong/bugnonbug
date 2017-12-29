@@ -1,0 +1,43 @@
+onreadystatechange not handline "this" correctly inside of Objects
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3
+
+This is probably related to bug #393221 in some way.
+
+When referenced from inside of a parent function, the function specified for onreadystatechange doe not view itself a being inside of that parent function. Therefor, the parent function's property can not be accessed from inside of the function. The function view itself a a standalone function, not part of the parent function when called from onreadystatechange.
+
+Here is an example:
+
+convertLink("http://www.google.com");
+function convertLink(oldLink){
+var url = "linkConverter.html";
+var newLink;
+request.open("POST", url, false);
+request.onreadystatechange = function(){
+if(request.readyState == 4){
+if(request.status == 200){
+newLink = request.responseText;
+}
+}
+}
+request.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+request.send("url=" + oldLink);
+
+alert(newLink);
+return newLink;
+}
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Take the code from the detail and place it inside of a blank html page (inside <script type="text/javascript"></script> tags).
+2. Create a "linkConverter.html" page that just return a URL
+3. Load the blank html page in the browser
+Actual Results:
+Nothing happens.
+
+Expected Results:
+an alert box appears with your converted URL. (This is the way it work in IE7 and Google Chrome)
+
+The software should have treated the onreadystatefunction a a member of the convertLink() function and used the local newLink variable from the convertLink() function in the onreadystatechange function.

@@ -1,0 +1,41 @@
+Multiple passwords in HTTP basic authentication will not be transmitted correctly
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.7) Gecko/20050414 Firefox/1.0.3
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.7) Gecko/20050414 Firefox/1.0.3
+
+In the HTTP basic authentication dialog, Firefox will send the correct password
+only at first time. If the first challenge fails, the HTTP server will prompt
+for athetnication again. When entering different credentials, they are messed
+up. The second password given is padded by the first, parts of the password of
+the first try will be send to the server again. The user will not notice the
+problem. Thie bug is evident if the second password is shorter than the first.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Select a HTTP server with HTTP basic authentication, and enable debugging of
+username and password credentials coming from clients
+2. Open Firefox and visit the server. Enter invalid credentials with a long
+password. The server will challenge again.
+3. Enter (maybe correct) credentials with a shorter password than before. The
+authentication fails.
+
+Actual Results:  
+Authentication is not possible without restarting Firefox if the first challenge
+failed.
+
+Expected Results:  
+Firefox should always send the entered credentials to the server.
+
+Here is a log of Firefox connecting to Tomcat 5.5.4. 
+The client sends username "a" and password "1234567890", which fails, followed
+by a second try, username "b" and passwort "c". The second password "c" is
+padded by "234567890".
+
+28.04.2005 21:37:24 DEBUG [http-9090-Processor25] [localhost].[/] - Returned
+username "a"
+28.04.2005 21:37:24 DEBUG [http-9090-Processor25] [localhost].[/] - Returned
+password "1234567890"
+28.04.2005 21:37:38 DEBUG [http-9090-Processor25] [localhost].[/] - Returned
+username "b"
+28.04.2005 21:37:38 DEBUG [http-9090-Processor25] [localhost].[/] - Returned
+password "c234567890"

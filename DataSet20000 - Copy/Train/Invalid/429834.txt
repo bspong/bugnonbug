@@ -1,0 +1,10 @@
+Bookmark auto flush is (only partially) disabled
+The BookmarksService in Fx 2 (and previous versions) incorporates a facility for marking the bookmark store as dirty and then later flushing the store to disk when a recurring timer fires. The timer and flush routines appear to be fully implemented, but the various places in the code where the bookmark service records that a change has dirtied the datastore (by setting mDirty = PR_True) have either been commented out or are part of deprecated routines that are no longer used. Further, there are plenty of places where the datastore is changed without any attempt to set the dirty flag. Most likely this system was intentionally disabled (but never fully excised from the code) long ago for performance reasons -- the earliest versions checked into the source repository show these bits commented out, so it's hard to know what the rationale was.
+
+Interestingly, though, one instance does remain: updateBookmarkIcon still sets mDirty and thus presumably causes the datastore to be flushed to disk when an icon is changed. It's strange that this instance alone remains intact.
+
+The upshot of this is that changes to the bookmark store are flushed in only two circumstances: (1) clean browser shutdown (actually, it flushes to disk regardless of change), and (2) within 15 seconds after a favicon change.
+
+For users, this means that an entire session's worth of bookmark changes that don't include a favicon update will be lost if the browser terminates unexpectedly. We've seen users report loss of data, especially on older Windows systems: during OS shutdown, Firefox fails to shut down during the time allocated by Windows, so Windows terminates it. Or maybe users are just flipping the power switch -- it's hard to know for sure.
+
+Regardless, Firefox 2 is nearing its end of life, so I don't expect that this will get much attention. But I did want to record this for posterity.

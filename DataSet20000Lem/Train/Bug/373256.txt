@@ -1,0 +1,45 @@
+URL/location bar autocomplete slowness (sqlite database doesn't seem to be cached)
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9a3pre) Gecko/20070223 Minefield/3.0a3pre
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9a3pre) Gecko/20070223 Minefield/3.0a3pre
+
+(Not sure if this is a bug or expected behaviour... but it's a mixed bag in the upgrade from 2.0 to 3.0alpha)
+
+I have a fairly large history(~60MB places.sqlite), in fx2.0 and earlier the history feature wa pretty much unusable(too slow , too much memory) due to the large size. But the URL auto-completion in the address/location field worked fine with a pause of maybe a couple of seconds(which wa acceptable for the volume of data).
+
+In Fx3.0 thanks to sqlite , the history feature (Ctrl-H) is finally usuable, (a LOT faster than before)
+
+But the URL autocompletion ha slowed down like crazy, the UI freeze for many second (20-30 second on average sometimes a high a a minute.) after I type the first letter. During which time there is plenty of disk activity(a constant read of ~600kb/sec) and minimal CPU activity.
+
+Trying to go to a URL started with a different letter immediately after this result in a similiar amount of delay.
+
+I have plenty of free RAM but the sqlite database doesn't seem to be cached. And is being read from disk again even though it hasn't been modified.
+
+But the latest query result seem to be cached and typing the same character again show up the auto-complete option almost instantly.
+
+Similarly for the history too , hitting Ctrl-H ...results in the database being read from disk .. and then high CPU activity while the history tree is being generated.
+
+Closing the history sidebar and immediately hitting Ctrl-H a second time, result in data being read from disk once again and then high CPU load a the history tree is generated again.
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Start with a large history file (places.sqlite > 60MB)
+2. hit the first letter to a URL, (say "p")
+3. (long pause while auto-complete information is being retreived, UI freezes/browser is unresponsive, constant disk activity around 600kb/sec)
+
+-- continuing on--
+
+4. Do not go to any site, instead clear the typed letter "p" and change it to "s"
+5. (another long pause and UI freeze while auto-complete information is being retreived, similiar disk activity a in step 3)
+
+(Note in all this while there ha been no browsing so places.sqlite is unchanged)
+
+6. clear the location bar and and type the original character in step 2 (ie, "p")
+7. auto complete option show up instantly.
+Actual Results:
+UI freeze in step 3 and 5
+
+Expected Results:
+1. UI shouldn't freeze while waiting for auto-complete.
+2. Autocomplete should be instantaneous atleast after the history database ha been read once. History database shouldn't have to be read 26 time for each starting letter.

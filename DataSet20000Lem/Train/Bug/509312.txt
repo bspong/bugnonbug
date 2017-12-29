@@ -1,0 +1,36 @@
+Parsing bug: nesting <section> inside <a> cause DOM rearranging
+User-Agent: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.5; en-GB; rv:1.9.1.2) Gecko/20090729 Firefox/3.5.2
+Build Identifier: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.5; en-GB; rv:1.9.1.2) Gecko/20090729 Firefox/3.5.2
+
+It's valid HTML 5 to put any non-interactive element inside of a link. So I can how wrap a link around an h1 and h2 together.
+
+In Firefox (and Minefield) this work fine, until you nest a section element inside an a element. If you use this markup, Firefox's parser rearranges the DOM breaking DOM layout the author intended (the result is similar to the Gecko bug where it couldn't parse unknown elements).
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Nest a section element within an a element, eg:
+
+<a href="#">
+<section>
+<p>p nested in a section wrapped in a link</p>
+</section>
+</a>
+
+Actual Results:
+Firefox rearranges the DOM a follows (from the above example):
+
+<a href="#">
+<section></section>
+</a>
+<p>
+<a href="#">p nested in a section wrapped in a link</a>
+</p>
+<a href="#"></a>
+
+It also close an open element upon encountering the section element (in the live example: http://jsbin.com/upiza - you'll see the article element ha also been closesd).
+
+Expected Results:
+It shouldn't rearrange the DOM and try to correct DOM.
+
+Using Minefield and html5.enable set to true, the parser correctly render the layout.

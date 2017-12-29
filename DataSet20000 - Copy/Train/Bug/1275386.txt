@@ -1,0 +1,16 @@
+Determine impact of stub installer default browser checkbox
+Before we completely remove this checkbox (bug 1272162), I'd like to have a clearer understanding of its direct impact. Usually, the way to measure this kind of thing would be to do an A/B test (eg Funnelcake), and compare the test to a control group. Changes to the stub installer require a full-up build and release, so a Funnelcake repack isn't possible here. Instead, we'd like to do the following, which is basically doing an A/B test in a normal release:
+
+1) The stub installer will hide the checkbox for a small, randomly chosen test cohort. EG:  if(random() < 0.01) { hidden = true; }
+
+2) When the stub installer does this, it will tag the install as part of the test cohort. Probably with a registry key, similar to what was done in bug 1041514.
+
+3) Firefox will record that registry key in opt-out telemetry.
+
+After this hits Release and soaks for a while, we'll run a telemetry analysis to compare user retention, usage hours, etc for the two cohorts. (IE, Win 7/XP users who got the checkbox as normal vs those who didn't as part of this test.)
+
+If there's no significant difference, we should proceed with bug 1272162. If there's a small difference, we should discuss if the qualitative benefits mean we should should still proceed with bug 1272162. This will give us the clearest understanding of the specific impact of what we're doing, and enable us to make an informed decision on deliberate change.
+
+[Verdi suggested we could arrange for a heartbeat survey to see if users who didn't get the checkbox are happier as a result, which would help build the case for such qualitative benefits; good idea, separate bug.]
+
+This is a minimal change to the stub installer, and since Jared's already done similar work in bug 1041514 he'll pick this up.

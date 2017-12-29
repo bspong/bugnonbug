@@ -1,0 +1,20 @@
+Breakpoints not triggering when reloading script
+I have a web page where pressing a button run the following code:
+
+var s = document.createElement('script');
+s.setAttribute('src', 'alert.js');
+document.body.appendChild(s);
+
+and alert.js contains the following code:
+
+alert("alert.js's main script is running!");
+
+When I open the debugger and press the button, the alert dialog pop up, and alert.js appears in my list of sources. But if I set a breakpoint on line 1 of alert.js and press the button again, the breakpoint never hits, and the alert dialog appears immediately.
+
+Technically, it's a different <script> element, but I think web developer expect that if they've set a breakpoint on line 1 of alert.js, then they expect a pause when they hit line 1 of alert.js. N'est-ce pas?
+
+I think this is because we don't properly apply existing breakpoints when new script appear. ThreadActor.prototype._addScript scan the table of existing breakpoint locations, but if the BreakpointActor ha already been inserted in any existing scripts, then we don't call _setBreakpoint on it - thus, the second <script> element's instance of alert.js get passed over, because the breakpoint we set on the first <script> already ha a Debugger.Script in it instance list.
+
+However, simply calling _setBreakpoint doesn't solve the problem either: inserting a breakpoint twice actually produce *two* entry for the given breakpoint object at that bytecode, and you'll get multiple breakpoint hit for the same breakpoint when control reach that location --- another one each time a new script with the right URL get loaded.
+
+The right fix is probably to refactor _setBreakpoint into one function that applies the breakpoint to all extant relevant D.Script instance --- used when first setting a breakpoint --- and a simpler function that just set a breakpoint in a specific Debugger.Script instance. Then _addScript would simply walk the tree of script rooted at the new script it had just been presented with, and set the breakpoint in those fresh script alone --- no need for a whole-compartment scan.

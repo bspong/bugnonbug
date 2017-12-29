@@ -1,0 +1,43 @@
+Breakpoints not removed from server when tab is closed
+STR copied from Shu in https://bugzilla.mozilla.org/show_bug.cgi?id=1008372#c1:
+
+1. Make some page with some JS and open it.
+2. Open debugger, set a breakpoint somewhere.
+3. Reload. Breakpoint hits.
+4. Close the tab.
+5. Open a new tab and navigate to the same page from step 1.
+6. Open debugger, verify no breakpoints are visually set.
+7. Reload. Invisible breakpoint hits.
+
+This is because the DebuggerController tries to cleanup everything on shutdown, including removing all the breakpoints. However, that code is triggered from the tab "close" event, and the debugger server is immediately disconnected afterwards, and the server deletes all the associated actors. So when the DebuggerController cleanup code gets around to sending packets to remove all the breakpoints, the server has already removed all the associated actors. server log:
+
+removing breakpoint!
+DBG-SERVER: Packet 26 sent to "conn0.breakpoint30"
+DBG-SERVER: Packet 27 sent to "conn0.context26"
+DBG-SERVER: in ThreadActor.prototype.disconnect
+DBG-SERVER: in ThreadActor.prototype.disconnect
+DBG-SERVER: Packet 28 sent from "conn0.tab1"
+DBG-SERVER: Packet 29 sent from "root"
+DBG-SERVER: Received packet 26: {
+  "to": "conn0.breakpoint30",
+  "type": "delete"
+}
+DBG-SERVER: Packet 30 sent from "conn0.breakpoint30"
+DBG-SERVER: Received packet 27: {
+  "to": "conn0.context26",
+  "type": "detach"
+}
+DBG-SERVER: Packet 31 sent from "conn0.context26"
+DBG-SERVER: Received packet 28: {
+  "from": "conn0.tab1",
+  "type": "tabDetached"
+}
+DBG-SERVER: Received packet 29: {
+  "from": "root",
+  "type": "tabListChanged"
+}
+DBG-SERVER: Received packet 30: {
+  "from": "conn0.breakpoint30",
+  "error": "noSuchActor",
+  "message": "No such actor for ID: conn0.breakpoint30"
+}

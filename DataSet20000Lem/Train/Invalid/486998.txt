@@ -1,0 +1,16 @@
+Changing the value attribute of an HTMLSelectElement doe not change the selectedIndex value too.
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.2; en-US; rv:1.9.0.8) Gecko/2009032609 Firefox/3.0.8 (.NET CLR 3.5.30729)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.2; en-US; rv:1.9.0.8) Gecko/2009032609 Firefox/3.0.8 (.NET CLR 3.5.30729)
+
+The DOM specifies that the 'value' attribute of the HTMLSelectElement is not read-only. You can change it in Firefox, however, the problem is when changing the value, it doe not reselect the option whose value is equivalent to the new value specified (unless within the onchange event of the select...), or -1 (as stated by the DOM) if no option can be selected. Firefox produce different result based on the scope, but doesn't produce the above result ever.
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+1. In the onchange event of a select, if I put this.value = '2', it selected the option whose value attribute wa '2', no matter what option I selected. This is correct behavior. However, if I make no option have the value '2', then it selects whatever option wa selected and doe not retain the value '2', but override the value with the newly selected option's value. This mean that the 'value' attribute wa read-only in this situation, because it did not retain the value it wa assigned, this is incorrect behavior.
+2. If you change this.value through another element, such a a button, it will not reselect any option, but it will retain the new value. This mean that this.value wa not read-only in this situation, which is correct behavior, but this.selectedIndex is incorrect because this.options[this.selectedIndex].value doe not equal this.value.
+Actual Results:
+Two different behavior based on context.
+
+Expected Results:
+Changing the 'value' attribute on an HTMLSelectElement should look for an option whose value is equivalent to the new value (what currently happens only if done within onchange), otherwise set selectedIndex to -1 (because no option would now be selected) and blank-out the selected text and retain the newly assigned value.

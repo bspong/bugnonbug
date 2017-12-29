@@ -1,0 +1,37 @@
+print() fails and stucks navigator on dynamicaly added iframe and frame nodes
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.0; fr; rv:1.8.0.7) Gecko/20060909 Firefox/1.5.0.7
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.0; fr; rv:1.8.0.7) Gecko/20060909 Firefox/1.5.0.7
+
+1) with dynamicalu created IFRAME
+
+I have a A link with href="javascrip:void(0)" and onclick="javascript:callMyPage(someurl)". callMyPage does this :
+1. creates an iframe node width createElement
+2. adds it to the body node
+3. Call prototype library function Event.observe() to observe onLoad events wich will call printMyPage(). The iframe node will be bound to the function as "this" (prototype library convenience)
+4. change iframe src to someurl to get a new iframe content.
+
+printMyPage() does this :
+1. alert(this.contentWindow.name) as debug display to confirm the correct iframe will be printed (WORKING FINE)
+2. call this.contentWindow.print()
+3. remove the node from the DOM
+
+In printMyPage function, if step 2 is comented, it works OK (Firebug console log confirms that iframe is in the DOM before removing, and not any more after.
+BUT : if print() call is uncommented, all instructions (including removing iframe from DOM) are not executed, the print settup doesn't pop out, iframe content isn't printed, and ALL Firefox windows has stopped to respond. You can close them, but Firefox process will not be shut down.
+
+2) with FRAME
+2.1) dynamicaly created
+Same problem. while iframe was added to body, the dynamicaly created frame is added to the parent frameset of current frame. The frame loads, can be added/removed, but a print() call an its window behaves the as above : firefox freezes (still with 0% CPU usage, as if a deadlock occured)
+2.1) existing HTM frame
+If the frame is in the HTML code of the frameset, no problem : reloading it with a new URL and binding a printing function to the onLoad event works perfecly (print settup then effective printing)
+
+Note that my function are using only DOM nodes, except for print() call that needs a somenode.contentWindow prefixing to get the window object to print.
+
+Reproducible: Always
+
+Steps to Reproduce:
+Create the 2 functions described above in a page. Page is inside a frameset with only 2 frame showing, other are hidden.
+Actual Results:  
+Firefox freeze
+
+Expected Results:  
+Firefox should print the dynamically added frame/iframe

@@ -1,0 +1,14 @@
+Firefox: Let authors put line breaks (newlines) in tooltips (title attribute)
+Many web authors make use of the MSIE behavior that translates newlines in title attributes into line breaks in the resulting tooltip.  This has led to frequent requests for Mozilla to do the same thing; see for example the many votes, comments, and duplicates for bug 67127 (which was until recently listed as a Core bug rather than being specific to the Suite: this bug is being filed to fill the void due to that change).  See that bug for several testcases, some attempted patches, and very lengthy discussion.  Note that this bug is related to bug 218223, but that bug asks for automatic wrapping of tooltips to multiple lines while this one asks for explicit author-specified line breaks.
+
+Emulating MSIE's behavior is not ideal: it can easily lead to accidental line breaks if the HTML source is word-wrapped, and it is not compatible with web standards.  The HTML 4.01 spec (http://www.w3.org/TR/html4/types.html#h-6.2) says that "User agents should interpret attribute values as follows:
+
+    * Replace character entities with characters,
+    * Ignore line feeds,
+    * Replace each carriage return or tab with a single space."
+
+This rules out a direct mapping of source code newlines to tooltip line breaks.  However, it could be consistent with the spec to allow character entities such as &#10; to yield tooltip line breaks by delaying entity replacement until after explicit CRs and tabs have been replaced by spaces.  (Technically, the spec does not say what order those steps must occur in.)  The desired behavior is outlined in bug 67127 comment 131.
+
+Before any patch enabling this would work, two things would need to happen.  First, the parsing behavior would need to change as outlined above: this would rely on the details of the eventual fix to bug 322270 (enabling the desired behavior may not be feasible).  And second, my interim Firefox patch for bug 67127 would need to be reverted (see bug 67127 comment 214 for details: note that for most existing pages, the effect of my interim patch is identical to the effect of any eventual fix for bug 322270).
+
+A patch for this issue may in fact be in easy reach (subject to those two caveats): both bug 67127 and bug 45375 were recently fixed for the SeaMonkey suite by the patch in bug 356900, and it seems likely that it could be adapted for Firefox.  (I haven't had the time to try yet myself.)  Given that, it isn't clear that bug 228673 is actually a dependency for this bug, but I'm copying it over here from bug 67127 at least until a Firefox patch that works around it does appear.  (Bug 356900 comment 15 indicates that the workaround won't be necessary once the reflow branch lands for Firefox 3; if we do get a workaround fix here before then, a Firefox analogue of bug 357337 would be necessary.)

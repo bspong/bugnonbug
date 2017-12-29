@@ -1,0 +1,41 @@
+windowed plugins are flickering, because FF windows don't have WS_CLIPCHILDREN & WS_CLIPSIBLINGS styles
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.7) Gecko/20040803 Firefox/0.9.3
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.7) Gecko/20040803 Firefox/0.9.3
+
+Windowed plugins, which are updated by timer (real time simulation, etc.), are
+flickering when Firefox window is being repainted. This happens for example when
+user clicks inside a plugin and then outside a plugin (when focus changes). I
+figured out, that at that time, a message WM_PAINT is posted to FF and plugin.
+But because FF windows don't have WS_CLIPCHILDREN and WS_CLIPSIBLINGS styles, FF
+window is repainted also on plugin's part of window, and that is wrong and
+annoying. 
+
+If I make a workaround and (at plugin's initialization - I wrote some plugin)
+traverse through all FF's windows and set those attributes to them, then there
+is no flicker anymore. But I think, this should be done in original build of
+Firefox.
+
+Those style attributes don't slow down a computer so much that avoiding them
+should be reasonable.
+
+(Windowless plugins don't have flickering problems, because are drawn into FF's
+buffer. But windowed plugins should be also working without a problem. Fix it!)
+
+Reproducible: Always
+Steps to Reproduce:
+1. Build a normal HTML page. Could be blank.
+2. Add some windowed plugin to it (<embed>). Don't use Flash, as it is windowless.
+3. Periodicaly click inside and outside a window.
+
+
+Actual Results:  
+Windowed plugin blinks every time.
+
+Expected Results:  
+Windowed plugin should not blinks, as it is drawn in its own window, which
+should not be overdrawn by Firefox!
+
+A proven solution is to set WS_CLIPCHILDREN and WS_CLIPSIBLINGS attributes to
+the windows, in which a plugin is shown (windows that displays page).
+
+This style attributes are not required for toolbars etc., only for the main page.

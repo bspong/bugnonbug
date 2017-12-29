@@ -1,0 +1,93 @@
+Authorization under client certificates does not work
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; ru; rv:1.8.1.7) Gecko/20070914 Firefox/2.0.0.7
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; ru; rv:1.8.1.7) Gecko/20070914 Firefox/2.0.0.7
+
+Server: Apache/1.3.37 (Unix) mod_gzip/1.3.26.1a PHP/5.1.6 mod_ssl/2.8.28 OpenSSL/0.9.7e-p1
+Client: Mozilla/5.0 (Windows; U; Windows NT 5.1; ru; rv:1.8.1.7) Gecko/20070914 Firefox/2.0.0.7
+
+httpd.conf:
+
+<IfDefine SSL>
+<VirtualHost 81.141.59.231:443>
+        ServerName company.com
+        DocumentRoot /home/company.com
+        Group www
+        User www
+        SSLEngine on
+        SSLCertificateFile    /usr/local/etc/apache/ssl.crt/company.com.crt
+        SSLCertificateKeyFile /usr/local/etc/apache/ssl.key/company.com.pem
+        SSLVerifyClient require
+        SSLVerifyDepth 5
+        SSLCACertificateFile /usr/local/etc/apache/ssl.crt/ca.company.com.crt
+        SSLProtocol     ALL
+        SSLCipherSuite  ALL
+</VirtualHost>
+</Ifdefine>
+
+From ssldump log:
+
+1 1  0.0132 (0.0132)  C>S SSLv2 compatible client hello
+  Version 3.0
+  cipher suites
+  Unknown value 0x39
+  Unknown value 0x38
+  Unknown value 0x35
+  Unknown value 0x33
+  Unknown value 0x32
+  SSL_RSA_WITH_RC4_128_MD5
+  SSL_RSA_WITH_RC4_128_SHA
+  Unknown value 0x2f
+  SSL_DHE_RSA_WITH_3DES_EDE_CBC_SHA
+  SSL_DHE_DSS_WITH_3DES_EDE_CBC_SHA
+  Unknown value 0xfeff
+  SSL_RSA_WITH_3DES_EDE_CBC_SHA
+1 2  0.0297 (0.0165)  S>CV3.0(74)  Handshake
+      ServerHello
+        Version 3.0
+        random[32]=
+          47 06 39 f4 43 73 49 b4 46 15 15 3d 8b 6c 99 09
+          22 f4 2f a6 91 3f 7e 93 fb 93 e9 99 4e 02 58 2d
+        session_id[32]=
+          91 87 a9 ea bb 5b 88 b1 ac 3c d0 f6 f5 40 4a 70
+          ad 8a 36 cc cf 0e 98 f7 fc 61 0a c8 48 7b b4 19
+        cipherSuite         Unknown value 0x39
+        compressionMethod                   NULL
+1 3  0.0510 (0.0213)  S>CV3.0(2424)  Handshake
+      Certificate
+1 4  0.0510 (0.0000)  S>CV3.0(333)  Handshake
+      ServerKeyExchange
+1 5  0.0641 (0.0130)  S>CV3.0(92)  Handshake
+      CertificateRequest
+        certificate_types                   rsa_fixed_dh
+        certificate_types                   dss_fixed_dh
+        certificate_types                 unknown value
+        certificate_types                 unknown value
+        certificate_types                   rsa_sign
+        certificate_types                   dss_sign
+        certificate_authority
+          30 47 31 12 30 10 06 0a 09 92 26 89 93 f2 2c 64
+          01 19 16 02 72 75 31 17 30 15 06 0a 09 92 26 89
+          93 f2 2c 64 01 19 16 07 69 6e 74 61 6c 65 76 31
+          18 30 16 06 03 55 04 03 13 0f 6c 6f 6b 69 2e 69
+          6e 74 61 6c 65 76 2e 72 75
+      ServerHelloDone
+1 6  0.1001 (0.0359)  C>SV3.0(2)  Alert
+    level           warning
+    value         unknown value
+1 7  0.1001 (0.0000)  C>SV3.0(134)  Handshake
+      ClientKeyExchange
+1 8  0.1001 (0.0000)  C>SV3.0(1)  ChangeCipherSpec
+1 9  0.1001 (0.0000)  C>SV3.0(64)  Handshake
+1 10 0.1001 (0.0000)  S>CV3.0(2)  Alert
+    level           fatal
+    value           handshake_failure
+1    0.1004 (0.0002)  S>C  TCP FIN
+
+At Internet Explorer7 problems are not present also all works
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.
+2.
+3.

@@ -1,0 +1,51 @@
+Reload does not fetch againg http (server provided) header parameters
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7) Gecko/20040803 Firefox/0.9.3
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7) Gecko/20040803 Firefox/0.9.3
+
+I realized that my web page, which used to validate in the w3c page, does not
+validate anymore and it stopped to display non ascii characters correctly. I
+investigated the problem and I discovered that in order to determine the
+charset, a browser should look first in the HTTP header (whatever it means),
+then in the <meta> fields in the header of the html file. Please see 
+  http://www.w3.org/TR/html401/charset.html#h-5.2.2
+to find
+
+  To sum up, conforming user agents must observe the following priorities when
+determining a document's character encoding (from highest priority to lowest):
+
+      1. An HTTP "charset" parameter in a "Content-Type" field.
+      2. A META declaration with "http-equiv" set to "Content-Type" and a value
+set for "charset".
+      3. The charset attribute set on an element that designates an external
+resource.
+
+I discovered that I could change the default charset that my server sends by
+adding a file .htaccess containing 
+  AddDefaultCharset iso-8859-1
+
+When I did it, my page was not reloading correctly (same charset problem), but
+it started validate correctly again. Them I cleaned the cache, and it started to
+display correctly. So, "reload" does not reload everything :-(
+
+I removed the file and repeated the process with my Mozilla version
+  Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.4.1) Gecko/20031114
+and it reloads *correctly*. Strange, isn't it?
+
+This behaviour is allways reproduced in firefox .9.3
+
+Reproducible: Always
+Steps to Reproduce:
+1. Make sure that your HTTP server sends some charset on page request, and that
+you can *change* that (or on server seettings or via .htaccess file)
+2. Put a page in a different encoding so that it does not display well and open
+firefox in this page. (To know what should change, please see the w3c page given
+above.)
+3. Change server settings
+4. Reload and see if the page is now correctly displayed (not in my case)
+5. Close Firefox and visit again the page (here still not correct)
+6. Clean cache and visit page again (now ok for me)
+Actual Results:  
+Reload does not get the new server settings (charset in my case).
+
+Expected Results:  
+All page related content should be reload, not only the contents of accessed files.

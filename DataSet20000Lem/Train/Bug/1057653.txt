@@ -1,0 +1,36 @@
+[Ubuntu Firefox] Gets stuck in tight poll loop/ -1 EAGAIN (Resource temporarily unavailable)
+User Agent: Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:31.0) Gecko/20100101 Firefox/31.0 (Beta/Release)
+Build ID: 20140715214335
+
+Steps to reproduce:
+
+From time to time firefox seems to hang. A strace -p <the firefox pid>, sometimes for minute it shows:
+
+clock_gettime(CLOCK_MONOTONIC, {1280899, 1320152}) = 0
+clock_gettime(CLOCK_MONOTONIC, {1280899, 1376167}) = 0
+recvmsg(4, 0xbff36344, 0) = -1 EAGAIN (Resource temporarily unavailable)
+poll([{fd=5, events=POLLIN}, {fd=4, events=POLLIN}, {fd=7, events=POLLIN|POLLPRI}, {fd=9, events=POLLIN}, {fd=25, events=POLLIN}, {fd=27, events=POLLIN}], 6, 0) = 0 (Timeout)
+clock_gettime(CLOCK_MONOTONIC, {1280899, 1650843}) = 0
+clock_gettime(CLOCK_MONOTONIC, {1280899, 1724592}) = 0
+recvmsg(4, 0xbff36344, 0) = -1 EAGAIN (Resource temporarily unavailable)
+.
+.
+.
+
+
+Actual results:
+
+Firefox hang and taks lot of CPU resources.
+
+On:
+Ubuntu 13.10 (GNU/Linux 3.11.0-13-generic i686)
+
+31.0
+Mozilla Firefox for Ubuntu
+canonical-1.0
+
+
+
+Expected results:
+
+Perhaps thread what ever is FD=4, block signal on that thread, and let it hang while the other thread still run.

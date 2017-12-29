@@ -1,0 +1,68 @@
+variable assignment from return value of native FF function is different from assignment to same text value
+Created attachment 8388220
+screen of FF console log with test code execution
+
+User Agent: Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/33.0.1750.117 Safari/537.36
+
+Steps to reproduce:
+
+when you assign `img.src` variable to `"\/\/farm9.staticflickr.com\/8125\/8631271691_27957357a9_o.jpg";` from console it works as expected, when you do it from return of native FF function - it sets variable wrong (not removing escaping \ scaracters). - Google Chrome works same in both cases as FireFox in direct text assignment.
+
+result from function return assignment: 
+i.src == "http://flickr.com/photos/mscorley/8631271691/%5C/%5C/farm9.staticflickr.com%5C/8125%5C/8631271691_27957357a9_o.jpg"
+
+result from direct text assignment:
+
+i.src == "http://farm9.staticflickr.com/8125/8631271691_27957357a9_o.jpg"
+
+
+test address: https://secure.flickr.com/photos/mscorley/8631271691/
+screen with execution result attached:
+text log of tests copied from FF console:
+
+17:21:12.694 function find_text_in_scripts(a, b)
+{
+	var s = document.getElementsByTagName("script");
+	for(var c=0;c<s.length;c++) 
+	{
+		var start_pos = s[c].innerHTML.indexOf(a);
+		if(start_pos == -1){continue;}
+		start_pos += a.length;
+		i = s[c];
+console.warn(s[c].innerHTML.substring(start_pos,s[c].innerHTML.indexOf(b,start_pos)));
+
+		i.src = s[c].innerHTML.substring(start_pos,s[c].innerHTML.indexOf(b,start_pos));
+console.warn(i.src);
+
+console.warn(decodeURIComponent(s[c].innerHTML.substring(start_pos,s[c].innerHTML.indexOf(b,start_pos))));
+
+		i.src = decodeURIComponent(s[c].innerHTML.substring(start_pos,s[c].innerHTML.indexOf(b,start_pos)));
+console.warn(i.src);
+		return true;
+	}
+	return false;
+}
+17:21:12.717 undefined
+17:21:17.054 find_text_in_scripts('"o":{"url":"', '"');
+17:21:17.056 true
+17:21:17.057 "\/\/farm9.staticflickr.com\/8125\/8631271691_27957357a9_o.jpg"
+17:21:17.057 "http://flickr.com/photos/mscorley/8631271691/%5C/%5C/farm9.staticflickr.com%5C/8125%5C/8631271691_27957357a9_o.jpg"
+17:21:17.057 "\/\/farm9.staticflickr.com\/8125\/8631271691_27957357a9_o.jpg"
+17:21:17.057 "http://flickr.com/photos/mscorley/8631271691/%5C/%5C/farm9.staticflickr.com%5C/8125%5C/8631271691_27957357a9_o.jpg"
+17:21:52.101 i.src
+17:21:52.104 "http://flickr.com/photos/mscorley/8631271691/%5C/%5C/farm9.staticflickr.com%5C/8125%5C/8631271691_27957357a9_o.jpg"
+17:21:56.213 i.src = "\/\/farm9.staticflickr.com\/8125\/8631271691_27957357a9_o.jpg";
+17:21:56.216 "//farm9.staticflickr.com/8125/8631271691_27957357a9_o.jpg"
+17:21:59.469 i.src
+17:21:59.472 "http://farm9.staticflickr.com/8125/8631271691_27957357a9_o.jpg"
+
+
+
+Actual results:
+
+i.src == "http://flickr.com/photos/mscorley/8631271691/%5C/%5C/farm9.staticflickr.com%5C/8125%5C/8631271691_27957357a9_o.jpg"
+
+
+Expected results:
+
+i.src == "http://farm9.staticflickr.com/8125/8631271691_27957357a9_o.jpg"

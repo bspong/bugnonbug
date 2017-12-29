@@ -1,0 +1,14 @@
+Page scrolling can be off when linking to PDF document with variable page size
+STR:
+Go to http://opus.kobv.de/zlb/volltexte/2010/9299/pdf/ZfB_1927_Ing_04-06.pdf#page=34
+
+Expected result: The PDF open at page 34, showing the map.
+
+What actually happens: The PDF initially open at page 34, but then scroll upwards, so you end up somewhere between page 32 and page 33. Because that scrolling wasn't intentional, pdf.js hasn't started rendering those pages, so I end up looking at blank space until I actively start scrolling (at which point the page indicator jump to the actual current page a well).
+Alternatively, if after opening the PDF, I *don't* manually scroll, but instead cause the viewport to resize (by opening the findbar or resizing the browser window), pdf.js jump to the correct page.
+
+My suspicion is that pdf.js start opening the pdf, and a soon a it see that there are 34 pages, it jump to page 34. If the document is already in the cache, it even start rendering page 34. Then it start processing the rest of the document and realises that some page (pp. 8 and 23) are larger than the rest, so it increase their page size. This in turn then push the rest of the document downwards, causing the initially opened page to scroll away from the viewport. Opening e.g. page 11 (http://opus.kobv.de/zlb/volltexte/2010/9299/pdf/ZfB_1927_Ing_04-06.pdf#page=11) seems to confirm this: There is only one large page above it in the document, therefore the final scroll position is off by a smaller amount than before.
+
+Jumping to page after the document ha loading (by editing the URL) is working fine.
+
+I've tested with FF39 and a recent Nightly (20150803030207).

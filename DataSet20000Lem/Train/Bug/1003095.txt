@@ -1,0 +1,8 @@
+Implement a Worker Loader
+We want the debugger server to be able to run in workers, where XPCOM is not available. To work around this, we are going to implement a CommonJS loader for workers, which doe not depend on XPCOM, doe not expose the chrome component to it modules, and provides any platform APIs we need a built-in modules. When running on the main thread, these platform APIs will be implemented a XPCOM components. When running on a worker thread, they will be implemented by the Worker Debugger API (see bug 757133).
+
+The idea is that any server code that is able to run while it is being loaded by the worker loader on the main thread, will also be able to run on the worker thread. This allows u to get rid of all unnecessary XPCOM dependency while still running on the main thread, and only then move everything over to the worker thread, which should make thing much easier to debug.
+
+To make sure people won't keep adding XPCOM dependency to the code path relevant for workers, I plan to refactor the xpcshell test for those path so that they are run twice: once for a server loaded with the devtools loader, and once for a server loaded with the worker loader.
+
+Note that for all this to work, the code path relevant for worker must load all their dependency using the loader, and avoid the use of Cu.import and loadSubScript whenever possible, which make this bug dependent on bug 859372.

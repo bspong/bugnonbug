@@ -1,0 +1,228 @@
+crash after seeking on html5 video with --enable-gstreamer=1.0
+User Agent: Mozilla/5.0 (X11; FreeBSD amd64; rv:31.0) Gecko/20100101 Firefox/31.0 (Beta/Release)
+Build ID: 20140402223951
+
+Steps to reproduce:
+
+Open YouTube or Vimeo with a long video and jump several times between not-yet-in-cache seek positions for a few seconds/minutes. Short videos often quickly end up whole cached and are less likely to expose the bug.
+
+For one, try https://www.youtube.com/watch?v=gbYXBJOFgeI
+
+Here is the version of GStreamer I have installed:
+
+$ pkg info -x gstreamer
+gstreamer-0.10.36
+gstreamer-ffmpeg-0.10.13_1
+gstreamer-plugins-0.10.36_3,3
+gstreamer-plugins-good-0.10.31,3
+gstreamer1-1.2.3
+gstreamer1-libav-1.2.3
+gstreamer1-plugins-1.2.3
+gstreamer1-plugins-good-1.2.3
+
+
+
+Actual results:
+
+Firefox crashes but just before one or more messages may be printed on terminal
+
+(firefox:94224): GStreamer-CRITICAL **: void gst_mini_object_unref(GstMiniObject *): assertion `mini_object->refcount > 0' failed
+
+which with GST_DEBUG=libav:3 shows
+
+0:00:19.531674308 96870    0x81f90e8e0 ERROR                  libav :0:: Non-reference picture received and no reference available
+0:00:19.531801996 96870    0x81f90e8e0 ERROR                  libav :0:: decode_slice_header error
+0:00:19.531990170 96870    0x82758dbf0 ERROR                  libav :0:: mmco: unref short failure
+
+and with G_DEBUG=fatal-criticals stacktrace like this
+
+#0  0x000000080bfb14d6 in g_logv () from /usr/local/lib/libglib-2.0.so.0
+#1  0x000000080bfb0f63 in g_log () from /usr/local/lib/libglib-2.0.so.0
+#2  0x000000080bfb0be0 in g_return_if_fail_warning () from /usr/local/lib/libglib-2.0.so.0
+#3  0x00000008277a41fa in gst_buffer_unref (buf=<optimized out>, buf=<optimized out>) at /usr/local/include/gstreamer-1.0/gst/gstbuffer.h:354
+#4  _gst_video_codec_frame_free (frame=<optimized out>, frame=<optimized out>) at gstvideoutils.c:43
+#5  gst_video_codec_frame_unref (frame=0x82e0ab880) at gstvideoutils.c:129
+#6  0x0000000827797ddc in gst_video_decoder_finish_frame (decoder=0x81bdfcc00, frame=0x82e0ab880) at gstvideodecoder.c:2565
+#7  0x000000082e48dc95 in gst_ffmpegviddec_video_frame (ffmpegdec=0x81bdfcc00, data=0x8257cb000 "", size=99, frame=0x81bf067c0, ret=0x7ffffac72954) at gstavviddec.c:1314
+#8  0x000000082e48cacf in gst_ffmpegviddec_frame (ffmpegdec=0x81bdfcc00, data=0x8257cb000 "", size=99, got_data=0x7ffffac729c4, frame=0x81bf067c0, ret=0x7ffffac72954) at gstavviddec.c:1371
+#9  0x000000082e48bade in gst_ffmpegviddec_handle_frame (decoder=0x81bdfcc00, frame=0x81bf067c0) at gstavviddec.c:1492
+#10 0x000000082779951f in gst_video_decoder_decode_frame (decoder=0x81bdfcc00, frame=0x81bf067c0) at gstvideodecoder.c:2832
+#11 0x000000082779cd81 in gst_video_decoder_chain_forward (decoder=0x81bdfcc00, buf=<optimized out>, at_eos=<optimized out>) at gstvideodecoder.c:1757
+#12 0x000000082779af8d in gst_video_decoder_chain (pad=<optimized out>, parent=0x81bdfcc00, buf=0x8298e3d08) at gstvideodecoder.c:2037
+#13 0x0000000827071722 in gst_pad_chain_data_unchecked (pad=0x81bea2800, type=<optimized out>, data=<optimized out>) at gstpad.c:3760
+#14 0x0000000827071f89 in gst_pad_push_data (pad=0x81bea2580, type=4112, data=<optimized out>) at gstpad.c:3990
+#15 0x000000082d01bdfc in gst_single_queue_push_one (mq=<optimized out>, object=<optimized out>, sq=<optimized out>) at gstmultiqueue.c:1089
+#16 gst_multi_queue_loop (pad=<optimized out>) at gstmultiqueue.c:1338
+#17 0x000000082709d1a7 in gst_task_func (task=0x81be84900) at gsttask.c:316
+#18 0x000000080bfe01d0 in ?? () from /usr/local/lib/libglib-2.0.so.0
+#19 0x000000080bfdec11 in g_thread_proxy () from /usr/local/lib/libglib-2.0.so.0
+#20 0x0000000800f514c5 in thread_start (curthread=0x81bcb4400) at /a/freebsd/lib/libthr/thread/thr_create.c:284
+#21 0x0000000000000000 in ?? ()
+
+and without G_DEBUG
+
+#0  0x000000080ec66963 in g_list_concat () from /usr/local/lib/libglib-2.0.so.0
+#1  0x0000000824496906 in gst_video_decoder_release_frame (dec=0x826bb4e00, frame=0x81d3d0580) at gstvideodecoder.c:2410
+#2  0x000000082c79040b in gst_ffmpegviddec_video_frame_free (ffmpegdec=0x826bb4e00, frame=0x81fe3d100) at gstavviddec.c:549
+#3  0x000000082c78ffe1 in gst_ffmpegviddec_release_buffer (context=0x81d527800, picture=0x8266ce628) at gstavviddec.c:790
+#4  0x000000082ca17cea in release_delayed_buffers (p=<optimized out>) at libavcodec/pthread.c:521
+#5  ff_thread_flush (avctx=<optimized out>) at libavcodec/pthread.c:900
+#6  0x000000082c78c0c8 in gst_ffmpegviddec_flush (decoder=0x826bb4e00) at gstavviddec.c:1610
+#7  0x000000082449daa2 in gst_video_decoder_flush (dec=<optimized out>, hard=<optimized out>) at gstvideodecoder.c:869
+#8  0x000000082449e2e1 in gst_video_decoder_sink_event_default (decoder=0x826bb4e00, event=0x8198df760) at gstvideodecoder.c:1114
+#9  0x0000000823d7455f in gst_pad_send_event_unchecked (pad=0x826b8dd80, event=<optimized out>, type=<optimized out>) at gstpad.c:5035
+#10 0x0000000823d73e04 in gst_pad_push_event_unchecked (pad=0x826b8db00, event=<optimized out>, type=<optimized out>) at gstpad.c:4731
+#11 0x0000000823d73aa8 in gst_pad_push_event (pad=0x826b8db00, event=0x8198df760) at gstpad.c:4854
+#12 0x0000000827c339e1 in gst_multi_queue_sink_event (pad=<optimized out>, parent=0x826b99380, event=0x8198df760) at gstmultiqueue.c:1572
+#13 0x0000000823d7455f in gst_pad_send_event_unchecked (pad=0x826b8d880, event=<optimized out>, type=<optimized out>) at gstpad.c:5035
+#14 0x0000000823d73e04 in gst_pad_push_event_unchecked (pad=0x826b8d600, event=<optimized out>, type=<optimized out>) at gstpad.c:4731
+#15 0x0000000823d73aa8 in gst_pad_push_event (pad=0x826b8d600, event=0x8198df760) at gstpad.c:4854
+#16 0x0000000823d6fb2b in event_forward_func (pad=0x826b8d600, data=0x7ffffa269758) at gstpad.c:2775
+#17 0x0000000823d6f7f7 in gst_pad_forward (pad=0x826b8d380, forward=0x823d6fa50 <event_forward_func>, user_data=0x7ffffa269758) at gstpad.c:2729
+#18 0x0000000823d6f9b1 in gst_pad_event_default (pad=0x826b8d380, parent=<optimized out>, event=0x8198df760) at gstpad.c:2826
+#19 0x0000000828212f3c in gst_qtdemux_handle_sink_event (sinkpad=<optimized out>, parent=0x826b48400, event=0x8198df760) at qtdemux.c:2050
+#20 0x0000000823d7455f in gst_pad_send_event_unchecked (pad=0x826b8d380, event=<optimized out>, type=<optimized out>) at gstpad.c:5035
+#21 0x0000000823d73e04 in gst_pad_push_event_unchecked (pad=0x8266c0d80, event=<optimized out>, type=<optimized out>) at gstpad.c:4731
+#22 0x0000000823d73aa8 in gst_pad_push_event (pad=0x8266c0d80, event=0x8198df760) at gstpad.c:4854
+#23 0x0000000827c47d0e in gst_type_find_element_sink_event (pad=<optimized out>, parent=0x826261e00, event=0x8198df760) at gsttypefindelement.c:678
+#24 0x0000000823d7455f in gst_pad_send_event_unchecked (pad=0x8266c0b00, event=<optimized out>, type=<optimized out>) at gstpad.c:5035
+#25 0x0000000823d73e04 in gst_pad_push_event_unchecked (pad=0x826b86300, event=<optimized out>, type=<optimized out>) at gstpad.c:4731
+#26 0x0000000823d73aa8 in gst_pad_push_event (pad=0x826b86300, event=0x8198df760) at gstpad.c:4854
+#27 0x0000000823d6fb2b in event_forward_func (pad=0x826b86300, data=0x7ffffa269db8) at gstpad.c:2775
+#28 0x0000000823d6f7f7 in gst_pad_forward (pad=0x826b86080, forward=0x823d6fa50 <event_forward_func>, user_data=0x7ffffa269db8) at gstpad.c:2729
+#29 0x0000000823d6f9b1 in gst_pad_event_default (pad=0x826b86080, parent=<optimized out>, event=0x8198df760) at gstpad.c:2826
+#30 0x0000000823d7455f in gst_pad_send_event_unchecked (pad=0x826b86080, event=<optimized out>, type=<optimized out>) at gstpad.c:5035
+#31 0x0000000823d73e04 in gst_pad_push_event_unchecked (pad=0x8266c0380, event=<optimized out>, type=<optimized out>) at gstpad.c:4731
+#32 0x0000000823d73aa8 in gst_pad_push_event (pad=0x8266c0380, event=0x8198df760) at gstpad.c:4854
+#33 0x00000008242494b4 in gst_base_src_perform_seek (src=0x826331f00, event=<optimized out>, unlock=<optimized out>) at gstbasesrc.c:1638
+#34 0x000000082424ed18 in gst_base_src_default_event (src=0x826331f00, event=0x8189dc7c0) at gstbasesrc.c:1936
+#35 0x000000082424caf9 in gst_base_src_event (pad=<optimized out>, parent=0x826331f00, event=0x8189dc7c0) at gstbasesrc.c:1988
+#36 0x0000000823d7455f in gst_pad_send_event_unchecked (pad=0x8266c0380, event=<optimized out>, type=<optimized out>) at gstpad.c:5035
+#37 0x0000000823d73e04 in gst_pad_push_event_unchecked (pad=0x826b86080, event=<optimized out>, type=<optimized out>) at gstpad.c:4731
+#38 0x0000000823d73aa8 in gst_pad_push_event (pad=0x826b86080, event=0x8189dc7c0) at gstpad.c:4854
+#39 0x0000000823d6fb2b in event_forward_func (pad=0x826b86080, data=0x7ffffa26a488) at gstpad.c:2775
+#40 0x0000000823d6f7f7 in gst_pad_forward (pad=0x826b86300, forward=0x823d6fa50 <event_forward_func>, user_data=0x7ffffa26a488) at gstpad.c:2729
+#41 0x0000000823d6f9b1 in gst_pad_event_default (pad=0x826b86300, parent=<optimized out>, event=0x8189dc7c0) at gstpad.c:2826
+#42 0x0000000823d7455f in gst_pad_send_event_unchecked (pad=0x826b86300, event=<optimized out>, type=<optimized out>) at gstpad.c:5035
+#43 0x0000000823d73e04 in gst_pad_push_event_unchecked (pad=0x8266c0b00, event=<optimized out>, type=<optimized out>) at gstpad.c:4731
+#44 0x0000000823d73aa8 in gst_pad_push_event (pad=0x8266c0b00, event=0x8189dc7c0) at gstpad.c:4854
+#45 0x0000000827c48034 in gst_type_find_element_src_event (pad=<optimized out>, parent=0x826261e00, event=0x0) at gsttypefindelement.c:519
+#46 0x0000000823d7455f in gst_pad_send_event_unchecked (pad=0x8266c0d80, event=<optimized out>, type=<optimized out>) at gstpad.c:5035
+#47 0x0000000823d73e04 in gst_pad_push_event_unchecked (pad=0x826b8d380, event=<optimized out>, type=<optimized out>) at gstpad.c:4731
+#48 0x0000000823d73aa8 in gst_pad_push_event (pad=0x826b8d380, event=0x8189dc7c0) at gstpad.c:4854
+#49 0x000000082821c005 in gst_qtdemux_do_push_seek (event=0x8189dc7c0, qtdemux=<optimized out>, pad=<optimized out>) at qtdemux.c:1322
+#50 gst_qtdemux_handle_src_event (pad=<optimized out>, parent=0x826b48400, event=0x8188fba00) at qtdemux.c:1582
+#51 0x0000000823d7455f in gst_pad_send_event_unchecked (pad=0x826b8d600, event=<optimized out>, type=<optimized out>) at gstpad.c:5035
+#52 0x0000000823d73e04 in gst_pad_push_event_unchecked (pad=0x826b8d880, event=<optimized out>, type=<optimized out>) at gstpad.c:4731
+#53 0x0000000823d73aa8 in gst_pad_push_event (pad=0x826b8d880, event=0x8188fba00) at gstpad.c:4854
+#54 0x0000000823d7455f in gst_pad_send_event_unchecked (pad=0x826b8db00, event=<optimized out>, type=<optimized out>) at gstpad.c:5035
+#55 0x0000000823d73e04 in gst_pad_push_event_unchecked (pad=0x826b8dd80, event=<optimized out>, type=<optimized out>) at gstpad.c:4731
+#56 0x0000000823d73aa8 in gst_pad_push_event (pad=0x826b8dd80, event=0x8188fba00) at gstpad.c:4854
+#57 0x000000082449ea0c in gst_video_decoder_src_event_default (decoder=0x826bb4e00, event=0x8188fba00) at gstvideodecoder.c:1285
+#58 0x0000000823d7455f in gst_pad_send_event_unchecked (pad=0x8266d6080, event=<optimized out>, type=<optimized out>) at gstpad.c:5035
+#59 0x0000000823d73e04 in gst_pad_push_event_unchecked (pad=0x826b8d100, event=<optimized out>, type=<optimized out>) at gstpad.c:4731
+#60 0x0000000823d73aa8 in gst_pad_push_event (pad=0x826b8d100, event=0x8188fba00) at gstpad.c:4854
+#61 0x0000000823d6fb2b in event_forward_func (pad=0x826b8d100, data=0x7ffffa26b2a8) at gstpad.c:2775
+#62 0x0000000823d6f7f7 in gst_pad_forward (pad=0x826b8ce80, forward=0x823d6fa50 <event_forward_func>, user_data=0x7ffffa26b2a8) at gstpad.c:2729
+#63 0x0000000823d6f9b1 in gst_pad_event_default (pad=0x826b8ce80, parent=<optimized out>, event=0x8188fba00) at gstpad.c:2826
+#64 0x0000000823d7455f in gst_pad_send_event_unchecked (pad=0x826b8ce80, event=<optimized out>, type=<optimized out>) at gstpad.c:5035
+#65 0x0000000823d73e04 in gst_pad_push_event_unchecked (pad=0x8266d9a00, event=<optimized out>, type=<optimized out>) at gstpad.c:4731
+#66 0x0000000823d73aa8 in gst_pad_push_event (pad=0x8266d9a00, event=0x8188fba00) at gstpad.c:4854
+#67 0x0000000823d6fb2b in event_forward_func (pad=0x8266d9a00, data=0x7ffffa26b5b8) at gstpad.c:2775
+#68 0x0000000823d6f7f7 in gst_pad_forward (pad=0x8266d9780, forward=0x823d6fa50 <event_forward_func>, user_data=0x7ffffa26b5b8) at gstpad.c:2729
+#69 0x0000000823d6f9b1 in gst_pad_event_default (pad=0x8266d9780, parent=<optimized out>, event=0x8188fba00) at gstpad.c:2826
+#70 0x0000000823d7455f in gst_pad_send_event_unchecked (pad=0x8266d9780, event=<optimized out>, type=<optimized out>) at gstpad.c:5035
+#71 0x0000000823d73e04 in gst_pad_push_event_unchecked (pad=0x829dd1500, event=<optimized out>, type=<optimized out>) at gstpad.c:4731
+#72 0x0000000823d73aa8 in gst_pad_push_event (pad=0x829dd1500, event=0x8188fba00) at gstpad.c:4854
+#73 0x0000000827c2df6a in gst_input_selector_event (pad=0x8266d9c80, parent=<optimized out>, event=0x8188fba00) at gstinputselector.c:1537
+#74 0x0000000823d7455f in gst_pad_send_event_unchecked (pad=0x8266d9c80, event=<optimized out>, type=<optimized out>) at gstpad.c:5035
+#75 0x0000000823d73e04 in gst_pad_push_event_unchecked (pad=0x8266dae00, event=<optimized out>, type=<optimized out>) at gstpad.c:4731
+#76 0x0000000823d73aa8 in gst_pad_push_event (pad=0x8266dae00, event=0x8188fba00) at gstpad.c:4854
+#77 0x0000000823d6fb2b in event_forward_func (pad=0x8266dae00, data=0x7ffffa26bb08) at gstpad.c:2775
+#78 0x0000000823d6f7f7 in gst_pad_forward (pad=0x8266db080, forward=0x823d6fa50 <event_forward_func>, user_data=0x7ffffa26bb08) at gstpad.c:2729
+#79 0x0000000823d6f9b1 in gst_pad_event_default (pad=0x8266db080, parent=<optimized out>, event=0x8188fba00) at gstpad.c:2826
+#80 0x0000000823d7455f in gst_pad_send_event_unchecked (pad=0x8266db080, event=<optimized out>, type=<optimized out>) at gstpad.c:5035
+#81 0x0000000823d73e04 in gst_pad_push_event_unchecked (pad=0x822e50600, event=<optimized out>, type=<optimized out>) at gstpad.c:4731
+#82 0x0000000823d73aa8 in gst_pad_push_event (pad=0x822e50600, event=0x8188fba00) at gstpad.c:4854
+#83 0x0000000823d6fb2b in event_forward_func (pad=0x822e50600, data=0x7ffffa26be18) at gstpad.c:2775
+#84 0x0000000823d6f7f7 in gst_pad_forward (pad=0x822e50880, forward=0x823d6fa50 <event_forward_func>, user_data=0x7ffffa26be18) at gstpad.c:2729
+#85 0x0000000823d6f9b1 in gst_pad_event_default (pad=0x822e50880, parent=<optimized out>, event=0x8188fba00) at gstpad.c:2826
+#86 0x00000008273593c5 in gst_stream_synchronizer_src_event (pad=0x822e50880, parent=0x826453140, event=<optimized out>) at gststreamsynchronizer.c:200
+#87 0x0000000823d7455f in gst_pad_send_event_unchecked (pad=0x822e50880, event=<optimized out>, type=<optimized out>) at gstpad.c:5035
+#88 0x0000000823d73e04 in gst_pad_push_event_unchecked (pad=0x822e50100, event=<optimized out>, type=<optimized out>) at gstpad.c:4731
+#89 0x0000000823d73aa8 in gst_pad_push_event (pad=0x822e50100, event=0x8188fba00) at gstpad.c:4854
+#90 0x0000000823d6fb2b in event_forward_func (pad=0x822e50100, data=0x7ffffa26c218) at gstpad.c:2775
+#91 0x0000000823d6f7f7 in gst_pad_forward (pad=0x822e50380, forward=0x823d6fa50 <event_forward_func>, user_data=0x7ffffa26c218) at gstpad.c:2729
+#92 0x0000000823d6f9b1 in gst_pad_event_default (pad=0x822e50380, parent=<optimized out>, event=0x8188fba00) at gstpad.c:2826
+#93 0x0000000823d7455f in gst_pad_send_event_unchecked (pad=0x822e50380, event=<optimized out>, type=<optimized out>) at gstpad.c:5035
+#94 0x0000000823d73e04 in gst_pad_push_event_unchecked (pad=0x822e4d900, event=<optimized out>, type=<optimized out>) at gstpad.c:4731
+#95 0x0000000823d73aa8 in gst_pad_push_event (pad=0x822e4d900, event=0x8188fba00) at gstpad.c:4854
+#96 0x0000000823d6fb2b in event_forward_func (pad=0x822e4d900, data=0x7ffffa26c528) at gstpad.c:2775
+#97 0x0000000823d6f7f7 in gst_pad_forward (pad=0x822e4db80, forward=0x823d6fa50 <event_forward_func>, user_data=0x7ffffa26c528) at gstpad.c:2729
+#98 0x0000000823d6f9b1 in gst_pad_event_default (pad=0x822e4db80, parent=<optimized out>, event=0x8188fba00) at gstpad.c:2826
+#99 0x0000000823d7455f in gst_pad_send_event_unchecked (pad=0x822e4db80, event=<optimized out>, type=<optimized out>) at gstpad.c:5035
+#100 0x0000000823d73e04 in gst_pad_push_event_unchecked (pad=0x822e4e300, event=<optimized out>, type=<optimized out>) at gstpad.c:4731
+#101 0x0000000823d73aa8 in gst_pad_push_event (pad=0x822e4e300, event=0x8188fba00) at gstpad.c:4854
+#102 0x0000000823d6fb2b in event_forward_func (pad=0x822e4e300, data=0x7ffffa26c838) at gstpad.c:2775
+#103 0x0000000823d6f7f7 in gst_pad_forward (pad=0x822e4e580, forward=0x823d6fa50 <event_forward_func>, user_data=0x7ffffa26c838) at gstpad.c:2729
+#104 0x0000000823d6f9b1 in gst_pad_event_default (pad=0x822e4e580, parent=<optimized out>, event=0x8188fba00) at gstpad.c:2826
+#105 0x0000000823d7455f in gst_pad_send_event_unchecked (pad=0x822e4e580, event=<optimized out>, type=<optimized out>) at gstpad.c:5035
+#106 0x0000000823d73e04 in gst_pad_push_event_unchecked (pad=0x822e4f700, event=<optimized out>, type=<optimized out>) at gstpad.c:4731
+#107 0x0000000823d73aa8 in gst_pad_push_event (pad=0x822e4f700, event=0x8188fba00) at gstpad.c:4854
+#108 0x00000008242543e0 in gst_base_transform_src_eventfunc (trans=0x828182000, event=0x8188fba00) at gstbasetransform.c:1931
+#109 0x0000000823d7455f in gst_pad_send_event_unchecked (pad=0x822e4f980, event=<optimized out>, type=<optimized out>) at gstpad.c:5035
+#110 0x0000000823d73e04 in gst_pad_push_event_unchecked (pad=0x822e4fc00, event=<optimized out>, type=<optimized out>) at gstpad.c:4731
+#111 0x0000000823d73aa8 in gst_pad_push_event (pad=0x822e4fc00, event=0x8188fba00) at gstpad.c:4854
+#112 0x00000008242543e0 in gst_base_transform_src_eventfunc (trans=0x828182500, event=0x8188fba00) at gstbasetransform.c:1931
+#113 0x000000082dd488c6 in gst_video_scale_src_event (trans=0x828182500, event=<optimized out>) at gstvideoscale.c:1489
+#114 0x0000000823d7455f in gst_pad_send_event_unchecked (pad=0x822e4fe80, event=<optimized out>, type=<optimized out>) at gstpad.c:5035
+#115 0x0000000823d73e04 in gst_pad_push_event_unchecked (pad=0x822e4ea80, event=<optimized out>, type=<optimized out>) at gstpad.c:4731
+#116 0x0000000823d73aa8 in gst_pad_push_event (pad=0x822e4ea80, event=0x8188fba00) at gstpad.c:4854
+#117 0x0000000823d6fb2b in event_forward_func (pad=0x822e4ea80, data=0x7ffffa26cfd8) at gstpad.c:2775
+#118 0x0000000823d6f7f7 in gst_pad_forward (pad=0x822e4e800, forward=0x823d6fa50 <event_forward_func>, user_data=0x7ffffa26cfd8) at gstpad.c:2729
+#119 0x0000000823d6f9b1 in gst_pad_event_default (pad=0x822e4e800, parent=<optimized out>, event=0x8188fba00) at gstpad.c:2826
+#120 0x0000000823d7455f in gst_pad_send_event_unchecked (pad=0x822e4e800, event=<optimized out>, type=<optimized out>) at gstpad.c:5035
+#121 0x0000000823d73e04 in gst_pad_push_event_unchecked (pad=0x8266bc000, event=<optimized out>, type=<optimized out>) at gstpad.c:4731
+#122 0x0000000823d73aa8 in gst_pad_push_event (pad=0x8266bc000, event=0x8188fba00) at gstpad.c:4854
+#123 0x0000000823d6fb2b in event_forward_func (pad=0x8266bc000, data=0x7ffffa26d2e8) at gstpad.c:2775
+#124 0x0000000823d6f7f7 in gst_pad_forward (pad=0x8266bc280, forward=0x823d6fa50 <event_forward_func>, user_data=0x7ffffa26d2e8) at gstpad.c:2729
+#125 0x0000000823d6f9b1 in gst_pad_event_default (pad=0x8266bc280, parent=<optimized out>, event=0x8188fba00) at gstpad.c:2826
+#126 0x0000000823d7455f in gst_pad_send_event_unchecked (pad=0x8266bc280, event=<optimized out>, type=<optimized out>) at gstpad.c:5035
+#127 0x0000000823d73e04 in gst_pad_push_event_unchecked (pad=0x8266bb880, event=<optimized out>, type=<optimized out>) at gstpad.c:4731
+#128 0x0000000823d73aa8 in gst_pad_push_event (pad=0x8266bb880, event=0x8188fba00) at gstpad.c:4854
+#129 0x00000008242543e0 in gst_base_transform_src_eventfunc (trans=0x823021080, event=0x8188fba00) at gstbasetransform.c:1931
+#130 0x0000000823d7455f in gst_pad_send_event_unchecked (pad=0x8266bbb00, event=<optimized out>, type=<optimized out>) at gstpad.c:5035
+#131 0x0000000823d73e04 in gst_pad_push_event_unchecked (pad=0x8266bbd80, event=<optimized out>, type=<optimized out>) at gstpad.c:4731
+#132 0x0000000823d73aa8 in gst_pad_push_event (pad=0x8266bbd80, event=0x8188fba00) at gstpad.c:4854
+#133 0x0000000824244cc2 in gst_base_sink_send_event (element=<optimized out>, event=0x8188fba00) at gstbasesink.c:4322
+#134 0x0000000823d55f13 in gst_element_send_event (element=0x823b9d200, event=0x8188fba00) at gstelement.c:1561
+#135 0x0000000823d3a44b in gst_bin_send_event (element=0x8262d1280, event=0x8188fba00) at gstbin.c:2832
+#136 0x0000000823d55f13 in gst_element_send_event (element=0x8262d1280, event=0x8188fba00) at gstelement.c:1561
+#137 0x0000000823d3a44b in gst_bin_send_event (element=0x82385c740, event=0x8188fba00) at gstbin.c:2832
+#138 0x0000000823d55f13 in gst_element_send_event (element=0x82385c740, event=0x8188fba00) at gstelement.c:1561
+#139 0x000000082734cab0 in gst_play_sink_send_event_to_sink (playsink=0x823021780, event=0x8188fba00) at gstplaysink.c:4412
+#140 0x000000082734c56d in gst_play_sink_send_event (element=0x823021780, event=0x8188fba00) at gstplaysink.c:4453
+#141 0x0000000823d55f13 in gst_element_send_event (element=0x823021780, event=0x8188fba00) at gstelement.c:1561
+#142 0x0000000823d3a44b in gst_bin_send_event (element=0x824a31000, event=0x8188fba00) at gstbin.c:2832
+#143 0x0000000823d55f13 in gst_element_send_event (element=0x824a31000, event=0x8188fba00) at gstelement.c:1561
+#144 0x0000000823da51bf in gst_element_seek_simple (element=0x824a31000, format=GST_FORMAT_TIME, seek_flags=5, seek_pos=1078571891000) at gstutils.c:2285
+#145 0x0000000803e51c57 in mozilla::GStreamerReader::Seek(long, long, long, long) () from /usr/local/lib/firefox-nightly/libxul.so
+#146 0x0000000803dec3eb in mozilla::MediaDecoderStateMachine::DecodeSeek() () from /usr/local/lib/firefox-nightly/libxul.so
+#147 0x0000000803e037c7 in nsRunnableMethodImpl<void (mozilla::MediaDecoderStateMachine::*)(), void, true>::Run() () from /usr/local/lib/firefox-nightly/libxul.so
+#148 0x0000000803dfc2ec in mozilla::MediaTaskQueue::Runner::Run() () from /usr/local/lib/firefox-nightly/libxul.so
+#149 0x00000008029930f9 in nsThreadPool::Run() () from /usr/local/lib/firefox-nightly/libxul.so
+#150 0x00000008029931ed in non-virtual thunk to nsThreadPool::Run() () from /usr/local/lib/firefox-nightly/libxul.so
+#151 0x00000008029914ad in nsThread::ProcessNextEvent(bool, bool*) () from /usr/local/lib/firefox-nightly/libxul.so
+#152 0x0000000802926653 in NS_ProcessNextEvent(nsIThread*, bool) () from /usr/local/lib/firefox-nightly/libxul.so
+#153 0x0000000802c0ee8b in mozilla::ipc::MessagePumpForNonMainThreads::Run(base::MessagePump::Delegate*) () from /usr/local/lib/firefox-nightly/libxul.so
+#154 0x0000000802be175e in MessageLoop::Run() () from /usr/local/lib/firefox-nightly/libxul.so
+#155 0x0000000802990258 in nsThread::ThreadFunc(void*) () from /usr/local/lib/firefox-nightly/libxul.so
+#156 0x000000080b8a5ea2 in _pt_root () from /usr/local/lib/libplds4.so.1
+#157 0x000000080114e4c5 in thread_start (curthread=0x826ae0400) at /a/freebsd/lib/libthr/thread/thr_create.c:284
+#158 0x0000000000000000 in ?? ()
+
+
+
+Expected results:
+
+no crash like with --enable-gstreamer=0.10

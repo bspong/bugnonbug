@@ -1,0 +1,8 @@
+History DB page titles are displayed corrupt in url bar autocomplete, endian problem turns Latin characters into Chinese
+Strings stored in history.dat are stored as UCS2.  This includes page titles.  history.dat is supposed to have a native endianness, set when the file is created or reset.  When using a history.dat file whose native endianness does not match the host architecture's endianness, existing page titles in the database are not being swapped (or are double-swapped?) for display in the url bar autocomplete.  This results in corrupt page titles being displayed in the history autocomplete dropdown.
+
+Although bytes aren't swapped when reading from history.dat, they are swapped as needed when writing to it.  This means that if you have a history.dat file set as other-endian, even new pages you visit will wind up with bad page titles being displayed.  Other reads from history seem unaffected: the Go menu and history sidebar do not have corrupt text.
+
+This will affect people who had run Firefox under Rosetta on x86 and switch to a native version, people who migrate from a ppc to x86 and copy their profile (or have their profile copied by a migration assistant), and people who wish to flip Rosetta on and off to use plugins that haven't yet been ported to x86.
+
+This was fixed for Core:History in bug 108134.  The byte-swapping code is still in the toolkit history implementation, we need to find out why the swaps don't happen (or happen twice?) during reads from history for url bar autocomplete display.

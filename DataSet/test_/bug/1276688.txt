@@ -1,0 +1,149 @@
+heap-buffer-overflow in BuildSegmentsFromValueEntries
+The following testcase crashes the latest ASAN build of Firefox (buildId 20160523171639).
+
+Testcase:
+
+<script>
+function start() {
+        o0=window.document;
+        o1=window.document.documentElement;
+        o32=document.createElementNS('http://www.w3.org/1999/xhtml','video');
+        o1.animate([{right: 'auto',strokeDasharray: 'none',rubyPosition: 'inter-character',stopOpacity: '1'},{right: '19px',strokeDasharray: 'none',rubyPosition: 'inter-character',stopOpacity: '13'}],1);
+        o32.innerHTML="<svg><desc>";
+        o39=o32.querySelectorAll('*')[0];
+        o59=o32.querySelectorAll('*')[1];
+        document.documentElement.appendChild(o39);
+        o59.animate([{dominantBaseline: 'use-script !important',all: 'initial'},{dominantBaseline: 'mathematical',all: 'unset'}],1);
+}
+</script>
+<body onload="start()"></body>
+
+
+ASAN crash:
+
+=================================================================
+==2854==ERROR: AddressSanitizer: heap-buffer-overflow on address 0x62d001246400 at pc 0x7f71fd965b72 bp 0x7ffcfce7ec90 sp 0x7ffcfce7ec88
+READ of size 4 at 0x62d001246400 thread T0 (Web Content)
+    #0 0x7f71fd965b71 in BuildSegmentsFromValueEntries /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/animation/KeyframeUtils.cpp:959
+    #1 0x7f71fd965b71 in mozilla::KeyframeUtils::GetAnimationPropertiesFromKeyframes(nsStyleContext*, mozilla::dom::Element*, mozilla::CSSPseudoElementType, nsTArray<mozilla::Keyframe> const&) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/animation/KeyframeUtils.cpp:553
+    #2 0x7f71fd95336b in mozilla::dom::KeyframeEffectReadOnly::UpdateProperties(nsStyleContext*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/animation/KeyframeEffect.cpp:514
+    #3 0x7f71fd95fc8e in mozilla::dom::KeyframeEffectReadOnly::SetKeyframes(JSContext*, JS::Handle<JSObject*>, mozilla::ErrorResult&) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/animation/KeyframeEffect.cpp:454
+    #4 0x7f71fd96e39a in already_AddRefed<mozilla::dom::KeyframeEffect> mozilla::dom::KeyframeEffectReadOnly::ConstructKeyframeEffect<mozilla::dom::KeyframeEffect, mozilla::dom::UnrestrictedDoubleOrKeyframeAnimationOptions>(mozilla::dom::GlobalObject const&, mozilla::dom::Nullable<mozilla::dom::ElementOrCSSPseudoElement> const&, JS::Handle<JSObject*>, mozilla::dom::UnrestrictedDoubleOrKeyframeAnimationOptions const&, mozilla::ErrorResult&) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/animation/KeyframeEffect.cpp:753
+    #5 0x7f71fd96dd4d in mozilla::dom::KeyframeEffect::Constructor(mozilla::dom::GlobalObject const&, mozilla::dom::Nullable<mozilla::dom::ElementOrCSSPseudoElement> const&, JS::Handle<JSObject*>, mozilla::dom::UnrestrictedDoubleOrKeyframeAnimationOptions const&, mozilla::ErrorResult&) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/animation/KeyframeEffect.cpp:1358
+    #6 0x7f71fdb9ad44 in mozilla::dom::Element::Animate(mozilla::dom::Nullable<mozilla::dom::ElementOrCSSPseudoElement> const&, JSContext*, JS::Handle<JSObject*>, mozilla::dom::UnrestrictedDoubleOrKeyframeAnimationOptions const&, mozilla::ErrorResult&) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/base/Element.cpp:3356
+    #7 0x7f71fdb9a68e in mozilla::dom::Element::Animate(JSContext*, JS::Handle<JSObject*>, mozilla::dom::UnrestrictedDoubleOrKeyframeAnimationOptions const&, mozilla::ErrorResult&) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/base/Element.cpp:3313
+    #8 0x7f71ff63fdc5 in mozilla::dom::ElementBinding::animate(JSContext*, JS::Handle<JSObject*>, mozilla::dom::Element*, JSJitMethodCallArgs const&) /builds/slave/m-cen-l64-asan-000000000000000/build/src/obj-firefox/dom/bindings/ElementBinding.cpp:3414
+    #9 0x7f71ffaf96b5 in mozilla::dom::GenericBindingMethod(JSContext*, unsigned int, JS::Value*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/bindings/BindingUtils.cpp:2782
+    #10 0x7f7205619b1e in CallJSNative /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/jscntxtinlines.h:235
+    #11 0x7f7205619b1e in js::InternalCallOrConstruct(JSContext*, JS::CallArgs const&, js::MaybeConstruct) /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/vm/Interpreter.cpp:480
+    #12 0x7f720560877c in CallFromStack /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/vm/Interpreter.cpp:531
+    #13 0x7f720560877c in Interpret(JSContext*, js::RunState&) /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/vm/Interpreter.cpp:2868
+    #14 0x7f72055e9b9e in js::RunScript(JSContext*, js::RunState&) /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/vm/Interpreter.cpp:426
+    #15 0x7f720561a26b in js::InternalCallOrConstruct(JSContext*, JS::CallArgs const&, js::MaybeConstruct) /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/vm/Interpreter.cpp:498
+    #16 0x7f720561a801 in js::Call(JSContext*, JS::Handle<JS::Value>, JS::Handle<JS::Value>, js::AnyInvokeArgs const&, JS::MutableHandle<JS::Value>) /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/vm/Interpreter.cpp:544
+    #17 0x7f72051c4e77 in JS::Call(JSContext*, JS::Handle<JS::Value>, JS::Handle<JS::Value>, JS::HandleValueArray const&, JS::MutableHandle<JS::Value>) /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/jsapi.cpp:2926
+    #18 0x7f71ff5bb923 in mozilla::dom::EventHandlerNonNull::Call(JSContext*, JS::Handle<JS::Value>, mozilla::dom::Event&, JS::MutableHandle<JS::Value>, mozilla::ErrorResult&) /builds/slave/m-cen-l64-asan-000000000000000/build/src/obj-firefox/dom/bindings/EventHandlerBinding.cpp:259
+    #19 0x7f71ffef7e89 in Call<nsISupports *> /builds/slave/m-cen-l64-asan-000000000000000/build/src/obj-firefox/dist/include/mozilla/dom/EventHandlerBinding.h:356
+    #20 0x7f71ffef7e89 in mozilla::JSEventHandler::HandleEvent(nsIDOMEvent*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/events/JSEventHandler.cpp:214
+    #21 0x7f71ffec28b4 in mozilla::EventListenerManager::HandleEventSubType(mozilla::EventListenerManager::Listener*, nsIDOMEvent*, mozilla::dom::EventTarget*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/events/EventListenerManager.cpp:1111
+    #22 0x7f71ffec4813 in mozilla::EventListenerManager::HandleEventInternal(nsPresContext*, mozilla::WidgetEvent*, nsIDOMEvent**, mozilla::dom::EventTarget*, nsEventStatus*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/events/EventListenerManager.cpp:1283
+    #23 0x7f71ffea1921 in mozilla::EventTargetChainItem::HandleEventTargetChain(nsTArray<mozilla::EventTargetChainItem>&, mozilla::EventChainPostVisitor&, mozilla::EventDispatchingCallback*, mozilla::ELMCreationDetector&) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/events/EventDispatcher.cpp:379
+    #24 0x7f71ffea5d3c in mozilla::EventDispatcher::Dispatch(nsISupports*, nsPresContext*, mozilla::WidgetEvent*, nsIDOMEvent*, nsEventStatus*, mozilla::EventDispatchingCallback*, nsTArray<mozilla::dom::EventTarget*>*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/events/EventDispatcher.cpp:710
+    #25 0x7f7201e791c0 in nsDocumentViewer::LoadComplete(nsresult) /builds/slave/m-cen-l64-asan-000000000000000/build/src/layout/base/nsDocumentViewer.cpp:993
+    #26 0x7f7202bbf49d in nsDocShell::EndPageLoad(nsIWebProgress*, nsIChannel*, nsresult) /builds/slave/m-cen-l64-asan-000000000000000/build/src/docshell/base/nsDocShell.cpp:7533
+    #27 0x7f7202bbb8a4 in nsDocShell::OnStateChange(nsIWebProgress*, nsIRequest*, unsigned int, nsresult) /builds/slave/m-cen-l64-asan-000000000000000/build/src/docshell/base/nsDocShell.cpp:7334
+    #28 0x7f7202bc26cf in non-virtual thunk to nsDocShell::OnStateChange(nsIWebProgress*, nsIRequest*, unsigned int, nsresult) /builds/slave/m-cen-l64-asan-000000000000000/build/src/obj-firefox/docshell/base/Unified_cpp_docshell_base0.cpp:7341
+    #29 0x7f71fcf2ce8b in nsDocLoader::DoFireOnStateChange(nsIWebProgress*, nsIRequest*, int&, nsresult) /builds/slave/m-cen-l64-asan-000000000000000/build/src/uriloader/base/nsDocLoader.cpp:1250
+    #30 0x7f71fcf2c173 in nsDocLoader::doStopDocumentLoad(nsIRequest*, nsresult) /builds/slave/m-cen-l64-asan-000000000000000/build/src/uriloader/base/nsDocLoader.cpp:834
+    #31 0x7f71fcf28e53 in nsDocLoader::DocLoaderIsEmpty(bool) /builds/slave/m-cen-l64-asan-000000000000000/build/src/uriloader/base/nsDocLoader.cpp:724
+    #32 0x7f71fcf2b12f in nsDocLoader::OnStopRequest(nsIRequest*, nsISupports*, nsresult) /builds/slave/m-cen-l64-asan-000000000000000/build/src/uriloader/base/nsDocLoader.cpp:608
+    #33 0x7f71fcf2bb3c in non-virtual thunk to nsDocLoader::OnStopRequest(nsIRequest*, nsISupports*, nsresult) /builds/slave/m-cen-l64-asan-000000000000000/build/src/obj-firefox/uriloader/base/Unified_cpp_uriloader_base0.cpp:612
+    #34 0x7f71fb394594 in nsLoadGroup::RemoveRequest(nsIRequest*, nsISupports*, nsresult) /builds/slave/m-cen-l64-asan-000000000000000/build/src/netwerk/base/nsLoadGroup.cpp:633
+    #35 0x7f71fddb399c in nsDocument::DoUnblockOnload() /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/base/nsDocument.cpp:9229
+    #36 0x7f71fde5d02f in nsUnblockOnloadEvent::Run() /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/base/nsDocument.cpp:9182
+    #37 0x7f71fb1c78db in nsThread::ProcessNextEvent(bool, bool*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/xpcom/threads/nsThread.cpp:1073
+    #38 0x7f71fb241e2a in NS_ProcessNextEvent(nsIThread*, bool) /builds/slave/m-cen-l64-asan-000000000000000/build/src/xpcom/glue/nsThreadUtils.cpp:290
+    #39 0x7f71fbf5156e in mozilla::ipc::MessagePump::Run(base::MessagePump::Delegate*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/ipc/glue/MessagePump.cpp:98
+    #40 0x7f71fbec622c in RunInternal /builds/slave/m-cen-l64-asan-000000000000000/build/src/ipc/chromium/src/base/message_loop.cc:235
+    #41 0x7f71fbec622c in RunHandler /builds/slave/m-cen-l64-asan-000000000000000/build/src/ipc/chromium/src/base/message_loop.cc:228
+    #42 0x7f71fbec622c in MessageLoop::Run() /builds/slave/m-cen-l64-asan-000000000000000/build/src/ipc/chromium/src/base/message_loop.cc:208
+    #43 0x7f72015da447 in nsBaseAppShell::Run() /builds/slave/m-cen-l64-asan-000000000000000/build/src/widget/nsBaseAppShell.cpp:156
+    #44 0x7f72035f5342 in XRE_RunAppShell /builds/slave/m-cen-l64-asan-000000000000000/build/src/toolkit/xre/nsEmbedFunctions.cpp:809
+    #45 0x7f71fbec622c in RunInternal /builds/slave/m-cen-l64-asan-000000000000000/build/src/ipc/chromium/src/base/message_loop.cc:235
+    #46 0x7f71fbec622c in RunHandler /builds/slave/m-cen-l64-asan-000000000000000/build/src/ipc/chromium/src/base/message_loop.cc:228
+    #47 0x7f71fbec622c in MessageLoop::Run() /builds/slave/m-cen-l64-asan-000000000000000/build/src/ipc/chromium/src/base/message_loop.cc:208
+    #48 0x7f72035f4a21 in XRE_InitChildProcess /builds/slave/m-cen-l64-asan-000000000000000/build/src/toolkit/xre/nsEmbedFunctions.cpp:644
+    #49 0x48df67 in content_process_main(int, char**) /builds/slave/m-cen-l64-asan-000000000000000/build/src/ipc/app/../contentproc/plugin-container.cpp:231
+    #50 0x7f71f8a0282f in __libc_start_main /build/glibc-GKVZIf/glibc-2.23/csu/../csu/libc-start.c:291
+    #51 0x48cb3c in _start (/home/nils/fuzzer3/firefox/plugin-container+0x48cb3c)
+
+0x62d001246400 is located 0 bytes to the right of 32768-byte region [0x62d00123e400,0x62d001246400)
+allocated by thread T0 (Web Content) here:
+    #0 0x4753cb in realloc /builds/slave/moz-toolchain/src/llvm/projects/compiler-rt/lib/asan/asan_malloc_linux.cc:95
+    #1 0x48e9fd in moz_xrealloc /builds/slave/m-cen-l64-asan-000000000000000/build/src/memory/mozalloc/mozalloc.cpp:105
+    #2 0x7f71faff63bf in Realloc /builds/slave/m-cen-l64-asan-000000000000000/build/src/obj-firefox/dist/include/nsTArray.h:181
+    #3 0x7f71faff63bf in nsTArrayInfallibleAllocator::ResultTypeProxy nsTArray_base<nsTArrayInfallibleAllocator, nsTArray_CopyWithMemutils>::EnsureCapacity<nsTArrayInfallibleAllocator>(unsigned long, unsigned long) /builds/slave/m-cen-l64-asan-000000000000000/build/src/obj-firefox/dist/include/nsTArray-inl.h:183
+    #4 0x7f71fd9648d3 in AppendElements<nsTArrayInfallibleAllocator> /builds/slave/m-cen-l64-asan-000000000000000/build/src/obj-firefox/dist/include/nsTArray.h:1609
+    #5 0x7f71fd9648d3 in AppendElement<nsTArrayInfallibleAllocator> /builds/slave/m-cen-l64-asan-000000000000000/build/src/obj-firefox/dist/include/nsTArray.h:1637
+    #6 0x7f71fd9648d3 in mozilla::KeyframeUtils::GetAnimationPropertiesFromKeyframes(nsStyleContext*, mozilla::dom::Element*, mozilla::CSSPseudoElementType, nsTArray<mozilla::Keyframe> const&) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/animation/KeyframeUtils.cpp:541
+    #7 0x7f71fd95336b in mozilla::dom::KeyframeEffectReadOnly::UpdateProperties(nsStyleContext*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/animation/KeyframeEffect.cpp:514
+    #8 0x7f71fd95fc8e in mozilla::dom::KeyframeEffectReadOnly::SetKeyframes(JSContext*, JS::Handle<JSObject*>, mozilla::ErrorResult&) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/animation/KeyframeEffect.cpp:454
+    #9 0x7f71fd96e39a in already_AddRefed<mozilla::dom::KeyframeEffect> mozilla::dom::KeyframeEffectReadOnly::ConstructKeyframeEffect<mozilla::dom::KeyframeEffect, mozilla::dom::UnrestrictedDoubleOrKeyframeAnimationOptions>(mozilla::dom::GlobalObject const&, mozilla::dom::Nullable<mozilla::dom::ElementOrCSSPseudoElement> const&, JS::Handle<JSObject*>, mozilla::dom::UnrestrictedDoubleOrKeyframeAnimationOptions const&, mozilla::ErrorResult&) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/animation/KeyframeEffect.cpp:753
+    #10 0x7f71fd96dd4d in mozilla::dom::KeyframeEffect::Constructor(mozilla::dom::GlobalObject const&, mozilla::dom::Nullable<mozilla::dom::ElementOrCSSPseudoElement> const&, JS::Handle<JSObject*>, mozilla::dom::UnrestrictedDoubleOrKeyframeAnimationOptions const&, mozilla::ErrorResult&) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/animation/KeyframeEffect.cpp:1358
+    #11 0x7f71fdb9ad44 in mozilla::dom::Element::Animate(mozilla::dom::Nullable<mozilla::dom::ElementOrCSSPseudoElement> const&, JSContext*, JS::Handle<JSObject*>, mozilla::dom::UnrestrictedDoubleOrKeyframeAnimationOptions const&, mozilla::ErrorResult&) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/base/Element.cpp:3356
+    #12 0x7f71fdb9a68e in mozilla::dom::Element::Animate(JSContext*, JS::Handle<JSObject*>, mozilla::dom::UnrestrictedDoubleOrKeyframeAnimationOptions const&, mozilla::ErrorResult&) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/base/Element.cpp:3313
+    #13 0x7f71ff63fdc5 in mozilla::dom::ElementBinding::animate(JSContext*, JS::Handle<JSObject*>, mozilla::dom::Element*, JSJitMethodCallArgs const&) /builds/slave/m-cen-l64-asan-000000000000000/build/src/obj-firefox/dom/bindings/ElementBinding.cpp:3414
+    #14 0x7f71ffaf96b5 in mozilla::dom::GenericBindingMethod(JSContext*, unsigned int, JS::Value*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/bindings/BindingUtils.cpp:2782
+    #15 0x7f7205619b1e in CallJSNative /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/jscntxtinlines.h:235
+    #16 0x7f7205619b1e in js::InternalCallOrConstruct(JSContext*, JS::CallArgs const&, js::MaybeConstruct) /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/vm/Interpreter.cpp:480
+    #17 0x7f720560877c in CallFromStack /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/vm/Interpreter.cpp:531
+    #18 0x7f720560877c in Interpret(JSContext*, js::RunState&) /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/vm/Interpreter.cpp:2868
+    #19 0x7f72055e9b9e in js::RunScript(JSContext*, js::RunState&) /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/vm/Interpreter.cpp:426
+    #20 0x7f720561a26b in js::InternalCallOrConstruct(JSContext*, JS::CallArgs const&, js::MaybeConstruct) /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/vm/Interpreter.cpp:498
+    #21 0x7f720561a801 in js::Call(JSContext*, JS::Handle<JS::Value>, JS::Handle<JS::Value>, js::AnyInvokeArgs const&, JS::MutableHandle<JS::Value>) /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/vm/Interpreter.cpp:544
+    #22 0x7f72051c4e77 in JS::Call(JSContext*, JS::Handle<JS::Value>, JS::Handle<JS::Value>, JS::HandleValueArray const&, JS::MutableHandle<JS::Value>) /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/jsapi.cpp:2926
+    #23 0x7f71ff5bb923 in mozilla::dom::EventHandlerNonNull::Call(JSContext*, JS::Handle<JS::Value>, mozilla::dom::Event&, JS::MutableHandle<JS::Value>, mozilla::ErrorResult&) /builds/slave/m-cen-l64-asan-000000000000000/build/src/obj-firefox/dom/bindings/EventHandlerBinding.cpp:259
+    #24 0x7f71ffef7e89 in Call<nsISupports *> /builds/slave/m-cen-l64-asan-000000000000000/build/src/obj-firefox/dist/include/mozilla/dom/EventHandlerBinding.h:356
+    #25 0x7f71ffef7e89 in mozilla::JSEventHandler::HandleEvent(nsIDOMEvent*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/events/JSEventHandler.cpp:214
+    #26 0x7f71ffec28b4 in mozilla::EventListenerManager::HandleEventSubType(mozilla::EventListenerManager::Listener*, nsIDOMEvent*, mozilla::dom::EventTarget*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/events/EventListenerManager.cpp:1111
+    #27 0x7f71ffec4813 in mozilla::EventListenerManager::HandleEventInternal(nsPresContext*, mozilla::WidgetEvent*, nsIDOMEvent**, mozilla::dom::EventTarget*, nsEventStatus*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/events/EventListenerManager.cpp:1283
+    #28 0x7f71ffea1921 in mozilla::EventTargetChainItem::HandleEventTargetChain(nsTArray<mozilla::EventTargetChainItem>&, mozilla::EventChainPostVisitor&, mozilla::EventDispatchingCallback*, mozilla::ELMCreationDetector&) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/events/EventDispatcher.cpp:379
+    #29 0x7f71ffea5d3c in mozilla::EventDispatcher::Dispatch(nsISupports*, nsPresContext*, mozilla::WidgetEvent*, nsIDOMEvent*, nsEventStatus*, mozilla::EventDispatchingCallback*, nsTArray<mozilla::dom::EventTarget*>*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/events/EventDispatcher.cpp:710
+    #30 0x7f7201e791c0 in nsDocumentViewer::LoadComplete(nsresult) /builds/slave/m-cen-l64-asan-000000000000000/build/src/layout/base/nsDocumentViewer.cpp:993
+    #31 0x7f7202bbf49d in nsDocShell::EndPageLoad(nsIWebProgress*, nsIChannel*, nsresult) /builds/slave/m-cen-l64-asan-000000000000000/build/src/docshell/base/nsDocShell.cpp:7533
+    #32 0x7f7202bbb8a4 in nsDocShell::OnStateChange(nsIWebProgress*, nsIRequest*, unsigned int, nsresult) /builds/slave/m-cen-l64-asan-000000000000000/build/src/docshell/base/nsDocShell.cpp:7334
+    #33 0x7f7202bc26cf in non-virtual thunk to nsDocShell::OnStateChange(nsIWebProgress*, nsIRequest*, unsigned int, nsresult) /builds/slave/m-cen-l64-asan-000000000000000/build/src/obj-firefox/docshell/base/Unified_cpp_docshell_base0.cpp:7341
+    #34 0x7f71fcf2ce8b in nsDocLoader::DoFireOnStateChange(nsIWebProgress*, nsIRequest*, int&, nsresult) /builds/slave/m-cen-l64-asan-000000000000000/build/src/uriloader/base/nsDocLoader.cpp:1250
+    #35 0x7f71fcf2c173 in nsDocLoader::doStopDocumentLoad(nsIRequest*, nsresult) /builds/slave/m-cen-l64-asan-000000000000000/build/src/uriloader/base/nsDocLoader.cpp:834
+
+SUMMARY: AddressSanitizer: heap-buffer-overflow /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/animation/KeyframeUtils.cpp:959 BuildSegmentsFromValueEntries
+Shadow bytes around the buggy address:
+  0x0c5a80240c30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x0c5a80240c40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x0c5a80240c50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x0c5a80240c60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x0c5a80240c70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+=>0x0c5a80240c80:[fa]fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x0c5a80240c90: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x0c5a80240ca0: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x0c5a80240cb0: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x0c5a80240cc0: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x0c5a80240cd0: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+Shadow byte legend (one shadow byte represents 8 application bytes):
+  Addressable:           00
+  Partially addressable: 01 02 03 04 05 06 07 
+  Heap left redzone:       fa
+  Heap right redzone:      fb
+  Freed heap region:       fd
+  Stack left redzone:      f1
+  Stack mid redzone:       f2
+  Stack right redzone:     f3
+  Stack partial redzone:   f4
+  Stack after return:      f5
+  Stack use after scope:   f8
+  Global redzone:          f9
+  Global init order:       f6
+  Poisoned by user:        f7
+  Contiguous container OOB:fc
+  ASan internal:           fe
+==2854==ABORTING

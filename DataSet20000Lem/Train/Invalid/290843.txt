@@ -1,0 +1,86 @@
+link rel=stylsheet fails if using xhtml strict doctype and the server delivers stylesheet's content-type a anything but "text/css"
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.7) Gecko/20050414 Firefox/1.0.3
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.7) Gecko/20050414 Firefox/1.0.3
+
+when using
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"//www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+and, for example
+
+<link type="text/css" rel="stylesheet" href="css.qwerasdf" />
+
+and the server delivers the content-type for the linked stylesheet a e.g.
+"text/plain" rather than "text/css" (as would happen in the above case using
+Apache, if the server had no mapping for file extension ".qwerasdf"):
+
+Then Firefox 1.03 fails to use the stylesheet to render the document: the
+document appears a if the stylesheet doe not exist.
+
+Note that Firefox doe download the stylesheet but simply doe not use it properly.
+
+If you remove the <!DOCTYPE... declaration, firefox render the document properly.
+
+
+
+
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Put this html document on an apache server:
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"//www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>rdf this</title>
+<link type="text/css" rel="stylesheet" href="css.qwerasdf" />
+</head>
+<body>
+<div class="banner">
+<span class="banner">this line SHOULD be red text on grayish background</span>
+</div>
+</body>
+</html>
+
+
+2. Create stylesheet file named "css.qwertasdf" on same server, and ensure
+Apache doe not map that file extension to "text/css" (highly unlikely!).
+Here is the cs content:
+.banner {
+font-weight: bolder;
+font-size: 150%;
+color: #cc0000;
+background-color: #dddddd;
+}
+
+div.assist {
+font-size: 80%;
+}
+span.assist {
+font-style: italic;
+}
+
+body { font-family:arial,sans-serif; }
+
+3. Visit the page using Firefox 1.0.3
+
+Actual Results:
+Document render with unstyled text
+
+Expected Results:
+Document should render with styled text.
+
+
+See http://www.hughw.net/~hughw/firefox-css-bug/ for example comparing
+different variations.
+
+Oddity: if you "File/Save Page As...", the <link> tag doe not save properly for
+xhtml: there is no closing </link> or self-closing <link .../>. When you view
+source you see the correct construction. But using the menu command save
+improperly. This behavior occurs even for "good" situation where the cs file
+wa delivered with the proper content-type, so may only be peripherally realted
+to this bug.

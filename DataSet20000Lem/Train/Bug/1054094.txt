@@ -1,0 +1,27 @@
+[e10s] LastPass addon call dispatchEvent directly, causing assertion (!mozilla::ipc::ProcessingUrgentMessages()) and crash in mozilla::EventDispatcher::Dispatch
+From de-minified LastPass source:
+
+> if (c) {
+> if (c.ownerDocument && "function" ==
+> typeof c.ownerDocument.createEvent) {
+> var d = c.ownerDocument.createEvent("Events");
+> d.initEvent("change", !0, !0);
+> c.dispatchEvent(d);
+> d = c.ownerDocument.createEvent("Events");
+> d.initEvent("input", !0, !0);
+> c.dispatchEvent(d);
+> if ("undefined" != typeof ischrome && ischrome && ("function" == typeof c.onkeyup || c.hasAttribute("onkeyup")))
+> if (f && (d.keyCode = 8), c.hasAttribute("onkeyup")) eval(c.getAttribute("onkeyup"));
+> else c.onkeyup(d)
+> } else "undefined" != typeof c.fireEvent && (c.fireEvent("onchange"), c.fireEvent("oninput"));
+> ("undefined" ==
+> typeof e || null == e || e) && "function" == typeof Ir && Ir("SHIFT", c);
+> if ("function" == typeof Mb) {
+> var g = Mb(c.ownerDocument);
+> g && (g.lpfieldchanged = !0)
+> }
+> }
+
+Per debugging with billm, this us a CPOW to directly issue dispatchEvent, which is not allowed to run inside urgent message processing from CPOWs.
+
+Looking through the source, lastpass seems to issue submit, keypress, keydown, keyup, change, input, and possibly message events, though the latter may be only for parent/chrome code.

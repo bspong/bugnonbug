@@ -1,0 +1,58 @@
+DOM (?) error when using style float:left with nested ul
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 6.0; el; rv:1.9.0.1) Gecko/2008070208 Firefox/3.0.1
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 6.0; el; rv:1.9.0.1) Gecko/2008070208 Firefox/3.0.1
+
+This came out when trying to construct a nested menu using ul/li, and the bug is very strange.
+
+Here is a minimal test case:
+
+-----------------
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+
+<title>Untitled Document</title>
+<style type="text/css">
+ul {
+	float: left;
+}
+</style>
+</head>
+
+<body>
+    <ul>
+        <li>Home</li>
+        <li>Next</li>
+        <li>Sub
+            <ul>
+                <li>Sub1</li>
+                <li>Sub2</li>
+            </ul>
+        </li>
+        <li>After</li>
+    </ul>
+</body>
+</html>
+
+-----------------
+
+This document produces a nested list such as
+
+    * Home
+    * Next
+    * Sub
+          o Sub1
+          o Sub2
+    * After
+
+However, run this document through the DOM inspector, and notice that when highlighting the <li> corresponding to "Sub", only "Sub" is marked and not "Sub1" and "Sub2". On the contrary, when highlighting the <li> corresponding to "After" the "Sub1" and "Sub2" are marked!
+
+However, if you remove the "float: left" from the style of <ul>, the elements of the document are marked correctly, that is "Sub1" and "Sub2" together with "Sub".
+
+Therefore it seems that for some reason the DOM is constructed incorrectly when using this style.
+
+
+Reproducible: Always

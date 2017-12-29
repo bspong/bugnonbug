@@ -1,0 +1,217 @@
+heap-use-after-free in mozilla::OggDemuxer::RangeEndTime
+==145946==ERROR: AddressSanitizer: heap-use-after-free on address 0x61e0000f8828 at pc 0x7f449caf1f65 bp 0x7f44531e5cc0 sp 0x7f44531e5cb8
+READ of size 8 at 0x61e0000f8828 thread T108 (MediaPD~oder #1)
+#0 0x7f449caf1f64 in Lock objdir-ff-asan/dist/include/mozilla/Mutex.h:69:25
+#1 0x7f449caf1f64 in BaseAutoLock objdir-ff-asan/dist/include/mozilla/Mutex.h:164
+#2 0x7f449caf1f64 in mozilla::EnableIf<((mozilla::DispatchPolicy)1)==((mozilla::DispatchPolicy)1), void>::Type mozilla::MediaEventSourceImpl<(mozilla::DispatchPolicy)1, (mozilla::ListenerPolicy)1, void>::NotifyInternal<(mozilla::DispatchPolicy)1, bool>(mozilla::IntegralConstant<mozilla::DispatchPolicy, (mozilla::DispatchPolicy)1>, bool&&) dom/media/MediaEventSource.h:502
+#3 0x7f449ceac622 in Notify<bool> objdir-ff-asan/dist/include/MediaEventSource.h:540:5
+#4 0x7f449ceac622 in Notify objdir-ff-asan/dist/include/MediaEventSource.h:577
+#5 0x7f449ceac622 in SetChained dom/media/ogg/OggDemuxer.cpp:599
+#6 0x7f449ceac622 in mozilla::OggDemuxer::RangeEndTime(mozilla::TrackInfo::TrackType, long, long, bool) dom/media/ogg/OggDemuxer.cpp:1587
+#7 0x7f449cea29e7 in RangeEndTime dom/media/ogg/OggDemuxer.cpp:1467:21
+#8 0x7f449cea29e7 in mozilla::OggDemuxer::ReadMetadata() dom/media/ogg/OggDemuxer.cpp:564
+#9 0x7f449cea1497 in mozilla::OggDemuxer::Init() dom/media/ogg/OggDemuxer.cpp:197:7
+#10 0x7f449cc4132c in operator() dom/media/MediaFormatReader.cpp:702:47
+#11 0x7f449cc4132c in mozilla::detail::ProxyFunctionRunnable<mozilla::MediaFormatReader::DemuxerProxy::Init()::$_5, mozilla::MozPromise<nsresult, mozilla::MediaResult, true> >::Run() objdir-ff-asan/dist/include/mozilla/MozPromise.h:1147
+#12 0x7f44980527a1 in mozilla::TaskQueue::Runner::Run() xpcom/threads/TaskQueue.cpp:232:12
+#13 0x7f449807fd42 in nsThreadPool::Run() xpcom/threads/nsThreadPool.cpp:226:14
+#14 0x7f44980805cc in non-virtual thunk to nsThreadPool::Run() xpcom/threads/nsThreadPool.cpp:153:15
+#15 0x7f4498065295 in nsThread::ProcessNextEvent(bool, bool*) xpcom/threads/nsThread.cpp:1213:14
+#16 0x7f44980e6cea in NS_ProcessNextEvent(nsIThread*, bool) xpcom/glue/nsThreadUtils.cpp:381:10
+#17 0x7f4498df8850 in mozilla::ipc::MessagePumpForNonMainThreads::Run(base::MessagePump::Delegate*) ipc/glue/MessagePump.cpp:338:20
+#18 0x7f4498d6cd3e in RunInternal ipc/chromium/src/base/message_loop.cc:238:10
+#19 0x7f4498d6cd3e in RunHandler ipc/chromium/src/base/message_loop.cc:231
+#20 0x7f4498d6cd3e in MessageLoop::Run() ipc/chromium/src/base/message_loop.cc:211
+#21 0x7f449805ea6c in nsThread::ThreadFunc(void*) xpcom/threads/nsThread.cpp:467:11
+#22 0x7f44aebd82f5 in _pt_root nsprpub/pr/src/pthreads/ptthread.c:216:5
+#23 0x7f44b2498183 in start_thread (/lib/x86_64-linux-gnu/libpthread.so.0+0x8183)
+#24 0x7f44b159937c in clone (/lib/x86_64-linux-gnu/libc.so.6+0xfa37c)
+
+0x61e0000f8828 is located 936 byte inside of 2584-byte region [0x61e0000f8480,0x61e0000f8e98)
+freed by thread T0 (Web Content) here:
+#0 0x4dc330 in __interceptor_free /build/llvm/projects/compiler-rt/lib/asan/asan_malloc_linux.cc:47
+#1 0x7f449cadc5f7 in Release dom/media/MediaDecoderReader.h:94:3
+#2 0x7f449cadc5f7 in Release objdir-ff-asan/dist/include/mozilla/RefPtr.h:40
+#3 0x7f449cadc5f7 in Release objdir-ff-asan/dist/include/mozilla/RefPtr.h:399
+#4 0x7f449cadc5f7 in ~RefPtr objdir-ff-asan/dist/include/mozilla/RefPtr.h:78
+#5 0x7f449cadc5f7 in ~MediaDecoderReaderWrapper dom/media/MediaDecoderReaderWrapper.cpp:19
+#6 0x7f449cadc5f7 in Release dom/media/MediaDecoderReaderWrapper.h:32
+#7 0x7f449cadc5f7 in Release objdir-ff-asan/dist/include/mozilla/RefPtr.h:40
+#8 0x7f449cadc5f7 in Release objdir-ff-asan/dist/include/mozilla/RefPtr.h:399
+#9 0x7f449cadc5f7 in ~RefPtr objdir-ff-asan/dist/include/mozilla/RefPtr.h:78
+#10 0x7f449cadc5f7 in mozilla::MediaDecoderStateMachine::~MediaDecoderStateMachine() dom/media/MediaDecoderStateMachine.cpp:2354
+#11 0x7f449caddbad in mozilla::MediaDecoderStateMachine::~MediaDecoderStateMachine() dom/media/MediaDecoderStateMachine.cpp:2347:1
+#12 0x7f449caafd3b in Release dom/media/MediaDecoderStateMachine.h:139:3
+#13 0x7f449caafd3b in Release objdir-ff-asan/dist/include/mozilla/RefPtr.h:40
+#14 0x7f449caafd3b in Release objdir-ff-asan/dist/include/mozilla/RefPtr.h:399
+#15 0x7f449caafd3b in assign_assuming_AddRef objdir-ff-asan/dist/include/mozilla/RefPtr.h:65
+#16 0x7f449caafd3b in assign_with_AddRef objdir-ff-asan/dist/include/mozilla/RefPtr.h:56
+#17 0x7f449caafd3b in operator= objdir-ff-asan/dist/include/mozilla/RefPtr.h:191
+#18 0x7f449caafd3b in mozilla::MediaDecoder::SetStateMachine(mozilla::MediaDecoderStateMachine*) dom/media/MediaDecoder.cpp:1431
+#19 0x7f449caad906 in mozilla::MediaDecoder::FinishShutdown() dom/media/MediaDecoder.cpp:578:3
+#20 0x7f449cb16587 in InvokeCallbackMethod<mozilla::MediaDecoder, void (mozilla::MediaDecoder::*)(), const bool &> objdir-ff-asan/dist/include/mozilla/MozPromise.h:473:5
+#21 0x7f449cb16587 in mozilla::MozPromise<bool, bool, false>::MethodThenValue<mozilla::MediaDecoder, void (mozilla::MediaDecoder::*)(), void (mozilla::MediaDecoder::*)()>::DoResolveOrRejectInternal(mozilla::MozPromise<bool, bool, false>::ResolveOrRejectValue const&) objdir-ff-asan/dist/include/mozilla/MozPromise.h:506
+#22 0x7f449806fa10 in mozilla::MozPromise<bool, bool, false>::ThenValueBase::DoResolveOrReject(mozilla::MozPromise<bool, bool, false>::ResolveOrRejectValue const&) objdir-ff-asan/dist/include/mozilla/MozPromise.h:404:30
+#23 0x7f449806f219 in mozilla::MozPromise<bool, bool, false>::ThenValueBase::ResolveOrRejectRunnable::Run() objdir-ff-asan/dist/include/mozilla/MozPromise.h:328:21
+#24 0x7f4498065295 in nsThread::ProcessNextEvent(bool, bool*) xpcom/threads/nsThread.cpp:1213:14
+#25 0x7f44980e6cea in NS_ProcessNextEvent(nsIThread*, bool) xpcom/glue/nsThreadUtils.cpp:381:10
+#26 0x7f4498df7341 in mozilla::ipc::MessagePump::Run(base::MessagePump::Delegate*) ipc/glue/MessagePump.cpp:96:21
+#27 0x7f4498d6cd3e in RunInternal ipc/chromium/src/base/message_loop.cc:238:10
+#28 0x7f4498d6cd3e in RunHandler ipc/chromium/src/base/message_loop.cc:231
+#29 0x7f4498d6cd3e in MessageLoop::Run() ipc/chromium/src/base/message_loop.cc:211
+#30 0x7f449dd5567a in nsBaseAppShell::Run() widget/nsBaseAppShell.cpp:156:27
+#31 0x7f449fdeebf2 in XRE_RunAppShell toolkit/xre/nsEmbedFunctions.cpp:924:22
+#32 0x7f4498d6cd3e in RunInternal ipc/chromium/src/base/message_loop.cc:238:10
+#33 0x7f4498d6cd3e in RunHandler ipc/chromium/src/base/message_loop.cc:231
+#34 0x7f4498d6cd3e in MessageLoop::Run() ipc/chromium/src/base/message_loop.cc:211
+#35 0x7f449fdedfc3 in XRE_InitChildProcess toolkit/xre/nsEmbedFunctions.cpp:756:34
+#36 0x518fda in content_process_main browser/app/../../ipc/contentproc/plugin-container.cpp:115:19
+#37 0x518fda in main browser/app/nsBrowserApp.cpp:429
+#38 0x7f44b14c0f44 in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x21f44)
+
+previously allocated by thread T0 (Web Content) here:
+#0 0x4dc688 in malloc /build/llvm/projects/compiler-rt/lib/asan/asan_malloc_linux.cc:64
+#1 0x51a59d in moz_xmalloc memory/mozalloc/mozalloc.cpp:83:17
+#2 0x7f449ce9dd68 in operator new objdir-ff-asan/dist/include/mozilla/mozalloc.h:194:12
+#3 0x7f449ce9dd68 in mozilla::OggDecoder::CreateStateMachine() dom/media/ogg/OggDecoder.cpp:20
+#4 0x7f449caaff7a in mozilla::MediaDecoder::Load(nsIStreamListener**) dom/media/MediaDecoder.cpp:608:19
+#5 0x7f449c85bd05 in mozilla::dom::HTMLMediaElement::FinishDecoderSetup(mozilla::MediaDecoder*, mozilla::MediaResource*, nsIStreamListener**) dom/html/HTMLMediaElement.cpp:4584:27
+#6 0x7f449c8435c5 in mozilla::dom::HTMLMediaElement::InitializeDecoderForChannel(nsIChannel*, nsIStreamListener**) dom/html/HTMLMediaElement.cpp:4553:10
+#7 0x7f449c842264 in mozilla::dom::HTMLMediaElement::MediaLoadListener::OnStartRequest(nsIRequest*, nsISupports*) dom/html/HTMLMediaElement.cpp:531:7
+#8 0x7f44981e80e4 in nsBaseChannel::OnStartRequest(nsIRequest*, nsISupports*) netwerk/base/nsBaseChannel.cpp:810:25
+#9 0x7f4498230659 in nsInputStreamPump::OnStateStart() netwerk/base/nsInputStreamPump.cpp:524:25
+#10 0x7f449822fc12 in nsInputStreamPump::OnInputStreamReady(nsIAsyncInputStream*) netwerk/base/nsInputStreamPump.cpp:426:25
+#11 0x7f449801ed2d in nsInputStreamReadyEvent::Run() xpcom/io/nsStreamUtils.cpp:95:20
+#12 0x7f4498065295 in nsThread::ProcessNextEvent(bool, bool*) xpcom/threads/nsThread.cpp:1213:14
+#13 0x7f44980e6cea in NS_ProcessNextEvent(nsIThread*, bool) xpcom/glue/nsThreadUtils.cpp:381:10
+#14 0x7f44980635d9 in nsThread::Shutdown() xpcom/threads/nsThread.cpp:983:5
+#15 0x7f449808132e in nsThreadPool::Shutdown() xpcom/threads/nsThreadPool.cpp:328:17
+#16 0x7f449807a322 in applyImpl<nsIThreadPool, nsresult (nsIThreadPool::*)()> objdir-ff-asan/dist/include/nsThreadUtils.h:791:12
+#17 0x7f449807a322 in apply<nsIThreadPool, nsresult (nsIThreadPool::*)()> objdir-ff-asan/dist/include/nsThreadUtils.h:797
+#18 0x7f449807a322 in mozilla::detail::RunnableMethodImpl<nsresult (nsIThreadPool::*)(), true, false>::Run() objdir-ff-asan/dist/include/nsThreadUtils.h:826
+#19 0x7f4498065295 in nsThread::ProcessNextEvent(bool, bool*) xpcom/threads/nsThread.cpp:1213:14
+#20 0x7f44980e6cea in NS_ProcessNextEvent(nsIThread*, bool) xpcom/glue/nsThreadUtils.cpp:381:10
+#21 0x7f4498df7341 in mozilla::ipc::MessagePump::Run(base::MessagePump::Delegate*) ipc/glue/MessagePump.cpp:96:21
+#22 0x7f4498d6cd3e in RunInternal ipc/chromium/src/base/message_loop.cc:238:10
+#23 0x7f4498d6cd3e in RunHandler ipc/chromium/src/base/message_loop.cc:231
+#24 0x7f4498d6cd3e in MessageLoop::Run() ipc/chromium/src/base/message_loop.cc:211
+#25 0x7f449dd5567a in nsBaseAppShell::Run() widget/nsBaseAppShell.cpp:156:27
+#26 0x7f449fdeebf2 in XRE_RunAppShell toolkit/xre/nsEmbedFunctions.cpp:924:22
+#27 0x7f4498d6cd3e in RunInternal ipc/chromium/src/base/message_loop.cc:238:10
+#28 0x7f4498d6cd3e in RunHandler ipc/chromium/src/base/message_loop.cc:231
+#29 0x7f4498d6cd3e in MessageLoop::Run() ipc/chromium/src/base/message_loop.cc:211
+#30 0x7f449fdedfc3 in XRE_InitChildProcess toolkit/xre/nsEmbedFunctions.cpp:756:34
+#31 0x518fda in content_process_main browser/app/../../ipc/contentproc/plugin-container.cpp:115:19
+#32 0x518fda in main browser/app/nsBrowserApp.cpp:429
+#33 0x7f44b14c0f44 in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x21f44)
+
+Thread T108 (MediaPD~oder #1) created by T105 (MediaPl~back #1) here:
+#0 0x43544d in __interceptor_pthread_create /build/llvm/projects/compiler-rt/lib/asan/asan_interceptors.cc:245
+#1 0x7f44aebd50e2 in _PR_CreateThread nsprpub/pr/src/pthreads/ptthread.c:457:14
+#2 0x7f44aebd4cfe in PR_CreateThread nsprpub/pr/src/pthreads/ptthread.c:548:12
+#3 0x7f44980607a6 in nsThread::Init() xpcom/threads/nsThread.cpp:643:8
+#4 0x7f449807d649 in nsThreadManager::NewThread(unsigned int, unsigned int, nsIThread**) xpcom/threads/nsThreadManager.cpp:260:22
+#5 0x7f449807ef16 in nsThreadPool::PutEvent(already_AddRefed<nsIRunnable>, unsigned int) xpcom/threads/nsThreadPool.cpp:107:26
+#6 0x7f44980808ca in nsThreadPool::Dispatch(already_AddRefed<nsIRunnable>, unsigned int) xpcom/threads/nsThreadPool.cpp:275:5
+#7 0x7f44980685fc in mozilla::SharedThreadPool::Dispatch(already_AddRefed<nsIRunnable>, unsigned int) objdir-ff-asan/dist/include/mozilla/SharedThreadPool.h:71:68
+#8 0x7f44980514e5 in mozilla::TaskQueue::DispatchLocked(nsCOMPtr<nsIRunnable>&, mozilla::AbstractThread::DispatchFailureHandling, mozilla::AbstractThread::DispatchReason) xpcom/threads/TaskQueue.cpp:114:26
+#9 0x7f449806946d in mozilla::TaskQueue::Dispatch(already_AddRefed<nsIRunnable>, mozilla::AbstractThread::DispatchFailureHandling, mozilla::AbstractThread::DispatchReason) objdir-ff-asan/dist/include/mozilla/TaskQueue.h:67:21
+#10 0x7f449cc255ca in mozilla::AutoTaskQueue::Dispatch(already_AddRefed<nsIRunnable>, mozilla::AbstractThread::DispatchFailureHandling, mozilla::AbstractThread::DispatchReason) objdir-ff-asan/dist/include/AutoTaskQueue.h:34:17
+#11 0x7f449cb88278 in InvokeAsync<(lambda at dom/media/MediaFormatReader.cpp:697:22)> objdir-ff-asan/dist/include/mozilla/MozPromise.h:1188:12
+#12 0x7f449cb88278 in InvokeAsync<(lambda at dom/media/MediaFormatReader.cpp:697:22)> objdir-ff-asan/dist/include/mozilla/MozPromise.h:1205
+#13 0x7f449cb88278 in mozilla::MediaFormatReader::DemuxerProxy::Init() dom/media/MediaFormatReader.cpp:696
+#14 0x7f449cb8eb83 in mozilla::MediaFormatReader::AsyncReadMetadata() dom/media/MediaFormatReader.cpp:980:39
+#15 0x7f449cb3ec1d in applyImpl<mozilla::MediaDecoderReader, RefPtr<mozilla::MozPromise<RefPtr<mozilla::MetadataHolder>, mozilla::MediaResult, true> > (mozilla::MediaDecoderReader::*)()> objdir-ff-asan/dist/include/nsThreadUtils.h:791:12
+#16 0x7f449cb3ec1d in apply<mozilla::MediaDecoderReader, RefPtr<mozilla::MozPromise<RefPtr<mozilla::MetadataHolder>, mozilla::MediaResult, true> > (mozilla::MediaDecoderReader::*)()> objdir-ff-asan/dist/include/nsThreadUtils.h:797
+#17 0x7f449cb3ec1d in Invoke objdir-ff-asan/dist/include/mozilla/MozPromise.h:1019
+#18 0x7f449cb3ec1d in mozilla::detail::ProxyRunnable<mozilla::MozPromise<RefPtr<mozilla::MetadataHolder>, mozilla::MediaResult, true>, RefPtr<mozilla::MozPromise<RefPtr<mozilla::MetadataHolder>, mozilla::MediaResult, true> > (mozilla::MediaDecoderReader::*)(), mozilla::MediaDecoderReader>::Run() objdir-ff-asan/dist/include/mozilla/MozPromise.h:1039
+#19 0x7f449806c4c8 in mozilla::AutoTaskDispatcher::TaskGroupRunnable::Run() objdir-ff-asan/dist/include/mozilla/TaskDispatcher.h:193:37
+#20 0x7f44980527a1 in mozilla::TaskQueue::Runner::Run() xpcom/threads/TaskQueue.cpp:232:12
+#21 0x7f449807fd42 in nsThreadPool::Run() xpcom/threads/nsThreadPool.cpp:226:14
+#22 0x7f44980805cc in non-virtual thunk to nsThreadPool::Run() xpcom/threads/nsThreadPool.cpp:153:15
+#23 0x7f4498065295 in nsThread::ProcessNextEvent(bool, bool*) xpcom/threads/nsThread.cpp:1213:14
+#24 0x7f44980e6cea in NS_ProcessNextEvent(nsIThread*, bool) xpcom/glue/nsThreadUtils.cpp:381:10
+#25 0x7f4498df8850 in mozilla::ipc::MessagePumpForNonMainThreads::Run(base::MessagePump::Delegate*) ipc/glue/MessagePump.cpp:338:20
+#26 0x7f4498d6cd3e in RunInternal ipc/chromium/src/base/message_loop.cc:238:10
+#27 0x7f4498d6cd3e in RunHandler ipc/chromium/src/base/message_loop.cc:231
+#28 0x7f4498d6cd3e in MessageLoop::Run() ipc/chromium/src/base/message_loop.cc:211
+#29 0x7f449805ea6c in nsThread::ThreadFunc(void*) xpcom/threads/nsThread.cpp:467:11
+#30 0x7f44aebd82f5 in _pt_root nsprpub/pr/src/pthreads/ptthread.c:216:5
+#31 0x7f44b2498183 in start_thread (/lib/x86_64-linux-gnu/libpthread.so.0+0x8183)
+
+Thread T105 (MediaPl~back #1) created by T0 (Web Content) here:
+#0 0x43544d in __interceptor_pthread_create /build/llvm/projects/compiler-rt/lib/asan/asan_interceptors.cc:245
+#1 0x7f44aebd50e2 in _PR_CreateThread nsprpub/pr/src/pthreads/ptthread.c:457:14
+#2 0x7f44aebd4cfe in PR_CreateThread nsprpub/pr/src/pthreads/ptthread.c:548:12
+#3 0x7f44980607a6 in nsThread::Init() xpcom/threads/nsThread.cpp:643:8
+#4 0x7f449807d649 in nsThreadManager::NewThread(unsigned int, unsigned int, nsIThread**) xpcom/threads/nsThreadManager.cpp:260:22
+#5 0x7f449807ef16 in nsThreadPool::PutEvent(already_AddRefed<nsIRunnable>, unsigned int) xpcom/threads/nsThreadPool.cpp:107:26
+#6 0x7f44980808ca in nsThreadPool::Dispatch(already_AddRefed<nsIRunnable>, unsigned int) xpcom/threads/nsThreadPool.cpp:275:5
+#7 0x7f44980685fc in mozilla::SharedThreadPool::Dispatch(already_AddRefed<nsIRunnable>, unsigned int) objdir-ff-asan/dist/include/mozilla/SharedThreadPool.h:71:68
+#8 0x7f44980514e5 in mozilla::TaskQueue::DispatchLocked(nsCOMPtr<nsIRunnable>&, mozilla::AbstractThread::DispatchFailureHandling, mozilla::AbstractThread::DispatchReason) xpcom/threads/TaskQueue.cpp:114:26
+#9 0x7f449806946d in mozilla::TaskQueue::Dispatch(already_AddRefed<nsIRunnable>, mozilla::AbstractThread::DispatchFailureHandling, mozilla::AbstractThread::DispatchReason) objdir-ff-asan/dist/include/mozilla/TaskQueue.h:67:21
+#10 0x7f449806ad7a in DispatchTaskGroup objdir-ff-asan/dist/include/mozilla/TaskDispatcher.h:245:13
+#11 0x7f449806ad7a in mozilla::AutoTaskDispatcher::~AutoTaskDispatcher() objdir-ff-asan/dist/include/mozilla/TaskDispatcher.h:91
+#12 0x7f449806a95d in reset objdir-ff-asan/dist/include/mozilla/Maybe.h:419:17
+#13 0x7f449806a95d in mozilla::XPCOMThreadWrapper::FireTailDispatcher() xpcom/threads/AbstractThread.cpp:80
+#14 0x7f449806d682 in applyImpl<mozilla::XPCOMThreadWrapper, void (mozilla::XPCOMThreadWrapper::*)()> objdir-ff-asan/dist/include/nsThreadUtils.h:791:12
+#15 0x7f449806d682 in apply<mozilla::XPCOMThreadWrapper, void (mozilla::XPCOMThreadWrapper::*)()> objdir-ff-asan/dist/include/nsThreadUtils.h:797
+#16 0x7f449806d682 in mozilla::detail::RunnableMethodImpl<void (mozilla::XPCOMThreadWrapper::*)(), true, false>::Run() objdir-ff-asan/dist/include/nsThreadUtils.h:826
+#17 0x7f4497f2acb3 in mozilla::CycleCollectedJSContext::ProcessStableStateQueue() xpcom/base/CycleCollectedJSContext.cpp:1336:12
+#18 0x7f449976ea81 in XPCJSContext::AfterProcessTask(unsigned int) js/xpconnect/src/XPCJSContext.cpp:3610:30
+#19 0x7f4498065743 in nsThread::ProcessNextEvent(bool, bool*) xpcom/threads/nsThread.cpp:1229:24
+#20 0x7f44980e6cea in NS_ProcessNextEvent(nsIThread*, bool) xpcom/glue/nsThreadUtils.cpp:381:10
+#21 0x7f44980635d9 in nsThread::Shutdown() xpcom/threads/nsThread.cpp:983:5
+#22 0x7f449808132e in nsThreadPool::Shutdown() xpcom/threads/nsThreadPool.cpp:328:17
+#23 0x7f449807a322 in applyImpl<nsIThreadPool, nsresult (nsIThreadPool::*)()> objdir-ff-asan/dist/include/nsThreadUtils.h:791:12
+#24 0x7f449807a322 in apply<nsIThreadPool, nsresult (nsIThreadPool::*)()> objdir-ff-asan/dist/include/nsThreadUtils.h:797
+#25 0x7f449807a322 in mozilla::detail::RunnableMethodImpl<nsresult (nsIThreadPool::*)(), true, false>::Run() objdir-ff-asan/dist/include/nsThreadUtils.h:826
+#26 0x7f4498065295 in nsThread::ProcessNextEvent(bool, bool*) xpcom/threads/nsThread.cpp:1213:14
+#27 0x7f44980e6cea in NS_ProcessNextEvent(nsIThread*, bool) xpcom/glue/nsThreadUtils.cpp:381:10
+#28 0x7f4498df7341 in mozilla::ipc::MessagePump::Run(base::MessagePump::Delegate*) ipc/glue/MessagePump.cpp:96:21
+#29 0x7f4498d6cd3e in RunInternal ipc/chromium/src/base/message_loop.cc:238:10
+#30 0x7f4498d6cd3e in RunHandler ipc/chromium/src/base/message_loop.cc:231
+#31 0x7f4498d6cd3e in MessageLoop::Run() ipc/chromium/src/base/message_loop.cc:211
+#32 0x7f449dd5567a in nsBaseAppShell::Run() widget/nsBaseAppShell.cpp:156:27
+#33 0x7f449fdeebf2 in XRE_RunAppShell toolkit/xre/nsEmbedFunctions.cpp:924:22
+#34 0x7f4498d6cd3e in RunInternal ipc/chromium/src/base/message_loop.cc:238:10
+#35 0x7f4498d6cd3e in RunHandler ipc/chromium/src/base/message_loop.cc:231
+#36 0x7f4498d6cd3e in MessageLoop::Run() ipc/chromium/src/base/message_loop.cc:211
+#37 0x7f449fdedfc3 in XRE_InitChildProcess toolkit/xre/nsEmbedFunctions.cpp:756:34
+#38 0x518fda in content_process_main browser/app/../../ipc/contentproc/plugin-container.cpp:115:19
+#39 0x518fda in main browser/app/nsBrowserApp.cpp:429
+#40 0x7f44b14c0f44 in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x21f44)
+
+SUMMARY: AddressSanitizer: heap-use-after-free objdir-ff-asan/dist/include/mozilla/Mutex.h:69:25 in Lock
+Shadow byte around the buggy address:
+0x0c3c800170b0: fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd
+0x0c3c800170c0: fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd
+0x0c3c800170d0: fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd
+0x0c3c800170e0: fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd
+0x0c3c800170f0: fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd
+=>0x0c3c80017100: fd fd fd fd fd[fd]fd fd fd fd fd fd fd fd fd fd
+0x0c3c80017110: fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd
+0x0c3c80017120: fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd
+0x0c3c80017130: fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd
+0x0c3c80017140: fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd
+0x0c3c80017150: fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd
+Shadow byte legend (one shadow byte represents 8 application bytes):
+Addressable: 00
+Partially addressable: 01 02 03 04 05 06 07
+Heap left redzone: fa
+Freed heap region: fd
+Stack left redzone: f1
+Stack mid redzone: f2
+Stack right redzone: f3
+Stack after return: f5
+Stack use after scope: f8
+Global redzone: f9
+Global init order: f6
+Poisoned by user: f7
+Container overflow: fc
+Array cookie: ac
+Intra object redzone: bb
+ASan internal: fe
+Left alloca redzone: ca
+Right alloca redzone: cb
+==145946==ABORTING

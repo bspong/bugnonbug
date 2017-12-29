@@ -1,0 +1,57 @@
+on firefox 3 evt.preventDefault() does not work when an ajax request is dispatched
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; it; rv:1.8.1.20) Gecko/20081217 Firefox/2.0.0.20
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; it; rv:1.8.1.20) Gecko/20081217 Firefox/2.0.0.20
+
+I hope to be in the right place to post this bug, if not I apologise and ask for the right place.
+
+I have two HTML text boxes, on the firt one I have a keydown eventhandler.
+The associated function retrives the keyCode from the event object to see if the tab key has been pressed, in which case the preventDefault function is called.
+After this call a synchronous ajax request is dispatched and its responseText is sent to the text box which has the focus.
+In Firefox 2 the text box with the focus is the same where the tab key has been pressed, in Firefox 3 is the next text box. 
+
+
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Any Servlet that sends back a text response will be OK.
+2. The JSP code:
+<%@page contentType="text/html" pageEncoding="UTF-8"%>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <title>JSP Page</title>
+       <script>
+            var currentElement;
+            function sendAjaxRequest(params){
+                var url = "/ProvaUTF8/AjaxServlet"
+                var ajaxRequest = new XMLHttpRequest();
+                ajaxRequest.open("POST", url, false);
+                ajaxRequest.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+                ajaxRequest.send(params);
+                return ajaxRequest.responseText;
+            }
+            function doKeyDown(evt){
+                if(evt.keyCode != 9) return;
+                evt.preventDefault();
+                var value = currentElement.value;
+                var params = "value=" + encodeURIComponent(value);
+                var result = sendAjaxRequest(params);
+                currentElement.value = result;
+            }
+        </script>
+    </head>
+    <body>
+        <input id="txt1" type="text" onfocus="currentElement=this;" onkeydown="doKeyDown(event)"/>
+        <input id="txt2" type="text" onfocus="currentElement=this;"/>
+    </body>
+</html>
+
+
+
+
+I found a work around setting the attribute tabinde="-1" on the second text box, but this means that I need to replicate this attribute on every text box of the form and write the necessary code to manage the navigation via keyboard.

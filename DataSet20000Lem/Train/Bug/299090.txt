@@ -1,0 +1,38 @@
+Crash if addSearchEngine called with invalid search plugin file but valid search icon (mycroft search engine) [@ nsCharTraits::length]
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8b2) Gecko/20050427 Firefox/1.0+
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8b2) Gecko/20050427 Firefox/1.0+
+
+It is possible to fool firefox into adding a search engine that doe not exist
+if you specify a valid icon for that search engine in the call to
+addSearchEngine(). Selecting this search engine will then crash Firefox.
+
+Confusingly, it will not do this the next time you try it, because it will not
+add the search engine if an icon file with the specified name already exists,
+and it already downloaded it into the searchplugins folder.
+
+Crucially it doe not seem to check for the existence of the src file for the
+plugin before adding it to the list.
+
+Reproducible: Always
+
+Steps to Reproduce:
+Make a call to window.sidebar.addSearchEngine() within the following restrictions:
+1. The search plugin icon must be a valid file
+2. The search plugin icon file must not already be downloaded (either because
+it's used by an existing plugin, or because you've tried this before)
+3. The search plugin source file must *not* be a valid file (or not accessible)
+
+Then,
+4. Select the search entry (which will have an icon but no text) in the search
+engine dropdown.
+Actual Results:
+Firefox downloaded the icon but not the source file (which didn't exist) without
+complaint. It added an item to the end of the list of search engine with the
+icon specified, but no text. When this item wa selected, Firefox crashed.
+
+Expected Results:
+If the file wa not found, the icon and entry in the list should not have been
+added (this is what Mozilla does). Some sort of error message would have been
+nice, too. :-)
+
+Attaching testcase (as linked) and stack trace.

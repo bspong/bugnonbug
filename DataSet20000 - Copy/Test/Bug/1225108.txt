@@ -1,0 +1,20 @@
+Introduce a special addon to ease working on devtools from Firefox
+We revived devtools.loader.srcdir and Loader.jsm recently.
+It allows to hot-reload a bunch of devtools resources, but not all.
+Also, it is very specific to devtools and this workflow can't be applied to any other Firefox resources.
+
+The big file moved :jryans did alllows us to simplify hot-reload feature by using an addon instead. We wouldn't bundled devtools as an addon.
+Instead we would just register xul content, skin and locales via an addon chrome.manifest. There wouldn't be any magic done in Loader.jsm.
+The addon is going to remap all root URL used by devtools to a local mozilla-central checkout transparently.
+This would have the benefit to not introduce a different codepath/loader/whatever between running firefox from a local checkout versus released package.
+
+The contribution workflow is done to be:
+ * Install a Firefox Nightly
+ * checkout mozilla-central with the same revision used to build this Nightly
+ * Register the addon (that lives in m-c checkout) via Firefox UI, bug 1221141
+ * Play with devtools
+ * Hit a keystroke (CTRL+ALT+R?) to hot-reload devtools
+ * Play with devtools with sources being hot-reloaded
+
+ * If you reload firefox, devtools are automatically going to be using local checkout sources.
+ * If you want to stop mapping to local sources, disable the addon.

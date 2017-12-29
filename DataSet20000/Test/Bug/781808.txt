@@ -1,0 +1,45 @@
+[PATCH] make install fails on platforms with PYTHONDONTWRITEBYTECODE
+Created attachment 650881
+Patch against the Mercurial head to correct the problem - adds "-f" to rm.
+
+User Agent: Mozilla/5.0 (X11; Linux x86_64; rv:14.0) Gecko/20100101 Firefox/14.0.1
+Build ID: 20120806062253
+
+Steps to reproduce:
+
+I built firefox from source using this .mozconfig:
+
+. $topsrcdir/browser/config/mozconfig
+export LDFLAGS="-Wl,--no-keep-memory"
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/ff-dbg
+ac_add_options --disable-optimize
+ac_add_options --enable-debug
+ac_add_options --enable-tests
+ac_add_options --enable-debug-symbols
+ac_add_options --prefix="/opt/firefox/hg"
+
+On my system I have export PYTHONDONTWRITEBYTECODE=1
+
+
+Actual results:
+
+I'm getting:
+
+/home/shlomif/Download/unpack/firefox/mozilla-central/ff-dbg/config/nsinstall -D /opt/firefox/hg/lib/firefox-devel-17.0a1/sdk/bin
+if test -f ../../dist/include/xpcom-config.h; then \
+  /home/shlomif/Download/unpack/firefox/mozilla-central/ff-dbg/config/nsinstall -t -m 644 ../../dist/include/xpcom-config.h /opt/firefox/hg/lib/firefox-devel-17.0a1; \
+fi
+find ../../dist/sdk -name "*.pyc" | xargs rm
+rm: missing operand
+Try 'rm --help' for more information.
+make[2]: *** [install] Error 123
+make[2]: Leaving directory `/home/shlomif/Download/unpack/firefox/mozilla-central/ff-dbg/browser/installer'
+make[1]: *** [install] Error 2
+make[1]: Leaving directory `/home/shlomif/Download/unpack/firefox/mozilla-central/ff-dbg'
+make: *** [install] Error 2
+
+
+
+Expected results:
+
+The installation should have proceeded.

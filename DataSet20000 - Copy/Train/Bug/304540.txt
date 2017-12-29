@@ -1,0 +1,49 @@
+pagecache works only twice when using <META HTTP-EQUIV="imagetoolbar"
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.0; de-DE; rv:1.7.10) Gecko/20050717 Firefox/1.0.6
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.0; de-DE; rv:1.7.10) Gecko/20050717 Firefox/1.0.6
+
+My Server gives the Response-Header (LiveHTTPHeader)
+
+HTTP/1.1 200 OK
+Server: Microsoft-IIS/5.0
+Date: Sat, 13 Aug 2005 12:44:01 GMT
+P3P: policyref="http://10.1.5.215/w3c/p3p.xml", CP="CURa,COM,ADM,BUS,DEV"
+Connection: close
+Content-Encoding: gzip
+Content-Type: text/html; charset=iso-8859-1
+Cache-Control: max-age=3600, s-maxage=3600, public
+
+and Firefox caches the Page correctly for an hour (as long as my page does not
+contain <META HTTP-EQUIV="imagetoolbar" content="no"> in <head></head>-Part). So
+each request during the next hour is served by the cache and the outdate-time is
+shown all the time correctly on the page infos.
+
+
+But if I add the line
+<META HTTP-EQUIV="imagetoolbar" content="no"> (for IE)
+firefox only sets the outdate-time correctly with the response from the server.
+After the page is requested again (this time result from cache) the outdate-time
+is set to time of last access. So when page is requested another time the cache
+is not valid any more and the page is requested from the server again. So the
+cache only works for every other request and outdates itself with this request.
+
+Livehttpheader shows the serverresponse for this case like this:
+
+HTTP/1.1 200 OK
+Server: Microsoft-IIS/5.0
+Date: Sat, 13 Aug 2005 12:59:37 GMT
+P3P: policyref="http://10.1.5.215/w3c/p3p.xml", CP="CURa,COM,ADM,BUS,DEV"
+Connection: close
+Content-Encoding: gzip
+Content-Type: text/html; charset=iso-8859-1
+Cache-Control: max-age=3600, s-maxage=3600, public
+imagetoolbar: no
+
+
+Reproducible: Always
+
+Actual Results:  
+cache invalidated itself by every second request
+
+Expected Results:  
+correct caching for an hour

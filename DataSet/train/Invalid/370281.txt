@@ -1,0 +1,164 @@
+oom crash [@ js_FreeStack] - would trip JS_ASSERT(sh), i.e. !cx->stackHeaders
+SunOS swift 5.11 snv_53 i86pc i386 i86pc
+
+   PKGINST:  SUNWfirefox
+      NAME:  Mozilla Firefox Web browser
+  CATEGORY:  FIREFOX,application,JDS4
+      ARCH:  i386
+   VERSION:  2.0,REV=110.0.4.2006.11.13.15.42
+   BASEDIR:  /usr
+    VENDOR:  Sun Microsystems, Inc.
+      DESC:  Mozilla Firefox Web browser
+    PSTAMP:  verbal20061113081942
+  INSTDATE:  Dec 12 2006 01:52
+   HOTLINE:  Please contact your local service provider
+    STATUS:  completely installed
+     FILES:      428 installed pathnames
+                   9 shared pathnames
+                  35 directories
+                 391 executables
+               95900 blocks used (approx)
+
+this is an oom crash. i'm not going to try to reproduce it, but i will keep the core. i'm not sure if i can get the symbols. but i can do just about anything else. i do have enough sources to be able to recover any variable necessary (it just takes finding a js small js function to determine offsets).
+
+timeless@swift:/var/crash/cores% ls -lah firefox-bin.19218.global.100.1171360448.swift
+-rw-------+  1 timeless other       3.8G Feb 13 14:44 firefox-bin.19218.global.100.1171360448.swift
+
+/usr/lib/firefox/run-mozilla.sh -g -d dbx /usr/lib/firefox/firefox-bin firefox-bin.19218.global.100.1171360448.swift
+
+http://mxr.mozilla.org/seamonkey/source/js/src/jsinterp.c#369
+ 368 JS_FRIEND_API(void)
+ 369 js_FreeStack(JSContext *cx, void *mark)
+ 370 {
+ 371     JSStackHeader *sh;
+ 372     jsuword slotdiff;
+ 373 
+ 374     /* Check for zero nslots allocation special case. */
+ 375     if (!mark)
+ 376         return;
+ 377 
+ 378     /* We can assert because js_FreeStack always balances js_AllocStack. */
+ 379     sh = cx->stackHeaders;
+ 380     JS_ASSERT(sh);
+ 381 
+ 382     /* If mark is in the current segment, reduce sh->nslots, else pop sh. */
+ 383     slotdiff = JS_UPTRDIFF(mark, JS_STACK_SEGMENT(sh)) / sizeof(jsval);
+ 384     if (slotdiff < (jsuword)sh->nslots)
+ 385         sh->nslots = slotdiff;
+ 386     else
+ 387         cx->stackHeaders = sh->down;
+ 388 
+ 389     /* Release the stackPool space allocated since mark was set. */
+ 390     JS_ARENA_RELEASE(&cx->stackPool, mark);
+ 391 }
+
+;'s in the dis below are my own comments and may be very wrong :|
+
+(dbx) where
+  [1] __lwp_kill(0x1, 0xb), at 0xfedb8dc5
+  [2] raise(0xb), at 0xfed72072
+  [3] nsProfileLock::FatalSignalHandler(0xb, 0x0, 0x8046e24), at 0x806bc86
+  [4] __sighndlr(0xb, 0x0, 0x8046e24, 0x806bba0), at 0xfedb78bf
+  [5] call_user_handler(0xb, 0x0, 0x8046e24), at 0xfedacf1b
+  [6] sigacthandler(0xb, 0x0, 0x8046e24, 0xf, 0x0, 0x0), at 0xfedad0c2
+  ---- called from signal handler with signal 11 (SIGSEGV) ------
+=>[7] js_FreeStack(0x892f200, 0x892f228), at 0xfe91525b
+  [8] js_ReportUncaughtException(0x892f200), at 0xfe90cb94
+  [9] JS_CallFunctionValue(0x892f200, 0x88c7c88, 0x15b3fb48, 0x1, 0x292942c8, 0x8047220), at 0xfe8d246c
+  [10] nsJSContext::CallEventHandler(0x892c1c8, 0x88c7c88, 0x15b3fb48, 0x1, 0x292942c8, 0x8047220), at 0xfa8f330e
+  [11] nsGlobalWindow::RunTimeout(0x895e930, 0x2665a8a0), at 0xfa91084d
+  [12] nsGlobalWindow::TimerCallback(0x2665a930, 0x2665a8a0), at 0xfa911778
+  [13] handleTimerEvent(0xc3f288a0), at 0xfec8c256
+  [14] PL_ProcessPendingEvents(0x8137c70), at 0xfec86629
+  [15] nsEventQueueImpl::ProcessPendingEvents(0x8117428), at 0xfec88c76
+  [16] event_processor_callback(0x8b647a0, 0x1, 0x8117428), at 0xfb4f365d
+  [17] g_io_unix_dispatch(0x8b7b110, 0xfb4f3648, 0x8117428), at 0xfe3a9d5b
+  [18] g_main_dispatch(0x80c7ec8), at 0xfe383615
+  [19] g_main_context_dispatch(0x80c7ec8), at 0xfe384705
+  [20] g_main_context_iterate(0x80c7ec8, 0x1, 0x1, 0x80b2988), at 0xfe384b22
+  [21] g_main_loop_run(0x89d2848), at 0xfe385124
+  [22] gtk_main(0x8047778, 0x8087430, 0x819aed0, 0x80474c8, 0xfb3f25ab, 0x81a2720), at 0xfe55a2ba
+  [23] nsAppShell::Run(0x81a2720), at 0xfb4f3928
+  [24] nsAppStartup::Run(0x819aed0), at 0xfb3f25ab
+  [25] XRE_main(0x5, 0x80477ec, 0x8087408), at 0x8061a2c
+  [26] main(0x5, 0x80477ec, 0x8047804), at 0x805a521
+(dbx) print (int*)0x892f200 ; cx from frame 7
+(int *) 0x892f200 = 0x892f200
+(dbx) print *(int*)(0x892f200+0x170) ; cx->stackHeaders according to my interpretation of 
+*((int *) (0x892f200+0x170)) = 0
+(dbx) regs
+current thread: t@null
+current frame:  [7]
+gs       0x00000000000001c3
+fs       0x0000000000000000
+es       0x0000000000000043
+ds       0x0000000000000043
+ss       0x0000000000000043
+cs       0x000000000000003b
+edi      0x00000000
+esi      0x00000000            ; NULL POINTER
+ebp      0x08047044
+esp      0x00000000
+ebx      0xfe998cdc
+edx      0x00000008
+ecx      0x0892f228
+eax      0x0224bc88
+eip      0xfe91525b:js_FreeStack+0x47   movl     %eax,(%esi)
+trapno   0x000000000000000e
+err      0x0000000000000007
+eflags   0x0000000000010297
+(dbx) dis js_FreeStack
+0xfe915214: js_FreeStack       :        pushl    %ebp
+0xfe915215: js_FreeStack+0x0001:        movl     %esp,%ebp
+0xfe915217: js_FreeStack+0x0003:        subl     $0x00000010,%esp
+0xfe91521a: js_FreeStack+0x0006:        andl     $0xfffffff0,%esp
+0xfe91521d: js_FreeStack+0x0009:        pushl    %ebx
+0xfe91521e: js_FreeStack+0x000a:        pushl    %esi
+0xfe91521f: js_FreeStack+0x000b:        pushl    %edi
+0xfe915220: js_FreeStack+0x000c:        call     js_FreeStack+0x11      [ 0xfe915225, .+5 ]
+0xfe915225: js_FreeStack+0x0011:        popl     %ebx
+0xfe915226: js_FreeStack+0x0012:        addl     $0x00083ab7,%ebx       ; adjust stack %ebx
+0xfe91522c: js_FreeStack+0x0018:        movl     0x0000000c(%ebp),%ecx  ; load mark to %ecx from stack
+0xfe91522f: js_FreeStack+0x001b:        testl    %ecx,%ecx              ; if (!mark)
+0xfe915231: js_FreeStack+0x001d:        je       js_FreeStack+0x87      [ 0xfe91529b, .+0x6a ] ; return
+0xfe915233: js_FreeStack+0x001f:        movl     0x00000008(%ebp),%eax  ; load cx to %eax from stack
+0xfe915236: js_FreeStack+0x0022:        movl     %eax,0xfffffffc(%ebp)
+0xfe915239: js_FreeStack+0x0025:        movl     0x00000170(%eax),%esi  ; load cx->stackHeaders to
+0xfe91523f: js_FreeStack+0x002b:        leal     0x00000008(%esi),%edx  ;   %edx
+0xfe915242: js_FreeStack+0x002e:        movl     %ecx,%eax
+0xfe915244: js_FreeStack+0x0030:        subl     %edx,%eax
+0xfe915246: js_FreeStack+0x0032:        shrl     $0x00000002,%eax
+0xfe915249: js_FreeStack+0x0035:        cmpl     (%esi),%eax
+0xfe91524b: js_FreeStack+0x0037:        jb       js_FreeStack+0x47      [ 0xfe91525b, .+0x10 ]
+0xfe91524d: js_FreeStack+0x0039:        movl     0x00000004(%esi),%eax
+0xfe915250: js_FreeStack+0x003c:        movl     0xfffffffc(%ebp),%edx
+0xfe915253: js_FreeStack+0x003f:        movl     %eax,0x00000170(%edx)
+0xfe915259: js_FreeStack+0x0045:        jmp      js_FreeStack+0x49      [ 0xfe91525d, .+4 ]
+0xfe91525b: js_FreeStack+0x0047:        movl     %eax,(%esi)            ; sh->nslots ; EIP, CRASH
+0xfe915266: js_FreeStack+0x0052:        movl     %eax,0xfffffff8(%ebp)
+0xfe915269: js_FreeStack+0x0055:        cmpl     %eax,%edx
+0xfe91526b: js_FreeStack+0x0057:        je       js_FreeStack+0x7a      [ 0xfe91528e, .+0x23 ]
+0xfe91526d: js_FreeStack+0x0059:        movl     0x00000004(%edx),%eax
+0xfe915270: js_FreeStack+0x005c:        movl     %ecx,%edi
+0xfe915272: js_FreeStack+0x005e:        subl     %eax,%edi
+0xfe915274: js_FreeStack+0x0060:        movl     0x0000000c(%edx),%esi
+0xfe915277: js_FreeStack+0x0063:        subl     %eax,%esi
+0xfe915279: js_FreeStack+0x0065:        cmpl     %esi,%edi
+0xfe91527b: js_FreeStack+0x0067:        ja       js_FreeStack+0x7a      [ 0xfe91528e, .+0x13 ]
+0xfe91527d: js_FreeStack+0x0069:        movl     0xfffffffc(%ebp),%eax
+0xfe915280: js_FreeStack+0x006c:        movl     0x00000030(%eax),%eax
+0xfe915283: js_FreeStack+0x006f:        addl     %eax,%ecx
+0xfe915285: js_FreeStack+0x0071:        notl     %eax
+0xfe915287: js_FreeStack+0x0073:        andl     %ecx,%eax
+0xfe915289: js_FreeStack+0x0075:        movl     %eax,0x0000000c(%edx)
+0xfe91528c: js_FreeStack+0x0078:        jmp      js_FreeStack+0x87      [ 0xfe91529b, .+0xf ]
+0xfe91528e: js_FreeStack+0x007a:        pushl    %ecx
+0xfe91528f: js_FreeStack+0x007b:        movl     0xfffffff8(%ebp),%eax
+0xfe915292: js_FreeStack+0x007e:        pushl    %eax
+0xfe915293: js_FreeStack+0x007f:        call     _PROCEDURE_LINKAGE_TABLE_+0x9d0 [PLT]  [ 0xfe8c85ec, .-0x4cca7 ]
+0xfe915298: js_FreeStack+0x0084:        addl     $0x00000008,%esp
+0xfe91529b: js_FreeStack+0x0087:        popl     %edi
+0xfe91529c: js_FreeStack+0x0088:        popl     %esi
+0xfe91529d: js_FreeStack+0x0089:        popl     %ebx
+0xfe91529e: js_FreeStack+0x008a:        leave
+0xfe91529f: js_FreeStack+0x008b:        ret

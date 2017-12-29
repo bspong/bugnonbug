@@ -1,0 +1,41 @@
+Holding enter allows arbitrary extension installation.
+It is possible to install an arbitrary XPI without user's consent if the user holds Enter on a malicious website containing a specially crafted JavaScript code.
+
+There are 2 layers of protection against an unauthorized installation of extensions:
+
+1) The principal of the opener is checked against whitelisted domains that are allowed to download the plugin without asking. If the domain is not trusted, the user is asked to allow to download the plugin.
+2) When the plugin is downloaded, the user is asked to confirm the installation.
+
+The first protection can be circumvented by creating a hidden "Embed" element containing an arbitrary XPI as its "pluginspage" parameter. The attacker can focus this element while the user holds Enter, causing a number of "Plugin Finder Service" windows to appear. The first window focuses the "Cancel" button and will just close, but all the subsequent ones will set focus on the "Manual Install" button directing to the malicious XPI. As soon as the user releases the key, the browser will start launching multiple windows with the provided URL. The windows will have a ChromeWindow object as their opener, so the user will not be asked to allow to download a plugin.
+
+The second protection can be bypassed due to a logic error in amWebInstallListener.js. When no window-watcher is registered in Services, this will throw:
+
+Services.ww.openWindow(this.window, "chrome://mozapps/content/xpinstall/xpinstallConfirm.xul",null, "chrome,modal,centerscreen", args);
+
+with the following message in the console:
+
+Warning: WARN addons.manager: InstallListener threw exception when calling onDownloadEnded: TypeError: Services.ww is undefined
+Source File: resource://gre/components/amWebInstallListener.js
+Line: 170
+
+When the confirmation dialog fails to open, the installation will commence as though the user clicked "Install".
+
+Getting the browser into a state in which Services.ww is permanently undefined can be achieved with no user interaction by using a modified version of https://bugzilla.mozilla.org/show_bug.cgi?id=616659 on a signed website. Exploiting it locally will likely bring about corrupt windows and a lot of errors in the console, but Services.ww will be defined. On a remote signed website, with the try-catch-inside-eval recursion performed during page load, after an alert dialog which prevents "too much recursion" error from occuring, it fails silently and Services.ww remains undefined for the whole browsing session, ie. Firefox will not ask to confirm a plugin installation until the user restarts the browser. The only mitigating factor is that if Services.ww was defined earlier in the browser session, the exploit may fail and corrupt windows will appear (hence point #2 in the steps described below, after opening windows to import the certificate). This was noticed by Zach Hoffman in https://bugzilla.mozilla.org/show_bug.cgi?id=616659#c37 but the implications there were reverse.
+
+There may be other ways to wind up with Services.ww undefined, but those should be safe as long as the plugin installation is stopped when xpinstallConfirm.xul fails to open.
+
+Reproducible: always (as long as Services.ww wasn't defined earlier in the browsing session)
+
+Steps to reproduce:
+1. Import x509.cert for software makers identification.
+2. Close the browser and reopen after the process shuts down.
+3. Open jar:http://x.x.x.x/mozilla/signed.jar!exploit.htm (see comment 1)
+4. Press and hold enter.
+
+Actual results:
+The plugin is automatically downloaded and installed.
+
+Expected results:
+The plugin should neither be downloaded nor installed without user's consent.
+
+Verified to work with Firefox 5.0.1 on Windows 7 SP1 64-bit and Windows XP SP3 32-bit.

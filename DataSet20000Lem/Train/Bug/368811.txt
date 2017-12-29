@@ -1,0 +1,64 @@
+Firefox crash on exit after plugin install activated by InstallTrigger.install(xpi,installCompleteFunction)
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.8.1.1) Gecko/20061204 Firefox/2.0.0.1
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.8.1.1) Gecko/20061204 Firefox/2.0.0.1
+
+After installing a plugin using xpinstall, and triggering the install with InstallTrigger.install(xpi,installCompleteFunction), the browser crash on exit in JS3250.dll if the Add-ons window (which pop up during plugin install) is closed after the last page.
+
+I built a debug build of Firefox 1.5.0.9 from source and the crash happens in
+JS3250.ddl:
+
+nsXPITriggerInfo::~nsXPITriggerInfo()
+{
+nsXPITriggerItem* item;
+
+for(PRUint32 i=0; i < Size(); i++)
+{
+item = Get(i);
+if (item)
+delete item;
+}
+mItems.Clear();
+
+if ( mCx && !JSVAL_IS_NULL(mCbval) ) {
+JS_BeginRequest(mCx);
+>>>> JS_RemoveRoot( mCx, &mCbval );
+JS_EndRequest(mCx);
+}
+
+MOZ_COUNT_DTOR(nsXPITriggerInfo);
+}
+
+After some debugging, I verified that during the install, the nsXPITriggerInfo receives the pointer to the callback function installCompleteFunction in the SaveCallback() method, which save it to the mCbval variable.
+
+When install is completed, the callback is called and then the method
+
+static void destroyTriggerEvent(XPITriggerEvent* event)
+{
+JS_BeginRequest(event->cx);
+JS_RemoveRoot( event->cx, &event->cbval );
+JS_EndRequest(event->cx);
+delete event;
+}
+
+is correcly executed.
+
+Then, when the last page ha been closed and the add-on window ha been closed, the destructor is called and crashes.
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Open a web page that launch a plugin install with InstallTrigger.install(xpi,installCompleteFunction)
+1b. The add-on window pop up and display the installation advace
+2. Open a web page that us the plugin
+3. Open another page / tab
+4. Close all page
+5. Close the Add-on window
+Actual Results:
+Crash
+
+Expected Results:
+Smooth exit
+
+It wa unable to reproduce the crash with Talkback installed.

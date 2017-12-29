@@ -1,0 +1,40 @@
+Firefox handle relative sourceRoot in source map incorrectly
+User Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:49.0) Gecko/20100101 Firefox/49.0
+Build ID: 20160922113459
+
+Steps to reproduce:
+
+When a source map contains sourceRoot which represents a relative path, Firefox handle the source path incorrectly.
+
+Example requires 3 file (2 if the source map is inlined):
+1) Source file (http://example.com/foo/source/script.js)
+2) File generated based on the source (http://example.com/foo/bundle.js)
+3) Source map (http://example.com/foo/bundle.map)
+
+Notice that the source file is located in a folder named `source` relative to the bundle.
+
+The source map look like this:
+```
+{"sources":["script.js"], "sourceRoot":"source", ...}
+```
+
+Here's a plunkr: https://plnkr.co/edit/ESu37NSP6Hs3xLxl9NLt?p=preview (Launch the preview in a separate window to reproduce the results.)
+
+
+Actual results:
+
+Instead of listing `http://example.com/foo/source/script.js` in the sources, dev tool show `http://example.com/source/script.js` - notice that `/foo` is missing, hence the URL is not correct.
+
+(If the source map doesn't contain sourcesContent this will result in 404 when dev tool will try to load the file.)
+
+
+Expected results:
+
+According to the spec (https://docs.google.com/document/d/1U1RGAehQwRypUTovF1KRlpiOFze0b-_2gc6fAH0KY0k/edit#heading=h.75yo6yoyk7x5):
+> If the source are not absolute URLs after prepending of the “sourceRoot”, the source are resolved relative to the SourceMap (like resolving script src in a html document).
+
+In this example the resulting source should be `http://example.com/foo/` + `source` + `script.js` = `http://example.com/foo/source/script.js`
+
+I've confirmed that Chrome, IE11 and Edge work correctly in this case.
+
+When sourceRoot is omitted (or empty) and the source is specified a `source/script.js` the issue is not reproducible and devtools work correctly

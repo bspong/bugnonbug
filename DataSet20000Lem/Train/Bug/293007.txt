@@ -1,0 +1,80 @@
+nsFontXft object are not freed on exit
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.7) Gecko/20050505 Firefox/1.0.3
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.7) Gecko/20050505 Firefox/1.0.3
+
+Some background. I am trying to find memory leak in Firefox using valgrind.
+Firefox leaf many unfreed dynamically allocated object at exit.
+It is not a bug per se, but make hunting for real leak difficult.
+I think we shall free everything we ever allocated.
+
+Let me start from the most visible ones. I opened five tab with
+a local page:
+
+<html>
+<a href="Titan IV.mpg">Titan IV.mpg (size: 2318887 bytes)</a>
+</html>
+
+then I closed them one-by-one, then closed the browser.
+
+Many small and two of three biggest unfreed allocation
+in valgrind log seem to result from unfreed nsFontXft objects:
+
+141924 byte in 4 block are still reachable in loss record 142 of 144
+at 0x341462B4: malloc (vg_replace_malloc.c:130)
+by 0x34A7CEF3: XftFontOpenInfo (in $X/lib/libXft.so.2.1)
+by 0x34A7DC7A: XftFontOpenPattern (in $X/lib/libXft.so.2.1)
+by 0x3537829D: nsFontXft::GetXftFont() (in $moz/components/libgfx_gtk.so)
+by 0x35375D15: nsFontMetricsXft::FindFont(unsigned) (in
+$moz/components/libgfx_gtk.so)
+by 0x35375610: nsFontMetricsXft::RealizeFont() (in $moz/components/libgfx_gtk.so)
+by 0x35374F2D: (within $moz/components/libgfx_gtk.so)
+by 0x3515E3E5: nsFontCache::GetMetricsFor(nsFont const&, nsIAtom*,
+nsIFontMetrics*&) (in $moz/libgkgfx.so)
+by 0x3515D740: DeviceContextImpl::GetMetricsFor(nsFont const&, nsIAtom*,
+nsIFontMetrics*&) (in $moz/libgkgfx.so)
+by 0x3573FC99: (within $moz/components/libgklayout.so)
+by 0x3573FDD3: nsHTMLReflowState::CalcLineHeight(nsIPresContext*,
+nsIRenderingContext*, nsIFrame*) (in $moz/components/libgklayout.so)
+by 0x35716FC1: nsBlockReflowState::nsBlockReflowState(nsHTMLReflowState
+const&, nsIPresContext*, nsBlockFrame*, nsHTMLReflowMetrics const&, int) (in
+$moz/components/libgklayout.so)
+
+486394 byte in 286 block are still reachable in loss record 144 of 144
+at 0x341462B4: malloc (vg_replace_malloc.c:130)
+by 0x34A956F6: ft_alloc (in $X/lib/libfreetype.so.6.3.3)
+by 0x34A8D1C9: FT_Alloc (in $X/lib/libfreetype.so.6.3.3)
+by 0x34A90DBF: FT_CMap_New (in $X/lib/libfreetype.so.6.3.3)
+by 0x34AA7B3E: PCF_Face_Init (in $X/lib/libfreetype.so.6.3.3)
+by 0x34A902B5: open_face (in $X/lib/libfreetype.so.6.3.3)
+by 0x34A9056B: FT_Open_Face (in $X/lib/libfreetype.so.6.3.3)
+by 0x34A90772: FT_New_Face (in $X/lib/libfreetype.so.6.3.3)
+by 0x34A7C8A6: _XftLockFile (in $X/lib/libXft.so.2.1)
+by 0x34A7CDCB: XftFontOpenInfo (in $X/lib/libXft.so.2.1)
+by 0x34A7DC7A: XftFontOpenPattern (in $X/lib/libXft.so.2.1)
+by 0x3537829D: nsFontXft::GetXftFont() (in $moz/components/libgfx_gtk.so)
+
+Last one is the biggest. Allocation:
+
+XftFont *nsFontXft::GetXftFont(void) {
+if (!mXftFont) {
+FcPattern *pat = FcFontRenderPrepare(0, mPattern, mFontName);
+if (!pat)
+return nsnull;
+...
+mXftFont = XftFontOpenPattern(GDK_DISPLAY(), pat); <===== HERE
+if (!mXftFont)
+FcPatternDestroy(pat);
+}
+return mXftFont;
+}
+
+It is never leaked AFAIKS. ~nsFontXft() destructor
+have code which free mXftFont. I conclude that some
+nsFontXft object are not destroyed at exit.
+
+Being totally unfamiliar with source tree, I did not track
+where freeing can (should?) be added.
+
+Reproducible: Always
+
+Steps to Reproduce:

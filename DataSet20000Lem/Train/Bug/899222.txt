@@ -1,0 +1,11 @@
+Make about:home work in e10s
+Created attachment 782692
+about-home
+
+Our goal for most about: page is to load them non-remotely. However, about:home is different because it load content from the network. Therefore we'd like to make sure it's sandboxed.
+
+This patch add code to communicate between the chrome and content process whenever the user click on the button for opening the downloads manager and the like. It also sends the snippet down to the content process and informs it when the search engine ha changed.
+
+The one tricky part wa dealing with search engine changes. The chrome process need to listen for change to the search engine and send them to any tab that have about:home open. When one of those tab close or navigates away, we need to stop listening.
+
+Ideally, the content process should be able to register a "pagehide" handler and tell the chrome process to stop listening. However, when everything run in the same process (as we do now in Firefox) the "pagehide" handler can be too late to send any messages. If the tab is being closed, the messageManager for the content script ha already been disconnected when "pagehide" fires. I worked around this by listening for "TabClose" in the chrome process. I'm welcome to other suggestion though.

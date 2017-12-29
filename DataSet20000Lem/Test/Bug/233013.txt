@@ -1,0 +1,36 @@
+middle button scrolling leaf trace a you scroll
+User-Agent:
+Build Identifier: Mozilla/5.0 (Windows; U; Win98; en-US; rv:1.5) Gecko/20031007 Firebird/0.7
+
+On our o ( qnx ) a well a on window there is a problem with midle button
+scrolling.
+The special icon that is displayed while the middle mouse button is pressed
+leaf trace up/down ( or left/right a misght be the case ).
+This is what happens:
+- the special icon get displayed when the middle button is pressed
+- nsWindow:Scroll() is called and we blit the content of the window up or down.
+This mean that the special icon will be blitted up or down.
+- the special icon is redisplayed at the old position, but portion of it are
+already displayed up or down, leaving traces.
+Please note that the middle button scrolling is disabled on window ( you have
+to change your pref.js in your profile to enable it ).
+
+I think the code that handle the scrolling should clear the special icon off
+the screen ( expose the space underneath it ), then call nsWindow:Scroll(), then
+redisplay the special icon on the same position.
+
+Reproducible: Always
+Steps to Reproduce:
+1. In Windows enable the middle button scrolling in your pref.js
+2. Click the middle button and hold it pressed over a scrollable area
+3. Move the mouse up or down while holding the button down. The trace will appear
+up and down.
+Actual Results:
+There are trace left from the scrolling, that are due to the special icon being
+displayed while the window is scrolling.
+
+Expected Results:
+No trace should be displayed.
+
+On linux this works, but I guess their implementation of the nsWindow::Scroll()
+is not blitting the actual content of the window up/down.

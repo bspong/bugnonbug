@@ -1,0 +1,99 @@
+anchor not added to document.anchors unless have name= attribute set
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.5) Gecko/20041107 Firefox/1.0
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.5) Gecko/20041107 Firefox/1.0
+
+A page ha a set of anchor tag (<a>). javascript code access document.anchors
+and expects to find all the anchor tag there, but not all the tag are found in
+that array. Appers that only the anchor with a name="somevalue" tag attribute
+are present. Those which only specify id="somevalue" (no 'name' tag attribute)
+don't appear. In IE6 they do not require name="value" to appear, but that is
+not the case in Mozilla 1.7.1 or Firefox 1.0. A small HTML file that duplicate
+this is included below in section Additional Information.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Run the enclosed html page under debugger.
+2. Set breakpoint in javascript function removeLineNos().
+3. Click the button Remove Line Numbers
+4. Step till value of document.anchors is accessed. Then open that array and
+look at the content. Will only have 4 items, rather than 6 (<a> tag "l3" and
+"l4" will not be there).
+
+Actual Results:
+document.anchors only contains 4 item (rather than 6)
+
+Expected Results:
+all 6 <a> tag should be in document.anchors
+
+** HTML file that duplicate this problem **
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>Mozilla Bug</title>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />
+<meta name="keywords" content="view, rate example, java, source file"/>
+<script type="text/javascript">
+var savedAnchorValues;
+
+function removeLineNos() {
+if (savedAnchorValues != null && savedAnchorValues.length > 0) {
+return;
+}
+var anchor = document.anchors;
+var inputElt;
+savedAnchorValues = new Array(anchors.length);
+for (i = 0; i < anchors.length; i++) {
+if ((anchors[i].className == "ln") || (anchors[i].className == "ln_hit")) {
+savedAnchorValues[i] = anchors[i].firstChild.data;
+anchors[i].removeChild(anchors[i].firstChild); // remove TextNode
+}
+}
+}
+
+function restoreLineNos() {
+if (!(savedAnchorValues && savedAnchorValues.length > 0)) {
+return;
+}
+var txt;
+var anchor = document.anchors;
+for (i = 0; i < anchors.length; i++) {
+if ((anchors[i].className == "ln") || (anchors[i].className == "ln_hit")) {
+txt = document.createTextNode(savedAnchorValues[i]);
+anchors[i].appendChild(txt);
+}
+}
+savedAnchorValues = null;
+}
+</script>
+<style type="text/css">
+.ln { color: #808080; background-color: #eef5fe;}
+</style>
+</head>
+
+<body>
+&lt;a&gt; tag must have attribute name="value" or won't be present in
+document.anchors
+<br/>
+<div>
+<input type="button" value="Remove Line Numbers"
+onClick="removeLineNos()" />
+<input type="button" value="Restore Line Numbers"
+onClick="restoreLineNos()" />
+</div>
+
+<div>
+<a class="ln" name="l1">L1</a>
+<a class="ln" name="l2">L2</a>
+<a href="#" class="ln" id="l101" name="l101">L101</a>
+<a href="#" class="ln" id="l102" name="l102">L102</a>
+
+<!-- following won't be returned by javascript: document.anchors: -->
+<a class="ln" id="l3">L3</a>
+<a class="ln" id="l4">L4</a>
+</div>
+
+</body>
+</html>

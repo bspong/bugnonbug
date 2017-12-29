@@ -1,0 +1,47 @@
+sdk/windows browserWindows list broken after javascript:window.open()
+Created attachment 8747995
+BrowserWindows@Test-0.0.1.xpi
+
+User Agent: Mozilla/5.0 (X11; Linux x86_64; rv:45.0) Gecko/20100101 Firefox/45.0
+Build ID: 20160426233433
+
+Steps to reproduce:
+
+0. Install attached BrowserWindowsTest extension for the debug shortcut Ctrl+Alt+D and start a clean session of Firefox, one window open. (Or you can run it with "jpm run -b /usr/bin/firefox").
+
+1. Press Ctrl+Alt+D and observe the Debug console [1]
+2. Press Ctrl+N to open a new browser window
+3. Press Ctrl+Alt+D and observe the Debug console [2]
+4. Enter "javascript:window.open('about:blank');" into the address bar and press Enter.
+5. Press Ctrl+Alt+D and observe the Debug console [3]
+
+[A] one browser window open:
+console.log: browserwindowstest: windows.browserWindows.length = 1
+console.log: browserwindowstest: constructor {"0":{}}
+
+[B] two browser window open:
+console.log: browserwindowstest: windows.browserWindows.length = 2
+console.log: browserwindowstest: constructor {"0":{},"1":{}}
+
+[C] three (!) browser window open:
+console.log: browserwindowstest: windows.browserWindows.length = 2
+console.log: browserwindowstest: constructor {"0":{},"1":{}}
+
+You can continue opening browser window with Ctrl+N and window.open() with the same result - those opened with Ctrl+N are added to sdk/windows browserWindows list, and those opened with window.open() are not.
+
+
+Actual results:
+
+sdk/windows browserWindows list doe not contain BrowserWindows opened with window.open().
+However these window are visually no different from BrowserWindows opened with Ctrl+N.
+
+Also no 'open' event is triggered for sdk/windows browserWindows after window.open().
+
+So there is no way to list all opened BrowserWindows.
+This render that SDK API *useless* for performing operation on browser window from within an addon.
+
+
+
+Expected results:
+
+sdk/windows browserWindows should contain *ALL* BrowserWindows opened, both with Ctrl+N and with window.open().

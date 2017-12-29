@@ -1,0 +1,71 @@
+Changing URL location while a page is loading temporarily reverts the URL
+This is effectively a clone of 798249 because people are reporting that's been regressed by 1354796.
+
+
+Original STR:
+Visit a slow loading page
+While the page is loading, type in a different URL in the location bar and hit Enter.
+
+Expected:
+The typed value will remain
+
+Actual:
+The typed value is reverted to the loading URL until some time later in the new request.
+
+This affect user perceived responsiveness since the status of the location bar is one of the way that user can track the progress of the page's load (for example, page that redirect upon loading). Reverting back to the current location can also cause confusion a user wonder if their attempt to redirect their navigation wa successful.
+
+
+
+(In reply to Berend De Schouwer from bug 798249 comment #54)
+> I can duplicate something similar in 50 release (which doesn't have
+> #1354796), 53 release (which ha #1354796) and nightly (which ha a fix for
+> #1354796)
+>
+> On a slow loading site, change the URL, hit enter, and before it completes
+> hit "stop" can show either the previous URL or about:blank.
+>
+> In Firefox 50:
+> - open a slow (no syn/ack) site using "right click, new tab"
+> - go to new tab
+> - change URL to another site
+> - hit Enter
+> - before the load finishes, hit Esc
+> - URLBar = new site (correct)
+>
+> In 53 and Nightly:
+> - open a slow (no syn/ack) site using "right click, new tab"
+> - go to new tab
+> - change URL to another site
+> - hit Enter
+> - before the load finishes, hit Esc
+> - URLBar = about:blank (incorrect)
+>
+> In 50, 53 and Nightly:
+> - open a new tab
+> - go to a slow (no syn/ack) site
+> - change URL
+> - hit enter
+> - before the load finishes, hit Esc
+> - URLBar = new site (correct)
+>
+> In 50, 53 and Nightly:
+> - open a new tab
+> - go to a slow (syn/ack, but slow/not cached) site
+> - change URL
+> - hit enter
+> - before the load finishes, hit Esc
+> - URLBar = old site (incorrect)
+>
+> I've tried my best to open with empty profiles, so there's no cache.
+>
+> To get the old site I have to hit Esc fairly quickly (as in, sub-one-second)
+>
+> No syn/ack mean no HTTP transfer have started. No data is there to
+> display. Slow but not cached mean HTTP transfer have started but not
+> finished. There likely will be some incomplete data to display.
+>
+> If the load of the new site get beyond a certain point, hitting Esc will
+> result in the new site being partially displayed, and the new site being in
+> the URL bar.
+
+This doesn't make sense. 53 doesn't, a far a I can tell, have the fix for 1354796 at all. It sound like it wa regressed by something else.

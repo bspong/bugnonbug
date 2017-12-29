@@ -1,0 +1,17 @@
+Differentiating active v passive mixed content for request made by plugins
+Plugins make request for resources; these resource are given a content type TYPE_OBJECT_SUBREQUEST.
+
+The Mixed Content Blocker can't tell if these request are for active content or passive content. For non-plugin requests, the content type is determined by the context of the request. Since the browser doesn't know why the plugin is requesting the content, we can't tell if it requesting a script or an image or a video.
+
+Mixed content caused by plugins isn't an issue that will go away (For example, we cannot expect that video file on http page are all encrypted. This would slow down the performance of the site and negatively effective user experience, especially for user with low bandwidth connections).
+
+There are a few way to deal with this. None of them are ideal and many are not easy:
+* Treat all plugin request a passive content
+* Check the file type that is returned (is it .js, is it .swf?) and make a best guess for the content type and active/passive classification.
+* Sniff the content that is returned to see what content type it look like.
+* Ask plugin creator to honor the mixed content setting of the browser. If mixed active content is turned off, do not allow mixed active content requests.
+* Ask plugin creator to provide API option that tell the browser whether a request/response is passive or active, and then let the browser decide how to handle the request/response.
+
+I first discovered this issue when testing the Mixed Content Blocker on https://youtube.com. In the current implementation of nsMixedContentBlocker, the video content is blocked because it is retrieved over http and nsMixedContentBlocker take the conservative approach by treating all TYPE_OBJECT_SUBREQUEST a active content.
+
+Other suggestion and thought are welcome!

@@ -1,0 +1,34 @@
+tolerate clock skew in HAWK requests
+The FxA login (and subsequent Sync protocol) has several servers, all of
+which might have clocks that are offset from the client. The HAWK protocol
+uses a timestamp to reduce replay attacks, and if the client-vs-server clock
+skew is too large, the request will be rejected. Client clocks are frequently
+really broken, and we need FxA/Sync to work anyways.
+
+One piece of work is to create a stateful HAWK client object, one per server,
+which remembers the most recent delta between the browser clock and the
+server it talks to. (It's probably sufficient to subtract current browser
+time from the HTTP response's "Date" header, when the response arrives.. no
+need for more sophisticated NTP-like calculations). It should then use this
+delta when computing the hashed timestamp of the next request. The object
+should also automatically retry any request, at most once, when the request
+is rejected due to a timestamp error.
+
+The Persona signed assertion also has a client-generated timestamp, in the
+"exp" (expires) field of the assertion object. This should be linked to the
+fxa-auth-server's clock. (I think the Persona shim has code to do this
+already). So the new HAWK client object needs an API to return the current
+delta, the jwcrypto.jsm function which creates assertions needs to accept an
+argument to set the desired expiration time, and the FxAccounts.jsm code
+needs to fetch the delta (from the HAWK-authenticated /certificate/sign
+request) and use it to compute the "exp" time.
+
+I'm not sure if there's a clean way to expose the HAWK delta to
+FxAccounts.jsm, as there's an intermediate "FxAccountsClient.jsm" object
+between them. So we may have to do some refactoring.
+
+We'll need one of these HAWK client objects for the fxa-auth-server. We might
+also need one for the Sync token-server, depending upon what protocol it
+uses. We probably need one for the Sync storage-server, since I think it
+accepts HAWK-authenticated requests (using the tokenserver's token as the
+HAWK key).

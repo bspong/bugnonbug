@@ -1,0 +1,14 @@
+search suggestions passes wrong previous result to form history
+MattN noticed a problem with the WIP patch from bug 469443 applied. When typing in the search box, sometimes search-suggestion entries would be displayed above the divider (where entries for previous matching searches are).
+
+The problem here is that nsSearchSuggestions.js is passing the wrong previousResult to form history. Instead of it being the previous form history search result, it's the SuggestAutoCompleteResult result (which contains the union of the form-history and search-suggest entries). So, when form history refines its results as you time, it can actually add *more* entries as data leaks from the suggestions result into form history result, and it thus looks like the divider is being drawn in the wrong place.
+
+This bug wasn't visible before 469443, because nsFormFillController::StartSearch tries to QI the provided result to a nsIAutoCompleteSimpleResult. The search-suggestion result is only implements nsIAutoCompletResult (no "Simple"), so the QI fails, historyResult nee previousResult becomes null, and thus Satchel was doing a new search every time.
+
+EG:
+
+1) type "b" in the search field.
+2) form history finds 1 entry ("blah"), search-suggestions finds "baaa", "bloop", "bzzz", the autocompete menu shows these in order with a divider between "blah" and "baaa".
+3) type an "l" in the search field ("bl")
+4) startHistorySearch()'s previous result contains ["blah", "baaa", "bloop", "bzzz"], Satchel filters this down to ["blah", "bloop"] to match the new "bl" search string
+5) nsSearchSuggestions's onReadyState() change is called with updated search suggestions, builds up a new list of results, but sees that the form history result now has *two* entries.

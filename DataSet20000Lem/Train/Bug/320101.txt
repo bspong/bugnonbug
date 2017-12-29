@@ -1,0 +1,79 @@
+meta security bug, per chofmann's question
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8) Gecko/20051111 Firefox/1.5
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8) Gecko/20051111 Firefox/1.5
+
+[DRAFT for meta bug]
+
+chofmann asked for "identifying broader solution that can seal off area
+of vulerability" related to jesse's bug with styles.
+
+chofmann asked and i am filing a bug.
+
+probably most of you already know this (seems to be a management issue).
+
+introduction: buggy code may be exploited even if the bug seems small
+(check the the openssh memset 0, qmail signed int exploit)
+
+don't see any broader solution than identifying buggy code in style and
+other module and then fixing the buggy code (except for perhaps A for some
+mitigation).
+
+this eventually may be done in this way (in no particular order):
+
+1. make similar fuzzers/bruteforcers for other module (especially SVG
+because of it heavy use of luser supplied numbers)
+2. make running them mandatory for some time at an interval.
+3. find code construct that cause this and manually or semi-automatically
+look for such code construct not catched by the fuzzers.
+4. after identifying such bugs, the majority of developer do
+manual/semi-automatic code audit.
+
+quite realize that this lower productivity/new releases, but managementoids
+and marketoids should analyze priority - i.e. shining feature v
+exploits. there must be a buzz word for the name of analysis.
+
+5. make clear coding guideline to avoid *the same* mistake in the future.
+check the difference in the flawed code between:
+
+https://bugzilla.mozilla.org/show_bug.cgi?id=319872
+and
+https://bugzilla.mozilla.org/show_bug.cgi?id=303213
+(no flame intended against the coder. i have written much worse code.)
+
+6. sec. related education for developer - have suggested this to mstoltz,
+not sure of the outcome.
+
+7. developer should *actively* be engaged in preventing/finding security
+problems.
+
+
+another potential pseudo solution may be to try to mitigate exploitability
+A:
+A1: runtime stack overflow protection may be effective for stack
+overflow (flamed on this on a list, probably there is a bug filed)
+the gcc propolice patch doesn't have performance penalty according to my
+tests. the m$ sh*t compiler may provide similar functionality.
+very easy to implement. doubt that that this give 100% protection.
+
+A2: try to implement some kind of heap protection via canary among
+blocks. this eventually may stop some bug and help find buffer overflows,
+but in a multithreaded code that heavily us C++ objects, it will not be
+very effective. if implemented in debug builds, may be used for real
+world testing. something like libfence may be effective for catching
+overflow at the moment they occur, but last time i checked the memory
+penalty wa rather big (not quite sure, though)
+
+more on technical mean for mitigation of exploitability later.
+
+probably this draft may apply to parasitic entity selling linux solution
+while hypocritically claiming that linux is not ready for the desktop, but
+don't care much.
+
+sorry for sounding like a female lawyer, but don't have a magic
+wand.
+
+
+
+Reproducible: Sometimes
+
+Steps to Reproduce:

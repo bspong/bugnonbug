@@ -1,0 +1,37 @@
+Extra blank tabs not removed when opening bookmark folder in background
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.7.5) Gecko/20041107 Firefox/1.0
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.7.5) Gecko/20041107 Firefox/1.0
+
+When opening a bookmark folder in tabs, unused blank tabs are not removed as
+intended when tabs are loaded in the background
+(browser.tabs.loadBookmarksInBackground = true). For example, if three blank
+tabs are opened by selecting "New Tab" from the File menu three times and a
+folder of two bookmarks is opened, the third unused tab should be removed,
+regardless of the value of the loadBookmarksInBackground.
+
+I believe the problem is due to a misplaced line in
+bookmarks.js::openGroupBookmark():
+
+653       // focus the first tab if prefs say to
+654       if (!loadInBackground || doReplace) {
+655         // Select the first tab in the group.
+656         var tabs = browser.mTabContainer.childNodes;
+657         browser.selectedTab = tabs[index0];
+658       }
+659 
+660       // Close any remaining open tabs that are left over.
+661       // (Always skipped when we append tabs)
+662       for (var i = tabCount-1; i >= index; --i)
+663         browser.removeTab(tabs[i]);
+664 
+
+The variable "tabs" should be declared outside the if (!loadInBackground ||
+doReplace) statement, so that it can still be used in the subsequent call to
+browser.removeTab() when loading tabs in background and doReplace is false.
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+See above.

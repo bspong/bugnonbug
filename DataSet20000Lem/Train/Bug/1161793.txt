@@ -1,0 +1,39 @@
+Pocket: Race condition in onShow handling
+There is a race condition occurring with the panel messaging (panel <=> chrome) that is causing a number of issues, primarily an infinite spinner showing on the save dialog or panel not loading.
+
+This is the root cause of the following bugs:
+- https://github.com/Pocket/Firefox/issues/15
+- https://github.com/Pocket/Firefox/issues/17
+- The missing error state described in: https://bugzilla.mozilla.org/show_bug.cgi?id=1161654#c4
+
+--
+
+The problem:
+
+The cause of the bug is an expected handling of the onShow callback of the showPanel method.
+
+In the add-on code, when the button is clicked the following is called:
+1. pktUI.pocketButtonOnCommand which go all the way down to pktUI.saveAndShowConfirmation
+2. This call pktUI.showPanel and pass a callback onShow that is expected to be called after the panel shows.
+3. The panel is then loaded and the javascript inside of the panel initializes
+4. The panel then trigger it's onpopupshown shown event which call pktUI.pocketPanelDidShow, which in turn call the onShow callback
+5. This onShow callback then sends a message to the panel and continues
+
+However, the code in native integration is doing something slightly different and not using the native onpopupshown event callback. When the Pocket button is clicked:
+1. Calls onPanelViewShowing in Pocket.jsm
+2. This method then in one line after the other calls: pktUI.pocketButtonOnCommand and pktUI.pocketPanelDidShow, so the following occurs:
+3. pktUI.pocketButtonOnCommand which go all the way down to pktUI.saveAndShowConfirmation
+4. This call pktUI.showPanel and pass a callback onShow that is expected to be called after the panel shows.
+5. [race condition occurs here]
+6. pktUI.pocketPanelDidShow is called immediately before the panel can potentially load and the content inside of it initializes.
+7. This immediately call the onShow callback which try to send a message to the panel, but the panel hasn't loaded yet so the message is never received.
+
+As a result, the panel end up in a state that will never complete.
+
+--
+
+The solution:
+
+A) The ideal solution is that pktUI.pocketPanelDidShow get called when the panel show (using the onpopupshown event). This will mirror what the add-on code is doing and will make it easier for u to maintain consistency there.
+
+B) If there is a problem with doing that, we can update our messaging framework to have the panel send a message up to the chrome to say "I've loaded" and then use that in place of the onpopupshown event. This will work, but it's possible this introduces a flash or delay after the panel load before content pop in.

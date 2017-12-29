@@ -1,0 +1,34 @@
+Origin spoofing when URL is copied to the URL bar
+Created attachment 8539809
+phishing-poc.html
+
+User Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:34.0) Gecko/20100101 Firefox/34.0
+Build ID: 20141126041045
+
+Steps to reproduce:
+
+1. Copy and paste a long URL in the address bar so that the first part (domain name) of the URL becomes hidden
+2. Press enter
+3. The page redirects or change the URL with JavaScript to another long URL
+
+
+
+Actual results:
+
+The first part of the new URL remains hidden, and the shown part can be used to spoof the new domain.
+
+
+Expected results:
+
+After copy and pasting a URL, the cursor should move back to the front of the URL and the address bar should remain left-aligned. This is what Chrome and IE currently does.
+
+This is similar to bug 991503 but not identical. That bug requires the user to change the URL bar alignment to right, while in this case, all he need to do is copy and paste a URL. It enables much easier phishing scenarios.
+
+A plausible phishing scenario:
+1. The attacker sends an email to the target person. The email is HTML based and is formatted like a Google Docs invite to open a presentation.
+2. The link in the invite mail is non-clickable, and the text says: 'Click on the following link or copy it to the URL bar to open the presentation:'. The user will probably copy and paste the URL, thinking that there wa a formatting error that made the link non-clickable.
+3. The link itself is copied from a Google search result page (so it begin with www.google.com/...) and redirects to an attacker controlled domain, that support HTTPS.
+4. The attacker controlled domain, when the referer equal the link sent, redirects to the HTML page containing the URL spoofing code, with a very long arbitrary hash text (phishing.html#paddingpaddingpadding...).
+5. The URL spoofing JS code measure the width of the browser window and replaces the hash with "# https://accounts.google.com/ServiceLogin " with enough space at the end to achieve perfect alignment to spoof the domain. Since the site is HTTPS, the lock icon will appear near the spoofed domain.
+6. The user enters his credential, thinking that the shared presentation need authentication before it can be accessed.
+7. The credential are stored on the attacker domain and then the user is redirected to the actual shared presentation that is accessible without authentication.

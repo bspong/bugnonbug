@@ -1,0 +1,65 @@
+Browser will never unload if a stringbundle is removed by an onunload-listener while a java applet is shown.
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.10) Gecko/20050716 Firefox/1.0.6
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.10) Gecko/20050716 Firefox/1.0.6
+
+This one is strange!
+
+Tested with Fx 1.5 Beta 1
+JRE 1.5.0_04
+
+OK:
+http://archive.mozilla.org/pub/firefox/nightly/2004-10-08-07-trunk/Firefox-win32.zip
+
+NOT OK:
+http://archive.mozilla.org/pub/firefox/nightly/2004-10-09-07-trunk/Firefox-win32.zip
+
+Fx 1.0.x is ok.
+
+Install the test-extension from
+http://wwww.krickelkrackel.de/testing/expando.xpi into a fresh profile.
+Restart (of course...)
+
+Load http://java.sun.com/openstudio/index.html
+Open the Windows Task-Manager
+Close the browser
+"Firefox.exe" will stay forever
+
+The extension doe the following:
+
+<?xml version="1.0"?>
+<!DOCTYPE window SYSTEM "chrome://navigator/locale/navigator.dtd">
+
+<overlay id="expando"
+xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<stringbundleset id="stringbundleset">
+<stringbundle id="expandobundle"
+src="chrome://expando/content/expando.properties"/>
+</stringbundleset>
+
+<script type="application/x-javascript">
+addEventListener('unload', expandoRemove, false);
+
+function expandoRemove(e)
+{
+var exNode = document.getElementById("expandobundle");
+exNode.parentNode.removeChild(exNode);
+
+}
+</script>
+</overlay>
+
+I'm not sure, if it's very clever to remove something from the DOM while
+the window is unloading...
+
+I've tried to remove other node from the DOM, but only removing a
+stringbundle reproduces the problem for me.
+
+Reproducible: Always
+
+Steps to Reproduce:
+
+
+
+Expected Results:
+Behave like Fx 1.0.x

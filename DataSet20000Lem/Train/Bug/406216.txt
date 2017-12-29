@@ -1,0 +1,28 @@
+"TabClose" event shoud be allow to close related tab by it listener
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.0; ja; rv:1.8.1.10) Gecko/20071115 Firefox/2.0.0.10
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.0; ja; rv:1.8.1.10) Gecko/20071115 Firefox/2.0.0.10
+
+Closing other tab by event listener of "TabClose" event possibly cause a null pointer error and break Firefox.
+
+We extension author sometimes use "TabClose" event to do something, and I thought to close tab related to the closing tab. However, I saw the NS_ERROR_NULL_POINTER error when I actually did it. This problem reduces convenience of this API ("TabClose" event).
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Add event listener which close following tab of the closing tab, to "TabClose" event.
+2. Close the current tab.
+
+Actual Results:
+Firefox selects no tab and NS_ERROR_NULL_POINTER appears in the error console.
+
+Expected Results:
+Firefox selects the last tab (which wa the previous tab of the closed one) and no error appear in the error console.
+
+
+Code to reproduce the description:
+
+gBrowser.addEventListener('TabClose', function(aEvent) {
+var tab = aEvent.originalTarget;
+while (tab.nextSibling) gBrowser.removeTab(tab.nextSibling);
+}, false);

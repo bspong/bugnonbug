@@ -1,0 +1,69 @@
+Selinux Audit block Ebay Partner Extension
+Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.9) Gecko/2007102514 Firefox/2.0.0.9
+
+The Ebay 2009 Partner Build cause a Selinux Audit Warning and this prevents in default setting the running of the extension.
+
+The OS is Fedora F7 in default Settings, SeLinux is on by default on Fedora.
+
+Error Message:
+
+Summary
+    SELinux is preventing /opt/firefox/firefox-bin from loading /opt/firefox/ext
+    ensions/{62760FD6-B943-48C9-AB09-F99C6FE96088}/platform/Linux/components/Eba
+    yFormSubmitObserver.so which requires text relocation.
+
+Detailed Description
+    The /opt/firefox/firefox-bin application attempted to load /opt/firefox/exte
+    nsions/{62760FD6-B943-48C9-AB09-F99C6FE96088}/platform/Linux/components/Ebay
+    FormSubmitObserver.so which requires text relocation.  This is a potential
+    security problem. Most libraries do not need this permission. Libraries are
+    sometimes coded incorrectly and request this permission.  The
+    http://people.redhat.com/drepper/selinux-mem.html web page explains how to
+    remove this requirement.  You can configure SELinux temporarily to allow /op
+    t/firefox/extensions/{62760FD6-B943-48C9-AB09-F99C6FE96088}/platform/Linux/c
+    omponents/EbayFormSubmitObserver.so to use relocation as a workaround, until
+    the library is fixed. Please file a
+    http://bugzilla.redhat.com/bugzilla/enter_bug.cgi against this package.
+
+Allowing Access
+    If you trust /opt/firefox/extensions/{62760FD6-B943-48C9-AB09-F99C6FE96088}/
+    platform/Linux/components/EbayFormSubmitObserver.so to run correctly, you
+    can change the file context to textrel_shlib_t. "chcon -t textrel_shlib_t /o
+    pt/firefox/extensions/{62760FD6-B943-48C9-AB09-F99C6FE96088}/platform/Linux/
+    components/EbayFormSubmitObserver.so"
+
+    The following command will allow this access:
+    chcon -t textrel_shlib_t /opt/firefox/extensions/{62760FD6-B943-48C9-AB09-F99C6FE96088}/platform/Linux/components/EbayFormSubmitObserver.so
+
+Additional Information        
+
+Source Context                root:system_r:unconfined_t:SystemLow-SystemHigh
+Target Context                root:object_r:usr_t
+Target Objects                /opt/firefox/extensions/{62760FD6-B943-48C9-AB09-F
+                              99C6FE96088}/platform/Linux/components/EbayFormSub
+                              mitObserver.so [ file ]
+Affected RPM Packages         
+Policy RPM                    selinux-policy-2.6.4-49.fc7
+Selinux Enabled               True
+Policy Type                   targeted
+MLS Enabled                   True
+Enforcing Mode                Enforcing
+Plugin Name                   plugins.allow_execmod
+Host Name                     localhost.localdomain
+Platform                      Linux localhost.localdomain 2.6.23.1-21.fc7 #1 SMP
+                              Thu Nov 1 21:09:24 EDT 2007 i686 i686
+Alert Count                   1
+First Seen                    Wed 14 Nov 2007 01:35:11 AM CET
+Last Seen                     Wed 14 Nov 2007 01:41:48 AM CET
+Local ID                      a153cabe-8c7e-406e-a4c6-beb6c21f8f6f
+Line Numbers                  
+
+Raw Audit Messages            
+
+avc: denied { execmod } for comm="firefox-bin" dev=dm-0 egid=0 euid=0
+exe="/opt/firefox/firefox-bin" exit=-13 fsgid=0 fsuid=0 gid=0 items=0 path="/opt
+/firefox/extensions/{62760FD6-B943-48C9-AB09-F99C6FE96088}/platform/Linux/compon
+ents/EbayFormSubmitObserver.so" pid=2950
+scontext=root:system_r:unconfined_t:s0-s0:c0.c1023 sgid=0
+subj=root:system_r:unconfined_t:s0-s0:c0.c1023 suid=0 tclass=file
+tcontext=root:object_r:usr_t:s0 tty=pts0 uid=0

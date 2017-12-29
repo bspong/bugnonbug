@@ -1,0 +1,22 @@
+localStorage and sessionStorage corrupted / unavailable after browser update, before restart
+Sometimes, localStorage and sessionStorage object cease functioning. This appears to occur after a browser update, and ha been observed on Fx 29 through Fx 32, on 64 bit OS X and Ubuntu.
+
+I have not managed to deterministically repro this bug, though I have experienced it firsthand.
+
+CarlFK on IRC just experienced this bug on Fx 29.0, running on 64-bit Ubuntu 14.04 LTS.
+
+Symptoms:
+
+- After performing `apt-get update && apt-get upgrade`, Persona started showing him an "Unsupported Browser" error message, which wa rooted in broken localStorage support.
+
+- When visiting the Persona Troubleshooting page at https://people.mozilla.org/~fmarier/troubleshoot.html, it reported that his browser defined both localStorage and sessionStorage, but that it did not support either.
+
+- In the Web Console for that page, `window.localStorage` print `[object Storage]` instead of the expected `Storage { length: 0 }` pretty-printing.
+
+- Attempting `window.localStorage.setItem('foo', 1)` yield `[Exception... "Component returned failure code: 0x8052000b (NS_ERROR_FILE_CORRUPTED) [nsIDOMStorage.setItem]" nsresult: "0x8052000b (NS_ERROR_FILE_CORRUPTED)" location: "JS frame :: debugger eval code :: <TOP_LEVEL> :: line 1" data: no]`
+
+- Everything work a expected in a new Private Browsing window.
+
+- After restarting the browser (to complete the upgrade), everything work a expected.
+
+Carl's UserAgent string wa "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:29.0) Gecko/20100101 Firefox/29.0" when he experienced this bug. I've seen it on Nightly.

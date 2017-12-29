@@ -1,0 +1,17 @@
+Pageload much slower when Inspector is open in a specific case
+Created attachment 8639993
+Testcase
+
+Loading the attached testcase (originally from <http://rcocks.github.io/>) is much slower when Inspector is open than when it's not open.
+
+I profiled this a bit, and of the 7 of wall-clock time in the profile about 2.5s are Proxy::get which doe various proxy and Xray goop and then land in xpc::AddonWrapper<xpc::XrayWrapper<js::CrossCompartmentWrapper, xpc::DOMXrayTraits> >::get which very eventually call a DOM binding getter. Of those 2.5s, only about 270ms are under the binding getter.
+
+The binding getters involved are the "type", "target", "attributeName", "attributeNamespace" getters on MutationRecord objects.
+
+Another 1.7s wall-clock is under Proxy::callProp, whih mostly spends it time (1.4s) under Proxy::get doing Xray stuff. In fact, I can't even tell what we're calling because all the sample were under Proxy::get afaict.
+
+Also, about 600ms doing JS_WrapValue whie calling MutationCallback::Call (presumably this is the chrome MutationCallback we're calling here, so have to Xray-wrap all the stuff). The vast majority of this is actual js::NewObjectWithGivenTaggedProto.
+
+Apart from that, there's a lot of .value set on HTMLInputElements (about 1 wall-clock under here). That's done by the actual web page code.
+
+So it look to me like having lot of value attribute change like this queue a ton of mutation observer and some combination of our Xray code and our devtools end up not that happy with that...

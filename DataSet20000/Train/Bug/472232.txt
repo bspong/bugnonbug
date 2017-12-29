@@ -1,0 +1,37 @@
+Secure favicon.ico (using nsIFaviconService and setAndLoadFaviconForPage) request pop-ups certificate error dialog
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.5) Gecko/2008120122 Firefox/3.0.5
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.2a1pre) Gecko/20090105 Minefield/3.2a1pre
+
+When attempting to retrieve a favicon from a site with an invalid certificate by using nsIFaviconService the invalid certificate error dialog appears.
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. run the following code with chrome privileges
+2. 
+function testFavicon(){
+    
+    function urlToURI(url){
+        return Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService).newURI(url, null, null);
+    }
+    
+    var url = 'https://beta.interclue.com/favicon.ico';
+    
+    var uriIcon = urlToURI(url);
+    var faviconService = Components.classes["@mozilla.org/browser/favicon-service;1"].getService(Components.interfaces.nsIFaviconService);
+    var uriPage = urlToURI(uriIcon.prePath);
+    faviconService.setAndLoadFaviconForPage(uriPage, uriIcon, false);
+}
+testFavicon();
+
+Actual Results:  
+An invalid certificate error dialog appears
+
+Expected Results:  
+No dialog should appear, but the faviconService.setAndLoadFaviconForPage() function should throw an error. 
+This error should be trappable (using try/catch) so that a extension developer can attempt to retrieve a favicon in the background without invalid certificate dialogs appearing for no reason.
+
+The bug was fixed in 3.0 builds, but appears to have reverted
+#453442 (https://bugzilla.mozilla.org/show_bug.cgi?id=453442) is very similar too this bug, however I am unable to re-open the ticket.

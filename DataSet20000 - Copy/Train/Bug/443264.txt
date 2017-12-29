@@ -1,0 +1,30 @@
+Diagonal middle button scrolling regression since fx2 (not using smooth scrolling)
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.9pre) Gecko/2008051315 Minefield/3.0pre
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; es-ES; rv:1.9) Gecko/2008052906 Firefox/3.0
+
+This is both on XP and Vista, probably others. I've seen it on at least 5 different machines.
+
+If you middle click a page to scroll around and then move the mouse exactly on the horizontal or vertical axis, everything is fine and fast, as when you use the scroll bars or the mouse wheel.
+
+However, when scrolling diagonally (on both axis at once), things get really slow. For example, scrolling vertically on one page gives me 50 updates per second (according to desktop composition framerate in Vista), which seems the limit, with 15% CPU usage. However, diagonal scrolling maxes out at 100% CPU (or one core on SMP machines). The reported framerate is 60, but the scrolling looks like it's under 25 or so fps and you can see the new zones artifacting as they're being redrawn (you don't get double buffering).
+
+I don't know if diagonals were slower than straights in Firefox 2, but I do know diagonal scrolling is much slower in Fx3 than it was in Fx2 (and Fx2 had one additional disadvantage: the scroll icon was placed inside the document, forcing to redraw that square as the scrolling was going on - in Fx3 it's a floating window).
+
+My initial guess is that diagonal scrolling forces a full redraw of the viewport (the bounding rectangle of the two newly exposed zones covers everything), but on closer inspection it looks even slower than a full redraw. It also looks much slower than twice the cost of a single-axis scroll.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Load a document. Any page would do (that is larger than the viewport on both axis), but it's more evident with, say, a big image, zoomed in so it draws even slower due to the filtering
+2. Middle click
+3. Scroll diagonally
+4. Compare speed with vertical or horizontal scrolling
+Actual Results:  
+Diagonal scrolling is very slow.
+
+Expected Results:  
+Diagonal scrolling shouldn't be much slower than half the speed of horizontal/vertical scrolling. Also, it should be at least as fast as it was on Fx2.
+
+None that I can think of. Machines I tested on had different CPU architectures, operating systems and graphics cards.
+
+This might or might not be a dupe of bug 246393, however keep in mind that's a very noticeable regression from Fx2 and it's very slow even considering the full redraw.

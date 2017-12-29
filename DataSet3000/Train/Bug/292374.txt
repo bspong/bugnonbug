@@ -1,0 +1,67 @@
+Research about complete freeze, loops calling ioctl(n, SNDCTL_DSP_GETOPTR, x)
+User-Agent:       Mozilla/5.0 (X11; U; Linux i586; en-US; rv:1.7.7) Gecko/20050416 Fedora/1.0.3-1.3.1 Firefox/1.0.3
+Build Identifier: Mozilla/5.0 (X11; U; Linux i586; en-US; rv:1.7.7) Gecko/20050416 Fedora/1.0.3-1.3.1 Firefox/1.0.3
+
+I clicked on a link on http://www.aftenposten.no/, pointing to
+http://www.aftenposten.no/nyheter/uriks/article1029268.ece, and browser went
+completely unresponsive, not updating window after partial obscuring, and not
+showing contents from new page. Cursor was hourglass. CPU consumption low, not zero.
+
+
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+Site too dinamic to really reproduce. See Additional info.
+Reproduction was consistent until site changed. Then another link reproduced it,
+God knows for how long.
+1. Point the browser to http://www.aftenposten.no
+2. Click the link labeled "Utenriks" in leftmost column, near top.
+3.
+
+Actual Results:  
+Froze. Hourglass icon. Obscure with another window, and expose - does not paint.
+strace showed loop on gettimeofday, ioctl(SNDCTL_DSP_GETOPTR) and
+ioctl(*_GETOSPACE), and select(0,0,0,11ms).
+
+Expected Results:  
+Should display the page that had been transmitted over the wire.
+
+Process status showed an mplayer plugin had started.
+
+Attaching the browser with "strace -p xxxx" showed a loop thus:
+
+  select(0, NULL, NULL, NULL, {0, 11000}) = 0 (Timeout)
+  gettimeofday({1114791124, 416741}, NULL) = 0
+  ioctl(35, SNDCTL_DSP_GETOPTR, 0xbff4225c) = 0
+  ioctl(35, SNDCTL_DSP_GETOSPACE, 0xbff4225c) = 0
+
+repeating ad infinitum, only the timestamp advancing by approx. 15ms.
+
+Sniffing the network with ethereal, repeating the steps reproduced the freeze,
+and ethereal showed a transfer complete with the finishing </html>. However, the
+last datagram to cross the wire was my PC sending an ACK. There was no FIN or
+RST from the server.
+
+Saving the payload of the exchanges to a .html file, and opening a new browser
+to view file:///tmp/the-saved-data.html displayed the page, no problem.  It
+appears that most links on the page are absolute links in different hosts, so
+the page seemed to load the same ads etc from the same sources. However, I never
+know if the ads are different.
+
+Downloaded today's latest nightly trunk build, and ran it with a new profile.
+The referring page (the page contining the link) had changed by that time,
+sorry. The link was no longer there. (The referring page was
+"http://www.aftenposten.no/", the major Norwegian newspaper. Highly dynamic, and
+quite crowded.) Since the link was to an article about a US event, I clicked the
+generic "Foreign Affairs" link ("Utenriks", left hand margin column, near top)
+of the main page, and the browser froze at the spot.
+
+In other words, reproduced with the latest nightly trunk build.
+
+Not knowing what else to do to research it. Please suggest. I don't think
+slashing down page complexity is relevant here since the problem was gone as
+soon as the page was saved to a file. Seems that the strace offers the only
+opportunity. You might have a chance looking at what could make it loop issuing
+those ioctls. Perhpas a more extensive strace (attaching before clicking the
+link would help you, please ask me to do so if you care looking at it.

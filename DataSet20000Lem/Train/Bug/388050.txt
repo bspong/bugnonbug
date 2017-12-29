@@ -1,0 +1,47 @@
+Firefox hang at 100% CPU when idle
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 6.0; en-GB; rv:1.8.1.4) Gecko/20070515 Firefox/2.0.0.4
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 6.0; en-GB; rv:1.8.1.4) Gecko/20070515 Firefox/2.0.0.4
+
+Sometimes, for no apparent reason Firefox hang and I need to kill the process.
+It just happened when I had openend a few page from a Google search in tabs. The page loaded and a few second after they were done loading Firefox stopped responding.
+
+I investigated with Process Explorer and noticed 1 thread that hogged all the CPU cycles: firefox.exe!jpeg_fdct_islow+0x27b1f
+
+Below is the call stack for the thread:
+firefox.exe!nsPrintOptions::GetNativeData+0x2eac7
+firefox.exe!nsPrintOptions::GetNativeData+0x335ae
+firefox.exe!nsPrintOptions::GetNativeData+0x26e57
+firefox.exe!DeviceContextImpl::PrepareDocument+0x54fd
+firefox.exe!nsFontCache::Init+0x21485
+firefox.exe!nsFontCache::Init+0x1849b
+firefox.exe!nsPrintOptions::GetNativeData+0x1b0a4
+firefox.exe!nsPrintOptions::GetNativeData+0x1bbbf
+firefox.exe!nsPrintOptions::GetNativeData+0x1b52c
+firefox.exe!nsPrintOptions::GetNativeData+0x1b29e
+firefox.exe!NS_RegistryGetFactory+0x17aea
+firefox.exe!NS_RegistryGetFactory+0x1568c
+js3250.dll!js_Invoke+0x55e
+js3250.dll!js_Invoke+0x5aee
+js3250.dll!js_Invoke+0x5b6
+js3250.dll!js_Invoke+0x905
+js3250.dll!JS_CallFunctionValue+0x1f
+firefox.exe!nsPrintOptions::GetNewPrintSettings+0x5fac
+firefox.exe!nsPrintOptions::GetNativeData+0x224a
+firefox.exe!nsPrintOptions::GetNativeData+0x275a
+firefox.exe!nsBlender::Release+0x133c3
+firefox.exe+0x1012
+kernel32.dll!BaseThreadInitThunk+0x12
+ntdll.dll!LdrInitializeThunk+0x4d
+
+I killed the process and started Firefox again. The crashed session wa restored, so all page I had open when the hang occured were loaded again, but this time no hang.
+
+Reproducible: Couldn't Reproduce
+
+Steps to Reproduce:
+1.
+2.
+3.
+
+
+
+I found another report for a problem in bug #369759 (https://bugzilla.mozilla.org/show_bug.cgi?id=369759), but I never noticed any disappearance of icon and I wasn't using any javascript application actively. A javascript may have been running in the background from a website ofcourse, but I hadn't visited an obvious javascript heavy site like a Google Application or anything.

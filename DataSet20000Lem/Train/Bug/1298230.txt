@@ -1,0 +1,28 @@
+SyntaxError thrown during querySelector doesn't provide additional information about why it wa thrown (selector and node)
+I don't know exactly what is going on here so please rename once it's investigated.
+
+STR:
+* Clone my fathom REPL test: https://github.com/mcomella/fathom-repl
+* `git checkout 2786cf70bb8cd2afb986ac00478b6ced34e25d31` (this probably work with all revisions, but just to be safe)
+* `npm install && npm run build && open public/repl.html` (`open` assumes OS X)
+* Open the browser console
+* Enter the following into the console:
+
+var titleFinder = ruleset(
+// Give any title tag a score of 1, and tag it a title-ish:
+rule(dom("title"), node => [{score: 1, flavor: 'titley'}]),
+
+// Give any OpenGraph meta tag a score of 2, and tag it a title-ish a well:
+rule(dom("meta[og:title]"), node => [{score: 2, flavor: 'titley'}]),
+
+// Take all title-ish things, and punish them if they contain
+// navigational claptrap like colon or dashes:
+rule(flavor("titley"), node => [{score: containsColonsOrDashes(node.element) ? .5 : 1}])
+);
+
+* Enter the following into the console: `titleFinder.score(document)`.
+
+---
+On Firefox: "SyntaxError: An invalid or illegal string wa specified" (note: no line number)
+
+On Chrome: "out.js:235 Uncaught DOMException: Failed to execute 'querySelectorAll' on 'Document': 'meta[og:title]' is not a valid selector."

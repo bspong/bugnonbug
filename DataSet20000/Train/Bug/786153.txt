@@ -1,0 +1,71 @@
+crash in nsBaseAppShell::OnProcessNextEvent with Trusteer Rapport
+This bug was filed from the Socorro interface and is 
+report bp-2ec9052c-2893-4f0d-bc13-429db2120827 .
+============================================================= 
+
+Seen while looking at crash stats. This one moved up the ranks of Beta 6 during the course of the day and now sits as #36 top crash in Beta 6: https://crash-stats.mozilla.com/report/list?signature=nsBaseAppShell::OnProcessNextEvent%28nsIThreadInternal*,%20bool,%20unsigned%20int%29
+
+ATM I don't see any crashes in Firefox 15 final (buildID=20120824154833), but filing to keep on eye on this.
+
+nsBaseAppShell::OnProcessNextEvent(nsIThreadInternal*, bool, unsigned int)|EXCEPTION_ACCESS_VIOLATION_EXEC (74 crashes)
+    301% (223/74) vs.   3% (1364/42848) msvcp80.dll
+    304% (225/74) vs.   9% (3857/42848) msvcr80.dll
+    200% (148/74) vs.   1% (254/42848) atl80.dll
+    100% (74/74) vs.   0% (126/42848) TanzanLight.dll
+    100% (74/74) vs.   0% (153/42848) riched20.dll
+    100% (74/74) vs.   0% (209/42848) RapportGP.dll
+    100% (74/74) vs.   0% (214/42848) rooksdol.dll
+    100% (74/74) vs.   0% (214/42848) RapportUtil.dll
+    100% (74/74) vs.   0% (214/42848) rookscom.dll
+    100% (74/74) vs.   1% (240/42848) rooksbas.dll
+    100% (74/74) vs.  10% (4123/42848) GdiPlus.dll
+    100% (74/74) vs.  18% (7725/42848) oleacc.dll
+    100% (74/74) vs.  23% (10041/42848) wtsapi32.dll
+
+Breakdown by module:
+
+100% (74/74) vs.   0% (214/42848) rooksdol.dll
+          0% (0/74) vs.   0% (4/42848) 2.115.0.0
+        100% (74/74) vs.   0% (205/42848) 2.116.0.0
+          0% (0/74) vs.   0% (1/42848) 2.94.0.0
+          0% (0/74) vs.   0% (2/42848) 2.97.0.0
+          0% (0/74) vs.   0% (2/42848) 2.98.0.0
+100% (74/74) vs.   0% (214/42848) RapportUtil.dll
+          0% (0/74) vs.   0% (1/42848) 3.5.1105.59
+          0% (0/74) vs.   0% (1/42848) 3.5.1108.52
+          0% (0/74) vs.   0% (1/42848) 3.5.1108.55
+          0% (0/74) vs.   0% (2/42848) 3.5.1108.73
+          0% (0/74) vs.   0% (1/42848) 3.5.1201.78
+          0% (0/74) vs.   0% (1/42848) 3.5.1201.84
+          0% (0/74) vs.   0% (2/42848) 3.5.1201.91
+          0% (0/74) vs.   0% (76/42848) 3.5.1201.94
+          0% (0/74) vs.   0% (1/42848) 3.5.1201.95
+          1% (1/74) vs.   0% (1/42848) 3.5.1201.98
+         99% (73/74) vs.   0% (127/42848) 3.5.1205.4
+    100% (74/74) vs.   0% (214/42848) rookscom.dll
+        100% (74/74) vs.   0% (213/42848) 2.16.0.0
+          0% (0/74) vs.   0% (1/42848) 2.9.0.0
+    100% (74/74) vs.   1% (240/42848) rooksbas.dll
+          0% (0/74) vs.   0% (6/42848) 2.56.0.0
+        100% (74/74) vs.   1% (234/42848) 2.57.0.0
+
+
+Frame 	Module 	Signature 	Source
+0 		@0xa491336b 	
+1 		@0x7198ffff 	
+2 	xul.dll 	nsBaseAppShell::OnProcessNextEvent 	widget/xpwidgets/nsBaseAppShell.cpp:280
+3 	xul.dll 	nsThread::ProcessNextEvent 	xpcom/threads/nsThread.cpp:586
+4 	xul.dll 	mozilla::ipc::MessagePump::Run 	ipc/glue/MessagePump.cpp:82
+5 	xul.dll 	MessageLoop::RunHandler 	ipc/chromium/src/base/message_loop.cc:201
+6 	xul.dll 	MessageLoop::Run 	ipc/chromium/src/base/message_loop.cc:175
+7 	xul.dll 	nsBaseAppShell::Run 	widget/xpwidgets/nsBaseAppShell.cpp:163
+8 	xul.dll 	nsAppShell::Run 	widget/windows/nsAppShell.cpp:232
+9 	xul.dll 	nsAppStartup::Run 	toolkit/components/startup/nsAppStartup.cpp:255
+10 	xul.dll 	XREMain::XRE_mainRun 	toolkit/xre/nsAppRunner.cpp:3786
+11 	xul.dll 	XREMain::XRE_main 	toolkit/xre/nsAppRunner.cpp:3863
+12 	xul.dll 	XRE_main 	toolkit/xre/nsAppRunner.cpp:3939
+13 	firefox.exe 	wmain 	toolkit/xre/nsWindowsWMain.cpp:100
+14 	firefox.exe 	__tmainCRTStartup 	crtexe.c:552
+15 	kernel32.dll 	BaseThreadInitThunk 	
+16 	ntdll.dll 	__RtlUserThreadStart 	
+17 	ntdll.dll 	_RtlUserThreadStart

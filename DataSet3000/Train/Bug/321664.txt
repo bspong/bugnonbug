@@ -1,0 +1,81 @@
+--enable-js-ultrasparc not ok when using gnu binutils with gcc on solaris
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8) Gecko/20051227 Firefox/1.5
+Build Identifier: ftp://mirror.switch.ch/mirror/mozilla/firefox/releases/1.5/source/firefox-1.5-source.tar.bz2
+
+using --enable-js-ultrasparc is not ok (compile fails):
+===
+gcc -o jsapi.o -c  -DOSTYPE=\"SunOS5\" -DOSARCH=\"SunOS\" -DBUILD_ID=0000000000 -DEXPORT_JS_API  -DJS_USE_SAFE_ARENA -DULTRA_SPARC   -I../../dist/include/js -I../../dist/include -I../../dist/include/nspr    -I../../dist/sdk/include -I/tmp/mozilla/js/src -I/usr/openwin/include   -fPIC -I"/tmp/mozilla/dist/include" -I"/tmp/mozilla/directory/c-sdk/ldap/include" -I/misc/sparc-sun-solaris2.9/include -I/usr/X11R6/include -I/usr/openwin/include  -I/usr/openwin/include -Wno-long-long -I"/tmp/mozilla/dist/include" -I"/tmp/mozilla/directory/c-sdk/ldap/include" -Wall -I/misc/sparc-sun-solaris2.9/include -I/usr/X11R6/include -I/usr/openwin/include -O3 -fomit-frame-pointer -freorder-blocks -fno-reorder-functions -pthreads -pipe  -DNDEBUG -DTRIMMED -ffunction-sections -O3 -Wa,-xarch=v8plus,-DULTRA_SPARC,-P,-L,-D_ASM,-D__STDC__=0  -I"/tmp/mozilla/dist/include" -I"/tmp/mozilla/directory/c-sdk/ldap/include" -I/misc/sparc-sun-solaris2.9/include -I/usr/X11R6/include -I/usr/openwin/include  -I/usr/openwin/include -include ../../mozilla-config.h -DMOZILLA_CLIENT -Wp,-MD,.deps/jsapi.pp jsapi.c
+/misc/sparc-sun-solaris2.9/bin/as: unrecognized option `-ULTRA_SPARC'
+jsapi.c: In function 'JS_ConvertArgumentsVA':
+jsapi.c:178: warning: array subscript has type 'char'
+jsapi.c: In function 'JS_PushArgumentsVA':
+jsapi.c:305: warning: array subscript has type 'char'
+jsapi.c:314: warning: array subscript has type 'char'
+make[3]: *** [jsapi.o] Error 2
+make[3]: Leaving directory `/tmp/mozilla/js/src'
+make[2]: *** [libs] Error 2
+make[2]: Leaving directory `/tmp/mozilla/js'
+make[1]: *** [tier_2] Error 2
+make[1]: Leaving directory `/tmp/mozilla'
+make: *** [default] Error 2
+===
+when gcc is setup to use the gnu binutils (i guess it's ok when using gcc with sun as/ld) in solaris!
+
+gcc, compiled to use gnu as/ld, does not understand -Wa,-xarch=v8plus,-DULTRA_SPARC,-P,-L,-D_ASM,-D__STDC__=0
+which is set in
+mozilla/js/src/Makefile.in
+line 276, 277 and 279.
+
+info page says:
+`-D'
+     Ignored.  This option is accepted for script compatibility with
+     calls to other assemblers.
+the following happens:
+===
+nwaibel@blade1000-1:~/fbuild $ as -DULTRA_SPARC
+as: unrecognized option `-ULTRA_SPARC'
+nwaibel@blade1000-1:~/fbuild $ as --version
+GNU assembler 2.16.91.0.5 20051219
+Copyright 2005 Free Software Foundation, Inc.
+This program is free software; you may redistribute it under the terms of
+the GNU General Public License.  This program has absolutely no warranty.
+This assembler was configured for a target of `sparc-sun-solaris2.9'.
+===
+also, option -P is not available with gnu as.
+if gcc is called it will preprocess the assembler file anyway.
+
+option -L is there. man page says:
+       -L
+       --keep-locals
+           Keep  (in  the  symbol  table) local symbols.  On traditional a.out
+           systems these start with L, but different  systems  have  different
+           local label prefixes.
+could be ok to use it...
+
+one solution for the problems mentioned would be -- obviously -- to switch off the asm code, but on the other hand it should not be too hard to detect gnu as/ld and pass other options.
+
+maybe i can find a way and provide a patch here...
+
+Reproducible: Always
+
+Steps to Reproduce:
+compile firefox on solaris using gcc (compiled to use gnu binutils!!!).
+Actual Results:  
+gcc -o jsapi.o -c  -DOSTYPE=\"SunOS5\" -DOSARCH=\"SunOS\" -DBUILD_ID=0000000000 -DEXPORT_JS_API  -DJS_USE_SAFE_ARENA -DULTRA_SPARC   -I../../dist/include/js -I../../dist/include -I../../dist/include/nspr    -I../../dist/sdk/include -I/tmp/mozilla/js/src -I/usr/openwin/include   -fPIC -I"/tmp/mozilla/dist/include" -I"/tmp/mozilla/directory/c-sdk/ldap/include" -I/misc/sparc-sun-solaris2.9/include -I/usr/X11R6/include -I/usr/openwin/include  -I/usr/openwin/include -Wno-long-long -I"/tmp/mozilla/dist/include" -I"/tmp/mozilla/directory/c-sdk/ldap/include" -Wall -I/misc/sparc-sun-solaris2.9/include -I/usr/X11R6/include -I/usr/openwin/include -O3 -fomit-frame-pointer -freorder-blocks -fno-reorder-functions -pthreads -pipe  -DNDEBUG -DTRIMMED -ffunction-sections -O3 -Wa,-xarch=v8plus,-DULTRA_SPARC,-P,-L,-D_ASM,-D__STDC__=0  -I"/tmp/mozilla/dist/include" -I"/tmp/mozilla/directory/c-sdk/ldap/include" -I/misc/sparc-sun-solaris2.9/include -I/usr/X11R6/include -I/usr/openwin/include  -I/usr/openwin/include -include ../../mozilla-config.h -DMOZILLA_CLIENT -Wp,-MD,.deps/jsapi.pp jsapi.c
+/misc/sparc-sun-solaris2.9/bin/as: unrecognized option `-ULTRA_SPARC'
+jsapi.c: In function 'JS_ConvertArgumentsVA':
+jsapi.c:178: warning: array subscript has type 'char'
+jsapi.c: In function 'JS_PushArgumentsVA':
+jsapi.c:305: warning: array subscript has type 'char'
+jsapi.c:314: warning: array subscript has type 'char'
+make[3]: *** [jsapi.o] Error 2
+make[3]: Leaving directory `/tmp/mozilla/js/src'
+make[2]: *** [libs] Error 2
+make[2]: Leaving directory `/tmp/mozilla/js'
+make[1]: *** [tier_2] Error 2
+make[1]: Leaving directory `/tmp/mozilla'
+make: *** [default] Error 2
+
+
+Expected Results:  
+a compiled binary called firefox-bin ;-)

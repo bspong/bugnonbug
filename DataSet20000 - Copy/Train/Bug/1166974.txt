@@ -1,0 +1,40 @@
+firefox-31.7.0 build w/ hardened gcc-5.1.0 fails at TypedObject.cpp with multiple "converting to 'bool' from 'std::nullptr_t' requires direct-initialization [-fpermissive]" errors
+User Agent: Mozilla/5.0 (X11; Linux x86_64; rv:31.0) Gecko/20100101 Firefox/31.0
+Build ID: 20150425181635
+
+Steps to reproduce:
+
+Gentoo system with SeLinux and PaX hardening, gcc-5.1.0 configured with following flags: "cilk cxx doc fortran hardened (multilib) nls nptl openmp sanitize (-altivec) (-awt) (-fixed-point) -gcj -go -graphite (-libssp) (-multislot) -nopie -nossp -objc -objc++ -objc-gc -regression-test -vanilla"
+
+Firefox configured with following flags: "dbus hardened minimal pulseaudio (selinux) system-cairo system-icu system-jpeg system-libvpx system-sqlite wifi -bindist -custom-cflags -custom-optimization -debug -gstreamer -jit (-pgo) -startup-notification {-test}"
+
+(flag "foo" indicates foo enabled, flag "-bar" indicates bar disabled)
+
+Build failed with command: MAKEOPTS="-j1" emerge -1av --quiet-build firefox
+
+Build of firefox-31.6.0 with hardened gcc-4.9.2 succeded
+
+Currently testing build with other versions and hardened/not-hardened configurations of gcc, will update with results
+
+
+Actual results:
+
+build failed with multiple errors at file mozilla-esr31/js/src/builtin/TypedObject.cpp
+
+example error:
+/var/tmp/portage/www-client/firefox-31.7.0/work/mozilla-esr31/js/src/builtin/TypedObject.h:262:5: note: in expansion of macro 'BINARYDATA_SCALAR_DEFINE'
+     macro_(ScalarTypeDescr::TYPE_FLOAT32, float,    float32)         \
+     ^
+/var/tmp/portage/www-client/firefox-31.7.0/work/mozilla-esr31/js/src/builtin/TypedObject.h:267:5: note: in expansion of macro 'JS_FOR_EACH_UNIQUE_SCALAR_TYPE_REPR_CTYPE'
+     JS_FOR_EACH_UNIQUE_SCALAR_TYPE_REPR_CTYPE(macro_)                           \
+     ^
+/var/tmp/portage/www-client/firefox-31.7.0/work/mozilla-esr31/js/src/builtin/TypedObject.cpp:1362:5: note: in expansion of macro 'JS_FOR_EACH_SCALAR_TYPE_REPR'
+     JS_FOR_EACH_SCALAR_TYPE_REPR(BINARYDATA_SCALAR_DEFINE)
+     ^
+/var/tmp/portage/www-client/firefox-31.7.0/work/mozilla-esr31/js/src/builtin/TypedObject.cpp:1361:16: error: converting to 'bool' from 'std::nullptr_t' requires direct-initialization [-fpermissive]
+         return nullptr;
+
+
+Expected results:
+
+expected sucessful build

@@ -1,0 +1,79 @@
+Select Element Does Not Notify Reset Listeners (Only the Form Element Does)
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.16) Gecko/20080715 Fedora/2.0.0.16-1.fc8 Firefox/2.0.0.16
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.16) Gecko/20080715 Fedora/2.0.0.16-1.fc8 Firefox/2.0.0.16
+
+Hi,
+
+I have a country component and a state component.  If the form containing the country component is reset, the first country in the options list is Afghanistan.     Afghanistan does not have any states, so the State component should be disabled.  The cleanest way to do this is to add the state component as a reset listener of the country component.  However the country component (select element) does not receive and therefore not broadcast reset events.  Only the form element does.
+
+So it's easy to wire around, by just just making the state component listen for reset events on the form, but it would be much cleaner if it were listening to them directly on the country component.
+
+So in general I think it would be great if elements contained by a form (Input, Select, etc.) also received reset events.
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd" >
+<html 	xmlns="http://www.w3.org/1999/xhtml"
+        xmlns:dojo="http://org.dojotoolkit"> 
+<head>
+	<title>HTMLCountrySelect Tests</title>
+    <script type="text/javascript"
+            src="../../../../../../dojo/dojo.js"
+            djConfig="isDebug: true">
+    </script>
+    <script type="text/javascript">
+    dojo.require("doh.runner");
+        
+        dojo.addOnLoad(function()
+        {
+            doh.register("HTMLStateSelect Tests",
+                [
+                    {
+                        name: "Test HTMLStateSelect.initialize()",
+                        runTest: function()
+                        {
+                        }
+                    },
+                    {
+                        name: "Test onSelectListener",
+                        runTest: function()
+                        {
+                            var handleResetEvent = function(resetEvent)
+                            {
+                                alert('reset');
+                                console.debug('reset');
+                            }
+                            
+                            dojo.connect(dojo.byId('form'),
+                                    'onreset',
+                                    handleResetEvent);
+
+                            dojo.byId('form').reset();
+                        }
+                    }
+                  ]
+            );
+            doh.run();
+        });
+    </script>
+</head>
+	<body>
+    <form id="form">
+        <select id="countrySelect">
+        </select>
+        <br></br>
+        <label id="stateLabel" for="stateSelect"></label>
+        <br></br>
+        <select id="stateSelect">
+        </select>
+    </form>
+	</body>
+</html>
+Actual Results:  
+In the test above when handleResetEvent is connect to the form element via dojo.connect the alert is triggered, but if handleResetEvent is connected directly to the countrySelect element, the alert is never triggered.
+
+Expected Results:  
+It would be great if the select element notified reset listeners as well.

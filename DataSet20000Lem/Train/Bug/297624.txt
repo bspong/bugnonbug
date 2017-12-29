@@ -1,0 +1,77 @@
+Standards-compliant embedding of realplayer in a web page fails to pas parameter to the realplayer plugin during object initialization.
+User-Agent: Mozilla/4.0 (compatible; MSIE 6.0; AOL 9.0; Windows NT 5.1; SV1; .NET CLR 1.1.4322)
+Build Identifier: Firefox 1.0.4
+
+When I embed the realplayer plugin in a web page using the OBJECT tag, the
+following code works...
+
+<object id="ExampleOfPluginEmbed"
+data="xxxxxxxx.ram"
+type="audio/x-pn-realaudio-plugin"
+width="230"
+height="230"
+controls="ImageWindow,ControlPanel,StatusBar"
+console="Video1">
+</object>
+
+Rename "xxxxxxx.ram" above to the URL of any .ram file that contains a URL to
+any .rm file. "Video1" console can be any name. The code above will not
+validate because "controls" and "console" are private, plug-in-specific
+attribute and are not valid HTML or XHTML attribute of the OBJECT tag.
+Firefox ignores those attribute when parsing, but still pass those value to
+the realplayer plug-in. The result is that the embedded realplayer display a
+it should with the image window for the video and the control which have the
+play button and volume control, etc. a well a the status bar which show data
+transfer rates, etc.
+
+-------------------------------------------------------------------------------
+
+The next block of code will validate, but the "controls" and "console"
+parameter and their value do not get passed to the plugin a it should. The
+result is that only the default realplayer control get embedded, but not the
+image window. All of the control get embedded by default and not just the
+control panel and status bar and they take up the entire width and height. The
+name and value for the real plugin parameter are not case sensitive.
+Realplayer allows you to also specify exactly which control to use a well. In
+my example, I only embed the control panel and the status bar plus the image
+window for the video.
+
+<object id="ExampleOfPluginEmbed"
+data="xxxxxxxx.ram"
+type="audio/x-pn-realaudio-plugin"
+width="230"
+height="230">
+<param name="controls value="ImageWindow,ControlPanel,StatusBar" />
+<param name="console" vlaue="Video1" />
+</object>
+
+From what I understand, Gecko pass the value of the OBJECT attribute to the
+plug-in using the arg parameter of the NPP_New call that creates the plug-in
+instance. I thought that the PARAM value were supposed to be sent in this
+array a well a the attributes. Obviously they are not.
+
+If PARAM value could be passed to plug-in in the same manner that EMBED
+attribute are passed to plug-in then this will enable web author to write
+valid code and use all plug-in just a effectively a with the non-standard
+EMBED tag.
+
+I could create functional test page to demonstrate this if you need me to.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.Create a web page that embeds the realplayer plugin with the method
+explained in my details.
+2.View in Firefox
+3.
+
+Actual Results:
+The non-valid code work a it should, but will not validate. The valid code
+will not display the image window...it ignores the private, plug-in-specific
+parameters.
+
+Expected Results:
+Firefox should pas the parameter name and value to the plugin.
+
+I am embedding the realplayer plugin that is installed with Real Alternative
+v1.40.

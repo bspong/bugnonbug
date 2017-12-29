@@ -1,0 +1,62 @@
+Not linking with -lnsl. configure script detetects its need correctly. Build fails on gethostbyname
+User-Agent:       Mozilla/5.0 (X11; U; SunOS sun4u; en-US; rv:1.0.1) Gecko/20020921 Netscape/7.0
+Build Identifier: firefox-1.0-source.tar.bz2
+
+The configure script detects correctly that it needs to link with -lnsl for
+gethostbyname to work. This result doesn't seem to get propagated to the
+appropriate LDFLAGS though, since the build fails in directory
+./mozilla/OBJ-mozilla/toolkit/mozapps/installer/unix/wizard when linking is
+tried with -lsocket alone.
+
+
+
+Reproducible: Always
+Steps to Reproduce:
+1: .mozconfig:
+. $topsrcdir/browser/config/mozconfig
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/OBJ-mozilla
+ac_add_options --enable-default-toolkit=gtk2
+ac_add_options --enable-xft
+ac_add_options --disable-test
+
+ac_add_options --enable-calendar
+ac_add_options --enable-xinerama
+ac_add_options --enable-js-ultrasparc
+ac_add_options --enable-xterm-updates
+ac_add_options --prefix=/opt/csw
+ac_add_options --with-gtk-prefix=/opt/csw
+#ac_add_options --enable-native-uconv
+ac_add_options --disable-freetype2
+
+2. Environment:
+PKG_CONFIG_PATH=/opt/csw/lib/pkgconfig
+LDFLAGS=-L/opt/csw/lib -R/opt/csw/lib
+CPPFLAGS=-I/opt/csw/include
+
+3. gmake distclean ; ksh ../configure ; gmake -j SHELL=ksh
+
+Actual Results:  
+configure output:
+checking for gethostbyname... (cached) no
+checking for gethostbyname in -lnsl... (cached) yes
+checking for connect... (cached) no
+checking for connect in -lsocket... (cached) yes
+
+Make bailing: (whitespace compressed to shorten lines)
+Undefined                       first referenced
+ symbol                             in file
+gethostbyaddr  ../../../../../dist/lib/libxpnet_s.a(nsSocket.o)  (symbol belongs
+to implicit dependency /usr/lib/libnsl.so.1)
+gethostbyname  ../../../../../dist/lib/libxpnet_s.a(nsSocket.o)  (symbol belongs
+to implicit dependency /usr/lib/libnsl.so.1)
+inet_addr      ../../../../../dist/lib/libxpnet_s.a(nsSocket.o)  (symbol belongs
+to implicit dependency /usr/lib/libnsl.so.1)
+ld: fatal: Symbol referencing errors. No output written to mozilla-installer-bin
+
+Temporary fix:
+For simplicity -lnsl was added to the LDFLAGS at the local subdirectory Makefile
+and compilation restarted. 
+
+Expected Results:  
+Use configure result to
+include -lnsl every time -lsocket is used.

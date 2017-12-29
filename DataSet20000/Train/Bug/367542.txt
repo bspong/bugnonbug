@@ -1,0 +1,33 @@
+when dragging and dropping a tab, show "don't drop" indicator when drop position will not move the tab.
+when dragging and dropping a tab, show "don't drop" indicator when drop position will not move the tab.
+
+right now, we show the "don't drop" indicator when the mouse is over the current tab, but we really need to extend that by 1/2 of the tab width in both directions.
+
+in canDrop(), in tabbrowser.xml, we have http://lxr.mozilla.org/seamonkey/source/toolkit/content/widgets/tabbrowser.xml#1705
+
+1705       <method name="canDrop">
+1706         <parameter name="aEvent"/>
+1707         <parameter name="aDragSession"/>
+1708         <body>
+1709           <![CDATA[
+1710             if (aDragSession.sourceNode &&
+1711                 aDragSession.sourceNode.parentNode == this.mTabContainer &&
+1712                 (aEvent.screenX >= aDragSession.sourceNode.boxObject.screenX &&
+1713                  aEvent.screenX <= (aDragSession.sourceNode.boxObject.screenX +
+1714                                     aDragSession.sourceNode.boxObject.width)))
+1715                 return false;
+1716             return true;
+1717           ]]>
+1718         </body>
+
+given that all our tabs are the same width, we can just do:
+
+(aEvent.screenX >= (aDragSession.sourceNode.boxObject.screenX -
+                    aDragSession.sourceNode.boxObject.width/2) &&
+ aEvent.screenX <= (aDragSession.sourceNode.boxObject.screenX +
+                    aDragSession.sourceNode.boxObject.width + 
+                    aDragSession.sourceNode.boxObject.width/2))
+
+i'd want to double check if the this breaks grabbing a tab and scrolling right or left, when the source node is the is on the edge, next to the scroll buttons.
+
+wayne, dao:  what do you think?

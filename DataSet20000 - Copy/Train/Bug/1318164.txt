@@ -1,0 +1,47 @@
+Debugger does not display optimized-out variables
+Created attachment 8811526
+closure-optimized-out.png
+
+When the JavaScript engine has decided not to store the value of a variable that a closure would be expected to capture, the JavaScript debugger simply omits the variable from the listing altogether. (See attached screenshot.) This causes people to file bugs claiming that the variable is missing, and mistrust the debugger. Instead, the debugger should have some indication of which variables have been optimized out.
+
+The underlying Debugger API provides all the information needed to show this information. When run with the SpiderMonkey shell, the script below prints:
+
+10
+["arguments", "y", "x"]
+({missingArguments:true})
+20
+({optimizedOut:true})
+
+Here's the JS shell script:
+
+var g = newGlobal();
+var dbg = new Debugger(g);
+
+g.evaluate(`
+    function f(x, y) {
+      console.log(x);
+      return function z() {
+        return breakpoint(y);
+      };
+    }
+
+    function breakpoint() {
+      debugger;
+    }
+
+    var closure = f(10, 20);
+
+    function click() {
+      closure();
+    }
+`);
+
+dbg.onDebuggerStatement = function (frame) {
+  var z_env = frame.older.environment.parent.parent;
+  print(uneval(z_env.names()));
+  for (name of z_env.names()) {
+    print(uneval(z_env.getVariable(name)));
+  }
+}
+
+g.click();

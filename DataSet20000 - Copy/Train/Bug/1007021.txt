@@ -1,0 +1,27 @@
+Reflow actor should observe reflows in all frames
+The reflow actor (bug 997198) only observes reflows in the tabActor's window, but reflows from child windows don't seem to bubble, so we'll need to go through them (via the docshell tree) and list for reflows there too, also listening to frames loaded and unloaded.
+
+There are at least 3 places in our actors that have this kind of window management process:
+
+- the inspector actor:
+https://mxr.mozilla.org/mozilla-central/source/toolkit/devtools/server/actors/inspector.js#834
+listens to frame load/unload to update the markup-view
+
+- the stylesheets actor:
+https://mxr.mozilla.org/mozilla-central/source/toolkit/devtools/server/actors/stylesheets.js#121
+lists the stylesheets in the main document and recursively looks for <iframe> nodes in it to list their stylesheets too
+https://mxr.mozilla.org/mozilla-central/source/browser/devtools/styleeditor/StyleEditorUI.jsm#117
+On the client side, listens to navigation events to list stylesheets again.
+
+- the newly introduced storage actor:
+https://mxr.mozilla.org/mozilla-central/source/toolkit/devtools/server/actors/storage.js#1501
+listens to window created and removed
+https://mxr.mozilla.org/mozilla-central/source/toolkit/devtools/server/actors/storage.js#1528
+listens to pageshow and pagehide events
+https://mxr.mozilla.org/mozilla-central/source/toolkit/devtools/server/actors/storage.js#1455
+lists all windows and inner windows
+
+Bug 977043 is cleaning this up a bit, so let's wait for this one to be fixed first.
+
+I like the pool management code in the storage actor, I think it should be part of the tab actor.
+The tab actor could provide a method to any child actor that needs to know the list of windows, and events to notify of windows being added and removed.

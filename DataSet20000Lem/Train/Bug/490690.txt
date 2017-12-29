@@ -1,0 +1,36 @@
+Proxy pac regexp fails to match for redirected page to the same host
+User-Agent: Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.0.10) Gecko/2009042708 Fedora/3.0.10-1.fc10 Firefox/3.0.10
+Build Identifier: Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.0.10) Gecko/2009042708 Fedora/3.0.10-1.fc10 Firefox/3.0.10
+
+When you configure a regexp in a proxy pac file to match a domain or IP if the web server return a redirect from http to http the same regexp that matched the domain the first time fails on the redirect. If you just reload the page or go to either the http or http site directly the proxy pac file work just fine so it is only on redirect that the browser is somehow doing thing differently with the proxy pac file.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Use my example firefoxbug.pac file a your autoproxy config file.
+2. Visit http://www.wachovia.com
+3. The firefoxbug.pac file tell your browser to go DIRECT for www.wachovia.com
+4. Firefox make the request DIRECT to www.wachovia.com and get a redirect to https://www.wachovia.com
+5. The firefoxbug.pac regexp that match www.wachovia.com now somehow fails to match www.wachovia.com on the redirect to https://www.wachovia.com so it sends the browser to the 127.0.0.2 proxy which fails. The 127.0.0.2 should never match in the example firefoxbug.pac file because www.wachovia.com should always match the regexp before that point.
+6. If you just relaod or type in the https://www.wachovia.com the regexp match and you go DIRECT like you are supposed to. Only the redirect from http to http failes the regexp.
+
+--- CUT BELOW HERE firefoxbug.pac START ---
+function FindProxyForURL(url, host)
+{
+var reip = /^www.wachovia.com$/g;
+if (reip.test(host)) {
+return "DIRECT";
+} else {
+// this if should never match www.wachovia.com
+// it should always be matched in the if above
+if(host.substring(0, 16) == "www.wachovia.com") {
+return "PROXY 127.0.0.2:35635";
+} else {
+return "DIRECT";
+}
+
+}
+}
+---- CUT ABOVE HERE firefoxbug.pac END ----
+Actual Results:
+The example firefoxbug.pac file should always match www.wachovia.com by the regexp and tell the browser to go direct. Somehow that is failing only for redirects to the same host.

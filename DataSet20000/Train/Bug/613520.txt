@@ -1,0 +1,31 @@
+Firefox restores result in excessive swapping
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.2.12) Gecko/20101027 Ubuntu/10.10 (maverick) Firefox/3.6.12
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.2.12) Gecko/20101027 Ubuntu/10.10 (maverick) Firefox/3.6.12
+
+Restored sessions offer poor performance vs. original sessions.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Create a moderately complex session, e.g. 10 windows, 60+ tabs on a low memory machine (e.g. 380 MB RAM - ~5 yr. old HP Pavilion 512n -- not an uncommon machine).
+2. Logout or shut down the machine w/ session save.
+3. Login/reboot the machine w/ session restore.
+
+Actual Results:  
+Switching back and forth between windows (which may have from 1-18 tabs each) involves a lot of swapping activity (disk I/O light on continuously; a lot of si/so & bi/bo activity on vmstat).  Both Firefox and other system activity (e.g. xterm) performance ranges from sluggish to non-functional in a reasonable time frame.
+
+Expected Results:  
+Firefox *should* be able to page-out inactive windows/tabs and page-in active windows/tabs within a few seconds -- not 30-60+ seconds.  Very large sessions become completely unresponsive for many minutes.
+
+
+Original sessions have poor performance on large (exceeding RAM size) sessions but restored sessions are worse.  Presumably this is due to 2 things.  Fragmentation of the heap and Javascript garbage collection / allocation / freeing requiring paging of non-ram pages.  But in a non-Javascript (either via NoScript or completely disabling Javascript in preferences) browser performance should be good.
+
+In a restored browser however it is not as good as a clean browser session startup due to the fragmentation of tabs (HTML, CSS, IMAGEs) in memory that is a result of multi-tab simultaneous loading when one requests a session restore.
+
+Session restores should optionally be window/tab sequential to allow for contiguous memory (cache) / swap file location of all of the data associated associated with a single page.  Alternatively the browser could keep track of the total memory requirements for a window/tab and once all of the page restores are complete allocate a single memory chunk for each page and relocate the data structures to that memory [1].  This allows for optimal caching both at the RAM level and at the swapping/disk I/O level.
+
+The answer of "go buy a machine with more RAM" is NOT A SOLUTION.  I've already increased the RAM on an HP a630n from 1GB to 3GB to deal with this problem for larger sessions (50+ windows 500+ tabs) and that isn't an option for the 512n (max memory is 512 MB).  As recent Linux patches to boost UI performance under high CPU load conditions shows this is a "system" problem.  The problem of firefox/seamonkey not performing well when VMrequirements >> RAMavailable (e.g. thrashing) will not be solved by changes to Linux when the changes that are really required involve the browser's use and layout of memory.
+
+Only when the memory requirements exceed available memory (a 200 MB text document in a single tab for example) should such trashing cause problems.
+
+1. One could even consider things like a single-use shared memory region or a ram-disk in which the data for a single tab/window is stored.  That way it is clear what should be cached/paged when one activates a tab (window).

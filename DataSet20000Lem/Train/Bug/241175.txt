@@ -1,0 +1,66 @@
+Bad XPConnect call when browser is shut down with tab loading in background
+Latest cv phoenix trunk debug, window xp
+
+Requires tabbed browsing and opening tab in background.
+
+Steps:
+
+Go to http://bugzilla.mozilla.org
+Ctrl-click on View Bugs Already Reported Today
+While new tab is loading, shut down browser (I use Ctrl-W)
+
+###!!! ASSERTION:
+XPConnect is being called on a scope without a 'Components' property!
+
+This is pretty much always bad. It usually mean that native code is
+making a callback to an interface implemented in JavaScript, but the
+document where the JS object wa created ha already been cleared and the
+global property of that document's window are *gone*. Generally this
+indicates a problem that should be addressed in the design and use of the
+callback code.
+: 'Error', file
+c:/project/mozilla/mozilla/js/src/xpconnect/src/xpcwrappednative
+scope.cpp, line 554
+Break: at file
+c:/project/mozilla/mozilla/js/src/xpconnect/src/xpcwrappednatives
+cope.cpp, line 554
+
+xpc3250.dll!DEBUG_CheckForComponentsInScope(XPCCallContext & ccx={...},
+JSObject * obj=0x00a6fa10, int OKIfNotInitialized=0x00000000) Line 554 +
+0x1axpc3250.dll!XPCWrappedNativeScope::FindInJSObjectScope(XPCCallContext &
+ccx={...}, JSObject * obj=0x00a6fa10, int OKIfNotInitialized=0x00000000) Line
+596 + 0x11
+xpc3250.dll!XPCConvert::NativeInterface2JSObject(XPCCallContext & ccx={...},
+nsIXPConnectJSObjectHolder * * dest=0x0012f73c, nsISupports * src=0x00a81160,
+const nsID * iid=0x0012fa24, JSObject * scope=0x028fca48, unsigned int *
+pErr=0x00000000) Line 1049 + 0xf
+xpc3250.dll!XPCConvert::NativeData2JS(XPCCallContext & ccx={...}, long *
+d=0x0012f99c, const void * s=0x0012fb4c, const nsXPTType & type={...}, const
+nsID * iid=0x0012fa24, JSObject * scope=0x028fca48, unsigned int *
+pErr=0x00000000) Line 466 + 0x3a
+xpc3250.dll!nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS *
+wrapper=0x02b9e1d8, unsigned short methodIndex=0x0003, const nsXPTMethodInfo *
+info=0x00ab7fa8, nsXPTCMiniVariant * nativeParams=0x0012fb4c) Line 1227 + 0x31
+xpc3250.dll!nsXPCWrappedJS::CallMethod(unsigned short methodIndex=0x0003,
+const nsXPTMethodInfo * info=0x00ab7fa8, nsXPTCMiniVariant *
+params=0x0012fb4c) Line 450
+xpcom.dll!PrepareAndDispatch(nsXPTCStubBase * self=0x02b9e1d8, unsigned int
+methodIndex=0x00000003, unsigned int * args=0x0012fc14, unsigned int *
+stackBytesToPop=0x0012fc04) Line 117 + 0x1c
+xpcom.dll!SharedStub() Line 147
+xpcom.dll!nsObserverService::NotifyObservers(nsISupports *
+aSubject=0x00a81160, const char * aTopic=0x0132d46c, const unsigned short *
+someData=0x0132d350) Line 210
+necko.dll!nsIOService::SetOffline(int offline=0x00000001) Line 533
+necko.dll!nsIOService::Observe(nsISupports * subject=0x00ab0088, const char *
+topic=0x01eff80c, const unsigned short * data=0x01eff7d0) Line 678
+xpcom.dll!nsObserverService::NotifyObservers(nsISupports *
+aSubject=0x00ab0088, const char * aTopic=0x01eff80c, const unsigned short *
+someData=0x01eff7d0) Line 210
+profile.dll!nsProfile::ShutDownCurrentProfile(unsigned int
+shutDownType=0x00000001) Line 1340
+firefox.exe!DoOnShutdown() Line 784
+firefox.exe!xre_main(int argc=0x00000001, char * * argv=0x002b7b58, const
+nsXREAppData & aAppData={...}) Line 1816 + 0x5
+firefox.exe!main(int argc=0x00000001, char * * argv=0x002b7b58) Line 51 + 0x11
+firefox.exe!mainCRTStartup() Line 398 + 0x11

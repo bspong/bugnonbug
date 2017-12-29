@@ -1,0 +1,13 @@
+Crash on launch for nightly builds in Growl code
+We're seeing a crash on launch for April 25th nightly. The stack is produced by the nightly doesn't make sense, but the code that's crashing is in Growl. Mossop showed me a stack that made more sense and I was able to track down the problem. I traced it down due to the following console log before the crash:
+
+2007-04-25 19:52:29.496 firefox-bin[2113] *** -[NSURL dockDescription]: selector not recognized [self = 0x1a2b5d0]
+2007-04-25 19:52:29.496 firefox-bin[2113] An uncaught exception was raised
+2007-04-25 19:52:29.496 firefox-bin[2113] *** -[NSURL dockDescription]: selector not recognized [self = 0x1a2b5d0]
+2007-04-25 19:52:29.496 firefox-bin[2113] *** Uncaught exception: <NSInvalidArgumentException> *** -[NSURL dockDescription]: selector not recognized [self = 0x1a2b5d0]
+
+It's trying to use a method added via a category to NSURL in the file NSURLAdditions.m, but at runtime that method is not showing up. It seems most likely that something is happening during the build process that's preventing this file and/or it symbols from getting built in.
+
+The thing is I'm seeing other growl symbols in nm and strings, but not the ones from NSURLAdditions.m. I'm unable to tell if it's a file level or class level problem, because there aren't any symbols or strings in that file that arne't part of the NSURL category. It's all very very strange.
+
+I didn't see this on an incremental build with --enable-debug and --disable-optimized, but Mossop is seeing it in his static optimized Non-UB build.

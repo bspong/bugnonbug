@@ -1,0 +1,1927 @@
+event.keycode
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9) Gecko/2008052906 Firefox/3.0
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9) Gecko/2008052906 Firefox/3.0
+
+while java web application in firefox. I am not able to see components in one frame it is blank. this problem is appearing in IE 7 also but it working fine with IE6.0
+
+following source of the error page. pls resolve this
+
+/*****************************************************************************
+ * File Name        :   ValidationFunction.js
+ * Description      :   JS file for Validation functions
+ *****************************************************************************/
+
+var RADIX_INT = 10;
+var DATE_FORMAT = "dd/MM/yyyy";
+//call this function on keypress event of every form
+
+function setDirtyBit(){
+        if(event.keyCode == 126 || event.keyCode == 94){
+              window.event.returnValue=false;
+              return;
+         }     
+    parent.banner.document.getElementById('dirtyBit').value = '1' ;
+}
+
+//call this function when the form is cleared
+function resetDirtyBit(){
+    parent.banner.document.getElementById('dirtyBit').value = '0' ;
+}
+
+//this function will be called internally when any link is clicked. (you dont have to bother about it)
+function checkTransition() {
+
+  var ans;
+  if(parent.banner.document.getElementById('dirtyBit').value == '1') {
+    ans = confirm("Selected action will discard any entered data. Continue?");
+    if(ans) {
+      parent.banner.document.getElementById('dirtyBit').value = '0';
+      return true;
+    } else {
+      return false;
+    }
+  }
+  return true ;
+}
+
+function uscmCurrentDate(){
+     // formateDate is a part of CalendarPopup.js
+     return formatDate(new Date(),DATE_FORMAT);
+}
+
+function uscmFormatNumber(num,decimalPlaces){
+
+    var numValue = new Number(num);
+    return numValue.toFixed(decimalPlaces);
+
+}
+
+function uscmFormatCurrency(num){
+
+    return uscmFormatNumber(num,2);
+
+}
+
+function trimNewLineSpaces(inputVal,side){
+    var i = 0;
+    var iLength = inputVal.length ;
+    var sTemp = "" ;
+	sTemp = inputVal.replace(/\n+|\r+|\f+/g,"") ;
+    /*while(i < iLength ){
+        if(inputVal.charAt(i) == '\\n' || inputVal.charAt(i) == ' ')
+            i++ ;
+        else{
+            sTemp = inputVal.substring (i, iLength);
+            break ;
+        }
+    }
+	alert(inputVal) ;
+    i = sTemp.length ;
+    while(i > 0){
+        if(sTemp.charAt(i) == '\\n' || inputVal.charAt(i) == ' ')
+            i-- ;
+        else{
+            sTemp = sTemp.substring (0, i+1);
+            break ;
+        }    
+    }*/
+    return(uscmTrim(sTemp,side)) ;
+}
+
+function uscmTrim (sInput, iSide)
+{
+
+	var sTemp = "";
+	var cChar = "";
+	var iCount = "";
+	var SINGLE_BLANK = " ";
+	var iInputWidth = 0;
+
+	iInputWidth = sInput.length;
+
+	switch (iSide)
+	{
+	case 0:
+		//left trim
+		for (iCount = 0; iCount < iInputWidth; iCount++)
+		{
+			cChar = sInput.charAt (iCount);
+			if (SINGLE_BLANK != cChar)
+			{
+				sTemp = sInput.substring (iCount, iInputWidth);
+				break;
+			}
+		}
+		break;
+	case 1:
+		//right trim
+		for (iCount = iInputWidth - 1; iCount >= 0 ; iCount--)
+		{
+			cChar = sInput.charAt (iCount);
+			if (cChar != SINGLE_BLANK)
+			{
+				sTemp = sInput.substring (0, iCount+1);
+				break;
+			}
+		}
+		break;
+	case 2:
+		//both trim
+		for (iCount = 0; iCount < iInputWidth; iCount++)
+		{
+			cChar = sInput.charAt (iCount);
+			if (SINGLE_BLANK != cChar)
+			{
+				sTemp = sInput.substring (iCount, iInputWidth);
+				break;
+			}
+		}
+		iInputWidth = sTemp.length;
+		for (iCount = iInputWidth - 1; iCount >= 0 ; iCount--)
+		{
+			cChar = sTemp.charAt (iCount);
+			if (cChar != SINGLE_BLANK)
+			{
+				sTemp = sTemp.substring (0, iCount+1);
+				break;
+			}
+		}
+		break;
+	}
+
+
+	return sTemp;
+} // end of uscmTrim
+function uscmCheckMinLength (sFieldValue, iMinLength)
+{
+	var bRetValue = true;
+	var iLen = 0;
+	var iLength = 0;
+
+	sFieldValue = uscmTrim (sFieldValue, 2);
+	iLen = sFieldValue.length;
+	iLength = parseInt (iMinLength, RADIX_INT);
+
+	if (true == uscmIsEmpty (sFieldValue))
+	{
+        bRetValue = false;
+    	}
+    else
+	{
+		if(iLen < iLength)
+		{
+			bRetValue = false;
+		}
+		else
+		{
+			bRetValue = true;
+		}
+	}
+	return bRetValue;
+
+} // end of uscmCheckMinLength
+
+function uscmCheckMaxLength (sFieldValue, iMaxLength)
+{
+	var bRetValue = true;
+	var iLen = 0;
+	var iLength = 0;
+
+	sFieldValue = uscmTrim (sFieldValue, 2);
+	iLen = sFieldValue.length;
+	iLength = parseInt (iMaxLength, RADIX_INT);
+
+	if(iLen > iLength)
+	{
+		bRetValue = false;
+	}
+
+	return bRetValue;
+
+} // end of uscmCheckMaxLength
+
+function uscmCheckLength (sFieldValue, iExactLength)
+{
+	var bRetValue = true;
+	var iLen = 0;
+	var iLength = 0;
+
+	sFieldValue = uscmTrim (sFieldValue, 2);
+	iLen = sFieldValue.length;
+	iLength = parseInt (iExactLength, RADIX_INT);
+
+	if (true == uscmIsEmpty (sFieldValue))
+	{
+        bRetValue = false;
+    	}
+    else
+	{
+		if(iLen != iExactLength)
+		{
+			bRetValue = false;
+		}
+		else
+		{
+			bRetValue = true;
+		}
+	}
+	return bRetValue;
+
+} // end of uscmCheckMinLength
+
+function uscmIsEmpty (sFieldValue)
+{
+	var bRetValue = false;
+	var EMPTY_STRING = "";
+	replacement = / /gi;			// regular expression
+	replacementForEnter = /\s/gi;			// regular expression
+	sFieldValue = uscmTrim(sFieldValue,2);
+
+	// remove all spaces
+	sFieldValue = sFieldValue + EMPTY_STRING;
+	sFieldValue = sFieldValue.replace(replacement, EMPTY_STRING);
+	sFieldValue = sFieldValue.replace(replacementForEnter, EMPTY_STRING);
+
+	if ((EMPTY_STRING == sFieldValue) || (null == sFieldValue))
+	{
+		bRetValue = true;
+	}
+
+	return bRetValue;
+} // end of uscmIsEmpty
+
+function uscmIsValidID(sFieldValue)
+{
+	var iCount = 0;
+	var iCode = 0;
+	var bRetValue = false;
+	sFieldValue = uscmTrim(sFieldValue,2)
+	if (true == uscmIsEmpty (sFieldValue))
+	{
+	        bRetValue = false;
+	}
+	else
+	{
+		var iFieldWidth = sFieldValue.length;
+		for (iCount = 0; iCount < iFieldWidth; iCount++)
+		{
+			iCode = sFieldValue.charCodeAt (iCount);
+			if ((48 <= iCode &&  57 >= iCode )|| (65 <= iCode &&  90 >= iCode) || (97 <= iCode &&  122 >= iCode) || iCode == 45 )
+			{
+				bRetValue = true;
+			}
+			else
+			{
+				bRetValue = false;
+				break;
+			}
+		}
+	}
+	return bRetValue ;
+}
+
+function uscmIsInteger (iFieldValue)
+{
+	var bRetValue = true;
+
+	var objRe = new RegExp ("[^0-9|\]");		// Regular expression
+
+	// trim from both sides
+	iFieldValue = uscmTrim (iFieldValue, 2);
+
+	if(!uscmIsEmpty(iFieldValue) && iFieldValue.charAt(0) == "-" && iFieldValue.length > 1)
+	{
+		iFieldValue = iFieldValue.substring(1);
+	}
+
+	iFieldValue = uscmTrim (iFieldValue, 2);
+
+
+	if (true == uscmIsEmpty (iFieldValue))
+	{
+		bRetValue = false;
+	}
+	else
+	{
+		if (objRe.test (iFieldValue))	    	// If not an integer
+		{
+			bRetValue = false;
+		}
+	}
+
+	return bRetValue;
+} // end of uscmIsInteger
+
+
+function uscmIsCurrency(sCurency)
+{
+	var bRetValue = true;
+
+	// trim from both sides
+	sCurency = uscmTrim (sCurency, 2);
+
+	if(true == CURRENCY_INTEGER)
+	{
+		if(uscmIsInteger(sCurency))
+		{
+			if(sCurency.length > CURRENCY_NO_DIGITS_BEFORE_DECIMAL)
+			{
+				bRetValue = false;
+			}
+		}
+		else
+		{
+			bRetValue = false;
+		}
+	}
+	else
+	{
+		if(uscmIsNumericTemp(sCurency,CURRENCY_DECIMAL_SEPARATOR))
+		{
+			var sarrCurr = sCurency.split(CURRENCY_DECIMAL_SEPARATOR);
+			if(sarrCurr[0].length > CURRENCY_NO_DIGITS_BEFORE_DECIMAL)
+			{
+				bRetValue = false;
+			}
+			else if(sarrCurr.length > 1 && sarrCurr[1].length > CURRENCY_NO_DIGITS_AFTER_DECIMAL)
+			{
+				bRetValue = false;
+			}
+		}
+		else
+		{
+			bRetValue = false;
+		}
+	}
+
+	return bRetValue;
+} // end of uscmIsCurrency
+
+function uscmIsNumeric(sVal,NUMERIC_NO_DIGITS_AFTER_DECIMAL)
+{
+
+	DECIMAL_SEPARATOR='.';
+	sVal = uscmTrim(sVal,2);
+
+	if(!uscmIsEmpty(sVal) && sVal.charAt(0) == "-" && sVal.length > 1)
+	{
+		sVal = sVal.substring(1);
+	}
+
+	return uscmIsNumericTemp(uscmTrim(sVal,2),DECIMAL_SEPARATOR,NUMERIC_NO_DIGITS_AFTER_DECIMAL)
+}
+
+
+//-------------------------------------------------------------------
+// uscmIsNumericTemp(value)
+//   Returns true if value contains a positive float value
+//-------------------------------------------------------------------
+function uscmIsNumericTemp(val,sDecimalSep,iNoOfDigitsAfterDecimal)
+{
+	var dp = false;
+	var iCounter = 0;
+	for (var i=0; i < val.length; i++)
+	{
+		if (!uscmIsDigit(val.charAt(i)))
+		{
+
+			if (val.charAt(i) == sDecimalSep)
+			{
+				if (dp == true)
+				{
+					return false;
+				} // already saw a decimal point
+				else
+				{
+					dp = true;
+				}
+			}
+			else
+			{
+				return false;
+			}
+		}
+
+		if(dp == true)
+		{
+			iCounter = iCounter + 1
+		}
+
+		if(iCounter > iNoOfDigitsAfterDecimal + 1)
+		{
+			return false;
+		}
+
+	}
+
+
+	if(dp == true)
+	{
+		 if(iCounter != 1)
+		 {
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	else
+		return true;
+
+}
+
+
+
+//-------------------------------------------------------------------
+// uscmIsDigit(value)
+//   Returns true if value is a 1-character digit
+//-------------------------------------------------------------------
+function uscmIsDigit(num)
+{
+	var string="1234567890";
+	if (string.indexOf(num) != -1)
+	{
+		return true;
+	}
+	return false;
+}
+
+
+function uscmIsAlphaNumeric (sFieldValue)
+{
+	var iCount = 0;
+	var iCode = 0;
+	var bRetValue = true;
+
+	sFieldValue = uscmTrim (sFieldValue, 2);
+
+	if ("" == sFieldValue)
+	{
+		bRetValue = false;
+	}
+	else
+	{
+		var iFieldWidth = sFieldValue.length;
+		for (iCount = 0; iCount < iFieldWidth; iCount++)
+		{
+			iCode = sFieldValue.charCodeAt (iCount);
+			if (48 > iCode || (57 < iCode && 65 > iCode) || (90 < iCode && 97 > iCode) || iCode > 122 )
+			{
+				bRetValue = false;
+				break;
+			}
+		}
+	}
+	return bRetValue;
+
+} // end of uscmIsAlphaNumeric
+
+function uscmIsMoreMaxNumSize(numFieldValue, iMaxSize)
+{
+	if (uscmIsNumeric (numFieldValue))
+	{
+		sTemp = numFieldValue.split(".");
+		iTemp = sTemp[0];
+		if((iTemp+"").length > iMaxSize)
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	else
+	{
+		return true;
+	}
+
+}
+function uscmIsValidDate(sDate)
+{
+	if(uscmIsEmpty(sDate))
+	{
+		return false;
+	}
+   	else
+   	{
+		return isDate(uscmTrim(sDate,2),DATE_FORMAT);
+    }
+
+}
+
+function uscmIsMoreDate(sMoreDate,sLessDate)
+{
+	if(uscmIsValidDate(sMoreDate) && uscmIsValidDate(sLessDate))
+	{
+		if(compareDates(uscmTrim(sMoreDate,2),DATE_FORMAT,uscmTrim(sLessDate,2),DATE_FORMAT) == 1)
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	else
+	{
+		return false;
+	}
+}
+
+function uscmIsMoreOrEqualDate(sMoreDate,sLessDate)
+{
+	sMoreDate=uscmTrim(sMoreDate,2);
+    sLessDate=uscmTrim(sLessDate,2);
+	if(uscmIsValidDate(sMoreDate) && uscmIsValidDate(sLessDate))
+	{
+		if(getDateFromFormat(sMoreDate,DATE_FORMAT) >= getDateFromFormat(sLessDate,DATE_FORMAT))
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	else
+	{
+		return false;
+	}
+}
+
+function uscmIsMoreDateByDays(sMoreDate,sLessDate,sDays)
+{
+	sMoreDate=uscmTrim(sMoreDate,2);
+    sLessDate=uscmTrim(sLessDate,2);
+	if(uscmIsValidDate(sMoreDate) && uscmIsValidDate(sLessDate))
+	{ 
+		if((getDateFromFormat(sMoreDate,DATE_FORMAT) - getDateFromFormat(sLessDate,DATE_FORMAT)) == sDays*24*60*60*1000)
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	else
+	{
+		return false;
+	}
+}
+
+function uscmIsDateDiffMoreByDays(sMoreDate,sLessDate,sDays)
+{
+	sMoreDate=uscmTrim(sMoreDate,2);
+    sLessDate=uscmTrim(sLessDate,2);
+	if(uscmIsValidDate(sMoreDate) && uscmIsValidDate(sLessDate))
+	{ 
+		if((getDateFromFormat(sMoreDate,DATE_FORMAT) - getDateFromFormat(sLessDate,DATE_FORMAT)) > sDays*24*60*60*1000)
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	else
+	{
+		return false;
+	}
+}
+
+
+/*function uscmGetDate(sDate)
+{
+	var month  = sDate.substring(0,2);
+	var date = sDate.substring(3,5);
+	var year  = sDate.substring(6,10);
+	return new Date(year,month-1,date);
+}*/
+
+function uscmIsDoubleByte (sFieldValue)
+{
+	var sRetValue = true;
+
+	var SIZE = 4;
+	var CODE_SPACE = 32;
+	var CODE_LINE_FEED = 16;
+	var CODE_CARRAGE_RETURN = 19;
+	var iCount = 0;
+	var iCode = 0;
+	var sUcode = "";
+	var iSize = 0;
+
+	sFieldValue = uscmTrim (sFieldValue, 2);
+
+	if ("" == sFieldValue)
+	{
+		sRetValue = true;
+	}
+	else
+	{
+		iFieldWidth = sFieldValue.length;
+
+		for (iCount = 0; iCount < iFieldWidth; iCount++)
+		{
+			iCode = sFieldValue.charCodeAt (iCount);
+
+			if((iCode >= 33 && iCode <= 64) || (iCode >= 91 && iCode <= 96) || (iCode >= 123 && iCode <= 126))
+			{
+				sRetValue = true;
+			}
+			else if ((iCode != CODE_SPACE) && (iCode != CODE_CARRAGE_RETURN) &&(iCode != CODE_LINE_FEED))
+			{
+				sUcode = escape (iCode);
+				iSize = sUcode.length;
+				if(SIZE > iSize)
+				{
+					sRetValue = uscmCheckSingleByteKatakana (sFieldValue);
+					if(sRetValue == false)
+					{
+						return sRetValue;
+					}
+				}
+			}
+		}
+
+	}
+	return sRetValue;
+} // end of uscmIsDoubleByte
+
+function uscmCheckSingleByteKatakana (sValue)
+{
+	var SINGLE_BYE_KANA_START = 65376;
+	var SINGLE_BYE_KANA_END = 65439
+	var bRetValue = true;
+	var iCount = 0;
+	var iCode = 0;
+	var iLength = 0;
+
+	sValue = sValue + "";
+	iLength = sValue.length;
+	for (iCount=0; iCount<iLength; iCount++)
+	{
+		iCode = sValue.charCodeAt(iCount); // get ascii code of character
+		if (SINGLE_BYE_KANA_START >= iCode || iCode >= SINGLE_BYE_KANA_END)
+		{
+			bRetValue = false;
+			break;
+		}
+	}
+	return bRetValue;
+}
+
+function uscmCheckKatakana (sValue)
+{
+	var KANA_START = 12448;
+	var KANA_END = 12543;
+	var SPACE = 32;
+	var DOUBLE_BYTE_SPACE = 12288;
+	var HYPEN = 65293;
+	var DIGITS_START = 65296;
+	var DIGITS_END = 65305;
+	var DOUBLE_BYTE_DOT = 65294;
+	var DOUBLE_BYTE_STAR = 65290;
+	var DOUBLE_BYTE_OPEN_BRACE = 65288;
+	var DOUBLE_BYTE_CLOSE_BRACE = 65289;
+
+	var bRetValue = true;
+	var iCount = 0;
+	var iCode = 0;
+	var iLength = 0;
+
+	sValue = sValue + "";
+	iLength = sValue.length;
+	for (iCount=0; iCount<iLength; iCount++)
+	{
+		iCode = sValue.charCodeAt(iCount); // get ascii code of character
+
+		if (KANA_START > iCode || KANA_END < iCode)
+		{
+			if (!((iCode >= DIGITS_START && iCode <= DIGITS_END) ||
+				(iCode == SPACE) || (iCode == HYPEN) || (iCode == DOUBLE_BYTE_SPACE) ||
+				(iCode == DOUBLE_BYTE_DOT) || (iCode == DOUBLE_BYTE_STAR) ||
+				(iCode == DOUBLE_BYTE_OPEN_BRACE) || (iCode == DOUBLE_BYTE_CLOSE_BRACE)))
+			{
+				bRetValue = false;
+				break;
+			}
+		}
+	}
+	return bRetValue;
+}
+
+function uscmIsSingleByte(sFieldValue)
+{
+	var sRetValue = true;
+
+	var SIZE = 4;
+	var iCount = 0;
+	var iCode = 0;
+	var iFieldWidth = 0;
+	var sUcode = "";
+	var iSize = 0;
+
+	sFieldValue = uscmTrim (sFieldValue, 2);
+
+	if ("" == sFieldValue)
+	{
+		sRetValue = true;
+	}
+	else
+	{
+		iFieldWidth = sFieldValue.length;
+
+		for (iCount = 0; iCount < iFieldWidth; iCount++)
+		{
+			iCode = sFieldValue.charCodeAt (iCount);
+			sUcode = escape (iCode);
+			iSize = sUcode.length;
+			if (SIZE <= iSize)
+			{
+				sRetValue = false;
+			}
+		}
+	}
+	return sRetValue;
+} // end of uscmIsSingleByte
+
+function uscmIsWildCardPresent(sFieldValue)
+{
+	var bRetValue = false;
+	sFieldValue = uscmTrim(sFieldValue,2)
+
+	if(sFieldValue.indexOf(WILD_CARD_CHARACTER) != -1)
+	{
+		bRetValue = true;
+	}
+	return bRetValue;
+} // end of uscmIsSingleByte
+
+//Global Varibles
+var iCountMandatory = 0;
+var iCountWildCard = 0;
+var iCountDateFormat = 0;
+var iCountNumeric =0;
+var iCountSingleByte = 0;
+var iCountDoubleByte = 0;
+var iCountKatakana = 0;
+var iCountSingleByteKatakana = 0;
+var iCountCurrencyFormat = 0;
+var iCountIntegerFormat = 0;
+var iCountZeroFormat = 0;
+var iCountSpecialChFormat = 0;
+
+function uscmValidateControl(objTxt,sLabel,arrCSErrMsg)
+{
+	var sValue = objTxt.value;
+	var bErrCode=false;
+	// Mandatory Check
+
+	if(objTxt.ATMANDATORY)
+	{
+		if ("true" == objTxt.ATMANDATORY)
+		{
+			if (true == uscmIsEmpty(sValue))
+			{
+				bErrCode=true;
+				arrCSErrMsg[arrCSErrMsg.length]=new Array();
+				arrCSErrMsg[arrCSErrMsg.length-1][0] = "M_EMPTY";
+				arrCSErrMsg[arrCSErrMsg.length-1][1] = sLabel;
+				iCountMandatory = iCountMandatory+1;
+			}
+		}
+	}
+	//Check wild card search allowed or not
+	if(objTxt.ATWILDCARD)
+	{
+		if("false" == objTxt.ATWILDCARD)
+		{
+			if (true == uscmIsWildCardPresent(sValue))
+			{
+				bErrCode=true;
+				arrCSErrMsg[arrCSErrMsg.length]=new Array();
+				arrCSErrMsg[arrCSErrMsg.length-1][0] = "M_WILD_CARD_NOT_ALLOWED";
+				arrCSErrMsg[arrCSErrMsg.length-1][1] = sLabel;
+				iCountWildCard = iCountWildCard + 1;
+			}
+		}
+
+	}
+	if (false == uscmIsEmpty (sValue))
+	{
+		// Date check
+		if(objTxt.ATDATE)
+		{
+			if ("true" == objTxt.ATDATE )
+			{
+				if (false == uscmIsValidDate(sValue))
+				{
+					bErrCode=true;
+					arrCSErrMsg[arrCSErrMsg.length]=new Array();
+					arrCSErrMsg[arrCSErrMsg.length-1][0] = "M_INVALID_DATE_FORMAT";
+					arrCSErrMsg[arrCSErrMsg.length-1][1] = sLabel;
+					iCountDateFormat = iCountDateFormat +1;
+				}
+			}
+		}
+		// Numeric check
+		if(objTxt.ATNUMERIC)
+		{
+			if ("true" == objTxt.ATNUMERIC )
+			{
+				if (false == uscmIsNumeric(sValue))
+				{
+					bErrCode=true;
+					arrCSErrMsg[arrCSErrMsg.length]=new Array();
+					arrCSErrMsg[arrCSErrMsg.length-1][0] = "M_NOT_NUMERIC";
+					arrCSErrMsg[arrCSErrMsg.length-1][1] = sLabel;
+					iCountNumeric = iCountNumeric +1;
+				}
+			}
+		}
+		// Numeric check
+		if(objTxt.ATMAXNUMERICLEN)
+		{
+			if (null != objTxt.ATMAXNUMERICLEN )
+			{
+				if (true == uscmIsNumeric(sValue) && true == uscmIsMoreMaxNumSize(sValue, objTxt.ATMAXNUMERICLEN))
+				{
+					bErrCode=true;
+					arrCSErrMsg[arrCSErrMsg.length]=new Array();
+					arrCSErrMsg[arrCSErrMsg.length-1][0] = "M_MAX_NUMERIC_LEN";
+					arrCSErrMsg[arrCSErrMsg.length-1][1] = sLabel;
+					arrCSErrMsg[arrCSErrMsg.length-1][2] = objTxt.ATMAXNUMERICLEN;
+				}
+			}
+		}
+		// Currency Check
+		if(objTxt.ATCURRENCY)
+		{
+			if ("true" == objTxt.ATCURRENCY )
+			{
+				if (false == uscmIsCurrency(sValue))
+				{
+					bErrCode=true;
+					arrCSErrMsg[arrCSErrMsg.length]=new Array();
+					arrCSErrMsg[arrCSErrMsg.length-1][0] = " M_NOT_CURRENCY";
+					arrCSErrMsg[arrCSErrMsg.length-1][1] = sLabel;
+					iCountCurrencyFormat = iCountCurrencyFormat + 1
+				}
+			}
+		}
+		// Integer Check
+		if(objTxt.ATINTEGER)
+		{
+			if ("true" == objTxt.ATINTEGER )
+			{
+				if (false == uscmIsInteger(sValue))
+				{
+					bErrCode=true;
+					arrCSErrMsg[arrCSErrMsg.length]=new Array();
+					arrCSErrMsg[arrCSErrMsg.length-1][0] = " M_NOT_INTEGER";
+					arrCSErrMsg[arrCSErrMsg.length-1][1] = sLabel;
+					iCountIntegerFormat = iCountIntegerFormat + 1
+				}
+			}
+		}
+		//Min Length check
+		if(objTxt.ATMINLENGTH)
+		{
+			if (null  != objTxt.ATMINLENGTH )
+			{
+				if (false == uscmCheckMinLength(sValue,objTxt.ATMINLENGTH ))
+				{
+					bErrCode=true;
+					arrCSErrMsg[arrCSErrMsg.length]=new Array();
+					arrCSErrMsg[arrCSErrMsg.length-1][0] = "M_MINIMUM_LENGTH";
+					arrCSErrMsg[arrCSErrMsg.length-1][1] = sLabel;
+					arrCSErrMsg[arrCSErrMsg.length-1][2] = objTxt.ATMINLENGTH;
+				}
+			}
+		}
+
+		// Single byte Check
+		if(objTxt.ATSINGLEBYTE)
+		{
+			if("true" == objTxt.ATSINGLEBYTE)
+			{
+				if (false == uscmIsSingleByte(sValue))
+				{
+					bErrCode=true;
+					arrCSErrMsg[arrCSErrMsg.length]=new Array();
+					arrCSErrMsg[arrCSErrMsg.length-1][0] = "M_NOT_SINGLE_BYTE";
+					arrCSErrMsg[arrCSErrMsg.length-1][1] = sLabel;
+					iCountSingleByte  = iCountSingleByte  +1;
+				}
+			}
+
+		}
+
+		// Double byte Check
+		if(objTxt.ATDOUBLEBYTE)
+		{
+			if("true" == objTxt.ATDOUBLEBYTE)
+			{
+				if (false == uscmIsDoubleByte(sValue))
+				{
+					bErrCode=true;
+					arrCSErrMsg[arrCSErrMsg.length]=new Array();
+					arrCSErrMsg[arrCSErrMsg.length-1][0] = "M_NOT_DOUBLE_BYTE";
+					arrCSErrMsg[arrCSErrMsg.length-1][1] = sLabel;
+					iCountDoubleByte = iCountDoubleByte + 1;
+				}
+			}
+
+		}
+
+		// Katakana byte Check
+		if(objTxt.ATKATAKANA)
+		{
+			if("true" == objTxt.ATKATAKANA)
+			{
+				if(false == uscmCheckKatakana(sValue) && false == uscmCheckSingleByteKatakana(sValue))
+				{
+					bErrCode=true;
+					arrCSErrMsg[arrCSErrMsg.length]=new Array();
+					arrCSErrMsg[arrCSErrMsg.length-1][0] = "M_NOT_KATAKANA";
+					arrCSErrMsg[arrCSErrMsg.length-1][1] = sLabel;
+					iCountKatakana = iCountKatakana +1
+				}
+			}
+
+		}
+
+		// Katakana byte Check
+		if(objTxt.ATSINGLEBYTEKATAKANA)
+		{
+			if("true" == objTxt.ATSINGLEBYTEKATAKANA)
+			{
+				if(false == uscmCheckSingleByteKatakana(sValue))
+				{
+					bErrCode=true;
+					arrCSErrMsg[arrCSErrMsg.length]=new Array();
+					arrCSErrMsg[arrCSErrMsg.length-1][0] = "M_NOT_SINGLE_BYTE_KATAKANA";
+					arrCSErrMsg[arrCSErrMsg.length-1][1] = sLabel;
+					iCountSingleByteKatakana = iCountSingleByteKatakana + 1;
+				}
+			}
+
+		}
+
+		//MAX Length check
+		if(objTxt.ATMAXLENGTH)
+		{
+			if (null  != objTxt.ATMAXLENGTH )
+			{
+				if (false == uscmCheckMaxLength(sValue,objTxt.ATMAXLENGTH ))
+				{
+					bErrCode=true;
+					arrCSErrMsg[arrCSErrMsg.length]=new Array();
+					arrCSErrMsg[arrCSErrMsg.length-1][0] = "M_MAXIMUM_LENGTH";
+					arrCSErrMsg[arrCSErrMsg.length-1][1] = sLabel;
+					arrCSErrMsg[arrCSErrMsg.length-1][2] = objTxt.ATMAXLENGTH;
+				}
+			}
+		}
+		if(objTxt.ATZERO)
+		{
+			if("false" == objTxt.ATZERO)
+			{
+				if (0 == uscmTrim(sValue,2))
+				{
+					bErrCode=true;
+					arrCSErrMsg[arrCSErrMsg.length]=new Array();
+					arrCSErrMsg[arrCSErrMsg.length-1][0] = "M_ZERO_NOT_ALLOWED";
+					arrCSErrMsg[arrCSErrMsg.length-1][1] = sLabel;
+					iCountZeroFormat = iCountZeroFormat + 1
+				}
+			}
+
+		}
+
+		// Katakana byte Check
+		if(objTxt.ATSTRINGSEPARATOR)
+		{
+			if("true" == objTxt.ATSTRINGSEPARATOR)
+			{
+				sValue = uscmTrim(sValue,2)
+
+				if(sValue.indexOf(STRING_SEPARATOR) != -1)
+				{
+					bErrCode=true;
+					arrCSErrMsg[arrCSErrMsg.length]=new Array();
+					arrCSErrMsg[arrCSErrMsg.length-1][0] = "M_STRING_SEPARATOR_NOT_ALLOWED";
+					arrCSErrMsg[arrCSErrMsg.length-1][1] = sLabel;
+					arrCSErrMsg[arrCSErrMsg.length-1][2] = STRING_SEPARATOR;
+					iCountSpecialChFormat = iCountSpecialChFormat + 1
+				}
+
+			}
+
+		}
+
+		//Check for English Alphabets numerals and "-"
+		if(objTxt.ATID)
+		{
+			if("true" == objTxt.ATID)
+			{
+				if (false == uscmIsValidID(sValue))
+				{
+					bErrCode=true;
+					arrCSErrMsg[arrCSErrMsg.length]=new Array();
+					arrCSErrMsg[arrCSErrMsg.length-1][0] = "M_ID_NOT_VALID";
+					arrCSErrMsg[arrCSErrMsg.length-1][1] = sLabel;
+				}
+			}
+		}
+
+	}
+	return bErrCode;
+}
+
+//-------------------------------------------------------------------
+// fnIsNumeric(value)
+//   Returns true if value contains a positive float value
+//-------------------------------------------------------------------
+function fnIsNumeric(lval)
+{
+	sVal = uscmTrim(lval,2);
+	if (uscmIsNumericTemp(uscmTrim(sVal,2),'.',2)){
+		if (sVal >= 1000)
+		{
+			return false;
+		}
+	}
+	else {
+		return false;
+	}
+
+	return true;
+}
+
+//-------------------------------------------------------------------
+// fnIsNumericForFinancials(value)
+// Returns true if value contains a positive float value
+// Author : dhanalakshmi
+//-------------------------------------------------------------------
+function fnIsNumericForFinancials(lval)
+{
+	sVal = uscmTrim(lval,2);
+	if (uscmIsNumericTemp(uscmTrim(sVal,2),'.',2)){
+		if (sVal >= 1000)
+		{
+			return false;
+		}
+	}
+	else {
+		return false;
+	}
+
+	return true;
+}
+
+//-------------------------------------------------------------------
+// isValidDate(dateTextObject,dateTobeValidatedAgainst)
+//   Returns true if the first parameter date is greater
+//	than the second date
+//-------------------------------------------------------------------
+
+function isValidDate(dateTobeValidated,dateTobeValidatedAgainst)
+{
+	var valid = true;
+		var inValid = false;
+		var curDate = 0;
+		var curMonth = 0;
+		var curYear = 0;
+		var date = 0;
+		var month = 0;
+		var year = 0;
+		var dateStr = dateTobeValidated;
+
+
+		dateTobeValidated = uscmTrim(dateTobeValidated,2);
+		dateTobeValidatedAgainst = uscmTrim(dateTobeValidatedAgainst,2);
+
+		if(uscmIsEmpty(dateStr) || uscmIsEmpty(dateTobeValidatedAgainst))
+			return valid;
+
+		if(dateTobeValidatedAgainst != null ) {
+
+			/* Get the date, month and the year */
+			if(dateTobeValidatedAgainst.substring(0,2) == "08")
+				curDate = 8;
+			else if(dateTobeValidatedAgainst.substring(0,2) == "09")
+				curDate = 9;
+			else
+				curDate = parseInt(dateTobeValidatedAgainst.substring(0,2));
+
+			if(dateTobeValidatedAgainst.substring(3,5) == "08")
+				curMonth = 8;
+			else if(dateTobeValidatedAgainst.substring(3,5) == "09")
+				curMonth = 9;
+			else
+				curMonth = parseInt(dateTobeValidatedAgainst.substring(3,5));
+
+				 //curDate = parseInt(dateTobeValidatedAgainst.substring(0,2));
+				 //curMonth = parseInt(dateTobeValidatedAgainst.substring(3,5));
+				 curYear = parseInt(dateTobeValidatedAgainst.substring(6,10));
+
+		 } else {
+			return inValid;
+		 }
+
+
+
+			/* Get the date, month and the year */
+			if(dateStr.substring(0,2) == "08")
+				date = 8;
+			else if(dateStr.substring(0,2) == "09")
+				date = 9;
+			else
+				date = parseInt(dateStr.substring(0,2));
+
+
+			if(dateStr.substring(3,5) == "08")
+				month = 8;
+			else if(dateStr.substring(3,5) == "09")
+				month = 9;
+			else
+				month = parseInt(dateStr.substring(3,5));
+
+
+			//date = parseInt(dateStr.substring(0,2));
+			//month = parseInt(dateStr.substring(3,5));
+			year = parseInt(dateStr.substring(6,10));
+
+
+
+			if(year > curYear )
+				return valid;
+			else if(year < curYear)
+				return inValid;
+
+			if(month > curMonth)
+				return valid;
+			else if(month < curMonth)
+				return inValid;
+
+			if(date >= curDate )
+				return valid;
+			else
+			return inValid;
+}
+
+
+function fnTrimMiddleAll(fieldValue)
+
+{
+
+          if (fieldValue == null) {
+
+          return;
+
+          }
+
+          var cnt;
+
+          var iCountTrim=0;
+
+          var len;
+
+          var fVal=fieldValue.toString();
+
+          var strTrimmed = "";
+
+          var str = fVal;
+
+          var chSelected= '';
+
+          len = fVal.length;
+
+
+
+          for(cnt=0;cnt < len;cnt++) {
+
+             chSelected=str.charAt(cnt);
+
+             if (chSelected != " ")
+
+             {
+
+                   strTrimmed+= chSelected;
+
+                   iCountTrim++;
+
+             }
+
+          }
+
+          return (strTrimmed);
+
+}//end of fnTrimMiddleAll
+
+//-------------------------------------------------------------------
+// fnChangeFloat(value)
+//   Returns 0 if the value is blank else the float value of entered data
+//  To be used before using parseFloat for data in Javascript.
+//  If on a blank data field parseFloat is done Nan is returned.
+//-------------------------------------------------------------------
+
+function fnChangeFloat(value) {
+    if( uscmTrim(value,2) == '' )
+        value = "0.00";
+    return parseFloat(value);
+
+}
+
+//-------------------------------------------------------------------
+// fnTruncate(value)
+// this function truncate a float value upto two decinal place.
+//-------------------------------------------------------------------
+
+function fnTruncate(val) {
+    var str = String(val);
+	var index = str.indexOf(".");
+
+	if(index > -1){
+	   str = str.substring(0, index+3);
+	}
+	if( str == "0") {
+        str = "0.00";
+    }
+	return parseFloat(str);
+}
+
+//-------------------------------------------------------------------
+// fnIsNumericFTS(value)
+//   Returns true if value contains a positive value
+//-------------------------------------------------------------------
+function fnIsNumericFTS(lval)
+{
+	sVal = uscmTrim(lval,2);
+	if (uscmIsNumericTemp(uscmTrim(sVal,2),'.',0)){
+		if (sVal >= 1000)
+		{
+			return false;
+		}
+	}
+	else {
+		return false;
+	}
+
+	return true;
+}
+
+//-------------------------------------------------------------------
+// checkMaxLength(control,length)
+// Implements the maxlength functionality in a textarea control.
+// Returns true if more characters are allowed to be entered.
+//-------------------------------------------------------------------
+function setLengthOfTextarea(textarea, maxLength)
+{
+    document.getElementById(textarea.name+"Count").innerText =document.getElementById(textarea.name).value.length;
+
+}
+
+function checkMaxLength (textarea, maxLength)
+{
+	if (maxLength != -1)
+	{
+		var allowKey = false;
+		var keyCode = document.layers ? event.which : event.keyCode;
+
+		if ((keyCode < 47 && keyCode != 13 && keyCode != 32) || keyCode > 146)
+			allowKey = true;
+		else if (event.ctrlKey)
+			{
+				adjustChars(textarea, maxLength);
+				if (textarea.value.length <= maxLength)
+					allowKey = true;
+			}
+		else
+			allowKey = textarea.value.length < maxLength;
+
+		textarea.selected = false;
+		event.returnValue = allowKey;
+	}
+	document.getElementById(textarea.name+"Count").innerText =
+    	document.getElementById(textarea.name).value.length;
+
+
+}
+
+//-------------------------------------------------------------------
+// adjustChars(control,length)
+// Trims the additional characters from a textarea control
+//-------------------------------------------------------------------
+function adjustChars(textarea, maxLength)
+{
+	if (maxLength != -1)
+	{
+		if (textarea.value.length > maxLength)
+			textarea.value = textarea.value.substring(0, maxLength);
+	}
+    document.getElementById(textarea.name+"Count").innerText =
+    	document.getElementById(textarea.name).value.length;
+}
+function checkMaxLengthById (textarea, maxLength)
+{
+	if (maxLength != -1)
+	{
+		var allowKey = false;
+		var keyCode = document.layers ? event.which : event.keyCode;
+
+		if ((keyCode < 47 && keyCode != 13 && keyCode != 32) || keyCode > 146)
+			allowKey = true;
+		else if (event.ctrlKey)
+			{
+				adjustChars(textarea, maxLength);
+				if (textarea.value.length <= maxLength)
+					allowKey = true;
+			}
+		else
+			allowKey = textarea.value.length < maxLength;
+
+		textarea.selected = false;
+		event.returnValue = allowKey;
+	}
+	document.getElementById(textarea.id+"Count").innerText =
+    	document.getElementById(textarea.id).value.length;
+
+
+}
+function adjustCharsById(textarea, maxLength)
+{
+	if (maxLength != -1)
+	{
+		if (textarea.value.length > maxLength)
+			textarea.value = textarea.value.substring(0, maxLength);
+	}
+    document.getElementById(textarea.id+"Count").innerText =
+    	document.getElementById(textarea.id).value.length;
+}
+//Added by Rahul on 3rd April 2003 for Onsite Changes made  by Sweta.
+
+//-------------------------------------------------------------------
+// fnChangeFloat(value)
+//   Returns 0 if the value is blank else the float value of entered data
+//  To be used before using parseFloat for data in Javascript.
+//  If on a blank data field parseFloat is done Nan is returned.
+//-------------------------------------------------------------------
+
+function fnChangeFloat(value) {
+    if( uscmTrim(value,2) == '' )
+        value = "0";
+    return parseFloat(value);
+
+}//end of fnChangeFloat
+
+
+//-------------------------------------------------------------------
+// fnIsNumericForFinancials(value)
+// Returns true if value contains a positive float value
+// Author : dhanalakshmi
+// modified by Rahul on 27 Aug 2003 for CR0374
+//-------------------------------------------------------------------
+function fnIsNumericForFinancials(lval)
+{
+	sVal = uscmTrim(lval,2);
+	if (uscmIsNumericTemp(uscmTrim(sVal,2),'.',0)){
+		if (sVal >= 10000000000)
+		{
+			return false;
+		}
+	}
+	else {
+		return false;
+	}
+
+	return true;
+}//end of fnIsNumericForFinancials
+
+
+//-------------------------------------------------------------------
+// fnIsNumericFTS(value)
+//   Returns true if value contains a positive value
+//-------------------------------------------------------------------
+function fnIsNumericFTS(lval)
+{
+	sVal = uscmTrim(lval,2);
+	if (uscmIsNumericTemp(uscmTrim(sVal,2),'.',0)){
+		if (sVal >= 100000000)
+		{
+			return false;
+		}
+	}
+	else {
+		return false;
+	}
+
+	return true;
+}//end of fnIsNumericFTS
+
+
+//-------------------------------------------------------------------
+// fnTruncate(value)
+// this function truncate a float value upto two decinal place.
+//-------------------------------------------------------------------
+
+function fnTruncate(val) {
+    var str = String(val);
+	/*
+    var index = str.indexOf(".");
+
+	if(index > -1){
+	   str = str.substring(0, index+3);
+	}
+	if( str == "0") {
+        str = "0.00";
+    }
+    */
+	return parseFloat(str);
+}//end of fnTruncate
+
+
+/* The following function is added by Jaideep Vijay Dhok on
+June 09, 2003 to format a decimal number in ##,###,### manner. */
+/* Change log : 
+Date: June 12, 2003.
+Description : Incorporated change for negative number. */
+
+function formatDecimalNumber(actualNum)
+{
+    var numFormatDecimalNumber = "";
+    var lenFormatDecimalNumber = 0;
+
+    numFormatDecimalNumber = numFormatDecimalNumber + actualNum;
+    lenFormatDecimalNumber = numFormatDecimalNumber.length;
+
+    
+    if(numFormatDecimalNumber.charAt(0) != '-')
+    {
+	/* For positive number. */	
+	    if(lenFormatDecimalNumber < 4 )
+		return numFormatDecimalNumber;
+	    if(lenFormatDecimalNumber < 7 )
+		return numFormatDecimalNumber.substr(0, lenFormatDecimalNumber - 3) + "," + numFormatDecimalNumber.substr(lenFormatDecimalNumber-3,3);
+	    if(lenFormatDecimalNumber < 10 )
+		return numFormatDecimalNumber.substr(0, lenFormatDecimalNumber - 6) + "," + numFormatDecimalNumber.substr(lenFormatDecimalNumber - 6, 3) + "," + numFormatDecimalNumber.substr(lenFormatDecimalNumber-3,3);
+	    else
+		return numFormatDecimalNumber.substr(0, lenFormatDecimalNumber - 9) + "," + numFormatDecimalNumber.substr(lenFormatDecimalNumber - 9, 3) + "," + 
+				numFormatDecimalNumber.substr(lenFormatDecimalNumber - 6, 3) + "," + numFormatDecimalNumber.substr(lenFormatDecimalNumber-3,3);
+    }
+    else
+    {
+	/* For negative number. */ 
+	    if(lenFormatDecimalNumber < 5 )
+		return numFormatDecimalNumber;
+	    if(lenFormatDecimalNumber < 8 )
+		return numFormatDecimalNumber.substr(0, lenFormatDecimalNumber - 3) + "," + numFormatDecimalNumber.substr(lenFormatDecimalNumber-3,3);
+	    if(lenFormatDecimalNumber < 11 )
+		return numFormatDecimalNumber.substr(0, lenFormatDecimalNumber - 6) + "," + numFormatDecimalNumber.substr(lenFormatDecimalNumber - 6, 3) + "," + numFormatDecimalNumber.substr(lenFormatDecimalNumber-3,3);
+	    else
+		return numFormatDecimalNumber.substr(0, lenFormatDecimalNumber - 9) + "," + numFormatDecimalNumber.substr(lenFormatDecimalNumber - 9, 3) + "," + 
+				numFormatDecimalNumber.substr(lenFormatDecimalNumber - 6, 3) + "," + numFormatDecimalNumber.substr(lenFormatDecimalNumber-3,3);
+    
+    	
+    }
+        
+}
+
+
+/* The following function is added by Jaideep Vijay Dhok on
+June 11, 2003 to extract a decimal number from ##,###,### format. */
+function extractDecimalNumber(actualNum)
+{
+    var numExtractDecimalNumber = "";
+    var lenExtractDecimalNumber = 0;
+    var returnStrExtractDecimalNumber = "";
+
+    numExtractDecimalNumber = numExtractDecimalNumber + actualNum;
+    lenExtractDecimalNumber = numExtractDecimalNumber.length;
+    for(iExtractDecimalNumber=0; iExtractDecimalNumber<lenExtractDecimalNumber; iExtractDecimalNumber++)
+    {
+	if(numExtractDecimalNumber.charAt(iExtractDecimalNumber) != ',')
+		returnStrExtractDecimalNumber = returnStrExtractDecimalNumber + numExtractDecimalNumber.charAt(iExtractDecimalNumber);
+	
+    }
+
+    return returnStrExtractDecimalNumber;
+        
+        
+}
+
+
+function fnCheckForValidNumber(obj) {
+
+	var bgColor = "<%= Globals.MANDATORY_BG_COLOR %>";
+	var backColor = "#F9E3CC";
+	var flg = 0;
+
+	obj.style.background = backColor;
+
+	var val = uscmTrim(obj.value,2);
+	obj.value = val;
+
+	if (uscmTrim(obj.value,2) == "") {
+		obj.value = 0;
+		return true;
+	}
+
+	if (val == '-') {
+		// modified by Rahul on 23 Aug 2003 for CR0374. Changed from 99999999
+		alert("Enter the value in dollars less than or equal to 9999999999.");
+		obj.style.background=bgColor;
+		obj.focus();
+		obj.select();
+		return false;
+	}
+
+}
+
+
+//function for checking 5,2 validity for the entry for financial details
+//internally calls uscmIsNumeric 
+//returns true if valid entry
+//added by Akhil on 7/1/2004 for CR506.2
+function uscmIsValidFinancialEntry(Entry,NUMERIC_NO_DIGITS_AFTER_DECIMAL)
+{
+	if (Entry >= 100000)
+		return false;
+	else
+	{
+		return uscmIsNumericTemp(Entry,'.',NUMERIC_NO_DIGITS_AFTER_DECIMAL);
+	}
+}
+
+//added by gopi from ubqvalidations.js
+
+function isEmpty(str) {
+  if(str == null || str == "")
+    return true;
+
+  return false;
+}
+
+function isPositiveInteger(str) {
+  var pattern = "0123456789"
+  var i = 0;
+  do {
+    var pos = 0;
+    for (var j=0; j<pattern.length; j++)
+      if (str.charAt(i)==pattern.charAt(j)) {
+        pos = 1;
+        break;
+      }
+    i++;
+  } while (pos==1 && i<str.length)  
+  if (pos==0) 
+    return false;
+
+  return true;
+}
+
+
+
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.
+2.
+3.
+Actual Results:  
+
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+  <head>
+    <title>Menu Items</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+    <link href="/uSCM/style/dqiColors.css" rel="stylesheet" type="text/css">
+    <link href="/uSCM/style/dqiStyles.css" rel="stylesheet" type="text/css">
+    <SCRIPT LANGUAGE="JavaScript" SRC="/uSCM/js/base/ValidateFunction.js"></SCRIPT>
+    <SCRIPT LANGUAGE="JavaScript" SRC="/uSCM/js/base/DynamicTableTemplate.js"></SCRIPT>
+    <style type="text/css">
+      <!--
+      body {
+      margin-left: 8px;
+      margin-top: 6px;
+      margin-right: 2px;
+      margin-bottom: 4px;
+      }
+      -->
+    </style>
+<script>
+function confirmTransition(arg1, arg2){
+  if(checkTransition()){
+    parent.blankFrame.location = arg1 ;
+    parent.activityFrame.location = arg2 ;
+    resetDirtyBit() ;
+    return;
+  }
+}
+
+function showPages(pageURL1, pageURL2){
+  //parent.blankFrame.location = pageURL1 ;
+  //parent.activityFrame.location = pageURL2 ;
+    if(checkTransition()){
+      parent.blankFrame.location = pageURL1 ;
+      parent.activityFrame.location = pageURL2 ;
+      return;
+    }
+}
+
+function showBlankPage(arg1) {
+  if(checkTransition()){
+    parent.activityFrame.location = arg1 ;
+    parent.blankFrame.location = '/uSCM/jsp/common/scmEmpty.jsp' ;
+    resetDirtyBit() ;
+    return;
+  }
+}
+
+ function setNewSelection(selection){
+     highlightSelection(selection);
+   }
+
+var currSelection ;
+
+function highlightSelection(elem) {
+    var row;
+   
+    if(currSelection != null) {
+      row = dynTableRow(currSelection);
+      row.style.background = currSelection.savedBackground;
+      currSelection.style.background = currSelection.savedBackground;
+    } 
+      elem.savedBackground = elem.style.background;
+      elem.style.background = "#FD9A00";
+      row = dynTableRow(elem);
+      row.style.background = "#FD9A00";
+      currSelection = elem;
+}
+
+
+</script>
+
+  </head>
+
+  <body class="workAreaBackgroundColor">
+    <form name="menu">
+        <table width="100%" height="672" border="0" cellpadding="0" cellspacing="0" class="activityBackgroundColor">
+            <tr valign="top">
+            <td>
+            
+      <table width="100%" height="100%" border="0" cellspacing="0" cellpadding="0" >
+        <tr class="tableHeaderColor" height="30">
+          <td class="tableHeader">&nbsp;Menu Items</td>
+        </tr>
+      
+          
+                  <tr valign="top">
+                <td   class="heading">
+                  &nbsp;&nbsp;Purchase </td>
+                  </tr>
+                
+                    <tr  valign="top">
+                <td  onclick="setNewSelection(this)">
+                    &nbsp;&nbsp;<a href="javascript:confirmTransition('/uSCM/PIDataEntryServlet','/uSCM/jsp/common/scmActivity.jsp')"  class="smallLabel"> Manage Purchase Invoice</a>
+                </td>
+                    </tr>
+                
+          
+                    <tr  valign="top">
+                <td  onclick="setNewSelection(this)">
+                    &nbsp;&nbsp;<a href="javascript:confirmTransition('/uSCM/EInvoiceDownloadServlet?command=initiateEinvoiceDownload','/uSCM/jsp/common/scmActivity.jsp?activityname=ePurchase Invoice')"  class="smallLabel"> ePurchase Invoice</a>
+                </td>
+                    </tr>
+                
+          
+                    <tr  valign="top">
+                <td  onclick="setNewSelection(this)">
+                    &nbsp;&nbsp;<a href="javascript:confirmTransition('/uSCM/RecordChequeServlet','/uSCM/jsp/common/scmActivity.jsp?activityname=Payment to BIL')"  class="smallLabel"> Payment to BIL</a>
+                </td>
+                    </tr>
+                
+          
+                    <tr  valign="top">
+                <td  onclick="setNewSelection(this)">
+                    &nbsp;&nbsp;<a href="javascript:confirmTransition('/uSCM/getUnRealizedChqServlet','/uSCM/jsp/common/scmActivity.jsp?activityname=Payment Tracking')"  class="smallLabel"> Payment Tracking</a>
+                </td>
+                    </tr>
+                
+          
+                  <tr valign="top">
+                <td   class="heading">
+                  &nbsp;&nbsp;Sales </td>
+                  </tr>
+                
+                    <tr  valign="top">
+                <td  onclick="setNewSelection(this)">
+                    &nbsp;&nbsp;<a href="javascript:confirmTransition('/uSCM/SIDataEntryServlet?command=getBillSeries','/uSCM/jsp/common/scmActivity.jsp?activityname=Bill - Entry')"  class="smallLabel"> Bill - Entry</a>
+                </td>
+                    </tr>
+                
+          
+                    <tr  valign="top">
+                <td  onclick="setNewSelection(this)">
+                    &nbsp;&nbsp;<a href="javascript:confirmTransition('/uSCM/jsp/sales/scmSalesInvoiceBrowser.jsp','/uSCM/jsp/common/scmActivity.jsp?activityname=Bill - Update/Print')"  class="smallLabel"> Bill - Update/Print</a>
+                </td>
+                    </tr>
+                
+          
+                    <tr  valign="top">
+                <td  onclick="setNewSelection(this)">
+                    &nbsp;&nbsp;<a href="javascript:confirmTransition('/uSCM/jsp/sales/VehicleAllocation.jsp?mode=AddNew','/uSCM/jsp/common/scmActivity.jsp?activityname=Vehicle Allocation')"  class="smallLabel"> Vehicle Allocation</a>
+                </td>
+                    </tr>
+                
+          
+                    <tr  valign="top">
+                <td  onclick="setNewSelection(this)">
+                    &nbsp;&nbsp;<a href="javascript:confirmTransition('/uSCM/jsp/sales/VehicleAllocationBrowser.jsp','/uSCM/jsp/common/scmActivity.jsp?activityname=Load Sheet/Delivery Report')"  class="smallLabel"> Load Sheet/Delivery Rpt</a>
+                </td>
+                    </tr>
+                
+          
+                    <tr  valign="top">
+                <td  onclick="setNewSelection(this)">
+                    &nbsp;&nbsp;<a href="javascript:confirmTransition('/uSCM/DailyBulkCollectionServlet','/uSCM/jsp/common/scmActivity.jsp?activityname=Collection - Bulk')"  class="smallLabel"> Collection - Bulk</a>
+                </td>
+                    </tr>
+                
+          
+                    <tr  valign="top">
+                <td  onclick="setNewSelection(this)">
+                    &nbsp;&nbsp;<a href="javascript:confirmTransition('/uSCM/CustomerwiseCollectionServlet?command=Receipt','/uSCM/jsp/common/scmActivity.jsp?activityname=Collection - Shopwise')"  class="smallLabel"> Collection - Shopwise</a>
+                </td>
+                    </tr>
+                
+          
+                    <tr  valign="top">
+                <td  onclick="setNewSelection(this)">
+                    &nbsp;&nbsp;<a href="javascript:confirmTransition('/uSCM/CustomerwiseCollectionServlet?command=AdvanceCollection','/uSCM/jsp/common/scmActivity.jsp?activityname=Collection - Advance')"  class="smallLabel"> Collection - Advance</a>
+                </td>
+                    </tr>
+                
+          
+                    <tr  valign="top">
+                <td  onclick="setNewSelection(this)">
+                    &nbsp;&nbsp;<a href="javascript:confirmTransition('/uSCM/jsp/sales/ReceiptBrowser.jsp','/uSCM/jsp/common/scmActivity.jsp?activityname=Collection Browser')"  class="smallLabel"> Collection Browser</a>
+                </td>
+                    </tr>
+                
+          
+                    <tr  valign="top">
+                <td  onclick="setNewSelection(this)">
+                    &nbsp;&nbsp;<a href="javascript:confirmTransition('/uSCM/scmSalesReturnEntry','/uSCM/jsp/common/scmActivity.jsp?activityname=Sales Return - Entry')"  class="smallLabel"> Sales Return - Entry</a>
+                </td>
+                    </tr>
+                
+          
+                    <tr  valign="top">
+                <td  onclick="setNewSelection(this)">
+                    &nbsp;&nbsp;<a href="javascript:confirmTransition('/uSCM/jsp/sales/scmSalesReturnBrowser.jsp','/uSCM/jsp/common/scmActivity.jsp?activityname=Sales Return - Update')"  class="smallLabel"> Sales Return - Update</a>
+                </td>
+                    </tr>
+                
+          
+                    <tr  valign="top">
+                <td  onclick="setNewSelection(this)">
+                    &nbsp;&nbsp;<a href="javascript:confirmTransition('/uSCM/SIDataEntryServlet?command=orderEntry','/uSCM/jsp/common/scmActivity.jsp?activityname=Order - Entry')"  class="smallLabel"> Order - Entry</a>
+                </td>
+                    </tr>
+                
+          
+                    <tr  valign="top">
+                <td  onclick="setNewSelection(this)">
+                    &nbsp;&nbsp;<a href="javascript:confirmTransition('/uSCM/jsp/sales/scmOrderBrowser.jsp','/uSCM/jsp/common/scmActivity.jsp?activityname=Order - Update')"  class="smallLabel"> Order - Update</a>
+                </td>
+                    </tr>
+                
+          
+                    <tr  valign="top">
+                <td  onclick="setNewSelection(this)">
+                    &nbsp;&nbsp;<a href="javascript:confirmTransition('/uSCM/MCNEntryServlet','/uSCM/jsp/common/scmActivity.jsp?activityname=Manual Credit Note - Entry')"  class="smallLabel"> ManualCredit Note-Entry</a>
+                </td>
+                    </tr>
+                
+          
+                    <tr  valign="top">
+                <td  onclick="setNewSelection(this)">
+                    &nbsp;&nbsp;<a href="javascript:confirmTransition('/uSCM/jsp/sales/scmMCNBrowser.jsp','/uSCM/jsp/common/scmActivity.jsp?activityname=Manual Credit Note - Update')"  class="smallLabel"> ManualCredit Note-Update</a>
+                </td>
+                    </tr>
+                
+          
+                  <tr valign="top">
+                <td   class="heading">
+                  &nbsp;&nbsp;Stock Management </td>
+                  </tr>
+                
+                    <tr  valign="top">
+                <td  onclick="setNewSelection(this)">
+                    &nbsp;&nbsp;<a href="javascript:confirmTransition('/uSCM/jsp/stock/scmStockBrowser.jsp','/uSCM/jsp/common/scmActivity.jsp?activityname=Stock Browser')"  class="smallLabel"> Stock Browser</a>
+                </td>
+                    </tr>
+                
+          
+                    <tr  valign="top">
+                <td  onclick="setNewSelection(this)">
+                    &nbsp;&nbsp;<a href="javascript:confirmTransition('/uSCM/jsp/stock/scmStockAdjustment.jsp','/uSCM/jsp/common/scmActivity.jsp?activityname=Stock Adjustment')"  class="smallLabel"> Stock Adjustment</a>
+                </td>
+                    </tr>
+                
+          
+                    <tr  valign="top">
+                <td  onclick="setNewSelection(this)">
+                    &nbsp;&nbsp;<a href="javascript:confirmTransition('/uSCM/jsp/stock/scmStockTypeTransfer.jsp?action=good2damaged','/uSCM/jsp/common/scmActivity.jsp?activityname=Stock Type Transfer')"  class="smallLabel"> Stock Type Transfer</a>
+                </td>
+                    </tr>
+                
+          
+                    <tr  valign="top">
+                <td  onclick="setNewSelection(this)">
+                    &nbsp;&nbsp;<a href="javascript:confirmTransition('/uSCM/jsp/stock/scmStockTypeTransfer.jsp?action=holdRelease','/uSCM/jsp/common/scmActivity.jsp?activityname=Hold / Release Stock')"  class="smallLabel"> Hold / Release Stock</a>
+                </td>
+                    </tr>
+                
+          
+                    <tr  valign="top">
+                <td  onclick="setNewSelection(this)">
+                    &nbsp;&nbsp;<a href="javascript:confirmTransition('/uSCM/jsp/stock/scmStockMovement.jsp','/uSCM/jsp/common/scmActivity.jsp?activityname=Stock Movement - Store')"  class="smallLabel"> Stock Movement - Store</a>
+                </td>
+                    </tr>
+                
+          
+                    <tr  valign="top">
+                <td  onclick="setNewSelection(this)">
+                    &nbsp;&nbsp;<a href="javascript:confirmTransition('/uSCM/EntityStockTransferServlet','/uSCM/jsp/common/scmActivity.jsp?activityname=Stock Transfer AW-AW')"  class="smallLabel"> AW-AW Stock Transfer</a>
+                </td>
+                    </tr>
+                
+          
+                    <tr  valign="top">
+                <td  onclick="setNewSelection(this)">
+                    &nbsp;&nbsp;<a href="javascript:confirmTransition('/uSCM/jsp/stock/StockTransferBrowser.jsp','/uSCM/jsp/common/scmActivity.jsp?activityname=Stock Transfer Browser')"  class="smallLabel"> AW Stk Transfer Browser</a>
+                </td>
+                    </tr>
+                
+          
+                    <tr  valign="top">
+                <td  onclick="setNewSelection(this)">
+                    &nbsp;&nbsp;<a href="javascript:confirmTransition('/uSCM/OpeningStockServlet?command=initializePage','/uSCM/jsp/common/scmActivity.jsp?activityname=Opening Stock')"  class="smallLabel"> Opening Stock</a>
+                </td>
+                    </tr>
+                
+          
+                  <tr valign="top">
+                <td   class="heading">
+                  &nbsp;&nbsp;Administration </td>
+                  </tr>
+                
+                        <tr valign="top">
+                <td  onclick="setNewSelection(this)">
+                        &nbsp;&nbsp;<a href="/uSCM/SCMMasterServlet?command=loadAccessibleCommands&parentMenu=Masters"  target="menuFrame" class="smallLabel" onclick="javascript:showBlankPage('/uSCM/jsp/common/scmActivity.jsp?activityname=Masters')"> Masters        >></a>
+                </td>
+                        </tr>
+                  
+                        <tr valign="top">
+                <td  onclick="setNewSelection(this)">
+                        &nbsp;&nbsp;<a href="/uSCM/SCMMasterServlet?command=loadAccessibleCommands&parentMenu=Reports"  target="menuFrame" class="smallLabel" onclick="javascript:showBlankPage('/uSCM/jsp/common/scmActivity.jsp?activityname=Reports')"> Reports        >></a>
+                </td>
+                        </tr>
+                  
+                        <tr valign="top">
+                <td  onclick="setNewSelection(this)">
+                        &nbsp;&nbsp;<a href="/uSCM/SCMMasterServlet?command=loadAccessibleCommands&parentMenu=Master-Admin"  target="menuFrame" class="smallLabel" onclick="javascript:showBlankPage('/uSCM/jsp/common/scmActivity.jsp?activityname=Masters-Admin')"> Master - Admin   >></a>
+                </td>
+                        </tr>
+                  
+                    <tr  valign="top">
+                <td  onclick="setNewSelection(this)">
+                    &nbsp;&nbsp;<a href="javascript:confirmTransition('/uSCM/DailyDataUploadServlet?command=initiateDataUpload','/uSCM/jsp/common/scmActivity.jsp?activityname=Upload Data to HUB')"  class="smallLabel"> Upload Data to HUB</a>
+                </td>
+                    </tr>
+                
+          
+          
+      </table>
+            </td>
+            </tr>
+      </table>
+    </form>
+  </body>
+</html>
+
+
+Expected Results:  
+it should open the way it opens in IE6.0. i can send screen shot for further inestigation.

@@ -1,0 +1,23 @@
+bookmark manager doesn't escape quotation mark in attribute value
+When the bookmark manager serializes the bookmark datasource to the bookmarks.html file, it doesn't escape quotation mark in attribute value like those for keywords and microsummaries, which make it possible to modify bookmark by crafting special keywords and microsummaries.
+
+It's unclear how easy it would be to exploit this with keywords. There's some code in addBookmark2.js to display and prepopulate the Keyword field with a "suggested" keyword, but it's unclear who doe the suggesting (the site?) and if it's even possible anymore. ispiked looked at it yesterday, and he doesn't see any code that actually us that feature.
+
+It seems exploitable with microsummaries. A site would just have to generate a microsummary that included some reasonable looking text, a bunch of spaces, and then some malicious code that doesn't appear in the menu item representing the microsummary because the space push it off the right hand side. There would be ellipses, of course, but no way to tell what they represent, and some user would select the microsummary anyway.
+
+Steps to Reproduce:
+
+1. bookmark any site;
+2. open the bookmark property dialog for that bookmark and enter
+the following text into the Keywords field:
+
+" HREF="http://www.evil.com/
+
+3. click "OK" in the dialog to save your changes, then restart Firefox;
+4. click the bookmark.
+
+Expected Results: you go to the site you bookmarked.
+
+Actual Results: you go to evil.com.
+
+It doesn't look like the name and description field are exploitable in this manner, since both value are stored in text node (the name is the content of the A tag representing the bookmark, while the description is the content of a DD tag), and significant character (& < > ") are all escaped in them.

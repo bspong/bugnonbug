@@ -1,0 +1,15 @@
+First sync after reauthenticating resets all engines and does a full sync
+STR:
+* delete the chrome://FxAccounts saved login.
+* restart the browser.
+* wait for you to be prompted to re-sign in to sync
+* re-sign in
+* note that a full sync starts (you probably need to check the logs to confirm this)
+
+I'm fairly sure the problem is https://dxr.mozilla.org/mozilla-central/rev/9b8bf5feb0b52aa4b03aa5fa3d4f0727b2974663/services/sync/modules/browserid_identity.js#271, which causes us to hit https://dxr.mozilla.org/mozilla-central/rev/9b8bf5feb0b52aa4b03aa5fa3d4f0727b2974663/services/sync/modules/stages/enginesync.js#106 - which means this has existed forever. However, I think it's still somewhat bad as a full sync is more likely to be interrupted and do bad things.
+
+I think the solution is at https://dxr.mozilla.org/mozilla-central/rev/9b8bf5feb0b52aa4b03aa5fa3d4f0727b2974663/services/sync/modules/browserid_identity.js#320 - instead of always passing |true|, we should see if Sync is already configured. However, part of that block we want to skip sends a "weave:service:setup-complete" notification, which displays a popup that Sync is now syncing - which we probably *do* want - but I think that can be solved by having that observe() method have a .then() which sends the notification.
+
+OTOH though, it's not clear why we need to set that pref even for the really-first-sync case - the client *should* already be reset (as signing out of sync resets it)
+
+Richard, can you think of a good reason to write that pref?

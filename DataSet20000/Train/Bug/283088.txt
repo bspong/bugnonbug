@@ -1,0 +1,39 @@
+browser.xml's destructor can over-remove observer, causing exceptions
+I've seen exceptions (NS_ERROR_FAILURE) occur in two places when calling
+nsIObserverService::removeObserver .  These are:
+
+[Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE)
+[nsIObserverService.removeObserver]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"
+ location: "JS frame :: chrome://global/content/bindings/browser.xml :: destroy
+:: line 578"  data: no]
+
+[Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE)
+[nsIObserverService.removeObserver]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"
+ location: "JS frame :: chrome://browser/content/browser.js :: Shutdown :: line
+837"  data: no]
+
+The latter of these exceptions is pretty much guaranteed to cause memory leaks
+because the code following fails to be executed.
+
+I think what's happening is this:
+ * browser.js and browser.xml both register and unregister the *same* observer
+for the same thing ("browser:purge-session-history")
+ * browser.xml has a destroy method that's called by tabbrowser, and it also
+calls that destroy method again itself (in its <destructor>).  This means that
+the browser.xml code registers the observer once and unregisters it twice.
+
+The observer service tolerates having the same observer registered multiple
+times -- it just needs to be removed the same number of times that it's added. 
+I think the reason that the location of the exception varies is that (since we
+have two adds and three removes) the order of the removes varies, and it's
+always the third one that throws.
+
+The easy (and safe, I think) fix is to make browser.xml not unregister things
+twice.  I'll attach a patch to do that.  I haven't seen the exceptions happen
+since I started running with that patch.  (That said, I never figured out the
+exact conditions under which they occur.)
+
+However, I'm not really sure if this code is still needed:
+http://bonsai.mozilla.org/cvsblame.cgi?file=mozilla/browser/base/content/browser.js&rev=1.382&mark=691-692,905#686
+However, I've done enough poking at this code already, so I'll leave that to
+somebody else to figure out, if they want to.

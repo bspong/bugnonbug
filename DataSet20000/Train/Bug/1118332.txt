@@ -1,0 +1,17 @@
+Only load the HTML page from browser cache in the debugger
+When loading a script's source, if we can't use the Debugger.Source text (sourcemapped, etc) we try to load it from the cache to skip another GET request. However we can't load it from cache all the time, for example we don't know when sourcemapped sources are updated.
+
+I'm a little confused about our rules for this and the code isn't clear to me, so I want to make sure it's working correctly after the big Debugger.Source change. Right now in `_getSourceText` it roughly follows this steps:
+
+1. if there's a sourcemap and it has the source contents for my url, return it
+2. if I have a Debugger.Source object, and my contentType is javascript, return the `text` property of the D.S object
+3. otherwise, do a GET request of my url, loading from cache if I do NOT have a Debugger.Source object
+
+For #3, we hit that when the source is sourcemapped or it's the special source representing the HTML page. Both don't have a Debugger.Source property or a contentType. The loading from cache logic here feels wrong, as the comment implies we should only load from the cache if it's not sourcemapped:
+
+        // XXX bug 865252: Don't load from the cache if this is a source mapped
+        // source because we can't guarantee that the cache has the most up to date
+        // content for this source like we can if it isn't source mapped.
+        let sourceFetched = fetch(this.url, { loadFromCache: !this.source });
+
+Since we load the source from the Debugger.Source.prototype.text property now, I can't even remember when we get to this point and we *can* load from cache. When is that even possible? If we are here, we either don't have a source or the contentType is not JS, which would always imply sourcemapped right? Is there a time when we DO have a Debugger.Source object but the contentType is NOT javascript?

@@ -1,0 +1,57 @@
+Markup view: too much whitespace in text node preview
+Created attachment 8465483
+Reasonable example with too much whitespace
+
+SUMMARY: text node preview (not the corresponding editing <textarea>s) shouldn’t be rendered using <pre>. They should be rendered using white-space:normal, to avoid surprising rendering that make it harder to browse the document tree.
+
+See attachment whitespace-example1.png for an example of the current result and of the desired result.
+
+
+RATIONALE
+
+The inspector’s text node preview display the first 50 character or so of the text node in a <pre> element. When the text ha a lot of whitespace, especially line breaks, this can take up a lot of space for little value, and make the value hard to parse visually.
+
+This common markup:
+
+<h2>
+My title
+</h2>
+<p>
+Published
+<time>two day ago</time>
+by
+<span>Author</span>
+</p>
+
+is visually rendered with 5 blank line in the markup view.
+This result:
+1. take up more space than is necessary for a useful result;
+2. look quite different from the source code anyway.
+
+Web page are full of more extreme cases, such as:
+- multiple blank line between tag and the non-whitespace content;
+- deep indenting being displayed in the preview (for instance, 6 tab character push the text preview more than 300px to the right).
+
+Especially with templating engines, PHP, etc., source code may have a lot of extraneous whitespace that is generally not useful to display.
+
+
+PROPOSED SOLUTION, with remark
+
+I suggest moving to just using white-space:normal. This will give a useful rendering that is not jarring most of the time.
+
+-> What about the editing mode?
+It probably shouldn’t change. This mean that when double-clicking to go from preview to edit mode, the text can move around quite a bit. I think that’s an acceptable trade-off.
+Separately from this issue, the editing mode could have a few improvement such a removal of extraneous indentation (then the text wouldn’t jump around much).
+
+-> But seeing whitespace can explain rendering issues!
+It’s true that the presence or absence of whitespace at the beginning and end of a text node can alter the layout (when the text node is preceded or followed by a display:inline|inline-block|inline-table element). But a of now the use of <pre> doesn’t show the presence or absence of such whitespace efficiently anyway:
+- The final line break (if any) is not displayed.
+- Whitespace at the end won't be displayed if the string is longer than 50 characters.
+- If the whitespace at the beginning is just one or two spaces, it will be visible but hard to identify.
+If it is indeed useful for layout debugging, "Highlight whitespace at the beginning|end of a text node when that text node is preceded|followed by a display:inline[-*] element" should be a separate feature.
+
+-> What about <pre> elements?
+No special treatment for <pre> element or any element with white-space other than normal. There’s probably little value in showing a "faithful" preview of a <pre>’s text content in the text node preview, since it’s just 50 character long or so.
+
+-> Should this be a devtools option?
+No idea. If it is implemented a an option, I suggest making white-space:normal the default for text node previews.

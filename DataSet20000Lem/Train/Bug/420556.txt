@@ -1,0 +1,19 @@
+sidebarheader on GNOME ha a transparent background
+Created attachment 306847
+patch v1: fix problem
+
+The sidebar header on GNOME ha a transparent background because it "-moz-appearance: toolbox" rule override it "background-color: -moz-Dialog;" rule, which cause problem for theming engine like Personas that expect the header to have an explicit background color, a it doe on Mac and Windows.
+
+The -moz-appearance rule also override rule specifying top and bottom borders, and it's unclear why there are these contradictory rules, but the rule are the same a in winstripe, where -moz-appearance doe not override the other rules, so perhaps they were simply copied from Windows to Linux verbatim.
+
+In that case, the intent would have been for the header to have the specified background color "-moz-Dialog", which we can do by simply removing the -moz-appearance. Nevertheless, that also cause the explicit border rule to be applied, and I looked at three other GNOME apps with sidebar (Totem, gThumb, and Evolution), and none of them give their sidebar header border (although Evolution give it a different background color).
+
+Plus border look funky with the native GTK splitter, which is borderless. So I think the header should remain borderless while fixing the background color issue, which we can do by removing both the -moz-appearance rule and the top and bottom border rules.
+
+Here's a patch that doe that.
+
+Note: there are other thing I noticed while investigating this issue, like that we use a widget (sidebarheader) with no XBL binding, that we put it style in toolkit/ instead of browser/ on Linux and Windows (it's in browser/ on Mac, although there's at least one funky rule there a well), and that we pad the header label by four pixel on the left, which cause it to be misaligned with text in the sidebar itself (f.e. the "Search" label in the Bookmarks sidebar).
+
+But I'll file those a separate bugs.
+
+Requesting wanted-firefox3 for this theme polish fix that ha implication for extensibility.

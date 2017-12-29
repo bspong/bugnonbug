@@ -1,0 +1,33 @@
+Implement pagination when expanding objects with lots of properties
+Performance considerations were taken care of in bug 828664, but a few UX problems remain:
+
+1. Although the browser remains responsive, building the UI when inspecting an object with a very large number of properties may take tens of seconds. If you'd want to inspect the *last* property on an object, you're gonna' have to wait.
+
+2. Searching for properties is easier because of bug 798874, but sometimes analyzing a subset (chunk) of needles in the haystack (at the same time) may be desirable.
+
+Pagination would work by grouping large sets of properties under a single expando pseudo-property. I think the most optimal solution is to have inspectable "quarters" when dealing with more than a certain number of properties (1000?). For example, when inspecting arrays with 100,000 elements, you'd have
+
+myVariable [object Array] 
+  > 0 ... 25,000
+  > 25,000 ... 50,000
+  > 50,000 ... 75,000
+  > 75,000 ... 100,000
+
+Expanding the first set would further reveal 4 sub-chunks between 0 and 25,000  and so on:
+
+myVariable [object Array] 
+  > 0 ... 25,000
+    > 0 ... 6,250
+    > 6,250 ... 12,500
+    > 12,500 ... 18,750
+    > 18,750 ... 25,000
+  > 25,000 ... 50,000
+  > 50,000 ... 75,000
+  > 75,000 ... 100,000
+
+This process is repeated until a subset contains less than than a certain number of properties.
+
+When dealing with objects and not arrays, properties can be grouped alphabetically: $ and _, A-G, H-M, N-S, T-Z, then other utf symbols.
+
+
+I don't think optimizing the protocol itself to handle fetching such chunks is really necessary. This is mostly a frontend UX problem.

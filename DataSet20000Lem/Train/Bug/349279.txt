@@ -1,0 +1,25 @@
+anchor href is followed even if onclick return false when command-clicking
+User-Agent: Mozilla/5.0 (Macintosh; U; PPC Mac OS X Mach-O; en-US; rv:1.8.1b2) Gecko/20060818 BonEcho/2.0b2
+Build Identifier: Mozilla/5.0 (Macintosh; U; PPC Mac OS X Mach-O; en-US; rv:1.8.1b2) Gecko/20060818 BonEcho/2.0b2
+
+Traditionally, if an anchor's onclick return false, it href is suppressed. However, Firefox 1.5.0.6, Bon Echo Beta 2, and Minefield do not suppress the href when command-clicking (or control-clicking).
+
+(They do suppress it when single-clicking or clicking with modifier key that aren't bound to tab generation, and SeaMonkey 1.5a always suppresses it correctly.)
+
+A common instance of this problem is when onclick involves window.open and an href is also supplied, which is a fairly common method of generating sized pop-up window while still wishing to be accessible to user agent without javascript.
+
+In this case command-clicking in my nonsuppressant browser display the onclick pop-up a if I had single-clicked the link (according to my tab v window preferences), but then also activates the href a if I had command-clicked the link (always in a new tab). This is especially confusing if the link in the href is intended only for user without javascript, but the fact that two new window object are created is bad enough.
+
+Gmail in it standard view, for example, ha both href and window.open for link embedded inside emails. When I have Firefox set to open new page in new windows, command-clicking cause one page (from onclick) to open in a new window and the other (from href) to open in a new tab (because of command-click). When I have Firefox set to open new page in new tabs, command-clicking cause two identical new tab to open, which just highlight the ridiculousness.
+
+It is also interesting to note that I haven't seen any browser besides Firefox display the javascript-generated window in a new tab; I can't find a preference setting on any of the suppressant browser to make a new page open in a new tab on single-click. What command/control-click should do when that preference is set is a separate interesting topic.
+
+Reproducible: Always
+
+Steps to Reproduce:
+Command/control-click on an anchor that ha both href="url1" and onclick="window.open(url2); return false;"
+Actual Results:
+Both url are followed
+
+Expected Results:
+Only the onclick url should be followed if javascript is enabled; otherwise only the href url should be followed

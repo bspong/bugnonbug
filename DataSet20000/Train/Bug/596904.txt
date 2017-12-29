@@ -1,0 +1,29 @@
+browser.tabs.autoHide doesn't work if there is any hidden tab
+"Tools" > "Options" > "Tabs" > "Always show the tab bar" means to hide the tab bar automatically when there is only one tab. However it doesn't work if there is any hidden tab.
+
+Steps to reproduce:
+1. Go to "Tools" > "Options" > "Tabs" and uncheck "Always show the tab bar".
+2. Open a new window. Then there is a window with only one tab. The tab bar is hidden.
+3. Open a new tab. Then the tab bar is shown.
+4. Click "Group Your Tabs" button.
+5. Make two groups and put tabs to each group. (Then tere are two groups and each group have only one tab.)
+6. Click a thumbnail in a group.
+
+Actual result:
+The tab bar is shown with only one visible tab.
+
+Expected result:
+The tab bar is hidden.
+
+----------------
+      <method name="updateVisibility">
+        <body><![CDATA[
+          if (this.childNodes.length - this.tabbrowser._removingTabs.length == 1 &&
+              window.toolbar.visible)
+            this.visible = !Services.prefs.getBoolPref("browser.tabs.autoHide");
+          else
+            this.visible = true;
+        ]]></body>
+      </method>
+-------------------
+"this.childNodes.length - this.tabbrowser._removingTabs.length" shoud be "this.tabbrowser.visibleTabs.length".

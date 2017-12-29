@@ -1,0 +1,73 @@
+Firefox crash on startup when build with gcc-4.9 -flto -O3--enable-optimize=-O3
+User Agent: Mozilla/5.0 (X11; Linux x86_64; rv:30.0) Gecko/20100101 Firefox/30.0 (Beta/Release)
+Build ID: 20140314141904
+
+Steps to reproduce:
+
+Build Firefox with gcc-4.9 with -flto and --enable-optimize=-O3 --disable-debug.
+
+
+Actual results:
+
+Firefox crash on startup:
+
+Program received signal SIGSEGV, Segmentation fault.
+[Switching to Thread 0x7fffebbee700 (LWP 21002)]
+assign_assuming_AddRef () at /var/tmp/mozilla-central/xpcom/build/../glue/nsCOMPtr.h:455
+455 NSCAP_RELEASE(this, oldPtr);
+(gdb) bt
+#0 assign_assuming_AddRef () at /var/tmp/mozilla-central/xpcom/build/../glue/nsCOMPtr.h:455
+#1 nsCOMPtr_base::assign_with_AddRef(nsISupports*) [clone .constprop.13272] (this=0x7fffe4187260, rawPtr=0x0) at /var/tmp/mozilla-central/xpcom/glue/nsCOMPtr.cpp:49
+#2 0x00007ffff43bea0b in operator= () at ../../../../dist/include/nsCOMPtr.h:649
+#3 SetNotificationCallbacks (aCallbacks=0x0, this=<optimized out>) at /var/tmp/mozilla-central/security/manager/ssl/src/nsNSSIOLayer.cpp:211
+#4 OnSocketDetached (this=0x7fffe4186d40, fd=<optimized out>) at /var/tmp/mozilla-central/netwerk/base/src/nsSocketTransport2.cpp:1876
+#5 0x00007ffff428664c in DetachSocket (this=this@entry=0x4fca20, listHead=0x4fcc80, sock=sock@entry=0x4fcda0)
+at /var/tmp/mozilla-central/netwerk/base/src/nsSocketTransportService2.cpp:191
+#6 0x00007ffff4393bcf in MoveToIdleList (sock=<optimized out>, this=<optimized out>) at /var/tmp/mozilla-central/netwerk/base/src/nsSocketTransportService2.cpp:312
+#7 DoPollIteration (wait=true, this=0x4fca20) at /var/tmp/mozilla-central/netwerk/base/src/nsSocketTransportService2.cpp:846
+#8 Run (this=0x4fca20) at /var/tmp/mozilla-central/netwerk/base/src/nsSocketTransportService2.cpp:744
+#9 0x00007ffff44316ca in nsThread::ProcessNextEvent(bool, bool*) (this=0x53aee0, mayWait=<optimized out>, result=0x7fffebbeddcf)
+at /var/tmp/mozilla-central/xpcom/threads/nsThread.cpp:694
+#10 0x00007ffff60d9cf9 in NS_ProcessNextEvent(nsIThread*, bool) [clone .constprop.13277] (thread=<optimized out>, mayWait=true)
+at /var/tmp/mozilla-central/xpcom/glue/nsThreadUtils.cpp:263
+#11 0x00007ffff4516f80 in mozilla::ipc::MessagePumpForNonMainThreads::Run (this=0x7fffe40015b0, aDelegate=0x7fffe4000cd0)
+at /var/tmp/mozilla-central/ipc/glue/MessagePump.cpp:332
+#12 0x00007ffff4296a1d in RunInternal () at /var/tmp/mozilla-central/ipc/chromium/src/base/message_loop.cc:226
+#13 RunHandler () at /var/tmp/mozilla-central/ipc/chromium/src/base/message_loop.cc:219
+#14 MessageLoop::Run() (this=<optimized out>) at /var/tmp/mozilla-central/ipc/chromium/src/base/message_loop.cc:193
+#15 0x00007ffff43c0376 in ThreadFunc (arg=0x53aee0) at /var/tmp/mozilla-central/xpcom/threads/nsThread.cpp:308
+#16 0x00007ffff7e7755c in _pt_root (arg=0x53b1e0) at /var/tmp/mozilla-central/nsprpub/pr/src/pthreads/ptthread.c:212
+#17 0x00007ffff7bc41e2 in start_thread () from /lib/libpthread.so.0
+#18 0x00007ffff74932ad in clone () from /lib/libc.so.6
+
+Valgrind shows:
+
+==21301== Conditional jump or move depends on uninitialised value(s)
+==21301== at 0x761F508: nsStyleContext::CalcStyleDifference(nsStyleContext*, nsChangeHint) (nsStyleStruct.cpp:3011)
+==21301== by 0x7620256: mozilla::ElementRestyler::Restyle(nsRestyleHint) (RestyleManager.cpp:2196)
+==21301== by 0x7621CDF: mozilla::RestyleManager::ComputeStyleChangeFor(nsIFrame*, nsStyleChangeList*, nsChangeHint, mozilla::RestyleTracker&, bool) (RestyleManager.cpp:2924)
+==21301== by 0x76319E0: mozilla::RestyleManager::DoRebuildAllStyleData(mozilla::RestyleTracker&, nsChangeHint) (RestyleManager.cpp:1374)
+==21301== by 0x763C8F0: mozilla::RestyleManager::RebuildAllStyleData(nsChangeHint) (RestyleManager.cpp:1340)
+==21301== by 0x76E3666: (anonymous namespace)::CharSetChangingRunnable::Run() [clone .lto_priv.24934] (nsPresContext.cpp:1220)
+==21301== by 0x65466C9: nsThread::ProcessNextEvent(bool, bool*) (nsThread.cpp:694)
+==21301== by 0x662C257: mozilla::ipc::MessagePump::Run(base::MessagePump::Delegate*) (nsThreadUtils.cpp:263)
+==21301== by 0x79C683B: nsAppStartup::Run() (message_loop.cc:226)
+==21301== by 0x794D801: XRE_main (nsAppRunner.cpp:4009)
+==21301== by 0x405A7C: do_main(int, char**, nsIFile*) [clone .lto_priv.43] (nsBrowserApp.cpp:282)
+==21301== by 0x4030A7: main (nsBrowserApp.cpp:643)
+==21301==
+==21301== Thread 3 Socket Thread:
+==21301== Invalid read of size 8
+==21301== at 0x81EEF4F: nsCOMPtr_base::assign_with_AddRef(nsISupports*) [clone .constprop.13272] (nsCOMPtr.h:455)
+==21301== by 0x64D3A0A: nsSocketTransport::OnSocketDetached(PRFileDesc*) (nsCOMPtr.h:649)
+==21301== by 0x639B64B: nsSocketTransportService::DetachSocket(nsSocketTransportService::SocketContext*, nsSocketTransportService::SocketContext*) (nsSocketTransportService2.cpp:191)
+==21301== by 0x64A8BCE: nsSocketTransportService::Run() (nsSocketTransportService2.cpp:312)
+==21301== by 0x65466C9: nsThread::ProcessNextEvent(bool, bool*) (nsThread.cpp:694)
+==21301== by 0x81EECF8: NS_ProcessNextEvent(nsIThread*, bool) [clone .constprop.13277] (nsThreadUtils.cpp:263)
+==21301== by 0x662BF7F: mozilla::ipc::MessagePumpForNonMainThreads::Run(base::MessagePump::Delegate*) (MessagePump.cpp:332)
+==21301== by 0x63ABA1C: MessageLoop::Run() (message_loop.cc:226)
+==21301== by 0x64D5375: nsThread::ThreadFunc(void*) (nsThread.cpp:308)
+==21301== by 0x41CD55B: _pt_root (ptthread.c:212)
+==21301== by 0x4A2B1E1: start_thread (in /lib64/libpthread-2.19.so)
+==21301== by 0x51B52AC: clone (in /lib64/libc-2.19.so)
+==21301== Address 0x3a7b46564d3 is not stack'd, malloc'd or (recently) free'd

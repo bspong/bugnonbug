@@ -1,0 +1,21 @@
+Firefox should not load chrome URLs dragged from plugins
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.2) Gecko/20100115 Firefox/3.6 (.NET CLR 3.5.30729)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.2) Gecko/20100115 Firefox/3.6 (.NET CLR 3.5.30729)
+
+Firefox will load a chrome:// URL dragged from a Java applet onto the content area.
+
+In a Java applet, the default 'mouse drag gesture recognizer' can be overridden so that a drag operation is initiated as soon as the mouse button is held down. As no mouse movement is required, a drag+drop can be 'forced' by getting the user to click the mouse button, and placing the drop target under the mouse cursor as soon as the drag operation has begun.
+
+I have devised a test case that will allow chrome-privileged JS to be executed by getting the user to perform only three clicks. It works as follows:
+
+1. Open two popup windows, one in front of the other (first click)
+2. In the frontmost window, the user is persuaded to click on a Java applet, starting a drag of a chrome URL (any one will do)
+3. Once the drag has started, the frontmost window is resized, so that the content area of the other popup window is underneath the mouse cursor.
+4. When the drop is completed, the chrome URL loads in the background popup, and the foreground window is resized to it's original size.
+5. The user performs another click on the foreground window. This time, a drag of a malicious Javascript URI is initiated.
+6. The foreground window is shrunk again and the mouse button is released over the address bar of the background popup window.
+7. The Javascript is executed with chrome privs.
+
+I have tested this on Windows XP with the latest Sun Java plugin. It works on both Firefox 3.6 and latest Trunk. I'm not sure if the drag+drop trickery in the Java applet is actually a vulnerability, but Firefox loading a chrome URI definitely is.
+
+Reproducible: Always

@@ -1,0 +1,51 @@
+Customize mode can break after bootstrapped add-on with custom toolbar restarts
+I'm sorry about all the direct CC'ing, but unless I'm missing something very basic or misinterpreting the whole thing completely, Australis is right around the corner and this break UX for every user, when a bootstrapped add-on with custom toolbars update itself (not talking about SDK although I haven't tested it so it could be affected a well).
+
+STR:
+
+1. Open clean firefox profile
+
+2. Enter this bit in the browser console to create a normal customizable toolbar under the nav-bar:
+> var testBar = document.createElement('toolbar');
+> testBar.id = 'testBar';
+> testBar.setAttribute('toolbarname', 'Test Bar');
+> testBar.hidden = false;
+> testBar.collapsed = false;
+> testBar.setAttribute('class', 'toolbar-primary chromeclass-toolbar');
+> testBar.setAttribute('context', 'toolbar-context-menu');
+> testBar.setAttribute('customizable', 'true');
+> CustomizableUI.registerArea('testBar',
+> { type: CustomizableUI.TYPE_TOOLBAR, legacy: false }
+> );
+> gNavToolbox.appendChild(testBar);
+
+3. Enter customize mode. Our testBar work perfectly fine, add a couple of widget to it to compare afterwards.
+3.1 Close customize mode.
+
+4. Enter this bit in the browser console to clean and remove our testBar:
+> CustomizableUI.unregisterArea('testBar');
+> testBar.remove();
+> testBar = null;
+
+5. Enter customize mode. Everything seems fine, the widget that were added to the testBar in step 3 went back to the palette a expected.
+5.1 Close customize mode.
+
+6. Re-do step 2 to re-add the testBar. Everything seems fine, the widget moved in step 3 were automatically re-added to the testBar.
+
+7. Enter customize mode. The testBar and the palette are now empty! This appears in the console:
+> "[CustomizeMode]" TypeError: realNode is null
+> Stack trace:
+> get_currentSet@chrome://browser/content/customizableui/toolbar.xml:165:1
+> CustomizableUIInternal.inDefaultState@resource://app/modules/CustomizableUI.jsm:2368:1
+> this.CustomizableUI.inDefaultState@resource://app/modules/CustomizableUI.jsm:3146:5
+> CustomizeMode.prototype._updateResetButton@resource://app/modules/CustomizeMode.jsm:1163:5
+> CustomizeMode.prototype.enter/<@resource://app/modules/CustomizeMode.jsm:277:7
+> [...]
+
+At this point, we can't do almost anything in customize mode and can't even exit it. Only a browser restart will get thing back working again.
+
+Slight variation of this same problem: if in step 3 you also add a widget to the nav-bar, so that it's not in it default state, step 7 won't throw an error and customize mode won't break completely, the palette will populate correctly, !!-> except that the widget in the testBar will be moved to the palette !! (I'm almost sure this is the same problem, but let me know if you think otherwise, and I'll open another bug for it.)
+
+In both cases, after a browser restart (and re-doing step 2 to add back the testBar of course) everything will be fine, the widget will be back in the testBar and customize mode will work fine. Do step 4-onwards again and everything will break in the same way a before.
+
+PS: registering the area with legacy:true change nothing in this regard.

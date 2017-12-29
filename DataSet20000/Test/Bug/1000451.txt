@@ -1,0 +1,40 @@
+firefox crashes with OCSP server conenction
+User Agent: Mozilla/5.0 (X11; Linux i686; rv:28.0) Gecko/20100101 Firefox/28.0 (Beta/Release)
+Build ID: 20140422193543
+
+Steps to reproduce:
+
+just clicked around in the internet at a stable 32 bit Gentoo Linux.
+version 28 is the first version since a longer time where it happens now again - and now few times at a day.
+
+
+
+Actual results:
+
+#0  0xb76f5424 in __kernel_vsyscall ()
+(gdb) bt
+#0  0xb76f5424 in __kernel_vsyscall ()
+#1  0xb76c0e3e in raise (sig=11) at ../nptl/sysdeps/unix/sysv/linux/pt-raise.c:38
+#2  0xb55da1f1 in nsProfileLock::FatalSignalHandler (signo=11, info=0xa71f6b8c, context=0xa71f6c0c) at /var/tmp/portage/www-client/firefox-28.0/work/mozilla-release/profile/dirserviceprovider/src/nsProfileLock.cpp:180
+#3  0xb5e952dd in AsmJSFaultHandler (context=0xa71f6c0c, info=0xa71f6b8c, signum=11) at /var/tmp/portage/www-client/firefox-28.0/work/mozilla-release/js/src/jit/AsmJSSignalHandlers.cpp:931
+#4  AsmJSFaultHandler (signum=11, info=0xa71f6b8c, context=0xa71f6c0c) at /var/tmp/portage/www-client/firefox-28.0/work/mozilla-release/js/src/jit/AsmJSSignalHandlers.cpp:913
+#5  <signal handler called>
+#6  0xb3d62c4b in nsCacheEntry::RemoveDescriptor (this=this@entry=0x9f592270, descriptor=descriptor@entry=0x96be26a0, doomEntry=doomEntry@entry=0xa71f70cf)
+    at /var/tmp/portage/www-client/firefox-28.0/work/mozilla-release/netwerk/cache/nsCacheEntry.cpp:224
+#7  0xb3d6bcf5 in nsCacheService::CloseDescriptor (descriptor=descriptor@entry=0x96be26a0) at /var/tmp/portage/www-client/firefox-28.0/work/mozilla-release/netwerk/cache/nsCacheService.cpp:2583
+#8  0xb3d65a14 in nsCacheEntryDescriptor::Close (this=this@entry=0x96be26a0) at /var/tmp/portage/www-client/firefox-28.0/work/mozilla-release/netwerk/cache/nsCacheEntryDescriptor.cpp:595
+#9  0xb3d65b91 in nsCacheEntryDescriptor::~nsCacheEntryDescriptor (this=0x96be26a0, __in_chrg=<optimized out>) at /var/tmp/portage/www-client/firefox-28.0/work/mozilla-release/netwerk/cache/nsCacheEntryDescriptor.cpp:100
+#10 0xb3d65bf2 in nsCacheEntryDescriptor::~nsCacheEntryDescriptor (this=0x96be26a0, __in_chrg=<optimized out>) at /var/tmp/portage/www-client/firefox-28.0/work/mozilla-release/netwerk/cache/nsCacheEntryDescriptor.cpp:108
+#11 0xb3d63fd5 in Release (this=0x96be26a0) at /var/tmp/portage/www-client/firefox-28.0/work/mozilla-release/netwerk/cache/nsCacheEntryDescriptor.cpp:73
+#12 nsCacheEntryDescriptor::Release (this=0x96be26a0) at /var/tmp/portage/www-client/firefox-28.0/work/mozilla-release/netwerk/cache/nsCacheEntryDescriptor.cpp:73
+#13 0xb3d64099 in ~nsRefPtr (this=<synthetic pointer>, __in_chrg=<optimized out>) at ../../dist/include/nsAutoPtr.h:887
+#14 nsCacheEntryDescriptor::nsOutputStreamWrapper::Release (this=0x9200d320) at /var/tmp/portage/www-client/firefox-28.0/work/mozilla-release/netwerk/cache/nsCacheEntryDescriptor.cpp:1077
+#15 0xb3c340d2 in nsProxyReleaseEvent::Run (this=0x94cad750) at /var/tmp/portage/www-client/firefox-28.0/work/mozilla-release/xpcom/glue/nsProxyRelease.cpp:19
+#16 0xb3c96012 in ProcessNextEvent (result=0xa71f72af, mayWait=true, this=0xab5c0e20) at /var/tmp/portage/www-client/firefox-28.0/work/mozilla-release/xpcom/threads/nsThread.cpp:612
+#17 nsThread::ProcessNextEvent (this=0xab5c0e20, mayWait=true, result=0xa71f72af) at /var/tmp/portage/www-client/firefox-28.0/work/mozilla-release/xpcom/threads/nsThread.cpp:545
+#18 0xb3c36d25 in NS_ProcessNextEvent (thread=<optimized out>, thread@entry=0xab5c0e20, mayWait=mayWait@entry=true) at /var/tmp/portage/www-client/firefox-28.0/work/mozilla-release/xpcom/glue/nsThreadUtils.cpp:263
+#19 0xb3c96f58 in nsThread::ThreadFunc (arg=0xab5c0e20) at /var/tmp/portage/www-client/firefox-28.0/work/mozilla-release/xpcom/threads/nsThread.cpp:246
+#20 0xb3300d69 in ?? () from /usr/lib/libnspr4.so
+#21 0xb76b8e15 in start_thread (arg=0xa71f7b40) at pthread_create.c:308
+#22 0xb74e961e in clone () at ../sysdeps/unix/sysv/linux/i386/clone.S:131
+(gdb)

@@ -1,0 +1,68 @@
+javascript is not executed in XSLT (xml-stylesheet) generated HTML, CSS requires xsl:output method=xml
+User-Agent:       Mozilla/5.0 (Macintosh; U; PPC Mac OS X Mach-O; en-US; rv:1.8.1.6) Gecko/20070725 Firefox/2.0.0.6
+Build Identifier: Mozilla/5.0 (Macintosh; U; PPC Mac OS X Mach-O; en-US; rv:1.8.1.6) Gecko/20070725 Firefox/2.0.0.6
+
+I'm developing code that relies on Firefox support
+for XSLT via:
+     <?xml-stylesheet type="text/xsl" href="bla.xsl"?>
+I have found that:
+
+1. I must specify 
+        <xsl:output method="xml" ... />
+   rather than
+        <xsl:output method="html" ... />
+   for Firefox to properly apply the CSS link
+   in the output document.
+   
+2. Regardless of xsl:output method, javascript passed
+    through from the source .xml document is not
+    executed.
+        Ex:  <script ...> document.write( "bla" ); </script>
+    does not run.
+    Also, javascript added to the output document via the
+    .xsl stylesheet causes Firefox to go into some kind of
+    infinite loop.
+
+If I just apply the XSL style-sheet to the XML and generate an
+HTML document by hand, then Firefox renders the resulting HTML
+correctly.  Safari-3 renders the whole pipeline correctly
+with xsl:output method=html set.
+
+The demo URL http://littleware.frickjack.com/test/mozilla-bug/bla.xml
+involves 3 files: bla.xml, bla.css, and bla.xsl.
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.Visit http://littleware.frickjack.com/test/mozilla-bug/bla.xml
+2.
+3.
+Actual Results:  
+Firefox spins in an infinite loop.
+
+If you edit bla.xsl to remove the block:
+        <script type="text/javascript">
+     &lt;!--
+     // &lt;[!CDATA[
+    <![CDATA[
+       document.writeln ( "<h3>OK from XSL</h3>" );
+    ]]>
+      // ]]&gt;
+      // --&gt;
+    </script>
+
+, then the bla.xml will render without CSS or 
+javascript execution.
+
+Expected Results:  
+http://littleware.frickjack.com/test/mozilla-bug/bla.xml
+
+should render the same as:
+
+http://littleware.frickjack.com/test/mozilla-bug/bla.html
+
+since
+
+$ xsltproc bla.xsl bla.xml > bla.html

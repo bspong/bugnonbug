@@ -1,0 +1,19 @@
+Add query for getting Highlights (recent bookmark and recent history with metadata)
+This query will be used by Activity Stream Highlights section to be implemented https://github.com/mozilla/activity-stream/issues/3147
+
+The desired functionality there is to show up to 9 highlight with the most recent bookmark from the last 5 day followed by recent history that ha metadata from bug 1393924.
+
+mak, I see there's `Bookmarks.getRecent` that call `fetchRecentBookmarks`:
+https://searchfox.org/mozilla-central/source/toolkit/components/places/Bookmarks.jsm#1684-1712
+
+We could just call that to get 9 bookmark and filter out those that are older than 5 days, but it look like that query isn't optimized:
+> 0|0|0|SCAN TABLE moz_bookmarks AS b
+> 0|1|1|SEARCH TABLE moz_bookmarks AS p USING INTEGER PRIMARY KEY (rowid=?)
+> 0|2|2|SEARCH TABLE moz_places AS h USING INTEGER PRIMARY KEY (rowid=?)
+> 0|0|0|USE TEMP B-TREE FOR ORDER BY
+
+It look like it might just want an index on dateAdded for moz_bookmarks? But we might put this behind a cache/timer anyway (top site only update once every 15 minute unless there's deletions), so performance might not be totally critical. And we'll use notification to detect added bookmarks.
+
+Activity stream would still need the metadata for those bookmark if available, so that will require re-querying or having a dedicated query for activity stream in the first place.
+
+So, doe it make sense to just have a custom query somewhere in NewTabUtils's ActivityStreamLinks/ActivityStreamProvider to get bookmark and history (by last_visit_date) with `description` and `preview_image_url`?

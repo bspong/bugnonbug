@@ -1,0 +1,36 @@
+When running firefox over SSH 2nd and greater instances are created as children of first instance window.
+User-Agent:       Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9b5) Gecko/2008050509 Firefox/3.0b5
+Build Identifier: Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9b5) Gecko/2008050509 Firefox/3.0b5
+
+When running firefox on a remote machine via SSH and displaying contents locally, 2nd and later firefox windows ALL run on the same machine (and thus have the same internet connection) where the first window was started.
+
+It would appear that Firefox is using
+See steps to reproduce below for specifics.
+
+Reproducible: Always
+
+Steps to Reproduce:
+There are two scenarios. One where firefox is always run locally, and another where firefox is always run remotely. I will only illustrate the first scenario here. The second is identical to the first, except that you start firefox on the remote system before running any firefox windows on your local system.
+
+1. Close ALL firefox windows.
+2. Terminate any SSH sessions you may have running.
+3. Launch firefox on your local box.
+4. In firefox browser, navigatate to "whatismyip.com" (or your favorite site that tells you your public IP) and note the IP shown on the page.
+5. SSH (using "ssh -Y <machine>..." to a machine on a different network than your local box. The remote network should have a web server that is only accessible to the remote machine for testing/verification purposes.
+6. Run firefox on the remote machine.
+7. In the browser that is "supposedly" running on the remote machine, navigate to whatismyip.com (or the site you chose in step 4) and note that it shows the same public IP that you got for your local machine.
+
+(If 1-7 doesn't convince you...)
+8. In the supposedly remote firefox window type the URL of a site that is only accessible to the remote machine. Note that the request cannot be resolved. (Because you are actually NOT interacting with a remote firefox process.)
+9. Close both firefox windows.
+10. Run firefox on the remote host from your SSH session.
+11. Navigate to whatismyip.com (or the site you chose for step 4) and note that you are now seeing the public IP for your remote system.
+12. Launch firefox on your local system. (Note the significant delay, almost like it's running remotely)
+13. In the supposedly local firefox window, navigate to whatismyip.com (or the site you chose for step 4) and note that the external IP of the remote machine is now displayed in the "local" firefox window.
+14. In the supposedly local firefox window, navigate to the web site that is only accessible to the remote system. Note that you are now able to connect to it because you are actually running two remote firefox sessions.
+
+Actual Results:  
+Actual results are integrated with the steps to reproduce.
+
+Expected Results:  
+Remote window be running on remote system, local window to be running on local system.

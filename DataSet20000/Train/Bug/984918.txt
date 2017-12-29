@@ -1,0 +1,38 @@
+Inspector doesn't load the first time between firefox and device nightly
+Here is the exception:
+
+I/GeckoDump( 9057): onPacket({"type":"getHighlighter","to":"conn0.child15:3"})
+I/Gecko   ( 9057): console.error: 
+E/GeckoConsole( 9057): Content JS ERROR at resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/protocol.js:814 in Actor<.writeError: Error: undefined passed where a value is required
+I/Gecko   ( 9057):   Message: Error: undefined passed where a value is required
+I/Gecko   ( 9057):   Stack:
+I/Gecko   ( 9057):     identityWrite@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/protocol.js:113:5
+I/Gecko   ( 9057): Arg<.read@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/protocol.js:409:5
+I/Gecko   ( 9057): Request<.read@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/protocol.js:569:7
+I/Gecko   ( 9057): actorProto/</handler@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/protocol.js:901:1
+I/Gecko   ( 9057): DSC_onPacket@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/main.js:1106:9
+I/Gecko   ( 9057): ChildDebuggerTransport.prototype.receiveMessage@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/main.js -> resource://gre/modules/devtools/server/transport.js:347:5
+
+Most likely due to this changeset:
+http://hg.mozilla.org/mozilla-central/diff/8dea188bf8a0/toolkit/devtools/server/actors/inspector.js#l1.47
+    1.35 -  getHighlighter: method(function () {
+    1.36 +  getHighlighter: method(function (autohide) {
+    1.37      if (this._highlighterPromise) {
+    1.38        return this._highlighterPromise;
+    1.39      }
+    1.40  
+    1.41      this._highlighterPromise = this.getWalker().then(walker => {
+    1.42 -      return HighlighterActor(this);
+    1.43 +      return HighlighterActor(this, autohide);
+    1.44      });
+    1.45      return this._highlighterPromise;
+    1.46    }, {
+    1.47 -    request: {},
+    1.48 +    request: { autohide: Arg(0, "boolean") },
+
+protocol.js ends up throwing as my firefox doesn't send this new boolean argument.
+So that's not really the important scenario, here it fails because of my client, i.e. firefox is older than my device.
+We can say that you ALWAYS need a client as least as recent as your device.
+But still, that could be handy if we can prevent such exeption.
+
+I don't know much about protocol.js yet. Wouldn't it be just about replacing Arg with Option or something?

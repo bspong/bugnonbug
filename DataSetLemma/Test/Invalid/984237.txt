@@ -1,0 +1,123 @@
+NS_ABORT_OOM SizeTooBig imgLoaderConstructor due to the imagelib memory reporter ending up a a dangling pointer if registration fails
+This start happening after bug 982072 fixed
+
+#0 0x46f37cf0 in NS_ABORT_OOM (size=2763326436) at xpcom/base/nsDebugImpl.cpp:573
+#1 0x46f26e34 in SizeTooBig (size=<optimized out>) at xpcom/glue/nsTArray.h:216
+#2 nsTArray_base<nsTArrayInfallibleAllocator, nsTArray_CopyWithMemutils>::EnsureCapacity (this=0x54e60640, capacity=3912057081, elemSize=4)
+at xpcom/glue/nsTArray-inl.h:112
+#3 0x47473448 in AppendElements<imgLoader*> (arrayLen=1, array=0x4b4e8774, this=0x54e60640) at ../../dist/include/nsTArray.h:1236
+#4 AppendElement<imgLoader*> (item=@0x4b4e8774: 0x0, this=0x54e60640) at ../../dist/include/nsTArray.h:1253
+#5 RegisterLoader (aLoader=0x1, this=0x54e60638) at image/src/imgLoader.cpp:142
+#6 imgLoader::imgLoader (this=0x54e60648) at image/src/imgLoader.cpp:727
+#7 0x4746f8a4 in imgLoaderConstructor (aResult=0x4b4e8800, aIID=..., aOuter=<optimized out>)
+at image/build/nsImageModule.cpp:28
+#8 imgLoaderConstructor (aOuter=<optimized out>, aIID=..., aResult=0x4b4e8800)
+at image/build/nsImageModule.cpp:28
+#9 0x46f24f18 in mozilla::GenericFactory::CreateInstance (this=<optimized out>, aOuter=<optimized out>, aIID=..., aResult=<optimized out>)
+at xpcom/glue/GenericFactory.cpp:16
+#10 0x46f6bbf0 in CreateInstanceByContractID (aResult=0x4879a60c <nsISupports::COMTypeInfo<int>::kIID>, aIID=..., aDelegate=<optimized out>,
+aContractID=0x54de2ad8 "@mozilla.org/image/loader;1", this=0x45f3d938)
+at xpcom/components/nsComponentManager.cpp:1079
+#11 nsComponentManagerImpl::CreateInstanceByContractID (this=0x45f3d938, aContractID=0x54de2ad8 "@mozilla.org/image/loader;1",
+aDelegate=<optimized out>, aIID=..., aResult=0x4b4e8800)
+at xpcom/components/nsComponentManager.cpp:1029
+#12 0x46f6c8c4 in GetServiceByContractID (result=0x4b4e8844, aIID=..., aContractID=<optimized out>, this=0x45f3d938)
+at xpcom/components/nsComponentManager.cpp:1435
+#13 nsComponentManagerImpl::GetServiceByContractID (this=0x45f3d938, aContractID=<optimized out>, aIID=..., result=0x4b4e8844)
+at xpcom/components/nsComponentManager.cpp:1349
+#14 0x46f27dc4 in nsGetServiceByContractID::operator() (this=<optimized out>, aIID=..., aInstancePtr=0x4b4e8844)
+at xpcom/glue/nsComponentManagerUtils.cpp:252
+#15 0x46f27df0 in nsCOMPtr_base::assign_from_gs_contractid (this=0x4b4e88dc, gs=..., iid=...)
+at xpcom/glue/nsCOMPtr.cpp:92
+#16 0x46f2823c in nsCOMPtr (gs=..., this=0x4b4e88d4) at xpcom/build/../glue/nsCOMPtr.h:941
+---Type <return> to continue, or q <return> to quit---
+#17 nsCategoryObserver::nsCategoryObserver (this=0x51e99f10, aCategory=0x54d10cb8 "content-sniffing-services")
+at xpcom/glue/nsCategoryCache.cpp:44
+#18 0x46fc7fd8 in GetEntries (result=..., this=0x54d0ed00) at ../../../dist/include/nsCategoryCache.h:69
+#19 NS_SniffContent (aSnifferType=<optimized out>, aRequest=0x46fa0d98 <CreateNewUnknownDecoderFactory(nsISupports*, nsIID const&, void**)+128>,
+aData=0x46b05948 "require._tmpModules[\":resource://gre/modules/osfile/osfile_shared_allthreads.jsm\"] = function(exports, require, module) {/* This Source Code Form is subject to the term of the Mozilla Public\n * Licen"..., aLength=16384, aSniffedType=...)
+at ../../../dist/include/nsNetUtil.h:2374
+#20 0x47001534 in DetermineContentType (aRequest=<optimized out>, this=<optimized out>)
+at netwerk/streamconv/converters/nsUnknownDecoder.cpp:331
+#21 nsUnknownDecoder::DetermineContentType (this=0x54d11510, aRequest=0x54de2efc)
+at netwerk/streamconv/converters/nsUnknownDecoder.cpp:298
+#22 0x46ff77a4 in nsUnknownDecoder::GetMIMETypeFromContent (this=0x54d11510, aRequest=<optimized out>, aData=<optimized out>,
+aLength=<optimized out>, type=...)
+at netwerk/streamconv/converters/nsUnknownDecoder.cpp:229
+#23 0x46fbdb10 in CallUnknownTypeSniffer (aClosure=<optimized out>,
+aData=0x46b05948 "require._tmpModules[\":resource://gre/modules/osfile/osfile_shared_allthreads.jsm\"] = function(exports, require, module) {/* This Source Code Form is subject to the term of the Mozilla Public\n * Licen"..., aCount=16384)
+at netwerk/base/src/nsBaseChannel.cpp:688
+#24 0x46fba27c in CallPeekFunc (aInStream=<optimized out>, aClosure=<optimized out>, aFromSegment=<optimized out>, aToOffset=<optimized out>,
+aCount=16384, aWriteCount=0x4b4e8a2c) at netwerk/base/src/nsInputStreamPump.cpp:100
+#25 0x46f60264 in nsPipeInputStream::ReadSegments (this=0x54d10c18,
+writer=0x46fba264 <CallPeekFunc(nsIInputStream*, void*, char const*, uint32_t, uint32_t, uint32_t*)>, closure=0x4b4e8a68, count=16384,
+readCount=0x4b4e8a74) at xpcom/io/nsPipe3.cpp:780
+#26 0x46fc3c30 in nsInputStreamPump::PeekStream (this=0x54d114a8, callback=0x46fbda78 <CallUnknownTypeSniffer(void*, uint8_t const*, uint32_t)>,
+closure=0x54de2efc) at netwerk/base/src/nsInputStreamPump.cpp:122
+#27 0x46fc3cd4 in nsBaseChannel::OnStartRequest (this=0x54de2ed0, request=<optimized out>, ctxt=<optimized out>)
+at netwerk/base/src/nsBaseChannel.cpp:705
+#28 0x46fc423c in nsInputStreamPump::OnStateStart (this=0x54d114a8)
+at netwerk/base/src/nsInputStreamPump.cpp:517
+---Type <return> to continue, or q <return> to quit---
+#29 0x46fc7c38 in nsInputStreamPump::OnInputStreamReady (this=0x54d114a8, stream=<optimized out>)
+at netwerk/base/src/nsInputStreamPump.cpp:431
+#30 0x46f640d8 in nsInputStreamReadyEvent::Run (this=<optimized out>)
+at xpcom/io/nsStreamUtils.cpp:163
+#31 0x46f73608 in ProcessNextEvent (result=0x4b4e8b2f, mayWait=<optimized out>, this=0x45f33768)
+at xpcom/threads/nsThread.cpp:694
+#32 nsThread::ProcessNextEvent (this=0x45f33768, mayWait=<optimized out>, result=0x4b4e8b2f)
+at xpcom/threads/nsThread.cpp:618
+#33 0x46f2bb70 in NS_ProcessPendingEvents (thread=0x45f33768, timeout=20)
+at xpcom/glue/nsThreadUtils.cpp:210
+#34 0x47786d20 in nsBaseAppShell::NativeEventCallback (this=0x50c0f708)
+at widget/xpwidgets/nsBaseAppShell.cpp:98
+#35 0x4777b9b0 in nsAppShell::event (this=<optimized out>, e=<optimized out>)
+at widget/qt/nsAppShell.cpp:86
+#36 0x4191f908 in void std::__rotate<QPair<int, int>*>(QPair<int, int>*, QPair<int, int>*, QPair<int, int>*, std::random_access_iterator_tag) ()
+from /usr/lib/libQt5Core.so.5
+#37 0x4191f908 in void std::__rotate<QPair<int, int>*>(QPair<int, int>*, QPair<int, int>*, QPair<int, int>*, std::random_access_iterator_tag) ()
+from /usr/lib/libQt5Core.so.5
+Backtrace stopped: previous frame identical to this frame (corrupt stack?)
+(gdb)
+---Type <return> to continue, or q <return> to quit---
+#17 nsCategoryObserver::nsCategoryObserver (this=0x51e99f10, aCategory=0x54d10cb8 "content-sniffing-services")
+at xpcom/glue/nsCategoryCache.cpp:44
+#18 0x46fc7fd8 in GetEntries (result=..., this=0x54d0ed00) at ../../../dist/include/nsCategoryCache.h:69
+#19 NS_SniffContent (aSnifferType=<optimized out>, aRequest=0x46fa0d98 <CreateNewUnknownDecoderFactory(nsISupports*, nsIID const&, void**)+128>,
+aData=0x46b05948 "require._tmpModules[\":resource://gre/modules/osfile/osfile_shared_allthreads.jsm\"] = function(exports, require, module) {/* This Source Code Form is subject to the term of the Mozilla Public\n * Licen"..., aLength=16384, aSniffedType=...)
+at ../../../dist/include/nsNetUtil.h:2374
+#20 0x47001534 in DetermineContentType (aRequest=<optimized out>, this=<optimized out>)
+at netwerk/streamconv/converters/nsUnknownDecoder.cpp:331
+#21 nsUnknownDecoder::DetermineContentType (this=0x54d11510, aRequest=0x54de2efc)
+at netwerk/streamconv/converters/nsUnknownDecoder.cpp:298
+#22 0x46ff77a4 in nsUnknownDecoder::GetMIMETypeFromContent (this=0x54d11510, aRequest=<optimized out>, aData=<optimized out>,
+aLength=<optimized out>, type=...)
+at netwerk/streamconv/converters/nsUnknownDecoder.cpp:229
+#23 0x46fbdb10 in CallUnknownTypeSniffer (aClosure=<optimized out>,
+aData=0x46b05948 "require._tmpModules[\":resource://gre/modules/osfile/osfile_shared_allthreads.jsm\"] = function(exports, require, module) {/* This Source Code Form is subject to the term of the Mozilla Public\n * Licen"..., aCount=16384)
+at netwerk/base/src/nsBaseChannel.cpp:688
+#24 0x46fba27c in CallPeekFunc (aInStream=<optimized out>, aClosure=<optimized out>, aFromSegment=<optimized out>, aToOffset=<optimized out>,
+aCount=16384, aWriteCount=0x4b4e8a2c) at netwerk/base/src/nsInputStreamPump.cpp:100
+#25 0x46f60264 in nsPipeInputStream::ReadSegments (this=0x54d10c18,
+writer=0x46fba264 <CallPeekFunc(nsIInputStream*, void*, char const*, uint32_t, uint32_t, uint32_t*)>, closure=0x4b4e8a68, count=16384,
+readCount=0x4b4e8a74) at xpcom/io/nsPipe3.cpp:780
+#26 0x46fc3c30 in nsInputStreamPump::PeekStream (this=0x54d114a8, callback=0x46fbda78 <CallUnknownTypeSniffer(void*, uint8_t const*, uint32_t)>,
+closure=0x54de2efc) at netwerk/base/src/nsInputStreamPump.cpp:122
+#27 0x46fc3cd4 in nsBaseChannel::OnStartRequest (this=0x54de2ed0, request=<optimized out>, ctxt=<optimized out>)
+at netwerk/base/src/nsBaseChannel.cpp:705
+#28 0x46fc423c in nsInputStreamPump::OnStateStart (this=0x54d114a8)
+at netwerk/base/src/nsInputStreamPump.cpp:517
+---Type <return> to continue, or q <return> to quit---
+#29 0x46fc7c38 in nsInputStreamPump::OnInputStreamReady (this=0x54d114a8, stream=<optimized out>)
+at netwerk/base/src/nsInputStreamPump.cpp:431
+#30 0x46f640d8 in nsInputStreamReadyEvent::Run (this=<optimized out>)
+at xpcom/io/nsStreamUtils.cpp:163
+#31 0x46f73608 in ProcessNextEvent (result=0x4b4e8b2f, mayWait=<optimized out>, this=0x45f33768)
+at xpcom/threads/nsThread.cpp:694
+#32 nsThread::ProcessNextEvent (this=0x45f33768, mayWait=<optimized out>, result=0x4b4e8b2f)
+at xpcom/threads/nsThread.cpp:618
+#33 0x46f2bb70 in NS_ProcessPendingEvents (thread=0x45f33768, timeout=20)
+at xpcom/glue/nsThreadUtils.cpp:210
+#34 0x47786d20 in nsBaseAppShell::NativeEventCallback (this=0x50c0f708)
+at widget/xpwidgets/nsBaseAppShell.cpp:98
+#35 0x4777b9b0 in nsAppShell::event (this=<optimized out>, e=<optimized out>)

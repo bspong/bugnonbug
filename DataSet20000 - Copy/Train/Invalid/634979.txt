@@ -1,0 +1,38 @@
+JavaScript engine injects 'amp;' when assigning window.location with '&' character
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 6.1; en-GB; rv:1.9.2.13) Gecko/20101203 Firefox/3.6.13
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 6.1; en-GB; rv:1.9.2.13) Gecko/20101203 Firefox/3.6.13
+
+The JavaScript parsing engine in Firefox/gecko injects "&amp;" whenever encountering the "&" character in a URL assigned through window.location. This is done regardless of whether the "&" is properly encoded as "&amp;".
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Create an HTML page containing javascript that redirects to a URL containing an ampersand, using the 'window.location' object :
+window.location.replace("http://test.url/page.html?var1=value&var2=value"); // OR
+window.location.replace("http://test.url/page.html?var1=value&amp;var2=value");
+2. Open the HTML file created in step 1
+3. Notice at the point where the "&" is encoutnered, the URL is injected with the string "amp;"
+Actual Results:  
+The code:
+window.location.replace("http://test.url/page.html?var1=value&var2=value");
+generates the URL:
+"http://test.url/page.html?var1=value&amp;var2=value"
+
+The code:
+window.location.replace("http://test.url/page.html?var1=value&amp;var2=value")
+generates the URL:
+"http://test.url/page.html?var1=value&amp;amp;var2=value"
+
+Expected Results:  
+The code:
+window.location.replace("http://test.url/page.html?var1=value&var2=value")
+generate the URL:
+"http://test.url/page.html?var1=value&var2=value" 
+(or is not parsed)
+
+The code:
+window.location.replace("http://test.url/page.html?var1=value&amp;var2=value")
+generates the URL:
+"http://test.url/page.html?var1=value&var2=value"
+
+Tested on other browsers with the same script (i.e. Internet Explorer 7) and it works as intended. This bug essentially makes it impossible to javascript a user's browser to a URL that contains a query string.

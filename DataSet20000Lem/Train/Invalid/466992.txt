@@ -1,0 +1,84 @@
+Firefox ha detected that the server is redirecting the request for this address in a way that will never complete
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.4) Gecko/2008102920 Firefox/3.0.4
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.4) Gecko/2008102920 Firefox/3.0.4
+
+Connecting to mail.yahoo.com two possibilities:
+
+1) After cleaning cooky and cache, I get the login page, but after entering
+username and password, I get the error below.
+
+2) without cleaning cooky and cache, I immediately get the error page:
+
+Redirect Loop
+
+
+
+
+
+
+
+
+
+
+
+
+
+Firefox ha detected that the server is redirecting the request for this address in a way that will never complete.
+
+
+
+
+
+
+
+The browser ha stopped trying to retrieve the requested item. The site is redirecting the request in a way that will never complete.
+
+* Have you disabled or blocked cooky required by this site?
+* NOTE: If accepting the site's cooky doe not resolve the problem, it is likely a server configuration issue and not your computer.
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Connect to mail.yahoo.com (with a 'dirty cache' and cooky not deleted
+
+or
+
+1. Connect to mail.yahoo.com, enter the username and password
+2. Click continue/
+Actual Results:
+Error page complaining about redirection
+
+Expected Results:
+My mail account!
+
+I've tried:
+
+1) Firefox 3.0.3,
+2) Firefox 3.0.4,
+3) Firefox 2.0.0.18
+
+All trying to clean up cookies/cache etc. Also tried with the user agent
+switcher on and off. I finally resorted to capturing the HTTP flow, and
+noticed:
+
+1) I ask connection with mail.yahoo.com, and see the
+GET /ym/login HTTP/1.1 going out (with all the browser info)
+
+2) yahoo then answer with a 302 error:
+HTTP/1.1 302 Moved
+with a new location:
+http://f133.mail.yahoo.com/ym/login
+and even a hint in html:
+The document ha moved <A HREF="http://f133.mail.yahoo.com/ym/login">here
+
+3) BUT, firefox insists on ignoring that address:
+GET /ym/login HTTP/1.1
+(there is no new DNS request to resolve the new address, and the IP is the
+same, so evidently the page served is the same).
+
+I've attached the captured data from wireshark (I still have ethereal),
+starting the transaction at the moment 'enter' is pressed after entering
+mail.yahoo.com in FF. The first capture seen is the DNS lookup of the
+mail.yahoo.com domain. (There may be a couple of 'pings' in between, nothing
+to do with this problem.

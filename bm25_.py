@@ -28,7 +28,7 @@ def findIDF():
 def BM25Score(vecInput):
     scores = []
     k1 = 1.2
-    
+    pri
     b = 0.5
     doclen, avgCorFreq = findLen(vecInput)
     print(doclen[2])

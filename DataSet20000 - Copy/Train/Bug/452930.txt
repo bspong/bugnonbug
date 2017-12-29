@@ -1,0 +1,69 @@
+selected option shown in dopr down list but NOT is select box when replacing selected option via javascript
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.8.1.16) Gecko/20080702 Firefox/2.0.0.16
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.8.1.16) Gecko/20080702 Firefox/2.0.0.16
+
+
+See the following HTML code, and open it in FireFox (2.0.0.16).
+
+It contains a select field with one selected option. When it's clicked on, the innerHTML is overwritten by new options. Hereby, it does not matter how the new options are added. innerHTML fails just as a "new Option()" or "document.createElement()" approach fail.
+
+As I think, I narrowed it down to the fact that Firefox does not like replacing the SELECTED OPTION. Only adding options is not a problem, nor seleting options, as long as the selected one is not deleted/overwriten.
+
+Adding ...
+[...]
+field.size = 2;
+field.size = 1;
+[...]
+... to the last line of refreshSelect() makes the selected option to show up (repaint() triggered?).
+
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+ <head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <title>dynamic select field</title>
+  <script type="text/javascript">
+	function refreshSelect(field)
+	{
+		if(field.options.length > 1)
+			return;
+	
+		field.innerHTML = '<option value = "1">1</option>'
+							+ '<option value = "2">2</option>'
+							+ '<option value = "3">3</option>'
+							+ '<option value = "4">4</option>'
+							+ '<option selected="selected" value = "5">5 (replacement of originally selected)</option>'
+							+ '<option value = "6">6</option>'
+	
+		return field;
+	}
+  </script>
+</head>
+ <body>
+ <form>
+  <select name="test" onfocus="refreshSelect(this)">
+	   <option selected="selected" value="5">5 (originally selected)</option>
+  </select>
+  <input type="submit">
+  <form>
+ </body>
+</html>
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. open example as posted in details
+2. click on select box
+3. see that option drop down holds all the options, but actual field is empty
+Actual Results:  
+select box is empty, while drop down list is okay
+
+Expected Results:  
+select box should show selected option
+
+no nice workaround found, as suggested 
+[...]
+field.size = 2;
+field.size = 1;
+[...]
+... shows the selected option, but closes the drop down list immediately once it was clicked on.

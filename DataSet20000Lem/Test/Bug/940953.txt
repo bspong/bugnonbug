@@ -1,0 +1,25 @@
+Australis' navbar's iconsize=small get overridden by localstore.rdf
+Due to compatibility reason and convention, the nav-bar (and other browser.xul toolbars) should always use iconsize=small, since the built-in theme are in fact using small icons, unless a third-party theme is installed and instructs to set iconsize=large.
+
+This wa implemented in bug 626382 for FX4, which ha all the gory detail such a using a cs counter to set the icon mode.
+
+The reason to do so is that a lot of add-on essentially do either:
+#mytoolbarbutton {
+list-style-image: url(large.png);
+}
+toolbar[iconsize="small"] #mytoolbarbutton {
+list-style-image: url(small.png);
+}
+or do it the other way round:
+#mytoolbarbutton {
+list-style-image: url(small.png);
+}
+toolbar[iconsize="large"] #mytoolbarbutton {
+list-style-image: url(large.png);
+}
+
+Please note that the above used to be (mostly) compatible with Firefox OSX/Win (small icons), Firefox Linux (large icons) and Seamonkey (large icons).
+
+After upgrading a long running profile to the first Australis nightly, some add-on toolbar button started to show up a large again (usually 24x24). DOM Inspector reveals that iconsize=large, which should never happen. I looked into localstore.rdf and sure enough it ha nav-bar iconsize=large. There is no longer any way to toggle this from the UI.
+
+Essentially, bug 626382 need to be re-implemented for Australis, to not break extension and themes.

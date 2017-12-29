@@ -1,0 +1,66 @@
+Code within a thread freezes Firefox 3 during execution
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 6.0; ru; rv:1.9) Gecko/2008052906 Firefox/3.0
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 6.0; ru; rv:1.9) Gecko/2008052906 Firefox/3.0
+
+Hi All !
+I was made extension for FF 1.5 / 2.x and it works fine. But in FF 3, i got the
+next trouble :
+When my thread is running, the FF UI is frozen, here is part of code which
+creates thread and do the some job within thread
+
+void MyExtension::Start()
+{
+...
+        if (NS_FAILED(threadManager->NewThread(0,
+getter_AddRefs(m_WorkingThread))))
+        {
+                throw;
+        }
+        m_WorkingThread->Dispatch(this, nsIThread::DISPATCH_NORMAL);
+...
+}
+
+void MyExtension::OnDataReceived(void* p)
+{
+        SetEvent(((MyExtension*)p)->m_ThreadEvent);
+}
+
+NS_IMETHODIMP MyExtension::Run()
+{
+        WCHAR szName[256];
+        memset(szName, 0, sizeof(szName));
+        _ltow((long)this, szName, 10);
+        m_ThreadEvent = CreateEvent(NULL, FALSE, FALSE, szName);
+        ResetEvent(m_ThreadEvent);      
+
+        m_pProcessor->AttachCallback(this, &Handler::OnDataReceived);
+        m_sMime.Assign(m_pProcessor->Start());
+
+        UINT32 nTimeoutCount = 0;
+        while (WaitForSingleObject(m_ThreadEvent, 1000) == WAIT_TIMEOUT)
+        {
+                nTimeoutCount++;
+                if (nTimeoutCount == 120)
+                        return NS_ERROR_FAILURE;
+        }
+
+        m_pProcessor->Finish();
+
+        m_pProcessor->GetDataAndClear((void**)&m_pData, &m_DataLength);
+        delete m_pProcessor;
+        m_pProcessor = NULL;
+
+        return NS_OK;
+}
+
+what's wrong here ?
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+create new thread
+within the thread CreateEvent
+then WaitForSingleObject
+Actual Results:  
+FF3.0 GUI will freeze during thread is running

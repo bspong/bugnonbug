@@ -1,0 +1,29 @@
+NewTabWebChannel.jsm trigger deprecation warning, "DEPRECATION WARNING: This path to event-emitter.js is deprecated. Please use require("devtools/shared/event-emitter") to load this module."
+STR:
+1. Start Firefox Nightly, and open a new tab.
+2. Check Error Console.
+
+ACTUAL RESULTS: This warning appears in the error console:
+DEPRECATION WARNING: This path to event-emitter.js is deprecated. Please use require("devtools/shared/event-emitter") to load this module.
+You may find more detail about this deprecation at: https://bugzil.la/912121
+resource://gre/modules/devtools/event-emitter.js 33 null
+resource://gre/modules/devtools/event-emitter.js 21 null
+resource://gre/modules/devtools/event-emitter.js 12 null
+resource://app/modules/NewTabWebChannel.jsm 28 null
+resource://gre/modules/XPCOMUtils.jsm 198 XPCU_defineLazyGetter/<.get
+resource://app/modules/NewTabWebChannel.jsm 76 NewTabWebChannelImpl
+resource://app/modules/NewTabWebChannel.jsm 295 null
+resource://gre/modules/XPCOMUtils.jsm 273 XPCU_moduleLambda
+resource://gre/modules/XPCOMUtils.jsm 198 XPCU_defineLazyGetter/<.get
+resource://app/components/nsBrowserGlue.js 763 BG__finalUIStartup
+resource://app/components/nsBrowserGlue.js 274 BG_observe
+
+
+I'm not 100% sure, but I think this chain back to this code:
+>XPCOMUtils.defineLazyGetter(this, "EventEmitter", function() {
+> const {EventEmitter} = Cu.import("resource://gre/modules/devtools/event-emitter.js", {});
+> return EventEmitter;
+>});
+http://hg.mozilla.org/mozilla-central/annotate/6202ade0e6d6/browser/components/newtab/NewTabWebChannel.jsm#l27
+
+Looks like this file (NewTabWebChannel.jsm) wa only added last week, in bug 1239118.

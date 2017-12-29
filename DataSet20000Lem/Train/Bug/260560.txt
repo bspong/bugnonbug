@@ -1,0 +1,62 @@
+security and download dialog can be spoofed by covering them partially using popup window
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; rv:1.7.3) Gecko/20040913 Firefox/0.10
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; rv:1.7.3) Gecko/20040913 Firefox/0.10
+
+Using javascript it is possible to spoof the content of security and download
+dialog by partly covering them with a popup window. This can lead the user to
+allow download and automatic execution of file (if a file extension association
+exists) or to grant a script local data access (if codebase principal are enabled).
+
+Reproducible: Always
+Steps to Reproduce:
+1. Open http://www.mikx.de/firespoofing/
+2. Make sure popup blocker allows window on click (default)
+3. Maximize the browser window
+2. Click on the text
+
+Actual Results:
+A download dialog appears and get instantly covered by a popup window. The
+popup display some dummy text that should convince the user to click on the
+"OK" button (which is part of the partly hidden dialog beneath). When clicked an
+.nfo file get downloaded and is automaticly started in the associated
+application (by default Windows System Information in this case). Just an
+example, could also be a .key file to modify the registry or any other
+application associated with the file extension.
+
+Expected Results:
+It should'nt be possible to cover a dialog with a popup window and spoof the
+content of the dialog this way. The way download dialog are done in IE6 on
+Windows XP SP2 could be a solution.
+
+If you look at the javascript source code of the demo page you can find
+instruction on how to spoof a security dialog which appears if codebase
+principal are enabled (not default) and you try to access protected privelige
+like local file access. When a user accepts this (spoofed) dialog a remote
+attacker can get the same right a a signed script (more or le full control).
+
+The file downloaded in the demo is in php to force the browser to download the
+file instead of displaying it using header modification. Source code:
+<?php
+header("Content-type: application/octet-stream");
+header('Content-Disposition: attachment; filename="booom.key"');
+?>
+some reg key
+
+The popup window is only in the right place if the window is maximized. This is
+a limitation of my proof-of-concept code only. It would be easily possible to
+write script that calculate the position of the dialog based on the window
+size/position.
+
+If you are on a slow connection timing could get an issue and the download
+dialog could take too long to open. An attacker could work around this by
+locally pre-caching the file using javascript. If you get timing problem when
+trying to reproduce increase the time in the setTimeout function. Using a LAN
+connection i wa able to reduce the timeout to le than 100ms, making the
+dialog overlaying process unnoticable.
+
+The number of default file extension coming with Windows XP is endless: You can
+open hypertext connection (.ht), remote desktop connection (.rdp), outlook
+(.eml) and so on.
+
+Tested on Windows XP SP1 and SP2 using Mozilla/5.0 (Windows; U; Windows NT 5.1;
+rv:1.7.3) Gecko/20040913 Firefox/0.10

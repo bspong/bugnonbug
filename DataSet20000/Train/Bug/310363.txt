@@ -1,0 +1,35 @@
+text-align broken when width of float'ed element changes (because of image load)
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.12) Gecko/20050915 Firefox/1.0.7
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.12) Gecko/20050915 Firefox/1.0.7
+
+This bug occurs with a fairly common HTML structure - a floated DIV that
+contains an image and some center-justified caption text.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Open the attached example.  Notice that the left caption text is
+left-aligned, while the right caption text is centered below the image.
+2. Reload the page.  Notice that both captions are now centered
+3. Ctrl-reload the page.  Notice that the alignment reverts back to the state
+described in step 1.
+
+
+
+
+Expected Results:  
+If you look at the HTML, you'll see that both captions should be centered below
+the image.
+
+I believe this problem is caused by the layout engine not recognizing that the
+width of the floated element needs to change once the width of the image is
+known.  When the page first loads - before the image has been fetched - the
+caption text is layed out according to the derived width of the div (which is
+just the width of the caption text.)  However, once the image loads, the DIV
+width changes, but the caption text position/width is not adjusted accordingly.
+
+When the page is loaded a 2nd time, the image is cached and so the browser
+correctly lays out the caption correctly.
+
+A possible workaround for this is illustrated in the HTML that renders the
+right-hand DIV: Just explicitely set the width of the IMG.

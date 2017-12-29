@@ -1,0 +1,28 @@
+Pressing Reload in a webpack + hot reloader + React application loads very slowly (due to source maps)
+The Devtools panel seems to be causing a dramatic slowdown when reloading our app (i.e. pressing the browser Reload button).
+
+Here's how to reproduce it:
+
+wget https://github.com/mozilla/addons-frontend/archive/8944b1d63294cb1f991dd274d408e2a2d0e1daa7.zip -O addons-frontend-tmp.zip
+unzip addons-frontend-tmp.zip
+cd addons-frontend-8944b1d63294cb1f991dd274d408e2a2d0e1daa7
+npm install
+npm run dev:amo
+
+Wait for the server to start and the webpack bundle to build. You'll see a message containing 'Addons-frontend server is running...'
+
+Load this URL in Nightly: http://127.0.0.1:3000/en-US/firefox/addon/chillout-page-action/
+
+Press the browser Reload button. It should reload quick-ish (within a few seconds).
+
+Open the Devtools panel. Now press the Reload button. The bug is that it takes about 20 seconds to load when the panel is open. Something is dramatically slowing it down.
+
+
+Observations:
+- another developer on my team confirmed this behavior
+- it doesn't happen in Firefox stable
+- this doesn't happen in Chrome stable
+- it happens in today's FDE and Nightly
+- disabling e10s doesn't make it go away
+
+Sorry for the heavyweight STR, I didn't have time to try and craft a lightweight example app. Even if it's something in our app, it still feels like a Devtools bug :)

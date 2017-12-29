@@ -1,0 +1,39 @@
+Bookmarks menu doe not close when Confirm open dialog is showing
+Regression from Bug 402558
+
+After Bug 402558 landed when i open folder with many tab with middle-click the Confirm open dialog is showing before the menu is closing.
+
+the dialog is behind the open menu
+
+the fix will be to close the menu befor doing anything else
+
+var target = aEvent.originalTarget;
++ // If this event bubbled up from a menu or menuitem, close the menus.
++ if (target.localName == "menu" || target.localName == "menuitem") {
++ for (var node = target.parentNode; node; node = node.parentNode) {
++ if (node.localName == "menupopup")
++ node.hidePopup();
++ else if (node.localName != "menu")
++ break;
++ }
++ }
++
+if (target.node && PlacesUtils.nodeIsContainer(target.node)) {
+// Don't open the root folder in tab when the empty area on the toolbar
+// is middle-clicked or when a non-bookmark item except for Open in Tabs)
+// in a bookmark menupopup is middle-clicked.
+if (target.localName == "menu" || target.localName == "toolbarbutton")
+PlacesUIUtils.openContainerNodeInTabs(target.node, aEvent);
+}
+else
+this.onCommand(aEvent);
+-
+- // If this event bubbled up from a menu or menuitem, close the menus.
+- if (target.localName == "menu" || target.localName == "menuitem") {
+- for (node = target.parentNode; node; node = node.parentNode) {
+- if (node.localName == "menupopup")
+- node.hidePopup();
+- else if (node.localName != "menu")
+- break;
+- }
+- }

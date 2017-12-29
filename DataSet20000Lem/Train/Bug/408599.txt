@@ -1,0 +1,24 @@
+FeedProtocolHandler creates horrifying nsIStandardURLs
+Four "valid" feed: "URI"s walk into a bar:
+
+feed://example.org/feed/
+feed:http://example.org/feed/
+feed:https://example.org/feed/
+feed:ftp://example.org/feed/
+
+Because FeedProtocolHandler.newURI treat them a nsIStandardURLs, failing to note that the "spec" author didn't read the part of the Generic URI Syntax RFC that make ":" an invalid character in a scheme, it turn them into the following URIs:
+
+host: example.org path: /feed/
+host: http path: //example.org/feed/
+host: http path: //example.org/feed/
+host: ftp path: //example.org/feed/
+
+Because FeedProtocolHandler.newChannel know what newURI ha done in the case of feed:http:// and feed:https:// and undoes it, that only show up in the UI when you try to load feed:foo://example.org/feed/, which fails by loading http://www.foo.com/example.org//feed/ - particularly unfortunate when foo == file, and you tell www.file.com that you just clicked a link to feed:file:///Users/philringnalda/nastythings/reallysickstuff/
+
+I rather doubt that nsIStandardURI want to add a fourth type to http://bonsai.mozilla.org/cvsblame.cgi?file=/mozilla/netwerk/base/public/nsIStandardURL.idl&rev=1.5&mark=55-77#50 for URLTYPE_SPEC_AUTHOR_FAILED_GENERIC_SYNTAX_101, so I see three options, and don't have any idea how to choose among them:
+
+* strip off the broken stupid feed: stuff in newURI, by creating real URIs with the real scheme - is it allowed to have newURI(myspec, ...).spec != myspec to that extent?
+
+* create nsISimpleURIs instead - I think that would mean losing the originCharset, but I'm not sure whether that's a good or a bad thing
+
+* keep creating totally bogus URIs, but teach newChannel to better deal - I suspect that's impossible in the edge cases, since feed:foo://bar/ and feed://foo//bar/ create identical URIs

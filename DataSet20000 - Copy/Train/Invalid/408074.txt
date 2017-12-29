@@ -1,0 +1,28 @@
+Long Javascript line causes Firefox to GET the page a second time
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.11) Gecko/20071127 Firefox/2.0.0.11
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.11) Gecko/20071127 Firefox/2.0.0.11
+
+The page is created via php, and the page sent to Firefox has a long line of Javascript code (approx. 1500 characters).  The line itself is an array declaration on the order of:
+
+coupons = new Array(new Array(434, "Jenny's Cappuccino Drink Club Dec '07", "https://www.softcardsystems.com/storefront/images/uploaded/cappuccino club exp 071231_1.jpg", "2007-12-01 00:00:00", "2007-12-31 00:00:00", "2008-01-01 00:00:00", "202"),
+new Array(435, "Jenny's 1/2-price Fountain Drink Dec '07", 
+...
+and so on, but as one line (the example above has newlines interspersed).
+
+My server code, as well as the server logs, see that another GET is generated from the browser to the page.  The first one is generated from a preceding page, this second one is generated from the target page.  For example: coupon_edit.php generates a "GET coupon_supercede.php" (expected), which generates a "GET coupon_supercede.php" (unexpected).  The resulting page has the long line, and it seems to work correctly.  Still, the second GET is disturbing.
+
+After interspersing newline chars in the long Javascript line to break it up, Firefox no longer generates the second GET (expected behavior).
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Generate a long (1500+ characters) Javascript line, with a newline only at the end of the declaration.  Mine was a long Array object declaration, containing nested Array declarations.
+2. GET that page.
+3. That should do it.
+Actual Results:  
+Firefox generates a second GET for the same page.
+
+Expected Results:  
+Firefox should have rendered the page without a second GET.
+
+Breaking the line up (with \n) fixed the problem...Firefox no longer issued the second GET.

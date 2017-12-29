@@ -1,0 +1,27 @@
+Firefox fails to start up due to a miscompiled file with FC3 gcc
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.5) Gecko/20041111 Firefox/1.0
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8b2) Gecko/20050225 Firefox/1.0+
+
+If I compile firefox on a Fedora FC3 system using --enable-optimize
+--disable-debug, firefox fails to start. It appears to hang, consuming all
+available CPU. I have tracked this down to what appears to be a compiler bug
+(gcc-3.4.2-6.fc3) causing nsAttrValue.cpp to be miscompiled. Here is what I
+know so far. If nsAttrValue.cpp is compiled with -O or -O1, the browser hangs.
+If it is compiled with -Os or w/o a -O flag, then the browser works.
+nsAttrValue.cpp is the only file which must be recompiled. I can leave the
+other file alone. The stack trace always look like this:
+
+(gdb) bt 5
+#0 nsAttrValue::ToString (this=0x83eff90, aResult=@0xbfffde2c)
+at nsAttrValue.h:382
+#1 0x40b307a0 in nsXULElement::GetAttr ()
+from dist/bin/components/libgklayout.so
+#2 0x409d566f in SelectorMatches ()
+from dist/bin/components/libgklayout.so
+#3 0x409d5c53 in ContentEnumFunc ()
+from dist/bin/components/libgklayout.so
+#4 0x409cf42f in RuleHash::EnumerateAllRules ()
+
+nsAttrValue::ToString() never returns.
+
+Reproducible: Always

@@ -1,0 +1,47 @@
+Dynamically updated CSS background images do not refresh when page is reloaded
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8b3) Gecko/20050712 Firefox/1.0+
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8b3) Gecko/20050712
+
+Dynamically generated images which are included as CSS background-image are not
+redrawn (but requested successfully from server) when the page is reloaded in
+the following manner:
+
+I have a mod_perl module which picks a random image every 60 seconds. To allow
+caching, it sets the Expires header to about 60 secs in the future. 
+I then include that image in a CSS background-image property - nothing
+spectacular yet.
+If I push the "Refresh" button, everything works: The background image is
+refreshed and FF shows a different image every 60 secs. However, if I just
+select the location bar and hit enter, the image stays the same all the time.
+
+An ethereal dump of the http traffic shows that FF actually requests the image
+from the server if the image's Expires header require so. The server then
+correctly sends back the _new_ image, but FF still draws the old one. If I
+'reload' the page by hitting 'Enter' in the location bar again, the new image is
+finally shown.
+The same happens if I click on a link in that page which refers to the page itself.
+This is not extremely annoying, but to me it just looks rather odd, since the
+image is requested correctly, but somehow it's still the old image which will be
+drawn.
+
+Reproducible: Always
+
+Steps to Reproduce:
+Hm, that's a bit tricky to reproduce. Maybe use tcpdum/ethereal etc. while
+visiting http://vitus.ch/ . The large horizontal image is dynamically picked
+from a pool of three images, every 60 secs. 
+Wait at least 60 secs, then 'reload' the page by hitting 'Enter' in the location
+bar (or by clicking on "Home" in the top navigation bar of the site).
+
+
+Actual Results:  
+The traffic dump shows that FF successfully requests and receives the new image
+data. However, the image on screen won't change.
+
+Expected Results:  
+FF does not only request and receive the image, but also draw it instead of the
+old one.
+
+Same behaviour is also present in FF 1.0.4 (Debian version) and FF 1.0.6
+(Windows 2K). Other browsers (Opera 8, IE 6) show the same tcpdump, but draw the
+image correctly.

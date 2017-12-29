@@ -1,0 +1,86 @@
+Simplify toolbarbutton stylesheet requirement to make life easier for extension
+Created attachment 504420
+Set "wantediconsize", "wantedicondimensions" and "wantediconmonochrome" based on the current theme
+
++++ This bug wa initially created a a clone of Bug #616472 +++
+
+As Dan Mosedale explained in bug 616472 comment 41, an important half of
+the issue originally discussed there is to allow extension author to use
+simple stylesheet rule to select which icon size and color should be used
+for their toolbar buttons, instead of relying on complex host application
+detection in chrome.manifest.
+
+An additional win would be for the stylesheet to choose whichever artwork is
+most suited to the current theme, regardless of the platform on which the
+browser is executing. For example, there is a custom Mac OS X theme that
+might want monochrome icon like the default "pinstripe" theme for Mac.
+This is very easy to achieve using the detection technique suggested by
+Markus Stange in bug 616472 comment 37.
+
+Using the simple test case provided by Nils Maier (thank you very much!)
+in bug 616472 comment 48, I wrote a patch that implement this detection
+technique. It's quite polished except for these known issues:
+- "Wanted style" attribute are not yet applied to the customization palette.
+- I haven't tested it on platform other than Windows, although I've tested
+it with some custom themes.
+- Contains debugging code that output detected value to the Error Console.
+- The new Toolkit toolbar customization event named "style" could use an
+automated test case.
+- I'm not sure if and what other automated test might be needed.
+
+Here is how an extension's stylesheet would appear. Note that all the new
+styling-specific attribute name begin with a common prefix, currently
+"wantedicon...", but I'm open to suggestions.
+
+
+
+
+
+/* --- MANDATORY ICONS --- */
+
+/* Basic (24x24) icon */
+#my-button {
+list-style-image: url(icon24.png);
+}
+
+/* Small (16x16) icon. The iconsize check is for FF3 compatibility only. */
+toolbar[wantediconsize="small"] #my-button,
+toolbar[iconsize="small"] #my-button {
+list-style-image: url(icon16.png);
+}
+
+/* --- OPTIONAL ICONS --- */
+
+/* Small (16x16) monochrome icon. The default on Mac. */
+toolbar[wantediconsize="small"][wantediconmonochrome] #my-button {
+list-style-image: url(icon16-monochrome.png);
+}
+
+/* Extra large (32x32) icon. Only for custom themes. */
+toolbar[wantediconsize="x-large"] #my-button {
+list-style-image: url(icon32.png);
+}
+
+/* Custom sized (example: 18x18) icon. Only for custom themes.
+Note that this icon will not be used if the theme want
+icon that are 20x20. However, in this case we still have
+wantediconsize="small" that allows u to use an icon
+that fit in the available space. */
+toolbar[wantedicondimensions="18x18"] #my-button {
+list-style-image: url(icon18.png);
+}
+
+
+
+
+
+
+Note that extension that handled the disabled or hover button state can
+now check if the "wantediconsize" attribute is set and, if this is the case,
+avoid to provide specific image for that case. I also considered setting
+a "wantediconwithouteffects" boolean attribute for that case, but maybe
+it's just overkill.
+
+Firefox 3 for Mac still need the add-on to draw the whole button broder and
+state, like before. Extensions that want to support this case must do it like
+they did previously.

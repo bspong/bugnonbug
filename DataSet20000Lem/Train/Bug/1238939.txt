@@ -1,0 +1,26 @@
+browser_net_cached-status.js fails when run solo
+It may also fail for other net monitor tests...
+
+It fails for two reasons:
+#1 Reentrance issue during client close:
+Handler function DebuggerClient.requester request callback threw an exception: InternalError: too much recursion
+Stack: LocalDebuggerTransport.prototype.close@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/shared/transport/transport.js:668:9
+DebuggerClient.prototype.close/cleanup@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/shared/client/main.js:369:7
+DebuggerClient.prototype.close/detachClients@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/shared/client/main.js:399:9
+DebuggerClient.requester/</<@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/shared/client/main.js:294:9
+makeInfallible/<@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/shared/DevToolsUtils.js:93:14
+emitOnObject@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/commonjs/sdk/event/core.js:112:9
+emit@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/commonjs/sdk/event/core.js:89:38
+Request.prototype.emit@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/shared/client/main.js:1218:29
+DebuggerClient.prototype.onClosed/reject@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/shared/client/main.js:1097:7
+DebuggerClient.prototype.onClosed@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/shared/client/main.js:1104:5
+LocalDebuggerTransport.prototype.close@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/shared/transport/transport.js:666:9
+DebuggerClient.prototype.close/cleanup@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/shared/client/main.js:369:7
+
+#2 Race during NetMonitorController cleanup:
+console.error:
+Message: Error: TabTarget#getTrait() can only be called on remote tabs.
+Stack:
+TabTarget.prototype.getTrait@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/client/framework/target.js:251:13
+NetMonitorController.disconnect<@chrome://devtools/content/netmonitor/netmonitor-controller.js:273:9
+NetMonitorController.shutdownNetMonitor<@chrome://devtools/content/netmonitor/netmonitor-controller.js:200:13

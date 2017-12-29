@@ -1,0 +1,48 @@
+browser_988072_sidebar_events.js intermittently fails with --e10s --run-by-dir
+I am working on adjust --run-by-dir to work for browser-chrome and --e10s, unfortunately a common failure in the bc1 suite is brower_988072_sidebar_events.js:
+https://treeherder.mozilla.org/ui/#/jobs?repo=try&revision=2db7095c9402&searchQuery=e10s-browser
+
+I can easily reproduce this locally on my linux64 desktop:
+./mach mochitest-browser --e10s browser/components/customizableui/test
+
+In playing with the manifest file, I can remove any one of these files and the error goes away locally:
+[browser_989338_saved_placements_not_resaved.js]
+[browser_989751_subviewbutton_class.js]
+[browser_987177_xul_wrapper_updating.js]
+[browser_987185_syncButton.js]
+
+This is the error I get for the test:
+13:13:05 INFO - 539 INFO TEST-START | chrome://mochitests/content/browser/browser/components/customizableui/test/browser_988072_sidebar_events.js
+13:13:05 INFO - 540 INFO checking window state
+13:13:05 INFO - 541 INFO Entering test
+13:13:05 INFO - 542 INFO TEST-UNEXPECTED-FAIL | chrome://mochitests/content/browser/browser/components/customizableui/test/browser_988072_sidebar_events.js | Should have the same number of children - Got 0, expected 2
+13:13:05 INFO - Stack trace:
+13:13:05 INFO - chrome://mochikit/content/browser-test.js:test_is:834
+13:13:05 INFO - chrome://mochitests/content/browser/browser/components/customizableui/test/browser_988072_sidebar_events.js:compareList:70
+13:13:05 INFO - chrome://mochitests/content/browser/browser/components/customizableui/test/browser_988072_sidebar_events.js:null:95
+13:13:05 INFO - self-hosted:InterpretGeneratorResume:960
+13:13:05 INFO - self-hosted:next:886
+13:13:05 INFO - Tester_execTest@chrome://mochikit/content/browser-test.js:651:9
+13:13:05 INFO - Tester.prototype.nextTest</<@chrome://mochikit/content/browser-test.js:577:7
+13:13:05 INFO - SimpleTest.waitForFocus/maybeRunTests/<@chrome://mochikit/content/tests/SimpleTest/SimpleTest.js:683:49
+13:13:05 INFO - *************************
+13:13:05 INFO - A coding exception was thrown and uncaught in a Task.
+13:13:05 INFO - Full message: TypeError: document.getElementById(...) is null
+13:13:05 INFO - Full stack: @chrome://mochitests/content/browser/browser/components/customizableui/test/browser_988072_sidebar_events.js:99:3
+13:13:05 INFO - Tester_execTest@chrome://mochikit/content/browser-test.js:651:9
+13:13:05 INFO - Tester.prototype.nextTest</<@chrome://mochikit/content/browser-test.js:577:7
+13:13:05 INFO - SimpleTest.waitForFocus/maybeRunTests/<@chrome://mochikit/content/tests/SimpleTest/SimpleTest.js:683:49
+13:13:05 INFO - *************************
+13:13:05 INFO - 543 INFO TEST-UNEXPECTED-FAIL | chrome://mochitests/content/browser/browser/components/customizableui/test/browser_988072_sidebar_events.js | Uncaught exception - at chrome://mochitests/content/browser/browser/components/customizableui/test/browser_988072_sidebar_events.js:99 - TypeError: document.getElementById(...) is null
+13:13:05 INFO - Stack trace:
+13:13:05 INFO - @chrome://mochitests/content/browser/browser/components/customizableui/test/browser_988072_sidebar_events.js:99:3
+13:13:05 INFO - Tester_execTest@chrome://mochikit/content/browser-test.js:651:9
+13:13:05 INFO - Tester.prototype.nextTest</<@chrome://mochikit/content/browser-test.js:577:7
+13:13:05 INFO - SimpleTest.waitForFocus/maybeRunTests/<@chrome://mochikit/content/tests/SimpleTest/SimpleTest.js:683:49
+13:13:05 INFO - Tester_execTest@chrome://mochikit/content/browser-test.js:651:9
+13:13:05 INFO - Tester.prototype.nextTest</<@chrome://mochikit/content/browser-test.js:577:7
+13:13:05 INFO - SimpleTest.waitForFocus/maybeRunTests/<@chrome://mochikit/content/tests/SimpleTest/SimpleTest.js:683:49
+13:13:09 INFO - 544 INFO TEST-OK | chrome://mochitests/content/browser/browser/components/customizableui/test/browser_988072_sidebar_events.js | took 4064ms 
+
+
+Is there something I can do to help figure this out?

@@ -1,0 +1,51 @@
+MDL Chime plug-in invocation break after accessing specific URL
+User-Agent: Mozilla/5.0 (X11; U; NetBSD i386; en-US; rv:1.8.0.2) Gecko/20060416 Firefox/1.5.0.2
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.8.1.14) Gecko/20080404 Firefox/2.0.0.14
+
+After selecting a link to download the text of a PDB (.pdb) file from the PDB website and saving the file to disk (without choosing to make this the default behavior), Firefox change it behavior for handling locally-opened PDB file such that it now give the "how would you like to handle this kind of file" dialog rather than invoking the MDL Chime plug-in a it used to.
+
+Reproducible: Always
+
+Steps to Reproduce:
+Step 1: install the popular MDL Chime plug-in that the biochemistry community us like all the time...
+
+After attempting to download a PDB file from the PDB website (http://pdb.org/), the MDL Chime plug-in which wa previously associated with viewing .pdb file is
+no longer invoked to display local .pdb files. An example of such a download URL:
+
+http://www.pdb.org/pdb/download/downloadFile.do?fileFormat=pdb&compression=NO&structureId=1A0Z
+
+On selecting this URL a a link the user is prompted to (defaulted option) "open with Internet Explorer (default)", or (not selected) "save to disk". After saving to disk, further Firefox handling of this kind of file changes, even though the "automatically perform" checkbox wa not selected. (The file wa successfully saved to disk, if it matters.)
+
+Accessing a .pdb _URL_ still result in invocation of the plug-in and successful display. Good.
+
+Accessing a local file is now different, however. Either invoking Firefox and the MDL Chime plug-in via Windows Explorer association or opening the file via the Firefox File->Open File option result in a dialog asking how to handle the file. This dialog now ha "open with Internet Explorer (default)" not selected, and "save to disk" a the default. But disk is where I got the file, and opening with IE, I think, really mean use Windows's file association, which for .pdb file is Firefox, so that up pop another Firefox tab and yet another one of these dialogs. Thus broken.
+Actual Results:
+File handling for PDB (.pdb) file changed.
+
+Expected Results:
+Not change handling.
+
+E3Joking aside, I imagine there's a substantial userbase out there with MDL Chime and I'd love for them all to be able to use Firefox. I'm surprised I couldn'
+t find a report for this bug. It's been around for If it's too much hassle to download the plug-in for testing (which I'm not sure is necessary to fix this bug
+), email me please.
+
+Here's what the server wa sending for the download link:
+
+HTTP/1.1 200 OK
+Server: Apache-Coyote/1.1
+Set-Cookie: JSESSIONID=C01444B92F4A543E012F5A3DE5411E53; Path=/pdb
+Content-Disposition: attachment; filename=1A0Z.pdb
+Content-Type: application/download
+Content-Length: 432783
+Date: Mon, 12 May 2008 23:00:41 GMT
+Connection: close
+
+And here are my Windows association for this file and type, if it's relevant at all:
+
+C:\>assoc .pdb
+.pdb=pdbFile
+
+C:\>ftype pdbFile
+pdbFile="C:\Program Files\Internet Explorer\Iexplore.exe" %1
+
+I don't know why it say Iexplore.exe here, a executing a .pdb from command shell or Explorer still invokes Firefox.

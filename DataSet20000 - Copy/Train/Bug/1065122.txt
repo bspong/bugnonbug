@@ -1,0 +1,56 @@
+Browser crash when using Timeline & Profiler at the same time
+Really hard to reproduce, and I've seen this only once so far.
+The only thing I can say is that it occurs some time after or while using the timeline panel (which needs the patch in bug 1050386 to be applied).
+
+I've since then tried to reproduce, but wasn't able to. So I don't have a reduced test case.
+
+I do have a stacktrace though:
+
+* thread #1: tid = 0x76edac, 0x000000010170f541 XUL`mozilla::BlockingResourceBase::CheckAcquire(this=0x0073747069726383) + 33 at BlockingResourceBase.cpp:267, queue = 'com.apple.main-thread', stop reason = EXC_BAD_ACCESS (code=EXC_I386_GPFLT)
+  * frame #0: 0x000000010170f541 XUL`mozilla::BlockingResourceBase::CheckAcquire(this=0x0073747069726383) + 33 at BlockingResourceBase.cpp:267
+    frame #1: 0x000000010170fa0f XUL`mozilla::OffTheBooksMutex::Lock(this=0x0073747069726383) + 31 at BlockingResourceBase.cpp:377
+    frame #2: 0x00000001015bbb0a XUL`BaseAutoLock(this=0x00007fff5fbfc7f0, aLock=0x0073747069726383, _notifier=0x00007fff5fbfc7e8) + 154 at Mutex.h:164
+    frame #3: 0x00000001015bab45 XUL`BaseAutoLock(this=0x00007fff5fbfc7f0, aLock=0x0073747069726383, _notifier=0x00007fff5fbfc7e8) + 37 at Mutex.h:165
+    frame #4: 0x00000001052f8241 XUL`SyncProfile::ShouldDestroy(this=0x0073747069726353) + 81 at SyncProfile.cpp:39
+    frame #5: 0x00000001052f81af XUL`~ProfilerBacktrace(this=0x000000012c028850) + 31 at ProfilerBacktrace.cpp:20
+    frame #6: 0x00000001052f8185 XUL`~ProfilerBacktrace(this=0x000000012c028850) + 21 at ProfilerBacktrace.cpp:19
+    frame #7: 0x00000001052ffe5a XUL`mozilla_sampler_free_backtrace(aBacktrace=0x000000012c028850) + 42 at platform.cpp:979
+    frame #8: 0x00000001052f8795 XUL`profiler_free_backtrace(aBacktrace=0x000000012c028850) + 21 at GeckoProfilerImpl.h:117
+    frame #9: 0x00000001052f8779 XUL`~ProfilerMarkerPayload(this=0x0000000132be9ca0) + 41 at ProfilerMarkers.cpp:26
+    frame #10: 0x0000000105303815 XUL`~ProfilerMarkerTracing(this=0x0000000132be9ca0) + 21 at ProfilerMarkers.h:68
+    frame #11: 0x00000001053036c5 XUL`~ProfilerMarkerTracing(this=0x0000000132be9ca0) + 21 at ProfilerMarkers.h:68
+    frame #12: 0x00000001053036e9 XUL`~ProfilerMarkerTracing(this=0x0000000132be9ca0) + 25 at ProfilerMarkers.h:68
+    frame #13: 0x00000001052fd2b5 XUL`~ProfilerMarker(this=0x0000000133deea20) + 69 at platform.cpp:136
+    frame #14: 0x00000001052fd265 XUL`~ProfilerMarker(this=0x0000000133deea20) + 21 at platform.cpp:134
+    frame #15: 0x00000001052fd462 XUL`PendingMarkers::addMarker(this=0x000000010035b000, aMarker=0x00000001280247e0) + 258 at platform.cpp:185
+    frame #16: 0x00000001053032ca XUL`PseudoStack::addMarker(this=0x0000000100355000, aMarkerStr=0x0000000107fa5bb3, aPayload=0x000000011926e580, aTime=174820.781) + 106 at PseudoStack.h:329
+    frame #17: 0x00000001052f861f XUL`mozilla_sampler_add_marker(aMarker=0x0000000107fa5bb3, aPayload=0x000000011926e580) + 255 at platform.cpp:1020
+    frame #18: 0x00000001052ffed2 XUL`mozilla_sampler_tracing(aCategory=0x0000000107e3e839, aInfo=0x0000000107fa5bb3, aMetaData=TRACING_INTERVAL_START) + 82 at platform.cpp:985
+    frame #19: 0x0000000104a7b4ea XUL`profiler_tracing(aCategory=0x0000000107e3e839, aInfo=0x0000000107fa5bb3, aMetaData=TRACING_INTERVAL_START) + 74 at GeckoProfilerImpl.h:269
+    frame #20: 0x0000000104a81b87 XUL`mozilla::RefreshDriverTimer::Tick(this=0x0000000114aa1400) + 183 at nsRefreshDriver.cpp:157
+    frame #21: 0x0000000104a81ac1 XUL`mozilla::RefreshDriverTimer::TimerTick(aTimer=0x0000000117a51400, aClosure=0x0000000114aa1400) + 33 at nsRefreshDriver.cpp:190
+    frame #22: 0x00000001016cfe32 XUL`nsTimerImpl::Fire(this=0x0000000117a51400) + 994 at nsTimerImpl.cpp:618
+    frame #23: 0x00000001016d0241 XUL`nsTimerEvent::Run(this=0x0000000117a73590) + 209 at nsTimerImpl.cpp:711
+    frame #24: 0x00000001016cacd8 XUL`nsThread::ProcessNextEvent(this=0x0000000100349400, aMayWait=false, aResult=0x00007fff5fbfcee3) + 2088 at nsThread.cpp:823
+    frame #25: 0x00000001017225ba XUL`NS_ProcessPendingEvents(aThread=0x0000000100349400, aTimeout=20) + 154 at nsThreadUtils.cpp:207
+    frame #26: 0x0000000103f6b469 XUL`nsBaseAppShell::NativeEventCallback(this=0x0000000114a4e160) + 201 at nsBaseAppShell.cpp:98
+    frame #27: 0x0000000103fea47d XUL`nsAppShell::ProcessGeckoEvents(aInfo=0x0000000114a4e160) + 445 at nsAppShell.mm:374
+    frame #28: 0x00007fff934955b1 CoreFoundation`__CFRUNLOOP_IS_CALLING_OUT_TO_A_SOURCE0_PERFORM_FUNCTION__ + 17
+    frame #29: 0x00007fff93486c62 CoreFoundation`__CFRunLoopDoSources0 + 242
+    frame #30: 0x00007fff934863ef CoreFoundation`__CFRunLoopRun + 831
+    frame #31: 0x00007fff93485e75 CoreFoundation`CFRunLoopRunSpecific + 309
+    frame #32: 0x00007fff95b76a0d HIToolbox`RunCurrentEventLoopInMode + 226
+    frame #33: 0x00007fff95b767b7 HIToolbox`ReceiveNextEventCommon + 479
+    frame #34: 0x00007fff95b765bc HIToolbox`_BlockUntilNextEventMatchingListInModeWithFilter + 65
+    frame #35: 0x00007fff946fe24e AppKit`_DPSNextEvent + 1434
+    frame #36: 0x00007fff946fd89b AppKit`-[NSApplication nextEventMatchingMask:untilDate:inMode:dequeue:] + 122
+    frame #37: 0x0000000103fe9097 XUL`-[GeckoNSApplication nextEventMatchingMask:untilDate:inMode:dequeue:](self=0x0000000114a0fa10, _cmd=0x00007fff951315c3, mask=18446744073709551615, expiration=0x422d63c37f00000d, mode=0x00007fff7c34bd00, flag='\x01') + 119 at nsAppShell.mm:129
+    frame #38: 0x00007fff946f199c AppKit`-[NSApplication run] + 553
+    frame #39: 0x0000000103feae07 XUL`nsAppShell::Run(this=0x0000000114a4e160) + 167 at nsAppShell.mm:647
+    frame #40: 0x000000010554546c XUL`nsAppStartup::Run(this=0x00000001148c16f0) + 156 at nsAppStartup.cpp:280
+    frame #41: 0x00000001055e8c06 XUL`XREMain::XRE_mainRun(this=0x00007fff5fbfefc0) + 6022 at nsAppRunner.cpp:4098
+    frame #42: 0x00000001055e9463 XUL`XREMain::XRE_main(this=0x00007fff5fbfefc0, argc=5, argv=0x00007fff5fbff8c8, aAppData=0x00007fff5fbff258) + 739 at nsAppRunner.cpp:4169
+    frame #43: 0x00000001055e98fd XUL`XRE_main(argc=5, argv=0x00007fff5fbff8c8, aAppData=0x00007fff5fbff258, aFlags=0) + 77 at nsAppRunner.cpp:4383
+    frame #44: 0x0000000100001fdf firefox`do_main(argc=5, argv=0x00007fff5fbff8c8, xreDirectory=0x000000010030e1c0) + 1647 at nsBrowserApp.cpp:282
+    frame #45: 0x0000000100001503 firefox`main(argc=5, argv=0x00007fff5fbff8c8) + 323 at nsBrowserApp.cpp:643
+    frame #46: 0x0000000100000f64 firefox`start + 52

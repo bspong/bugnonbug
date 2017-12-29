@@ -1,0 +1,24 @@
+Fix the browser.sessionstore.resume_from_crash preference
+The resume_from_crash preference has been in sessionstore since v1, probably. Its meaning has changed a lot since then and I think we should clean this up.
+
+When it first got introduced, resume_from_crash=false basically meant that nothing will be written to disk. No session data will be stored, and no help will be given in case of a crash.
+
+> // when crash recovery is disabled, session data is not written to disk
+> XPCOMUtils.defineLazyGetter(this, "_resume_from_crash", function () {
+>   this._prefBranch.addObserver("sessionstore.resume_from_crash", this, true);
+>   return this._prefBranch.getBoolPref("sessionstore.resume_from_crash");
+> });
+
+This comment is certainly not true anymore. With resume_from_crash=false session data containing only app tabs will be written to disk and will automatically be restored on next startup. Interesting is that we do save the whole session including pinned and unpinned tabs when quitting:
+
+> saveState: function ssi_saveState(aUpdateAll) {
+>   let pinnedOnly = this._loadState == STATE_RUNNING && !this._resume_from_crash;
+>   let oState = this._getCurrentState(aUpdateAll, pinnedOnly);
+
+On next startup we will have a deferred session, i.e. we restore pinned tabs automatically and the user can decide to restore the rest of the session manually. If we crash, we only have pinned tabs and cannot offer the user to manually restore the last session. That's weird and inconsistent.
+
+My suggestion is to fix resume_from_crash to behave like the name suggests. We shouldn't exclude pinned tabs when collecting the session, we should just not resume a session automatically after a crash with resume_from_crash=false.
+
+I think resume_from_crash was introduced back then mostly because of privacy reasons? The preference was added before we even had the private browsing mode. Now we have private windows so I think that's the preferred way to go undercover if you need to.
+
+The pref of course also allows a user to opt-out of maybe annoying crash dialogs if you don't care about your session and you happen to just shutdown the OS and not apps first. It is also used in a couple of test suites that don't want Firefox to restore stuff when crashing so it seems like we should keep that pref around.

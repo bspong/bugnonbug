@@ -1,0 +1,20 @@
+Make Windows installer more 'Unicode-aware'
+Currently, our installer on Windows show garbled string when the codepage
+(character encoding) of an installer is different from the codepage for
+'non-Unicode' application on Windows 2x/XP (and the default system codepage on
+Windows 9x/ME). That's because it us 'A' version of Windows APIs even when
+'W' APIs are available on Win 9x/ME (let alone Win 2k/XP). (e.g. |ExtTextOut|).
+
+There are two consequences. The first is what's mentioned at the beginning of
+this report. The other is that we can't make installers for language that are
+not supported by any of legacy Windows codepages. For instance, Hindi or Tamil
+installers can't be made.
+
+To fix this, we need to replace |ExtTextOut| and alike with the corresponding W
+APIs. In addition, translated string for each localized installer need to be
+converted to UTF-8. A trickier part is how to deal with Windows APIs whose 'W'
+version are not available on Windows 9x/ME unless MSLU is present (e.g.
+SendMessage). It might be possible to define 'UNICODE' in 'Makefile' or
+equivalent and to rely on the fact that MSLU is very likely to be available on
+virtually all Windows 9x/ME (even then, we might have to know it location,
+which is not easy)

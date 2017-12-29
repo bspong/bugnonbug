@@ -1,0 +1,11 @@
+Changing a feedURI to non-http leaves the properties dialog open when it fails
+Since we've eliminated any way of manually creating a live bookmark other than copy-paste, the scope of this is pretty limited, but it's still ugly.
+
+1. Copy the default livemark, paste it back onto the toolbar.
+2. Right-click the copy, Properties
+3. Change the Feed Location to a non-http URI, say file:///var/
+4. Click Save Changes
+
+At this point, since createFixedURI was happy with the file: URI, we do a editLivemarkFeedURI transaction, which calls setFeedURI and then calls reloadLivemarkFolder. At that point, in _updateLivemarkChildren, we try to QI a file URI's channel to nsIHttpChannel, fail, it throws, and the dialog remains open since we were still in its _saveChanges handler. Do the obvious thing at that point, click Cancel, and since the new feedURI was already saved, you now have a bogus feedURI which will merrily throw every 15 seconds until the end of time, since we don't set the ERROR_EXPIRATION on failures at that point in the code.
+
+Not sure who should be protecting against that: the livemark service could silently fail on non-http/https, since that would be right where someone adding support for more protocols would see it, or the transaction service could catch exceptions, though that would be likely to swallow unexpected ones, or bookmarkProperties.js's _containsValidURI could return the fixed-up URI instead of true, so that when the caller's checking a feedURI, it can also check the scheme, and not enable the Save Changes button when the input won't be fixed up into an http URI - that would provide the best UI, not allowing you to save something which will then throw every 15 seconds for the rest of your life, but would also be the most likely to be missed by someone adding support for non-http schemes.

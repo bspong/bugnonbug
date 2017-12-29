@@ -1,0 +1,870 @@
+Nested List symbol render on same line a parent symbol {list}
+Steve, this is the bug for the problem I described to you last week. If I have
+the following code:
+
+<UL>
+<LI>
+<UL>
+<LI>blah blah</LI>
+</UL>
+</LI>
+</UL>
+
+The layout is this, where o is supposed to be a bullet:
+
+o o blah blah
+
+Expected to see:
+
+o
+o blah blah
+
+If the parent LI doe not have text or an nbsp, then the child bullet end up on
+the same line.
+
+
+
+------- Additional Comments From beppe@netscape.com 2000-05-10 13:22 -------
+
+adding Joe to the cc list
+
+
+
+------- Additional Comments From jfrancis@netscape.com 2000-05-10 16:31 -------
+
+I'm curious how we know this is a bug. I didn't think this much rendering
+detail
+wa specified by html. Is this only a bug because we are trying to be
+compatible
+with some other browser? 4.x?
+
+
+
+------- Additional Comments From beppe@netscape.com 2000-05-10 16:34 -------
+
+Lists are block elemetns and should therefore render on a new line, not render
+a if they were inline elements.
+
+
+
+------- Additional Comments From jfrancis@netscape.com 2000-05-10 16:44 -------
+
+Ok, but I'm not sure this reasoning applies to nested blocks. For instance, a
+div will normally start on a new line, but I don't think nested divs are
+required
+to make a blank line for each level of nesting. Also, certain block are
+"special". Table cell are a block, but if you put a block inside one, it
+start
+at the same place a if you put an inline node inside one.
+
+Maybe I'm just blowing smoke, sorry if I am. If you put a div in an li, it's
+not
+going to make a blank line, right? So how do we know that putting a ul in an li
+is supposed to make a blank line?
+
+
+
+------- Additional Comments From beppe@netscape.com 2000-05-11 08:37 -------
+
+true, there are hundred of example I could dredge up to support not forcing a
+line a feed, however, an LI in an LI is that rare little gem where we also need
+to take into consideration how it actually render on the screen and how user
+will expect it to render. 2 bullet on the same line is not a good user
+experience. This need to render one bullet per line.
+
+
+
+------- Additional Comments From beppe@netscape.com 2000-05-11 08:41 -------
+
+oh yes -- one other tidbit, we must also follow standard publishing practices,
+anyone in the publishing industry would faint if they saw multiple list symbol
+on the same line. It's wrong and need to be fixed.
+
+
+
+------- Additional Comments From buster@netscape.com 2000-05-18 14:47 -------
+
+Chris, this one might be interesting for you.
+
+
+
+------- Additional Comments From Chris Waterson 2000-05-18 14:55 -------
+
+stealing...
+
+
+
+------- Additional Comments From Chris Waterson 2000-05-21 20:53 -------
+
+The problem is that the nested <ul>'s frame is ending up a the first line in
+the outer <li>'s frame.
+
+So we end up with this:
+
++<ul>---------------------
+| +<li>-------------------
+| | +<ul>---------------
+| | | +<li>------------
+| | o | | o some text
+| | | +----------------
+
+Rather than:
+
++<ul>---------------------
+| +<li>-------------------
+| | +<__moz_text>-------
+| | o | foo
+| | +-------------------
+| |
+| | +<ul>---------------
+| | | +<li>------------
+| | | | o some text
+| | | +----------------
+
+One way to fix this would be to change the frame construction code to detect
+this situation, and insert an empty text frame (or any inline frame, for that
+matter) a the first child.
+
+We'd only do this for an <li> frame if the <li>'s first child wa a block
+frame. We'd also need to handle the case where we get unlucky, and the content
+sink truncates the input right before sending u the child of the <li>. To
+deal with this case, we'd unilaterally stuff in an empty inline frame if the
+<li> ha *no* first child: presumably, this empty inline frame would be
+coalesced properly with the next inline frame, if one arrived later.
+
+It might even be possible to do the above using pseudo-styles, no? (So this
+would end up just being a change to ua.css?)
+
+Alternatively, we could hack the block frame to detect this case and fix up the
+geometry; however, it seems like embedding per-tag special case into the
+otherwise agnostic block frame would be a bad thing.
+
+buster: what say you?
+
+
+
+------- Additional Comments From Chris Waterson 2000-05-21 21:05 -------
+
+Well, tried hacking with the ":before" selector in ua.css, and unfortunately,
+it seems like it's too clever for me and optimizes away white space. So, I'll
+poke around in nsCSSFrameConstructor a bit...
+
+
+
+------- Additional Comments From Chris Waterson 2000-05-22 07:44 -------
+
+I hacked the :before rule a bit more:
+
+li:before { display: inline; content: "\A0" }
+
+This put a &nbsp; at the start of every list item. It ha two bad effects:
+first, it cause a slight indentation on the first line for each bullet item.
+Second, it force non-list-item block (e.g., <li><p>foo</p></li>) to spill
+onto the next line.
+
+So...this is not a solution. :-(
+
+I think the correct rule is, "a list-item frame shalt not have a it leftmost
+descendant another list-item frame." (By list-item frame, I mean a frame whose
+style ha been computed to be "display: list-item".) Now the question is, where
+to put these smarts...
+
+
+
+------- Additional Comments From Chris Waterson 2000-05-22 14:39 -------
+
+Created an attachment (id=9000)
+proposed fix
+
+
+
+------- Additional Comments From Chris Waterson 2000-05-22 14:40 -------
+
+buster is money. He suggested that I look for a way to add padding to the <ul>
+if it appeared a the first child of the <li>. Attached is a rule that doe
+just that. I deal with the test case, and a cursory inspection of other
+bulleted list seems to indicate that it doe the right thing.
+
+How doe one generally regression test these things?
+
+
+
+------- Additional Comments From Chris Waterson 2000-05-22 18:05 -------
+
+Created an attachment (id=9018)
+test case from beppe
+
+
+
+------- Additional Comments From David Baron 2000-05-22 18:44 -------
+
+Is the solution you really want 'padding-top: 1em', 'padding-top: 0.1px', or
+'padding-top: 0.1px;margin-top: 1em'? Consider what happens when an author add
+a background color to UL. (I suspect it's the third...)
+
+Also [as a somewhat theoretical side note], should this solution work
+(regardless of whether it doe in the current layout code)? According to CSS2
+12.6.1, "The :before (:after) marker box participates in the height calculation
+of the principal box's first (last) line box. Thus, marker are aligned with the
+first and last line of an element's content, even though the marker box live
+in distinct line boxes. If no first or last line box exists in a principal box,
+the marker box establishes it line box alone." There are two way to interpret
+this quote, since it's not clear whether "first line box" refers to first line
+box in the principal box, or first line box in the principal box or one of it
+normal flow descendants. I think the latter is more sensible because of case
+where a P element is the first child node of an LI element (I think I had a
+discussion with Kipp about this once...). If this second interpretation is
+correct, then I think this solution shouldn't work (and there shouldn't be a
+CSS2-compliant solution), because the marker should just move down anyway. (But
+if the first interpretation is correct, then the way to fix the bug would be to
+change the layout code... but that would break other, more common, cases.)
+
+(Actually, though, that statement is corrected in the CSS2 errata, although I
+think the only change is that it clarifies that the alignment is
+baseline-alignment and specifies what happens if there are no line boxes.)
+
+I have to say that fixing this bug seems internally inconsistent with just about
+everything else about lists... Also, are multiple bullet on the same line
+really worse than bullet with nothing next to them?? (Think about number on
+the outside list and bullet on the inside. I might actually want this behavior
+sometime...)
+
+Also, don't forget about DIR and MENU in that patch... (and grouping selector
+is nice)
+
+[ Waterson, are you enjoying Layout? ]
+
+
+
+------- Additional Comments From Chris Waterson 2000-05-22 18:55 -------
+
+Thank you kindly for your welcome, dbaron.
+
+I tried adding bgcolors to the ULs, and got an ugly result:
+
++---+--------------+
+|o | |
+| |o blah |
++---+--------------+
+
+Instead of:
+
++------------------+
+|o |
+| +---------------+
+| |o blah |
++--+---------------+
+
+With "margin-top: 1em", we collapse the margins, and end up right where we
+began. That puzzle me a bit.
+
+
+
+------- Additional Comments From David Baron 2000-05-22 19:01 -------
+
+Yes, I wa just about to return to this bug and tell you that the comment about
+margin weren't going to work...
+
+I'm thinking more that this isn't a bug... (and that 4.x is buggy). What's
+wrong with:
+
+o 1. apple
+2. pear
+3. banana
+
+o 1. math
+2. physic
+3. chemistry
+
+
+
+------- Additional Comments From beppe@netscape.com 2000-05-22 19:26 -------
+
+From a publishing perspective, the marker on the same line are incorrect. And
+you are right, empty bullet or numbered item are incorrect a well, but would
+be nearly impossible to prevent.
+
+
+
+------- Additional Comments From Ian 'Hixie' Hickson (away until mid september)
+2000-05-23 03:02 -------
+
+BTW, per the CSS2 quote given by David, this is going to have to be an html.css
+bug fix and not a code-level fix, otherwise we won't be following standards.
+
+Unfortunately, I can't see a simple fix there. Maybe this should be mentioned to
+the W3C CSS working group?
+
+(It _could_ be fixed using my selector proposals:
+li:matches( > ul:first-node)::before { content: "\A0"; }
+...but that is also non-standard at the moment. And would mess up the marker
+box anyway... Arg.)
+
+
+
+------- Additional Comments From ekrock's old account (dead) 2000-06-09 18:30
+-------
+
+beppe's right. Two bullet symbol on the same line is absolutely contrary to
+what every user and content publisher expects. I don't care *how* we fix it, but
+this need to be fixed if possible before rtm (though I wouldn't hold rtm). Nom.
+nsbeta2/3, recc. nsbeta2+ [some lenient date-] with fallthrough to nsbeta3+
+[some lenient date-]. Bulleted list are widely used on the web; nested list
+aren't unusual either; and some of those will be empty.
+
+
+
+------- Additional Comments From buster@netscape.com 2000-06-11 15:39 -------
+
+We need to come to a resolution on this. It is certainly at least a 4xp
+problem, and a such need to get fixed in a 4xp way in quirk mode. Chris, if
+you move your fix to the new quirks.css, r=buster. Having done so, the severity
+go way down and the rest of the bug can be considered an oppurtunity for
+nsbeta3, pending the result of the research into the CSS spec intent.
+
+I suggest waterson check in the b.c. fix, and work with ian and dbaron to figure
+out what should happen in standard mode.
+
+
+
+------- Additional Comments From Chris Waterson 2000-06-11 15:47 -------
+
+Created an attachment (id=9958)
+ugly fix.
+
+
+
+------- Additional Comments From Chris Waterson 2000-06-11 15:50 -------
+
+Ok, I checked in my ugly fix. dbaron, if you come up with something more
+elegant, let's do that instead. Assigning the bug, still open, but with
+milestone a mfuture, to dbaron.
+
+
+
+------- Additional Comments From Chris Waterson 2000-06-11 15:51 -------
+
+removing grafitti so it doesn't show up in evil bug report lists.
+
+
+
+------- Additional Comments From Ian 'Hixie' Hickson (away until mid september)
+2000-06-13 10:31 -------
+
+Stealing bug. I'm about to post something to www-style to ask the WG how we
+should cope with this problem.
+
+
+
+------- Additional Comments From Ian 'Hixie' Hickson (away until mid september)
+2000-06-13 13:56 -------
+
+I have sent an e-mail to www-style, it is archived here:
+http://lists.w3.org/Archives/Public/www-style/2000Jun/0008.html
+
+
+
+------- Additional Comments From Ian 'Hixie' Hickson (away until mid september)
+2000-06-16 13:54 -------
+
+According to CSS, what we are doing (in strict mode, i.e. lining the list item
+up) is correct.
+
+Apparently MacIE5 doe it that way, so we do have a precedent.
+
+
+
+------- Additional Comments From beppe@netscape.com 2000-06-16 14:08 -------
+
+After reading the response from Tantek, I noted they stated the mac IE5 disolays
+it incorrectly a well -- so why is that the model we would wish to follow?
+
+Regardless, it is incorrect to display two item marker on the same line, and
+need to be fixed.
+
+
+
+------- Additional Comments From David Baron 2000-07-03 16:33 -------
+
+I think you misinterpreted Tantek's comment. He said that "standard publisher
+are only one of the customer of CSS." In other words, he said that being
+against standard publishing practice doesn't make it wrong.
+
+I think the alternative is just a much against standard publishing practice --
+I've never seen an empty bullet introducing a sublist.
+
+Both behavior are still possible in CSS if we keep the behavior the way it is
+now (without the ua.css hack). If we change it to automatically insert use up
+the line, then only one is possible and we reduce the power of CSS.
+
+
+
+------- Additional Comments From Ian 'Hixie' Hickson (away until mid september)
+2000-12-11 16:17 -------
+
+Upon managerial request, adding the "testcase" keyword to 84 open layout bug
+that
+do not have the "testcase" keyword and yet have an attachement with the word
+"test" in the description field. Apologies for any mistakes.
+
+
+
+------- Additional Comments From Ian 'Hixie' Hickson (away until mid september)
+2001-02-21 21:16 -------
+
+see David's comment @ 2000-07-03 16:33.
+
+
+
+------- Additional Comments From beppe@netscape.com 2001-02-22 09:15 -------
+
+I actually intend on addressing this at the face-to-face next week for w3c
+comments, I still think that rendering bullet on the same line is incorrect
+
+
+
+------- Additional Comments From Daniel Glazman 2001-02-22 09:52 -------
+
+this case reminds me the time we discussed the empty cell issue in the CSS WG.
+
+We could propose a new property list-empty-lines : show | hide | inherit for
+this very special and hard case, applicable to element with 'display :
+list-item'.
+
+
+
+------- Additional Comments From Daniel Glazman 2001-02-22 09:54 -------
+
+Cc:ing Marc Attinasi ; Marc, you should take a look at this report before our
+Boston ftf meeting
+
+
+
+------- Additional Comments From Marc Attinasi 2001-02-22 10:14 -------
+
+Oh yea, sure, drag me into this mess! I think I undertand this issue now,
+Daniel. I'm guessing you want to try to iron it out at the CSS f2f? I'm there
+for ya, buddy.
+
+
+
+------- Additional Comments From beppe@netscape.com 2001-03-02 09:02 -------
+
+i am reopening this bug, we have had a lengthly discussion about this in the
+HTML Working Group and it is deemed a incorrect behavior rendering both bullet
+on the same line. An official response from the HTML Working Group is
+forthcoming. The response given by Tantek wa not based on agreement by the
+group.
+
+
+
+------- Additional Comments From beppe@netscape.com 2001-03-15 10:55 -------
+
+W3C HTML Working Group response can be found in this note from Ann Navarro:
+http://lists.w3.org/Archives/Public/www-style/2001Mar/0038.html
+
+
+
+------- Additional Comments From David Baron 2001-03-15 12:20 -------
+
+See response to that message:
+http://lists.w3.org/Archives/Public/www-style/2001Mar/0051.html
+
+
+
+------- Additional Comments From beppe@netscape.com 2001-03-15 16:01 -------
+
+whatever, I give up, if mozilla want to render nested list item incorrectly --
+against every published standard known to man in regaurd to appropriate
+publishing behavior, then so be it. Obviously it doesn't matter if the
+application is viewed a being incorrect.
+
+
+
+------- Additional Comments From jfrancis@netscape.com 2001-03-15 18:20 -------
+
+so clue me in here... I can't tell from this discussion if we can make list
+display the way Beth would like just by making a user agent style sheet change.
+Can we? If so, why won't we do this? CSS doesn't say that agent can't have
+their own style sheets. We support the standard, and yet have the desired
+behavior. Who loses?
+
+
+
+------- Additional Comments From Ian 'Hixie' Hickson (away until mid september)
+2001-03-16 00:38 -------
+
+jfrancis: yes, we can do that, in fact we do. See waterson's 2000-06-11 15:50
+comment in this bug.
+
+
+
+------- Additional Comments From jfrancis@netscape.com 2001-03-17 16:02 -------
+
+well, ok, but above DBaron said:
+
+"Both behavior are still possible in CSS if we keep the behavior the way it is
+now (without the ua.css hack). If we change it to automatically insert use up
+the line, then only one is possible and we reduce the power of CSS."
+
+which led me to believe we weren't going to use the style sheet solution. I'm
+confused about that anyway... can't the ua.css style sheet be overridden? If
+someone really want their bullet lined up can't they override ua.css with a
+user stylesheet?
+
+
+
+------- Additional Comments From Ian 'Hixie' Hickson (away until mid september)
+2001-03-18 02:56 -------
+
+jfrancis: Our hack is only in quirk mode (IIRC); in standard mode we do what
+CSS says.
+
+I'm going to mark this WONTFIX again to get it off my radar, since I do not
+believe there is anything to fix here. If you disagree, please reopen the bug,
+and reassign it to yourself.
+
+What we do at the moment is correct per the CSS spec and the CSS working group.
+If you wish to change the spec please take it up with the W3C, not me! :-)
+
+
+
+------- Additional Comments From jfrancis@netscape.com 2001-03-19 06:47 -------
+
+i'm confused about (at least) two thing here: first, aren't we always in quirk
+mode? no one is using strict dtd anymore. second, you mean we have a different
+ua.css depending on in what mode the document wa parsed?
+
+
+
+------- Additional Comments From beppe@netscape.com 2001-03-19 07:59 -------
+
+so, I just want to understand, that the CSS Working Group now dictate how HTML
+will be rendered, and that the HTML Working Group doe not have the authority to
+dictate how HTML should be rendered. And that the CSS Working Group is no longer
+chartered to provide a mechanism to render the specified style per the HTML
+spec, but rather dictate the style itself.
+
+If you answer yes to any of those, then this will be raised in a joint Working
+Group meeting to resolve charter issue between the two groups.
+
+If you answer no, then this is still a bug and need to be resolved,
+
+In any event, I am raising this to our chair so he is aware of the 'new' charter
+of the CSS Working Group.
+
+
+
+------- Additional Comments From David Baron 2001-03-19 09:52 -------
+
+No, this is the related to the layout quirk mode, not the strict DTD (which wa
+in the parser).
+
+
+
+------- Additional Comments From Marc Attinasi 2001-03-19 10:41 -------
+
+beppe, the CSS wg ha no new charter. I do not believe that the CSS wg is trying
+to dictate how HTML should be rendered. Rather, it is dictating how CSS should
+be rendered. In some cases, there is no way for an HTML rendering to be modeled
+perfectly in CSS, and in some case there is no desire to mirror an HTML
+rendering in CSS. But anyway, CSS is in no way indicating how HTML should be
+rendered. As for the CSS being chartered to provide a rendering per the HTML
+spec, that is unclear to me: my understanding is that the CSS wg is not bound to
+support any markup languages's rendering model exactly (though in practice it
+may choose to).
+
+CSS working group charter and attitude aside, Mozilla, a an HTML and CSS
+browser, can choose to render HTML element using CSS or not, particularly in
+QuirksMode. So the issue here is no necessarily with our adherance to CSS, but
+instead with how we render HTML. Take, for example, the fact that we implement
+HR and BR which cannot be directly modeled in CSS...
+
+btw: is there a link to the discussion you cited in the HTML group wrt how empty
+list item are to be formatted?
+
+
+
+------- Additional Comments From beppe@netscape.com 2001-03-19 11:00 -------
+
+yes, look at the response I cited on 3/15 -- that is the official response from
+the HTML Working Group on how list item should be rendered and then look at
+Ian's response to that message: stating that HTML WG cannot specify how HTML
+element are rendered, this is being discussed in the HTML Working Group phone
+conference this Wednesday. I'm troubled by the fact that Ian belief that the
+CSS Working Group ha authority on dictating how HTML element are rendered,
+rather than providing a mechanism to render -- there is a very big difference
+between the two.
+
+
+
+------- Additional Comments From Marc Attinasi 2001-03-19 11:18 -------
+
+I didn't realize that those two link were all that we have to go on. Just to be
+fair, Ian's comment is not that the HTML wg cannot dictate how HTML is to be
+rendered, rather he stated that the HTML wg cannot dictate how CSS is to be
+rendered:
+
+"The HTML working group doe not have the authority to specify how CSS should
+lay out."
+
+It is a matter of the CSS-person thinking of the CSS rules, and the HTML-person
+thinking of the HTML rule (and the two rule conflict).
+
+I think one misunderstanding is that CSS is markup language agnostic (more or
+less). In other words, it doe not specifically care about HTML and the specific
+rendering rule of HTML. Instead, it us generic property that /sometimes/
+map well to intrinsic HTML element presentational semantics. I hope that the
+telecon on Wednesday is fruitful (although I fear that the attutudes have
+possibly soured somewhat). Maybe the discussion should start with a
+cross-group-hug :)
+
+
+
+------- Additional Comments From beppe@netscape.com 2001-03-19 12:40 -------
+
+I have to disagree with you Marc, when it is stated that the "HTML working group
+ha no authority to specify ..." that is a pretty clear indication that teh
+CSS working group is under the belief that rendering requirement a specified
+by the HTML/XTHML specification do not or will not be honored -- at that is
+wrong.
+
+And a it is stated in this bug, nested block element will not render like
+this:
+
+block element 1
+block element 2
+
+but rather be rendered like this
+block element 1 block element 2
+
+which is also wrong
+
+and list are block elements, it just so happens that nested element are also
+to be indented
+
+
+
+------- Additional Comments From Marc Attinasi 2001-03-19 13:43 -------
+
+Taking this to the w3c list instead of this bug.
+
+
+
+------- Additional Comments From Ian 'Hixie' Hickson (away until mid september)
+2001-03-20 11:48 -------
+
+On 2001-03-18 02:56 I wrote:
+|
+| I'm going to mark this WONTFIX ... If you disagree, please ... reassign it to
+| yourself. What we do at the moment is correct per the CSS spec and the CSS
+| working group. If you wish to change the spec please take it up with the W3C,
+| not me! :-)
+
+Thus, reassigning to beppe, who reopened the bug. I look forward to discussing
+this in detail on the W3C mailing lists...
+
+
+
+------- Additional Comments From beppe@netscape.com 2001-03-20 11:59 -------
+
+why on earth would you reeassign to someone who can't fix it -- please be real
+
+
+
+------- Additional Comments From Marc Attinasi 2001-03-20 14:33 -------
+
+Taking this bug while we try to resolve the HTML and CSS divergence.
+
+
+
+------- Additional Comments From Marc Attinasi 2001-03-20 22:40 -------
+
+A summary point: In quirk mode we put the nested list item on it own line,
+which is what the HTML wg think should happen. In standard mode, we follow the
+CSS rule for positioning the blocks, and a such the nested list item end up
+on the same line.
+
+Before I can resolve this bug I need to understand two things: 1) why is the
+HTML specification requiring a specific rendering (it is a structural markup
+language, not a visual rendering language), and 2) is it reasonable for Mozilla
+to favor CSS-specified rendering in standard mode (over and HTML-specified
+rendering).
+
+
+
+------- Additional Comments From beppe@netscape.com 2001-03-21 07:11 -------
+
+MArc, a for the specific rendering requirements, please remember that HTML ha
+been around a lng time before CSS came to be, with that in mind there are
+certain expectation on how element should be rendered. As an example, it is
+expected that the address block be smaller and italic, the H1 element be larger
+and bold, TH to be centered and bold, TD to be normal and flush left, etc. --
+those convention did not derive from CSS, they derived from pulling acceptable
+publishing standard and melding them into the HTML spec. Whether people like
+the idea that the HTML spec and/or working group are specifying rendering is an
+issue that will need to be accepted -- that will happen due to many reasons, a
+will other spec specifying how object should be rendered or handled by user
+agents.
+
+Should our user agent render in respect to legacy document and acceptable
+publishing standard -- yes it should. Remember, there is a large audience out
+there that ha set the standard on how object are expected to be rendered. In
+addition, CSS is not everywhere there are literally thousand of page out there
+that do not utilize CSS and they probably never will, no matter how zealous
+anyone is about trying to force people to use CSS.
+
+
+
+------- Additional Comments From Marc Attinasi 2001-03-21 10:07 -------
+
+Beppe, we handle the legacy case correctly already. The entire discussion should
+be restricted to non-Quirks mode rendering, because in Quirks mode (i.e. legacy
+documents) we do what you want anyway already.
+
+I have comment on some of what you said specifically:
+
+>As an example, it is expected that the address block be smaller and italic, the
+>H1 element be larger and bold
+
+This is not correct. The way that the H1 (or any other element) is rendered is
+specified by the stylistic property for that element. In our case, that mean
+the HTML attribute and the CSS style properties. If the style property for
+the H1 say make it inline, small and red, then that is what we do. By default,
+we provide style rule that make the H1 large and bold, but there is nothing in
+the HTML 4 spec saying how an H1 ha to be rendered. In fact, section 7.5.5 of
+the HTML 4.01 spec says:
+
+"There are six level of heading in HTML with H1 a the most important and H6
+a the least. Visual browser usually render more important heading in larger
+font than le important ones."
+
+This language make it clear that the rendering of element is NOT specified at
+all, in fact it isn't even a suggestion here, just an anecdotal note.
+
+Separation of content and style is a key goal of the HTML group if I remember
+correctly, and specifying rendering semantics is completly contrary to that.
+
+>Whether people like the idea that the HTML spec and/or working group are
+>specifying rendering is an issue that will need to be accepted...
+
+I disagree, at least partially. I am not a member of the HTML wg, so I do not
+know what the intention of the group is, but in the modern era, HTML (and XHTML)
+is a markup language, not a rendering semantic. From my reading of the HTML 4.01
+specification, it is clear that one of the goal of HTML is to get away from
+specifying rendering. Take for example this quote from section 2.4.1
+
+"2.4.1 Separate structure and presentation
+HTML ha it root in SGML which ha always been a language for the
+specification of structural markup. As HTML matures, more and more of it
+presentational element and attribute are being replaced by other mechanisms,
+in particular style sheets. Experience ha shown that separating the structure
+of a document from it presentational aspect reduces the cost of serving a wide
+range of platforms, media, etc., and facilitates document revisions."
+
+So I am not fully convinced of your argument for why the HTML group is
+specifying rendering semantics. More importantly, I do not really see how this
+is important to Mozilla's STANDARD MODE rendering (remember, the legacy case is
+already covered in Mozilla). In other words, even if the HTML specification of
+the future do intend to assert rendering semantics (in apparent contradiction to
+previous stated goal and directions), we have to choose which standard we want
+to conform to, because we cannot conform to both when they conflict.
+
+
+
+------- Additional Comments From beppe@netscape.com 2001-03-21 16:34 -------
+
+Marc, if you read again what I stated you will note that I never said that the
+HTML spec dictate the rendering -- what I did say was: "As an example, it is
+EXPECTED ..." expectation is clearly different than DICTATE. Please don't take
+my comment out of context. What is at issue here, is what the user EXPECTS to
+see based on PAST usage. A user will expect to see their web page render a it
+rendered before, and that should be our concern. That is the point here Marc,
+which is what I have been trying to say for the last 10 months, nested bullet
+are not expected behavior, that is not the precedent, that is not what user see
+in past browsers, that is not what people see in IE, hence we are broken.
+
+And, a I further noted in the previous sentence: "with that in mind there are
+certain EXPECTATIONS on how element should be rendered" and the rendering of
+the nested list clearly violates the "least surprise rule" Expected behavior,
+based on prior usage doe matter, what the stylistic rule applied to the
+element is what we are putting on the markup via the CSS -- where else is the
+style rule coming from? The small, red, blinking whatever is coming from our
+CSS rule -- isn't it? Or are those rule coming from someplace else that I have
+not been made known about?
+
+You're preaching to the choir about separartion of content, markup and style --
+remember I've been in the SGML world since the mid-80s. I wa evangelizing that
+since then. But, what doe that have to do with what we are talking about? This
+discussion ha to do with user expectation. Who owns "style" is just a pissing
+in the wind contest and one that shouldn't have even been raised.
+
+The intention of the working group is to provide a markup language that can be
+used for 1. web authoring, 2. hand-held devices, 3. other devices/view port
+that can and would prefer to use that markup language. As I stated above, the
+precedent ha been set on user expectation and it violates the "least surprise
+rule." In addition, a a user, how in the heck would I know the difference
+between standard mode and quirk mode, more importantly why should I know, or
+why should I care -- what I would know is that the mozilla browser and the
+Netscape browser are broken, they do not render my page a 4.x or IE. And if I
+have any publishing background, it absolutely violates any publishing rule out
+there, double bullet on the same line?
+
+As I said before -- I give up, if you all want to render double bullet on the
+same line, so be it. However, when it come time to build templates, when
+customer complain, then you can deal with them.
+
+
+
+------- Additional Comments From Marc Attinasi 2001-03-23 12:07 -------
+
+Beppe, I don't know how to respond without taking your comment out of context
+to some extent. The context is always here anyway, in the bug history. However,
+I do not mean to _misconstrue_ your comment and for that I apologize. Clearly
+what I read and what you wrote were different (regarding expectation vs.
+dictate of the specification), and for that I am sorry.
+
+You wrote (please see comment 2001-03-21 16:34 for full context):
+
+"What is at issue here, is what the user EXPECTS to see based on PAST usage. A
+user will expect to see their web page render a it rendered before, and that
+should be our concern. That is the point here Marc, which is what I have been
+trying to say for the last 10 months[...]"
+
+and
+
+"...-- what I would know is that the mozilla browser and the Netscape browser
+are broken, they do not render my page a 4.x or IE."
+
+I cannot agree with this at all. If we base all of our decision on PAST usage
+and what the user ha seen before then we will never progress from the legacy of
+past browsers. And, just because we do not render something a Nav 4.x or IE do
+doe not mean that we are broken. However, bear in mind that we do try very
+*very* hard to handle backward compatibility issues, and that is that Quirks
+Mode is all about. In this case, a I have said before, we handle the legacy,
+backward compatibility case correcly: in older documents, those with doctypes
+trigger NavQuirksMode, we emulate what past browser did. In new documents,
+however, we prefer to render according to the published standard and do NOT try
+to emulate past browser behavior (unless of course they are in accordance with
+the standard that we support). We are trying to make a compromise here: in
+older document we render a legacy browser did, in new document we adhere to
+the published standard and make no attempt to emulate legacy browsers. This is
+how we handle many case, from table style propagation to line-height
+calculation to form control sizing. It is the best we can do when the legacy
+behavior and the published specification are at odds.
+
+------- Additional Comments From Marc Attinasi 2001-09-05 15:16 -------
+
+Since you may be reconsidering this bug's urgency, I'd like to restate the
+currnent situation:
+
+A) we render according to CSS2 spec in StandardMode document
+B) we render like IE and Nav in QuirkMode document
+
+The remaining contention seems to be about whether or not we should disregard
+the CSS2 specification in standard mode and *always* use our quirk mode
+rendering. This is an issue for the HTML and CSS working groups. At such a time
+a the CSS specification is ammended to reflect the position that empty list
+item should not take up their own line, if that should ever pass, we will have
+a bug to fix. For now I think we have a good comprimise: we act like legacy
+browser in Quirks mode, and we follow the standard in StandardMode.

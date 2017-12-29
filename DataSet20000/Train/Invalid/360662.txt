@@ -1,0 +1,51 @@
+Mingw build error: multiple definition of `nsCSubstring::nsCSubstring
+After updating my tree yesterday, I get this build error while trying to build my Firefox debug build, using mingw:
+
+NIMAL=1 -DMOZ_PHOENIX=1 -DMOZ_BUILD_APP=browser -DMOZ_XUL_APP=1 -DMOZ_DEFAULT_TO
+OLKIT=\"cairo-windows\" -DMOZ_THEBES=1 -DMOZ_CAIRO_GFX=1 -DMOZ_DISTRIBUTION_ID=\
+"org.mozilla\" -DOJI=1 -DIBMBIDI=1 -DMOZ_VIEW_SOURCE=1 -DMOZ_XPINSTALL=1 -DMOZ_J
+SLOADER=1 -DNS_PRINTING=1 -DNS_PRINT_PREVIEW=1 -DMOZ_NO_XPCOM_OBSOLETE=1 -DMOZ_X
+TF=1 -DMOZ_MATHML=1 -DMOZ_ENABLE_CANVAS=1 -DMOZ_SVG=1 -DMOZ_SVG_FOREIGNOBJECT=1
+-DMOZ_UPDATE_CHANNEL=default -DMOZ_FEEDS=1 -DMOZ_STORAGE=1 -DMOZ_SAFE_BROWSING=1
+ -DMOZ_URL_CLASSIFIER=1 -DMOZ_LOGGING=1 -DHAVE___CXA_DEMANGLE=1 -DMOZ_DEMANGLE_S
+YMBOLS=1 -DMOZ_USER_DIR=\"Mozilla\" -DHAVE_STDINT_H=1 -DHAVE_INTTYPES_H=1 -DHAVE
+_UINT64_T=1 -DMOZ_XUL=1 -DMOZ_PROFILELOCKING=1 -DMOZ_RDF=1 -DMOZ_MORK=1 -DMOZ_MO
+RKREADER=1 -DMOZ_DLL_SUFFIX=\".dll\" -DJS_THREADSAFE=1 -DMOZ_REFLOW_PERF=1 -DMOZ
+_REFLOW_PERF_DSP=1 -DMOZILLA_LOCALE_VERSION=\"1.9a1\" -DMOZILLA_REGION_VERSION=\
+"1.9a1\" -DMOZILLA_SKIN_VERSION=\"1.8\"  -D_MOZILLA_CONFIG_H_ -DMOZILLA_CLIENT /
+cygdrive/c/mozilla/mozilla/docshell/build/nsDocShellModule.cpp
+rm -f docshell.dll
+/cygdrive/c/mozilla/mozilla/build/cygwin-wrapper g++ -mno-cygwin -shared -o docs
+hell.dll  nsDocShellModule.o   ./module.res          -Wl,--whole-archive ../base
+/libbasedocshell_s.a ../../uriloader/base/liburiloaderbase_s.a ../../uriloader/e
+xthandler/libexthandler_s.a ../../uriloader/prefetch/libprefetch_s.a ../shistory
+/src/libshistory_s.a  -Wl,--no-whole-archive -L../../dist/bin -L../../dist/lib -
+lgkgfx -L../../dist/lib -ljs3250 ../../dist/lib/libunicharutil_s.a -L../../dist/
+lib -lxpcom -lxpcom_core -L../../dist/bin -L../../dist/lib -lnspr4 -lplc4 -lplds
+4   -lm  -lgdi32 -lwinmm -lwsock32 -lshell32
+d000091.o: multiple definition of `nsSubstring::nsSubstring(wchar_t*, unsigned i
+nt, unsigned int)'
+../../uriloader/exthandler/libexthandler_s.a(nsOSHelperAppService.o):c:/mozilla/
+mozilla/uriloader/exthandler/../../dist/include/xpcom/nsISupportsUtils.h:(.text$
+_ZN11nsSubstringC2EPwjj[nsSubstring::nsSubstring(wchar_t*, unsigned int, unsigne
+d int)]+0x0): first defined here
+d000111.o: multiple definition of `nsCSubstring::nsCSubstring(char*, unsigned in
+t, unsigned int)'
+../../uriloader/exthandler/libexthandler_s.a(nsOSHelperAppService.o):c:/mozilla/
+mozilla/uriloader/exthandler/../../dist/include/xpcom/nsISupportsUtils.h:(.text$
+_ZN12nsCSubstringC2EPcjj[nsCSubstring::nsCSubstring(char*, unsigned int, unsigne
+d int)]+0x0): first defined here
+collect2: ld returned 1 exit status
+make[5]: *** [docshell.dll] Error 1
+make[5]: Leaving directory `/cygdrive/c/mozilla/mozilla/docshell/build'
+make[4]: *** [libs] Error 2
+make[4]: Leaving directory `/cygdrive/c/mozilla/mozilla/docshell'
+make[3]: *** [libs_tier_gecko] Error 2
+make[3]: Leaving directory `/cygdrive/c/mozilla/mozilla'
+make[2]: *** [tier_gecko] Error 2
+make[2]: Leaving directory `/cygdrive/c/mozilla/mozilla'
+make[1]: *** [alldep] Error 2
+make[1]: Leaving directory `/cygdrive/c/mozilla/mozilla'
+make: *** [alldep] Error 2
+
+It seems to me that it is somehow caused by the patch for bug 345517, although I  don't know how.

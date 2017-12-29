@@ -1,0 +1,47 @@
+Crash [@ nspr4!CopyHostent+0x2f] adding bookmark
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.215 Safari/534.10
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.2.12) Gecko/20101026 Firefox/3.6.12
+
+Hi again,
+
+A specially crafted bookmark URL cause an overflow and subsequent browser crash.
+
+I have just found this now, so decided to log it straight away. I'll get a chance this evening to examine the stack trace.
+
+(720.e4c): Access violation - code c0000005 (first chance)
+First chance exception are reported before any exception handling.
+This exception may be expected and handled.
+eax=00000005 ebx=0578fed0 ecx=0578fed0 edx=0578fecc esi=00000005 edi=00008020
+eip=0031f1af esp=0578fe94 ebp=0578fecc iopl=0 nv up ei pl zr na pe nc
+cs=001b ss=0023 ds=0023 es=0023 fs=003b gs=0000 efl=00010246
+nspr4!CopyHostent+0x2f:
+0031f1af 0fb74608 movzx eax,word ptr [esi+8] ds:0023:0000000d=????
+0:020> kP
+ChildEBP RetAddr
+0578fe9c 0031f61f nspr4!CopyHostent(
+struct hostent * from = 0x00000400,
+char ** buf = 0x0313a400,
+int * bufsize = 0x06ca0000,
+_PRIPAddrConversion conversion = 32800 (No matching enumerant),
+struct PRHostEnt * to = 0x0578ff24)+0x2f [e:\builds\moz2_slave\win32_build\build\nsprpub\pr\src\misc\prnetdb.c @ 536]
+0578fec0 00320a43 nspr4!PR_GetHostByName(
+char * name = 0x06cad040 "aaaaaaaaaaaaaaaaaaaaa..";
+char * buf = 0x0313a000 "",
+int bufsize = 1024,
+struct PRHostEnt * hp = 0x0313a400)+0x7f [e:\builds\moz2_slave\win32_build\build\nsprpub\pr\src\misc\prnetdb.c @ 732]
+0578fee4 00320b21 nspr4!pr_GetAddrInfoByNameFB(
+char * hostname = 0x06cad040 "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa..@;
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Open attached html file in browser
+2. Press Punch it
+Actual Results:
+Crashes every time
+
+Expected Results:
+Bookmark screen popup, no crash, handle the URL appropriately
+
+I'm using Windows XP Professional Service pack 3

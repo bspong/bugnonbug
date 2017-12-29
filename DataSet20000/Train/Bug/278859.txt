@@ -1,0 +1,82 @@
+layout-debug issues in Firefox
+BUILD: Current trunk Firefox (before bsmedberg's command-line landing)
+
+STEPS TO REPRODUCE:
+1) Build debug Firefox with --enable-extensions=all
+2) Try to run it with the -layoutdebug command-line option
+
+EXPECTED RESULT: See layout debugger, with working menus and all.
+
+ACTUAL RESULT: Totally horked UI.  Menus don't work.
+
+This is pretty basic dogfood here... People are having to build SeaMonkey for
+something as basic as running the layout regression tests.
+
+I did some testing, and on first startup the menus that are present do work (the
+others presumably reference overlays that don't exist in Firefox).  On second
+startup I get some nice fastload errors:
+
+###!!! ASSERTION: redundant multiplexed document?: 'docMapEntry->mString ==
+nsnull', file /home/bzbarsky/mozilla/debug/mozilla/xpcom/io/nsFastLoadFile.cpp,
+line 140
+
+followed by layout being confused:
+
+###!!! ASSERTION: initial containing block already created: 'nsnull ==
+mInitialContainingBlock', file
+/home/bzbarsky/mozilla/debug/mozilla/layout/base/nsCSSFrameConstructor.cpp, line
+8971
+
+followed by XUL being confused:
+
+###!!! ASSERTION: Popup set is already defined! Only 1 allowed.: 'Not Reached',
+file
+/home/bzbarsky/mozilla/debug/mozilla/layout/xul/base/src/nsRootBoxFrame.cpp,
+line 296
+###!!! ASSERTION: node in map twice: 'Not Reached', file
+/home/bzbarsky/mozilla/debug/mozilla/layout/base/nsFrameManager.cpp, line 1897
+###!!! ASSERTION: unexpected second call to SetInitialChildList: 'Not Reached',
+file /home/bzbarsky/mozilla/debug/mozilla/layout/generic/nsContainerFrame.cpp,
+line 109
+###!!! ASSERTION: redundant multiplexed document?: 'docMapEntry->mString ==
+nsnull', file /home/bzbarsky/mozilla/debug/mozilla/xpcom/io/nsFastLoadFile.cpp,
+line 1403
+###!!! ASSERTION: Bug 119310, perhaps overlayinfo referenced a overlay that
+doesn't exist: 'mPlaceHolderRequest', file
+/home/bzbarsky/mozilla/debug/mozilla/content/xul/document/src/nsXULDocument.cpp,
+line 2985
+###!!! ASSERTION: redundant multiplexed document?: 'docMapEntry->mString ==
+nsnull', file /home/bzbarsky/mozilla/debug/mozilla/xpcom/io/nsFastLoadFile.cpp,
+line 1403
+###!!! ASSERTION: forward references have already been resolved: 'Error', file
+/home/bzbarsky/mozilla/debug/mozilla/content/xul/document/src/nsXULDocument.cpp,
+line 1321
+
+Several repeats of this last one, then all of the above from the top, with lots
+of copies of:
+
+###!!! ASSERTION: node in map twice: 'Not Reached', file
+/home/bzbarsky/mozilla/debug/mozilla/layout/base/nsFrameManager.cpp, line 1897
+
+then (from nsBoxFrame.cpp):
+
+WARNING: Warning add child failed!!
+
+then (because the root session history is null, I bet):
+
+WARNING: NS_ENSURE_TRUE(webnav) failed, file
+/home/bzbarsky/mozilla/debug/mozilla/docshell/base/nsDocShell.cpp, line 2652
+
+WARNING: NS_ENSURE_TRUE(aContent) failed, file
+/home/bzbarsky/mozilla/debug/mozilla/layout/base/nsFrameManager.cpp, line 372
+
+###!!! ASSERTION: Found more undisplayed content data after removal: 'context ==
+nsnull', file
+/home/bzbarsky/mozilla/debug/mozilla/layout/base/nsFrameManager.cpp, line 660
+
+This last message is repeated half a dozen times.  Then all is quiet, and the UI
+is dead.
+
+Interestingly, after this I can't get the initial "ok" state no matter what I do
+(I tried deleting the XUL.mfasl file and deleting all of .mozilla/firefox, but
+neither helped).

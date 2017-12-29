@@ -1,0 +1,29 @@
+recent browser/locales/Makefile.in changes have broken mar generation for l10n
+bug 458014 made some significant changes to l10n repack code. During 3.1b2 I discovered that this has completely broken MAR generation for l10n builds.
+
+We generate MARs as follows:
+make -C tools/update-packaging full-update DIST=`pwd`/dist/l10n-stage AB_CD=whatever MOZ_PKG_PRETTYNAMES=1
+
+This will still generate a valid MAR but it will be missing a bunch of files, as our update_verify test found out:
+calling QuitProgressUI
+Only in target/Firefox/chrome: be.jar
+Only in target/Firefox/chrome: be.manifest
+Only in target/Firefox/defaults/pref: firefox-l10n.js
+Only in target/Firefox/defaults/profile: bookmarks.html
+Only in target/Firefox/defaults/profile/chrome: userChrome-example.css
+Only in target/Firefox/defaults/profile/chrome: userContent-example.css
+Only in target/Firefox/defaults/profile: localstore.rdf
+Only in target/Firefox/defaults/profile: mimeTypes.rdf
+diff -r source/firefox/removed-files target/Firefox/removed-files
+521a522
+> modules/JSON.jsm
+Only in target/Firefox/searchplugins: be.wikipedia.org.xml
+Only in target/Firefox/searchplugins: be-x-old.wikipedia.org.xml
+Only in target/Firefox/searchplugins: google.xml
+Only in target/Firefox/searchplugins: ru.wikipedia.org-be.xml
+Only in target/Firefox/searchplugins: tut.by.xml
+Only in target/Firefox/searchplugins: yahoo.xml
+Only in target/Firefox/searchplugins: yandex.ru-be.xml
+
+
+This is blocking Firefox 3.1b2.

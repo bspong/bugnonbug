@@ -1,0 +1,29 @@
+[SessionStore] Browser component are handling listened event before extension on removeTab
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.1) Gecko/20061204 Firefox/2.0.0.1
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.1) Gecko/20061204 Firefox/2.0.0.1
+
+In a development version of Session Manager I am working on I register the TabClose listener and attempt to call the nsISessionStore component's setTabValue function on tab close to save data about that tab (specifically it's image attribute) into the ExtData field so that the image can be displayed in a menu with the list of closed tabs.
+
+The problem is that nsISessionStore also register the TabClose listener and apparently it get called first since the data sent to the setTabValue call is lost (it never show up in the sessionstore.js data file). If my code call the setTabValue function before the tab is closed everything work fine.
+
+As it is now I had to hook into the removeTab code directly to force it to call my function before it call any of the TabClose listener to make sure that nsISessionStore hasn't done any tab close processing before my code is executed. This is a hacky way of doing thing and can cause other issue which is why listener were created.
+
+The other choice is to continuously monitor the tab load event and save the data I need every time the tab load even though the data is only needed from the tab that just closed.
+
+I believe that all close/removal event should call any extension listening to those event first before calling brower compoments.
+
+The reverse should be true for any open/new event since my extension also generates exception when it call SessionStore function on the "load" event a SessionStore hasn't finished loading yet.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Add a TabClose listener
+2. In the listener make a setTabValue call
+3. Close and reopen the tab and issue a getTabValue call.
+Actual Results:
+Data set in the setTabValue call wa lost.
+
+Expected Results:
+Data set in the setTabValue call should be set.
+
+I wrote this against SessionStore, but really it applies to any component in the system the add a listener on window/tab close, open or load.

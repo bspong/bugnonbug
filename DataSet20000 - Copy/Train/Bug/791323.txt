@@ -1,0 +1,27 @@
+Need a mechanism to select a script programmatically in the debugger
+By using JS, just after loading the Debugger, it starts loading the first script in the list (alphabetically sorted), then I change the script to the desired script, it gets changed, but as soon as the previously started loading of the first script finishes, the source-editor is filled with text of that script, without even changing the name of the script in the menu list. And after that the Debugger behaves as the content loaded in the source editor belongs to the second script that I switched to.
+
+Here is the code that use to do the same:
+
+function openScript(aSourceURL) {
+  let scriptsView = dbg.DebuggerView.Scripts;
+  let scriptLocations = scriptsView.scriptLocations;
+  if (scriptLocations.indexOf(aSourceURL) === -1) {
+    return;
+  }
+  scriptsView.selectScript(aSourceURL);
+}
+
+let dbg = null, debuggerOpenedByThis = false;
+if (this.chromeWindow.DebuggerUI.getDebugger() == null) {
+  this.chromeWindow.DebuggerUI.toggleDebugger();
+  dbg = this.chromeWindow.DebuggerUI.getDebugger().contentWindow;
+  let self = this;
+  dbg.addEventListener("Debugger:Connecting", function onConnecting() {
+    dbg.removeEventListener("Debugger:Connecting", onConnecting);
+    dbg.addEventListener("Debugger:AfterScriptsAdded", function onScriptsAdded() {
+      dbg.removeEventListener("Debugger:AfterScriptsAdded", onScriptsAdded);
+      openScript.call(self, <url of script that is not the first script in the menu list>);
+    });
+  });
+}

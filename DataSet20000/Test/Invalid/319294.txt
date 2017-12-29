@@ -1,0 +1,26 @@
+javascript appendChild() method makes spurious call to backend webserver
+User-Agent:       Mozilla/5.0 (Macintosh; U; PPC Mac OS X Mach-O; en-US; rv:1.8) Gecko/20051111 Firefox/1.5
+Build Identifier: Mozilla/5.0 (Macintosh; U; PPC Mac OS X Mach-O; en-US; rv:1.8) Gecko/20051111 Firefox/1.5
+
+While rendering the javascript show_calendar() function within calendar.js, it calls the overlib() function within overlib_mini.js. Buried inside is a call like so:
+
+alert('start layerWrite 2');
+over.appendChild(domfrag);
+alert('start layerWrite 3: ' + domfrag.toString());
+
+The appendChild() method, when called, causes a spurious GET request to be sent to the URL of the enclosing page (which is different to the URL of the form in which the javascript is enclosed). In our case this extra request triggers a number of expensive database calls on our backend. This behaviour is not present in IE6.
+
+To reproduce, place the files test.html, calendar.js and overlib_mini.js onto a webserver and watch the logs.
+
+View test.html, and click on the button to the right of "value date" somewhat in the centre of the screen. This causes the popup calendar to appear, and the appendChild() method triggers the spurious call to test.html, which appears in the log like so:
+
+127.0.0.1 - - [06/Dec/2005:15:13:37 +0200] "GET /rfs/test.html HTTP/1.1" 200 35110
+127.0.0.1 - - [06/Dec/2005:15:13:51 +0200] "GET /rfs/test.html HTTP/1.1" 200 35110
+127.0.0.1 - - [06/Dec/2005:15:14:02 +0200] "GET /rfs/test.html HTTP/1.1" 200 35110
+127.0.0.1 - - [06/Dec/2005:15:14:31 +0200] "GET /rfs/test.html HTTP/1.1" 200 35110
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+xxx

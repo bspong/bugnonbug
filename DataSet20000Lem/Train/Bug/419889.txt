@@ -1,0 +1,71 @@
+modal java dialog started from applet cause "always on top" behavior of firefox
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.11) Gecko/20071127 Firefox/2.0.0.11
+Build Identifier: Mozilla/5.0 (Macintosh; U; Intel Mac OS X; en-US; rv:1.8.1.11) Gecko/20071127 Firefox/2.0.0.11
+
+When using Firefox on Mac Leopard with a java applet using JRE 1.5.0_13, a modal java dialog can cause the browser to thereafter exhibit "always on top" behavior. If a modal dialog is displayed AND another application is given the focus eg. "Finder", the browser will thereafter always be the top window, even after the dialog is dismissed and even if another web page is visited. You have to exit the browser completely to restore normal behavior.
+
+If no other application is given the focus while the dialog is active, the problem doe not occur. (Namely just display the dialog and dismiss it without accessing another application in the interim). Interestingly enough, after the problem occurs, normal behavior is temporarily restored by once again displaying the java dialog. As long a the dialog is active, other application can cover the browser/dialog. But once the dialog is dismissed, the incorrect behavior is exhibited until the browser is stopped and restarted.
+
+
+Here is some sample code that will reproduce the problem:
+
+
+
+package apptest;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+
+
+public class MyApplet extends JApplet {
+
+
+public void init() {
+
+JButton b = new JButton("OK");
+b.setPreferredSize(new Dimension(30,20));
+
+b.addActionListener(new ActionListener() {
+public void actionPerformed(ActionEvent ae) {
+JOptionPane.showConfirmDialog(MyApplet.this.getContentPane(), "Test");
+
+}
+});
+getContentPane().setLayout(new GridLayout());
+getContentPane().add(b);
+
+
+}
+
+}
+The following html can be used to load the applet if the applet is placed in a
+subdirectory called apptest, compiled and placed in a jar file called
+apptest.jar
+
+<html>
+<embed width="800" height="548" scriptable="true"
+
+pluginspage="http://java.sun.com/products/plugin/index.html#download"
+mayscript="true"
+archive="apptest.jar"
+type="application/x-java-applet;version=1.5"
+code="apptest.MyApplet.class"
+java_codebase="." id="applet_test"/>
+</embed>
+</html>
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.Run the applet above a described, on a Mac running Leopard and click on the OK button. A dialog is displayed.
+2. While the dialog is displayed bring up another application such a the Mac "Finder".
+3.Dismiss the "Finder", then dismiss the java dialog.
+4.Bring up the "Finder" again. It will come up underneath Firefox, a will all other applications. You must iconify Firefox to see any of the other displays.
+5.If you click on the "OK" button again to bring up the java dialog, you will note that once again, bringing up "Finder" at the same time will put it in front. But only a long a the java dialog is being displayed.
+Actual Results:
+Until Firefox is stopped and restarted it will always be the top window.
+
+Expected Results:
+Bringing up another application while a java modal dialog is active should NOT cause Firefox to exhibit "always on top" behavior thereafter.
+
+This problem doe not occur on Mac Tiger with the same Firefox version nor Windows platforms. It also doe not occur on Mac Leopard with Safari.

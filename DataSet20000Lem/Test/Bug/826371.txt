@@ -1,0 +1,17 @@
+Canceling UI for per-window private browsing autostart mode, doesn't revert browser.privatebrowsing.autostart preference
+Bug 801823 added a UI to force the browser to restart if the user try to enable private browsing autostart mode. The problem is that if the user cancel the prompt, the browser.privatebrowsing.autostart isn't reverted to the original value so a restart isn't "required" to change the setting.
+
+Steps to reproduce:
+1. Open option and change the "Firefox will" setting on the Privacy tab.
+2. Click Okay.
+3. At prompt click cancel.
+
+At this point the option window will close, but the browser.privatebrowsing.autostart preference will be changed. This can be verified by re-opening the Options window or checking about:config
+
+
+I looked at the code and it appears that the option in the preference window are being reverted (and I can see this quickly before the option window closes), but since the "Okay" button wa clicked and the option window is closing, that doesn't actually revert the preference change.
+
+Either the close of the option window need to be stopped or (and this is better since the user could then cancel the options) the prefs.valueFromPreferences should be reverted.
+
+
+Also I'll mention the option window UI change doe nothing to prevent the actual changing of the browser.privatebrowsing.autostart preference from something like the about:config page (or any where other than the option window).

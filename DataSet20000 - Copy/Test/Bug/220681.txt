@@ -1,0 +1,68 @@
+New window uses small icons even though original window has large icons
+User-Agent:       Mozilla/5.0 (Windows; U; Win98; en-US; rv:1.5b) Gecko/20030904 Firebird/0.6.1+
+Build Identifier: Mozilla/5.0 (Windows; U; Win98; en-US; rv:1.5b) Gecko/20030904 Firebird/0.6.1+
+
+New window uses small icons even though original window has large icons:
+
+If iconsize="small" is in localstore, and then you switch to large icons, new
+windows you launch will still have small icons.  This condition continues until
+you close a window that has large icons, after which new windows will have large
+icons.
+
+I fixed this issue as a part of my patch for bug 173444.  However, that
+particular part of the patch was not checked in, so this is the spinoff bug. 
+The issue, I believe, was first mentioned in bug 171731 comment 1 and bug 171731
+comment 2.
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+0. Create / Use new profile.
+1. Observe localstore.rdf has no toolbar info in it.
+2. View -> Toolbars -> Customize...
+3. Uncheck "Use Small Icons" checkbox.
+4. Press "Done" button.
+5. Observe localstore.rdf has iconsize="" for browser.xul#toolbar-menubar,
+#navigator-toolbox, #PersonalToolbar, and #nav-bar
+6. View -> Toolbars -> Customize...
+7. Check "Use Small Icons" checkbox.
+8. Press "Done" button.
+9. Observe localstore.rdf has iconsize="small" for the aforementioned elements.
+10. View -> Toolbars -> Customize...
+11. Uncheck "Use Small Icons" checkbox.
+12. Press "Done" button.
+13. Observe localstore.rdf has no toolbar iconsize info in it.
+
+So, even though the toolbar icons are currently large (or rather, 'not small'),
+there is no indication in localstore.rdf that this is their state.
+
+14. File -> New Window
+
+Actual Results:  
+A new window appears with small icons.  This is because there is no information
+currently in localstore.rdf, and the default for the toolbox and toolbars in
+browser.xul is iconsize="small".
+
+
+Expected Results:  
+A new window appears with large icons (the same size that the first window has).
+
+
+The problem happens because the setAttribute function in customizeToolbar.js
+will _remove_ the attribute if null is passed as the value, and null is used to
+represent a switch to "large" icons in updateIconSize(aUseSmallIcons):
+
+  var val = aUseSmallIcons ? "small" : null;
+  setAttribute(gToolbox, "iconsize", val);
+
+The issue is worked around if we s/null/"large"/ above, so that the custom
+setAttribute() does not remove the attribute.
+
+Alternately (though I have not yet tested this), we could use the DOM's
+setAttribute instead of the custom function:  gToolbox.setAttribute("iconsize",
+val); etc...
+
+I'll attach a patch later.
+
+David

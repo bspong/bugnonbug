@@ -1,0 +1,27 @@
+Finalize visual presentation of identity information (Larry)
+Created attachment 291241
+Identity box 90%+Bold, DV displays eTLD+1 with pref, string tweaks
+
+There have been several tweaks floating around for Larry presentation, some minor and uncontentious, others less so, and yet there is no bug tracking these discussions.  This bug tracks:
+
+ - Simplify some of the popup text.  This means eliminating or rewording the supplemental text in the SSL case, since it is wordy and confusing right now.
+
+ - Come to a decision on what to do about the url bar display on an SSL site.  On non-SSL we just have the button, on EV we have "Company Name (Country)" but on SSL we had the full domain (which was too much repetition) and then bug 402260 hid it completely, but several people (I CC'd those I could remember) are interested to know when it's coming back.  We also need it to not look like another textbox.
+
+ - Address the issue with the winstripe theme (windows/linux) right now introduced by bug 395248.  Dao made Larry much nicer looking in that bug, much more button-ish, instead of just being a textbox, but it had the side effect that instead of turning green as it does on Mac, the Larry box always has the same coloration, and just picks up a blue border highlight on EV.  Whatever we do should be at least marginally consistent, within the constraints of each platform's look and feel.
+
+I've attached a patch that does a first pass at addressing some of these:
+
+ - Identity box text changed to 90%, Bold to set it off from normal text
+
+ - Identity popup on SSL sites drops the supplemental line about "owner information may not have been verified" since it is confusing in contrast to the "Verified" language above and below.
+
+ - On EV sites, popup is more explicit about Location *and* owner being verified, and includes both in the body text to make it clear that this is a superset of DV verification.
+
+ - Identity box shows eTLD+1 on SSL sites by default. I recognize that this is not strictly what PKI promises (since a sub-sub-sub-domain could obtain a cert which does not give them authority over the top level domain.)  On the other hand, the domain name system, and user expectations as well, assumes that subdomains represent trust delegation, and this feels like a good compromise in terms of telling users *something* about the confirmed identity of the site they are visiting, without gobbling up location-bar real-estate. The patch makes this a tri-state pref ("browser.identity.ssl_domain_display"), with 0 hiding the domain entirely, 1 being eTLD+1, and 2 being full domain (the old Larry behaviour).  In all cases, the info popup includes the full domain.
+
+What's still missing is a solution to the cross-platform disparity in how EV is displayed, but I'd like to get Alex/Beltzner to chime in here from the UX side of things.
+
+Nominating blocking because even if we do none of this, we need a final decision here before ship.  I suppose maybe it could pass as just wanted-firefox3, if we think doing nothing is a reasonable approach.
+
+(For people who want to test the EV display in conjunction with this bug, see bug 404592 comment 2)

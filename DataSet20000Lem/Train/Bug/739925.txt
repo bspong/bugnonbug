@@ -1,0 +1,52 @@
+OTS off-by-one may result in arbitrary code execution
+This is chromium bug:
+https://code.google.com/p/chromium/issues/detail?id=116524
+which state that jruderman and dveditz are cced, but since i did not find an open bug, i decided to open one. (Apologies if this is a dupe.)
+
+Patch available at:
+http://code.google.com/p/ots/source/detail?r=83#
+
+snippet from upstream bug:
+There's an off-by-one vulnerability in OpenType Sanitiser (http://code.google.com/p/ots/). The bug wa found using AddressSanitizer.
+
+See the following code from src/gpos.cc:
+
+--- cut ---
+30: GPOS_TYPE_RESERVED = 10
+
+[...]
+
+60: const ots::LookupSubtableParser::TypeParser kGposTypeParsers[] = {
+61: {GPOS_TYPE_SINGLE_ADJUSTMENT, ParseSingleAdjustment},
+62: {GPOS_TYPE_PAIR_ADJUSTMENT, ParsePairAdjustment},
+63: {GPOS_TYPE_CURSIVE_ATTACHMENT, ParseCursiveAttachment},
+64: {GPOS_TYPE_MARK_TO_BASE_ATTACHMENT, ParseMarkToBaseAttachment},
+65: {GPOS_TYPE_MARK_TO_LIGATURE_ATTACHMENT, ParseMarkToLigatureAttachment},
+66: {GPOS_TYPE_MARK_TO_MARK_ATTACHMENT, ParseMarkToMarkAttachment},
+67: {GPOS_TYPE_CONTEXT_POSITIONING, ParseContextPositioning},
+68: {GPOS_TYPE_CHAINED_CONTEXT_POSITIONING, ParseChainedContextPositioning},
+69: {GPOS_TYPE_EXTENSION_POSITIONING, ParseExtensionPositioning}
+70: };
+71:
+72: const ots::LookupSubtableParser kGposLookupSubtableParser = {
+73: GPOS_TYPE_RESERVED, GPOS_TYPE_EXTENSION_POSITIONING, kGposTypeParsers
+74: };
+--- cut ---
+
+The kGposTypeParsers table ha 9 items, however a value of 10 (GPOS_TYPE_RESERVED) is used a the num_types value of the kGposLookupSubtableParser structure. This can later lead to an out-of-bounds read and execution of an uninitialized function pointer from kGposTypeParsers[9].parser (see src/layout.cc):
+
+1153: bool LookupSubtableParser::Parse(const OpenTypeFile *file, const uint8_t *data,
+1154: const size_t length,
+1155: const uint16_t lookup_type) const {
+1156: for (unsigned i = 0; i < num_types; ++i) {
+1157: if (parsers[i].type == lookup_type && parsers[i].parse) {
+1158: if (!parsers[i].parse(file, data, length)) {
+1159: return OTS_FAILURE();
+1160: }
+1161: return true;
+1162: }
+1163: }
+1164: return OTS_FAILURE();
+1165: }
+
+The vulnerable behavior can be potentially used to get a direct control over the application's execution flow.

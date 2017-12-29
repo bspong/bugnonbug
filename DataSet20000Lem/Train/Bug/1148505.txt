@@ -1,0 +1,112 @@
+Opening the back-button popup menu cause unsafe CPOW usage warning
+STR:
+
+0) Open the Browser Console
+1) Get some session history by browsing to a few page
+2) Click and hold the back button to open up the session history popup
+
+ER:
+
+No unsafe CPOW usage warning in the Browser Console
+
+AR:
+
+Several unsafe CPOW usage warning in the Browser Console
+
+
+The warning are for these line of code:
+
+http://hg.mozilla.org/mozilla-central/file/44e454b5e93b/browser/base/content/browser.js#l3673
+http://hg.mozilla.org/mozilla-central/file/44e454b5e93b/browser/base/content/browser.js#l3678
+http://hg.mozilla.org/mozilla-central/file/44e454b5e93b/browser/base/content/browser.js#l3691
+http://hg.mozilla.org/mozilla-central/file/44e454b5e93b/browser/base/content/browser.js#l3692
+http://hg.mozilla.org/mozilla-central/file/44e454b5e93b/browser/base/content/browser.js#l3693
+http://hg.mozilla.org/mozilla-central/file/44e454b5e93b/browser/base/content/browser.js#l3696
+
+function FillHistoryMenu(aParent) {
+// Lazily add the hover listener on first showing and never remove them
+if (!aParent.hasStatusListener) {
+// Show history item's uri in the status bar when hovering, and clear on exit
+aParent.addEventListener("DOMMenuItemActive", function(aEvent) {
+// Only the current page should have the checked attribute, so skip it
+if (!aEvent.target.hasAttribute("checked"))
+XULBrowserWindow.setOverLink(aEvent.target.getAttribute("uri"));
+}, false);
+aParent.addEventListener("DOMMenuItemInactive", function() {
+XULBrowserWindow.setOverLink("");
+}, false);
+
+aParent.hasStatusListener = true;
+}
+
+// Remove old entry if any
+var child = aParent.childNodes;
+for (var i = children.length - 1; i >= 0; --i) {
+if (children[i].hasAttribute("index"))
+aParent.removeChild(children[i]);
+}
+
+var webNav = gBrowser.webNavigation;
+var sessionHistory = webNav.sessionHistory;
+
+var count = sessionHistory.count; <-- cause unsafe CPOW usage warning
+if (count <= 1) // don't display the popup for a single item
+return false;
+
+const MAX_HISTORY_MENU_ITEMS = 15;
+var index = sessionHistory.index; <-- cause unsafe CPOW usage warning
+var half_length = Math.floor(MAX_HISTORY_MENU_ITEMS / 2);
+var start = Math.max(index - half_length, 0);
+var end = Math.min(start == 0 ? MAX_HISTORY_MENU_ITEMS : index + half_length + 1, count);
+if (end == count)
+start = Math.max(count - MAX_HISTORY_MENU_ITEMS, 0);
+
+var tooltipBack = gNavigatorBundle.getString("tabHistory.goBack");
+var tooltipCurrent = gNavigatorBundle.getString("tabHistory.current");
+var tooltipForward = gNavigatorBundle.getString("tabHistory.goForward");
+
+for (var j = end - 1; j >= start; j--) {
+let item = document.createElement("menuitem");
+let entry = sessionHistory.getEntryAtIndex(j, false); <-- cause unsafe CPOW usage warning
+let uri = entry.URI.spec; <-- cause unsafe CPOW usage warning
+let entryURI = BrowserUtils.makeURIFromCPOW(entry.URI); <-- cause unsafe CPOW usage warning
+
+item.setAttribute("uri", uri);
+item.setAttribute("label", entry.title || uri); <-- cause unsafe CPOW usage warning
+item.setAttribute("index", j);
+
+if (j != index) {
+PlacesUtils.favicons.getFaviconURLForPage(entryURI, function (aURI) {
+if (aURI) {
+let iconURL = PlacesUtils.favicons.getFaviconLinkForIcon(aURI).spec;
+iconURL = PlacesUtils.getImageURLForResolution(window, iconURL);
+item.style.listStyleImage = "url(" + iconURL + ")";
+}
+});
+}
+
+if (j < index) {
+item.className = "unified-nav-back menuitem-iconic menuitem-with-favicon";
+item.setAttribute("tooltiptext", tooltipBack);
+} else if (j == index) {
+item.setAttribute("type", "radio");
+item.setAttribute("checked", "true");
+item.className = "unified-nav-current";
+item.setAttribute("tooltiptext", tooltipCurrent);
+} else {
+item.className = "unified-nav-forward menuitem-iconic menuitem-with-favicon";
+item.setAttribute("tooltiptext", tooltipForward);
+}
+
+aParent.appendChild(item);
+}
+return true;
+}
+
+...
+
+http://hg.mozilla.org/mozilla-central/file/44e454b5e93b/toolkit/modules/BrowserUtils.jsm#l78
+
+makeURIFromCPOW: function(aCPOWURI) {
+return Services.io.newURI(aCPOWURI.spec, aCPOWURI.originCharset, null); <-- cause unsafe CPOW usage warning
+},

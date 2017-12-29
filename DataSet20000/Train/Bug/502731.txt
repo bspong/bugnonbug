@@ -1,0 +1,56 @@
+Memory leak only cleaned up if window refocused
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.1) Gecko/20090624 Firefox/3.5
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.1) Gecko/20090624 Firefox/3.5
+
+If I leave Firefox open with 10 tabs open, and minimize it, leaving
+it open for a day or 2, there is a memory leak.
+
+If it is still possible, I can refocus the Firefox window while the
+system is swapping the memory (on the hard drive)
+and the memory get's released. If that doesn't work, closing a tab
+will remove the excess memory.
+
+If it fails (and crashes), the built-in Session Manager sometimes loses
+data as well. In one case, an entire window or tab was lost and
+was not included in the list of windows and tabs to restore (in the Session Manager).
+
+My suggestion is to change the memory manager to make it
+clean up often, even when the window is unfocused.
+
+This seems like a regression from Firefox 3.5 RC3,
+where the memory is cleaned up often.
+
+This occurs mostly in Linux. I haven't tried testing it out in Windows.
+
+This was tested in a clean environment. (Clean profile, no plugins on)
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Start a clean session by opening Firefox with the Profile Manager:
+./firefox -ProfileManager (LINUX)
+2. Create a clean profile. (new one)
+3. Disable any plugins installed in Firefox.
+4. Open Javascript/CSS/HTML/Image intensive websites, like cnn.com, yahoo.com, microsoft.com.
+5. Minimize the window. Look at the memory usage.
+6. Keep it open (still minimized) for a day or 2. 
+7. Look at memory again. If memory doesn't go up, refocus the window.
+   The memory may go up at that point.
+8. As fast as possible, close a tab.
+9. Examine memory usage again. The memory usage should have
+   dropped significantly.
+Actual Results:  
+Memory leak occurred, had to close a tab to get Firefox's memory manager
+to free up memory.
+
+Expected Results:  
+Firefox's memory manager should have freed memory periodically,
+like in Firefox 3.5 RC3.
+
+Linux:
+OS: Ubuntu 8.04 LTS
+Firefox: Mozilla official build (from Mozilla's website - NOT repository build!)
+
+Windows:
+Version: Windows XP SP2
+Firefox: Mozilla official build (from Mozilla's website)

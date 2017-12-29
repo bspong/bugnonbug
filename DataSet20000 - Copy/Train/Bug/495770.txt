@@ -1,0 +1,32 @@
+Freezes for a second a second after changing page (with slow HDD)
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.10) Gecko/2009042513 Ubuntu/8.04 (hardy) Firefox/3.0.10
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.10) Gecko/2009042513 Ubuntu/8.04 (hardy) Firefox/3.0.10
+
+When i change web page using either the URL field or a link firefox freezes for a second just after having finished loading the page. This seems to be due to firefox updating the Bookmarks places.sqlite. This is from a strace:
+
+23:15:19.765912 fsync(35)               = 0 <1.652567>
+And this is an except from lsof:
+firefox 10709     1000   35uw  REG      254,0  3522560  704560 /home/zinob/.mozilla/firefox/fwz552fg.default/places.sqlite
+
+If I make my FF-profile dir a RAM drive the problem  disappears, and I have not experienced it on my stationary computers, with fast hard disks. But nither when i used FF 1.5 on this computer. I tried vacuuming the database, but it did not shrink much, still at 3.5MiB
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Go to any web page not in the current tabs history using a link or typing the address in the bar.
+2. Try scrolling, you will notice the scroll for a second about a second after the page finishes loading
+Actual Results:  
+The window stopped responding to everything for a second, and the scroll halts to make a big jump-scroll when the browser thaws again.
+
+Expected Results:  
+A smooth scroll and continuous response.
+
+quick and dirty benchmark of the disk:
+zinob@mist:~$ sudo hdparm -T /dev/mapper/maindisks-lv_home 
+
+/dev/mapper/maindisks-lv_home:
+ Timing cached reads:   1166 MB in  2.00 seconds = 582.51 MB/sec
+zinob@mist:~$ sudo hdparm -t /dev/mapper/maindisks-lv_home 
+
+/dev/mapper/maindisks-lv_home:
+ Timing buffered disk reads:   98 MB in  3.01 seconds =  32.52 MB/sec

@@ -1,0 +1,37 @@
+Content of Response gets lost in combination with flex/flash application.
+User-Agent:       Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; en-US; rv:1.9.2.8) Gecko/20100722 Firefox/3.6.8
+Build Identifier: Mozilla/5.0 (Windows NT 6.1; rv:2.0b4pre) Gecko/20100815 Minefield/4.0b4pre
+
+In my Flash & php architecture i am using a code like this to send an error response to the flash application:
+
+<code type="php">
+header("THIS IS NOT TRANSMITTED BY APACHE, WHY? WE DON'T KNOW", true, 500);
+echo "Errorcode: 1234\nBogus Error Message.";
+
+exit;
+</code>
+
+on the client side something like this normally does the trick (being put in the regarding error handler...):
+
+<code type="flash">
+var event:FaultEvent;
+
+Alert.show(event.message.body.toString(), "Error");
+</code>
+
+This works with several different combinations of browsers and operating systems, but it is definitely not working on windows xp & 7 with Firefox 3.6.8 and the latest nightly build i tested it with 10 minutes ago. I used wireshark to analyze the network traffic. The body _does_ show up there. Also if i enter the url that is used in the flash code to "GET" the request, i will get the content displayed in the browser window. My first assumption was that the flash player might loose the content somehow, but as it worked with the latest flash player (10.1.82.76 in debug mode and non-debug mode) and Firefox 3.6.3, i figured that this seems to be a firefox related issue. I also used firebug to trace that behavior and there also the content did not show up in the network pane under response. Again it did show up, using the url that the flash code uses. 
+This also works with firefox 3.6.8 & flash 10.1.82.76 on an (Intel-) Mac OS X. 
+
+Thanks for your support! 
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Open the flash application of your choice that will trigger such an error response
+2. Use the functionality in which's scope the error occurs.
+3. Be sad that the error message displayed is empty!
+Actual Results:  
+I tried to trace it from the apache to the flash player and found out that the content of the response gets lost in firefox (and chrome also btw...)
+
+Expected Results:  
+Display the content of the response in an error dialogue

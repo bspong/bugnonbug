@@ -1,0 +1,29 @@
+thumbnail tile may remain unchanged in a single newtab page after thumbnail file updates
+I can reliably reproduce a newtab page showing an old thumbnail after
+forcing the thumbnail to refresh and seeing the new thumbnail on all other newtab pages.
+
+This happens both with and without the bug #1180715 fix.
+
+STR:
+
+Prepare by:
+
+* Create a new profile
+* Make sure browser.newtab.preload is still the default true
+* Browse around a little to create at least one frecent site
+* Find the file that stores the site thumbnail, e.g. with PageThumbsStorage.getFilePathForURL
+* Make sure that this file is at least two days old and showing a different image (e.g. copy it from your regular profile)
+
+Now,
+
+1 Open a new tab page
+=> See a tile showing the old thumbnail
+2 Open the site in a new tab from the tile; wait for it to load; switch to it; wait a few more seconds
+3 Switch back to the newtab page
+=> The tile now shows a thumbnail for the current page
+4 Open a new newtab page
+=> The tile shows a thumbnail for the old page
+5 Open a further newtab page
+=> The tile shows a thumbnail for the current page
+
+The reason for this is that the preloaded newtab page that will be opened in Step 4 happens to have the loadid that is stored in the image cache entry. So the old image will continue to be used by imgLoader regardless of the fact that hasExpired=true in imgLoader::ValidateEntry().

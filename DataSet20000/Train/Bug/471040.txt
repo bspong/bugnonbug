@@ -1,0 +1,53 @@
+JavaScript Error: "document.tooltipNode.ownerDocument is null"
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 6.0; fr; rv:1.9.0.5) Gecko/2008120122 Firefox/3.0.5
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 6.0; fr; rv:1.9.0.5) Gecko/2008120122 Firefox/3.0.5
+
+I'm running an automated script running with Selenium RC.
+
+When opening some URLs, I get a weird:
+
+[JavaScript Error: "document.tooltipNode.ownerDocument is null" {file: "chrome://browser/content/browser.js" line: 3597}]
+
+I have no idea why.
+
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+Sorry, no idea how to reproduce it.
+I just get it consistently.
+
+Actual Results:  
+[JavaScript Error: "document.tooltipNode.ownerDocument is null" {file: "chrome://browser/content/browser.js" line: 3597}]
+
+Expected Results:  
+No Javascript error.
+
+
+Here is the code in browser.js:
+
+    if (document.tooltipNode) {
+      // Optimise for the common case
+      if (aWebProgress.DOMWindow == content) {
+        document.getElementById("aHTMLTooltip").hidePopup();
+        document.tooltipNode = null;
+      }
+      else
+        for (var tooltipWindow =
+               document.tooltipNode.ownerDocument.defaultView;
+             tooltipWindow != tooltipWindow.parent;
+             tooltipWindow = tooltipWindow.parent) {
+          if (tooltipWindow == aWebProgress.DOMWindow) {
+            document.getElementById("aHTMLTooltip").hidePopup();
+            document.tooltipNode = null;
+            break;
+          }
+        }
+      }
+    }
+
+It seems that document.tooltipNode.ownerDocument is null.
+The fix is pretty easy:
+
+Replace else with:
+      else if (document.tooltipNode.ownerDocument)

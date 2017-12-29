@@ -1,0 +1,8 @@
+MS-Windows: XPS Viewer incorrectly redirects to firefox (Vista, XP)
+Basically, according to the shell, a .xps file is set to open using the "XPS Document Viewer". In the registry, this seems like it chain down into the PresentationFramework assembly, to MS.Internal.IO.Packaging.XpsFilter. However, if Firefox is set a the default browser, double-clicking an XPS file try to open it in Firefox. We don't know what to do with the file, so we offer to open it with the default app (which is the "XPS Document Viewer", "XPSViewer"). If I click ok there, the system try to pas it on to Firefox again.
+
+An even worse situation happens if the user selects "Always do this for this type of file", because we get stuck in an infinite loop with the system trying to open the file in Firefox.
+
+I'm guessing that what's happening is that the XpsFilter handler is trying to pas off the XPS to IE. But instead of passing it to IE explicitly, it instead hand it off to whatever the default browser is -- in this case, firefox. This sound like a bug inside XpsFilter/XPSViewer. (It's fairly simple to reproduce -- install Firefox, set it a the default browser, and then try to open a XPS document; it'll attempt to open in Firefox.)
+
+(Note: I sent this off to MS a well, haven't heard back yet. I think that this is a bug on their end, but if they don't fix it for RTM, we should figure out a way to work around it on our end -- even special handling XPS file if necessary, a the behaviour above is pretty bad and could look like we're at fault.)

@@ -1,0 +1,73 @@
+firefox receives SIGKILL if it runned under debugger in few second after main firefox window is displayed
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; ru-RU; rv:1.7.8) Gecko/20050511 Firefox/1.0.4
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; ru-RU; rv:1.7.8) Gecko/20050511 Firefox/1.0.4
+
+Slackware 10.0, glibc-2.3.2.
+Seems like something with libthread_db.so/libthread.so.
+
+firefox -g
+Using host libthread_db library "/lib/libthread_db.so.1".
+(gdb) prun
+Breakpoint 2 at 0x8057eb1: file nsBrowserApp.cpp, line 58.
+main (argc=1, argv=0xbfda87d4) at nsBrowserApp.cpp:58
+Type Manifest File: /root/.mozilla/firefox/6fjrdnbr.default/xpti.dat
+nsNativeComponentLoader: autoregistering begins.
+nsNativeComponentLoader: SelfRegisterDll(libp3p.so) Load FAILED with
+error: /usr/local/lib/firefox-1.0.4/components/libp3p.so: undefined
+symbol: _ZTI23nsSupportsWeakReference
+nsNativeComponentLoader: SelfRegisterDll(libtypeaheadfind.so) Load
+FAILED with error:
+/usr/local/lib/firefox-1.0.4/components/libtypeaheadfind.so: undefined
+symbol: _ZTI23nsSupportsWeakReference
+nsNativeComponentLoader: SelfRegisterDll(libwallet.so) Load FAILED with
+error: /usr/local/lib/firefox-1.0.4/components/libwallet.so: undefined
+symbol: _ZTI23nsSupportsWeakReference
+nsNativeComponentLoader: SelfRegisterDll(libspellchecker.so) Load FAILED
+with error: /usr/local/lib/firefox-1.0.4/components/libspellchecker.so:
+undefined symbol: _ZTI23nsSupportsWeakReference
+nsNativeComponentLoader: autoregistering succeeded
+nNCL: registering deferred (0)
+GFX: dpi=75 t2p=0.0526316 p2t=19 depth=24
+++WEBSHELL == 1
+WARNING: NS_ENSURE_TRUE(NS_SUCCEEDED(rv)) failed, file
+nsPermissionManager.cpp, line 623
+++DOMWINDOW == 1
+++WEBSHELL == 2
+++DOMWINDOW == 2
+bad FastLoad file checksum
+Note: styleverifytree is disabled
+Note: frameverifytree is disabled
+WARNING: the property eo already exists
+, file nsPersistentProperties.cpp, line 282
+Note: verifyreflow is disabled
+WARNING: GetDefaultCharsetForLocale: need to add multi locale support,
+file nsUNIXCharset.cpp, line 189
+WARNING: GetDefaultCharsetForLocale: need to add multi locale support,
+file nsUNIXCharset.cpp, line 189
+++WEBSHELL == 3
+++DOMWINDOW == 3
+###!!! ASSERTION: should have made area frame for this: 'aRelPos', file
+nsCSSFrameConstructor.cpp, line 12518
+Break: at file nsCSSFrameConstructor.cpp, line 12518
+^G
+Program terminated with signal SIGKILL, Killed.
+The program no longer exists.
+
+If i cretate thread in my xpcom like this:
+NS_NewThread(getter_AddRefs(mThread), this, 0, PR_UNJOINABLE_THREAD);
+firefox reveives signall 11 and crushed too.
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. type firefox -g
+2. type run
+
+Actual Results:
+firefox killed
+
+Expected Results:
+firefox runned
+
+I`ll give any additional information if needed.

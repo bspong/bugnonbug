@@ -1,0 +1,41 @@
+First-party FAVICON cookie behavior change with third-party cookie setting.
+User-Agent: Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; .NET CLR 1.1.4322; .NET CLR 2.0.50727; .NET CLR 3.0.04506.30; .NET CLR 3.0.04506.648)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9) Gecko/2008051206 Firefox/3.0
+
+GRC's forthcoming browser cookie handling analyzer demonstrates some odd Firefox v3 behavior that is going to result in question and should be easy to fix. Specifically ...
+
+o With third-party cooky disabled, FFv3 is NOT *accepting* first-party
+cooky with FAVICON reply (but you are for CSS content).
+
+o With third-party cookie enabled, FFv3 IS accepting first-party cooky with
+both FAVISON and CSS content replies.
+
+o And if third-party cooky are THEN disabled, you are RETURNING an "old" (stale) cookie that you previously accepted during the FAVICON query when third-party cooky were enabled. GRC's cookie forensics page show this a an orange colored (stale) cookie.
+
+http://www.grc.com/cookies/forensics.htm
+
+This is NOT a privacy concern, of course, since you have third-party cookie leakage nailed down tight under FFv3. But the behavior demonstrates an oddness that's going to make people wonder what's going on.
+
+Thanks for your attention and consideration.
+
+/Steve.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Enable third-party cooky in FFv3
+
+2. Go to GRC's cookie forensics page: http://www.grc.com/cookies/forensics.htm
+
+3. Page will show all type of first-party session and persistent cooky "green" -- meaning that they were just exchanged between your browser and our server. Page will also show all type of third-party session and persistent cooky "red" -- meaning that they were also just exchanged between your browser and our server.
+
+4. Change FFv3 to NOT accept third-party cooky then either click "Reread Cookies" button or reload the page.
+
+5. You will now see that all third-party cooky are absent (Very Good) and all first-party cooky are green ... *EXCEPT* for the Favicon cookie (ICON) which will show ORANGE. The "Oldest Cookie" field will also show the age of that stale Favicon cookie. This indicates that GRC's server is still *receiving* the cookie that it originally *set* in the browser when third-party cooky were being accepted, but that the cookie is no longer being set.
+
+As I wrote above, this is NOT a "big" deal -- but it's weird -- and FFv3's cookie handling would be *perfect* if the acceptance of first-party Favicon cooky wa not, for some reason, tied to FF's acceptance of third-party cookies.
+Actual Results:
+First-party cooky are not being accepted with Favicon query reply when third-party cooky are disabled.
+
+Expected Results:
+First-party cookie handling should not be affected by the setting of third-party cookie handling. ONLY the Favicon reply are affected in this way.

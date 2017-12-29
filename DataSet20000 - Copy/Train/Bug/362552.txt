@@ -1,0 +1,31 @@
+bookmark loses name for some JavaScript bookmarks with no error
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9a1) Gecko/20061201 Minefield/3.0a1
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9a1) Gecko/20061201 Minefield/3.0a1
+
+I have a bookmark in my Bookmarks toolbar that creates Technorati tags.  Its name always reverts to blank when I restart Minefield.  My other bookmarklets with bits of JavaScript (e.g. post to del.icio.us) don't have this problem.  But I get no error report on editing the bookmark, exiting the browser, or restart.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.  Right-click in Bookmarks toolbar, choose New Bookmark...
+2.  Create new bookmark with
+   Name: TEST NAME,
+   Location: (paste in next line only, all one line)
+javascript:(function(){var a='';var t=prompt('Enter Tags:','');var tr=t.split(' ');a+='<span class='+unescape('%22')+'technoratitag'+unescape('%22')+'>Categories:<a href=%22http://www.technorati.com/tag/skierpage%22> </a>';for(var i=0;i<tr.length;i++){if(i > 0){a+=', ';}a+='<a href='+unescape('%22')+'http://del.icio.us/skierpage/'+tr[i]+unescape('%22')+' rel='+unescape('%22')+'tag'+unescape('%22')+'>'+tr[i]+'</a>';}a+='</span>';prompt('Copy this code, press OK, then paste to your blog entry:',a);})()
+   Keyword: testkw
+   Description: Problem with this bookmark?
+3. Click the bookmark (It pops up a dialog, enter "blabla", it creates some HTML that you can copy; just click OK to dismiss).
+4. Note no errors in Tools > Error Console.
+5. Exit browser
+6. Restart browser
+Actual Results:  
+The name is gone!  The button is still there and works, and in bookmark Properties the location, description, and keyword are all still there.
+
+After restoring the name in Properties, I exported my bookmarks from Organize Bookmarks and the bookmark's name is present between the opening and closing <DT> tag.  But when I later looked at my bookmarks.html in my profile, it was missing.  I renamed the exported bookmarks file as xml and loaded in the browser and the browser complained about i<u.length in the JavaScript not being well-formed.
+
+Expected Results:  
+Don't lose the name.
+(And, if the JavaScript is bad, then warn at some point.
+And maybe avoid problems by wrapping bits of JavaScript in CDATA blocks?)
+
+Bugzilla has bugs about bookmark renaming and blank bookmarks, maybe those cases are also due to unexpected JavaScript.

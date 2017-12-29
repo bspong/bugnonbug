@@ -1,0 +1,92 @@
+Option '-app' missing from Firefox above version 3
+User Agent: Mozilla/5.0 (X11; Linux i686; rv:7.0.1) Gecko/20100101 Firefox/7.0.1
+Build ID: 20110928134238
+
+Steps to reproduce:
+
+There ha been an '-app' command line option for Firefox, which should have been introduced in Firefox 3:
+
+http://arstechnica.com/open-source/news/2007/08/using-firefox-3-as-a-xul-runtime-environment.ars
+
+... which would have allowed Firefox to run XUL application via `firefox -app /path/to/application.ini`.
+
+However, that switch doe not seem to work any longer in newer Firefoxes:
+
+http://stackoverflow.com/questions/5900814/does-the-app-command-line-option-work-properly-in-firefox-4
+http://stackoverflow.com/questions/7869546/single-file-app-with-xulrunner-possible
+
+I have performed the following test in Firefox 7 (versions a given above):
+
+* Generate a small XUL application (bash):
+
+###
+mkdir xultestapp
+mkdir -p xultestapp/chrome/content
+mkdir -p xultestapp/defaults/preferences
+cat > xultestapp/application.ini <<"EOF"
+[App]
+Vendor=XULTest
+Name=xultestapp
+Version=1.0
+BuildID=20111024
+ID=xultestapp@xultest.org
+
+[Gecko]
+MinVersion=1.8
+MaxVersion=2.*
+EOF
+cat > xultestapp/chrome/chrome.manifest <<"EOF"
+content xultestapp content/
+EOF
+cat > xultestapp/chrome.manifest <<"EOF"
+manifest chrome/chrome.manifest
+EOF
+cat > xultestapp/defaults/preferences/prefs.js <<"EOF"
+pref("toolkit.defaultChromeURI", "chrome://xultestapp/content/main.xul");
+EOF
+cat > xultestapp/chrome/content/main.xul <<"EOF"
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<window id="main" title="xultestapp" width="300" height="300" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<caption label="Hello World"/>
+<separator/>
+<button label="More >>" />
+<separator/>
+<description id="more-text" hidden="true">This is a simple XULRunner application. XUL is simple to use and quite powerful and can even be used on mobile devices.</description>
+
+</window>
+EOF
+
+###
+
+* and now if I call xulrunner, it works:
+###
+xulrunner xultestapp/application.ini
+###
+
+
+Actual results:
+
+* however, if I use firefox:
+###
+firefox -no-remote -app xultestapp/application.ini
+###
+
+... Firefox just start a usual, ignoring the XUL application specification.
+
+
+
+
+Expected results:
+
+Firefox should have ran the XUL application just like xulrunner did.
+
+----
+
+Can anyone explain if/when/why wa this option removed - and if there is a similar functionality in newer Firefoxes?
+
+Many thanks in advance,
+Cheers!

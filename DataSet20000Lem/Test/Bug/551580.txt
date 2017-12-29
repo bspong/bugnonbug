@@ -1,0 +1,34 @@
+Can't enter private browsing mode, fails with Error "ds is undefined" in _beginRemoveTab()
+I hit this once a few day ago, and just caught it again...
+
+Select "Start Private Browsing" from the menubar, and some (but not all!) tab close. The about:privatebrowsing page doe not open. The error console record the following error:
+
+Error: Exception thrown while processing the private browsing mode change
+request: [Exception... "'[JavaScript Error: "ds is undefined" {file:
+"chrome://browser/content/tabbrowser.xml" line: 1511}]' when calling method:
+[nsISessionStore::setBrowserState]" nsresult: "0x80570021
+(NS_ERROR_XPC_JAVASCRIPT_ERROR_WITH_DETAILS)" location: "JS frame ::
+file:///Applications/Minefield.app/Contents/MacOS/components/nsPrivateBrowsingService.js
+:: PBS__onBeforePrivateBrowsingModeChange :: line 166" data: yes]
+Source File:
+file:///Applications/Minefield.app/Contents/MacOS/components/nsPrivateBrowsingService.js
+Line: 493
+
+
+Relevant code:
+
+<method name="_beginRemoveTab">
+...
+var browser = this.getBrowserForTab(aTab);
+
+if (!aTabWillBeMoved) {
+let d = browser.docShell;
+--> if (ds.contentViewer && !ds.contentViewer.permitUnload())
+return null;
+}
+
+Not sure what would cause this, I've got 1 window with ~15 tab open, all have normal page content, so it's odd that .docShell would be undefined.
+
+Anything I should look at if this happens again?
+
+If I select "Start Private Browsing" from the menu again, the tab that were closed are restored. [Probably need better error handling here for when entering PB mode fails.]

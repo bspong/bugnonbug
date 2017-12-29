@@ -1,0 +1,35 @@
+top crash @ nsAutoCompleteController::HandleStartComposition(), RevertTextValue() and HandleKeyNavigation()
+top crash @ nsAutoCompleteController::HandleStartComposition()
+
+From a crash report:  http://crash-stats.mozilla.com/report/index/27165375-a90f-11dc-99a5-001a4bd43e5c
+
+Looking at the code:
+
+ 339    // Stop all searches in case they are async.
+ 340    StopSearch();
+ 341                   
+ 342    PRBool isOpen;
+ 343    mInput->GetPopupOpen(&isOpen);
+
+From the stack:
+
+0	nsAutoCompleteController::HandleStartComposition()	mozilla/toolkit/components/autocomplete/src/nsAutoCompleteController.cpp:343 
+1	NS_InvokeByIndex_P	mozilla/xpcom/reflect/xptcall/src/md/win32/xptcinvoke.cpp:101 
+2	XPCWrappedNative::CallMethod(XPCCallContext&, XPCWrappedNative::CallMode)	mozilla/js/src/xpconnect/src/xpcwrappednative.cpp:2347 
+3	XPC_WN_CallMethod(JSContext*, JSObject*, unsigned int, long*, long*)	mozilla/js/src/xpconnect/src/xpcwrappednativejsops.cpp:1467
+
+This sounds familiar, right?  (See bug #395344)
+
+After we call StopSearch(), we need to check mInput
+
+Something like:
+
+   // Stop all searches in case they are async.
+   StopSearch();
+ 
++  if (!mInput) {
++    // StopSearch() can call PostSearchCleanup() which might result
++    // in a blur event, which could null out mInput, so we need to check it
++    // again.  See bug #395344 for more details
++    return NS_OK;
++  }

@@ -1,0 +1,72 @@
+<col> tags css background formatting when using style or class attributes is ignored
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; rv:1.7.3) Gecko/20040913 Firefox/0.10
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; rv:1.7.3) Gecko/20040913 Firefox/0.10
+
+here's some html to illustrate the problem:
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<style type="text/css">
+#tab {border-collapse:collapse;width:100%;}
+#tab td {border:1px dotted black;}
+.number {text-align:right;background:red;}
+</style>
+</head>
+<body>
+<table id="tab" cellspacing="0">
+<col><col style="text-align:center;"><col class="number">
+<tbody>
+	<tr><td>a1</td><td>b1</td><td>c1</td></tr>
+	<tr><td>a2</td><td>b2</td><td>c2</td></tr>
+	<tr><td class="number">a3</td><td style="text-align: right;">b3</td><td
+style="text-align: center;">c3</td></tr>
+	<tr><td>a4</td><td>b4</td><td>c4</td></tr>
+</tbody>
+</table>
+</body>
+</html>
+
+this table should be rendered with the second column text centered and the thrid
+column text right aligned and red. The third row is rendered correctly as the
+css is applied at the cell level (except that the third cell - c3 - should be
+red, as it should inherit the css from the col tag).
+
+Note that i've reported this bug incorrectly before (#262159), as i was made
+aware, text-align and color are not supported for the col tag according to the
+css 2.1 specs (http://www.w3.org/TR/CSS21/tables.html#q4).
+
+However according to the specs 'background' IS valid in col tags...
+from the above w3.org link (17.3 Columns)...
+----------------
+The following properties apply to column and column-group elements:
+...
+'background'
+    The background properties set the background for cells in the column, but
+only if both the cell and row have transparent backgrounds. See "Table layers
+and transparency."
+-----------------
+
+also, interestingly enough i've noticed that when changing the doctype to strict
+(<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Strict//EN">) everything works
+exactly like IE, even the text-align and color in the col tags - effectively
+extending the css2.1 specs - VERY COOL.
+
+anyway, please let me know if i'm missing something or if the css background not
+working in col tags is infact a bug.
+
+Thanks
+
+Reproducible: Always
+Steps to Reproduce:
+1.paste the html code above into a texteditor (ie. notepad)
+2.save as test.htm onto your computer (ie. desktop)
+3.open the test.htm file in Firefox/Mozilla and observe the incorrect behaviour.
+4.open in IE or any other recent, non mozilla based browser and see how it
+should be interpreted.
+
+Actual Results:  
+renders incorrectly - the col tag background css is completely ignored when the
+table is rendered.
+
+Expected Results:  
+it should use the css specified inside the col tags to render the table correctly.

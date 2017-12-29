@@ -1,0 +1,48 @@
+Firefox return only half adress to the application (network.protocol-handler.external.mms) if link is wroted in form i action method and propably when this link has special character like "?"
+User-Agent:       Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.8.0.2) Gecko/20060414 Firefox/1.5.0.2
+Build Identifier: Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.8.0.2) Gecko/20060414 Firefox/1.5.0.2
+
+I try handle mms:// protocol but i have a problem with links that are in form in "action" method. This is the code wroted on the biggest polish portal:
+<form style="margin: 0pt;" action="mms://stream.onet.pl/media.wsx?/film/200604/928c189dfc.wmv">
+<input type="submit" class="btn_yellow" value="Tak"/>
+</form>
+
+I set in prefs.js options:
+user_pref("network.protocol-handler.app.mms", "mplayer");
+user_pref("network.protocol-handler.expose.mms", false);
+user_pref("network.protocol-handler.external.mms", true);
+user_pref("network.protocol-handler.warn-external.mms", false);
+but movies dont want open so i try figure whats goin wrong.
+
+I've made a script 'test.sh' which wrote adress to my home directory. Exacly code:
+#!/bin/sh
+echo "$@" > /home/users/kamil/test.txt
+
+and i change option "network.protocol-handler.app.mms" in pref.js from mplayer to test.sh:
+user_pref("network.protocol-handler.app.mms", "test.sh");
+
+I test this set and script return to the file test.txt only a part of adress. I get "mms://stream.onet.pl/media.wsx?" but i should "mms://stream.onet.pl/media.wsx?/film/200604/928c189dfc.wmv". If i typed this adres directly to the adress bar script return to the file full, correct adress. Also if I set network.protocol-handler.app.mms to mplayer and i type adress mms://stream.onet.pl/media.wsx?/film/200604/928c189dfc.wmv directly to the adress bar mplayer plays this movie. Only if adress is wroted in action method this doesn't work:(
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Set in prefs.js options:
+user_pref("network.protocol-handler.app.mms", "mplayer");
+user_pref("network.protocol-handler.expose.mms", false);
+user_pref("network.protocol-handler.external.mms", true);
+user_pref("network.protocol-handler.warn-external.mms", false);
+
+2. Make a page with form like this below (orginal code from the biggest, polish portal):
+<form style="margin: 0pt;" action="mms://stream.onet.pl/media.wsx?/film/200604/928c189dfc.wmv">
+<input type="submit" class="btn_yellow" value="Tak"/>
+</form>
+3. Open page in firefox and click on the button
+
+Actual Results:  
+Mplayer try play adress "mms://stream.onet.pl/media.wsx?" beacouse firefox return only half of adress.
+
+Expected Results:  
+Mplayer should play movie "mms://stream.onet.pl/media.wsx?/film/200604/928c189dfc.wmv" but he doesn't play it because firefox return only half adress and mplayer try play "mms://stream.onet.pl/media.wsx?".
+
+I use Linux and i test this bug only under Linux.
+My eanglish is very bad;)

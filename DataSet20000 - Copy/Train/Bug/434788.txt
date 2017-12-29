@@ -1,0 +1,41 @@
+Crash at [@ nsNavHistoryResult::OnEndUpdateBatch] while removing history entries from "Today" folder
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.8.1.14) Gecko/20080404 Firefox/2.0.0.14
+Build Identifier: Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.9pre)
+
+From bug# 434590#c15
+https://bugzilla.mozilla.org/show_bug.cgi?id=434590#c15
+Firefox crashed when I tried to delete the history entries from "Today" folder and open web pages simultaneously. I believe this will happen in RC1 even with the fix from bug# 434590 or bug# 433525
+
+This does not happen frequently and I don't know how to reliably reproduce this. I am guessing the bug has to do with locking and transactions. This may be related to other bugs 401558, 432323, 379880
+
+Output from Windbg
+------------------
+First chance exceptions are reported before any exception handling.
+This exception may be expected and handled.
+eax=04f798f0 ebx=00000001 ecx=05e1e538 edx=06983184 esi=02ea93fc edi=0000000c
+eip=6f6e6e41 esp=0012e8a8 ebp=0012e8bc iopl=0         nv up ei pl nz na po nc
+cs=001b  ss=0023  ds=0023  es=0023  fs=0038  gs=0000             efl=00010202
+6f6e6e41 ??              ???
+
+Stack Trace from WinDbg:
+-----------------------
+xul!nsNavHistoryResult::OnEndUpdateBatch(void)+0x3d [e:\builds\sendchange-slave\sendchange-win32\mozilla\toolkit\components\places\src\nsnavhistoryresult.cpp @ 4079]
+xul!nsNavHistory::EndUpdateBatch(void)+0x4d [e:\builds\sendchange-slave\sendchange-win32\mozilla\toolkit\components\places\src\nsnavhistory.cpp @ 3631]
+xul!nsNavHistory::RemovePagesByTimeframe(int64 aBeginTime = 102, int64 aEndTime = 1211299909249062)+0x14a [e:\builds\sendchange-slave\sendchange-win32\mozilla\toolkit\components\places\src\nsnavhistory.cpp @ 3984]
+xul!NS_InvokeByIndex_P(class nsISupports * that = 0x010f6438, unsigned int methodIndex = 0xc, unsigned int paramCount = 2, struct nsXPTCVariant * params = 0x0012e950)+0x27 [e:\builds\sendchange-slave\sendchange-win32\mozilla\xpcom\reflect\xptcall\src\md\win32\xptcinvoke.cpp @ 102]
+xul!XPCWrappedNative::CallMethod(class XPCCallContext * ccx = 0x01371040, XPCWrappedNative::CallMode mode = 268606161 (No matching enumerant))+0x814 [e:\builds\sendchange-slave\sendchange-win32\mozilla\js\src\xpconnect\src\xpcwrappednative.cpp @ 2390]
+js3250!js_DefineNativeProperty(struct JSContext * cx = <Memory access error>, struct JSObject * obj = 0x04f798f0, long id = <Memory access error>, long value = <Memory access error>, <function> * getter = <Memory access error>, <function> * setter = <Memory access error>, unsigned int attrs = <Memory access error>, unsigned int flags = <Memory access error>, int shortid = <Memory access error>, struct JSProperty ** propp = <Memory access error>)+0x305 [e:\builds\sendchange-slave\sendchange-win32\mozilla\js\src\jsobj.c @ 3152]
+xul!xpc_CloneJSFunction(class XPCCallContext * ccx = 0x01236540, struct JSObject * funobj = 0x20000006, struct JSObject * parent = 0x01236570)+0xc6 [e:\builds\sendchange-slave\sendchange-win32\mozilla\js\src\xpconnect\src\xpcwrappednativeinfo.cpp @ 81]
+
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+1.
+2.
+3.
+Actual Results:  
+Firefox crashes
+
+Expected Results:  
+Should function normally or display a message if the user is performing an invalid action.

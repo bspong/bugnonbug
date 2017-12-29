@@ -1,0 +1,69 @@
+Can not bookmark by drag & drop a link from some kind of list items
+User-Agent:       Mozilla/5.0 (Windows NT 5.1; rv:2.0b7) Gecko/20100101 Firefox/4.0b7
+Build Identifier: Mozilla/5.0 (Windows NT 5.1; rv:2.0b10pre) Gecko/20110111 Firefox/4.0b10pre ID:20110111030357 4413ed6ba5a5
+
+Can not make bookmark by drag & drop a link from list items, 
+with some combination of html tags and/or line breaking positions 
+in html source.
+
+OS: Windows XP SP3, Linux (Ubuntu 10.10 on VirtualBox Guest VM)
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. open testcase #1
+2. try to make bookmark by drag & drop any linked text from the 
+   test page to Bookmarks Toolbar, Bookmarks Sidebar or Library.
+
+Actual Results:  
+  Links from pink-bg-colored html source can not be dropped to make 
+  bookmark.  For the present, those are 
+    type 4-2, 6-2, 7-2, 7-3, 7-4, 9-4 and 10-2.
+      note: type 2 is the different case which includes the br in 
+           linked text, mentioned in Bug 613923 .
+  Error Console shows two kind of messages while dragging linked 
+  text.  Which will be shown is depend on where the link is dragged to.
+    Bookmarks Toolbar: message A
+    Library: message B
+    Bookmarks Sidebar: both
+
+  message A:
+    Error: dragged is undefined
+    Source File: chrome://browser/content/places/controller.js
+    Line: 1431
+  message B:
+    Error: uncaught exception: [Exception... "'[
+    JavaScript Error: "dragged is undefined" {
+      file: "chrome://browser/content/places/controller.js" 
+      line: 1431}]' 
+      when calling method: [nsITreeView::canDrop]"  
+      nsresult: "0x80570021 (NS_ERROR_XPC_JAVASCRIPT_ERROR_WITH_DETAILS)"  
+      location: "JS frame :: chrome://browser/content/places/tree.xml :: onxbldragover :: line 731" 
+      data: yes]
+
+
+Expected Results:  
+  Any of links should be dropped and bookmarked.
+
+
+Range:
+  I'm seeing this with Firefox 4.0b1 - 4.0b8, Firefox-trunk and 
+  SeaMonkey-trunk, while not seeing with Firefox 3.0.19, 3.5.16, 
+  3.6.13 nor 1.9.2-branch-nightly.
+
+There was two situation changing in the past.
+1st: http://hg.mozilla.org/mozilla-central/pushloghtml?fromchange=da9e50cb4091&tochange=ffbc3baf03ae
+  works on 
+  rv:1.9.3a5pre) Gecko/20100524 Minefield/3.7a5pre ID:20100524035942
+  not work on
+  rv:1.9.3a5pre) Gecko/20100525 Minefield/3.7a5pre ID:20100525062103
+  from this point to next changing, all links of type 6 and 9
+  can not be dropped.
+2nd: http://hg.mozilla.org/mozilla-central/pushloghtml?fromchange=fb26f787c727&tochange=ce18b4287791
+  type 6 and 9 can not be dropped on
+  rv:1.9.3a6pre) Gecko/20100621 Minefield/3.7a6pre ID:20100621053039
+  type 6 and 9 can be dropped on
+  rv:1.9.3a6pre) Gecko/20100622 Minefield/3.7a6pre ID:20100622040308
+  and later builds including 
+  rv:2.0b10pre) Gecko/20110111 Firefox/4.0b10pre ID:20110111030357

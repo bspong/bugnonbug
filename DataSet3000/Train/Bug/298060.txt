@@ -1,0 +1,36 @@
+Build fails with undefined reference to 'NS_NewHTMLMetaElement(nsINodeInfo*, int)'
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8b2) Gecko/20050616 Firefox/1.0+
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8b2) Gecko/20050616 Firefox/1.0+
+
+I am building Firefox from CVS with GCC 4.0 and binutils 2.15 on Mandrake 10.2.
+ The linker started erroring out on 6/16 with:
+
+In function `HTMLContentSink::ProcessMETATag(nsIParserNode const&)':
+: undefined reference to 'NS_NewHTMLMetaElement(nsINodeInfo*, int)'
+
+This appears to be caused by the checkin by peterv%propagandism.org.
+I grepped my source tree for NS_NewHTMLMetaElement and the only location is one
+line in nsHTMLContentSink.cpp.
+
+Reproducible: Always
+
+Actual Results:  
+../../dist/lib/components/libgklayout.a(nsHTMLContentSink.o)(.data+0x104):
+undefined reference to 'NS_NewHTMLMetaElement(nsINodeInfo*, int)'
+../../dist/lib/components/libgklayout.a(nsHTMLContentSink.o)(.text._ZN15HTMLContentSink14ProcessMETATagERK13nsIParserNode+0x8b):
+In function 'HTMLContentSink::ProcessMETATag(nsIParserNode const&)':
+: undefined reference to 'NS_NewHTMLMetaElement(nsINodeInfo*, int)'
+collect2: ld returned 1 exit status
+gmake[4]: *** [firefox-bin] Error 1
+gmake[4]: Leaving directory `/home/bsjacks/mozilla/browser/app'
+gmake[3]: *** [libs] Error 2
+gmake[3]: Leaving directory `/home/bsjacks/mozilla/browser'
+gmake[2]: *** [tier_99] Error 2
+gmake[2]: Leaving directory `/home/bsjacks/mozilla'
+make[1]: *** [default] Error 2
+make[1]: Leaving directory `/home/bsjacks/mozilla'
+make: *** [build] Error 2
+Command exited with non-zero status 2
+
+Expected Results:  
+Link should complete.

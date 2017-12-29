@@ -1,0 +1,106 @@
+Javascript alert
+User-Agent:       Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; .NET CLR 1.1.4322; .NET CLR 2.0.50727; .NET CLR 3.0.04506.30; InfoPath.1)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.6) Gecko/20070725 Firefox/2.0.0.6
+
+I have a survey web page that can include a field for an email address.
+I have a function that validates the field for the email address using the blur event for the field. The function checks the field contents for a valid email address (ie: looks for a '@' and a '.' within the field) and shows an alert if it's 'invalid'. Additionally, it is supposed to set the focus back to the field and select the contents for editing, basically so the user cannot continue to another page of the survey with an invalid email address being submitted.
+
+The problem is that when a button is clicked (to proceed to the next page or go to the prior page of the survey) with an 'invalid' email address in the field, the button click is fired despite the alert popup. Shouldn't the alert box be a modal box, and no other action can take place until it is closed? And if the action immediately following the alert is to set the focus on the field, the click event should not be fired? The check works fine in IE, but Mozilla seems to ignore the remaining code after the alert.
+
+Here's a sample of the page...
+<html><head><title></title>
+<script type="text/javascript" language="JavaScript"><!--
+function isEnterKey(evt){
+  if (!evt)
+    evt=window.event;
+  else if (!evt.keyCode)
+    evt.keyCode = evt.which;
+  return (evt.keyCode == 13);
+}
+function checkkey2(fld,evt){//avoid submitting with enter key
+  if(isEnterKey(evt))
+    return false;
+  else
+    return true;
+}
+function fixemail(whichfield,formaction,formname,sendaction,dosubmitit){ //validate the email
+  myString=whichfield.value;
+  if(myString!=""){
+    mtmpString="";
+    mybadString="@";
+    mybadString2=".";
+    var gotat=false;
+    var gotdot=false;
+    for (i=0;i<=myString.length-1;i++){
+      if (myString.charAt(i)==mybadString)
+        gotat=true;
+      if (myString.charAt(i)==mybadString2)
+        gotdot=true;
+    }
+    if (gotat==false || gotdot==false){
+      alert("The email address is invalid, please correct the email address.");
+      whichfield.value="";
+      whichfield.focus();
+      whichfield.select();
+    }
+    else{
+      if(dosubmitit==true)
+        alert("The survey would be submitted here/now.");
+    }
+  }
+}
+//--></script>
+</head>
+<body>
+  <form name="preview" method="post" action="" onKeyPress="return checkkey2(this,event)" ACCEPT-CHARSET="UTF-8">
+  <table summary="" align="center" width="80%">
+    <tr>
+      <td>
+        <table summary="" align="center" width="100%" border="1">
+  <tr id="QRow13" style="display:table-row;"  >
+    <td valign="top" colspan="7" width="100%">
+      <table summary="" width="100%" style="background:transparent;">
+        <tr>
+          <td style="padding-left:15;padding-right:5;"  colspan='6' width='25%' valign="top" >
+
+<span   >
+            <span style="text-decoration:none;" >Email address</span>
+</span>
+<br />
+           </td>
+          <td valign="top" align="left"><input type="text" name="WC14" title="Type your email address here" size="40" value=""  onBlur=fixemail(this,'','','',false) >
+              <br /><span >(Must be in the format:&nbsp;<b><i>participant@whereever.com</i></b>)</span>
+
+        </td></tr>
+        
+      </table>
+    </td>
+  </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+
+  <table width="80%" align="center">
+    <tr>
+      <td align="center">
+        <input type="button" value="<< Previous" onClick="alert('Going to the PREVIOUS page.');" style="width:150;" name="back" title="Save and go to the Previous Survey Page">
+        <input type="button" value="Finish >>" onClick="alert('Going to the NEXT/THANK YOU page.');" style="width:150;" name="forward" title="Submit this Survey ">
+      </td>
+    </tr>
+
+  </table>
+  </body></html>
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Enter an invalid email address
+2. Try to click on the previous or finish button
+Actual Results:  
+overrides the function and shows the button click alert instead of finishing the fixemail function
+
+Expected Results:  
+put the cursor into the field again, don't allow the click events for the buttons to fire
+
+works fine in ie, have not tried opera, nn or other browsers.

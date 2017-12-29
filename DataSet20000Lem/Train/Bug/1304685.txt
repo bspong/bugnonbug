@@ -1,0 +1,28 @@
+Help debug spacing issue caused by whitespace text node
+Created attachment 8793727
+whitespace-spacing-issues.html
+
+Whitespace text node are very common node in any DOM tree, simply because you tend to format your HTML markup like this:
+
+<body>
+<p>a paragraph</p>
+<p>another one</p>
+</body>
+
+If you looked at the DOM tree inside <body> that's generated from the above markup, you'd see that body ha 5 childNodes: 3 text node (the space and line breaks) and 2 element nodes.
+
+Various browser devtools don't show these empty text nodes, because people usually don't care about them, they're just formatting information that's useless in the inspector. They would unnecessarily clutter the inspector.
+
+Now, of course, that's not always true, hence this bug.
+
+Whitespace text node inside inline formatting context are a very common source of frustration and cause problem that are really hard to investigate.
+
+Take the attached test case for example, you'll see that there's an empty space between each and every element in the page. At least that's how it seems if you open the inspector, because you're not seeing the text nodes.
+Searching in the rule-view for a potential margin doesn't help because there's none. What usually happens is you spend 15 minute trying to figure this out, searching for answer on google, and finally facepalming yourself realizing it's just an extra space in the markup somewhere ...
+
+I'd like u to figure out a way to help with this common problem.
+
+The issue here is that people loose time because they're not thinking that this could come from whitespace text nodes, so having a mode where you ask people to switch ON whitespace text node wouldn't help. By then, they'd have figured out the problem and moved on.
+So maybe we should show these node in inline element only? Or show them only when they actually have box generated for them.
+
+For info, whitespace text node are filtered out by the walker actor here http://searchfox.org/mozilla-central/rev/8910ca900f826a9b714607fd23bfa1b37a191eca/devtools/server/actors/inspector.js#2961-2965

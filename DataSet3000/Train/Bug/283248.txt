@@ -1,0 +1,101 @@
+http://www.circuitcity.com displays as binary garbage
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.6) Gecko/20040614 Firefox/0.8
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.6) Gecko/20040614 Firefox/0.8
+
+This happens to me about 90% of the time.  When I go to
+http://www.circuitcity.com,  all I see is a bunch of binary garbage, instead of
+the page.  None of the page loads correctly.  I used ethereal to take a trace,
+and it shows the request/response below.  The server said it was sending gzip
+encoding and no body, just headers.  Then it closed the connection.
+
+The same symptom occurs in Windows and MacOS X versions of the browser.
+
+I'm guessing that maybe we running the gzip decoder on some unitialized memory,
+or not handling error cases from the gzip decoder directly?  Just a guess.
+
+
+GET
+http://www.circuitcity.com/ccd/home.do?com.broadvision.session.new=Yes&BV_UseBVCookie=No
+HTTP/1.1
+
+Host: www.circuitcity.com
+
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.6) Gecko/20040614
+Firefox/0.8
+
+Accept:
+text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,video/x-mng,image/png,image/jpeg,image/gif;q=0.2,*/*;q=0.1
+
+Accept-Language: en-us,en;q=0.5
+
+Accept-Encoding: gzip,deflate
+
+Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7
+
+Keep-Alive: 300
+
+Proxy-Connection: keep-alive
+
+Cookie: BV_IDS=ccccadddmdjlglkcfngcfkmdffhdfgo.0:@@@@1801710802.1109121215@@@@;
+lastvisit=02/22/05 20:13:35; firstvisit=<02/08/05 21:49:54; visitcount=30;
+tvsweeps=yes; guestid=1254423950.1107917394.cccladddkllhjmkcfngcfkmdffhdffh.0; ct=0
+
+Cache-Control: max-age=0
+
+
+
+HTTP/1.1 200 OK
+
+Server: Sun-ONE-Web-Server/6.1
+
+Date: Wed, 23 Feb 2005 01:15:06 GMT
+
+Content-type: text/html;charset=ISO-8859-1
+
+Pragma: no-cache
+
+Cache-Control: no-cache
+
+Cache-Control: no-store
+
+Cache-Control: must-revalidate
+
+Set-cookie:
+BV_IDS=ccchadddmdjlgmlcfngcfkmdffhdfgo.0:@@@@0123630966.1109121305@@@@; path=/;
+domain=.circuitcity.com
+
+Set-cookie: firstvisit=<02/08/05 21:49:54; path=/; expires=Saturday, 23-Feb-2008
+01:15:05 GMT; domain=.circuitcity.com
+
+Set-cookie: lastvisit=02/22/05 20:15:05; path=/; expires=Saturday, 23-Feb-2008
+01:15:05 GMT; domain=.circuitcity.com
+
+Set-cookie: visitcount=31; expires=Saturday, 23-Feb-2008 01:15:05 GMT; path=/;
+domain=.circuitcity.com;
+
+P3P: P3P: CP='CAO DSP COR CURa DEVa PSAa OUR BUS ONL UNI PRE'
+
+Content-encoding: gzip
+
+Vary: accept-encoding
+
+Connection: close
+
+Content-Length: 6894
+
+Content-Encoding: gzip
+
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+1. Go to http://www.circuitcity.com/ in firefox.
+2. Garbage appears in the browser window.
+3. If the page loaded correctly, try hitting 'reload' until it fails to load
+correctly.
+
+Actual Results:  
+All I saw was garbled text in the browser window.
+
+Expected Results:  
+The page should have loaded correctly with images, etc.

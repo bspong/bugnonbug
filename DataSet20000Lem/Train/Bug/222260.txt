@@ -1,0 +1,49 @@
+Page that set cookie is called twice
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.5) Gecko/20031007 Firebird/0.7
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.5) Gecko/20031007 Firebird/0.7
+
+In a PHP hit logging script, that us a 15 minute long cookie to determine a
+new hit or a subsequent hit, The log show that Mozilla 0.6 and 0.7 hit the page
+twice everytime, with a second or so between them.
+
+The script test for a cookie by name, and record to a Db accordingly.
+
+So on first entry (no cookie set), a hit is logged and the cookie is set,
+causing another hit to be logged for this page access.
+
+Moving to a different page log a hit, the timeout for the cookie is reset by
+this page which in turn cause another hit to be logged.
+
+Thus always double logging with Moz 0.6/0.7, this doe not happen with IE6,Opera
+7, or Netscape 7.0 on Win2k or Win98.
+
+To ensure it wa double hitting, I checked my Apache access log, here's a
+typical Mozilla 0.6/0.7 page hit (index.php called twice):
+[15/Oct/2003:15:48:07 +0100] "GET /index.php...
+[15/Oct/2003:15:48:07 +0100] "GET /css/menuimg/20.gif...
+[15/Oct/2003:15:48:08 +0100] "GET /someinclude.php...
+[15/Oct/2003:15:48:08 +0100] "GET /index.php...
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.simple PHP script to check for a named cookie. If set, refresh the time, if
+not set, set it.
+2. check time of access against server access log, look for double page call.
+3. Repeat with other browsers, esp. Netscape 7.0, and note this doe not happen.
+
+Actual Results:
+server log for Moz. show second page call a above
+server log for same page with Netscape 7.0, show page (index.php) is called
+only once.
+
+Expected Results:
+Should not recall page when a cookie is set/refreshed.
+
+Noticed on Mozilla 0.6, downloaded Mozilla 0.7 with default theme, no
+improvement. Sample script have been tested many times, cooky deleted and
+test carried out again each time.
+Has been tested on Win98 and Win2k only.
+Cannot replicate this issue in any other browsers.

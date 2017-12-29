@@ -1,0 +1,72 @@
+In Firefox versions from 4 links provided by a reverse ftp proxy has the auth part in it and can't be clicked.
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.2.18) Gecko/20110613 SUSE/3.6.18-2.1 Firefox/3.6.18
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.2.18) Gecko/20110613 SUSE/3.6.18-2.1 Firefox/3.6.18
+
+When using Firefox version 4.0.1 or version 5.0-3 on openSuSE 11.4 there is a difference in how some URL's are resolved compared to Firefox version 3.*
+(the one I've compared to here is version 3.6.18).
+
+I have an apache 2.2 server on a Linux host (host1) which act as a reverse proxy
+server for a FTP photo archive on an IIS server (host2).
+
+This is setup with apache's reverse proxy commands on host1 like this:
+(Host names and domain is fake for security reasons)
+---------------------
+ProxyPass /photos/ ftp://host2.domain.net/photo/
+ProxyPassReverse /photos/ ftp://host2.domain.net/photo/
+---------------------
+
+It is then accessed like this:
+
+http://host1.domain.net/photos/
+
+The IIS FTP server (host2) will then popup an authorization dialog where we in this case login with username "user" and a password.
+
+Then the user can click on directories to get there and download/display
+pictures.
+
+That's how it worked with Firefox 3.*.
+
+Now with Firefox 4 or 5 user can't click the directory because when hovering the
+mouse over the link the URL is different than it is with Firefox 3.*.
+
+With Firefox 3.* the link works and lookes like this:
+
+http://host1.domain.net/photos/directory/
+
+With Firefox 4.* or 5.* the link doesn't work and look like this:
+
+http://host1.domain.net/photos/user@photos/directory/
+
+and the target can of course not be found !
+
+So with Firefox 4.* or 5.* the authorization part is added to the URL.
+
+Funny thing is that when rightclicking on the page and viewing page source,
+the links/direcories can be clicked as before from there !
+
+I don' know if this is a bug or a feature.
+I've tried with a new profile and with different users.
+
+My question is:
+
+Is there a way in Firefox 4.* - 5.* to change that behavior back to as it where ?
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.Install an apache server 2.2 with proxy commands as described above.
+
+2. Install an IIS FTP server that's not available for "anonymous" use.
+
+3. Go to the location: http://host1.domain.net/photos/login with username
+and a password and try to click a link.
+
+
+
+Actual Results:  
+Link/Directory is not found.
+
+Expected Results:  
+Link/Directory found.
+
+If it's a bug, then the auth part shouldn't be in the url.

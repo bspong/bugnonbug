@@ -1,0 +1,76 @@
+Private downloads get lost due to "cooldown" firefox restart
+Hi all,
+
+This issue is relevant to firefox 40 and newer.
+If an extension which need browser restart is installed, firefox show the
+relevant pop-up notification, prompting the user to perform the restart.
+This is normal.
+However, in case there is an active or paused private download(s), if the user
+proceed to restart firefox via this pop-up notification, the private download(s)
+will be lost after restart.
+This is due the lack of the warning dialog (like in firefox 39 and some earlier
+versions), which notifies/reminds about the private download, giving the chance
+to the user to cancel the restart attempt.
+
+How to reproduce:
+
+1. Open a private window and start a download in it.
+2. Before this download is finished, install an extension which need browser
+restart.
+3. Attempt to perform the restart via the pop-up notification.
+
+Actual result:
+
+Firefox get restarted immediately, without any warning.
+As a result, the private download will have been lost after restart.
+
+Expected result:
+
+On attempt to restart, firefox should show the warning dialog about the private
+download(s), giving the chance for restart cancellation, like firefox 39 and
+some earlier version do.
+
+Taking a look "under the hood", i found that the responsible code for this resides
+in "BrowserUtils.jsm", line 29 - 38:
+> restartApplication: function() {
+> let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"]
+> .getService(Ci.nsIAppStartup);
+> //if already in safe mode restart in safe mode
+> if (Services.appinfo.inSafeMode) {
+> appStartup.restartInSafeMode(Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart);
+> return;
+> }
+> appStartup.quit(Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart);
+> },
+My proposing patch:
+Modifying the original code above a follows, this issue is gone, restoring the
+warning dialog:
+> restartApplication: function() {
+> let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"]
+> .getService(Ci.nsIAppStartup);
+> + let cancelQuit = Cc["@mozilla.org/supports-PRBool;1"]
+> + .createInstance(Ci.nsISupportsPRBool);
+> + Services.obs.notifyObservers(cancelQuit, "quit-application-requested", "restart");
+> + if(cancelQuit.data) { // The quit request ha been canceled.
+> + return false;
+> + };
+> //if already in safe mode restart in safe mode
+> if (Services.appinfo.inSafeMode) {
+> appStartup.restartInSafeMode(Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart);
+> return;
+> }
+> appStartup.quit(Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart);
+> },
+
+I hadn't the time to investigate further, but most likely this restart function
+in "BrowserUtils.jsm" is called also in other case too.
+Please note that, after the installation of the extension, if the browser restart is
+performed via the extension manager, we have the same behavior like firefox 39:
+in case there is a private download, firefox 40+ show the warning dialog.
+In my opinion, a "cooldown" browser restart in not a good practice, because there
+are case where some pending/active operation must not be interrupted
+before their completion.
+So, since an "accidental" restart is always possible, we need a warning dialog
+when it is necessary.
+
+Thanks

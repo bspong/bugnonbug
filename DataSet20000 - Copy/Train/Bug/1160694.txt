@@ -1,0 +1,25 @@
+Add-on watcher incorrectly reports that Mouse Gestures Suite causes Nightly to run slowly
+User Agent: Mozilla/5.0 (Windows NT 6.1; rv:36.0) Gecko/20100101 Firefox/36.0 SeaMonkey/2.33.1
+Build ID: 20150321194901
+
+Steps to reproduce:
+
+I am the author of https://addons.mozilla.org/addon/mouse-gestures-suite/ and have noticed that firefox erroneously pops out this alert "Mouse Gestures Suite might be making Nightly to run slowly" on certain occasions.
+
+The thing is tricky because the alert comes up when the extension initiates or executes certain operations that indeed cause a higher CPU usage but those operations launch internal browser's mechanisms and are requested and invoked by the user therefore it's not the extension's fault that they take time to execute.
+
+Two examples:
+
+1. In options in General Preferences turn on "Mouse Gestures autoscroll". This basically replaces the browser's built-in autoscroll with a slightly different implementation. But then load any web page and start using the autoscroll - press the middle button and initiate scrolling - after a few seconds the slow alert shows up at the bottom. While it is clear that the extension actually performs the continuous scrolling of the page this is normal and expected operation of the add-on and the user should not be alerted that something is wrong with the extension. Obviously, causing continuous page scroll will always eat up some CPU and there's no way around it and the extension can't be "fixed" in any way - the window.scrollTo() method must do its work and it requires CPU time. When you switch to the browser's built-in autoscroll then no more alerts appear even though the CPU usage is similar. The only difference is that the autoscroll is no longer initiated by an extension.
+
+2. Enable e10s, open more than one tab and open a very large page like http://www.whatwg.org/specs/web-apps/current-work/ in a new tab. Loading the page will require some time and it may take a few seconds with high CPU usage to render the page completely. Now while this page is being rendered (with high CPU usage) use a mouse gesture to close the tab - the default is down-right with the right mouse button. The tab will not close immediately but it will take some before it happens (some rendering processes need to finish, I suppose) - but then again the alert comes up saying that Mouse Gestures Suite is making Firefox slow (You can try it a few times to make this happen but it's quite easy to reproduce). Again - same situation - the extension initiated a browser action (to close a tab) but it is not its fault that it's happening so slowly - if you try closing it with the standard X on the tab it will be equally slow. The extension is initiating a browser command but it has no influence on how long it will execute and so the user shouldn't be given wrong information that the extension is causing the slowness.
+
+
+Actual results:
+
+Slow alerts for extensions appear even if high CPU usage is not caused by a running extension code but by browser's internal mechanisms merely initiated by the extension.
+
+
+Expected results:
+
+Users should not be given alerts in cases where extensions initiate browser operations while it's the browser's internal mechanisms that use a lot of CPU and not the extension itself.

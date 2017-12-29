@@ -1,0 +1,38 @@
+after changing a bookmark's location, need to update the frecency of the "old" uri
+after changing a bookmark's location, need to update the frecency of the "old" uri.
+
+we already update the frecency of the "new" uri for the bookmark.
+
+From the current patch in bug #394038, see nsNavBookmarks::ChangeBookmarkURI()
+
+  // upon changing the uri for a bookmark, update the frecency for the new place
+  // no need to check if this is a livemark, because...
+  rv = History()->UpdateFrecency(placeId, PR_TRUE /* isBookmark */);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+#if 0
+  // upon changing the uri for a bookmark, update the frecency for the old place
+  // XXX todo, we need to get the oldPlaceId (fk) before changing it above
+  // and then here, we need to determine if that oldPlaceId is still a bookmark (and not a livemark)
+  rv = History()->UpdateFrecency(oldPlaceId,  PR_FALSE /* isBookmark */);
+  NS_ENSURE_SUCCESS(rv, rv);
+#endif
+
+notes:
+
+1)  
+
+Q:  "no need to check if this is a livemark, because..."?
+A:  the reasons we check if a bookmark is real child of a livemark item is that those should not appear in autocomplete (so frecency should be = 0) if they are not visited.  When changing a bookmark's uri, the new url is a legit bookmark, so we want it to appear in ac, even if not visited.
+
+2)
+
+if we don't fix this, here's an how the user would see it:
+
+say I have a legit bookmark to foo.com/story1.html and that is also a livemark item for food.com/feed.xml.   foo.com/story1.html is not visited, but since it is a legit bookmark, and not just an item of a livemark feed, it should show up in the ac results.
+
+now, say I change the uri for the legit foo.com/story1.html bookmark to be foo.com/story2.html.
+
+the current code will call UpdateFrecency() on foo.com/story2.html, and pass in isBookmark = true, so this will now be visible in ac even if not visited.
+
+but, the disabled code will not call UpdateFrecency() on foo.com/story1.html, so it will appear in ac results even though it is only an unvisitied livemark item.

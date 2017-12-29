@@ -1,0 +1,38 @@
+Worng Content is displayed in iframe if you reload a page while the page is still loading
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.2.2) Gecko/20100316 Firefox/3.6.2 GTB6 (.NET CLR 3.5.30729)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.2.2) Gecko/20100316 Firefox/3.6.2 GTB6 (.NET CLR 3.5.30729)
+
+If you press F5 while a page is still loading, you may get content of an iframe
+from the last page in the reloaded page. This happens if the reloaded page has
+less iframes than the last page. In the example we can reproduce it with iframes
+but we also saw it with other external? content.
+
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+open http://www.raikosoft.com/reloadbug/main.php
+you can download the page source here:
+http://www.raikosoft.com/reloadbug/reloadbug.zip
+
+The page uses 4 seconds sleeps to show the behavior better.
+On the page there are two iframes:
+one shows the text "Top" in a red iframe
+the other shows the text "Bottom" in a blue iframe.
+The blue iframe is shown always. The red iframe is shown by random.
+   
+1. load the page http://www.raikosoft.com/reloadbug/main.php until you see both
+   iframes.
+2. press F5 
+3. press F5 again within 2 seconds (while the page is still loading)
+4. repeat step 2 and 3 until you see the red "Top" iframe under the hr line
+Actual Results:  
+The content of the red "Top" iframe is shown instead of the blue "Bottom" iframe.
+
+
+We think this is not an iframe problem but a problem with content which is loaded
+in background. If you load a page while the current page is still loading,
+perhaps the background threads? are not canceled. So the content of the last page is shown in the new page.
+You can also reproduce the bug with the forward/backward buttons.
+
+Feel free to contact us for additional infos.

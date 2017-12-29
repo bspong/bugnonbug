@@ -1,0 +1,47 @@
+Firefox crash on Fedora 19 32bit
+Reproducing this bug requires the in-development Fedora 19 system on 32 bit, 64 bit work fine.
+
+The crash is seen using the Fedora Firefox build (using a downloaded release build from Mozilla doesn't crash.
+
+Reproducing is simple, open https://www.paypal.com
+
+#0 isValid (this=0xa0704e48) at /usr/src/debug/xulrunner-19.0.2/mozilla-release/js/src/jsinferinlines.h:141
+#1 js::types::TypeCompartment::addPendingRecompile (this=this@entry=0xa3613e64, cx=cx@entry=0xaa20cd00, info=...) at /usr/src/debug/xulrunner-19.0.2/mozilla-release/js/src/jsinfer.cpp:2521
+#2 0x4d41f52c in js::types::TypeCompartment::addPendingRecompile (this=0xa3613e64, cx=0xaa20cd00, script=..., pc=0xaa1b7b92 "5") at /usr/src/debug/xulrunner-19.0.2/mozilla-release/js/src/jsinfer.cpp:2585
+#3 0x4d41f79b in AddPendingRecompile (cx=0xaa20cd00, script=..., pc=0xaa1b7b92 "5", kind=RECOMPILE_CHECK_BARRIERS) at /usr/src/debug/xulrunner-19.0.2/mozilla-release/js/src/jsinfer.cpp:2019
+#4 0x4d41fa2b in js::analyze::ScriptAnalysis::addTypeBarrier (this=0xa0d2ba60, cx=cx@entry=0xaa20cd00, pc=0xaa1b7b92 "5", target=0xa60f1368, type=type@entry=...) at /usr/src/debug/xulrunner-19.0.2/mozilla-release/js/src/jsinfer.cpp:2730
+#5 0x4d41fb01 in TypeConstraintSubsetBarrier::newType (this=0xa0766f28, cx=0xaa20cd00, source=0xa08d62ac, type=...) at /usr/src/debug/xulrunner-19.0.2/mozilla-release/js/src/jsinfer.cpp:911
+#6 0x4d41d54a in js::types::TypeSet::addTypesToConstraint (this=<optimized out>, cx=0xaa20cd00, constraint=<optimized out>) at /usr/src/debug/xulrunner-19.0.2/mozilla-release/js/src/jsinfer.cpp:364
+#7 0x4d41e4f3 in add (callExisting=true, constraint=<optimized out>, cx=<optimized out>, this=<optimized out>) at /usr/src/debug/xulrunner-19.0.2/mozilla-release/js/src/jsinfer.cpp:388
+#8 js::types::HeapTypeSet::addSubsetBarrier (this=this@entry=0xa08d62ac, cx=cx@entry=0xaa20cd00, script=..., script@entry=..., pc=pc@entry=0xaa1b7b92 "5", target=target@entry=0xa60f1368) at /usr/src/debug/xulrunner-19.0.2/mozilla-release/js/src/jsinfer.cpp:926
+#9 0x4d4250c8 in PropertyAccess<(PropertyAccessKind)1> (cx=0xaa20cd00, script=..., pc=0xaa1b7b92 "5", object=0xb2847d60, target=0xa60f1368, id=-1298605952) at /usr/src/debug/xulrunner-19.0.2/mozilla-release/js/src/jsinfer.cpp:1113
+#10 0x4d42e523 in TypeConstraintProp<(PropertyAccessKind)1>::newType (this=0xa0cb2a10, cx=0xaa20cd00, source=0xa0cb2958, type=...) at /usr/src/debug/xulrunner-19.0.2/mozilla-release/js/src/jsinfer.cpp:1178
+#11 0x4d4191a1 in resolvePending (cx=0xaa20cd00, this=0xa3613e64) at /usr/src/debug/xulrunner-19.0.2/mozilla-release/js/src/jsinferinlines.h:1100
+#12 js::types::TypeSet::addType (this=0xa60f1458, cx=0xaa20cd00, type=...) at /usr/src/debug/xulrunner-19.0.2/mozilla-release/js/src/jsinferinlines.h:1419
+#13 0x4d42d4a7 in SetArgument (type=..., arg=0, script=..., cx=0xaa20cd00) at /usr/src/debug/xulrunner-19.0.2/mozilla-release/js/src/jsinferinlines.h:1040
+#14 SetArgument (value=..., arg=0, script=..., cx=0xaa20cd00) at /usr/src/debug/xulrunner-19.0.2/mozilla-release/js/src/jsinferinlines.h:1049
+#15 js::types::TypeMonitorCallSlow (cx=0xaa20cd00, callee=..., args=..., constructing=true) at /usr/src/debug/xulrunner-19.0.2/mozilla-release/js/src/jsinfer.cpp:5219
+#16 0x4d43f55c in TypeMonitorCall (constructing=true, args=..., cx=0xaa20cd00) at /usr/src/debug/xulrunner-19.0.2/mozilla-release/js/src/jsinferinlines.h:546
+#17 js::Interpret (cx=cx@entry=0xaa20cd00, entryFrame=entryFrame@entry=0xb3aff258, interpMode=js::JSINTERP_NORMAL) at /usr/src/debug/xulrunner-19.0.2/mozilla-release/js/src/jsinterp.cpp:2346
+#18 0x4d4421b0 in js::RunScript (cx=cx@entry=0xaa20cd00, script=script@entry=..., fp=0xb3aff258) at /usr/src/debug/xulrunner-19.0.2/mozilla-release/js/src/jsinterp.cpp:324
+#19 0x4d66a940 in UncachedInlineCall (f=..., initial=initial@entry=js::INITIAL_LOWERED, pret=pret@entry=0xbfffa228, unjittable=unjittable@entry=0xbfffa22c, argc=argc@entry=2) at /usr/src/debug/xulrunner-19.0.2/mozilla-release/js/src/methodjit/InvokeHelpers.cpp:367
+#20 0x4d66cb4e in js::mjit::stubs::UncachedCallHelper (f=..., argc=2, lowered=true, ucr=...) at /usr/src/debug/xulrunner-19.0.2/mozilla-release/js/src/methodjit/InvokeHelpers.cpp:455
+#21 0x4d66d06c in UncachedLoweredCall (argc=<optimized out>, f=...) at /usr/src/debug/xulrunner-19.0.2/mozilla-release/js/src/methodjit/InvokeHelpers.cpp:418
+#22 js::mjit::stubs::CompileFunction (f=..., argc=<optimized out>) at /usr/src/debug/xulrunner-19.0.2/mozilla-release/js/src/methodjit/InvokeHelpers.cpp:247
+#23 0xad6498ab in ?? ()
+#24 0x4d858000 in ?? () from /usr/lib/xulrunner/libmozjs.so
+
+
+Using valgrind I got the following:
+
+
+==27404== Use of uninitialised value of size 4
+==27404== at 0x4D659722: js::mjit::GetPropCompiler::linkerEpilogue(js::mjit::LinkerHelper&, JSC::AbstractMacroAssembler<JSC::X86Assembler>::Label, js::Vector<JSC::AbstractMacroAssembler<JSC::X86Assembler>::Jump, 8u, js::TempAllocPolicy>&) (X86Assembler.h:2815)
+==27404== by 0x4D662AF6: js::mjit::GetPropCompiler::generateStub(JSObject*, JS::Handle<js::Shape*>) (PolyIC.cpp:1440)
+==27404== by 0x4D663270: js::mjit::GetPropCompiler::update() (PolyIC.cpp:1533)
+==27404== by 0x4D665080: js::mjit::ic::GetProp(js::VMFrame&, js::mjit::ic::PICInfo*) (PolyIC.cpp:2068)
+==27404== by 0x7B78652: ???
+==27404== by 0x4D857FFF: ??? (in /usr/lib/xulrunner/libmozjs.so)
+
+
+There were some additional report about "Conditional jump or move depends on uninitialised value(s)" in the CSS/Image renderer, but I guess those are unrelated.

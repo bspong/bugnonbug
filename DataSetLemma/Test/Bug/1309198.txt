@@ -1,0 +1,188 @@
+heap-use-after-free in mozilla::dom::Element::GetAnimations
+Created attachment 8799713
+crash.html minimized testcase: requires Jesse's dom fuzzing addon
+
+The attached testcases crash the latest ASAN build of Firefox (BuildID=20161010095556) a follows. It requires Jesse's fuzzPriv extension to reproduce reliably.
+
+ASAN output:
+
+=================================================================
+==936==ERROR: AddressSanitizer: heap-use-after-free on address 0x60f0000a6318 at pc 0x7f16979d2e9f bp 0x7ffc3623fcb0 sp 0x7ffc3623fca8
+READ of size 4 at 0x60f0000a6318 thread T0 (Web Content)
+#0 0x7f16979d2e9e in HasFlag /home/worker/workspace/build/src/dom/base/nsWrapperCache.h:210:15
+#1 0x7f16979d2e9e in IsRootOfNativeAnonymousSubtree /home/worker/workspace/build/src/dom/base/nsIContent.h:174
+#2 0x7f16979d2e9e in IsGeneratedContentContainerForBefore /home/worker/workspace/build/src/dom/base/nsIContent.h:332
+#3 0x7f16979d2e9e in mozilla::dom::Element::GetAnimations(mozilla::dom::AnimationFilter const&, nsTArray<RefPtr<mozilla::dom::Animation> >&) /home/worker/workspace/build/src/dom/base/Element.cpp:3460
+#4 0x7f1697bb046b in nsDocument::GetAnimations(nsTArray<RefPtr<mozilla::dom::Animation> >&) /home/worker/workspace/build/src/dom/base/nsDocument.cpp:3032:3
+#5 0x7f169956d2c8 in mozilla::dom::DocumentBinding::getAnimations(JSContext*, JS::Handle<JSObject*>, nsIDocument*, JSJitMethodCallArgs const&) /home/worker/workspace/build/src/obj-firefox/dom/bindings/DocumentBinding.cpp:4247:3
+#6 0x7f16999f6460 in mozilla::dom::GenericBindingMethod(JSContext*, unsigned int, JS::Value*) /home/worker/workspace/build/src/dom/bindings/BindingUtils.cpp:2825:13
+#7 0x7f169fc301a5 in CallJSNative /home/worker/workspace/build/src/js/src/jscntxtinlines.h:239:15
+#8 0x7f169fc301a5 in js::InternalCallOrConstruct(JSContext*, JS::CallArgs const&, js::MaybeConstruct) /home/worker/workspace/build/src/js/src/vm/Interpreter.cpp:446
+#9 0x7f169fc30e52 in js::Call(JSContext*, JS::Handle<JS::Value>, JS::Handle<JS::Value>, js::AnyInvokeArgs const&, JS::MutableHandle<JS::Value>) /home/worker/workspace/build/src/js/src/vm/Interpreter.cpp:522:10
+#10 0x7f169fa519bc in js::Wrapper::call(JSContext*, JS::Handle<JSObject*>, JS::CallArgs const&) const /home/worker/workspace/build/src/js/src/proxy/Wrapper.cpp:165:12
+#11 0x7f169f99b92f in js::CrossCompartmentWrapper::call(JSContext*, JS::Handle<JSObject*>, JS::CallArgs const&) const /home/worker/workspace/build/src/js/src/proxy/CrossCompartmentWrapper.cpp:333:14
+#12 0x7f169f9a9c6f in js::Proxy::call(JSContext*, JS::Handle<JSObject*>, JS::CallArgs const&) /home/worker/workspace/build/src/js/src/proxy/Proxy.cpp:400:12
+#13 0x7f169f9ac62e in js::proxy_Call(JSContext*, unsigned int, JS::Value*) /home/worker/workspace/build/src/js/src/proxy/Proxy.cpp:689:12
+#14 0x7f169fc301a5 in CallJSNative /home/worker/workspace/build/src/js/src/jscntxtinlines.h:239:15
+#15 0x7f169fc301a5 in js::InternalCallOrConstruct(JSContext*, JS::CallArgs const&, js::MaybeConstruct) /home/worker/workspace/build/src/js/src/vm/Interpreter.cpp:446
+#16 0x7f169fc10956 in CallFromStack /home/worker/workspace/build/src/js/src/vm/Interpreter.cpp:509:12
+#17 0x7f169fc10956 in Interpret(JSContext*, js::RunState&) /home/worker/workspace/build/src/js/src/vm/Interpreter.cpp:2922
+#18 0x7f169fbf5c5b in js::RunScript(JSContext*, js::RunState&) /home/worker/workspace/build/src/js/src/vm/Interpreter.cpp:404:12
+#19 0x7f169fc3080f in js::InternalCallOrConstruct(JSContext*, JS::CallArgs const&, js::MaybeConstruct) /home/worker/workspace/build/src/js/src/vm/Interpreter.cpp:476:15
+#20 0x7f169fc30e52 in js::Call(JSContext*, JS::Handle<JS::Value>, JS::Handle<JS::Value>, js::AnyInvokeArgs const&, JS::MutableHandle<JS::Value>) /home/worker/workspace/build/src/js/src/vm/Interpreter.cpp:522:10
+#21 0x7f169f7358cd in JS::Call(JSContext*, JS::Handle<JS::Value>, JS::Handle<JS::Value>, JS::HandleValueArray const&, JS::MutableHandle<JS::Value>) /home/worker/workspace/build/src/js/src/jsapi.cpp:2825:12
+#22 0x7f1699527852 in mozilla::dom::EventHandlerNonNull::Call(JSContext*, JS::Handle<JS::Value>, mozilla::dom::Event&, JS::MutableHandle<JS::Value>, mozilla::ErrorResult&) /home/worker/workspace/build/src/obj-firefox/dom/bindings/EventHandlerBinding.cpp:259:37
+#23 0x7f1699e4ec41 in Call<nsISupports *> /home/worker/workspace/build/src/obj-firefox/dist/include/mozilla/dom/EventHandlerBinding.h:361:12
+#24 0x7f1699e4ec41 in mozilla::JSEventHandler::HandleEvent(nsIDOMEvent*) /home/worker/workspace/build/src/dom/events/JSEventHandler.cpp:214
+#25 0x7f1699e1af44 in mozilla::EventListenerManager::HandleEventSubType(mozilla::EventListenerManager::Listener*, nsIDOMEvent*, mozilla::dom::EventTarget*) /home/worker/workspace/build/src/dom/events/EventListenerManager.cpp:1133:16
+#26 0x7f1699e1c50f in mozilla::EventListenerManager::HandleEventInternal(nsPresContext*, mozilla::WidgetEvent*, nsIDOMEvent**, mozilla::dom::EventTarget*, nsEventStatus*) /home/worker/workspace/build/src/dom/events/EventListenerManager.cpp:1286:17
+#27 0x7f1699e06806 in mozilla::EventTargetChainItem::HandleEventTargetChain(nsTArray<mozilla::EventTargetChainItem>&, mozilla::EventChainPostVisitor&, mozilla::EventDispatchingCallback*, mozilla::ELMCreationDetector&) /home/worker/workspace/build/src/dom/events/EventDispatcher.cpp:380:5
+#28 0x7f1699e0a86d in mozilla::EventDispatcher::Dispatch(nsISupports*, nsPresContext*, mozilla::WidgetEvent*, nsIDOMEvent*, nsEventStatus*, mozilla::EventDispatchingCallback*, nsTArray<mozilla::dom::EventTarget*>*) /home/worker/workspace/build/src/dom/events/EventDispatcher.cpp:711:9
+#29 0x7f169c080055 in nsDocumentViewer::LoadComplete(nsresult) /home/worker/workspace/build/src/layout/base/nsDocumentViewer.cpp:998:7
+#30 0x7f169cdfa1de in nsDocShell::EndPageLoad(nsIWebProgress*, nsIChannel*, nsresult) /home/worker/workspace/build/src/docshell/base/nsDocShell.cpp:7615:5
+#31 0x7f169cdf5fb4 in nsDocShell::OnStateChange(nsIWebProgress*, nsIRequest*, unsigned int, nsresult) /home/worker/workspace/build/src/docshell/base/nsDocShell.cpp:7415:7
+#32 0x7f169cdfd57f in non-virtual thunk to nsDocShell::OnStateChange(nsIWebProgress*, nsIRequest*, unsigned int, nsresult) /home/worker/workspace/build/src/docshell/base/nsDocShell.cpp:7312:13
+#33 0x7f1696c786a0 in nsDocLoader::DoFireOnStateChange(nsIWebProgress*, nsIRequest*, int&, nsresult) /home/worker/workspace/build/src/uriloader/base/nsDocLoader.cpp:1255:3
+#34 0x7f1696c77668 in nsDocLoader::doStopDocumentLoad(nsIRequest*, nsresult) /home/worker/workspace/build/src/uriloader/base/nsDocLoader.cpp:840:5
+#35 0x7f1696c7441c in nsDocLoader::DocLoaderIsEmpty(bool) /home/worker/workspace/build/src/uriloader/base/nsDocLoader.cpp:730:9
+#36 0x7f1696c764f4 in nsDocLoader::OnStopRequest(nsIRequest*, nsISupports*, nsresult) /home/worker/workspace/build/src/uriloader/base/nsDocLoader.cpp:612:5
+#37 0x7f1696c7707c in non-virtual thunk to nsDocLoader::OnStopRequest(nsIRequest*, nsISupports*, nsresult) /home/worker/workspace/build/src/uriloader/base/nsDocLoader.cpp:468:14
+#38 0x7f1695012f8b in mozilla::net::nsLoadGroup::RemoveRequest(nsIRequest*, nsISupports*, nsresult) /home/worker/workspace/build/src/netwerk/base/nsLoadGroup.cpp:633:18
+#39 0x7f1697bf360f in nsDocument::DoUnblockOnload() /home/worker/workspace/build/src/dom/base/nsDocument.cpp:8625:7
+#40 0x7f1697ccb9ff in nsUnblockOnloadEvent::Run() /home/worker/workspace/build/src/dom/base/nsDocument.cpp:8578:5
+#41 0x7f1694e3939d in nsThread::ProcessNextEvent(bool, bool*) /home/worker/workspace/build/src/xpcom/threads/nsThread.cpp:1082:7
+#42 0x7f1694eb8c1c in NS_ProcessNextEvent(nsIThread*, bool) /home/worker/workspace/build/src/xpcom/glue/nsThreadUtils.cpp:290:10
+#43 0x7f1695c1660f in mozilla::ipc::MessagePump::Run(base::MessagePump::Delegate*) /home/worker/workspace/build/src/ipc/glue/MessagePump.cpp:96:21
+#44 0x7f1695b883b8 in RunInternal /home/worker/workspace/build/src/ipc/chromium/src/base/message_loop.cc:232:3
+#45 0x7f1695b883b8 in RunHandler /home/worker/workspace/build/src/ipc/chromium/src/base/message_loop.cc:225
+#46 0x7f1695b883b8 in MessageLoop::Run() /home/worker/workspace/build/src/ipc/chromium/src/base/message_loop.cc:205
+#47 0x7f169b7aa46f in nsBaseAppShell::Run() /home/worker/workspace/build/src/widget/nsBaseAppShell.cpp:156:3
+#48 0x7f169d9012c7 in XRE_RunAppShell /home/worker/workspace/build/src/toolkit/xre/nsEmbedFunctions.cpp:869:12
+#49 0x7f1695b883b8 in RunInternal /home/worker/workspace/build/src/ipc/chromium/src/base/message_loop.cc:232:3
+#50 0x7f1695b883b8 in RunHandler /home/worker/workspace/build/src/ipc/chromium/src/base/message_loop.cc:225
+#51 0x7f1695b883b8 in MessageLoop::Run() /home/worker/workspace/build/src/ipc/chromium/src/base/message_loop.cc:205
+#52 0x7f169d900803 in XRE_InitChildProcess /home/worker/workspace/build/src/toolkit/xre/nsEmbedFunctions.cpp:701:7
+#53 0x4dfb2b in content_process_main /home/worker/workspace/build/src/browser/app/../../ipc/contentproc/plugin-container.cpp:197:19
+#54 0x4dfb2b in main /home/worker/workspace/build/src/browser/app/nsBrowserApp.cpp:392
+#55 0x7f16b05b082f in __libc_start_main /build/glibc-GKVZIf/glibc-2.23/csu/../csu/libc-start.c:291
+#56 0x41ba08 in _start (/home/nils/fuzzer3/firefox/firefox+0x41ba08)
+
+0x60f0000a6318 is located 24 byte inside of 176-byte region [0x60f0000a6300,0x60f0000a63b0)
+freed by thread T0 (Web Content) here:
+#0 0x4b215b in __interceptor_free /builds/slave/moz-toolchain/src/llvm/projects/compiler-rt/lib/asan/asan_malloc_linux.cc:38:3
+#1 0x7f1694d13574 in SnowWhiteKiller::~SnowWhiteKiller() /home/worker/workspace/build/src/xpcom/base/nsCycleCollector.cpp:2665:9
+#2 0x7f1694d13166 in nsCycleCollector::FreeSnowWhite(bool) /home/worker/workspace/build/src/xpcom/base/nsCycleCollector.cpp:2840:3
+#3 0x7f1694d1985c in nsCycleCollector::BeginCollection(ccType, nsICycleCollectorListener*) /home/worker/workspace/build/src/xpcom/base/nsCycleCollector.cpp:3826:3
+#4 0x7f1694d1903c in nsCycleCollector::Collect(ccType, js::SliceBudget&, nsICycleCollectorListener*, bool) /home/worker/workspace/build/src/xpcom/base/nsCycleCollector.cpp:3651:9
+#5 0x7f1694d1c216 in nsCycleCollector_collect(nsICycleCollectorListener*) /home/worker/workspace/build/src/xpcom/base/nsCycleCollector.cpp:4144:3
+#6 0x7f1697cda939 in nsJSContext::CycleCollectNow(nsICycleCollectorListener*, int) /home/worker/workspace/build/src/dom/base/nsJSEnvironment.cpp:1440:3
+#7 0x7f169782615d in nsDOMWindowUtils::CycleCollect(nsICycleCollectorListener*, int) /home/worker/workspace/build/src/dom/base/nsDOMWindowUtils.cpp:1338:3
+#8 0x7f1694e5fe36 in NS_InvokeByIndex /home/worker/workspace/build/src/xpcom/reflect/xptcall/md/unix/xptcinvoke_x86_64_unix.cpp:180:23
+#9 0x7f1696840cee in Invoke /home/worker/workspace/build/src/js/xpconnect/src/XPCWrappedNative.cpp:2064:12
+#10 0x7f1696840cee in Call /home/worker/workspace/build/src/js/xpconnect/src/XPCWrappedNative.cpp:1383
+#11 0x7f1696840cee in XPCWrappedNative::CallMethod(XPCCallContext&, XPCWrappedNative::CallMode) /home/worker/workspace/build/src/js/xpconnect/src/XPCWrappedNative.cpp:1350
+#12 0x7f169684847b in XPC_WN_CallMethod(JSContext*, unsigned int, JS::Value*) /home/worker/workspace/build/src/js/xpconnect/src/XPCWrappedNativeJSOps.cpp:1143:12
+#13 0x7f169fc301a5 in CallJSNative /home/worker/workspace/build/src/js/src/jscntxtinlines.h:239:15
+#14 0x7f169fc301a5 in js::InternalCallOrConstruct(JSContext*, JS::CallArgs const&, js::MaybeConstruct) /home/worker/workspace/build/src/js/src/vm/Interpreter.cpp:446
+#15 0x7f169fc10956 in CallFromStack /home/worker/workspace/build/src/js/src/vm/Interpreter.cpp:509:12
+#16 0x7f169fc10956 in Interpret(JSContext*, js::RunState&) /home/worker/workspace/build/src/js/src/vm/Interpreter.cpp:2922
+#17 0x7f169fbf5c5b in js::RunScript(JSContext*, js::RunState&) /home/worker/workspace/build/src/js/src/vm/Interpreter.cpp:404:12
+#18 0x7f169fc3080f in js::InternalCallOrConstruct(JSContext*, JS::CallArgs const&, js::MaybeConstruct) /home/worker/workspace/build/src/js/src/vm/Interpreter.cpp:476:15
+#19 0x7f169fc30e52 in js::Call(JSContext*, JS::Handle<JS::Value>, JS::Handle<JS::Value>, js::AnyInvokeArgs const&, JS::MutableHandle<JS::Value>) /home/worker/workspace/build/src/js/src/vm/Interpreter.cpp:522:10
+#20 0x7f169f732fdd in JS_CallFunctionValue(JSContext*, JS::Handle<JSObject*>, JS::Handle<JS::Value>, JS::HandleValueArray const&, JS::MutableHandle<JS::Value>) /home/worker/workspace/build/src/js/src/jsapi.cpp:2766:12
+#21 0x7f1696779e2f in xpc::FunctionForwarder(JSContext*, unsigned int, JS::Value*) /home/worker/workspace/build/src/js/xpconnect/src/ExportHelpers.cpp:353:18
+#22 0x7f169fc301a5 in CallJSNative /home/worker/workspace/build/src/js/src/jscntxtinlines.h:239:15
+#23 0x7f169fc301a5 in js::InternalCallOrConstruct(JSContext*, JS::CallArgs const&, js::MaybeConstruct) /home/worker/workspace/build/src/js/src/vm/Interpreter.cpp:446
+#24 0x7f169fc10956 in CallFromStack /home/worker/workspace/build/src/js/src/vm/Interpreter.cpp:509:12
+#25 0x7f169fc10956 in Interpret(JSContext*, js::RunState&) /home/worker/workspace/build/src/js/src/vm/Interpreter.cpp:2922
+#26 0x7f169fbf5c5b in js::RunScript(JSContext*, js::RunState&) /home/worker/workspace/build/src/js/src/vm/Interpreter.cpp:404:12
+#27 0x7f169fc3080f in js::InternalCallOrConstruct(JSContext*, JS::CallArgs const&, js::MaybeConstruct) /home/worker/workspace/build/src/js/src/vm/Interpreter.cpp:476:15
+#28 0x7f169fc30e52 in js::Call(JSContext*, JS::Handle<JS::Value>, JS::Handle<JS::Value>, js::AnyInvokeArgs const&, JS::MutableHandle<JS::Value>) /home/worker/workspace/build/src/js/src/vm/Interpreter.cpp:522:10
+#29 0x7f169f7358cd in JS::Call(JSContext*, JS::Handle<JS::Value>, JS::Handle<JS::Value>, JS::HandleValueArray const&, JS::MutableHandle<JS::Value>) /home/worker/workspace/build/src/js/src/jsapi.cpp:2825:12
+#30 0x7f1699529925 in mozilla::dom::OnErrorEventHandlerNonNull::Call(JSContext*, JS::Handle<JS::Value>, mozilla::dom::EventOrString const&, mozilla::dom::Optional<nsAString_internal> const&, mozilla::dom::Optional<unsigned int> const&, mozilla::dom::Optional<unsigned int> const&, mozilla::dom::Optional<JS::Handle<JS::Value> > const&, mozilla::ErrorResult&) /home/worker/workspace/build/src/obj-firefox/dom/bindings/EventHandlerBinding.cpp:389:37
+#31 0x7f1699e4f6a0 in Call<nsISupports *> /home/worker/workspace/build/src/obj-firefox/dist/include/mozilla/dom/EventHandlerBinding.h:527:12
+#32 0x7f1699e4f6a0 in mozilla::JSEventHandler::HandleEvent(nsIDOMEvent*) /home/worker/workspace/build/src/dom/events/JSEventHandler.cpp:166
+#33 0x7f1699e1af44 in mozilla::EventListenerManager::HandleEventSubType(mozilla::EventListenerManager::Listener*, nsIDOMEvent*, mozilla::dom::EventTarget*) /home/worker/workspace/build/src/dom/events/EventListenerManager.cpp:1133:16
+#34 0x7f1699e1c50f in mozilla::EventListenerManager::HandleEventInternal(nsPresContext*, mozilla::WidgetEvent*, nsIDOMEvent**, mozilla::dom::EventTarget*, nsEventStatus*) /home/worker/workspace/build/src/dom/events/EventListenerManager.cpp:1286:17
+#35 0x7f1699e06806 in mozilla::EventTargetChainItem::HandleEventTargetChain(nsTArray<mozilla::EventTargetChainItem>&, mozilla::EventChainPostVisitor&, mozilla::EventDispatchingCallback*, mozilla::ELMCreationDetector&) /home/worker/workspace/build/src/dom/events/EventDispatcher.cpp:380:5
+#36 0x7f1699e0a86d in mozilla::EventDispatcher::Dispatch(nsISupports*, nsPresContext*, mozilla::WidgetEvent*, nsIDOMEvent*, nsEventStatus*, mozilla::EventDispatchingCallback*, nsTArray<mozilla::dom::EventTarget*>*) /home/worker/workspace/build/src/dom/events/EventDispatcher.cpp:711:9
+
+previously allocated by thread T0 (Web Content) here:
+#0 0x4b247b in malloc /builds/slave/moz-toolchain/src/llvm/projects/compiler-rt/lib/asan/asan_malloc_linux.cc:52:3
+#1 0x4e0d6d in moz_xmalloc /home/worker/workspace/build/src/memory/mozalloc/mozalloc.cpp:83:17
+#2 0x7f169a146183 in operator new /home/worker/workspace/build/src/obj-firefox/dist/include/mozilla/mozalloc.h:194:12
+#3 0x7f169a146183 in NS_NewHTMLSharedElement(already_AddRefed<mozilla::dom::NodeInfo>&&, mozilla::dom::FromParser) /home/worker/workspace/build/src/dom/html/HTMLSharedElement.cpp:23
+#4 0x7f169c898598 in NS_NewHTMLHtmlElement /home/worker/workspace/build/src/dom/html/nsGenericHTMLElement.h:1686:1
+#5 0x7f169c898598 in nsContentDLF::CreateBlankDocument(nsILoadGroup*, nsIPrincipal*, nsIDocument**) /home/worker/workspace/build/src/layout/build/nsContentDLF.cpp:298
+#6 0x7f169ce00306 in nsDocShell::CreateAboutBlankContentViewer(nsIPrincipal*, nsIURI*, bool) /home/worker/workspace/build/src/docshell/base/nsDocShell.cpp:8075:5
+#7 0x7f169cd9f9f3 in nsDocShell::EnsureContentViewer() /home/worker/workspace/build/src/docshell/base/nsDocShell.cpp:7965:17
+#8 0x7f169cdd3687 in GetDocument /home/worker/workspace/build/src/docshell/base/nsDocShell.cpp:4528:3
+#9 0x7f169cdd3687 in non-virtual thunk to nsDocShell::GetDocument() /home/worker/workspace/build/src/docshell/base/nsDocShell.cpp:4526
+#10 0x7f169786b8ed in MaybeCreateDoc /home/worker/workspace/build/src/dom/base/nsGlobalWindow.cpp:3633:38
+#11 0x7f169786b8ed in GetDoc /home/worker/workspace/build/src/obj-firefox/dist/include/nsPIDOMWindow.h:181
+#12 0x7f169786b8ed in EnsureInnerWindow /home/worker/workspace/build/src/obj-firefox/dist/include/nsPIDOMWindow.h:849
+#13 0x7f169786b8ed in nsOuterWindowProxy::GetSubframeWindow(JSContext*, JS::Handle<JSObject*>, JS::Handle<jsid>, JS::MutableHandle<JS::Value>, bool&) const /home/worker/workspace/build/src/dom/base/nsGlobalWindow.cpp:1063
+#14 0x7f169786d2bc in nsOuterWindowProxy::get(JSContext*, JS::Handle<JSObject*>, JS::Handle<JS::Value>, JS::Handle<jsid>, JS::MutableHandle<JS::Value>) const /home/worker/workspace/build/src/dom/base/nsGlobalWindow.cpp:1002:8
+#15 0x7f169f9a761e in js::Proxy::get(JSContext*, JS::Handle<JSObject*>, JS::Handle<JS::Value>, JS::Handle<jsid>, JS::MutableHandle<JS::Value>) /home/worker/workspace/build/src/js/src/proxy/Proxy.cpp:309:12
+#16 0x7f169fa50d80 in GetProperty /home/worker/workspace/build/src/js/src/vm/NativeObject.h:1497:16
+#17 0x7f169fa50d80 in js::Wrapper::get(JSContext*, JS::Handle<JSObject*>, JS::Handle<JS::Value>, JS::Handle<jsid>, JS::MutableHandle<JS::Value>) const /home/worker/workspace/build/src/js/src/proxy/Wrapper.cpp:143
+#18 0x7f169f998f22 in js::CrossCompartmentWrapper::get(JSContext*, JS::Handle<JSObject*>, JS::Handle<JS::Value>, JS::Handle<jsid>, JS::MutableHandle<JS::Value>) const /home/worker/workspace/build/src/js/src/proxy/CrossCompartmentWrapper.cpp:209:14
+#19 0x7f169f9a761e in js::Proxy::get(JSContext*, JS::Handle<JSObject*>, JS::Handle<JS::Value>, JS::Handle<jsid>, JS::MutableHandle<JS::Value>) /home/worker/workspace/build/src/js/src/proxy/Proxy.cpp:309:12
+#20 0x7f169fca1d76 in GetProperty /home/worker/workspace/build/src/js/src/vm/NativeObject.h:1497:16
+#21 0x7f169fca1d76 in js::GetElement(JSContext*, JS::Handle<JSObject*>, JS::Handle<JS::Value>, unsigned int, JS::MutableHandle<JS::Value>) /home/worker/workspace/build/src/js/src/jsobjinlines.h:200
+#22 0x7f169fc11ee9 in GetElement /home/worker/workspace/build/src/js/src/jsobjinlines.h:208:12
+#23 0x7f169fc11ee9 in GetObjectElementOperation /home/worker/workspace/build/src/js/src/vm/Interpreter-inl.h:436
+#24 0x7f169fc11ee9 in GetElementOperation /home/worker/workspace/build/src/js/src/vm/Interpreter-inl.h:563
+#25 0x7f169fc11ee9 in Interpret(JSContext*, js::RunState&) /home/worker/workspace/build/src/js/src/vm/Interpreter.cpp:2760
+#26 0x7f169fbf5c5b in js::RunScript(JSContext*, js::RunState&) /home/worker/workspace/build/src/js/src/vm/Interpreter.cpp:404:12
+#27 0x7f169fc3080f in js::InternalCallOrConstruct(JSContext*, JS::CallArgs const&, js::MaybeConstruct) /home/worker/workspace/build/src/js/src/vm/Interpreter.cpp:476:15
+#28 0x7f169fc30e52 in js::Call(JSContext*, JS::Handle<JS::Value>, JS::Handle<JS::Value>, js::AnyInvokeArgs const&, JS::MutableHandle<JS::Value>) /home/worker/workspace/build/src/js/src/vm/Interpreter.cpp:522:10
+#29 0x7f169f7358cd in JS::Call(JSContext*, JS::Handle<JS::Value>, JS::Handle<JS::Value>, JS::HandleValueArray const&, JS::MutableHandle<JS::Value>) /home/worker/workspace/build/src/js/src/jsapi.cpp:2825:12
+#30 0x7f1699527852 in mozilla::dom::EventHandlerNonNull::Call(JSContext*, JS::Handle<JS::Value>, mozilla::dom::Event&, JS::MutableHandle<JS::Value>, mozilla::ErrorResult&) /home/worker/workspace/build/src/obj-firefox/dom/bindings/EventHandlerBinding.cpp:259:37
+#31 0x7f1699e4ec41 in Call<nsISupports *> /home/worker/workspace/build/src/obj-firefox/dist/include/mozilla/dom/EventHandlerBinding.h:361:12
+#32 0x7f1699e4ec41 in mozilla::JSEventHandler::HandleEvent(nsIDOMEvent*) /home/worker/workspace/build/src/dom/events/JSEventHandler.cpp:214
+#33 0x7f1699e1af44 in mozilla::EventListenerManager::HandleEventSubType(mozilla::EventListenerManager::Listener*, nsIDOMEvent*, mozilla::dom::EventTarget*) /home/worker/workspace/build/src/dom/events/EventListenerManager.cpp:1133:16
+#34 0x7f1699e1c50f in mozilla::EventListenerManager::HandleEventInternal(nsPresContext*, mozilla::WidgetEvent*, nsIDOMEvent**, mozilla::dom::EventTarget*, nsEventStatus*) /home/worker/workspace/build/src/dom/events/EventListenerManager.cpp:1286:17
+#35 0x7f1699e06806 in mozilla::EventTargetChainItem::HandleEventTargetChain(nsTArray<mozilla::EventTargetChainItem>&, mozilla::EventChainPostVisitor&, mozilla::EventDispatchingCallback*, mozilla::ELMCreationDetector&) /home/worker/workspace/build/src/dom/events/EventDispatcher.cpp:380:5
+#36 0x7f1699e0a86d in mozilla::EventDispatcher::Dispatch(nsISupports*, nsPresContext*, mozilla::WidgetEvent*, nsIDOMEvent*, nsEventStatus*, mozilla::EventDispatchingCallback*, nsTArray<mozilla::dom::EventTarget*>*) /home/worker/workspace/build/src/dom/events/EventDispatcher.cpp:711:9
+#37 0x7f169c080055 in nsDocumentViewer::LoadComplete(nsresult) /home/worker/workspace/build/src/layout/base/nsDocumentViewer.cpp:998:7
+#38 0x7f169cdfa1de in nsDocShell::EndPageLoad(nsIWebProgress*, nsIChannel*, nsresult) /home/worker/workspace/build/src/docshell/base/nsDocShell.cpp:7615:5
+#39 0x7f169cdf5fb4 in nsDocShell::OnStateChange(nsIWebProgress*, nsIRequest*, unsigned int, nsresult) /home/worker/workspace/build/src/docshell/base/nsDocShell.cpp:7415:7
+#40 0x7f169cdfd57f in non-virtual thunk to nsDocShell::OnStateChange(nsIWebProgress*, nsIRequest*, unsigned int, nsresult) /home/worker/workspace/build/src/docshell/base/nsDocShell.cpp:7312:13
+#41 0x7f1696c786a0 in nsDocLoader::DoFireOnStateChange(nsIWebProgress*, nsIRequest*, int&, nsresult) /home/worker/workspace/build/src/uriloader/base/nsDocLoader.cpp:1255:3
+
+SUMMARY: AddressSanitizer: heap-use-after-free /home/worker/workspace/build/src/dom/base/nsWrapperCache.h:210:15 in HasFlag
+Shadow byte around the buggy address:
+0x0c1e8000cc10: 00 00 00 00 00 00 00 00 00 00 00 fa fa fa fa fa
+0x0c1e8000cc20: fa fa fa fa 00 00 00 00 00 00 00 00 00 00 00 00
+0x0c1e8000cc30: 00 00 00 00 00 00 00 00 00 00 fa fa fa fa fa fa
+0x0c1e8000cc40: fa fa fd fd fd fd fd fd fd fd fd fd fd fd fd fd
+0x0c1e8000cc50: fd fd fd fd fd fd fd fd fa fa fa fa fa fa fa fa
+=>0x0c1e8000cc60: fd fd fd[fd]fd fd fd fd fd fd fd fd fd fd fd fd
+0x0c1e8000cc70: fd fd fd fd fd fd fa fa fa fa fa fa fa fa 00 00
+0x0c1e8000cc80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+0x0c1e8000cc90: 00 00 00 fa fa fa fa fa fa fa fa fa 00 00 00 00
+0x0c1e8000cca0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+0x0c1e8000ccb0: 00 fa fa fa fa fa fa fa fa fa 00 00 00 00 00 00
+Shadow byte legend (one shadow byte represents 8 application bytes):
+Addressable: 00
+Partially addressable: 01 02 03 04 05 06 07
+Heap left redzone: fa
+Heap right redzone: fb
+Freed heap region: fd
+Stack left redzone: f1
+Stack mid redzone: f2
+Stack right redzone: f3
+Stack partial redzone: f4
+Stack after return: f5
+Stack use after scope: f8
+Global redzone: f9
+Global init order: f6
+Poisoned by user: f7
+Container overflow: fc
+Array cookie: ac
+Intra object redzone: bb
+ASan internal: fe
+Left alloca redzone: ca
+Right alloca redzone: cb
+==936==ABORTING

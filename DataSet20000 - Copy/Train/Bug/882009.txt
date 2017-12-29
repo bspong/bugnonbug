@@ -1,0 +1,12 @@
+Fix browser.tabs.drawInTitlebar pref support on Windows
+Prior to Australis, the pref browser.tabs.drawInTitlebar controls whether there is a gap between the tabs and the top of the screen for the titlebar/Firefox button when the browser is maximized and the menubar is hidden. This has no effect when the menubar is shown because the menubar was always shown below the titlebar.
+
+With Australis, the menubar always appears above the titlebar but we still move the tabs down when drawInTitlebar = false. We currently don't show the Window title because we have always have @chromemargin set on the Window.
+
+We should either:
+A) Drop support for the pref. 
+B) Fix Australis to show the title in the titlebar when it's false.
+
+Neither of these are huge wins/costs but we're currently in a middle ground with brokenness for users who have the pref set to false. Is there a compelling reason to continue to support the pref set to false? An add-on would be able to get the system titlebar back even if we stop supporting the pref.
+
+Note that this won't necessarily allow us to remove much, if any, of the TabsInTitlebar code in browser.js since we still have special cases such as Print Preview, TabView, and popup windows without a tabstrip where @TabsInTitlebar is not true. We would also need some CSS to keep checking the attribute for those special cases. Australis currently works fine in those cases AFAIK. This bug should focus on whether we should support users setting drawInTitlebar to false and how it should look when they do so.

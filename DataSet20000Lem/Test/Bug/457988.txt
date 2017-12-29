@@ -1,0 +1,222 @@
+radio button re-rendered a selected on x,y coordinate of page upon refresh, maybe javascript related
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3
+
+I have a javascript to demonstrate random quiz stuff. The script writes a form (doesn't post anywhere) with a set of questions, choices, and the correct answer shown in blue in CSS. The question and choice are randomly shuffled, but the answer should always be correct.
+
+When I refresh the page, the bug show up only when another set of radio button is rendered where the previously selected radio button is, exactly at the x,y coordinate of the previous state. I can't disable the selection of the radio by looping through the form element in javascript. I can't add a meta tag to do "no-cache": no effect. Also no effect if I form.reset() with body onLoad. I can't get rid of the cached state.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Load the script into your browser.
+2. Select a radio button. Its state is "checked".
+3. Refresh the page a few time and notice other radio button at that position on the page. Whatever radio button that's there will also be checked.
+
+
+Expected Results:
+Expected Results: form should be clear, a intended by developer or whatever is written. I have not tested this in straight HTML. Note that the form is produced with Javascript document.writeln().
+
+Cut and paste the below into a file and load it in FF.
+-------------- 8< cut-and-paste >-------------------------
+
+<html>
+<head>
+<script>
+
+/*
+RandomizeTest accepts and return a Test object. The question in the
+returned object should be in a random order. The order of the choice
+within each question should also be randomized.
+*/
+function RandomizeTest(tstObject){
+// A generic Fisher-Yates function.
+var fy = function(ar) {
+var i = ar.length;
+if (i == 0) return false;
+while (--i) {
+var j = Math.floor( Math.random() * ( i + 0.5 ) );
+var tmpi = ar[i];
+var tmpj = ar[j];
+ar[i] = tmpj;
+ar[j] = tmpi;
+}
+};
+
+// This part is the same concept a the algorithm shown
+// in the Fisher-Yates shuffle above.
+// A range operator would be nice. Alas, no.
+// Shuffle the index of questions. One more shuffle of inner
+// array index on answer xor choices.
+var outerSeq = new Array();
+var innerSeq = new Array();
+for(i=0; i<tstObject.questions.length; i++) {
+outerSeq[i] = i;
+innerSeq[i] = new Array();
+for(j=0; j<tstObject.answers[i].length; j++) {
+innerSeq[i][j] = j;
+}
+fy(innerSeq[i]);
+}
+fy(outerSeq);
+
+var c = 0; // The index of the outer array.
+var qArray = new Array(); // Declare outer arrays.
+var cArray = new Array();
+var aArray = new Array();
+for(var o in outerSeq) {
+var a = outerSeq[o]; // The value of the outer shuffle order.
+qArray[c] = tstObject.questions[a];
+var n = 0; // The index of the inner array.
+var seq = innerSeq[a];
+cArray[c] = new Array(); // Declare inner arrays.
+aArray[c] = new Array();
+for(var i in seq) {
+var b = seq[i]; // The value of the inner shuffle order.
+cArray[c][n] = tstObject.choices[a][b];
+aArray[c][n] = tstObject.answers[a][b];
+n++;
+}
+c++;
+}
+
+// Reassign back to test object.
+tstObject.questions = qArray;
+tstObject.choices = cArray;
+tstObject.answers = aArray;
+return tstObject;
+}
+
+
+//definition of the test object
+function Test(aryQuestions, aryChoices, aryAnswers){
+this.questions = aryQuestions;
+this.choices = aryChoices;
+this.answers = aryAnswers;
+}
+
+
+
+//displays the sample test in the browser with the correct answer highlighted
+function WriteTest() {
+
+var tst = CreateSampleTest();
+tst = RandomizeTest(tst);
+
+document.write("<table border=0 cellspacing=3 cellpadding=3><form name=test id=test>");
+
+for (i=0; i < tst.questions.length; i++) {
+
+document.write("<tr><td valign=top>&nbsp;</td>")
+
+document.write("<td><p>" + (i+1) + ".&nbsp;" + tst.questions[i]);
+for (j=0; j < tst.choices[i].length; j++) {
+
+var correctcount = 0;
+var setblue = "";
+
+for (k=0; k<tst.answers[i].length; k++) {
+if (tst.answers[i][k] == 1) {
+correctcount++;
+}
+}
+
+if (tst.answers[i][j] == 1) {
+setblue="class=blue";
+}
+
+// Tweaked attribute of radio button and textboxes that
+// that they don't clash a (a) set(s). Added disabling and
+// and readonly, lest easter egg. Unfortunately, I stumbled
+// upon a bug in Mozilla 3.0.3 that I'll report later.
+if (correctcount == 1) {
+// Mozilla 3.0.3 ha a bug regarding radio buttons.
+document.write("<br><input type=radio name=rad"+i+" value='"+i+"."+j+"'>");
+document.write("<span "+setblue+">"+tst.choices[i][j]+"</span>");
+}
+else { // a unique name for this set of checkboxes
+document.write("<br><input readonly type=checkbox name=chbx"+i+" value='"+i+"."+j+"' onclick='return false;'>");
+document.write("<span "+setblue+">"+tst.choices[i][j]+"</span>");
+}
+}
+
+document.write("</td></tr><tr><td colspan=2><br></td></tr>");
+}
+}
+
+
+
+function CreateSampleTest(){
+
+var question = [
+"What can you find in my house?",
+"My favorite color is",
+"I am between the age of",
+"A mean is (choose all that apply):",
+"Water is"
+];
+
+var choice = [
+[
+"Moldy bread",
+"A laptop",
+"Organic foods",
+"A cat",
+"Porn magazines"
+],
+[
+"red",
+"blue",
+"green",
+"chartreuse"
+],
+[
+"10-15",
+"16-19",
+"20-27",
+"28-35",
+"36-99"
+],
+[
+"Not a way",
+"The plural of to be mean",
+"The arithmetic average"
+],
+[
+"70+ % of the human body's fluids",
+"raining down on me",
+"available of Mars",
+"good for ya",
+"H<sub>2</sub>0"
+]
+];
+
+var answer = [
+[1,1,0,1,0],
+[0,1,0,0],
+[0,0,0,1,0],
+[0,0,1],
+[1,0,0,1,1]
+];
+
+return new Test(questions, choices, answers);
+}
+
+
+</script>
+<style type="text/css">
+.blue {font-size : 14px; font-family : arial, helvetica, sans-serif; color : #336897; font-weight:bold;}
+</style>
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="-1">
+</head>
+<body>
+<script>
+WriteTest();
+</script>
+</body>
+</html>
+
+
+
+-------------- 8< end >-------------------------

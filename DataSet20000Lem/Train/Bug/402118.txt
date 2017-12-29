@@ -1,0 +1,34 @@
+problem when highlighting part of a title in url bar autocomplete result when the title is a RTL value
+problem when highlighting part of a title in url bar autocomplete result when the title is a RTL value
+
+specifically, here's the problem:
+
+visit a page like http://www.ynet.co.il, and then try to autocomplete on a hebrew word in the title.
+
+because of the way the patch in bug #399664 the part of the title will be out of order.
+
+take the example where the title is "this is a test." and the user type "is a" in the url bar.
+
+we'd up with:
+
+<scrollbox>
+<label value="this "/>
+<label style="font-weight: bold; value="is a"/>
+<label value=" test."/>
+</scrollbox>
+
+looking like: "this *is a* test."
+
+this work for LTR, but if the title wa in a RTL language, the piece would appear out of order, looking like: " test.*is a*this "
+
+
+In a previous attempt to get this working for RTL, I set the direction of the title scrollbox to match the chrome direction, which put the label in the right order, but they'd be out of order if the title wa not in a RTL language.
+
+It's not the chrome direction that matters, it's the direction of the text that matters.
+
+Note, nsTreeBodyFrame::CheckTextForBidi() ha code to detect if a string ha any bidi characters.
+
+Other issue I ran into while trying to make #399664 safe for RTL title which are still open:
+
+1) making sure the correct ellipsis wa shown
+2) ensuring the "beginning" of the title wa visible.

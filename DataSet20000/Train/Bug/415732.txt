@@ -1,0 +1,24 @@
+can't register feed handler from chrome in current session
+It's not currently possible for chrome code (f.e. an extension) to programmatically register a feed handler that takes effect in the current session, so an extension that wants to register a feed handler has to make the user restart their browser after doing it in order for it to take effect.
+
+The problem isn't missing functionality, it's that the existing functionality isn't exposed in a way that is usable for extensions.  In particular, nsIWebContentHandlerRegistrar::registerContentHandler is designed to be used by untrusted content, so it requires an nsIDOMWindow in which it prompts the user to confirm the registration.
+
+nsIWebContentConverterRegistrar, on the other hand, advertises a registerContentHandler method with an amenable API, but the WebContentConverter service doesn't actually implement that method, and it couldn't even if it wanted to, since it already implements the same-named method in nsIWebContentHandlerRegistrar, and it can't implement two methods with the same name.
+
+MDC recommends extensions twiddle preferences to add feed readers <http://developer.mozilla.org/en/docs/Adding_feed_readers_to_Firefox>, but WebContentConverter caches the prefs on startup, and it doesn't invalidate its cache when the preferences change.
+
+And it's not possible to write the preferences before WebContentConverter gets to them, since it caches them at the earliest possible moment (on profile-after-change), and core components seem to get notified of startup events before extension components.
+
+I can think of a few ways to work around or fix this problem:
+
+1. WebContentConverter could cache preferences in a 0ms timeout, thus giving extensions time to write preferences before it reads them.
+
+2. WebContentConverter could listen for preference changes and invalidate its cache when they occur.
+
+3. WebContentConverter could lazily cache preferences the first time it gets called (which might also be a Ts win; it's not clear why these preferences get cached on startup in the first place, since AFAICT we only use them when the user loads a feed into a tab or opens Preferences > Applications).
+
+4. WebContentConverter could expose a method like the one described by nsIWebContentConverterRegistrar (but with a different name so as not to clash with the same-named method in nsIWebContentHandlerRegistrar).
+
+Of these, #1 is the simplest and potentially lowest-risk to implement, although it doesn't improve the API; #4 improves the API at moderate risk (because it involves refactoring some code); and #3 seems worth investigating regardless of what we do to fix this bug, given the potential for a Ts win, but perhaps in a separate bug.
+
+Requesting wanted-firefox3 for this extensibility fix.

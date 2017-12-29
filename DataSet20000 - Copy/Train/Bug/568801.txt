@@ -1,0 +1,36 @@
+object received with no cache/expires headers using xmlhttprequest is sometimes after next request (to same URI) returned from cache
+User-Agent:       Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_5_8; en-us) AppleWebKit/531.22.7 (KHTML, like Gecko) Version/4.0.5 Safari/531.22.7
+Build Identifier: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.5; en-US; rv:1.9.2.3) Gecko/20100401 Firefox/3.6.3
+
+I have server resource, URI e.g.: /gdc/md/uikbr0t694tnh3uje22yedukbyzyt30o/obj/4691
+
+I GET it, here are response headers:
+
+DateFri, 28 May 2010 09:49:32 GMT
+ExpiresSat, 26 Jul 1997 05:00:00 GMT
+Cache-Controlno-store, no-cache, must-revalidate, max-age=0
+Pragmano-cache
+X-GDC-REQUESTlBkZ7xNt2p4hrY03:8ypmhlz66m77etin
+Content-Typeapplication/json
+Content-Length7513
+Keep-Alivetimeout=5, max=97
+ConnectionKeep-Alive
+
+After a while (few seconds) perform POST to this object URI  to save changes and after successfully received confirmation that POST was successful
+I GET this resource again to have it synced with server, GET response headers when problem occur:
+
+DateFri, 28 May 2010 09:49:32 GMT
+ExpiresSat, 26 Jul 1997 05:00:00 GMT
+Cache-Controlno-store, no-cache, must-revalidate, max-age=0
+Pragmano-cache
+X-GDC-REQUESTlBkZ7xNt2p4hrY03:8ypmhlz66m77etin
+Content-Typeapplication/json
+Content-Length7513
+
+The resource in next GET response is sometimes taken from memory cache, no request to server is performed (you can see our custom header X-GDC-REQUEST having same id twice and absence of Keep-alive and Connection headers, also confirmed with HttpFox plugin). But this resource should not be cached at all.
+This bug happens only in 1/10, 1/15 attempts, is very hard to find minimal use case, not happens in FF 3.5.9, observed in FF 3.6.3. 
+The gap between two GET is between 4-10 seconds.
+
+
+
+Reproducible: Sometimes

@@ -1,0 +1,13 @@
+CVE-2006-4561 same-origin policy bypass (subverting DNS pinning)
+The site in the URL field describes a method for acquiring information from an intranet server.  The attack is as follows (text taken from the URL):
+
+
+1) The victim loads the script from www.attacker.org.
+2) The attacker changes the DNS entry of www.attacker.org to 10.10.10.10
+3) Further more the attacker quits the web server that was running on www.attacker.org’s original IP
+4) The script uses a timed event (setIntervall or setTimeout) to load a web page from www.attacker.org
+5) The web browser tries to connect to the IP which is bound to www.attacker.org from the previous request. As the web server there is shut down now, this connection attempt is rejected.
+6) Because of this (and probably because of the DNS entry’s short lifetime), the browser drops the DNS pinning and does a new DNS lookup request, resulting in 10.10.10.10 (sometimes it takes more than one loading attempt to trigger the lookup request).
+7) The script is now able to access the intranet server’s content and to leak it to the outside. 
+
+I verified this issue on Firefox 1.5.0.7

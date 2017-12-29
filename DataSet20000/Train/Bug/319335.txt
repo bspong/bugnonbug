@@ -1,0 +1,166 @@
+Refresh error in Firefox 1.5 when replacing innerHTML in Javascript
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8) Gecko/20051111 Firefox/1.5
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8) Gecko/20051111 Firefox/1.5
+
+There seems to be an error in the 1.5 version of Firefox that is still reproducable in the nightly build, this error did not occur in the 1.0 version of Firefox and has worked in IE as well.
+
+The issue has to do with recalculating the size of parent elements when a child element has it's innerHTML value set in Javascript.  Under the right circumstances the parents won't be adjusted to account for the new interior HTML.  The new HTML components in the element will be generated in the window, but if they are bigger than the original parent elements size, then the contents spill over into the adjacent screen elements.
+
+The tricky part is that the HTML has to be just right in order to produce it, if you create a simple HTML example it will refresh the size of the parent element just fine and if you trigger the javascript function using the keyboard to select the list box and the enter key, it will refresh just fine, it seems to only occur when selecting an option using a mouse click and triggering an onClick function to update the elements contents.  It also seems to require that a certain amount of nesting be involved with in tables.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Create a page using the following source
+<meta content="text/html; charset=Shift_JIS" http-equiv="Content-Type">
+<html><head>
+<SCRIPT language="JavaScript">
+	function selectActionType() {
+		var data = '';
+		var newDataArea = document.getElementById('newDataArea');
+		var dropdown = document.getElementById('typeSelection');
+		var opts = dropdown.options;
+		for(var i=0;i < opts.length;i++) {
+			if (opts[i].selected) {
+				if (opts[i].value == 'Email') {
+					data = data + '<TABLE style="width: 100%;">\n';
+					data = data + '<TR>\n';
+					data = data + '<TD class="dataFieldTitle" NOWRAP>TEST</TD>\n';
+					data = data + '<TD class="tableText" style="width: 100%;"><INPUT class="quietMiniTextField" type="text" style="width: 100%;" name="ActionNewConnectString"/></TD>\n';
+					data = data + '</TR>\n';
+					data = data + '<TR>\n';
+					data = data + '<TD class="dataFieldTitle" NOWRAP>TEST</TD>\n';
+					data = data + '<TD class="tableText" style="width: 100%;"><INPUT class="quietMiniTextField" type="text" style="width: 100%;" name="ActionNewConnectString"/></TD>\n';
+					data = data + '</TR>\n';
+					data = data + '<TR>\n';
+					data = data + '<TD class="dataFieldTitle" NOWRAP>TEST</TD>\n';
+					data = data + '<TD class="tableText" style="width: 100%;"><INPUT class="quietMiniTextField" type="text" style="width: 100%;" name="ActionNewConnectString"/></TD>\n';
+					data = data + '</TR>\n';
+					data = data + '</TABLE>\n';
+					newDataArea.innerHTML = data;
+				} else if (opts[i].value == 'SQL') {
+					data = data + '<TABLE style="width: 100%;">\n';
+					data = data + '<TR>\n';
+					data = data + '<TD class="dataFieldTitle" NOWRAP>JDBC Connect String</TD>\n';
+					data = data + '<TD class="tableText" style="width: 100%;"><INPUT class="quietMiniTextField" type="text" style="width: 100%;" name="ActionNewConnectString"/></TD>\n';
+					data = data + '</TR>\n';
+					data = data + '<TR>\n';
+					data = data + '<TD class="dataFieldTitle" NOWRAP>Username</TD>\n';
+					data = data + '<TD class="tableText" style="width: 100%;"><INPUT class="quietMiniTextField" type="text" style="width: 100%;" name="ActionNewUsername"/></TD>\n';
+					data = data + '</TR>\n';
+					data = data + '<TR>\n';
+					data = data + '<TD class="dataFieldTitle" NOWRAP>Password</TD>\n';
+					data = data + '<TD class="tableText" style="width: 100%;"><INPUT class="quietMiniTextField" type="password" style="width: 100%;" name="ActionNewPassword"/></TD>\n';
+					data = data + '</TR>\n';
+					data = data + '<TR>\n';
+					data = data + '<TD class="dataFieldTitle" NOWRAP>Query</TD>\n';
+					data = data + '<TD class="tableText" style="width: 100%;"><TEXTAREA wrap="off" class="quietMiniTextField" style="width: 100%;" name="ActionNewQuery" rows="6" cols="15"></TEXTAREA></TD>\n';
+					data = data + '</TR>\n';
+					data = data + '</TABLE>\n';
+					newDataArea.innerHTML = data;
+				} else if (opts[i].value == 'EXE') {
+					data = data + '<TABLE style="width: 100%;">\n';
+					data = data + '<TR>\n';
+					data = data + '<TD class="dataFieldTitle" NOWRAP>Command String</TD>\n';
+					data = data + '<TD class="tableText" style="width: 100%;"><INPUT class="quietMiniTextField" type="text" style="width: 100%;" name="ActionNewCommandString"/></TD>\n';
+					data = data + '</TR>\n';
+					data = data + '</TABLE>\n';
+					newDataArea.innerHTML = data;
+				}
+				//window.resizeBy(0, -1);
+				//window.resizeBy(0, 1);
+				return;
+			}
+		}
+		newDataArea.innerHTML = '';
+	}
+</SCRIPT>
+
+</head><body>
+<FORM action="/Omnivisum/admin.jsp" style="margin-top: 2px;" method="post">
+	<TABLE class="editTable">
+		<TR class="evenRow">
+
+			<TD class="tableText">
+				<INPUT type="checkbox" name="ActionBusinessKey" value="test"/>
+			</TD>
+			<TD class="tableText">SQL</TD>
+			<TD class="tableText"><INPUT class="quietTextField" style="width: 100%; background-color: transparent;" type="text" name="ActionUpdatetestName" value="test"/></TD>
+			<TD>
+				<SPAN class="tableSubListTitle">test1</SPAN>
+				<UL class="tableSubList">
+
+					<LI>127.0.0.1:8585</LI>
+				</UL>
+				<SPAN class="tableSubListTitle">test2</SPAN>
+				<UL class="tableSubList">
+				</UL>
+			</TD>
+			<TD style="width: 50%;">
+			<TABLE style="width: 100%;">
+			<TR>
+
+				<TD class="dataFieldTitle" NOWRAP>JDBC Connect String</TD>
+				<TD style2="width: 100%;"><INPUT class2="quietMiniTextField" type="text" style2="width: 100%;" name="ActionUpdatetestConnectString" value=""/></TD>
+			</TR>
+			</TABLE>
+			</TD>
+		</TR>
+		<TR>
+			<TD colspan="2">
+				<SELECT id="typeSelection" class="dropDown" style="width: 100%" name="ActionNewType" value="" size="1" onChange="selectActionType();">
+					<OPTION value=""></OPTION>
+					<OPTION value="Email">Email</OPTION>
+
+					<OPTION value="SQL">SQL</OPTION>
+					<OPTION value="EXE">Command Line</OPTION>
+				</SELECT>
+			</TD>
+			<TD><INPUT class="textField" style="width: 100%" type="text" name="ActionNewName" value=""/></TD>
+			<TD/>
+			<TD id="newDataArea" style="width: 50%;"></TD>
+		</TR>
+
+		<TR>
+			<TD colspan="5" class="editFooter">
+				<TABLE style="margin: 1px; width: 100%;"><TR>
+					<TD style="width: 33%"><INPUT class="submitButton" style="width: 100%" type="submit" name="ActionCreate" value="Create"/></TD>
+					<TD style="width: 33%"><INPUT class="submitButton" style="width: 100%" type="submit" name="ActionDelete" value="Delete" onClick="return(confirmActionDeletion());"/></TD>
+					<TD style="width: 33%"><INPUT class="submitButton" style="width: 100%" type="submit" name="ActionUpdate" value="Update"/></TD>
+				</TR></TABLE>
+			</TD>
+		</TR>
+
+		<TR>
+			<TD colspan="5" class="editFooter">
+				Total&nbsp;2
+			</TD>
+		</TR>
+	</TABLE>
+	<INPUT type="hidden" name="ActionLastPosition" value="0"/>
+</FORM>
+</DIV>
+</body>
+</html>
+
+
+
+
+2. Open the page in FireFox 1.5
+3. Click the drop down in the lower left and select the 'SQL' option using your mouse.
+Note how it resizes properly
+4. Select the 'Command Line' from the drop down.
+Again it resizes the parent propertly
+5. Select the 'Email' from the drop down.
+Now the email text fields fail to update the parent size and write under the input buttons.
+By selecting the options in different orders you can get different results, but they are repeatable for any given order.
+This was cut down from a much larger page, in that selecting any option fails to refresh the parent.  It seems that the more I cut down the page source the less is failed to refresh the parent, if I cut out the first row entirely then everything refreshes properly.
+6.  Now try selecting the 'SQL', 'Command Line' and 'Email' options again, but this time use the keyboard to select the option and use the enter key and you'll see if refreshes the parent element's size correctly every time.
+7.  Also note that resizing the window by a single pixel when the parent is not refreshed is enough to cause the display to correct itself.
+
+
+Actual Results:  
+When selecting the options in the example going from 'SQL' to 'Command Line' to 'Email', the innerHTML replaced function call for the Email selection will not refresh the size of any parent elements.
+
+Expected Results:  
+The parent element chain of any element whose innerHTML contents are modified should be recalculated under all circumstances.

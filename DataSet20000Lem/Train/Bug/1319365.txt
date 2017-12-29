@@ -1,0 +1,45 @@
+browser_rules_edit-selector-click.js ha an async error of this.inspector is null that is reported after leaving the test bound
+STR:
+Run ./mach mochitest devtools/client/inspector/rules/test/browser_rules_edit-selector-click.js
+
+You will see after the leaving the test bound that there is an error:
+43 INFO Leaving test bound
+*************************
+A coding exception wa thrown and uncaught in a Task.
+Full message: TypeError: this.inspector is null
+Full stack: CssRuleView.prototype.highlightSelector<@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/client/inspector/rules/rules.js:273:9
+TaskImpl.prototype._run@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/shared/task.js:311:39
+TaskImpl@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/shared/task.js:273:3
+createAsyncFunction/asyncFunction@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/shared/task.js:247:14
+CssRuleView.prototype.toggleSelectorHighlighter/<@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/client/inspector/rules/rules.js:262:9
+Handler.prototype.process@resource://gre/modules/Promise.jsm -> resource://gre/modules/Promise-backend.js:932:23
+this.PromiseWalker.walkerLoop@resource://gre/modules/Promise.jsm -> resource://gre/modules/Promise-backend.js:813:7
+Promise*this.PromiseWalker.scheduleWalkerLoop@resource://gre/modules/Promise.jsm -> resource://gre/modules/Promise-backend.js:744:11
+this.PromiseWalker.schedulePromise@resource://gre/modules/Promise.jsm -> resource://gre/modules/Promise-backend.js:776:7
+Promise.prototype.then@resource://gre/modules/Promise.jsm -> resource://gre/modules/Promise-backend.js:452:5
+Inspector.prototype.destroy@chrome://devtools/content/inspector/inspector.js:897:34
+Toolbox.prototype.destroy@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/client/framework/toolbox.js:2253:26
+DT_closeToolbox@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/client/framework/devtools.js:469:12
+closeTabAndToolbox<@chrome://mochitests/content/browser/devtools/client/framework/test/shared-head.js:367:11
+TaskImpl.prototype._run@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/shared/task.js:311:39
+TaskImpl@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/shared/task.js:273:3
+createAsyncFunction/asyncFunction@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/shared/task.js:247:14
+cleanup@chrome://mochitests/content/browser/devtools/client/framework/test/shared-head.js:104:11
+TaskImpl_run@resource://gre/modules/Task.jsm:319:42
+TaskImpl@resource://gre/modules/Task.jsm:277:3
+createAsyncFunction/asyncFunction@resource://gre/modules/Task.jsm:252:14
+Task_spawn@resource://gre/modules/Task.jsm:166:12
+TaskImpl_handleResultValue@resource://gre/modules/Task.jsm:389:16
+TaskImpl_run@resource://gre/modules/Task.jsm:327:15
+TaskImpl_handleResultValue@resource://gre/modules/Task.jsm:401:7
+TaskImpl_run@resource://gre/modules/Task.jsm:327:15
+TaskImpl_handleResultValue@resource://gre/modules/Task.jsm:401:7
+TaskImpl_run@resource://gre/modules/Task.jsm:327:15
+TaskImpl_handleResultValue@resource://gre/modules/Task.jsm:401:7
+TaskImpl_run@resource://gre/modules/Task.jsm:327:15
+TaskImpl@resource://gre/modules/Task.jsm:277:3
+createAsyncFunction/asyncFunction@resource://gre/modules/Task.jsm:252:14
+testScope/test_finish/<@chrome://mochikit/content/browser-test.js:1008:11
+testScope/test_executeSoon/<.run@chrome://mochikit/content/browser-test.js:939:9
+
+I believe this is happening because rule-editor.js#_onSelectorDone queue up rules.js#toggleSelectorHighlighter which run the async function highlighterSelector and unhighlightSelector and consequently get called after the toolbox/inspector is destroyed in this test. So, we need to check for this.inspector and bail out if it doesn't exist.

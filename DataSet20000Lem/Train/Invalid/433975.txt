@@ -1,0 +1,18 @@
+delete sessionstore.js when starting a new session
+Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.5; en-US; rv:1.9) Gecko/2008051202 Firefox/3.0 (10.5.2)
+
+While going through the session store test case in litmus (test case 4275), it look like you can restore to the wrong session, to the restored session prior to to starting new session after abnormal exit.
+
+Steps to reproduce:
+1. add this to your prefs.js file: user_pref("browser.sessionstore.interval", 1);
+2. Start the browser and load the latest headline in all tab
+3. kill -9 the process corresponding to your Firefox instance
+4. Relaunch it. When the dialog to restore session come up, select Start New Session.
+5. kill -9 it too.
+6. Relaunch it. When the dialog come up, choose Restore Session.
+
+Expected: Browser should launch and open the default Start page (assuming this is a clean profile where no home page customizations have been done).
+
+Actual: You rever to the session in step 2, with the latest headline open in all tabs.
+
+It look like upon relaunching the browser with a new session in step 4 the sessionstore file are not being deleted.

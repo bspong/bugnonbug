@@ -1,0 +1,23 @@
+With cookies disabled, various failures in tab and session restore functions occur when visiting certain web pages.
+When visiting certain web pages with cookies disabled, errors in the Back button history menu, session save/restore, and undo / re-open tabs and windows occur. The problems occur in Firefox 43.0 to FirefoxNightly 46.0a1.
+
+The problem is triggered by specific web pages. Examples include:
+Microsoft - http://www.microsoft.com/en-us/
+Boing Boing - http://boingboing.net
+Popular Science - http://www.popsci.com
+
+If one or more of these "bad" pages is visited with cookies disabled, the following errors can occur:
+- the Back button's history drop-down menu may not contain entries for the pages, or the menu may become inacessible, or show an incorrect position.
+- when using "Show my windows and tabs from last time", a history entry for the page's URL, title, etc., is not recorded to sessionstore.js on quit. After restart, the previously-visited page in the tab's history is displayed instead.
+- if the tab is closed, the Undo Close Tab menu item is grayed out, and an entry in the Recently Closed Tabs menu is not created.
+- if a window with a tab containing one of the pages is closed, an entry in the Recently Closed Windows menu is not created, and its entry in sessionstore.js is not moved to the "closed windows" section. After restore, the closed window is re-opened.
+
+The issue is not present in Firefox 42.0 and earlier, where the same pages work without error. It is still present as of FirefoxNightly 46.0a1 2016-01-06, with the exception that if one of the bad URLs is opened directly from the New Tab page (but not the Start Page), with no other history, it can be correctly saved and restored.
+
+I don't know what the "bad" pages have in common, except that when cookies are disabled, the Web Console shows "SecurityError: The operation is insecure", which is not present when cookies are enabled. However, other sites that show the same error, such as wikipedia.org, can be saved and restored correctly.
+
+Disabling Javascript with eg. QuickJS, avoids the problem. It may be possible that there are pages that trigger the behaviour even when cookies are enabled, but I haven't encountered any. 
+
+All errors can be reproduced 100% of the time. Testing was done with a new profile, no addons installed, all default settings except "Show my windows and tabs from last time", and with "Accept cookies from sites" unchecked. I can provide detailed steps to reproduce if necessary.
+
+This bug may be related to bug 1232955, bug 1217026, bug 1234021, and to the second comment in bug 1225501.

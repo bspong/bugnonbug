@@ -1,0 +1,82 @@
+Trunk (but firebird build) build break with error in security/nss/lib/pk11wrap/secmod.h
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.6a) Gecko/20031003 Firebird/0.7+ (Optimized for:Athlon XP-SSE by Yek)
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.6a) Gecko/20031010 Firebird/0.7+
+
+I wa rebuilding to test another bug I'd reported today, but the new cv pull
+(about 10/10 1800gmt) failed to build. This wa the output:
+
+gcc -o Linux2.6_x86_glibc_PTH_OPT.OBJ/pk11util.o -c -O2 -fPIC -DLINUX1_2 -Di386
+-D_XOPEN_SOURCE -DLINUX2_1 -ansi -Wall -pipe -DLINUX -Dlinux -D_POSIX_SOURCE
+-D_BSD_SOURCE -DHAVE_STRERROR -DXP_UNIX -UDEBUG -DNDEBUG -D_REENTRANT
+-I/d2/src/firebird/mozilla/dist/include -I../../../../dist/public/nss
+-I../../../../dist/private/nss -I../../../../dist/include
+-I/d2/src/firebird/mozilla/dist/include/nspr
+-I/d2/src/firebird/mozilla/dist/include/dbm -I../../../../dist/public/dbm
+pk11util.c
+pk11util.c:504: conflicting type for `SECMOD_AddNewModuleEx'
+secmod.h:136: previous declaration of `SECMOD_AddNewModuleEx'
+pk11util.c:556: conflicting type for `SECMOD_AddNewModule'
+secmod.h:131: previous declaration of `SECMOD_AddNewModule'
+gmake[4]: *** [Linux2.6_x86_glibc_PTH_OPT.OBJ/pk11util.o] Error 1
+gmake[4]: Leaving directory `/d2/src/firebird/mozilla/security/nss/lib/pk11wrap'
+gmake[3]: *** [libs] Error 2
+gmake[3]: Leaving directory `/d2/src/firebird/mozilla/security/nss/lib'
+gmake[2]: *** [libs] Error 2
+gmake[2]: Leaving directory `/d2/src/firebird/mozilla/security/manager'
+gmake[1]: *** [tier_40] Error 2
+gmake[1]: Leaving directory `/d2/src/firebird/mozilla'
+make: *** [default] Error 2
+
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. pull cv fresh with a date tag of -D 2003-10-10 18:00 GMT (well, that's when
+I did my cv co again).
+2. ./configure using my mozconfig from bug 221795
+3. make
+
+Actual Results:
+gcc -o Linux2.6_x86_glibc_PTH_OPT.OBJ/pk11util.o -c -O2 -fPIC -DLINUX1_2 -Di386
+-D_XOPEN_SOURCE -DLINUX2_1 -ansi -Wall -pipe -DLINUX -Dlinux -D_POSIX_SOURCE
+-D_BSD_SOURCE -DHAVE_STRERROR -DXP_UNIX -UDEBUG -DNDEBUG -D_REENTRANT
+-I/d2/src/firebird/mozilla/dist/include -I../../../../dist/public/nss
+-I../../../../dist/private/nss -I../../../../dist/include
+-I/d2/src/firebird/mozilla/dist/include/nspr
+-I/d2/src/firebird/mozilla/dist/include/dbm -I../../../../dist/public/dbm
+pk11util.c
+pk11util.c:504: conflicting type for `SECMOD_AddNewModuleEx'
+secmod.h:136: previous declaration of `SECMOD_AddNewModuleEx'
+pk11util.c:556: conflicting type for `SECMOD_AddNewModule'
+secmod.h:131: previous declaration of `SECMOD_AddNewModule'
+gmake[4]: *** [Linux2.6_x86_glibc_PTH_OPT.OBJ/pk11util.o] Error 1
+gmake[4]: Leaving directory `/d2/src/firebird/mozilla/security/nss/lib/pk11wrap'
+gmake[3]: *** [libs] Error 2
+gmake[3]: Leaving directory `/d2/src/firebird/mozilla/security/nss/lib'
+gmake[2]: *** [libs] Error 2
+gmake[2]: Leaving directory `/d2/src/firebird/mozilla/security/manager'
+gmake[1]: *** [tier_40] Error 2
+gmake[1]: Leaving directory `/d2/src/firebird/mozilla'
+make: *** [default] Error 2
+[
+
+Expected Results:
+It should have built successfully.
+
+pk11util.c includes secmod.h which doe an extern declare of these 2 modules:
+
+SECMOD_AddNewModuleEx
+SECMOD_AddNewModule
+
+pk11util.c also then declares and defines those two modules.
+
+It seems a if there should be an #ifdef on the "extern declare" in secmod.h if
+it's going to be included in the defining .c module. (but this is just from 1
+minute of staring at those two file and I've gotta hit the road for work now).
+
+History: I'd pulled cv fresh today a couple hour ago and ran into the bug in
+nsHttpHandler.cpp concerning no prefs. I wa asked to redownload cv and rebuild
+(before I knew this wa a duplicate bug), so I did another cv co of the mozilla
+trunk, and used my firebird .mozconfig mentioned above to build it.

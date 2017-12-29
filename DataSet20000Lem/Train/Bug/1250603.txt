@@ -1,0 +1,33 @@
+update "WebappRT" comment or remove app restriction on component
+After I remove the web runtime in bug 1238079, we won't need to restrict various component to a specific list of apps because of "WebappRT" (i.e. the desktop web runtime):
+
+https://dxr.mozilla.org/mozilla-central/search?q=WebappRT+doesn%27t+need+these+instructions&redirect=true&case=false
+
+However, in my testing, I've found that we still need to do so in at least some case for other reasons, a a variety of test fail otherwise with message like:
+
+> Assertion count 1 is greater than expected range 0-0 assertions.
+
+In log for debug builds, I also see many instance of warning like:
+
+> 03:17:17 INFO - [Child 708] WARNING: NS_ENSURE_SUCCESS(rv, rv) failed with result 0x80004005: file c:/builds/moz2_slave/try-w64-d-00000000000000000000/build/src/toolkit/xre/nsXREDirProvider.cpp, line 1408
+> 03:17:17 INFO - [Child 708] WARNING: NS_ENSURE_SUCCESS(rv, rv) failed with result 0x80004005: file c:/builds/moz2_slave/try-w64-d-00000000000000000000/build/src/xpcom/base/nsSystemInfo.cpp, line 112
+> 03:17:17 INFO - [Child 708] WARNING: NS_ENSURE_SUCCESS(rv, rv) failed with result 0x80040111: file c:/builds/moz2_slave/try-w64-d-00000000000000000000/build/src/netwerk/protocol/res/SubstitutingProtocolHandler.cpp, line 244
+> 03:17:17 INFO - [Child 708] WARNING: NS_ENSURE_SUCCESS(rv, rv) failed with result 0x80040111: file c:/builds/moz2_slave/try-w64-d-00000000000000000000/build/src/netwerk/protocol/res/SubstitutingProtocolHandler.cpp, line 244
+> 03:17:17 INFO - [Child 708] WARNING: NS_ENSURE_SUCCESS(rv, rv) failed with result 0x80040111: file c:/builds/moz2_slave/try-w64-d-00000000000000000000/build/src/netwerk/base/nsIOService.cpp, line 779
+> 03:17:17 INFO - [Child 708] WARNING: NS_ENSURE_SUCCESS(rv, rv) failed with result 0x80040111: file c:\builds\moz2_slave\try-w64-d-00000000000000000000\build\src\netwerk\base\nsNetUtil.inl, line 180
+> 03:17:17 INFO - [Child 708] WARNING: NS_ENSURE_SUCCESS(rv, rv) failed with result 0x80040111: file c:/builds/moz2_slave/try-w64-d-00000000000000000000/build/src/js/xpconnect/loader/mozJSComponentLoader.cpp, line 251
+> 03:17:17 INFO - [Child 708] WARNING: NS_ENSURE_SUCCESS(rv, rv) failed with result 0x80040111: file c:/builds/moz2_slave/try-w64-d-00000000000000000000/build/src/js/xpconnect/loader/mozJSComponentLoader.cpp, line 1135
+
+Followed by error like:
+
+> 03:17:17 INFO - JavaScript error: jar:file:///C:/slave/test/build/application/firefox/omni.ja!/components/Weave.js, line 13: NS_ERROR_NOT_AVAILABLE: Component returned failure code: 0x80040111 (NS_ERROR_NOT_AVAILABLE) [nsIXPCComponents_Utils.import]
+> 03:17:17 INFO - [Child 708] WARNING: Cannot create startup observer : service,@mozilla.org/weave/service;1: file c:/builds/moz2_slave/try-w64-d-00000000000000000000/build/src/embedding/components/appstartup/nsAppStartupNotifier.cpp, line 81
+
+And:
+
+> 13:19:08 INFO - JavaScript error: jar:file:///builds/slave/test/build/application/firefox/browser/omni.ja!/components/nsBrowserGlue.js, line 3222: NS_ERROR_XPC_GS_RETURNED_FAILURE: Component returned failure code: 0x80570016 (NS_ERROR_XPC_GS_RETURNED_FAILURE) [nsIJSCID.getService]
+> 13:19:08 INFO - [Child 2477] WARNING: Cannot create startup observer : service,@mozilla.org/browser/browserglue;1: file /builds/slave/try-l64-d-00000000000000000000/build/src/embedding/components/appstartup/nsAppStartupNotifier.cpp, line 81
+
+So there's clearly another reason to restrict one or more of these component to a specified list of apps, and we should continue to do so. But we should update the comment to reflect the current reason (or at least stop crediting WebappRT).
+
+We might also be able to remove the restriction for some of these components. In my test so far, removing them from browser/components/BrowserComponents.manifest and browser/components/feeds/BrowserFeeds.manifest seems to cause test failures, while removing them from browser/components/sessionstore/nsSessionStore.manifest doesn't seem to cause problems. Unsure about services/sync/SyncComponents.manifest.

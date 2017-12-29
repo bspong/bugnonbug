@@ -1,0 +1,32 @@
+spoofing risk in social activation doorhanger
+The social activation doorhanger embeds page content in the middle of a sentence, a known spoofing risk. In English the prompt read
+
+Would you like to enable service from <name> to display
+in your <ShortBrand> toolbar and sidebar?
+
+In bug 1029942 comment 27 Shane note that we already use the name in a number of place such a menu item and in about:addons. However those are context where the name stand alone. Embedded in a sentence this allows a malicious page to get creative and use the sentence structure to endow authority or mislead about who's asking. E.g.:
+
+Would you like to enable service from <Mozilla that prevent
+website from tracking you, and> to display in your
+<ShortBrand> toolbar and sidebar?
+
+Not great (Nigerian-spam quality grammar; I'm sure Jesse could come up with something better) but I hope that give a taste of what's possible. Keep web-supplied value contextually separate from the prompt (Bonus: this is easier for localization, too).
+
+Off the top of my head (i.e. plenty of room for improvement):
+
+This website offer enhanced service that can display
+in your <ShortBrand> toolbar and sidebar. Would you like
+to enable them?
+
+Service: <name>
+Homepage: <url>
+
+That brings u to the second problem: Website A can claim to be installing service for B while actually installing service for C. By not showing the URL for which we're adding the service we've created a phisher's dream. For example: from our activation site (mozilla.net) I installed what the site /said/ wa GMail. Since I often flush my cookied the first thing that happened when I clicked on the "Share" button wa a panel claiming to be google in web content wanting me to give it my password. I have no idea whether what got installed wa GMail, and having installed it I have no idea who wa really behind that password prompt.
+
+OK, so everyone trust Mozilla and we're not going to do anything evil from our activation page -- it's probably the real GMail. But what about some other random page? If I'm on trusted Foo.com and it asks to install service for itself I can probably trust that, too -- why would they lie? Unless, of course, they were hacked or I'm on an insecure (http) connection to it. But if I'm on some "fan" site for a service the average user ha no way to know whether it's an evil fan or not.
+
+Gotta show the origin somewhere.
+
+(and of course when you show the origin watch out for scumbags who create really long domain hoping bit get truncated: www.facebook.com.social.I.hope.this.is.cut.off.evil.com. eTLD+1 can be misleading, but if bit get truncated it might be safer than the truncation. If you do truncate, chop from the front not the middle.)
+
+But then we might show the "homepage" field, and it might not match the actual service origins. Does the API force the important URLs to be same-origin? The Icons probably don't matter (or at least we should make an exception to allow data:) but the service should match the homepage. Or the service should match each other, and we show /that/ origin on the dialog, saving the homepage field for the addons manager.

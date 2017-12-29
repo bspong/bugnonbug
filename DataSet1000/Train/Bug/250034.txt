@@ -1,0 +1,49 @@
+Browser hangs, cpu usage goes to 99+%
+User-Agent:       Mozilla/5.0 (compatible; Konqueror/3.2; Linux) (KHTML, like Gecko)
+Build Identifier: Firefox version 0.9.1
+
+The sequence of page hits (see below strace) produces a (fully) reproducible 
+condition which locks up my firefox. When it locks, I see this in strace. 
+ 
+select(4, [3], NULL, NULL, NULL)        = 1 (in [3]) 
+read(3, "\1\1n}\0\0\0\0A\356\0\0015\0\236\0\0\0\0\0\0\0\0\0(\0\0"..., 32) = 32 
+write(3, "(\0\4\0\344\v\300\2\216\0\0\0\0\0\0\0", 16) = 16 
+read(3, 0xbfffd280, 32)                 = -1 EAGAIN (Resource temporarily 
+unavailable) 
+select(4, [3], NULL, NULL, NULL)        = 1 (in [3]) 
+read(3, "\1\1o}\0\0\0\0A\356\0\0015\0\236\0\0\0\0\0\0\0\0\0(\0\0"..., 32) = 32 
+write(3, "(\0\4\0\344\v\300\2\216\0\0\0\0\0\0\0", 16) = 16 
+read(3, "\1\1p}\0\0\0\0A\356\0\0015\0\236\0\0\0\0\0\0\0\0\0(\0\0"..., 32) = 32 
+write(3, "(\0\4\0\344\v\300\2\216\0\0\0\0\0\0\0", 16) = 16 
+read(3, "\1\1q}\0\0\0\0A\356\0\0015\0\236\0\0\0\0\0\0\0\0\0(\0\0"..., 32) = 32 
+write(3, "(\0\4\0\344\v\300\2\216\0\0\0\0\0\0\0", 16) = 16 
+read(3, "\1\1r}\0\0\0\0A\356\0\0015\0\236\0\0\0\0\0\0\0\0\0(\0\0"..., 32) = 32 
+gettimeofday({1089132809, 131113}, NULL) = 0 
+gettimeofday({1089132809, 131743}, NULL) = 0 
+kill(12243, SIGRTMIN)                   = 0 
+gettimeofday({1089132809, 132466}, NULL) = 0 
+gettimeofday({1089132809, 132565}, NULL) = 0 
+gettimeofday({1089132809, 133831}, NULL) = 0 
+gettimeofday({1089132809, 159452}, NULL) = 0 
+gettimeofday({1089132809, 159603}, NULL) = 0 
+kill(12243, SIGRTMIN) 
+ 
+			 
+ 
+ 
+
+Reproducible: Always
+Steps to Reproduce:
+	1.) got to http://c4.codeweavers.com 
+	2.) Select "Search" link on left-hand side 
+	3.) Enter Goldmine in "Application Name" and press <Submit Search> 
+	4.) Choose "Goldmine 6.5"  
+	5.) Choose "Search" link on left-hand side 
+	 
+Actual Results:  
+You are now hung. 
+
+Expected Results:  
+Should have returned to the Search page and not consumed all of my CPU 
+
+Strace in details above

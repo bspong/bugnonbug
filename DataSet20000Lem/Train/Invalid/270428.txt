@@ -1,0 +1,36 @@
+XMLHttpRequest resends address transaction instead of transaction spec'd
+User-Agent: Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; .NET CLR 1.1.4322; .NET CLR 1.0.3705)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.5) Gecko/20041107 Firefox/1.0
+
+Loading page with CGI transaction http://192.168.1.39:8081/GetHTML?
+FilePath=c:\Test\xmlhttp.html in order to skip security error by implicit cross-
+domain load from file:/// vs. localhost. Set up XMLHttpRequest object to use
+TestTrans transaction instead of GetHTML [ URL becomes
+http://192.168.1.39:8081/TestTrans?form0.field1=25&etc... ] but when sent the
+server see GetHTML exercised again, not TestTrans. All the aggregated form
+data is sent along, but it appears that the XMLHttpRequest object substitute
+the original transaction in the URL for the one I need to send.
+
+Ran the exact same page/activity in IE (using ActiveXObject
+("Microsoft.XMLHTTP")) and got the expected results--no substitution of CGI
+transaction specifier.
+
+Reproducible: Always
+Steps to Reproduce:
+1. Load a page via CGI transaction
+2. Use XMLHttpRequest to send a transaction request back to the URL, but use a
+different CGI transaction instead of the original transaction
+
+Actual Results:
+Moz/Firefox sent the original transaction with new URL data
+
+Expected Results:
+Sent the requested transaction with the new URL data
+
+The web server is our code, but since I'm echoing the URL before sending the
+GET and seeing what I expect to see, I'm confident that we're not seeing the
+wrong code called in the server. (It's been in the field for about 8 year now
+[in major corporate installations], and we don't see this occur anywhere
+else.) This is a normal priority bug, since it doesn't break anything in our
+world right now, but it doe keep me from certifying that some major airline
+web-checkin site are completely Firefox/Netscape compatible.

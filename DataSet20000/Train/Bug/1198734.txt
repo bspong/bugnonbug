@@ -1,0 +1,37 @@
+debugger causes Promise handler to be executed early
+User Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:40.0) Gecko/20100101 Firefox/40.0
+Build ID: 20150819100600
+
+Steps to reproduce:
+
+When the Developer Tools are open, a Promise `then` handler is called earlier than expected, while other Javascript code is running (see http://jsbin.com/pikaxiwuke/1/edit?js,console for live example):
+
+   (function() {
+      function create_closure() {
+         return function() {
+            var x;
+            x.apply(this, arguments);
+         };
+      }
+     
+     
+      var p = new Promise(function(res) {
+         res();
+      });
+   
+      var state = 1;
+      p.then(function() {
+         console.log('executed in state ' + state);
+      });
+   
+      state = 2;
+      create_closure();
+   
+      state = 3;
+   })();
+
+Here normally "executed in state 3" will be logged into the console, since the promise handler runs after the main function is completed.
+
+With opened Developer Tools, it will log "executed in state 2" instead. The promise handler runs during the call to `create_closure()` even though it shouldn't. `create_closure()` is completely synchronous and it shouldn't be interrupted by the promise handler.
+
+This can lead to all kinds of concurrency issues since the main Javascript is unexpectedly interrupted and might be in an inconsistent state when the promise handler runs. Also it makes debugging hard, since the program behaves differently when the debugger is activated.

@@ -1,0 +1,56 @@
+browser_bug462673 fails under e10s during "Window is closed" test
+- found while working on another bug, this test fails when it expects the two tab one closed in the test and the to be closed one via an unload handler to result in a closed window.
+
+executeSoon wa replaced with a lengthy setTimeout (up to 10,000), so we do not think it is an issue of ipc taking more work under e10s.
+
+adding dump the test file:
++++ b/browser/base/content/test/general/test_bug462673.html
+@@ -1,17 +1,20 @@
+<html>
+<head>
+<script>
+var w;
+function openIt() {
+w = window.open("", "window2");
++ window.dump("anaaktge-- openIt() opened window2");
+}
+function closeIt() {
++ window.dump("anaakge-- first line of closeIt()");
+if (w) {
++ window.dump("anaaktge-- w is not null, about to call w.close()");
+w.close();
+w = null;
+}
+}
+</script>
+</head>
+<body onload="openIt();" onunload="closeIt();">
+</body>
+
+show the following in the log
+0:09.81 TEST-START | chrome://mochitests/content/browser/browser/base/content/t
+est/general/browser_bug462673.js
+0:10.00 TEST-INFO | chrome://mochitests/content/browser/browser/base/content/te
+st/general/browser_bug462673.js | Console message: [JavaScript Error: "this._cps
+2 is undefined" {file: "chrome://browser/content/browser.js" line: 1700}]
+0:10.05 TEST-PASS | chrome://mochitests/content/browser/browser/base/content/te
+st/general/browser_bug462673.js | test_bug462673.html ha opened a second tab
+0:10.05 TEST-PASS | chrome://mochitests/content/browser/browser/base/content/te
+st/general/browser_bug462673.js | dependent tab is selected
+0:10.10 anaakge-- first line of closeIt()TEST-UNEXPECTED-FAIL | chrome://mochit
+ests/content/browser/browser/base/content/test/general/browser_bug462673.js | Wi
+ndow is closed
+0:10.10 Stack trace:
+0:10.10 JS frame :: chrome://mochitests/content/browser/browser/base/conten
+t/test/general/browser_bug462673.js :: runs</< :: line 9
+0:10.10 JS frame :: chrome://mochikit/content/browser-test.js :: testScope/
+test_executeSoon/<.run :: line 786
+0:10.10 JS frame :: chrome://mochitests/content/browser/browser/base/conten
+t/test/general/test_bug462673.html :: openIt :: line 6
+0:10.10 JS frame :: chrome://mochitests/content/browser/browser/base/conten
+t/test/general/test_bug462673.html :: onload :: line 1
+0:10.10 native frame :: <unknown filename> :: <TOP_LEVEL> :: line 0
+0:10.10
+0:10.51 anaaktge-- openIt() opened window2
+
+Bill suspect something is wrong with the order of the load events.

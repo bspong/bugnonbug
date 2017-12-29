@@ -1,0 +1,37 @@
+MLK: Memory leak from BritishAirways.com - possibly in JavaScript
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-GB; rv:1.8.1b1) Gecko/20060710 Firefox/2.0b1
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-GB; rv:1.8.1b1) Gecko/20060710 Firefox/2.0b1
+
+The BritishAirways.com web site cause Firefox to use ~30% CPU and memory to grow without bound. Freshly started Firefox process. Virtual memory size wa 139 MiB. 20 minute later after doing nothing the virtual memory size had grown to 1095 MiB. That's ~39 MiB leak per minute.
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Go to the BritishAirways.com web site
+2. Monitor Firefox process memory size (e.g. via top)
+
+Actual Results:
+Firefox process size grows without bound.
+
+
+Fedora Core 5 (x86) OS with all updates.
+Also effect Firefox 1.5.0.4 and 1.5.0.6 Fedora package the same way.
+
+This may no technically be a memory leak a the resident set size of Firefox also grows to a much a the OS can handle. This suggests that the process is accessing all the page in it virtual memory.
+
+When I first discovered this problem a few day ago Firefox (then 1.5.0.4) had been left for several hours. The virtual memory size grew to 1819 MiB and wa causing the machine to swap so much that the CPU wa spending 95% of it time waiting for disk IO completion. Heres the output from top:
+
+top - 20:04:02 up 3 days, 32 min, 3 users, load average: 7.19, 7.61, 5.12
+Tasks: 116 total, 2 running, 114 sleeping, 0 stopped, 0 zombie
+Cpu(s): 0.9% us, 3.8% sy, 0.0% ni, 0.0% id, 94.8% wa, 0.4% hi, 0.0% si, 0Mem: 1035168k total, 1021516k used, 13652k free, 272k buffer
+Swap: 1004052k total, 1004040k used, 12k free, 9056k cached
+
+PID USER PR NI VIRT RES SHR S %CPU %MEM TIME+ COMMAND
+171 root 15 0 0 0 0 D 3.3 0.0 0:14.52 kswapd0
+2226 haldaemo 15 0 5100 1056 708 S 0.3 0.1 0:01.79 hald
+10592 root 15 0 213m 3760 1048 S 0.3 0.4 7:46.14 Xorg
+10692 mike 15 0 21272 1152 916 S 0.3 0.1 0:01.31 gnome-volume-ma
+12008 mike 16 0 1819m 924m 876 D 0.3 91.5 145:36.94 firefox-bin
+18691 mike 15 0 2128 644 428 R 0.3 0.1 0:00.54 top
+1 root 16 0 2000 276 248 S 0.0 0.0 0:00.82 init

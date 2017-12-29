@@ -1,0 +1,98 @@
+PageRequestManagerParserErrorException appears when using Ajax update panels
+User-Agent:       Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9) Gecko/2008052906 Firefox/3.0
+
+When a Proxy in Mozilla is set, the (async) request from the server will be truncated. This Bug appears at random after ~100 Postbacks or so. This Problem already appeard in the older versions of Firefox but never in IE or any other Browser. Here is a link where the Bug is described at great Length, including an Hack for it, although it doesn't work all the Time.
+
+http://blog.graffen.dk/CommentView,guid,684f6439-982b-48fb-b634-aea7c9c1b8c1.aspx
+
+http://bhaskarm.blogspot.com/2007/10/intermittent-pagerequestmanagerparserer.html
+
+I build a really simple aspx Page to reproduce the error quite fast (without any Hack). I run Visual Studio 2005 (SP1) with ASP.NET 2.0 AJAX Extensions 1.0. 
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+Here is the Page with all the content you need to reproduce the error:
+
+<%@ Page Language="C#" 
+    AutoEventWireup="true" 
+    CodeFile="Empty.aspx.cs" 
+    EnableEventValidation="false"
+    Inherits="Empty" 
+    Debug="true" 
+    EnableSessionState="True" 
+    Trace="false" %>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head runat="server">
+    <title>Unbenannte Seite</title>
+</head>
+<body>
+  
+    <form id="form1" runat="server">
+    <div>       
+        <ajax:ScriptManager 
+            ID="ScriptManager1" runat="server">
+        </ajax:ScriptManager>              
+        <ajax:Timer 
+            ID="Timer1" 
+            runat="server" 
+            Interval="1000" 
+            OnTick="Timer1_Tick"           
+            EnableViewState="False">
+        </ajax:Timer>
+    </div>
+        <ajax:UpdatePanel 
+            ID="UpdatePanel2" 
+            runat="server" 
+            ChildrenAsTriggers="False" 
+            UpdateMode="Conditional">
+            <ContentTemplate>
+                <asp:Label 
+                    ID="Label1" 
+                    runat="server" 
+                    Text="Label">
+                </asp:Label>
+            </ContentTemplate>           
+            <Triggers>
+                <ajax:AsyncPostBackTrigger ControlID="Timer1" EventName="Tick" />
+            </Triggers>
+        </ajax:UpdatePanel>     
+    </form>
+</body>
+</html>
+
+
+
+Here is the Codebehind-file :
+
+using System;
+using System.Web;
+using System.Web.UI;
+
+public partial class Empty : System.Web.UI.Page
+{
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        Session["sss"] = true;       
+    }
+      
+    protected void Timer1_Tick(object sender, EventArgs e)
+    {
+        Label1.Text = DateTime.Now.Ticks.ToString();       
+    }   
+}
+Actual Results:  
+The Timer will cause the Updatepanel to do a postback every second. After 5-10 Minutes or so, the Exception will occur.
+
+Expected Results:  
+Firefox should not truncate the asynchronus response from the server. the Label in the Page should be updated every second!  
+
+All further information at these links:
+
+http://blog.graffen.dk/CommentView,guid,684f6439-982b-48fb-b634-aea7c9c1b8c1.aspx
+
+http://bhaskarm.blogspot.com/2007/10/intermittent-pagerequestmanagerparserer.html

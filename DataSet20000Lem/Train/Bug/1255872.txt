@@ -1,0 +1,28 @@
+Source map exception in the log when opening the debugger on irccloud.mozilla.com
+STR:
+
+- Login to irccloud.mozilla.com (hopefully a lot of people at mozilla use irccloud, so you'll be able to reproduce this, I haven't tried when not logged in).
+- Open the debugger panel.
+
+The following stack trace is logged to the browser console
+
+"TabSources.prototype._fetchSourceMap threw an exception: SyntaxError: JSON.parse: unexpected character at line 1 column 1 of the JSON data
+Stack: SourceMapConsumer@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/shared/sourcemap/source-map.js:1281:20
+TabSources.prototype._fetchSourceMap/fetching<@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/server/actors/utils/TabSources.js:447:19
+Handler.prototype.process@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/Promise-backend.js:933:23
+this.PromiseWalker.walkerLoop@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/Promise-backend.js:812:7
+Promise*this.PromiseWalker.scheduleWalkerLoop@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/Promise-backend.js:743:11
+this.PromiseWalker.schedulePromise@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/Promise-backend.js:775:7
+this.PromiseWalker.completePromise@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/Promise-backend.js:710:7
+mainThreadFetch/onResponse@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/shared/DevToolsUtils.js:442:7
+NetUtil_asyncFetch/<.onStopRequest@resource://gre/modules/NetUtil.jsm:128:17
+Line: 1281, column: 20"
+
+This seems mostly harmless, the debugger seems to work fine anyway.
+
+I have fixed a similar problem in the style-editor recently. This most probably come from doing
+
+let map = new SourceMapConsumer(content);
+
+inside TabSources.prototype._fetchSourceMap
+And this happens when content isn't something that JSON.parse can parse (so it could be, for instance, a 404 HTML page returned by the server).

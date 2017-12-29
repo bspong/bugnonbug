@@ -1,0 +1,14 @@
+Online Path of Exile Passive Skill Tree editor generates SessionStore jank by saving lot of page history
+(Created in response to bug 934934 comment #18)
+
+Having various Path of Exile character build open significantly impact SessionStore. It seems that every time you modify one of these builds, it creates a new entry in the page history, and each entry get saved. I had two build open in pinned tab with lot of history from tweaking each build, and this caused me to experience significant jank whenever the SessionStore file wa updated. about:sessionstore showed me that these tab were causing around 26MiB of SessionStore usage, and Windows' task manager showed 400-500 MiB spike in memory usage every time the SessionStore file wa written.
+
+Opening these build in new tab (thereby losing the back button history) then clearing the closed tab entry in about:sessionstore made SessionStore size drop back down to ~400kiB and made the jank go away (it also lowered average total memory usage by about 100MiB, even beyond eliminating the spikes).
+
+See the example build in the associated URL. You can play around with it by deallocating any of the leaf node and putting these point into something else - each change will increase the amount of page showing up in the back button page history by one.
+
+As I see it there are two problem here:
+1) Page history end up containing a large amount of Passive Skill Tree page instance - about:sessionstore showed over 300 child for each pinned tab. Perhaps the amount of data saved this way could be capped, but going back a long way in a tab's history is also a possible use case.
+2) SessionStore janks Firefox significantly while reading or writing all this data - a second or two on my fast PC - and memory usage spike considerably. I don't know how much of this is done asynchronously right now, but I would expect that
+a) Nothing in the page history could have changed, so that data shouldn't need to be updated and
+b) If it is necessary to handle these entry every time, at least the inactive content should be done asynchronously (I expect that at least some part of saving *active* content will always be synchronous).

@@ -1,0 +1,35 @@
+Investigate DevTools XPCShell test collisions on B2G Emulator Debug
+In bug 912121, I am moving all DevTools files up to a top-level /devtools directory.
+
+This has led to the following situation for XPCShell on B2G Emulator ICS debug:
+
+# Overview
+
+* Emulator debug XPCShell tests are split into 4 chunks
+* Tests are sorted alphabetically by source tree path before dividing into chunks
+
+# Current State (before bug 912121 changes)
+
+* Example run: https://treeherder.mozilla.org/#/jobs?repo=fx-team&revision=30fffdc35b41&filter-searchStr=ics%20xpcshell
+* Chunk 1 starts the RIL tests up to test_ril_worker_cw.js, then the chunk ends
+* Chunk 2 runs the remaining RIL tests
+
+# Future State (after bug 912121 changes)
+
+* Example run: https://treeherder.mozilla.org/#/jobs?repo=try&revision=052b34bc7034&filter-searchStr=ics%20xpcshell
+* All DevTools tests are now before RIL in alphabetic sort
+* Chunk 1 starts the RIL tests up to test_ril_worker_icc_ICCPDUHelper.js, then the chunk ends
+* Chunk 2 tries to run remaining RIL tests, but test_ril_worker_cellbroadcast.js now permafails
+* Bug 912121 caused 16 RIL tests to move from chunk 1 to chunk 2
+
+# Solutions
+
+I tried disabling the RIL tests, but other tests continue to permafail in chunk 2.  In order to land bug 912121 for now, I have disabled the following directories on Gonk:
+
+devtools/shared/apps
+devtools/shared/qrcode
+devtools/shared/security
+devtools/shared/shared
+devtools/shared/sourcemap
+
+We should investigate a better solution so we can re-enable the DevTools tests here.

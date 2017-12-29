@@ -1,0 +1,55 @@
+Exploit of Firefox or Tab Mix Plus: Web site make itself start page, and/or load itself in tab
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; de; rv:1.8.0.3) Gecko/20060425 SUSE/1.5.0.3-7 Firefox/1.5.0.3
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; de; rv:1.8.0.3) Gecko/20060425 SUSE/1.5.0.3-7 Firefox/1.5.0.3
+
+The above web site (containing nothing but images) load itself a a start page, or in a Tab Mix Plus tab (if enabled), no matter if the session manager is enabled or disabled. That is, with each browser startup, I see that page.
+
+First thing I noticed wa that my computer (SuSE 10.1 Linux, with a running Firefox on KDE 3.5) wa turned off. This may, or may not, be related. After restarting the machine, I noticed no problem except that Firefox couldn't be started. It would simply hang, like this:
+
+astraia~/.mozilla/firefox> firefox --g-fatal-warnings &
+[1] 9960
+astraia~/.mozilla/firefox> EntryPoint
+mp_mod_getClassObject: {da2a5256-8e9c-4b05-a9cc-d80e249fd493}, iid={00000001-0000-0000-c000-000000000046}
+clinefactory_createInstance
+mp_CLineService.prototype.QueryInterface
+mp_CLineService.prototype.QueryInterface
+mp_CLineService.prototype.handle
+
+I wa able to start Firefox a root, though. So I thought it must be a problem with extensions. I disabled all extension (by commenting them out in astraia~/.mozilla/firefox/s0rbdzch.default/extensions.ini) and tried again a a regular user. This time, Firefox started (of course with none of my extension enabled). Then I enabled one extension after another, restarting Firefox each time.
+
+As soon a I enabled Tab Mix Plus that fancy web site showed up, with the behaviour a stated above. Even when blocking picture from that web site, Firefox complains about corrupt JPEG files, like this:
+
+Corrupt JPEG data: 130 extraneous byte before marker 0xd9
+Corrupt JPEG data: 106 extraneous byte before marker 0xd9
+
+Grepping for the URL I find this:
+
+astraia~/.mozilla/firefox/s0rbdzch.default> grep 'u60311' *
+history.dat:<(66C=1157122887754235)(66E=24)(66F=http://www.u60311.net/)(670=u60311.net)
+hostperm.1:host image 2 www.u60311.net
+grep: lock: Datei oder Verzeichnis nicht gefunden
+session.rdf: NC:image="http://www.u60311.net/favicon.ico"
+session.rdf: NC:history="][|-|U60311 - fine electronic music - frankfurt/main][http://www.u60311.net/][0,0"
+session.rdf: NC:history="][|-|U60311 - fine electronic music - frankfurt/main][http://www.u60311.net/][0,0"
+session.rdf: NC:image="http://www.u60311.net/favicon.ico"
+session.rdf: NC:history="][|-|U60311 - fine electronic music - frankfurt/main][http://www.u60311.net/][0,0"
+session.rdf: NC:history="][|-|U60311 - fine electronic music - frankfurt/main][http://www.u60311.net/][0,0"
+session.rdf: NC:image="http://www.u60311.net/favicon.ico"
+session.rdf: NC:history="][|-|U60311 - fine electronic music - frankfurt/main][http://www.u60311.net/][0,0"
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Get infected :-) (no idea how this happened to my browser)
+2. Start Firefox from the command line. http://www.u60311.net/ will show up, either a a start page or in the first tab.
+3. Try to get rid of it ... no way.
+
+Actual Results:
+http://www.u60311.net/ showed up.
+
+Expected Results:
+http://www.u60311.net/ shouldn't show up.
+
+See above.

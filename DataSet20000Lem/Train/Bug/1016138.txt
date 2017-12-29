@@ -1,0 +1,27 @@
+Add telemetry probe for master password usage
+Created attachment 8428941
+The patch which caused the xperf failure
+
++++ This bug wa initially created a a clone of Bug #1013448 +++
+
+This will help u better estimate how many user have master password enabled.
+
+The patch from bug 1013448 caused xperf test failures:
+
+00:38:30 INFO - TEST-UNEXPECTED-FAIL : xperf: File '{profile}\secmod.db' wa accessed and we were not expecting it. DiskReadCount: 6, DiskWriteCount: 0, DiskReadBytes: 16904, DiskWriteBytes: 0
+
+00:38:30 INFO - TEST-UNEXPECTED-FAIL : xperf: File '{profile}\cert8.db' wa accessed and we were not expecting it. DiskReadCount: 4, DiskWriteCount: 0, DiskReadBytes: 33288, DiskWriteBytes: 0
+
+00:38:30 INFO - TEST-UNEXPECTED-FAIL : xperf: File '{profile}\key3.db' wa accessed and we were not expecting it. DiskReadCount: 4, DiskWriteCount: 0, DiskReadBytes: 8712, DiskWriteBytes: 0
+
+because we were querying the master-password state a part of delayedStartup, causing these reads.
+
+(In reply to Vladan Djeric (:vladan) from bug 1013448 comment 21)
+> I think you can fix this by moving the Telemetry work out of
+> _delayedStartup. Either do it after sessionstore-windows-restored (i.e.
+> listen for this event and then do the work in a setTimeout) or at browser
+> exit ("profile-before-change" event).
+
+I'm wondering if there is a way to avoid this additional IO completely - eg, move the probe closer to the security modules, and write the probe once we are already doing the IO for other reason (eg, to read a password).
+
+Dolske, any thoughts?

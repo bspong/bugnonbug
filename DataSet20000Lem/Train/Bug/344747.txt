@@ -1,0 +1,15 @@
+Moving button on bookmark toolbar from left to right result in button being moved one too far
+If you try to move a button on the bookmark toolbar, and move it from left to right, it'll insert at a point one index too far. This only work with non-folder buttons.
+
+The reason is that controller.js remove the button from it old position before it insert it at the new one in PMIT_doTransaction():
+http://lxr.mozilla.org/seamonkey/source/browser/components/places/content/controller.js#2407
+Because there's now one element less, the index for the point of insertion need to be decremented by one.
+
+Adjusting it in that function will fix the problem for bookmark buttons, but it'll then screw up the moving of bookmark in the Places tree, because Places also us that function, but itpreemptively adjusts the insertion point index much earlier, using _adjustInsertionPoint() in tree.xml:
+http://lxr.mozilla.org/seamonkey/source/browser/components/places/content/tree.xml#923
+
+So what's the best way to fix this?
+- maybe, in toolbar.xml (which handle toolbar DnD), emulate what's done in tree.xml, by creating an _adjustInsertionPoint() function and calling it in TBV_DO_onDrop()?
+- or move the _adjustInsertionPoint() code to somewhere common where it can be accessed by the drop call in both tree.xml and toolbar.xml?
+- or maybe call it in neither, but adjust the insertion point later down the chain in controller.js?
+- something else?

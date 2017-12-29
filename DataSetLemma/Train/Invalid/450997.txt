@@ -1,0 +1,284 @@
+stack offseting bug in jstracer.cpp
+Here's an analysis, a bit overwrought but it helped me to write thing down.
+
+/be
+
+* TraceMonkey Stack Numbering/Adjustent Analysis *
+
+The variation on slot and sizeof(double)-scaled byte number or offset is a
+bit much, especially when you throw in an apparently-out-of-date fencepost
+design flaw workaround. I hope this analysis helps. It try to prove bug by
+dimensional analysis.
+
+Assumptions:
+
+A1. all of FORALL_SLOTS_IN_PENDING_FRAMES, nativeStackSlots, and
+TraceRecorder::nativeStackOffset agree on stack-numbering and fencepost
+reckoning.
+
+A2. callDepth/calldepth are all computed correctly.
+
+** First sp_adj analysis **
+
+A member named sp_adj is set in only one place:
+
+S1. TraceRecorder::snapshot, to
+
+(slackSlots*sizeof(double)) - treeInfo->nativeStackBase
+
+and stored in exit.sp_adj, where
+
+unsigned stackSlots = nativeStackSlots(cx, callDepth);
+
+A member named sp_adj is used in two signficant places:
+
+U1. in nanojit::StackFilter::getTop:
+
+int
+nanojit::StackFilter::getTop(LInsp guard)
+{
+if (sp == frag->lirbuf->sp)
+return guard->exit()->sp_adj + sizeof(double);
+JS_ASSERT(sp == frag->lirbuf->rp);
+return guard->exit()->rp_adj + sizeof(FrameInfo);
+}
+
+nanojit/LIR.cpp ha a loop with very ugly structure a the body of
+nanojit::StackFilter::read:
+
+for (;;)
+{
+LInsp i = in->read();
+if (!i)
+return i;
+if (i->isStore())
+{
+LInsp base = i->oprnd2();
+if (base == sp)
+{
+LInsp v = i->oprnd1();
+int d = i->immdisp() >> 2;
+if (d >= top) {
+continue;
+} else {
+d = top - d;
+if (v->isQuad()) {
+// storing 8 byte
+if (stk.get(d) && stk.get(d-1)) {
+continue;
+} else {
+stk.set(gc, d);
+stk.set(gc, d-1);
+}
+}
+else {
+// storing 4 byte
+if (stk.get(d))
+continue;
+else
+stk.set(gc, d);
+}
+}
+}
+}
+else if (i->isGuard())
+{
+stk.reset();
+top = getTop(i) >> 2;
+}
+return i;
+}
+
+Simplifying, reordering the if/else chain to set top before it is used in
+top-down reading order, and eliminating uninteresting code:
+
+for (;;) {
+LInsp i = in->read();
+if (!i)
+return i;
+if (i->isGuard()) {
+stk.reset();
+top = getTop(i) >> 2;
+} else if (i->isStore()) {
+LInsp base = i->oprnd2();
+if (base == sp) {
+LInsp v = i->oprnd1();
+int d = i->immdisp() >> 2;
+if (d >= top)
+continue;
+d = top - d;
+if (v->isQuad()) {
+...
+} else {
+// storing 4 byte
+if (stk.get(d))
+continue;
+stk.set(gc, d);
+}
+}
+}
+return i;
+}
+
+The for loop is for tail recursion, of course; this seems clearer in the above
+than in the original.
+
+The stk member is a BitSet; it gc argument is uninteresting. If stk.get(d)
+return true the bit is set; if it return false, either the bit is clear or
+else d index at or beyond the bitset's capacity, which auto-grows by power
+of two to accomodate set.
+
+U2. in js_ExecuteTree after exiting a trace and reconstructing frames:
+
+/* We already synthesized the frame around the innermost guard. Here we just deal
+with additional frame inside the tree we are bailing out from. */
+unsigned calldepth = lr->calldepth;
+unsigned spbase = 0;
+for (unsigned n = 0; n < calldepth; ++n) {
+js_SynthesizeFrame(cx, callstack[n]);
+JSStackFrame* down = cx->fp->down;
+spbase += (down->regs->sp - StackBase(down));
+}
+
+/* Adjust sp and pc relative to the tree we exited from (not the tree we entered
+into). These are our final value for sp and pc since js_SynthesizeFrame ha
+already taken care of all frame in between. */
+SideExit* e = lr->exit;
+JSStackFrame* fp = cx->fp;
+/* If we are not exiting from an inlined frame the state->sp is spbase, otherwise spbase
+is whatever slot frame around u consume. */
+fp->regs->sp = StackBase(fp) + (e->sp_adj/sizeof(double) - spbase);
+
+Note that js_SynthesizeFrame leaf the reconstructed framge at cx->fp, with an
+empty operand stack:
+
+newifp->frame.regs->sp = newsp + script->nfixed;
+newifp->frame.slots = newsp;
+...
+cx->fp = &newifp->frame;
+
+Bug:
+
+B1. spbase should not sum over just the used part of each frame's down-frame
+(parent, caller frame)'s operand stack. Why doe it do that? It excludes var
+that way.
+
+Dimensional Analysis:
+
+tree-based |nativeStackSlots(...)| is TreeSlots
+tree-based |nativeStackOffset(...)| is TreeBytes
+
+TreeSlots * sizeof(double) == TreeBytes
+
+What is |treeInfo->nativeStackBase|?
+
+treeInfo->nativeStackBase is set in only one place:
+
+ti->nativeStackBase = (entryNativeStackSlots -
+(cx->fp->regs->sp - StackBase(cx->fp))) * sizeof(double);
+
+where entryNativeStackSlots is set indirectly via nativeStackSlots(...), so it
+unit are TreeSlots. But the above code subtracts whatever's on the operand
+stack in cx->fp, then scale the subtraction by sizeof(double):
+
+EntryOperands = |cx->fp->regs->sp - StackBase(cx->fp)|
+
+|ti->nativeStackBase| = |(TreeSlots - EntryOperands) * sizeof(double)|
+|ti->nativeStackBase| = TreeBytes
+
+but let's use different unit for non-zero-based Slots and Bytes. So call the
+unit of ti->nativeStackBase ZeroOperandsInEntryFrameBytes:
+
+|ti->nativeStackBase| = ZeroOperandsInEntryFrameBytes
+
+Now look at S1:
+
+(slackSlots*sizeof(double)) - treeInfo->nativeStackBase
+
+and get for exit.sp_adj's units:
+
+BytesAboveEntryFrameStackBase = TreeBytes - ZeroOperandsInEntryFrameBytes
+
+Uses of S1 are U1 and U2.
+
+*** U1 analysis ***
+
+U1 add sizeeof(double) to the guard->exit()->sp_adj
+returned to StackFilter::read. So the unit for getTop's return value are
+
+|BytesAboveEntryFrameStackBase| + |sizeof(double)| =
+|8+BytesAboveEntryFrameStackBase|
+
+The getTop return value is stored in top, which then act a a fencepost for d,
+the immediate displacement of the first operand of the store instruction that
+is a candidate for filtering:
+
+LInsp v = i->oprnd1();
+int d = i->immdisp() >> 2;
+if (d >= top)
+continue;
+
+The displacement d come from TraceRecorder::set in jstracer.cpp:
+
+x = writeBack(i, lirbuf->sp, -treeInfo->nativeStackBase + nativeStackOffset(p));
+
+where TraceRecorder::writeBack(i, base, offset) doe some int/double promotion
+bookkeeping and then forward to insStorei:
+
+return lir->insStorei(i, base, offset);
+
+So |d| = |-treeInfo->nativeStackBase + nativeStackOffset(p)|
+= |TreeBytes| - |ZeroOperandsInEntryFrameBytes|
+= |BytesAboveEntryFrameStackBase|
+
+and *not* |8+BytesAboveEntryFrameStackBase|.
+
+B2. There may have been a need to add sizeof(double) to work around a fencepost
+design flaw in StackFilter::read, but I don't see it any longer. This look
+like it can leave store unfiltered.
+
+*** U2 analysis ***
+
+The second use of exit.sp_adj set at S1 is in js_ExecuteTree:
+
+fp->regs->sp = StackBase(fp) + (e->sp_adj/sizeof(double) - spbase);
+
+Let |fp->regs->sp| = StackPointer and |StackBase(fp)| = OperandStackPointer.
+
+StackPointer = OperandStackPointer +
+|BytesAboveEntryFrameStackBase/sizeof(double)| -
+|spbase|
+
+What are the unit of spbase? It's the sum of down->regs->sp - StackBase(down),
+but that seems a bug, B1. There is no definite relation between slot above the
+entry frame stack base which includes local var slots, and the number of live
+operand in use on every frame. The two are incommensurate and the dimensional
+analysis confirms the bug.
+
+** Second sp_adj analysis **
+
+A variable named sp_adj is set in only one place:
+
+S2. TraceRecorder::emitTreeCall:
+
+ptrdiff_t sp_adj = nativeStackOffset(&cx->fp->argv[0]);
+
+which is used a follows:
+
+U3. LIns* sp_top = lir->ins2i(LIR_add, lirbuf->sp,
+- treeInfo->nativeStackBase /* rebase sp to beginning of outer tree's stack */
++ sp_adj /* adjust for stack in outer frame inner tree can't see */
++ ti->maxNativeStackSlots * sizeof(double)); /* plus the inner tree's stack */
+
+U4. lir->insStorei(inner_sp = lir->ins2i(LIR_add, lirbuf->sp,
+- treeInfo->nativeStackBase /* rebase sp to beginning of outer tree's stack */
++ sp_adj /* adjust for stack in outer frame inner tree can't see */
++ ti->nativeStackBase), /* plus the inner tree's stack base */
+lirbuf->state, offsetof(InterpState, sp));
+
+Look at S2:
+
+ptrdiff_t sp_adj = nativeStackOffset(&cx->fp->argv[0]);
+
+which is |TreeBytes|. Uses at U3 and U4 seem good. Not sure why argv[-2] didn't
+work, possibly bug identified above? Fix first and retest may be best.

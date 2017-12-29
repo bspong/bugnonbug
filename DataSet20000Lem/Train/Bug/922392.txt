@@ -1,0 +1,38 @@
+Crash [@PL_DHashTableEnumerate] during main process shutdown
+User Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:24.0) Gecko/20100101 Firefox/24.0 (Beta/Release)
+Build ID: 20130910201120
+
+Steps to reproduce:
+
+Used Firefox ESR24, short session, made a few forum posts.
+Then closed Firefox ESR24.
+
+
+Actual results:
+
+Upon shutdown, Firefox crashed, did not present the crash reporter, but a standard crash dialog instead. Luckily this wa on my main dev machine so I could plug in the debugger immediately, load the symbols, and find out where the crash happened.
+
+The thread 0x1388 ha exited with code 0 (0x0).
+Unhandled exception at 0x5E57D4F8 (xul.dll) in firefox.exe: 0xC0000005: Access violation reading location 0x00000008.
+
+Stack follows:
+> xul.dll!PL_DHashTableEnumerate(PLDHashTable * table, PLDHashOperator (PLDHashTable *, PLDHashEntryHdr *, unsigned int, void *) * etor, void * arg) Line 705 C++
+xul.dll!nsBaseHashtable<nsCStringHashKey,nsCString,nsCString>::EnumerateRead(PLDHashOperator (const nsACString_internal &, nsCString, void *) * enumFunc, void * userArg) Line 190 C++
+xul.dll!CrashReporter::WriteExtraData(nsIFile * extraFile, const nsDataHashtable<nsCStringHashKey,nsCString> & data, const CrashReporter::Blacklist & blacklist, bool writeCrashTime, bool truncate) Line 2098 C++
+xul.dll!CrashReporter::WriteExtraForMinidump(nsIFile * minidump, const CrashReporter::Blacklist & blacklist, nsIFile * * extraFile) Line 2131 C++
+xul.dll!CrashReporter::OnChildProcessDumpRequested(void * aContext, const google_breakpad::ClientInfo * aClientInfo, const std::basic_string<wchar_t,std::char_traits<wchar_t>,std::allocator<wchar_t> > * aFilePath) Line 2185 C++
+xul.dll!google_breakpad::CrashGenerationServer::HandleDumpRequest(const google_breakpad::ClientInfo & client_info) Line 901 C++
+xul.dll!google_breakpad::CrashGenerationServer::OnDumpRequest(void * context, unsigned char __formal) Line 840 C++
+ntdll.dll!7717118e() Unknown
+[Frames below may be incorrect and/or missing, no symbol loaded for ntdll.dll]
+ntdll.dll!77154971() Unknown
+ntdll.dll!77154429() Unknown
+kernel32.dll!749e336a() Unknown
+ntdll.dll!77139f72() Unknown
+ntdll.dll!77139f45() Unknown
+
+
+
+Expected results:
+
+A non-crashy shutdown of the browser ;)

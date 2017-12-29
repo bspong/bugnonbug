@@ -1,0 +1,30 @@
+application/x-www-form-urlencoded content type is encoded improperly.
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.5) Gecko/2008121300 SUSE/3.0.5-1.1 Firefox/3.0.5
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.9.0.7) Gecko/2009021910 Firefox/3.0.7
+
+Due to rfc1738 "Uniform Resource Locators (URL)" paragraph 2.2 (http://www.ietf.org/rfc/rfc1738.txt):
+
+"octets may be encoded by a character triplet consisting of the character "%" followed by the two hexadecimal digit (from "0123456789ABCDEF") which forming the hexadecimal value of the octet. (The character "abcdef" may also be used in hexadecimal encodings.)"
+
+Firefox brake this rule by omitting character "0" previous to symbol from "123456789ABCDEF". Here is an example of urlencoded content produce by Firefox:
+
+limit=6&content=%CF%F0%E8%E2%E5%F2+%EA%E0%EA+%E4%E5%EB%E0.+%CC%ED%E5+%ED%E5%EE%E1%F5%EE%E4%E8%EC+%E4%EE%EA%F3%EC%E5%ED%F2+%F3%F0%EE%E2%ED%FF+%C4%D1%CF.+%CF%EE%EC%EE%E6%E5%F8%FC%3F%3Cbr%3E%A%3Cbr%3E%A&rand=957140
+
+Mind %A which occurs twice.
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Log in to www.mail.ru account.
+2. Go to inbox folder and open unread mail message.
+3. Intercept http request and try to parse it.
+Actual Results:
+java.net.URLDecoder crush with IllegalArgumentException and message:
+
+'Illegal hex character in escape (%) pattern - For input string: "A%"'
+
+Expected Results:
+Same step performed with Internet Explorer didn't cause any exception. Http request wa parsed successfully.
+
+Intercepted HTTP request is attached.

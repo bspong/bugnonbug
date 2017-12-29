@@ -1,0 +1,46 @@
+JavaScript Event handler issue, onchange and onblur events on form fields cannot stop the "default" event from firing.
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.5) Gecko/20041107 Firefox/1.0
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.5) Gecko/20041107 Firefox/1.0
+
+We use onchange for data validation in forms.  The idea is that the user can't
+leave the field until the data is correct.  As such, we do a return false in the
+onChange handler for the form field, so the default action (change of focus to
+the next item in a tab or click) is suppressed.  This works in IE.  (I realize
+this doesn't say much)
+
+I've tried to replicate the behavior in Firefox.  When I do a return false in
+onBlur or onChange, it appears to have no effect.  Regardless of what I put in
+the onChange handler (including an explicit this.focus()), once it completes the
+focus moves to the next element in the form.  I've tried using stopPropagation
+methods, preventDefault, and cancelBubble, but none have any effect.  It seems
+tab cannot be trapped with an onKeyDown event either.  This is the first problem.
+
+With an onChange return of false, the focus should not leave the original field.
+ When it does, the onChange is then reset, which means even if I return to the
+field, if I leave this time, the data is no longer different from when I focused
+on the field, so the onChange handler won't even fire this time.  This is the
+second problem.  
+
+I'd like to think that a fix for first problem will also fix the second.  This
+type of behavior is critical for web based applications.
+
+Reproducible: Always
+Steps to Reproduce:
+1. Go to the URL I've supplied.
+(https://mgmt.k12system.com/~mrwizard/firefox_js.html)
+2. Focus on the validation field, and enter some data.  (anything will do)
+3. Hit tab, or click away.
+
+Actual Results:  
+Notice you're now in the Something to Receive Focus field, and the focus2 event
+has fired.
+
+Expected Results:  
+Focus should have remained in the validation field.
+
+Appears to be related to Mozilla Classic bugs of 243816, 53579, 65581... None of
+which seem to have a resolution.  I think the problem is in the "stacking" of
+events, the focus should not change.  The other problem I notice is that the
+onBlur happens before the onChange, so we've already left the field.  If I could
+move the validation to the onBlur I would, but return false has no effect there
+either.  (notice the return false in the onBlur of the validation field)

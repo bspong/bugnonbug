@@ -1,0 +1,38 @@
+read from cache in javascript causes deadlock
+User-Agent:       Mozilla/5.0 (Windows; U; Win98; en-US; rv:1.7.12) Gecko/20050915 Firefox/1.0.7
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8b2)Gecko/20050227 Firefox/1.0+
+
+install current version of HTML Validator extension, enable validate in browser.
+install http://downloads.mozdev.org/tamperdata/tamper_data-0.87.beta-fx.xpi
+
+Tools->tamperdata
+Browser will hang inside HTML Validator upon navigation.
+
+Tamperdata is QI'ing the nsIHttpChannel to a Caching Channel, and retrieving the
+cache token, then discarding it, inside an observer service call back.  n.b. accessing the token doesn't seem to be a factor, merely doing the QI seems to
+be sufficient.
+
+HTML validator is creating a caching channel inside an onload event.  The
+browser hangs when the caching channel is opened.
+
+I believe there is a problem/delay with the way javascript is cleaning up the reference to the caching channel created by tamperdata, as inserting alert's,
+or stepping through the HTML Validator using the javascript debugger seems to 
+make the problem disappear.  Though the channel open should throw an exception
+rather than deadlock.
+
+Problem seen on Win 98, and Win 2000, using either 1.5RC3 or 1.07.
+
+Also, in general, reading from the cache while the page is still loading seems
+to cause deadlocks as well, though I don't have a reproducable test case.
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+See details, running above extensions consistently reproduces the problem, though as it seems like a deadlock, it may be affected timing sensative.
+Actual Results:  
+Browser hangs
+
+Expected Results:  
+Should not hang...

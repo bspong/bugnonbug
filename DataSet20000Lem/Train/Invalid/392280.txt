@@ -1,0 +1,51 @@
+crash loading xhtml11.dtd file
+crash loading .dtd file
+
+I found this while going to http://www.eonline.com/news/article/index.jsp?uuid=25b554ad-0f04-453b-bd4b-e2e4ea75a24f&entry=index, which because eonline wa down, tried to load file:///c:/builds/trunk/mozilla/ff-debug/dist/bin/res/dtd/xhtml11.dtd
+
+with Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9a8pre) Gecko/2007081005 Minefield/3.0a8pre, I get the "The connection ha timed out" page, but with my debug build, I crash.
+
+with Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9a8pre) Gecko/2007081005 Minefield/3.0a8pre, loading xhtml11.dtd manually doe not crash either, but it doe with my nightly.
+
+here's the stack:
+
+xpcom_core.dll!nsQueryInterface::operator()(const nsID & aIID={...}, void * * answer=0x0012ee38) Line 47 + 0x12 byte C++
+docshell.dll!nsCOMPtr<nsILocalFile>::assign_from_qi(nsQueryInterface qi={...}, const nsID & aIID={...}) Line 1244 + 0x10 byte C++
+docshell.dll!nsCOMPtr<nsILocalFile>::nsCOMPtr<nsILocalFile>(nsQueryInterface qi={...}) Line 646 C++
+docshell.dll!nsMIMEInfoWin::LaunchDefaultWithFile(nsIFile * aFile=0x00000001) Line 61 C++
+docshell.dll!nsMIMEInfoBase::Release() Line 49 + 0x92 byte C++
+docshell.dll!nsMIMEInfoWin::Release() Line 50 + 0xd byte C++
+docshell.dll!nsCOMPtr<nsIMIMEInfo>::~nsCOMPtr<nsIMIMEInfo>() Line 584 C++
+docshell.dll!nsExternalHelperAppService::GetTypeFromExtension(const nsACString_internal & aFileExt={...}, nsACString_internal & aContentType={...}) Line 2873 + 0x28 byte C++
+docshell.dll!nsExternalHelperAppService::GetTypeFromFile(nsIFile * aFile=0x082d6f38, nsACString_internal & aContentType={...}) Line 3021 + 0x16 byte C++
+necko.dll!nsFileChannel::MakeFileInputStream(nsIFile * file=0x082d6f38, nsCOMPtr<nsIInputStream> & stream={...}, nsCString & contentType={...}) Line 304 C++
+necko.dll!nsFileChannel::OpenContentStream(int async=0, nsIInputStream * * result=0x0012f1ac) Line 352 + 0x1c byte C++
+necko.dll!nsBaseChannel::Open(nsIInputStream * * result=0x0012f1ac) Line 454 + 0x17 byte C++
+> gkparser.dll!NS_OpenURI(nsIInputStream * * result=0x0012f380, nsIURI * uri=0x082d6e58, nsIIOService * ioService=0x00000000, nsILoadGroup * loadGroup=0x00000000, nsIInterfaceRequestor * callbacks=0x00000000, unsigned int loadFlags=0, nsIChannel * * channelOut=0x00000000) Line 211 + 0x1d byte C++
+gkparser.dll!nsExpatDriver::OpenInputStreamFromExternalDTD(const unsigned short * aFPIStr=0x082e7598, const unsigned short * aURLStr=0x082e75da, const unsigned short * aBaseURL=0x082e74b8, nsIInputStream * * aStream=0x0012f380, nsAString_internal & aAbsURL={...}) Line 787 + 0x1c byte C++
+gkparser.dll!nsExpatDriver::HandleExternalEntityRef(const unsigned short * openEntityNames=0x082e7588, const unsigned short * base=0x082e74b8, const unsigned short * systemId=0x082e75da, const unsigned short * publicId=0x082e7598) Line 716 + 0x3c byte C++
+gkparser.dll!Driver_HandleExternalEntityRef(void * aExternalEntityRefHandler=0x08230048, const unsigned short * aOpenEntityNames=0x082e7588, const unsigned short * aBase=0x082e74b8, const unsigned short * aSystemId=0x082e75da, const unsigned short * aPublicId=0x082e7598) Line 212 C++
+gkparser.dll!doProlog(XML_ParserStruct * parser=0x082ee5b0, const encoding * enc=0x044e0838, const char * s=0x0822e146, const char * end=0x08230010, int tok=28, const char * next=0x0822e158, const char * * nextPtr=0x0012f5a4, unsigned char haveMore='') Line 4598 + 0x2a byte C
+gkparser.dll!prologProcessor(XML_ParserStruct * parser=0x082ee5b0, const char * s=0x0822e010, const char * end=0x08230010, const char * * nextPtr=0x0012f5a4) Line 3810 + 0x37 byte C
+gkparser.dll!prologInitProcessor(XML_ParserStruct * parser=0x082ee5b0, const char * s=0x0822e010, const char * end=0x08230010, const char * * nextPtr=0x0012f5a4) Line 3626 + 0x15 byte C
+gkparser.dll!MOZ_XML_Parse(XML_ParserStruct * parser=0x082ee5b0, const char * s=0x0822e010, int len=8192, int isFinal=0) Line 1528 + 0x2a byte C
+gkparser.dll!nsExpatDriver::ParseBuffer(const unsigned short * aBuffer=0x0822e010, unsigned int aLength=4096, int aIsFinal=0, unsigned int * aConsumed=0x0012f79c) Line 989 + 0x1a byte C++
+gkparser.dll!nsExpatDriver::ConsumeToken(nsScanner & aScanner={...}, int & aFlushTokens=0) Line 1095 C++
+gkparser.dll!nsParser::Tokenize(int aIsFinalChunk=0) Line 2367 + 0x21 byte C++
+gkparser.dll!nsParser::ResumeParse(int allowIteration=1, int aIsFinalChunk=0, int aCanInterrupt=1) Line 1593 + 0x1b byte C++
+gkparser.dll!nsParser::OnDataAvailable(nsIRequest * request=0x081d7818, nsISupports * aContext=0x00000000, nsIInputStream * pIStream=0x06cd3d70, unsigned int sourceOffset=0, unsigned int aLength=11360) Line 2231 + 0x17 byte C++
+docshell.dll!nsDocumentOpenInfo::OnDataAvailable(nsIRequest * request=0x081d7818, nsISupports * aCtxt=0x00000000, nsIInputStream * inStr=0x06cd3d70, unsigned int sourceOffset=0, unsigned int count=11360) Line 361 + 0x30 byte C++
+jar50.dll!nsJARChannel::OnDataAvailable(nsIRequest * req=0x06cd3c70, nsISupports * ctx=0x00000000, nsIInputStream * stream=0x06cd3d70, unsigned int offset=0, unsigned int count=11360) Line 783 + 0x3b byte C++
+necko.dll!nsInputStreamPump::OnStateTransfer() Line 508 + 0x40 byte C++
+necko.dll!nsInputStreamPump::OnInputStreamReady(nsIAsyncInputStream * stream=0x06cd3d70) Line 398 + 0xb byte C++
+xpcom_core.dll!nsInputStreamReadyEvent::Run() Line 112 C++
+xpcom_core.dll!nsThread::ProcessNextEvent(int mayWait=1, int * result=0x0012fa04) Line 491 C++
+xpcom_core.dll!NS_ProcessNextEvent_P(nsIThread * thread=0x00cb4c98, int mayWait=1) Line 227 + 0x16 byte C++
+gkwidget.dll!nsBaseAppShell::Run() Line 154 + 0xc byte C++
+tkitcmps.dll!nsAppStartup::Run() Line 170 + 0x1c byte C++
+xul.dll!XRE_main(int argc=3, char * * argv=0x00bc9660, const nsXREAppData * aAppData=0x00bc9a50) Line 3059 + 0x25 byte C++
+firefox.exe!main(int argc=3, char * * argv=0x00bc9660) Line 153 + 0x12 byte C++
+firefox.exe!__tmainCRTStartup() Line 586 + 0x19 byte C
+firefox.exe!mainCRTStartup() Line 403 C
+kernel32.dll!7c816fd7()
+[Frames below may be incorrect and/or missing, no symbol loaded for kernel32.dll]

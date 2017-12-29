@@ -1,0 +1,42 @@
+X server crash with java plugin at openprocessing.org
+User-Agent: Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.3a2pre) Gecko/20100224 Minefield/3.7a2pre
+Build Identifier: Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.3a2pre) Gecko/20100224 Minefield/3.7a2pre
+
+X server crash during Java plugin rendering when content is scrolled (/clipped?).
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Go to http://www.openprocessing.org/visuals/?visualID=2097
+2. Resize the browser window (make window shorter)
+3. Scroll the plugin display (big black square with rendering) out of the top of the window
+Actual Results:
+X server crashes, the user is dropped to text virtual terminal and GDM restarts the X server (user graphical session is aborted and the user must relogin to do anything)
+
+Expected Results:
+Window should scroll normally and plugin should continue to render the result. X server should not crash.
+
+This may be a java bug, X server bug, X server display adapter driver bug or a Firefox bug. The same page work fine with Google Chrome with the same plugin.
+
+Environment:
+Ubuntu 9.10 amd64 (running on Intel Core 2 Duo)
+intel X4500 display adapter (Q43/Q45 integrated, pci device [8086:2e12])
+$ apt-cache policy sun-java6-jre xserver-xorg-video-intel xserver-xorg | egrep '(^[^ ]|Installed)'
+sun-java6-jre:
+Installed: 6-15-1
+xserver-xorg-video-intel:
+Installed: 2:2.9.0-1ubuntu2.1
+xserver-xorg:
+Installed: 1:7.4+3ubuntu10
+
+The only hint of crash in the X server log is
+ddxSigGiveUp: Closing log
+(the space at the start of the line is in the log, looking around with Google suggests that the actual log should be following:
+
+Saw signal 11. Server aborting.
+ddxSigGiveUp: Closing log
+ddxSigGiveUp: re-raising 11
+
+I don't know why my log ha only that line.)
+
+Setting Severity: Critical because this loses all unsaved data in any open application in user's X server session. I'm also able to reproduce with Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.1.8) Gecko/20100214 Ubuntu/9.10 (karmic) Firefox/3.5.8

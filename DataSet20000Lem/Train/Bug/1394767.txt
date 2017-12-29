@@ -1,0 +1,26 @@
+restoreTab shouldn't use NS_ASSERT
+from bug 1388628 comment 10:
+
+> Okay, I can reproduce with a file:// homepage in nightly.
+>
+> This seems relevant:
+>
+> A coding exception wa thrown in a Promise resolution callback.
+> See
+> https://developer.mozilla.org/Mozilla/JavaScript_code_modules/Promise.jsm/
+> Promise
+>
+> Full message: TypeError: access to strict mode caller function is censored
+> Full stack: NS_ASSERT@resource://gre/modules/debug.js:50:7
+> restoreTab@resource:///modules/sessionstore/SessionStore.jsm:3552:5
+> restoreTabs@resource:///modules/sessionstore/SessionStore.jsm:3539:7
+> ssi_restoreWindow@resource:///modules/sessionstore/SessionStore.jsm:3404:7
+> ssi_restoreWindows@resource:///modules/sessionstore/SessionStore.jsm:3484:5
+> initializeWindow@resource:///modules/sessionstore/SessionStore.jsm:1158:11
+> onBeforeBrowserWindowShown/<@resource:///modules/sessionstore/SessionStore.
+> jsm:1307:9
+> process@resource://gre/modules/Promise-backend.js:922:23
+> walkerLoop@resource://gre/modules/Promise-backend.js:806:7
+> scheduleWalkerLoop/<@resource://gre/modules/Promise-backend.js:742:11
+
+restoreTab should not break the whole session restore process when this happens. It should instead log an error and return, or something like that.

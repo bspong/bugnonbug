@@ -1,0 +1,50 @@
+PHP MYSQL script executed twice
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; hu; rv:1.9.1.2) Gecko/20090729 Firefox/3.5.2
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; hu; rv:1.9.1.2) Gecko/20090729 Firefox/3.5.2
+
+If a PHP script contains INSERT INTO statement and this statement is run WHEN THE PAGE LOADS AT FIRST TIME, in the MYSQL database there will be two inserted line instead of one. Second line often is empty, but sometimes contains inserted data, could not figure out the reason yet. If the page is recalled by itself and the INSERT INTO statement is executed at recall, all is OK, one line is inserted only. When inserted randomly generated data into MYSQL I observed that the script is executed twice and the two inserted line contains different random data. Tested against Internet Explorer 5, this bug doe not exist there. In my special case MYSQL run under Linux.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. In PHP MYSQL run INSERT INTO statement a the page loads.
+2. Auto-recall page conditioned and run INSERT INTO statement - the bug disappears.
+
+
+Actual Results:
+two line inserted into MYSQL database instead of one, second often empty.
+
+Expected Results:
+one line inserted into MYSQL Database
+
+Example to bad working script:
+<?php
+
+//open
+mysql_query(INSERT INTO database (a, b...) VALUES ($a, $b...)
+//close
+
+// other code
+
+?>
+
+
+Example to good working script:
+<?php
+if ($_REQUEST['redisplay']=="2")
+{
+//open
+mysql_query(INSERT INTO database (a, b...) VALUES ($a, $b...) )
+//close
+}
+
+else
+{
+// other script
+......
+<form action='this page itself.php'>
+<input type='hidden' name='redisplay' value='2'>
+.....
+</form>
+}
+?>

@@ -1,0 +1,25 @@
+call-watcher should not store strong references
+* call-watcher needs to not store strong reference
+
+(gdb) js
+0 anonymous() ["resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/actors/call-watcher.js":387]
+    this = [object XrayWrapper [object AudioContext]]
+1 <TOP LEVEL> ["http://people.mozilla.org/~eakhgari/webaudio/gain.html":25]
+    this = [object Window]
+
+Also, side issue to remove WeakMaps from implementation, because issue WeakMap/Cu.getWeakReference where it holds a strong reference, I believe this can be fixed by removing WeakMaps since we have IDs:
+
+0 anonymous(conn = [object Object], node = [object XrayWrapper [object AudioBufferSourceNode]]) ["resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/actors/webaudio.js":133]
+    this = [object Object]
+1 constructor(instance = [object Object], arguments = [object XrayWrapper [object AudioBufferSourceNode]]) ["resource://gre/modules/addons/XPIProvider.jsm -> jar:file:///Users/ehsan/Library/Application%20Support/Firefox/Profiles/f42unlva.pb/extensions/jid0-edalmuivkozlouyij0lpdx548bc@jetpack.xpi!/bootstrap.js -> resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/commonjs/sdk/core/heritage.js":145]
+    this = [object Object]
+2 anonymous(node = [object XrayWrapper [object AudioBufferSourceNode]]) ["resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/actors/webaudio.js":441]
+    this = [object Object]
+3 anonymous(node = [object XrayWrapper [object AudioBufferSourceNode]]) ["resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/actors/webaudio.js":527]
+    this = [object Object]
+4 anonymous(functionCall = [object Object]) ["resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/actors/webaudio.js":376]
+    this = [object Object]
+5 anonymous(functionCall = [object Object]) ["resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/actors/webaudio.js":339]
+    this = [object Object]
+6 anonymous(details = [object Window],AudioContext,[object XrayWrapper [object AudioContext]],0,createBufferSource,[object Object],[object Object],[object Object],,[object AudioBufferSourceNode], functionCall = "AudioContext", [object XrayWrapper [object AudioContext]], 0, "createBufferSource", [object Object],[object Object],[object Object], , [object AudioBufferSourceNode]) ["resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/actors/call-watcher.js":507]
+    this = [object Object]

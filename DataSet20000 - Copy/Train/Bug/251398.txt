@@ -1,0 +1,69 @@
+Firefox is inserting carriage returns into quoted attribute values
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7) Gecko/20040614 Firefox/0.9
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7) Gecko/20040614 Firefox/0.9
+
+Firefox is inserting a carriage return inside of quoted attribute values
+resulting in various JavaScript/DOM type errors.  For example:
+
+<html>
+  <head>
+    <title>Mozilla Bug</title>
+  </head>
+  <body>
+    <form name="test_form">
+      <input type="radio" name="test_radio" value="1">
+      <span style="cursor: pointer" onClick=
+        "test_radio[0].checked=true">option 1</span>
+      <br>
+      <input type="radio" name="test_radio" value="2">
+      <span style="cursor: pointer" onClick=
+        "test_radio[1].checked=true">option 2</span>
+      <br>
+      <input type="radio" name="test_radio" value="3">
+      <span style="cursor: pointer" onClick=
+        "test_radio[2].checked=true">option 3</span>
+    </form>
+  </body>
+</html>
+
+In this example, firefox is moving the carriage returns between 'onClick='
+and the quote and moving it after the quote.  So clicking on the text 
+generates an error whereas in previous versions of firefox and in current
+versions of IE, it selects the element.  Here is the mangled html generated 
+by firefox:
+
+<html>
+  <head>
+    <title>Mozilla Bug</title>
+  </head>
+  <body>
+    <form name="test_form">
+      <input type="radio" name="test_radio" value="1">
+      <span style="cursor: pointer" onClick="
+        test_radio[0].checked=true">option 1</span>
+
+      <br>
+      <input type="radio" name="test_radio" value="2">
+      <span style="cursor: pointer" onClick="
+        test_radio[1].checked=true">option 2</span>
+      <br>
+      <input type="radio" name="test_radio" value="3">
+      <span style="cursor: pointer" onClick="
+        test_radio[2].checked=true">option 3</span>
+    </form>
+  </body>
+
+</html>
+
+
+Reproducible: Always
+Steps to Reproduce:
+1. Create an html file with the contents provided in the details.
+2. Open the file in firefox.
+3. Click on the text of one of the options
+
+Actual Results:  
+Javascript error indicating malformed syntax.
+
+Expected Results:  
+Selected the appropriate element.

@@ -1,0 +1,28 @@
+Duplicate the behavior of IE when setting Firefox a the default browser
+This applies to OS's prior to Vista
+
+What I am seeing with IE:
+1.a Admin user with no handler under HKCU\Software\Classes with handler under HKLM\Software\Classes
+Take handler under HKLM\Software\Classes
+
+1.b Admin user with handler under HKCU\Software\Classes AND HKLM\Software\Classes
+Take handler under HKLM\Software\Classes AND HKCU\Software\Classes
+
+1.c Non-Admin user with handler under HKCU\Software\Classes AND HKLM\Software\Classes
+Take handler under HKCU\Software\Classes
+
+What I am seeing with Firefox:
+2.a Admin user with no handler under HKCU\Software\Classes with handler under HKLM\Software\Classes
+Take handler under HKLM\Software\Classes
+
+2.b Admin user with handler under HKCU\Software\Classes AND HKLM\Software\Classes
+Take handler under HKCU\Software\Classes
+
+2.c Non-Admin user with handler under HKCU\Software\Classes AND HKLM\Software\Classes
+Take handler under HKCU\Software\Classes
+
+So, 2.b is not the same a 1.b
+
+Also, because of the way we set handler we can end up with some of them being set under HKLM and some under HKCU for the admin user. If we pas false for aForAllUsers when calling OpenKeyForWriting we check for the existence of the key in HKCU and if it doesn't exist we fallback to HKLM. So, if it is found under HKCU we won't update HKLM.
+
+http://lxr.mozilla.org/seamonkey/source/browser/components/shell/src/nsWindowsShellService.cpp#101

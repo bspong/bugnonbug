@@ -1,0 +1,37 @@
+Very strange problem in recent version of Firefox with the drag and drop
+User Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2486.0 Safari/537.36 Edge/13.10586
+
+Steps to reproduce:
+
+I have a very strange issue with Firefox 49.0.1 (it wa not present in previous version like 37.x)
+I am a C++ developer and I must code a third party product that (between other things) ha to tansform uploaded file into other files. My program is an external program. It is basically a .dll library that is injected into Firefox.exe and I intercept (using hooking mechanisms) the RegisterDragDrop API. Once Firefox.exe call (my) RegisterDragDrop, instead of returning the Firefox IDropTarget COM interface I return my own IDropTarget COM interface. So when a user drag a file into Firefox my IDropTarget COM interface is called instead.
+At this point my logic is "very simple" since I create a kind of wrapper: I have my own IDropTarget COM interface. When the user drag a file to gmail.com (to add an attachment) then my IDropTarget::DragEnter, IDropTarget::DragOver, and IDropTarget::Drop method are called.
+What I do in them is to directly call the Firefox original IDropTarget (that's why I say it's a pretty straightforward implementation).
+However in the Drop method I do:
+HRESULT Drop(....)
+{
+HRESULT hr;
+Sleep(3000); //Sleeps 3 second
+return OriginalIDropTarget->Drop();
+}
+
+I really need these 3 second because what I do is to do some transformation to the file that will take time.
+
+It work pretty nice in hotmail, yahoo, facebook... that is, the user drop a file and the drop action take 3 second and then the file is finally dropped OK.
+However in gmail.com it doe not work: Most of the time nothing is attached. If I reduce this sleep to 500 or 600 millisecond then it works.
+
+See that the only difference is this sleep of 3 second before calling the original IDropTarget.Drop event.
+
+Has something changed in the recent releases?
+
+Thanks in advance.
+
+
+Actual results:
+
+Nothing wa attached
+
+
+Expected results:
+
+A file should be attached

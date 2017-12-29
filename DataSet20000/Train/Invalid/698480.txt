@@ -1,0 +1,44 @@
+crash in memmove or memcpy coming from CopyUnicodeTo
+This bug was filed from the Socorro interface and is 
+report bp-165506a7-8cd3-496d-b634-fdd212111030 .
+============================================================= 
+
+Seen while reviewing trunk crash stats. Low volume trunk only crashes started showing up using the 2011102200 build. 
+
+Possible pushlog regression range: http://hg.mozilla.org/mozilla-central/pushloghtml?fromchange=2afc252b4d39&tochange=e79245e249c4
+
+https://crash-stats.mozilla.com/report/index/165506a7-8cd3-496d-b634-fdd212111030
+
+Frame 	Module 	Signature [Expand] 	Source
+0 	msvcr90.dll 	memmove 	
+1 	xul.dll 	CopyUnicodeTo 	xpcom/string/src/nsReadableUtils.cpp:390
+2 	xul.dll 	nsAttrValue::GetStringBuffer 	content/base/src/nsAttrValue.cpp:1348
+3 	xul.dll 	nsAttrValue::SetTo 	content/base/src/nsAttrValue.cpp:283
+4 	xul.dll 	nsGenericElement::SetAttr 	content/base/src/nsGenericElement.cpp:4526
+5 	xul.dll 	nsCycleCollector::CleanupAfterCollection 	xpcom/base/nsCycleCollector.cpp:2681
+6 	xul.dll 	nsHTMLInputElement::QueryInterface 	content/html/content/src/nsHTMLInputElement.cpp:653
+7 	mozutils.dll 	arena_malloc_small 	memory/jemalloc/jemalloc.c:3917
+8 	xul.dll 	NS_IsMainThread_P 	obj-firefox/xpcom/build/nsThreadUtils.cpp:138
+9 	xul.dll 	XPCWrappedNative::InitTearOff 	js/xpconnect/src/XPCWrappedNative.cpp:1963
+10 	xul.dll 	nsGenericHTMLElement::SetAttr 	content/html/content/src/nsGenericHTMLElement.cpp:1301
+11 	xul.dll 	XPCWrappedNative::FindTearOff 	js/xpconnect/src/XPCWrappedNative.cpp:1795
+12 	xul.dll 	nsGenericHTMLElement::SetAttrHelper 	content/html/content/src/nsGenericHTMLElement.cpp:2204
+13 	xul.dll 	XPTC__InvokebyIndex 	
+14 	xul.dll 	XPTC__InvokebyIndex 	
+15 	xul.dll 	XPCWrappedNative::CallMethod 	js/xpconnect/src/XPCWrappedNative.cpp:2173
+16 	xul.dll 	JSObject::getChildProperty 	js/src/jsscope.cpp:442
+17 	xul.dll 	xul.dll@0xcfa0df 	
+18 	xul.dll 	NS_IsMainThread_P 	obj-firefox/xpcom/build/nsThreadUtils.cpp:138
+19 	xul.dll 	JSObject::putProperty 	js/src/jsscope.cpp:755
+20 	xul.dll 	DEBUG_CheckWrapperThreadSafety 	js/xpconnect/src/XPCWrappedNative.cpp:3566
+21 	xul.dll 	xul.dll@0xcfa0df 	
+22 	xul.dll 	js::Shape::hashify 	js/src/jsscope.cpp:178
+23 	xul.dll 	js::DefineNativeProperty 	js/src/jsobj.cpp:5304
+24 	xul.dll 	xul.dll@0xcfa0df 	
+25 	xul.dll 	XPCWrappedNative::GetWrappedNativeOfJSObject 	js/xpconnect/src/XPCWrappedNative.cpp:1612
+26 	xul.dll 	XPCCallContext::Init 	js/xpconnect/src/XPCCallContext.cpp:183
+27 	xul.dll 	XPCCallContext::XPCCallContext 	js/xpconnect/src/XPCCallContext.cpp:63
+28 	xul.dll 	JS_DefinePropertyById 	js/src/jsapi.cpp:3517
+29 	xul.dll 	XPCNativeMember::GetCallInfo 	js/xpconnect/src/XPCWrappedNativeInfo.cpp:96
+30 	xul.dll 	XPC_WN_GetterSetter 	js/xpconnect/src/XPCWrappedNativeJSOps.cpp:1601
+31 	xul.dll 	XPCCallContext::~XPCCallContext 	js/xpconnect/src/XPCCallContext.cpp:382

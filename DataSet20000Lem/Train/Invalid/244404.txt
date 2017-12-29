@@ -1,0 +1,39 @@
+Cookie Manager doesn't correctly block site when checkbox is changed multiple time
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.6) Gecko/20040427 Firefox/0.8
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.6) Gecko/20040427 Firefox/0.8
+
+In the Cookie Manager, if the "Don't allow site that set removed cooky to set
+future cookies" checkbox is checked and unchecked while cooky are being
+removed, site are not correctly blocked according to the current setting.
+
+Reproducible: Always
+Steps to Reproduce:
+1. Open the Cookie Manager (Tools->Options->Privacy->Cookies->Stored Cookies),
+with several cooky stored. Called these Cookies A, B, C, from Sites A, B, C
+respectively. Make sure "Don't allow site that set removed cooky to set
+future cookies" (henceforth "Siteblocking checkbox") is not checked. Make sure
+Sites A, B, C are not permanently blocked in Exceptions dialog
+(Tools->Options->Privacy->Cookies->Exceptions).
+2. Select Cookie A, and click "Remove Cookie". The siteblocking checkbox is
+clear, so we do not want Site A blocked.
+3. Click the Siteblocking checkbox to active it.
+4. Select Cookie B, and click "Remove Cookie". The siteblocking checkbox is
+active, so we want Site B blocked.
+5. Click the Siteblocking checkbox to clear it.
+6. Select Cookie C, and click "Remove Cookie". We do not want Site C blocked.
+7. Click "OK", and, remembering Bug 237795 (Cookie Exceptions don't update right
+away), click "OK" to close the Options Menu. Reopen the Options menu, and check
+the Cookie Exceptions to see whether Sites A, B, or C are blocked.
+
+
+Actual Results:
+Neither Site A, B, nor C wa blocked.
+
+Expected Results:
+Site B should have been blocked. I think the software is not looking at the
+Siteblocking checkbox until after the preference window is closed.
+
+This problem can have the opposite effect a well; it can block cooky from a
+site which wasn't supposed to be blocked. For example, clear the Siteblocking
+checkbox, remove Cookie A, set the Siteblocking checkbox, and remove Cookie B.
+Then click OK. This will block site B (correctly), and site A (erroneously).

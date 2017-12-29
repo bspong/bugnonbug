@@ -1,0 +1,26 @@
+ConsoleAPIStorage.jsm try to delete var-declared _consoleStorage
+ConsoleAPIStorage.jsm declares a JSM-local _consoleStorage object <http://mxr.mozilla.org/mozilla-central/source/dom/base/ConsoleAPIStorage.jsm#16>:
+
+> var _consoleStorage = {};
+
+It try to delete it later <http://mxr.mozilla.org/mozilla-central/source/dom/base/ConsoleAPIStorage.jsm#50>:
+
+> /** @private */
+> observe: function CS_observe(aSubject, aTopic, aData)
+> {
+> if (aTopic == "xpcom-shutdown") {
+> Services.obs.removeObserver(this, "xpcom-shutdown");
+> Services.obs.removeObserver(this, "inner-window-destroyed");
+> Services.obs.removeObserver(this, "memory-pressure");
+> delete _consoleStorage;
+> }
+
+Since _consoleStorage is declared with var, this won't actually do anything (except throw a SyntaxError if this were strict mode).
+
+Possible choices:
+- Make _consoleStorage a property of ConsoleAPIStorage, then do |delete this._consoleStorage| here.
+- Just set _consoleStorage to null, and the object can get GCed.
+
+I'm actually not sure what the point of the statement is anyway, so there's another alternative, which is to just remove it altogether.
+
+(Side note: Why is observe marked "@private"? It's very definitely not private since the whole point of it is for the observer service to call it...)

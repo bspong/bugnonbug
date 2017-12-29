@@ -1,0 +1,18 @@
+_breakOnEnter should not use setBreakpoint
+Created attachment 8548775
+patch
+
+Currently setBreakpoint is called with either an original location or a generated location. Not only is this very confusing, its also conceptually wrong in some cases (i.e. breakpoint sliding on generated sources).
+
+I'm trying to move things to where setBreakpoint always takes an original location, but one thing that is blocking me from getting there is the fact that _breakOnEnter uses setBreakpoint to set hidden breakpoints. This is wrong in my opinion.
+
+setBreakpoint doesn't need most of the machinery of setBreakpoint. In particular, breakpoint sliding is not needed, because the very point of breakOnEnter is to set a breakpoint on a script and line that are guaranteed to exist. The attached patch removes _breakOnEnter's dependency on setBreakpoint, and simplifies it in the process.
+
+A couple of notes of interest:
+- findEntryPointsForLine and setBreakpointOnEntryPoints shouldn't live on     
+  SourceActor, because they don't need any of state of instances of that class.
+  Since _breakOnEnter also needs these functions, but lives on the ThreadActor,
+  it makes sense to make them global.
+- The second argument to BreakPointActor.prototype.setActor is actually not
+  required. The thread actor for a breakpoint actor is already set in its
+  constructor, and is never supposed to change after that.

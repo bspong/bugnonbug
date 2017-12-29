@@ -1,0 +1,33 @@
+Changing password doesn't cause browser to enter reauth state until browser is restarted.
+STR:
+* Create a bool pref |services.sync.debug.ignoreCachedAuthCredentials| set to true so the repro happens immediately.
+* Configure Sync, perform a first sync.
+* In the same browser, change your password via "manage account"
+* Perform a Sync
+
+Expected:
+* Hamburger menu enters the "please reconnect to Sync" state.
+
+Actual:
+* Sync fails but the state isn't reflected in the hamburger menu (but it *is* reflected in the prefs pane)
+
+If you restart the browser it correctly enters that state.
+
+The relevant log entries:
+> 1457493320592 Sync.BrowserIDManager ERROR Authentication error in _fetchTokenForUser: {"details":{"code":401,"errno":110,"error":"Unauthorized","message":"Invalid authentication token in request signature","info":"https://github.com/mozilla/fxa-auth-server/blob/master/docs/api.md#response-format"}}
+> 1457493320592 Sync.Status DEBUG Status.login: success.login => error.login.reason.account
+> 1457493320592 Sync.Status DEBUG Status.service: success.status_ok => error.login.failed
+> 1457493320592 Sync.BrowserIDManager INFO Failed to fetch the cluster URL: {"details":{"code":401,"errno":110,"error":"Unauthorized","message":"Invalid authentication token in request signature","info":"https://github.com/mozilla/fxa-auth-server/blob/master/docs/api.md#response-format"}}
+> 1457493320592 Sync.Service DEBUG Cluster value = null
+> 1457493320592 Sync.Status DEBUG Status.sync: success.sync => error.sync.reason.no_node_found
+> 1457493320592 Sync.Status DEBUG Status.service: error.login.failed => error.sync.failed
+
+So Sync tried to update it token and failed. Sync treated this a a "no node available" error and changed the service state away from the error.login.failed state to error.sync.failed - it's that initial state that the hamburger menu expects to see before showing it reauth state.
+
+(aside - the log also show:
+
+> 1457493309567 FirefoxAccounts WARN Unrecognized FxAccountsWebChannel command: fxaccounts:change_password
+
+a the password is changed, which we should consider using so we don't rely on the token expiring before the device notice - but that's somewhat orthogonal to this bug)
+
+(aside 2 - this is very difficult to write a test for - it might make sense to spend some time with tps to add check for these state - tps will let you restart the browser etc - but that's probably a few day work I'd think, so probably shouldn't block this being fixed)

@@ -1,0 +1,17 @@
+Investigate issue with skipintoolbarset and our DnD code
+Might be 2 different issues, really:
+
+1) Drag skipintoolbarset item onto other (non-skipintoolbarset) item
+2) Drop stuff on skipintoolbarset item
+
+
+In both cases, though, we're going to run into the problem that trying to find these item in our placement code isn't going to work, so finding a drop target will likely be problematic. I'm not 100% sure what the solution should be.
+
+The no-nonsense, "buh-bye" solution would be to just hide all these item in customization mode. Their place in the document is usually managed by other code, and we should probably not let user mess with it. On the other hand, hiding them entirely mean they take up no space in the toolbar, which ha side-effects, etc. If they're not invisible we can drop stuff on them (even if we stop people from dragging the item themselves).
+
+Painstakingly trying to do "something" would probably be:
+
+1) if the item itself is skipintoolbarset, shortcircuit, don't bother finding placement or anything, just try to append it where the user dropped it.
+2) if dropping on a skipintoolbarset item, find the next sibling, and drop on (i.e. before) that instead. For bonus points, insert before the skipintoolbarset item in the window where dragging happens (by the nature of these items, I think all bet are off for what happens in other windows). Note that there's a still-edgier-edgecase here when you drop an item that's right of a skipintoolbarset item on that item (the placeholder will pretend to insert to the left of the item, I think). Placement-wise, that'll make 0 difference, but if we're going here we should probably ensure that something happens or that the DnD feedback make the fact that nothing will happen intuitive.
+
+Opinions? Other ideas?

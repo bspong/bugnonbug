@@ -1,0 +1,20 @@
+XML DOM throws NS_ERROR_UNEXPECTED error only in Firefox 3.5
+User-Agent:       Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_5_7; en-us) AppleWebKit/530.19.2 (KHTML, like Gecko) Version/4.0.2 Safari/530.19
+Build Identifier: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.5; en-US; rv:1.9.1.2) Gecko/20090729 Firefox/3.5.2
+
+My extension provides an XML document via an XPCOM interface provided through a global constructor.  It loads an XHTML application which then has access to this XML document via a "helper" instance much like how feed subscription is handled.  This all works just fine in Firefox 3.0 but does not in 3.5.  It directly relates to privilege issues as the error never happens for privileged extension code.  What doesn't make sense is that it works for short random amount of time and then fails.  You would think it would either (A) fail due to permissions or (B) consistently work.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Load my extension (0.3) from https://addons.mozilla.org/en-US/firefox/addons/versions/13493
+2. Use the Tools->"XML Application - Sample Document" to load a sample.
+3. Hit the 'Hello' button several times.  It should fail within less than a minute and most certainly after only a handful of button presses.
+4. Look at the error console and you should see a "NS_ERROR_UNEXPECTED" error.
+Actual Results:  
+An NS_ERROR_UNEXPECTED was thrown from accessing _helper.document.documentElement.localName
+
+Expected Results:  
+No error should be thrown.
+
+Any access to certain DOM properties will fail after awhile (e.g. firstChild, documentElement, etc.).  The initially work and always work in 3.0.

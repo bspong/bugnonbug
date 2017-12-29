@@ -1,0 +1,21 @@
+Rare but important warning got thrown out with the too-common-warning bathwater
+Bug 966692 turned off showing JS warning in the console by default.
+
+Unfortunately, there are warning we want web developer to see because they indicate serious bug in their site that are not actually "JS" warning but are getting lumped in there by the console. For example the warning about <meta charset> after the sniffing boundary...
+
+This change also make deprecation warning not visible by default, which mean it's compeletely pointless to warn about deprecation now. That may significantly affect our ability to evolve the web platform. That's assuming anyone wa paying attention to those warning to start with, of course.
+
+I realize that some warning (like the sourcemap thing that jquery hits) are just way too common and we want to not show them by default. Are there example other than the sourcemap thing? I'd like to understand which subsystem exactly are producing too many warnings, and there is no real concrete info on that in bug 966692.
+
+The one concrete thing that _is_ there is that nytimes.com ha too many warnings. When I just loaded it, the JS warning I see there are:
+
+1) Use of getPreventDefault() is deprecated. Use defaultPrevented instead.
+2) The character encoding of a framed document wa not declared. The document may appear different if viewed without the document framing it.
+
+That doesn't seem particularly overwhelming, but if those warning are too common we should in fact consider turning them off on the platform level...
+
+I guess my point is that I would like u to make a distinction between "warnings that we want to warn about for pedantic reason but are hit all the time" and "warnings that are not common but indicate a serious problem when present". I'm happy to split thing into different category on the Gecko end to accomplish this, but that requires the UI to not lump those category together (like it doe now, with treating HTML parser warning a "JS" warnings).
+
+Thoughts?
+
+If we do keep the devtools UI as-is, we should just remove all the infrastructure we have for deprecation warning and such in Gecko, since it becomes completely pointless.

@@ -1,0 +1,43 @@
+Javascript string match feature cause firefox to segfault.
+User-Agent: Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9b5) Gecko/2008041515 Firefox/3.0b5
+Build Identifier: Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9b5) Gecko/2008041515 Firefox/3.0b5
+
+The following javascript command will cause firefox to segfault.
+
+var linkList = content.document.links;
+for (var x=0; x < linkList.length; x++){
+if (linkList[x].href.match("computer_number=") && linkList[x].target.match("_new")){
+var tmpObject = new coreItem(linkList[x].innerHTML);
+ticketDevices.push(tmpObject);
+};
+};
+
+I fixed the problem with:
+
+var linkList = content.document.links;
+for (var x=0; x < linkList.length; x++){
+if (linkList[x].href.indexOf("computer_number=") > -1 && linkList[x].target.indexOf("_new") > -1){
+var tmpObject = new coreItem(linkList[x].innerHTML);
+ticketDevices.push(tmpObject);
+};
+};
+
+So the actual problem is:
+
+if (linkList[x].href.match("computer_number=") && linkList[x].target.match("_new")){
+
+In particular the "match" command. If i replace it with "indexOf". Then firefox doe not segfult and the expected result happens.
+
+The loop is 7465 in length. There is only one link on the page that meet the criteria.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.run the above loop with > 7500 element and use the match command to filter out the elements.
+Actual Results:
+Firefox will segfult. It will not report anything to the console if you run it from a command prompt.
+
+Expected Results:
+It should have returned an array with one object in it.
+
+This is being run from within a add on.

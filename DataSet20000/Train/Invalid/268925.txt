@@ -1,0 +1,31 @@
+Ability to execute arbitrary remote js, including js that writes local files
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.5) Gecko/20041107 Firefox/1.0
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.5) Gecko/20041107 Firefox/1.0
+
+It's possible to use XMLHttpRequest to retrieve the text from a remote
+javascript file and then to eval that text and execute the javascript within a
+local scope. This circumvents the need to sign remote scripts and can be done
+without enabling UniversalXPConnect. In theory, one would simply suggest that
+application developers be careful not to write code that would execute arbitrary
+remote javascript, but this doesn't account for malicious coders who might make
+extensions available, for example, and use them to tamper with the users'
+machines. It may be that this is a jslib issue and not a Gecko issue, but I
+wasn't sure where else to report it.
+
+Reproducible: Always
+Steps to Reproduce:
+1. Install jstest package (attached).
+2. Edit xul.js (in zip file), replacing the second parameter to the "save()"
+call to a local file on your system (or to a file that doesn't exist yet in a
+writable directory).
+3. Place xul.js (in zip file) on a remote server.
+4. Edit the button in jstest.xul within package so that the parameter to
+"execute()" in the "oncommand" parameter points to the file created in step 2.
+5. Run the package and press the button.
+Actual Results:  
+A file is written to the local path specified in the remote script containing
+the text sent as the first parameter to the remote "save()" function.
+
+Expected Results:  
+No unsigned remote javascript should be able to perform certain actions, such as
+local file operations.

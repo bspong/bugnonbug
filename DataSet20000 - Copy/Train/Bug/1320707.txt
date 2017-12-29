@@ -1,0 +1,35 @@
+stealing http status codes cross origin via script onerror attribute
+Created attachment 8814952
+HTTP requests and responses that very only by the returned status code.
+
+User Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36
+
+Steps to reproduce:
+
+Using linux nightly build I attempted to load JavaScript cross origin with the source pointing to an HTML page. Specifically:
+
+function load_script(url){ 
+  d = document.createElement('script'); 
+  d.src = url; d.onerror = function(){alert('onerror')}; 
+  d.onload = function(){alert('onload')}; 
+  document.head.appendChild(d); 
+}
+load_script("https://hl8.me/resp.php?code=200&content=html"); // onload executes
+load_script("https://hl8.me/resp.php?code=403&content=html"); // onerror executes
+
+The requests and responses for each are included in the attached file.
+
+
+Actual results:
+
+Two requests were made, both contained authentication tokens. The request that returned a 403 caused the onerror event to execute and the request that returned a 200 caused the onload to execute. 
+
+This behavior was used to steal uniquely identifying information about users cross origin for a bug bounty program. But because server side resolution would mean "abandoning HTTP status codes" I was recommended here.
+
+
+
+Expected results:
+
+Authenticated HTTP status codes of HTML resources should not be leaked cross origin. Either the authentication token should not of been sent (this is how chrome seems to do it) or the content type should of caused the onerror event despite the 200 response.
+
+Note: the POC created for the bug bounty failed to execute on Firefox 53.0a1 Nightly while firefox 45.5 worked fine. However it appears this is the result of some HTTP header being returned by that specific website (.X-Content-Type-Options maybe?) which was not specifically designed to protect against the leaking of the status code.

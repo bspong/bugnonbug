@@ -1,0 +1,44 @@
+[e10s] "View Selection/MathML Source" in remote browser cause unsafe CPOW usage warning
++++ This bug wa initially created a a clone of Bug #1133577 +++
+
+STR:
+
+1) Visit a site in an e10s window, optionally one with MathML
+2) Select some page text/find some MathML
+2) Right-click on the page/MathML, and choose "View Selection/MathML Source"
+
+This cause lot "unsafe CPOW usage" warning in the Browser Console.
+
+In browser/base/content/nsContextMenu.js:
+
+// View Partial Source
+viewPartialSource: function(aContext) {
+var focusedWindow = document.commandDispatcher.focusedWindow;
+if (focusedWindow == window)
+focusedWindow = gBrowser.selectedBrowser.contentWindowAsCPOW;
+
+var docCharset = null;
+if (focusedWindow)
+docCharset = "charset=" + focusedWindow.document.characterSet; <-- Causes CPOW warning
+
+// "View Selection Source" and others such a "View MathML Source"
+// are mutually exclusive, with the precedence given to the selection
+// when there is one
+var reference = null;
+if (aContext == "selection")
+reference = focusedWindow.getSelection(); <-- Causes CPOW warning [selection]
+else if (aContext == "mathml")
+reference = this.target;
+else
+throw "not reached";
+
+// unused (and play nice for fragment generated via XSLT too)
+var docUrl = null;
+window.openDialog("chrome://global/content/viewPartialSource.xul",
+"_blank", "scrollbars,resizable,chrome,dialog=no",
+docUrl, docCharset, reference, aContext);
+},
+
+in toolkit/components/viewsource/content/viewPartialSource.js
+
+[far more than I care to list right now, at least 31 distinct source lines, just selecting <a>text</a>, and even more console message due to loops. It get distinctly worse the more complicated the source of the selection/with MathML]

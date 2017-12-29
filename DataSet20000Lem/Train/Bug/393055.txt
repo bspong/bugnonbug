@@ -1,0 +1,45 @@
+Calling document.close() inside of a dynamically created iframe, cause throbber to never stop.
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.6) Gecko/20070725 Firefox/2.0.0.6
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.6) Gecko/20070725 Firefox/2.0.0.6
+
+If you dynamically create an iframe ... and inside of that iframe you do a document.write() of some content, and then call document.close() ...
+
+Then the throbber will never stop ... and onLoad will never fire.
+
+Reproducible: Always
+
+Steps to Reproduce:
+Use the following HTML/JS ...
+
+1. Use it a is ... note that the page load instantly and the throbber stops.
+2. Uncomment out the line with document.close() and load it again. Now the throbber spin forever.
+
+Code:
+
+<html>
+<head><title>Test</title></head>
+<body id="test" leftmargin="0" topmargin="0">
+<div name="testDIV" id="testDIV" style="border: 1px solid red; "></div>
+<script type="text/javascript">
+var ifrm = document.createElement("IFRAME");
+var elm = document.getElementById("testDIV");
+elm.insertBefore(ifrm, elm.firstChild);
+ifrm.contentDocument.write(
+'<html><head><title>Advertisement</title></head>' +
+'<body id="bob" leftmargin="0" topmargin="0">' +
+'<scr' + 'ipt type="text/javascript">' +
+' document.write("Hello. There is document.close in this script");' +
+// ' document.close();' +
+'</scr'+'ipt>' +
+'</body></html>'
+);
+ifrm.contentDocument.close();
+</script>
+</body></html>
+
+
+Actual Results:
+Throbber spin forever.
+
+Expected Results:
+Throbber should have stopped.

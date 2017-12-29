@@ -1,0 +1,49 @@
+When popping out a simple dialog Firefox allocates tons of memory and sometimes make an access violation when no memory is avalible - FF10x M17x [@ nsCheapStringBufferUtils::CopyToBuffer]
+User-Agent:       Mozilla/5.0 (Windows; U; Win98; zh-CN; rv:1.7.5) Gecko/20041124 Firefox/1.0
+Build Identifier: Mozilla/5.0 (Windows; U; Win98; zh-CN; rv:1.7.5) Gecko/20041124 Firefox/1.0
+
+I have been using Firefox for a while and I liked it very much. 
+Not long ago Firefox starts to stop responding for a while when browsing but I
+paid no attention. Then it starts read HDD so suddenly when browsing and hangs
+at the same time. 
+But this day I clicked a link whick triggered an OnClick event which runs a line
+of javascript code which returns with the result of a comfirm(). (Forgive me of
+my verbosity. ) Then after a long long wait, a box appeared telling me Firefox
+has made an access violation
+(later I found out,'twas caused by doing mov  dword ptr[eax],esi 
+when eax = 00000000).
+
+At this point I reproduced this bug with Dr.Watson running(for 3 times), and
+found out if given sufficient memory and swap file(virtual memory), it will
+still pop out the dialog. I also accidentaly found out this happens too when
+Firefox prompts you if to save a password or not.
+
+However these tests have made my computer run out of virtual memory(2 MMORPGs
+installed on a 7.29G partition), so I rebooted and entered DOS to delete the
+swap file. I also copied firefox to another directory (as I suspected this
+problem has to do with XPCOM.dll so I want to get it's CRC hash in order to know
+if the file is corrupted). 
+
+After doing these steps I cannot reproduce the problem any more...(If not I
+would have to report this as a BLOCKER, as this blocks me from entering password
+to bugzilla.)
+
+And just as I'm filling this report the OS prompts me that Firefox crushes
+*again*... but it is still responding and functional and not closed, and the
+problem was found in MFC42.dll. Maybe that's corrupted file(as I got numerous
+errors with this file)?
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+1.Execute a script with a confirm function or try to make the dialog asking if
+to save password appear.
+
+Actual Results:  
+Firefox allocates memory at an amazing speed then pops up the dialog; or in the
+end runs out of memory and try to access memory with an uninit'ed pointer.
+
+Expected Results:  
+Pop up the dialog without too much delay. 
+
+Or at least say that the pointer is invaild(but how do you know that...)

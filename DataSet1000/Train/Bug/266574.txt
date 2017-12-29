@@ -1,0 +1,54 @@
+reproducible segmentation fault while accessing a web site
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; rv:1.7.3) Gecko/20041026 Firefox/0.10.1 (Debian package  0.10.1+1.0PR-4)
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; rv:1.7.3) Gecko/20041026 Firefox/0.10.1 (Debian package  0.10.1+1.0PR-4)
+
+I noticed a reproducible bug in Mozilla Firefox. My version is Mozilla Firefox
+0.10.1 from current Debian GNU/Linux Sid. Firefox creates a segmentation
+violation while loading a website. See steps to reproduce.
+
+Reproducible: Always
+Steps to Reproduce:
+1. Go to http://www.google.de/
+2. Search for "UUnet Deutschland GmbH"
+3. Visit the first result and wait till page is loaded
+4. Click the back button
+5. Click the first search result again
+Actual Results:  
+Segmentation Fault. Firefox killed by Linux Kernel.
+
+Expected Results:  
+Load the page.
+
+following lines from strace:
+
+connect(46, {sa_family=AF_FILE, path="/var/run/.nscd_socket"}, 110) = -1 ENOENT
+(No such file or directory)
+close(46)                               = 0
+open("/etc/hosts", O_RDONLY)            = 46
+fcntl64(46, F_GETFD)                    = 0
+fcntl64(46, F_SETFD, FD_CLOEXEC)        = 0
+fstat64(46, {st_mode=S_IFREG|0644, st_size=332, ...}) = 0
+mmap2(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) =
+0xb3087000
+read(46, "127.0.0.1\tlocalhost\n192.168.1.10"..., 4096) = 332
+read(46, "", 4096)                      = 0
+close(46)                               = 0
+munmap(0xb3087000, 4096)                = 0
+pipe([46, 47])                          = 0
+gettimeofday({1099006068, 209121}, NULL) = 0
+rt_sigaction(SIGPIPE, {SIG_IGN}, {SIG_IGN}, 8) = 0
+gettimeofday({1099006068, 222964}, NULL) = 0
+rt_sigaction(SIGILL, {0xb3565430, [ILL], SA_RESTART}, {0x8055eb0, [ILL],
+SA_RESTART}, 8) = 0
+rt_sigaction(SIGILL, {0x8055eb0, [ILL], SA_RESTART}, {0xb3565430, [ILL],
+SA_RESTART}, 8) = 0
+--- SIGSEGV (Segmentation fault) @ 0 (0) ---
+unlink("/home/flo/.mozilla/firefox/default.bkm/lock") = 0
+rt_sigaction(SIGSEGV, {SIG_DFL}, NULL, 8) = 0
+rt_sigprocmask(SIG_UNBLOCK, [SEGV], NULL, 8) = 0
+tgkill(7525, 7525, SIGSEGV)             = 0
+--- SIGSEGV (Segmentation fault) @ 0 (0) ---  
++++ killed by SIGSEGV +++
+
+
+(Mail me if you need complete strace logfile)

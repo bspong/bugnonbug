@@ -1,0 +1,67 @@
+New tab behavior for opening multiple tab is inconsistent with single tab behavior
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.1) Gecko/2008070208 Firefox/3.0.1
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.1) Gecko/2008070208 Firefox/3.0.1
+
+To open multiple bookmark in tabs, from the toolbar or sidebar, you can use either Ctrl+click or Ctrl+Shift+click (eg, on a folder). Middle-click is equivalent to Ctrl+click, and the "Open All in Tabs" context menu is equivalent to Ctrl+Shift+click, so I won't mention those further.
+
+Currently, Fx3 doe this when opening multiple tabs:
+. Ctrl: Append all new tab (in the fg) after the last existing tab
+. Ctrl+Shift: Replace the current tab only (in the fg) and insert the rest before the next tab
+(Note: When I say "in the fg" I mean the first new tab becomes focused, while "in the bg" mean the current (old) tab remains focused.)
+
+This is inconsistent with the role of Ctrl and Ctrl+shift for single tabs:
+. Ctrl: Append new tab (in the fg)
+. Ctrl+Shift Append new tab (in the bg)
+(Note: This assumes 'loadBookmarksInBackground'=false (default). Otherwise, the meaning of Ctrl and Ctrl+Shift are swapped. Links behave similarly but use a different pref, 'loadInBackground'=true (default).)
+
+First of all, I think that the two behavior (multiple v single) should be consistent so they are easy to remember, something like this for multiple tabs:
+. Ctrl: Replace the current tab only (in the fg) and insert the rest before the next tab
+. Ctrl+Shift: Append all tab (in the bg) after the last existing tab
+
+This basically swap the two; for Ctrl+Shift, the tab are also loaded in the bg instead of the fg.
+
+Second, the 'loadBookmarksInBackground' pref is not consulted at all, like it is for single new tabs, and it should be. I consider this a minor bug.
+
+Third, for people who abhor having their current tab replaced, there should be a new pref to change it, say, 'loadFolderAndReplaceCurrent'=true (default). If this pref=false, then the new tab would be appended in the fg, instead of the default replace&insert. Note I'm not talking about the obsolete pref 'loadFolderAndReplace' which allowed you to replace all tab in the way.
+
+
+The change to implement this would be pretty simple:
+
+-------------------------------
+utils.js (function: openTabset)
+-------------------------------
+
+CURRENT VERSION:
+_openTabset: function PU__openTabset(aItemsToOpen, aEvent) {
+...
+var loadInBackground = where == "tabshifted" ? true : false;
+var replaceCurrentTab = where == "tab" ? false : true;
+browserWindow.getBrowser().loadTabs(urls, loadInBackground, replaceCurrentTab);
+}
+
+
+PROPOSED VERSION w/o new pref:
+_openTabset: function PU__openTabset(aItemsToOpen, aEvent) {
+...
+var loadBmsInBg = getBoolPref("browser.tabs.loadBookmarksInBackground");
+loadInBackground = (where == "tabshifted") ? !loadBmsInBg : loadBmsInBg;
+var replaceCurrentTab = true;
+if (loadInBackground)
+replaceCurrentTab = false;
+browserWindow.getBrowser().loadTabs(urls, loadInBackground, replaceCurrentTab);
+}
+
+PROPOSED VERSION with new pref (just changed one line):
+_openTabset: function PU__openTabset(aItemsToOpen, aEvent) {
+...
+var loadBmsInBg = getBoolPref("browser.tabs.loadBookmarksInBackground");
+loadInBackground = (where == "tabshifted") ? !loadBmsInBg : loadBmsInBg;
+var replaceCurrentTab = getBoolPref("browser.tabs.loadFolderAndReplaceCurrent"); //RC new pref
+if (loadInBackground)
+replaceCurrentTab = false;
+browserWindow.getBrowser().loadTabs(urls, loadInBackground, replaceCurrentTab);
+}
+
+
+
+Reproducible: Always

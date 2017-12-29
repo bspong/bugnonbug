@@ -1,0 +1,126 @@
+lunable to view restricted page after successful login - work perfectly in MS IE
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.8) Gecko/20050511 Firefox/1.0.4
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.8) Gecko/20050511 Firefox/1.0.4
+
+After successful login of user, user is unable to view restricted pages.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.Register and Login in
+2.Select restricted page
+3.view restricted page
+Actual Results:
+In the attempt to view restricted page after a successful login, user is
+directed back to login page a if he did not successfully login
+
+Expected Results:
+User should be able to view restricted page
+
+Below is code for restricted page followed by code for login page.
+
+Code work perfectly in MS IE.
+
+This is standard code from Dreamweaver MX.
+
+Code for restricted page>>>>>>>>>>>>
+
+<?php
+session_start();
+$MM_authorizedUsers = "";
+$MM_donotCheckaccess = "true";
+
+// *** Restrict Access To Page: Grant or deny access to this page
+function isAuthorized($strUsers, $strGroups, $UserName, $UserGroup) {
+// For security, start by assuming the visitor is NOT authorized.
+$isValid = False;
+
+// When a visitor ha logged into this site, the Session variable MM_Username
+set equal to their username.
+// Therefore, we know that a user is NOT logged in if that Session variable is
+blank.
+if (!empty($UserName)) {
+// Besides being logged in, you may restrict access to only certain user
+based on an ID established when they login.
+// Parse the string into arrays.
+$arrUsers = Explode(",", $strUsers);
+$arrGroups = Explode(",", $strGroups);
+if (in_array($UserName, $arrUsers)) {
+$isValid = true;
+}
+// Or, you may restrict access to only certain user based on their username.
+if (in_array($UserGroup, $arrGroups)) {
+$isValid = true;
+}
+if (($strUsers == "") && true) {
+$isValid = true;
+}
+}
+return $isValid);
+}
+
+Code for login page>>>>>>>>>>>>>>>>>>
+
+<?php
+# FileName="Connection_php_mysql.htm"
+# Type="MYSQL"
+# HTTP="true"
+$hostname_wsawka = "mysql3.secureserver.net";
+$database_wsawka = "wsawka";
+$username_wsawka = "wsawka";
+$password_wsawka = "awheaj";
+$dbname_wsawka = "wsawka";
+$usertable_wsawka = "tbl_users";
+$registration = mysql_pconnect($hostname_wsawka, $username_wsawka,
+$password_wsawka) or trigger_error(mysql_error(),E_USER_ERROR);
+// *** Validate request to login to this site.
+session_start();
+
+$loginFormAction = $_SERVER['PHP_SELF'];
+if (isset($accesscheck)) {
+$GLOBALS['PrevUrl'] = $accesscheck;
+session_register('PrevUrl');
+}
+
+if (isset($_POST['username'])) {
+$loginUsername=$_POST['username'];
+$password=$_POST['pwd'];
+$MM_fldUserAuthorization = "userGroup";
+$MM_redirectLoginSuccess = "login_succeeded.php";
+$MM_redirectLoginFailed = "login_failed.php";
+$MM_redirecttoReferrer = true;
+mysql_select_db($database_wsawka, $registration);
+
+$LoginRS__query=sprintf("SELECT username, pwd, userGroup FROM tbl_users WHERE
+username='%s' AND pwd='%s'",
+get_magic_quotes_gpc() ? $loginUsername : addslashes($loginUsername),
+get_magic_quotes_gpc() ? $password : addslashes($password));
+
+$LoginRS = mysql_query($LoginRS__query, $registration) or die(mysql_error());
+$loginFoundUser = mysql_num_rows($LoginRS);
+if ($loginFoundUser) {
+
+$loginStrGroup = mysql_result($LoginRS,0,'userGroup');
+
+//declare two session variable and assign them
+// $GLOBALS['MM_Username'] = $loginUsername;
+// $GLOBALS['MM_UserGroup'] = $loginStrGroup;
+
+//register the session variable
+// session_register("MM_Username");
+// session_register("MM_UserGroup");
+$_SESSION['MM_Username'] = $loginUsername;
+$_SESSION['MM_UserGroup'] = $loginStrGroup;
+
+if (isset($_SESSION['PrevUrl']) && true) {
+$MM_redirectLoginSuccess = $_SESSION['PrevUrl'];
+}
+header("Location: " . $MM_redirectLoginSuccess );
+exit();
+}
+else {
+header("Location: ". $MM_redirectLoginFailed );
+exit();
+}
+}
+?>

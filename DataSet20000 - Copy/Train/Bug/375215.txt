@@ -1,0 +1,23 @@
+FeedWriter fails for feeds with text/html content type
+Created attachment 259529
+Add missing null check
+
+Google's code search uses type "text/html" for the content. Firefox expects it to be "html" and fails displaying it with an exception (both Firefox 2.0.0.3 and trunk nightlies):
+
+Error: [Exception... "Component returned failure code: 0x80004003 (NS_ERROR_INVALID_POINTER) [nsIDOMHTMLParagraphElement.appendChild]"  nsresult: "0x80004003 (NS_ERROR_INVALID_POINTER)"  location: "JS frame :: file:///.../components/FeedWriter.js :: FW__writeFeedContent :: line 273"  data: no]
+Source File: file:///.../components/FeedWriter.js
+Line: 273
+
+The problem is this code:
+
+  docFragment = summary.createDocumentFragment(body);
+  body.appendChild(docFragment);
+
+summary.createDocumentFragment() will return null for unknown types. So adding a null check for body.append() fixes the exception - entries are still displayed, just without a summary.
+
+There remains the question whether we should recognize MIME types in the type attribute. From the spec it looks that we should:
+
+   On the atom:content element, the value of the "type" attribute MAY be
+   one of "text", "html", or "xhtml".  Failing that, it MUST conform to
+   the syntax of a MIME media type, but MUST NOT be a composite type
+   (see Section 4.2.6 of [MIMEREG]).

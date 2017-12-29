@@ -1,0 +1,18 @@
+Clean up the markup-view test
+I'd like to propose a change to the way the inspector test are written/organized:
+
+- naming convention for the test files: is not consistent at all and file name are often very very long. We should just agree on one way to name them
+
+- test file length: varies a great deal. Some test file only test one single usecase, others several. It would help a lot to split the bigger file into single testcases that can be maintained more easily
+
+- common code: is duplicated. Because we have folder for each of the inspector's tool (markup, rule, computed, font, layout), we are not sharing their head.js common functions, and within one folder, a lot of test are duplicating common things. I propose to regroup all test into browser/devtools/inspector/test, or find a way to share head.js but I don't think that's possible.
+
+- start test pattern: is duplicated all over the place. We almost always open a new tab, load a URL, open the inspector. That should be put into a single function that return a promise
+
+- async test patterns: varies a great deal too. We have nested callback here and there, nested promise in other places, and some Task.spawn in yet other places. I'd like to propose that we always use something like:
+
+Task.spawn(function() {
+let inspector = yield openInspector(url);
+yield doSomething();
+yield doSomethingElse();
+}).then(null, ok.bind(null, false)).then(endTests);

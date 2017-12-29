@@ -1,0 +1,651 @@
+Colour of my Javascript menu isn't changing, or the colour change but position is wrong
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.6) Gecko/20050225 Firefox/1.0.1
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.6) Gecko/20050225 Firefox/1.0.1
+
+I have a javaScript menu system which display a main menu and a drop down. It
+display perfectly in IE and Opera but I am having problem in Mozilla Firefox.
+The problem relates to the positioning of the dropdown or the font colour on the
+menu. The positioning only work correctly when the docType is set to :
+
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">. However I cannot change the font colour
+from black. If I change the docType to :
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/strict.dtd"> then the colour work correctly but the
+drop down always drop down from the top left hand corner of the page. I really
+cannot find the solution to this problem. Any help would be much appreciated.
+Thanks in advance
+
+There are 2 javaScript file - menu.js and layers.js a follows :
+
+menu.js:
+var orientation = 0 // 0-horizontal 1-vertical
+var imgPath = "../images/"
+
+/*var mainItemForeground = "#000000"
+var mainItemBorder = "#CCCCCC"
+var mainItemBackground = "#CCCCCC"*/
+var mainItemForeground = "#FFFFFF" //"#FFFFFF"
+var mainItemBorder = "#882150"
+var mainItemBackground = "#882150"
+
+var mainItemHoverForeground = "#FFFFFF"
+var mainItemHoverBorder = "#FFFFFF"
+var mainItemHoverBackground = "#999999"
+/*var mainItemHoverForeground = "#000000"
+var mainItemHoverBorder = "#a0a0a0"
+var mainItemHoverBackground = "#f0f0f0"*/
+
+/*var subItemForeground = "#000000"
+var subItemBorder = "#CCCCCC"
+var subItemBackground = "#CCCCCC"*/
+var subItemForeground = "#FFFFFF"
+var subItemBorder = "#999999"
+var subItemBackground = "#999999"
+
+var subItemHoverForeground = "#FFFFFF"
+var subItemHoverBorder = "#FFFFFF"
+var subItemHoverBackground = "#882150"
+
+var menuFont = "Arial, Helvetica, sans-serif"
+var menuSize = "10px"
+
+/////////////////////////////////////////////////////////////////////////////
+
+var ie=(navigator.appName=='Microsoft Internet Explorer')
+var ns=(navigator.appName=='Netscape')
+var dom=document.getElementById
+var lw_menuId, lw_trigger, to1
+var s1
+
+/////////////////////////////////////////////////////////////////////////////
+
+function Tmenu (id, parentId, url, description, img) {
+this.id = id
+this.parentId = parentId
+this.url = url
+this.description = description
+this.numChild = 0
+this.levelId = 0
+this.img = img
+}
+
+/////////////////////////////////////////////////////////////////////////////
+
+var menu = new Array()
+var menuCounter = 0
+var numLevel = 0
+var prevMenuId = -1
+var nNowAt = 0
+
+function displayMenuItem(menuId) {
+var sHTML
+
+if (menu[menuId].parentId>0)
+{
+ItemForeground = subItemForeground
+Border = subItemBorder
+Background = subItemBackground
+
+HoverForeground = subItemHoverForeground
+HoverBorder = subItemHoverBorder
+HoverBackground = subItemHoverBackground
+}
+else
+{
+ItemForeground = mainItemForeground
+Border = mainItemBorder
+Background = mainItemBackground
+
+HoverForeground = mainItemHoverForeground
+HoverBorder = mainItemHoverBorder
+HoverBackground = mainItemHoverBackground
+}
+
+if ((orientation==1)||(menu[menuId].levelId>0))
+{
+sHTML += "<tr>"
+}
+
+if (menu[menuId].description!='-')
+{
+sHTML = "<td id='menu_"+menuId+"'
+style='cursor:pointer;cursor:hand;border-style:solid;border-width:1px;background-color:"+
+Background +";color=\""+ ItemForeground +"\";border-color:"+ Border +"'
+onmouseover='clearInterval(s1);this.style.backgroundColor=\"" + HoverBackground
++ "\";" //this.style.color=\"" + HoverForeground +
+"\";this.style.borderColor=\"" + HoverBorder + "\";"
+
+if (menu[menuId].numChild!=0) {
+sHTML +=
+"showSubmenu("+menu[menuId].id+",this);hideSubmenu(menu["+menuId+"].levelId+1);"
+}
+else
+{
+sHTML += "prevMenuId = "+menuId+";hideSubmenu(menu["+menuId+"].levelId);"
+}
+
+sHTML +=
+";nNowAt="+menuId+";clearAll("+menu[menuId].levelId+","+menu[menuId].parentId+")'
+onclick='document.location.href=\""+menu[menuId].url+"\"'
+onmouseout='s1=setInterval(\"resetMenu();hideSubmenu(0)\",1000);'><table
+cellpadding=0 cellspacing=0 border=0 ><tr>"
+
+if (menu[menuId].levelId>0)
+{
+sHTML += "<td style='padding-left:3px'><img src='"
+if (menu[menuId].img=="")
+{
+sHTML += imgPath + "trans.gif"
+}
+else
+{
+sHTML += imgPath + menu[menuId].img
+}
+sHTML += "' width=16 height=16 border=0></td>"
+}
+
+if ((orientation==0) && (menu[menuId].levelId==0))
+{
+nArrowWidth = 0
+}
+else
+{
+nArrowWidth = 25
+}
+
+sHTML += "<td style='padding-left:5px;padding-right:5px; color:\""+
+ItemForeground +"\"; font-size:"+menuSize+";font-family:"+menuFont+";'
+align=left >" + menu[menuId].description.replace(" ","&nbsp;") + "</td><td>"
+//sHTML += "<td style='padding-left:5px;padding-right:5px' align=left>" +
+menu[menuId].description.replace(" ","&nbsp;") + "</td><td
+style='padding-right:2px' align=right width="+nArrowWidth+">"
+if (menu[menuId].levelId>0)
+{
+sHTML += "<td style='padding-left:3px'><img src='"
+if (menu[menuId].img=="")
+{
+sHTML += imgPath + "trans.gif"
+}
+else
+{
+sHTML += imgPath + menu[menuId].img
+}
+sHTML += "' width=16 height=16 border=0></td>"
+}
+
+else if (menu[menuId].numChild>0)
+{
+if ((orientation==0)&&(menu[menuId].levelId==0))
+{
+sHTML += "<img src='" + imgPath + "arrow_down.gif'>"
+}
+else
+{
+sHTML += "<img src='" + imgPath + "arrow_right.gif'>"
+}
+}
+else
+{
+sHTML += "&nbsp;"
+}
+sHTML += "</td></tr></table></td>"
+//sHTML += "</tr></table></td>"
+}
+else
+{
+sHTML = "<td><img src='" + imgPath + "trans.gif' height=2></td></tr><tr><td
+onmouseover='' bgcolor='#d0d0d0'><img src='" + imgPath + "trans.gif'
+height=1></td></tr><tr><td><img src='" + imgPath + "trans.gif' height=2></td>"
+}
+
+if ((orientation==1)||(menu[menuId].levelId>0))
+{
+sHTML += "</tr>"
+}
+return sHTML
+}
+
+function clearAll(levelId, parentId) {
+
+if (levelId>0)
+{
+Border = subItemBorder
+Background = subItemBackground
+}
+else
+{
+Border = mainItemBorder
+Background = mainItemBackground
+}
+
+for (i=0;i<menuCounter;i++)
+{
+if (menu[i].levelId==levelId)
+{
+if ((i!=nNowAt) && (menu[i].parentId==parentId) && (menu[i].description!="-")) {
+lw_getObj("menu_"+i).backgroundColor=Background;
+lw_getObj("menu_"+i).borderColor=Border
+}
+}
+}
+
+}
+
+function mapID (id) {
+for (var i=0;i<menuCounter;i++)
+{
+if (menu[i].id==id)
+{
+return i
+}
+}
+return -1
+}
+
+function showSubmenu(menuId,trigger) {
+lw_menuId = menuId
+lw_trigger = trigger
+
+if (ns)
+{
+to1 = setTimeout("showActualSubmenu(lw_menuId,lw_trigger)",50)
+}
+else
+{
+showActualSubmenu(lw_menuId,lw_trigger)
+}
+}
+
+function showActualSubmenu(menuId,trigger) {
+var nLevel = 0
+var leftpos = 0
+var nIndex=0
+
+if (menuId>0)
+{
+lw_calcpos(trigger)
+
+for (var i=0;i<menuCounter;i++)
+{
+if (menu[i].id==menuId)
+{
+nLevel = menu[i].levelId
+nIndex = i
+}
+}
+
+if ((orientation==1)||(menu[nIndex].parentId>0))
+{
+lw_getObj("menu_level_"+nLevel).top=lw_toppos
+leftpos = lw_leftpos + lw_width + 5
+
+if (nLevel==0) {
+leftpos -= 3
+}
+}
+else {
+lw_getObj("menu_level_"+nLevel).top = lw_toppos + lw_height + 2
+leftpos = lw_leftpos
+}
+
+lw_getObj("menu_level_"+nLevel).left=leftpos
+
+sHTML = "<table cellpadding=0 cellspacing=0 border=0>"
+for (var i=0;i<menuCounter;i++)
+{
+if (menu[i].parentId==menuId)
+{
+sHTML += displayMenuItem (i)
+}
+}
+sHTML += "</table>"
+
+document.getElementById("menu_level_"+nLevel+"_content").innerHTML=sHTML
+lw_showLayer('menu_level_'+nLevel)
+}
+}
+
+function hideSubmenu(levelId) {
+
+for (var cnt=levelId; cnt<numLevel; cnt++)
+{
+lw_hideLayerName("menu_level_"+cnt)
+}
+}
+
+function DrawMenu () {
+
+for (var i=0; i<numLevel ; i++)
+{
+lw_createLayer("menu_level_"+i,0,0,0,0,"#ffffff","#d0d0d0",100)
+}
+
+sHTML="<table cellpadding=2 cellspacing=0>"
+for (var i=0; i<menuCounter; i++)
+{
+if (menu[i].parentId==0)
+{
+sHTML += displayMenuItem (i)
+}
+else if (menu[i].parentId==-1)
+{
+sHTML += "<tr><td><img src='trans' height=2></td></tr><tr
+bgcolor='"+mainItemBackground+"'><td style='padding:5px'><b>" +
+menu[i].description + "</b></td></tr>"
+}
+}
+sHTML += "</table>"
+
+document.writeln(sHTML)
+
+}
+
+function getLevel (menuId) {
+var pId=menuId
+var nLevel=0
+
+while (pId!=0)
+{
+nLevel++
+for (var i=0;i<menuCounter;i++)
+{
+if (menu[i].id==pId)
+{
+pId = menu[i].parentId
+}
+}
+}
+
+return nLevel
+}
+
+function AddMenuItem (id, parentId, url, description, img) {
+
+menu[menuCounter++] = new Tmenu (id, parentId, url, description, img)
+
+if (parentId>0)
+{
+for (i=0;i<menuCounter;i++)
+{
+if (menu[i].id==parentId)
+{
+menu[i].numChild++
+}
+}
+menu[menuCounter-1].levelId = getLevel(parentId)
+
+if ( numLevel < menu[menuCounter-1].levelId)
+{
+numLevel = menu[menuCounter-1].levelId
+}
+}
+else if (parentId==0)
+{
+menu[menuCounter-1].levelId = 0
+}
+else
+{
+menu[menuCounter-1].levelId = -1
+}
+}
+
+function handleonclick() {
+if (ns)
+{
+lw_closeAllLayers()
+}
+else
+{
+lw_closeAllLayers(event)
+}
+
+resetMenu()
+}
+
+function handlekeypress(e) {
+if (ns)
+{
+var keyCode = e.keyCode?e.keyCode:e.which?e.which:e.charCode;
+if ((keyCode==27)||(keyCode==1))
+{
+handleonclick()
+}
+}
+else
+if ((event.keyCode==0)||(event.keyCode==27))
+{
+handleonclick()
+}
+resetMenu()
+}
+
+function resetMenu () {
+for (i=0;i<menuCounter;i++)
+{
+if (menu[i].levelId==0)
+{
+lw_getObj("menu_"+i).backgroundColor=mainItemBackground
+lw_getObj("menu_"+i).borderColor=mainItemBorder
+}
+}
+}
+
+document.onkeypress = handlekeypress
+document.onclick = handleonclick
+
+
+
+
+
+layers.js
+var layerQueue=new Array()
+var layerIndex=-1
+
+/* hide <select> and <applet> object (for IE only) */
+function hideElement( elmID, overDiv )
+{
+if( ie )
+{
+for( i = 0; i < document.getElementsByTagName( elmID ).length; i++ )
+{
+obj = document.getElementsByTagName( elmID )[i];
+if( !obj || !obj.offsetParent )
+{
+continue;
+}
+
+// Find the element's offsetTop and offsetLeft relative to the BODY tag.
+objLeft = obj.offsetLeft;
+objTop = obj.offsetTop;
+objParent = obj.offsetParent;
+
+while( objParent.tagName.toUpperCase() != "BODY" )
+{
+objLeft += objParent.offsetLeft;
+objTop += objParent.offsetTop;
+objParent = objParent.offsetParent;
+}
+
+objHeight = obj.offsetHeight;
+objWidth = obj.offsetWidth;
+
+if(( overDiv.offsetLeft + overDiv.offsetWidth ) <= objLeft );
+else if(( overDiv.offsetTop + overDiv.offsetHeight ) <= objTop );
+else if( overDiv.offsetTop >= ( objTop + objHeight ));
+else if( overDiv.offsetLeft >= ( objLeft + objWidth ));
+else
+{
+obj.style.visibility = "hidden";
+}
+}
+}
+}
+
+/*
+* unhides <select> and <applet> object (for IE only)
+*/
+function showElement( elmID )
+{
+if( ie )
+{
+for( i = 0; i < document.getElementsByTagName( elmID ).length; i++ )
+{
+obj = document.getElementsByTagName( elmID )[i];
+
+if( !obj || !obj.offsetParent )
+{
+continue;
+}
+
+obj.style.visibility = "";
+}
+}
+}
+
+function lw_createLayer (layerName, top_pos, left_pos, width, height, bgcolor,
+bordercolor, z_index) {
+document.write("<div ONCLICK='event.cancelBubble=true' id='"+layerName+"'
+style='z-index:" + z_index +
+";position:absolute;top:"+top_pos+";left:"+left_pos+";visibility:hidden;'><table
+bgcolor='"+bgcolor+"' style='border-width:1px;border-style:solid;border-color:"
++ bordercolor + "' cellpadding=2 cellspacing=0 width=0><tr><td valign=top
+width='"+width+"' height='"+height+"'><span
+id='"+layerName+"_content'></span></td></tr></table></div>")
+}
+
+function lw_getObj (objName) {
+return
+(dom)?document.getElementById(objName).style:ie?eval("document.all."+objName)
+:eval("document."+objName)
+}
+
+function lw_showLayer (layerName) {
+
+found=false
+for (i=0;i<=layerIndex;i++)
+{
+if (layerQueue[i]==layerName)
+{
+found=true
+}
+}
+
+if
+((lw_getObj(layerName).visibility!="visible")&&(lw_getObj(layerName).visibility!="show"))
+{
+lw_getObj(layerName).visibility = (dom||ie)?"visible":"show"
+layerQueue[++layerIndex] = layerName
+
+hideElement( 'SELECT', document.getElementById(layerName) );
+hideElement( 'APPLET', document.getElementById(layerName) );
+}
+}
+
+function lw_hideLayer () {
+showElement( 'SELECT', document.getElementById(layerQueue[layerIndex]) );
+showElement( 'APPLET', document.getElementById(layerQueue[layerIndex]) );
+
+lw_getObj(layerQueue[layerIndex--]).visibility = "hidden"
+}
+
+function lw_hideLayerName (layerName) {
+var i
+var tmpQueue=new Array()
+var newIndex=-1
+
+showElement( 'SELECT', document.getElementById(layerName) );
+showElement( 'APPLET', document.getElementById(layerName) );
+
+lw_getObj(layerName).visibility = "hidden"
+
+for (i=0;i<=layerIndex;i++)
+{
+if ((layerQueue[i]!="")&&(layerQueue[i]!=layerName))
+{
+tmpQueue [++newIndex] = layerQueue[i]
+hideElement( 'SELECT', document.getElementById(layerQueue[i]) );
+hideElement( 'APPLET', document.getElementById(layerQueue[i]) );
+}
+
+}
+
+layerQueue = tmpQueue
+layerIndex = newIndex
+}
+
+function lw_closeAllLayers() {
+while (layerIndex >= 0)
+{
+lw_hideLayer()
+}
+}
+
+function lw_closeLastLayer() {
+if (layerIndex >= 0)
+{
+while ((lw_getObj(layerQueue[layerIndex]).visibility!="visible") && (layerIndex>0))
+{
+layerIndex--;
+}
+lw_hideLayer()
+}
+}
+
+function lw_escLayer (e) {
+if (navigator.appName=="Netscape")
+{
+var keyCode = e.keyCode?e.keyCode:e.which?e.which:e.charCode;
+if ((keyCode==27)||(keyCode==1))
+{
+lw_closeLastLayer()
+}
+}
+else
+if ((event.keyCode==0)||(event.keyCode==27))
+{
+lw_closeLastLayer()
+}
+}
+
+
+var lw_leftpos = 0
+var lw_toppos = 0
+var lw_width = 0
+var lw_height = 0
+
+function lw_calcpos(obj) {
+lw_leftpos=0
+lw_toppos=0
+lw_width = obj.offsetWidth
+lw_height = obj.offsetHeight
+
+var aTag = obj
+do {
+lw_leftpos += aTag.offsetLeft;
+lw_toppos += aTag.offsetTop;
+aTag = aTag.offsetParent;
+} while(aTag.tagName!="BODY");
+}
+
+document.onkeypress = lw_escLayer;
+document.onclick = lw_closeAllLayers;
+
+
+Reproducible: Always
+
+Actual Results:
+The menu appear with black text instead of white in HTML 4.0, and they are in
+correct place on the screen.
+When switching to HTML 4.01 the menu appear in white (correct colour) but the
+menu get moved from below the main menu to the very top left of the screen.
+
+Expected Results:
+In Opera and IE the menu are white, and are displayed in the correct position.
+As these are just table row and cell I don't see any real reason for the
+colour not displaying correctly.
+
+This is a part of the main company website, so complieance is very important. We
+*could* force everybody to use IE, but that is a bit harsh, so supporting the
+other browser is important

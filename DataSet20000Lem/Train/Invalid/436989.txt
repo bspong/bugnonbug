@@ -1,0 +1,30 @@
+contentaccessible=yes is required even when trusted content add a chrome:// reference
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9) Gecko/2008052909 Firefox/3.0
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9) Gecko/2008052909 Firefox/3.0
+
+In the LibX extension, we embed icon in a web page by adding <img src="chrome://skin/libx/someicon.ico"> element to a client's DOM.
+
+FF 3.0 RC1 (though not FF 3.0b5) disallows this access unless we set contentaccessible=yes.
+
+This is contrary to the documentation at http://developer.mozilla.org/en/docs/Chrome_Registration#contentaccessible which state that contentaccessible=yes allows untrusted content access to chrome:// URL.
+
+In this case, the content attempting to access the chrome:// URL is trusted.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Download http://libx.org/editions/vt.5/libx-vt.xpi
+2. Go to: http://www.amazon.com/gp/product/006073132X
+3. See the broken image next to "(Hardcover)"
+
+Repeat the same in FF 3.0b5 or FF 2.0.0.14 and you see the correct link.
+
+Actual Results:
+The image is broken unless I specify contentaccessible=yes
+
+Expected Results:
+The image should be shown even if contentaccessible=yes is not given, because contentaccessible applies only to untrusted content. Here, the script performing the insert() action is trusted.
+
+Please either fix this, or, better, explain to me how I can insert a <img src="chrome://...." /> element in a script from within a trusted extension without FF thinking that untrusted content is attempting to access chrome://
+
+If I must set contentaccessible=yes, justify why I need to open *all* of my extension to untrusted content, rather than just the skin/ subdirectory.

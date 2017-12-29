@@ -1,0 +1,51 @@
+Xul problem and back: when icon changes, the back button disappear
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.3) Gecko/20070309 Firefox/2.0.0.3
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.3) Gecko/20070309 Firefox/2.0.0.3
+
+I am the Author of the extension called HTML Validator.
+My user reported me a problem but the cause is due to a bug in firefox.
+
+When I change an icon of my extension on the status bar during a particular Firefox event, the back button is reset.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Install HTML Validator for Firefox 0.839
+This link: http://users.skynet.be/mgueury/mozilla/download.html
+Win: http://htmlvalidator.sourceforge.net/mozilla/tidy_firefox_win_0839.xpi
+Linux:
+http://htmlvalidator.sourceforge.net/mozilla/tidy_firefox_linux_0839.xpi
+Or this link:
+https://addons.mozilla.org/en-US/firefox/addon/249
+
+2. restart Firefox, choose the algorithm you want
+3. Open a new window
+Go to www.google.com
+Click on any link (ex: images) -> you go to the next page
+-> There is no back button (This is the bug)
+Go to a link futher( back rework )
+Actual Results:
+no back button after new window
+
+Expected Results:
+back button available
+
+I know the code causing this in my extension. Just that it is crazy:
+- If you look the extension, you will see that there is an icon in the status bar that is green, yellow or red depending of the HTML error on the page.
+- when I do
+
+this.xulBrowserImg = document.getElementById("tidy-status-bar-img");
+...
+img = this.xulBrowserImg;
+...
+img.setAttribute("src", icon + ".png" );
+
+The back button disappear.
+
+If I replace the line of code by:
+
+setTimeout('oTidyBrowser.xulBrowserImg.setAttribute("src","'+icon+'.png" )',10)
+
+It works. This behavior is really strange and buggy. It should be fixed. A lot of extension have numerous work-around for such bugs.
+
+Thanks by advance,

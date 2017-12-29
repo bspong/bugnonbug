@@ -1,0 +1,32 @@
+Problem when adding (in a local file) an assert containing a literal with utf-8 character
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.0; fr; rv:1.8.0.6) Gecko/20060728 Firefox/1.5.0.6
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.0; fr; rv:1.8.0.6) Gecko/20060728 Firefox/1.5.0.6
+
+When one stores rdf data in a local file, for example one adds an Assert containing a string literal with unicode characters like \u2014, these caracters are not properly written in the file. If one opens this file, one will see the caracters is not known as a valid character.
+
+Then, if one reloads the RDF file in the nsIRDFDatasource, we have an error.
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+1. Create a javascript string with an unicode caracters, for instance \u2014 : var mystring = "ma—string";
+
+2. create a dummy assertion containing an object literal of wich the value is 'mystring' :
+var rdfService = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
+
+var myresource = rdfService.GetResource("mypredicate");
+var mypredicate = rdfService.GetResource("mypredicate");
+var mytarget = _rdfService.GetLiteral(mystring);
+
+
+3. Create a local datasource and call the Assert method to add the former assertion.
+var localDs = rdfService.GetDataSourceBlocking("file://c:/test.rdf");
+localDs.Assert(myresource, mypredicate,mytarget);
+4. Reload the datasource. You will have an error.
+var localDs2 = rdfService.GetDataSourceBlocking("file://c:/test.rdf");
+
+Actual Results:  
+An exception is thrown preventing the next javascript steps instructions after  rdfService.GetDataSourceBlocking("file://c:/test.rdf");
+
+Expected Results:  
+Read and write all unicode character properly.

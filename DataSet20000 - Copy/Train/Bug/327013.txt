@@ -1,0 +1,58 @@
+cursor is not moving behind typed characters when using a javascript-java-communication
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.0.1) Gecko/20060124 Firefox/1.5.0.1
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.0.1) Gecko/20060124 Firefox/1.5.0.1
+
+When running a javascript that is calling (periodically) a method of a java applet, the cursor is not moving like it should when typing something in a form or url-bar of another tab.
+The cursor is often moving not behind the typed character so that other characters appear before the previous one. It looks like this alway happens as long as the java-method is not returning yet. For example if the called java-method is 'sleeping' for one second, the cursor is not moving anymore for this second.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Create a HTML page like this:
+<html><head> <title>bug</title>
+
+<script type="text/javascript">
+  loop = function()
+  {
+    try 
+    {
+      var message = document.applets["DEMO_APPLET"].JS2JRequest();
+    } 
+    catch (exception)
+    {}
+    window.setTimeout("loop()", 2000);
+  };
+</script>
+</head>
+
+<body>
+<input type="button" value="start" onclick="loop();"> <p>
+<APPLET CODE="FA.class" NAME="DEMO_APPLET" WIDTH="50" HEIGHT="50"/></APPLET>
+
+</body></html>
+
+2. Create an applet:
+import java.applet.Applet;
+
+public class FA extends Applet {
+  public void init() {
+    System.out.println("starting demo-applet");
+  }
+
+  public void JS2JRequest() {
+    try {Thread.sleep(1000);}
+    catch (Exception e) {;}
+    return;
+  }
+}
+
+3. Load the page.
+4. Hit the button to start the JavaScript-Java-Communication
+5. Open another tab
+6. Type arbitrary characters in the location bar or in a form field of any other website.
+
+Actual Results:  
+The cursor is not moving behind the typed characters.
+
+Expected Results:  
+The cursor should move behind the typed characters.

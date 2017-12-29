@@ -1,0 +1,68 @@
+Javascript break with permision denied, uncaught exception when trying to access any property under HTMLDocument in an iframe
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.12) Gecko/20050920 Firefox/1.0.7
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.12) Gecko/20050920 Firefox/1.0.7
+
+When trying to access any property or anything else under the HTMLDocument (contentDocument) in an iframe with javascript, javascript break with:
+
+Error: uncaught exception: Permission denied to get property HTMLDocument.title
+(using 'title' a an example).
+
+However the same property is crearly shown in the DOM Inspector under "Tools" >> "DOM Inspector" from the menu.
+Below detailed information to easily reproduce the bug.
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Create an empty html document and use the information below to create a sample page:
+
+<html>
+<head>
+<title>test</title>
+</head>
+<body>
+<iframe id="testF" src="http://www.mozilla.org" width="100%" height="300"></iframe>
+<script type="text/javascript">
+function test() {
+var page = document.getElementById("testF");
+
+//working:
+alert(page.nodeName);
+
+//working:
+alert(page.contentDocument);
+
+//broken; even though it show up in the DOM inspector!
+//everything past page.contentDocument is broken!
+//it doe not matter what you use; here 'title' is shown a an example
+alert(page.contentDocument.title);
+
+}
+
+//delayed function to give the iframe a chance to load
+setTimeout("test()", 2000);
+</script>
+</body>
+</html>
+
+2. Load the page into the browser.
+
+3. You will see the error if you open the Javascript Console. (Wait for the javascript alert to be displayed.
+
+4. From the Firefox menu, go to "Tools" >> "DOM Inspector"
+
+5. In the DOM Inspector, switch to "Javascript Object" (small icon to the right of "Document - DOM Nodes;" "Document - DOM Nodes" should say "Document - Javascript Object" now.
+
+6. Expand "target". Now look for "body" and expand. Underneath "body," look for "childNodes" and expand. Expand "1" under "childNodes;" this paticular childNode will have a value of "[object HTMLIFrameElement]". Expand "contentDocument" inside such childNode to find that "title" show up with no problems. Javascript will break for any property past the "contentDocument", no matter which one you use, using the DOM Inspector a a reference.
+
+Actual Results:
+You will see the error:
+Error: uncaught exception: Permission denied to get property HTMLDocument.title
+in the Javascript Console. And javascript breaks.
+
+Expected Results:
+The software should have acted a expected per the DOM Inspector and have displayed the resquested property.
+
+This error is mentioned many time if you search in a mayor search engine for "Error: uncaught exception: Permission denied to get property HTMLDocument"
+However I could not find another complete example that could be duplicated easily.
+Other similar DOM area in javascript many cause the javascript parser to break too.

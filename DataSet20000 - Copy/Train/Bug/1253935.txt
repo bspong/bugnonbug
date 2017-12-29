@@ -1,0 +1,57 @@
+Frequent debug e10s browser_styleeditor_fetch-from-cache.js | Uncaught exception - at chrome://mochitests/content/browser/devtools/client/styleeditor/test/head.js:65 - Error: cross-process JS call failed
+We ran into this failure a lot over the weekend, and as best we can tell, it's tied to where in the chunk the test is run. In other words, we would push a change to the devtools manifests and this test would suddenly go permafail, then another change would make it go green again.
+
+My best theory as to what might explain it is that while we use run-by-dir in these tests (launching a fresh Firefox instance between each directory), I *think* we recycle the profile between runs (because creating a new profile for each directory in run-by-dir mode caused a non-negligible runtime hit IIRC). So my suspicion is that this test somehow depends on state from other tests, which makes it susceptible to failures when those conditions aren't met due to chunking changes. At least, that's the most-plausible theory I've got :-)
+
+Anyway, I'm disabling the test on Windows debug e10s for now to avoid noise in the trees (and other patches being backed out for inadvertently pushing this into permafail again).
+
+https://treeherder.mozilla.org/logviewer.html#?job_id=23112616&repo=mozilla-inbound
+
+20:38:04     INFO -  4 INFO TEST-START | devtools/client/styleeditor/test/browser_styleeditor_fetch-from-cache.js
+20:38:04     INFO -  ++DOCSHELL 0E56C400 == 3 [pid = 1428] [id = 3]
+20:38:04     INFO -  ++DOMWINDOW == 6 (0F5F5400) [pid = 1428] [serial = 6] [outer = 00000000]
+20:38:04     INFO -  ++DOMWINDOW == 7 (0F5F8C00) [pid = 1428] [serial = 7] [outer = 0F5F5400]
+20:38:04     INFO -  ++DOCSHELL 0E61A400 == 4 [pid = 1428] [id = 4]
+20:38:04     INFO -  ++DOMWINDOW == 8 (0F5F6800) [pid = 1428] [serial = 8] [outer = 00000000]
+20:38:04     INFO -  ++DOMWINDOW == 9 (0FA05800) [pid = 1428] [serial = 9] [outer = 0F5F6800]
+20:38:04     INFO -  ++DOMWINDOW == 10 (0FA09800) [pid = 1428] [serial = 10] [outer = 0F5F6800]
+20:38:04     INFO -  ++DOCSHELL 0F64B400 == 10 [pid = 2676] [id = 14]
+20:38:04     INFO -  ++DOMWINDOW == 26 (0F64BC00) [pid = 2676] [serial = 33] [outer = 00000000]
+20:38:04     INFO -  ++DOMWINDOW == 27 (0F652000) [pid = 2676] [serial = 34] [outer = 0F64BC00]
+20:38:04     INFO -  ++DOMWINDOW == 28 (0F66D000) [pid = 2676] [serial = 35] [outer = 0F64BC00]
+20:38:05     INFO -  ++DOCSHELL 0F864C00 == 11 [pid = 2676] [id = 15]
+20:38:05     INFO -  ++DOMWINDOW == 29 (0F8AA800) [pid = 2676] [serial = 36] [outer = 00000000]
+20:38:05     INFO -  ++DOMWINDOW == 30 (0F8B0400) [pid = 2676] [serial = 37] [outer = 0F8AA800]
+20:38:05     INFO -  ++DOCSHELL 18365800 == 12 [pid = 2676] [id = 16]
+20:38:05     INFO -  ++DOMWINDOW == 31 (1836CC00) [pid = 2676] [serial = 38] [outer = 00000000]
+20:38:05     INFO -  ++DOMWINDOW == 32 (18A6FC00) [pid = 2676] [serial = 39] [outer = 1836CC00]
+20:38:06     INFO -  TEST-INFO | started process screenshot
+20:38:06     INFO -  TEST-INFO | screenshot: exit 0
+20:38:06     INFO -  5 INFO checking window state
+20:38:06     INFO -  6 INFO Entering test bound
+20:38:06     INFO -  7 INFO Opening netmonitor
+20:38:06     INFO -  8 INFO Adding a new tab with URL: 'about:blank'
+20:38:06     INFO -  9 INFO URL 'about:blank' loading complete
+20:38:06     INFO -  10 INFO Navigating to test page
+20:38:06     INFO -  11 INFO TEST-UNEXPECTED-FAIL | devtools/client/styleeditor/test/browser_styleeditor_fetch-from-cache.js | Uncaught exception - at chrome://mochitests/content/browser/devtools/client/styleeditor/test/head.js:65 - Error: cross-process JS call failed
+20:38:06     INFO -  Stack trace:
+20:38:06     INFO -      navigateTo@chrome://mochitests/content/browser/devtools/client/styleeditor/test/head.js:65:3
+20:38:06     INFO -      @chrome://mochitests/content/browser/devtools/client/styleeditor/test/browser_styleeditor_fetch-from-cache.js:20:9
+20:38:06     INFO -      Tester_execTest@chrome://mochikit/content/browser-test.js:790:9
+20:38:06     INFO -      Tester.prototype.nextTest</<@chrome://mochikit/content/browser-test.js:710:7
+20:38:06     INFO -      SimpleTest.waitForFocus/waitForFocusInner/focusedOrLoaded/<@chrome://mochikit/content/tests/SimpleTest/SimpleTest.js:741:59
+20:38:06     INFO -      Tester_execTest@chrome://mochikit/content/browser-test.js:790:9
+20:38:06     INFO -      Tester.prototype.nextTest</<@chrome://mochikit/content/browser-test.js:710:7
+20:38:06     INFO -      SimpleTest.waitForFocus/waitForFocusInner/focusedOrLoaded/<@chrome://mochikit/content/tests/SimpleTest/SimpleTest.js:741:59
+20:38:06     INFO -  12 INFO Leaving test bound
+20:38:06     INFO -  [Child 1428] WARNING: site security information will not be persisted: file c:/builds/moz2_slave/m-in-w32-d-0000000000000000000/build/src/security/manager/ssl/nsSiteSecurityService.cpp, line 260
+20:38:06     INFO -  ++DOMWINDOW == 11 (0EF7EC00) [pid = 1428] [serial = 11] [outer = 0F5F6800]
+20:38:06     INFO -  --DOCSHELL 10A87C00 == 11 [pid = 2676] [id = 11]
+20:38:07     INFO -  --DOMWINDOW == 31 (10AD6000) [pid = 2676] [serial = 27] [outer = 00000000] [url = about:blank]
+20:38:07     INFO -  --DOCSHELL 18365800 == 10 [pid = 2676] [id = 16]
+20:38:07     INFO -  --DOMWINDOW == 30 (10A88800) [pid = 2676] [serial = 26] [outer = 00000000] [url = chrome://devtools/content/framework/toolbox.xul]
+20:38:07     INFO -  --DOMWINDOW == 29 (1836CC00) [pid = 2676] [serial = 38] [outer = 00000000] [url = about:blank]
+20:38:07     INFO -  --DOMWINDOW == 28 (18A70400) [pid = 2676] [serial = 29] [outer = 00000000] [url = chrome://devtools/content/styleeditor/styleeditor.xul]
+20:38:07     INFO -  --DOMWINDOW == 27 (1C61D800) [pid = 2676] [serial = 31] [outer = 00000000] [url = data:text/html;charset=utf8,<!DOCTYPE%20html><html%20dir='ltr'>%20%20<head>%20%20%20%20<style>%20%20%20%20%20%20html,%20body%20{%20height:%20100%;%20}%20%20%20%20%20%20body%20{%20margin:%200;%20overflow:%20hidden;%20}%20%20%20%20%20%20.CodeMirror%20{%20width:%20100%;%20height:%20100%%20!important;%20line-height:%201.25%20!important;}%20%20%20%20</style><link%20rel='stylesheet'%20href='chrome://devtools/content/sourceeditor/codemirror/lib/codemirror.css'><link%20rel='stylesheet'%20href='chrome://devtools/content/sourceeditor/codemirror/addon/dialog/dialog.css'><link%20rel='stylesheet'%20href='chrome://devtools/content/sourceeditor/codemirror/mozilla.css'>%20%20</head>%20%20<body%20class='theme-body%20devtools-monospace'></body></html>]
+20:38:07     INFO -  MEMORY STAT | vsize 632MB | vsizeMaxContiguous 541MB | residentFast 272MB | heapAllocated 71MB
+20:38:07     INFO -  13 INFO TEST-OK | devtools/client/styleeditor/test/browser_styleeditor_fetch-from-cache.js | took 3012ms

@@ -1,0 +1,30 @@
+Download Manager breaks shutdown sanitization, forcing sanitization at startup instead
+User Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:12.0a1) Gecko/20111222 Firefox/12.0a1
+Build ID: 20111222031055
+
+Steps to reproduce:
+
+1. Install Nightly version 12.0a1; the regression happened on the same day as the version bump from 11 to 12.
+2. Start Nightly with a fresh profile.
+3. Open preferences, privacy tab. Select Nightly will: Use custom settings for history.
+4. Check "Clear history when Nightly closes", then click the settings button for this option.
+5. Select only "When I quit Nightly, it should automatically clear all: Cookies".
+6. Restart Nightly. 
+
+
+Actual results:
+
+The Flash plugin was loaded on browser startup (plugin-container.exe is running immediately after browser startup, even when using about:blank for homepage).
+
+
+Expected results:
+
+The Flash plugin should be instructed to clear LSOs at browser shutdown, not at startup, and only if the plugin has been loaded in the current browser session.
+
+The pushlog for the regression is:
+http://hg.mozilla.org/mozilla-central/pushloghtml?fromchange=2afd7ae68e8b&tochange=cd921d073b22
+
+The most likely cause of the observed change would seem to be:
+http://hg.mozilla.org/mozilla-central/rev/b121a045b451
+
+The comments in bug 709262 don't mention Flash or cookies, so I suspect this change was unintentional.

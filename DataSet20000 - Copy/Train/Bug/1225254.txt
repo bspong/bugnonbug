@@ -1,0 +1,57 @@
+Refactor css-logic.js
+(not sure if this is the right component).
+
+I think we ought it to ourselves to do a complete audit of css-logic.js
+It's a rather old module that hasn't been modified too much since it was created, but the code around it was. My feeling (but I may be wrong, hence, the audit) is that it's not used as much as it used to, and not in the same way.
+
+It's 2000 lines long, and really, having 2000 lines of JS to deal with stylesheets and rules and properties seems wrong, I'm pretty sure a lot of this could/should be done by platform.
+
+Also, some code might just be dead. Taking a quick look, I couldn't find a usage of findMatchedSelectors for example (which means that it could be removed along with compareTo and specificity). There might be some others too.
+
+Also, the actors in styles.js are the only ones that actually instantiate the CssLogic class, but I have a feeling that this class isn't nearly as useful as it used to. For instance, we keep on calling .reset() on the instance, which, I think, defeats the original purpose which was to cache a bunch of properties.
+
+Here's a quick list of the usages of css-logic.js throughout our code (excluding the css-logic tests):
+
+StyleSheetEditor.jsm
+  shortSource
+  prettifyCSS
+computed-view.js
+  shortSource
+  FILTER
+  STATUS
+  l10n
+rule-view.js
+  shortSource
+  _strings
+  l10n
+doc_frame_script.js
+  isContentStyleSheet
+styleinspector/test/head.js
+  Useless import
+csscoverage.js
+  prettifyCSS
+markup.js
+  getComputedStyle
+  getBindingElementAndPseudo
+inspector.js
+  getComputedStyle
+  findCssSelector
+script.js
+  findCssSelector
+styleeditor.js
+  isContentStyleSheet
+styles.js
+  new
+  reset
+  sourceFilter
+  FILTER
+  highlight
+  computedStyle
+  hasMatchedSelectors
+  getPropertyInfo
+  getShortName
+  getBindingElementAndPseudo
+  getSelectors
+  keyframesRules
+stylesheets.js
+  isContentStyleSheet

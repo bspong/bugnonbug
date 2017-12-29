@@ -1,0 +1,64 @@
+Firefox save wrong window restore size while closing a maximized window.
+Firefox save wrong window restore size and window position while closing a maximized window.
+
+Current logic is making restore window button useless. Which is too irritating.
+
+This wa tested on windows.
+
+Steps:-
+1. Exit Firefox, to close all Firefox instance.
+2. Re-Start Firefox, to get a single Firefox window.
+3. Re-Size window to 60% size of screen display.
+4. Reposition window 10% away from top and left.
+6. Exit Firefox, then Re-Start Firefox.
+7. You can see Firefox remember window state,
+size and position correctly.
+(ie, restore state, size 60%, 10% from top/left)
+6. Now Maximize window, by clicking window maximize button.
+(remember not to change position/size
+when it is still in restore state)
+7. Exit Firefox, then Re-Start Firefox.
+8. You can see Firefox in Maximized window state,
+ie, Firefox remember window state correctly.
+9. Now click Restore Button.
+
+Result:-
+--------
+You can see
+* size is almost 100% of screen size
+* position almost left, top of screen size
+
+Expected:-
+---------
+* size 60% of screen size
+* position at 10% from top/left of screen.
+
+
+
+What to be done:-
+---------------
+We should use following common logic.
+
+function onExitApplication(){
+switch(window.state){
+
+'maxmized' :
+save_window_state('maxmized');
+break;
+
+'normal' : /*ie, restored state*/
+save_window_state('normal');
+save_window_size(window.width, window.height);
+save_window_position(window.left, window.top);
+break;
+
+'minimized' :
+'systray' :
+default :
+/*save nothing*/
+}
+}
+
+
+Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9a9pre)
+Gecko/2007100505 Minefield/3.0a9pre

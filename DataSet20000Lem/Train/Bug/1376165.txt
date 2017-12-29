@@ -1,0 +1,21 @@
+The dragging gap / space between button and tab is inserted in the wrong place on macOS
+Created attachment 8881110
+placement of the button and placeholder
+
+https://dxr.mozilla.org/mozilla-central/source/browser/base/content/browser-tabsintitlebar.js#159
+> let captionButtonsBoxWidth = rect($("titlebar-buttonbox-container")).width;
+
+https://dxr.mozilla.org/mozilla-central/rev/c01aa84ded7eb0b3e691f8bcc5cd887c960a779e/browser/base/content/browser-tabsintitlebar.js#242
+> this._sizePlaceholder("caption-buttons", captionButtonsBoxWidth);
+
+https://dxr.mozilla.org/mozilla-central/source/browser/base/content/browser-tabsintitlebar.js#267
+> _sizePlaceholder(type, width) {
+> Array.forEach(document.querySelectorAll(".titlebar-placeholder[type='" + type + "']"),
+> function(node) { node.width = width; });
+> },
+
+It's apparently trying to copy the width of titlebar-buttonbox-container to caption-buttons placeholder (to avoid overlapping button and tab maybe?), but it doesn't look like resulting in expected state, since the titlebar-buttonbox-container and caption-buttons placeholder are not in the same place (see attached screenshot), and that result in unnecessary gap between button and the first tab.
+
+I guess caption-buttons placeholder is supposed to be aligned to the left side of the window, but is not for some reason.
+
+(might be related to bug 1120880 but this also applies to non-devedition)

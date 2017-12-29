@@ -1,0 +1,52 @@
+Favicon request is causing a Domain Mismatch Error
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8b) Gecko/20050124 Firefox/1.0+
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8b) Gecko/20050124 Firefox/1.0+
+
+In the URL listed, "https://sannas.ca/2005/ffbug.html/" this page load
+correctly, however a second after it does, for some reason it attempt to
+connect to some page at "https://www.sannas.ca". The certificate that this
+domain is using only cover the domain "sannas.ca" and not "www.sannas.ca" which
+result in an error.
+
+Note that this page ha absolutely no external references. I tried forcing a
+favicon fetch on the "sannas.ca" domain and this error still occured. This
+error occured on the Nightly build of both Firefox and Mozilla.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Go to https://sannas.ca/2005/ffbug.html
+2. If you say cancel, you can view the page fine, until you attempt to grab
+another page off of the site.
+
+More generic reproduction steps:
+1. Create a web page at "domain.com"
+2. Setup a domain specific certificate for "domain.com", such a SSL123 through
+Thawte
+3. Point firefox or mozilla at "https://domain.com"
+4. Get an error about "https://www.domain.com" not being secured properly.
+3.
+
+Actual Results:
+I get this message, even though I never attempted to access "www.sannas.ca",
+just "sannas.ca".
+
+You have attempted to establish a connection with "www.sannas.ca". However, the
+security certificate presented belongs to "sannas.ca". It is possible, though
+unlikely, that someone may be trying to intercept your communication with this
+web site.
+
+If you suspect the certificate shown doe not belong to "www.sannas.ca", please
+cancel the connection and notify the site administrator.
+
+Expected Results:
+Should have loaded the certificate correctly, and not attempted to contact
+"www.sannas.ca" after resolving, connecting and fetching entire page from
+"sannas.ca"
+
+I've been in contact with Thawte, and they claim that the certificate is
+installed correctly. These page all work a expected on Internet Explorer 6.0.
+
+The workaround is to essentially have a certificate that cover both domains. I
+havn't attempted it, but assumingly moving the certificate to cover the "www"
+version of the domain might fix it a well.

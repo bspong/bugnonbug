@@ -1,0 +1,14 @@
+Prevent "TypeError: can't access dead object" exception on webconsole getCachedMessages
+As part of Bug 1211665 (Log message for background script should appear in extension debugger), the originAttributes of the context that ha produced the log message is stored in the console message event.
+
+The console message event is also saved in a cache of logged messages, and the cached message are then retrieved by the webconsole actor when the webconsole panel is loaded.
+
+Unfortunately the originAttributes reference can become a dead object (e.g. because the log message ha been produced by a content script's sandbox that ha been nuked when the related addon is disabled/uninstalled/reloaded/upgraded) and the webconsole "getCachedMessages RDP request" will fail because of an "accessing dead wrapper" exception raised when the array of cached message is serialized by 'devtools/shared/transport/transport.js' to be sent to the client.
+
+To prevent the "TypeError: can't access dead object" exception from breaking the webconsole panel loading we should:
+
+- remove the originAttributes property from the cached message when they are collected by the webconsole actor (in the prepareConsoleMessageForRemote, http://searchfox.org/mozilla-central/source/devtools/server/actors/webconsole.js#1735-1759)
+
+to be able to still filter the console message using the originAttributes property even after the context that ha originated the console message ha been destroyed:
+
+- clone the original originAttributes property when it ha been received by the 'dom/console/ConsoleAPIStorage.js' and before it ha been stored in the cached message (in the recordEvent method, http://searchfox.org/mozilla-central/source/dom/console/ConsoleAPIStorage.js#123-139)

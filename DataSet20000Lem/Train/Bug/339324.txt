@@ -1,0 +1,65 @@
+dhtml not recognising fully formed link if specified using relative path
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.8.0.3) Gecko/20060426 Firefox/1.5.0.3
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.8.0.3) Gecko/20060426 Firefox/1.5.0.3
+
+When using DHTML document.write() to load content dynamically, unless path are specified absolutely using 'file://C:/go_here.htm', then the link are not correctly formed. I cannot use '../go_here.htm'. This applies to all link within the page including those to .css and .js.
+
+Of note: the address bar displays: 'file:///'
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. create a local htm file with the following content:
+//////////////////////////////////////////////////////
+<html>
+<head>
+<title>untitled</title>
+
+<script type="text/javascript"><!-- // hide script
+function writeBody() {
+var mydoc = document;
+var myContent;
+myContent = "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">";
+
+myContent += "<html><head><title>Dynamic Content</title>";
+myContent += "<meta http-equiv=\"content-type\" content=\"text/html; charset=ISO-8859-1\" />";
+
+myContent += "<link href=\"screen.css\" rel=\"stylesheet\" type=\"text/css\" media=\"screen\">";
+myContent += "</head><body>";
+myContent += "<h1>Dynamic Content</h1>";
+myContent += "<p>Lorem ipsum dolor sit amet...</p>";
+myContent += "<p><a href=\"destination.htm\">link</a></p>";
+myContent += "</body></html>";
+
+mydoc.open();
+mydoc.writeln(myContent);
+mydoc.close();
+}
+// --> end hiding </script>
+
+</head>
+<body>
+<center><form name="formLoad" action="">
+<input type="button" value="Load Dynamic Content" name="buttonLoad" onclick="writeBody()" />
+</form></center>
+</body>
+</html>
+//////////////////////////////////////////////////////
+
+2. Ensure screen.css is in the same directory a the new htm file (and contains valid cs that modifies the dynamic content).
+3. Load the file and click the button.
+Actual Results:
+1. Address bar displays: 'file:///'
+2. Document remains unformatted (css not applied).
+3. Mouse over link displays: 'file:///destination.htm'
+4. View source is empty.
+
+Expected Results:
+1. Address bar should show full path of originating document.
+2. File should be formatted.
+3. Mouse over link should display absolute path to destination file.
+4. View source should display source of original htm file (or selection, if made).
+
+Installation: Windows XP SP2 050301-1519 - fully updated. Last update were KB905754, KB911701, KB913471 for Word and Office and KB892130 for XP).
+
+Dynamic page content is loaded correctly in Moz, IE and Opera.

@@ -1,0 +1,99 @@
+Cannot access the bookmarkservice (nsINavBookmarksService) in C++
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9) Gecko/2008052906 Firefox/3.0
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9) Gecko/2008052906 Firefox/3.0
+
+I want to write an C++ console application in VS2005 to use the new Bookmarks API (nsINavBookmarksService) for Firefox 3. I got the latest nightly Gecko (xulrunner) sdk (xulrunner-1.9pre.en-US.win32.sdk.zip). My problem is that I cannot get the service. I initialized the Glue and the XPCOM, I got the ServiceManager but I cannot get the service through nsIServiceManager::GetServiceByContractID nor by nsIServiceManager::GetService (I get NS_ERROR_UNEXPECTED). I also checked the xpti.dat and compreg.dat files and the component/service is there. I also tried accessing another service (ICacheService) and it worked, so the code seems to be correct, but still the bookmarks-service cannot be retrieved.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Initialize Glue and XPCOM
+2. Get the service manager
+3. Get the Bookmarks service
+Actual Results:  
+When trying to get the bookmarks service and error is returned (NS_ERROR_UNEXPECTED) and the bookmarks service is unavailable.
+
+Expected Results:  
+The Bookmarks service is returned without any errors and the bookmarks service can be used.
+
+sample of the code I was using.
+...
+nsresult GetBookmarksService()
+{
+    nsresult rv;
+
+    nsCOMPtr<nsIServiceManager> servMan;
+    rv = NS_GetServiceManager(getter_AddRefs(servMan));
+    if (NS_FAILED(rv))
+    {
+        return -1;
+    }
+
+    nsCOMPtr<nsIComponentManager> compMan;
+    rv = NS_GetComponentManager(getter_AddRefs(compMan));
+    if (NS_FAILED(rv))
+    {
+        return -1;
+    }
+
+    nsCOMPtr<nsINavBookmarksService> bookmarksService;
+    rv = servMan->GetServiceByContractID(NS_NAVBOOKMARKSSERVICE_CONTRACTID, NS_GET_IID(nsINavBookmarksService), getter_AddRefs(bookmarksService));
+    if (NS_FAILED(rv))
+    {
+        //NS_ERROR_UNEXPECTED
+        printf("ERROR: Cannot retrieve the service [%x].\n", rv);
+    }
+
+    rv = compMan->CreateInstanceByContractID(NS_NAVBOOKMARKSSERVICE_CONTRACTID, nsnull, NS_GET_IID(nsINavBookmarksService), getter_AddRefs(bookmarksService));
+    if (NS_FAILED(rv))
+    {
+        //NS_ERROR_UNEXPECTED
+        printf("ERROR: Cannot retrieve the service [%x].\n", rv);
+    }
+
+//     nsCOMPtr<nsICacheService> cacheService;
+//     rv = servMan->GetServiceByContractID(NS_CACHESERVICE_CONTRACTID, NS_GET_IID(nsICacheService), getter_AddRefs(cacheService));
+//     if (NS_FAILED(rv))
+//         return false; 
+
+    nsIID nsiid = NS_INAVBOOKMARKSSERVICE_IID;
+    nsCID nscid = NS_NAVBOOKMARKSSERVICE_CID;
+    rv = servMan->GetService(nscid, nsiid, (void **)&bookmarksService);
+    if (NS_FAILED(rv))
+    {
+        //NS_ERROR_UNEXPECTED
+        printf("ERROR: Cannot retrieve the service [%x].\n", rv);
+    }
+
+    rv = compMan->GetClassObjectByContractID(NS_NAVBOOKMARKSSERVICE_CONTRACTID, NS_GET_IID(nsINavBookmarksService), getter_AddRefs(bookmarksService));
+    if (NS_FAILED(rv))
+    {
+        //NS_ERROR_UNEXPECTED
+        printf("ERROR: Cannot retrieve the service [%x].\n", rv);
+    }
+
+    rv = compMan->GetClassObject(nscid, nsiid, getter_AddRefs(bookmarksService));
+    if (NS_FAILED(rv))
+    {
+        //NS_ERROR_UNEXPECTED
+        printf("ERROR: Cannot retrieve the service [%x].\n", rv);
+    }
+
+
+   rv = NS_ShutdownXPCOM(servMan);
+
+    return rv;
+}
+
+int _tmain(int argc, _TCHAR* argv[])
+{
+    nsresult rv;
+
+    rv = XPCOMGlueStartup("C:\\Program Files\\Mozilla Firefox\\xpcom.dll");
+
+    rv = GetBookmarksService();
+
+    rv = XPCOMGlueShutdown();
+
+    return rv;
+}

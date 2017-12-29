@@ -1,0 +1,20 @@
+Devtools test "browser_ruleview_authored.js" fails if native webkit gradient prefixes are enabled
+STR:
+ 1. Apply bug 1210575 "part 5" to current mozilla-inbound, and run devtools test browser_ruleview_authored.js
+
+ACTUAL RESULTS:
+{
+105 INFO TEST-UNEXPECTED-FAIL | devtools/client/styleinspector/test/browser_ruleview_authored.js | post-change check overridden for 0 - Got true, expected false
+106 INFO TEST-UNEXPECTED-FAIL | devtools/client/styleinspector/test/browser_ruleview_authored.js | post-change check overridden for 1 - Got false, expected true 
+}
+Sample test log from a Try run with that patch:
+https://treeherder.mozilla.org/logviewer.html#?job_id=12380184&repo=try
+
+EXPECTED RESULTS: No test failure.
+
+This test has an "overrideTest" function which has a series of gradients, including a "-webkit-linear-gradient". I'm guessing that's what's involved here, and the test is getting confused because it's expecting us to reject that expression, but we now will accept it.
+
+
+NOTE for any local live testing outside of the test harness: along with applying the patch mentioned in the STR, one also needs to toggle the pref "layout.css.prefixes.webkit" before these prefixed gradients will start working. That pref is disabled by default, but enabled during test runs.
+
+tromey, do you know what we need to change in this test for it to keep working after we support "-webkit-linear-gradient" natively?

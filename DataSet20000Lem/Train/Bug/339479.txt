@@ -1,0 +1,13 @@
+Autocomplete controller isn't updated properly in all case
+Steps to reproduce:
+1) Select Google or Yahoo in the search engine dropdown.
+2) Open a new Firefox window.
+3) In the first window, select an engine that doe not have Suggest functionality (e.g. answers.com).
+4) Go to the second window, and start typing a search.
+5) (Optional) Press down a couple time to start autocomplete.
+
+Autocomplete either doesn't work (Error: searchService.currentEngine.suggestionURI ha no properties) or is incorrect (blank entry in the dropdown).
+
+What's happening is that the autocomplete backend is only being updated in the first binding, but not in the second window (since it's an engine-change notification that change the engine there, and not the user). In bug 337178 and in bug 338061 the nsSearchSuggest code wa made to be used only for engine that support the suggest functionality, and code wa put in the search bar to ensure that the correct controller is used depending on the engine. Thinking about this more, I think that wa the wrong approach (i.e. I shouldn't have said what I said in bug 338061 comment 6 :). I propose having all search engine use nsSearchSuggestion's nsIAutoCompleteSearch, and make that handle a null suggestionURI by returning only the form history results. This remove the need to do any special casing in the search binding itself.
+
+I'll post a patch in a sec.

@@ -1,0 +1,33 @@
+Click callback on images does not always gets called (or is cleared)
+User-Agent:       Mozilla/5.0 (Macintosh; U; Intel Mac OS X; en-US; rv:1.8.1.5) Gecko/20070713 Firefox/2.0.0.5
+Build Identifier: Mozilla/5.0 (Macintosh; U; Intel Mac OS X; en-US; rv:1.8.1.5) Gecko/20070713 Firefox/2.0.0.5
+
+
+What happens is click listener on the content of the iframe does not get called. This looks like a race condition where listeners get cleared. The exact sequence of events is this:
+
+ - While page is loading the user click BlueMark (bookmark button)
+
+ - An iframe window is poped up by the BlueOrganizer code. We take a template, run it through XLST
+   and then write content into the iframe inside of the poped window.
+
+ - We have a load listener that gets called back when the content of iframe is loaded.
+   This always works.
+
+ - Inside the callback we find a button in the window and add click listener to it. This click listener
+   is what does not always work. It seems to be that it gets cleared for some reason. And it is
+   not deterministic.
+
+Our emergency fix is to do timeout with 2 seconds before trying to add the click listener.
+This is clearly a hack, but it does appear to work for us.
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+See the above description
+Actual Results:  
+Callback is not always invoked
+
+Expected Results:  
+Callback is always invoked
+
+Please contact alex.iskold@gmail.com about this.

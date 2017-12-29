@@ -1,0 +1,113 @@
+Page Load Error: "File Not Found" when retrieving files from the cache (visible problem: some images are not displayed)
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; es-ES; rv:1.9.0.5) Gecko/2008120122 Firefox/3.0.5
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; es-ES; rv:1.9.0.5) Gecko/2008120122 Firefox/3.0.5
+
+Sometimes, when navigating through web pages, I randomly see broken images (not displayed, like not found in the server). This happens not only images, but CSS and JS documents, and also an entire HTML document (so you get the error page when accessing it via a link).
+
+Opening the missing image/file/document in a window gives me a page errora, page that internally is the following address:
+
+about:neterror?e=fileNotFound&u=http%3A//URL.of.the/file&c=UTF-8&d=Firefox%20can't%20find%20the%20file%20at%20http%3A//URL.of.the/file.
+
+Substing the "http%3A//URI.of.the/file" string to the URL of the image:
+
+Document title: Page Load Error:
+> 
+> File Not Found
+> Firefox can't find the file at http://URL.of.the/file.
+> 
+> * Could the item have been renamed, removed, or relocated?
+> * Is there a spelling, capitalization, or other typographical
+>   error in the address?
+> * Do you have sufficient access permissions to the requested item?
+
+
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+This is reproducible for me. It happens randomly and I couldn't find any pattern of which steps follow to reproduce that.
+
+I cleared the entire cache once, to see if it was caused by some incoherency on the browser update, but it happens again. But seems like the problem was corrected immediately after the cache cleared. Maybe when the cache storage grows to some critical point then this happens.
+
+The problem persists when closing the browser and reopening it again. The same files affected still have the same problem.
+
+I think it happens at least since version 3.0.4 (now on 3.0.5)
+
+Maybe, surf a lot on the web? If that matters, I edit and visit any pages on several *.wikia.com wikis. That error happens on some images and JS form there, but also I saw it in other sites.
+
+
+
+If I right-click the image and select "Show image", It doesn't get displayed. Running WireShark I see a HTTP request with cache headers like If-Modified-Since: and If-None-Match:, and a HTTP 304 Not Modified response from the server.
+
+If I right click the image and select "View Image", or access the filedirectly I get the above page error
+
+
+Then I go to the cache entry for that file, locating it inside the address "about:cache?device=disk"
+
+I found it. Comparing the entry item with another image that loads fine, I see those relevant differences:
+
+The file that loads fine:
+* "file on disk: none"
+* At the bottom theres a HEX representation of the file
+
+The file that doesn't load:
+* "file on disk: C:\Documents and Settings\jesus\Configuración local\Datos de programa\Mozilla\Firefox\Profiles\owsj7j7k.default\Cache\CF912BDEd01" (I took a look and the file DOESN'T EXIST)
+* There's no HEX file representation at the bottom.
+
+
+I have the WebDeveloper addon installed. If I check the "disable cache" option, right-click the image and select "Show image" the image then shows, but turning on cache at next page reload the image doesn't show.
+
+If I right click the image and select "View Image", I get the above neterror page. If on that page I do a [CTRL + SHIFT + R] then the image get loaded and displays OK in further page loads, so the problem on that image is solved
+
+
+The cache folder is ATM 62.8 MB with 879 files in it
+
+The url about:cache?device=disk gives:
+Number of entries: 	8192
+Maximum storage size: 	100000 KiB
+Storage in use: 	65900 KiB
+Cache Directory: 	C:\Documents and Settings\jesus\Configuración local\Datos de programa\Mozilla\Firefox\Profiles\owsj7j7k.default\Cache
+
+I have set 100MB of cache storage on preferences.
+
+Remember that when I tried to find the cached file of the missing image, I didn't found it.
+
+--- Other bugs that I found that may be related: ---
+
+Bug 426961: Same page error.
+But the response headers in my example seem OK: (that is what shows the about:cache)
+
+HTTP/1.1 200 OK
+Cache-Control: max-age=30
+Content-Type: image/png
+Etag: "1786596717"
+Last-Modified: Wed, 31 Jan 2007 17:13:44 GMT
+Server: lighttpd/1.4.18
+X-Varnish: 3083198044
+Via: 1.1 varnish
+Content-Length: 955
+X-Orighost: origin-images.wikia.com
+X-Served-By-Backend: varnish2
+X-Cacheable: YES
+Date: Wed, 07 Jan 2009 16:04:15 GMT
+Age: 535625
+X-Served-By: varnish9
+X-Cache: HIT
+X-Cache-Hits: 47
+Expires: Sun, 04 Jan 2009 20:15:51 GMT
+
+And the 302 response (from WireShark):
+
+HTTP/1.1 304 Not Modified
+Date: Wed, 07 Jan 2009 15:50:33 GMT
+Via: 1.1 varnish
+X-Varnish: 3758480970
+Last-Modified: Sun, 14 Sep 2008 16:52:38 GMT
+Connection: keep-alive
+X-Served-By: varnish8
+X-Cache: HIT
+X-Cache-Hits: 55
+
+Bug 452494: Same page error, but it seems different, because this is a cache issue, and this bug is with local files.
+
+It seems there are some other people with this problem: <http://www.google.com/search?q=firefox+"Do+you+have+sufficient+access+permissions+to+the+requested+item">

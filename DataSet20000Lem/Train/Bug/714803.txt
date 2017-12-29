@@ -1,0 +1,36 @@
+Firefox doe not range check for valid window coordinate at session restore
+User Agent: Mozilla/5.0 (X11; Linux x86_64; rv:7.0.1) Gecko/20100101 Firefox/7.0.1
+Build ID: 2011092900
+
+Steps to reproduce:
+
+This bug ha happened several time to me, on various Firefox version and on Windows, Linux and FreeBSD.
+
+Had Firefox open with many tabs, lot of them with Flash content (animations, videos).
+Played a youtube video in fullscreen and the bug appeared.
+
+
+
+Actual results:
+
+Flash plugin crashed.
+When restarting Firefox, browser window(s) were visible for a short moment, then disappearing, being placed outside of the screen. I confirmed by window spy program (forgot which one) on Windows and FvwmIdent on Linux).
+These window were accessible only by maximizing via task bar.
+When trying to resize, they "disappeared".
+This bug appeared several time over the years, on Windows and Linux machines.
+
+As this particular session wa a big one with several browser window and tab open that I didn't want to delete, I looked at sessionstore.js and found the following entries:
+
+,"width":1293,"height":972,"screenX":-4662,"screenY":0,"sizemode":"normal",
+,"screenX":6384,"screenY":-127,"sizemode":"normal",
+
+After fixing the negative and out-of-range numbers, Firefox displayed the window correctly at restart.
+(See also my post at http://forums.mozillazine.org/viewtopic.php?f=9&t=2396633&sid=a80da91625967f4ed8a652913417d5a0 )
+
+
+
+Expected results:
+
+Firefox should do a simple range checking for valid screen coordinate before moving the window to the location stored in sessionstore.js after creating them.
+
+By the way, this would avoid the same problem which occurs when the screen resolution is reduced and the Firefox window would be off-screen at the new, lower screen resolution.

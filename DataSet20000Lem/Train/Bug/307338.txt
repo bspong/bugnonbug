@@ -1,0 +1,101 @@
+Crash [@nsCRLInfo::nsCRLInfo] clicking a flash ad
+Clicking the flash ad in the URL above crash Firefox (100% reproducable on my
+machine).
+
+Mozilla/5.0 (Macintosh; U; PPC Mac OS X Mach-O; en-US; rv:1.8b4) Gecko/20050906
+Firefox/1.4
+
+TB ID: TB9113439Q
+
+stack:
+Thread 0 Crashed:
+0 org.mozilla.firefox 0x00430314
+nsCRLInfo::nsCRLInfo[unified](CERTSignedCrlStr*) + 488
+1 com.apple.AE 0x91451a40 aeDispatchAppleEvent(AEDesc const*,
+AEDesc*, unsigned long, unsigned char*) + 208
+2 com.apple.AE 0x9145d04c sendToSelf(AEDesc const*, AEDesc*,
+long, long) + 372
+3 com.apple.AE 0x914559d8 AESendMessage + 648
+4 com.apple.AE 0x914554b4 aeSend + 224
+5 com.apple.HIToolbox 0x931d7f28 AESend + 108
+6 com.apple.HIToolbox 0x9323d678
+HandleTextInputEvent(OpaqueEventRef*) + 296
+7 com.apple.HIToolbox 0x9312f138
+ToolboxEventDispatcherHandler(OpaqueEventHandlerCallRef*, OpaqueEventRef*,
+void*) + 524
+8 com.apple.HIToolbox 0x93128b24
+DispatchEventToHandlers(EventTargetRec*, OpaqueEventRef*, HandlerCallRec*) + 1284
+9 com.apple.HIToolbox 0x9312802c
+SendEventToEventTargetInternal(OpaqueEventRef*, OpaqueEventTargetRef*,
+HandlerCallRec*) + 372
+10 com.apple.HIToolbox 0x9312edb0 SendEventToEventTarget + 40
+11 com.apple.HIToolbox 0x9323d484 SendTSMEvent + 228
+12 com.apple.HIToolbox 0x933ae7cc SendTextInputEvent + 568
+13 com.apple.CharacterPaletteIM 0x02d63524 UCPHandleOffsetToPos + 296
+14 com.apple.CharacterPaletteIM 0x02d6488c UCPInitializeMessageReceiving + 1412
+15 com.apple.CoreFoundation 0x90792610 __CFMessagePortPerform + 304
+16 com.apple.CoreFoundation 0x90758ef4 __CFRunLoopDoSource1 + 152
+17 com.apple.CoreFoundation 0x9074b60c __CFRunLoopRun + 1556
+18 com.apple.CoreFoundation 0x9074ac3c CFRunLoopRunSpecific + 268
+19 com.apple.HIToolbox 0x93129ac0 RunCurrentEventLoopInMode + 264
+20 com.apple.HIToolbox 0x9320e64c GetNextEventMatchingMask + 116
+21 com.apple.HIToolbox 0x9320e51c WNEInternal + 140
+22 com.apple.HIToolbox 0x9320e47c WaitNextEvent + 76
+23 org.mozilla.firefox 0x0068adc8
+nsMacMessagePump::GetEvent(EventRecord&) + 116
+24 org.mozilla.firefox 0x0068ad24 nsMacMessagePump::DoMessagePump() + 48
+25 org.mozilla.firefox 0x002fc5d4 nsAppShell::Run() + 56
+26 org.mozilla.firefox 0x0039b420 nsAppStartup::Run() + 40
+27 org.mozilla.firefox 0x000142d8 XRE_main + 3696
+28 org.mozilla.firefox 0x0000f6a8 start + 432
+29 org.mozilla.firefox 0x0000f528 start + 48
+
+With a trunk build (Mozilla/5.0 (Macintosh; U; PPC Mac OS X Mach-O; en-US;
+rv:1.9a1) Gecko/20050901 Firefox/1.6a1) I get a slightly different stack trace:
+
+Thread 0 Crashed:
+0 libSystem.B.dylib 0x90032044 pthread_cond_signal + 36
+1 libnspr4.dylib 0x030179f4 _PR_InitLocks + 212
+2 libnspr4.dylib 0x03017ba8 PR_Unlock + 108
+3 org.mozilla.firefox 0x004300ac nsNSSActivityState::isUIForbidden()
++ 40
+4 org.mozilla.firefox 0x007fc3c0
+nsMacTSMMessagePump::OffsetToPositionHandler(AEDesc const*, AEDesc*, long) + 144
+5 com.apple.AE 0x91451a40 aeDispatchAppleEvent(AEDesc const*,
+AEDesc*, unsigned long, unsigned char*) + 208
+6 com.apple.AE 0x9145d04c sendToSelf(AEDesc const*, AEDesc*,
+long, long) + 372
+7 com.apple.AE 0x914559d8 AESendMessage + 648
+8 com.apple.AE 0x914554b4 aeSend + 224
+9 com.apple.HIToolbox 0x931d7f28 AESend + 108
+10 com.apple.HIToolbox 0x9323d678
+HandleTextInputEvent(OpaqueEventRef*) + 296
+11 com.apple.HIToolbox 0x9312f138
+ToolboxEventDispatcherHandler(OpaqueEventHandlerCallRef*, OpaqueEventRef*,
+void*) + 524
+12 com.apple.HIToolbox 0x93128b24
+DispatchEventToHandlers(EventTargetRec*, OpaqueEventRef*, HandlerCallRec*) + 1284
+13 com.apple.HIToolbox 0x9312802c
+SendEventToEventTargetInternal(OpaqueEventRef*, OpaqueEventTargetRef*,
+HandlerCallRec*) + 372
+14 com.apple.HIToolbox 0x9312edb0 SendEventToEventTarget + 40
+15 com.apple.HIToolbox 0x9323d484 SendTSMEvent + 228
+16 com.apple.HIToolbox 0x933ae7cc SendTextInputEvent + 568
+17 com.apple.CharacterPaletteIM 0x01af6524 UCPHandleOffsetToPos + 296
+18 com.apple.CharacterPaletteIM 0x01af788c UCPInitializeMessageReceiving + 1412
+19 com.apple.CoreFoundation 0x90792610 __CFMessagePortPerform + 304
+20 com.apple.CoreFoundation 0x90758ef4 __CFRunLoopDoSource1 + 152
+21 com.apple.CoreFoundation 0x9074b60c __CFRunLoopRun + 1556
+22 com.apple.CoreFoundation 0x9074ac3c CFRunLoopRunSpecific + 268
+23 com.apple.HIToolbox 0x93129ac0 RunCurrentEventLoopInMode + 264
+24 com.apple.HIToolbox 0x9320e64c GetNextEventMatchingMask + 116
+25 com.apple.HIToolbox 0x9320e51c WNEInternal + 140
+26 com.apple.HIToolbox 0x9320e47c WaitNextEvent + 76
+27 org.mozilla.firefox 0x0069fdb0
+nsMacMessagePump::GetEvent(EventRecord&) + 116
+28 org.mozilla.firefox 0x0069fd0c nsMacMessagePump::DoMessagePump() + 48
+29 org.mozilla.firefox 0x002faa08 nsAppShell::Run() + 56
+30 org.mozilla.firefox 0x0039b5a4 nsAppStartup::Run() + 40
+31 org.mozilla.firefox 0x000142a0 XRE_main + 3700
+32 org.mozilla.firefox 0x0000f6a8 start + 432
+33 org.mozilla.firefox 0x0000f528 start + 48

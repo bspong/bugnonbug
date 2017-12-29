@@ -1,0 +1,34 @@
+Hovering in debugger completely break debug session
+User Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:28.0) Gecko/20100101 Firefox/28.0 (Beta/Release)
+Build ID: 20140212005842
+
+Steps to reproduce:
+
+I moused over the JS file display, on the way to click "next line".
+
+
+Actual results:
+
+Apparently the new hover-to-view item is breaking:
+
+error occurred while processing 'clientEvaluate: TypeError: can't access dead object
+Stack: @resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/main.js -> resource://gre/modules/devtools/server/actors/script.js:1731
+@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/main.js -> resource://gre/modules/devtools/server/actors/script.js:1200
+DSC_onPacket@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/main.js:1013
+@resource://gre/modules/devtools/dbg-client.jsm -> resource://gre/modules/devtools/server/transport.js:258
+@resource://gre/modules/devtools/DevToolsUtils.jsm -> resource://gre/modules/devtools/DevToolsUtils.js:75
+main.js:918
+onPacket threw an exception: Error: Server did not specify an actor, dropping packet: {"error":"unknownError","message":"error occurred while processing 'clientEvaluate: TypeError: can't access dead object\nStack: @resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/main.js -> resource://gre/modules/devtools/server/actors/script.js:1731\n@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/main.js -> resource://gre/modules/devtools/server/actors/script.js:1200\nDSC_onPacket@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/main.js:1013\n@resource://gre/modules/devtools/dbg-client.jsm -> resource://gre/modules/devtools/server/transport.js:258\n@resource://gre/modules/devtools/DevToolsUtils.jsm -> resource://gre/modules/devtools/DevToolsUtils.js:75\n"}
+Stack: @resource://gre/modules/devtools/dbg-client.jsm:651
+resolve@resource://gre/modules/commonjs/sdk/core/promise.js:118
+then@resource://gre/modules/commonjs/sdk/core/promise.js:43
+then@resource://gre/modules/commonjs/sdk/core/promise.js:153
+DC_onPacket@resource://gre/modules/devtools/dbg-client.jsm:700
+@resource://gre/modules/devtools/dbg-client.jsm -> resource://gre/modules/devtools/server/transport.js:258
+@resource://gre/modules/devtools/DevToolsUtils.jsm -> resource://gre/modules/devtools/DevToolsUtils.js:75
+DevToolsUtils.js:51
+
+
+Expected results:
+
+The popup evaluation should not completely break the debugger for broken JS objects, it should try/catch and not cause these exceptions.

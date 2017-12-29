@@ -1,0 +1,52 @@
+Some plug-in (Acrobat Reader/Quick Time) failed to re-display after hiding by "display:none"
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; zh-CN; rv:1.9.0.10) Gecko/2009042316 Firefox/3.0.10
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; zh-CN; rv:1.9.0.10) Gecko/2009042316 Firefox/3.0.10
+
+This problem occured with Acrobat Reader plugin for Firefox, so installing a Acrobat Reader plugin and setting it to open pdf files within Firefox is a prerequisite. (Quick Time plugin also has the same problem.)
+
+Then let's see how is the problem. If a IFrame is wrapped in a div element and the IFrame is pointing to a pdf file on the Internet, the PDF file can be opened correctly on loading. Then if setting the div's style to be "display:none" by a javascript function call, the PDF file will be hidden. Now, the problem is coming. If setting the div's style not to be hidden (such as "display:block") by javascript, the PDF file will not show again. 
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.Install Acrobat Reader.
+2.Open the following html file:
+<html>
+	<head>
+		<script type="text/javascript">
+		function minimize(){
+			var pdfDiv = document.getElementById("pdfContent");
+			pdfDiv.style.display="none";
+		}
+		function maximize(){
+			var pdfDiv = document.getElementById("pdfContent");
+			pdfDiv.style.display="block";
+		}
+		</script>
+	</head> 
+	<body>
+		<div style="display:block">
+			<button type="button" onclick="minimize()">Minimize It</button>
+			<button type="button" onclick="maximize()">Maximize It</button>
+		</div>
+		<div id="pdfContent" style="display:block;width:800px;height:600px;overflow:auto">
+			<iframe src="http://illiad.evms.edu/sample.pdf" style="width:800px;height:600px;overflow:hidden">
+
+				<html>
+				<body marginwidth="0" marginheight="0">
+				<embed width="100%" height="100%" name="plugin" src="http://illiad.evms.edu/sample.pdf" type="application/pdf"/>
+				</body>
+				</html>
+
+			</iframe>
+		</div>
+	</body>
+</html>
+3.Click the "Minimize It" button.
+4.Click the "Maximize It" button. 
+
+Actual Results:  
+The PDF file will not show again after step 4.
+
+Expected Results:  
+The PDF file should show again after step 4.

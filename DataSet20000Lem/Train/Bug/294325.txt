@@ -1,0 +1,44 @@
+crash in PR_GetConnectStatus
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.7) Gecko/20050420 Debian/1.7.7-2
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.7) Gecko/20050420 Debian/1.7.7-2
+
+crash on startup. tab reloaded (session saver extension), most of them ok.
+password dialog come to unlock password db, http auth'ed page ask for OK on
+password popups. loading go on and firefox crashes.
+
+reproducible but I cannot share it because it contains plenty of internal tabs.
+there were 40+ tabs, memory allocation is around 70MB.
+
+(gdb) bt
+#0 0x401b8108 in send () from /lib/libpthread.so.0
+#1 0x4017ff54 in PR_GetConnectStatus ()
+from /usr/lib/mozilla-firefox/libnspr4.so
+#2 0x40810c56 in NSSSSL_VersionCheck ()
+from /usr/lib/mozilla-firefox/libssl3.so
+#3 0x40802201 in SSL_GetStatistics () from /usr/lib/mozilla-firefox/libssl3.so
+#4 0x408025b6 in SSL_GetStatistics () from /usr/lib/mozilla-firefox/libssl3.so
+#5 0x40812f9e in SSL_ConfigSecureServer ()
+from /usr/lib/mozilla-firefox/libssl3.so
+#6 0x4081700a in SSL_ImportFD () from /usr/lib/mozilla-firefox/libssl3.so
+#7 0x08a92c0e in nsSSLIOLayerFreeTLSIntolerantSites ()
+#8 0x40168981 in PR_Close () from /usr/lib/mozilla-firefox/libnspr4.so
+#9 0x08439a56 in nsSocketTransport::ReleaseFD_Locked ()
+#10 0x08439f8c in nsSocketTransport::OnSocketDetached ()
+#11 0x083d7aae in nsSocketTransportService::DetachSocket ()
+#12 0x083d8698 in nsSocketTransportService::ServiceEventQ ()
+#13 0x4011b6fb in nsThread::Main () from /usr/lib/mozilla-firefox/libxpcom.so
+#14 0x40182fe9 in PR_Select () from /usr/lib/mozilla-firefox/libnspr4.so
+#15 0x401b1e51 in pthread_start_thread () from /lib/libpthread.so.0
+#16 0x401b1ecf in pthread_start_thread_event () from /lib/libpthread.so.0
+#17 0x40b1b92a in clone () from /lib/libc.so.6
+
+
+Reproducible: Always
+
+
+
+
+I try to save the session so I can test whether it still crashes, or try other
+debugging method you may feel to share.
+
+This is debian/sid, 1 day old firefox.

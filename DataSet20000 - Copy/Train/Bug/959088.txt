@@ -1,0 +1,9 @@
+browserid_identity doesn't report an auth status of "ok" until a sync key bundle has been fetched.
+Created attachment 8359108
+Have-bid_identity-not-return-a-status-of-LOGIN_FAILE.patch
+
+bid_identity's currentAuthState getter wants to see both a username and a sync key bundle before it reports STATUS_OK.  However, the bundle is fetched from a server, so it is always the case that even when everything is configured correctly, we initially report a status of LOGIN_FAILED_NO_PASSPHRASE.  This causes things like sync setup panes to initially report a bad configuration before eventually changing to STATUS_OK as the remote server responds.
+
+This patch tries to resolve this by the addition of a flag _shouldHaveSyncKeyBundle.  While this flag is false, it reports STATUS_OK so long as we have just the username.  When it is true, it also wants the sync key bundle.  This flag initially starts as false, and is set to true as we attempt to fetch the sync key bundle.
+
+The end result is that STATUS_OK is typically returned as things initialize.  If we fail to fetch a sync key bundle, it eventually will return an error state, but the end result is that if the sync options dialog is displayed before we've managed to grab the sync key bundle, the user doesn't get informed we are in an error state.

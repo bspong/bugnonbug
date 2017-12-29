@@ -1,0 +1,31 @@
+keyword search are now encoding ":", this break bookmarklets
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.0.7) Gecko/20060909 Firefox/1.5.0.7
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.0.7) Gecko/20060909 Firefox/1.5.0.7
+
+The %s placeholder parameter is now URL encoded, this break many bookmarklets.
+
+Example, this bookmark is for doing a Google site related search:
+
+http://www.google.com/search?q=related:%s
+my keyword = gr
+
+Fx used to substitute %s without any transformation, so if I issued "g2 http://forums.mozillazine.org" in the address bar, it would translate correctly to "http://www.google.com/search?q=related:http://forums.mozillazine.org".
+
+Now it translates to "http://www.google.com/search?q=related:http%253A//forums.mozillazine.org" and google fails.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. create bookmarklet for keyword search that is based on an URL, e.g. http://www.google.com/search?q=related:%s
+2. assign keyword to the bookmarklet, e.g. gr
+3. issue keyword search in the address bar and inspect the resulting URL
+4. resulting URL get incorrect parameter because the keyword search placeholder substitution is encoded, Firefox didn't used to do this.
+
+Actual Results:
+for http://www.google.com/search?q=related:%s, and using gr a the keyword and http://forums.mozillazine.org a the search argument,
+http://www.google.com/search?q=related:http%253A//forums.mozillazine.org is the resulting URL and Google report that there is no match.
+
+Expected Results:
+Google will report two match if http://www.google.com/search?q=related:http://forums.mozillazine.org is hand-entered into the address bar
+
+Fx didn't use to do this, it left the keyword substitution alone.

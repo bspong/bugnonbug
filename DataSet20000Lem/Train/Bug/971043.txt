@@ -1,0 +1,40 @@
+Implement document walker to grab webpage's text content and format it for translation service
+When a webpage content ha finished loading, we need grab all of the page's text content and parse it in a way that is suitable for the translation service.
+
+It must generate a tree similar to a DOM tree, but it must skip non-textual node that may exist inside the page's body (such a <script>, <style>, others?).
+It also doe not need to preserve the whole tree structure, a it can discard any node which do not directly have text content.
+And it should assign unique id to each node, which do not need to reflect the id from the webpage.
+
+For example, the following page:
+
+<html>
+<body>
+<h1 id="header" class="h1class">Welcome to <b>Felipe's</b> webpage</h1>
+<div>My Sidebar
+<ul>
+<li>Item 1</li>
+<li>Item 2</li>
+</ul>
+</div>
+
+<div class="main-page">
+<p>This is the main page's body</p>
+</div>
+
+<script>analyticsTracking();</script>
+<style>div { color: blue }</style>
+</body></html>
+
+Should get a tree (in a JS struct) like:
+
+<body>
+<h1 id="1">Welcome to <b id="2">Felipe's</b>webpage</h1>
+<div id="3">
+<li id="4">Item 1</li>
+<li id="5"></li>
+<div>
+<p id="6">This is the main page's body</p>
+</body>
+
+
+In addition, this module need to be able to parse a string serialization of this structure (as above) back into an equal JS struct.

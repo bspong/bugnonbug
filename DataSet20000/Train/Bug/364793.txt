@@ -1,0 +1,98 @@
+History Sorting causes a Segmentation Fault
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1) Gecko/20061010 Firefox/2.0
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1) Gecko/20061010 Firefox/2.0
+
+From Firefox 1.5 up to current release of firefox
+I'm seeing a Segmentation Fault in history loading
+just when history grows, about 1 week.
+I've traced this on My Firefox 2.0 and it looked like
+this :
+(gdb) c
+Continuing.
+
+Program received signal SIGSEGV, Segmentation fault.
+[Switching to Thread -1221318976 (LWP 6060)]
+0xb74a2ca8 in strcoll_l () from /lib/tls/libc.so.6
+(gdb) bt
+#0  0xb74a2ca8 in strcoll_l () from /lib/tls/libc.so.6
+#1  0xb749edb9 in strcoll () from /lib/tls/libc.so.6
+#2  0x080ce653 in nsTHashtable<nsBaseHashtableET<nsDepCharHashKey, nsAutoPtr<nsINIParser::INIValue> > >::~nsTHashtable ()
+#3  0x0848c8ae in nsReadingIterator<unsigned short>::advance ()
+#4  0xb7e9bb96 in NS_QuickSort () from /usr/lib/firefox/libxpcom_core.so
+#5  0x0848cc9c in nsReadingIterator<unsigned short>::advance ()
+#6  0x0848ccbd in nsReadingIterator<unsigned short>::advance ()
+#7  0x0848a344 in nsReadingIterator<unsigned short>::advance ()
+#8  0x08472177 in nsReadingIterator<unsigned short>::advance ()
+#9  0x08471e01 in nsReadingIterator<unsigned short>::advance ()
+#10 0x08471627 in nsReadingIterator<unsigned short>::advance ()
+#11 0x083531f9 in nsPRUint32Key::Clone ()
+#12 0x08353380 in nsPRUint32Key::Clone ()
+#13 0x08359560 in nsPRUint32Key::Clone ()
+#14 0x08355810 in nsPRUint32Key::Clone ()
+#15 0x08359560 in nsPRUint32Key::Clone ()
+#16 0x08355810 in nsPRUint32Key::Clone ()
+#17 0x08359560 in nsPRUint32Key::Clone ()
+#18 0x08355810 in nsPRUint32Key::Clone ()
+#19 0x08359560 in nsPRUint32Key::Clone ()
+#20 0x08355810 in nsPRUint32Key::Clone ()
+#21 0x08357853 in nsPRUint32Key::Clone ()
+#22 0x08355a24 in nsPRUint32Key::Clone ()
+#23 0x083533c0 in nsPRUint32Key::Clone ()
+#24 0x0835a341 in nsPRUint32Key::Clone ()
+#25 0x08355a24 in nsPRUint32Key::Clone ()
+#26 0x083533c0 in nsPRUint32Key::Clone ()
+#27 0x083554d2 in nsPRUint32Key::Clone ()
+#28 0x082980e9 in XmlInitUnknownEncodingNS ()
+#29 0x082dac9b in XmlInitUnknownEncodingNS ()
+#30 0x0827dde8 in XmlInitUnknownEncodingNS ()
+#31 0x08428a28 in nsReadingIterator<unsigned short>::advance ()
+#32 0x0842a721 in nsReadingIterator<unsigned short>::advance ()
+#33 0x0842afac in nsReadingIterator<unsigned short>::advance ()
+#34 0x0813b374 in nsTHashtable<nsBaseHashtableET<nsDepCharHashKey, nsAutoPtr<nsINIParser::INIValue> > >::~nsTHashtable ()
+#35 0xb6ff3b92 in NSGetModule () from /usr/lib/firefox/components/libjar50.so
+#36 0x0812a8b9 in nsTHashtable<nsBaseHashtableET<nsDepCharHashKey, nsAutoPtr<nsINIParser::INIValue> > >::~nsTHashtable ()
+#37 0x0812a62d in nsTHashtable<nsBaseHashtableET<nsDepCharHashKey, nsAutoPtr<nsINIParser::INIValue> > >::~nsTHashtable ()
+#38 0xb7eb29c0 in nsInputStreamReadyEvent::EventHandler () from /usr/lib/firefox/libxpcom_core.so
+#39 0xb7eca11f in PL_HandleEvent () from /usr/lib/firefox/libxpcom_core.so
+#40 0xb7eca072 in PL_ProcessPendingEvents () from /usr/lib/firefox/libxpcom_core.so
+#41 0xb7ecb69f in nsEventQueueImpl::CheckForDeactivation () from /usr/lib/firefox/libxpcom_core.so
+#42 0x0824aba4 in XmlInitUnknownEncodingNS ()
+#43 0xb797feff in g_vasprintf () from /usr/lib/libglib-2.0.so.0
+#44 0xb7956b8c in g_main_context_dispatch () from /usr/lib/libglib-2.0.so.0
+#45 0xb7959f6b in g_main_context_check () from /usr/lib/libglib-2.0.so.0
+#46 0xb795a2c7 in g_main_loop_run () from /usr/lib/libglib-2.0.so.0
+#47 0xb7c19231 in gtk_main () from /usr/lib/libgtk-x11-2.0.so.0
+#48 0x0824ae48 in XmlInitUnknownEncodingNS ()
+#49 0x0869f4c4 in nsXPTCVariant::Init ()
+#50 0x0807d11f in ?? ()
+#51 0x08e8ccb0 in ?? ()
+#52 0xb7fa6be1 in _dl_catch_error () from /lib/ld-linux.so.2
+#53 0x08079397 in ?? ()
+#54 0x00000002 in ?? ()
+#55 0xbf8afe04 in ?? ()
+#56 0x088330a0 in _IO_stdin_used ()
+#57 0xbf8afdd8 in ?? ()
+#58 0xb7448d7f in __libc_start_main () from /lib/tls/libc.so.6
+#59 0xb7448d7f in __libc_start_main () from /lib/tls/libc.so.6
+#60 0x080792f5 in ?? ()
+
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+1.Me My self would find this if my history grows a little
+2.After that just pressing Ctrl+H to view history closes firefox
+3.
+
+Actual Results:  
+Segmentation Fault --> Crash
+
+Expected Results:  
+Viewing History Normally
+
+Linux CompaqAli 2.6.15 #7 SMP PREEMPT Sun Feb 19 23:35:17 CET 2006 i686 GNU/Linux
+
+libc.so.6
+
+I didn't find any way to attach my history.dat file.
+:(

@@ -1,0 +1,160 @@
+Liveconnect applet crash on page reload
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; rv:1.7.3) Gecko/20040913 Firefox/0.10
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; rv:1.7.3) Gecko/20040913 Firefox/0.10
+
+I have run into a problem with Firefox crashing on page reloads while using the
+liveconnect java package.  I have started a thread on the java developer boards
+and we can't figure out what the problem is so I wanted to mention it here.
+
+original thread:
+http://forum.java.sun.com/thread.jsp?forum=31&thread=556920&tstart=0&trange=15
+
+Summary:
+While attempting to use liveconnect to bridge an applet and javascript for 'real
+time' data I repeatedly get a crash in Firefox on page reloads or on leaving the
+page.  Here is what I was trying to do:
+
+Applet Code:
+
+import java.applet.*;
+import java.awt.*;
+import java.io.*;
+import java.net.*;
+import java.text.*;
+import java.util.ArrayList;
+import netscape.javascript.*;
+
+public class Test extends Applet implements Runnable
+{
+  boolean bRunning = false;
+  JSObject m_Window;
+
+  public void start() 
+  {
+    try
+    {
+      super.start();
+      Thread t = new Thread(this);
+      t.start();
+    }
+    catch ( NullPointerException npe )
+    {
+      System.out.println("Null Pointer exception in Start(): " + npe.toString() );
+    }
+  }
+
+  public void run()
+  {
+    try
+    {
+      bRunning = true;
+      m_Window = JSObject.getWindow(this);
+      for ( int i = 0; i < 100000; i++ )
+      {
+        String[] args = {"TimeCode", "0", "0", "0", Integer.toString(i)};
+        //m_Window.call( "test", args );
+        if ( bRunning )
+          m_Window.eval(getFunction("test", args));
+        else
+          break;
+      }
+    }
+
+    catch ( NullPointerException npe )
+    {
+      System.out.println("Null Pointer exception in Run(): " + npe.toString() );
+    }
+
+    catch( Exception e)
+    {
+      System.err.println( e.toString() );
+    }
+  }
+
+  public String getFunction(String f, String[] args) 
+  {
+    try
+    {
+
+      StringBuffer sb = new StringBuffer(f).append("(");
+      for(int x = 0; x < args.length; x++) 
+      {
+        if(x != 0) 
+        {
+          sb.append(", ");
+        }
+        sb.append("'").append(args[x]).append("'");
+      }
+      return sb.append(");").toString();
+    }
+    catch ( NullPointerException npe )
+    {
+      System.out.println("Null Pointer exception in getFunction(): " +
+npe.toString() );
+      return "null";
+    }
+    catch( Exception e)
+    {
+      System.err.println( e.toString() );
+      return "null";
+    }
+  }
+
+  public void stop() 
+  {
+    try
+    {
+      bRunning = false;
+      super.stop();
+    }
+    catch ( NullPointerException npe )
+    {
+      System.out.println("Null Pointer exception in Stop(): " + npe.toString() );
+    }
+    catch( Exception e)
+    {
+      System.err.println( e.toString() );
+    }
+  }
+}
+
+Html code:
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; CHARSET=utf-8" />
+    <meta http-equiv='Content-Style-Type' content='text/css' />
+<link rel="stylesheet" href="styles.css" type="text/css"/>
+<script Language="JavaScript" src="functions.js"></script>
+  </head>
+  <body>
+  <form>
+  <input type="text" name="test" id="test">
+  </form>
+  <applet name="Test" id="Test" code="Test.class" width="1" height="1"
+mayscript></applet>
+  </body>
+</html>
+
+Javascript code:
+function test( sFunctionName, ParamA, ParamB, ParamC, ParamD )
+{
+  var elem = document.getElementById( "test" );
+  var msg;
+  
+  if ( sFunctionName == "TimeCode" )
+    msg = ParamA + ":" + ParamB + ":" + ParamC + ":" + ParamD;
+  
+  elem.value = msg;
+}
+
+Reproducible: Always
+Steps to Reproduce:
+1. compile applet code
+2. load the html page that references the applet locally
+3. after the applet loads leave the page
+
+Actual Results:  
+The browser will crash...  the destruction of the applet seems to be a problem.
+
+Expected Results:  
+Clean exit.

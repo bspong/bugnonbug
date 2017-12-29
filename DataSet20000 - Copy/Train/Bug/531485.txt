@@ -1,0 +1,40 @@
+Specified Cache values not used; FF uses bad bad values
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 6.1; en-UTF-8; rv:1.9.1.5) Gecko/20091102 Firefox/3.5.5 (.NET CLR 3.5.30729)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 6.1; en-UTF-8; rv:1.9.1.5) Gecko/20091102 Firefox/3.5.5 (.NET CLR 3.5.30729)
+
+I Specifically and continually set Firefox to NOT use disk space -- not use a disk cache, or use 5-128k -- tried various values.  It keeps resetting it to 150Mb and cache on.  I told it to use (instead) 1.5GB of memory for cache.  After running for
+some time, I checked on the cache usage.  It had again reset the disk cache to 150MB, and had used 147MB of disk cache -- AND!@!!!  it had only used 12 bytes in 8 items in the memory cache!!!!
+
+WTF!!!...Talk about spite that bites!  IT's not only doing the opposite of what I want, but in multiple-power-of 2 multipliers!
+
+It used 147MB in disk and 12 bytes of memory cache!?! when I tell it it has 1.5GB of RAM and to NOT use disk (or use only 128K)?    Geeze...like it's being deliberately obstreperous! :-)
+
+Ok, someone is making some bad assumptions about how we want the browser to use cache.  Like to minimize memory, and only put small things there, and to always use a disk cache whether the user wants it or not -- and to use multiple megabytes?  I have 15GB of RAM, I'm not going to miss 1.5G to my browswer.  I know FF is limited to 2GB or so being a puddly 32-bit prog, but I figured I'd tell it that it could use as much RAM as it can deal with for cache -- and it it ignores it.
+
+This is pretty bad and explains why my disk is thrashing while FF goes out to lunch for long periods.  It's thrashing it's cache on disk -- when it could be
+going to memory MUCH faster.
+
+This is very  very bad.  What's the point of claiming FF enables us to take our desktop back when it doesn't listen to such basic config params?
+
+(While your at it, making FF large mem aware, could allow it to use up to 3GB even in 32 bit mode -- though a 64 bit version on win and linux for that  matter, would be nice (multithreaded, of course).
+
+Hey, the 64-bit part should be a recompile -- and ignoring users specified params -- literally resetting them! -- that's a severe, critical bug. IMO.
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. set disk usage to 0 in UI
+2. use about:config to set mem cache usage high -- turn disk caching off even,
+3. restart...
+Actual Results:  
+see disk usage go back up to ~150MB, and turn back on...
+mem cache value stays untouched, but run for a while...
+see that firefox *wrongly* prefers disk cache over mem-cache, even when mem cache is larger.
+
+Expected Results:  
+1) exepct ff to use user values.
+2) expect ff to use fastest cache first, proportional to the relative sizes of the caches.  i.e. if mem cache was 1mb and disk was 150mb, I'd expect items larger than ~1/20th the size of the mem cache to go to the disk cache.  But if
+mem cache is 1.5GB and disk cache is 15k, I'd expect anything and everything to go to the mem cache as it is faster.  Disk cache should only be used when mem cache is smaller.
+UNLESS, it is of large size AND user doesn't have "clear cache at shut down" turned on", and the disk cache might be re-used.  Otherwise, the disk cache is worthlessly slow.

@@ -1,0 +1,137 @@
+Personal Firefox build crashes on OS X with an "EXC_BAD_ACCESS" memory error [@ nsAString::~nsAString]
+User-Agent:       Mozilla/5.0 (Macintosh; U; PPC Mac OS X Mach-O; en-US; rv:1.8a) Gecko/20040425 Firefox/0.8.0+
+Build Identifier: Mozilla/5.0 (Macintosh; U; PPC Mac OS X Mach-O; en-US; rv:1.8a) Gecko/20040425 Firefox/0.8.0+
+
+I compiled Firefox from a cvs tree pulled on April 27. The compilation went ok
+and  Firefox runs until I quit, where upon it crashes.
+
+I use following as my CFLAGS "-O3 -mcpu=7450 -mtune=7450 -fomit-frame-pointer
+-faltivec -funroll-loops -fsched-interblock -falign-loops=16 -falign-jumps=16
+-falign-functions=16 -falign-jumps-max-skip=15 -falign-loops-max-skip=15
+-mpowerpc-gpopt"
+
+I usually compile firefox fine [and run fine]with the above CFLAGS set, but as
+of lately I am having trouble with the above CFLAGS when firefox is quitting.
+
+
+ With the following errors:
+
+Program received signal EXC_BAD_ACCESS, Could not access memory.
+0x028ab7d0 in nsAString::~nsAString() ()
+
+Here is the backtrace
+
+Thread 9 (process 18241 thread 0xb303):
+#0  0x900075c8 in mach_msg_trap ()
+#1  0x90007118 in mach_msg ()
+#2  0x9249a808 in JVM_NewInstance ()
+#3  0x924b9f70 in JVM_FillInStackTrace ()
+#4  0x924e22b0 in JVM_StartThread ()
+#5  0x924d0e04 in JVM_FindLoadedClass ()
+#6  0x92577054 in JVM_UnloadLibrary ()
+#7  0x924fdc9c in JVM_GetClassMethodsCount ()
+#8  0x900247e8 in _pthread_body ()
+
+Thread 8 (process 18241 thread 0xb003):
+#0  0x900075c8 in mach_msg_trap ()
+#1  0x90007118 in mach_msg ()
+#2  0x9249a808 in JVM_NewInstance ()
+#3  0x924b9f70 in JVM_FillInStackTrace ()
+#4  0x92553b20 in JVM_InitProperties ()
+#5  0x92553920 in JVM_InitProperties ()
+#6  0x92577054 in JVM_UnloadLibrary ()
+#7  0x924fdc9c in JVM_GetClassMethodsCount ()
+#8  0x900247e8 in _pthread_body ()
+
+Thread 7 (process 18241 thread 0xad03):
+#0  0x900075c8 in mach_msg_trap ()
+#1  0x90007118 in mach_msg ()
+#2  0x9249a89c in JVM_NewInstance ()
+#3  0x924a1a04 in JVM_GetClassLoader ()
+#4  0x924a17a4 in JVM_GetClassLoader ()
+#5  0x924fdc9c in JVM_GetClassMethodsCount ()
+#6  0x900247e8 in _pthread_body ()
+
+Thread 6 (process 18241 thread 0xa803):
+#0  0x900075c8 in mach_msg_trap ()
+#1  0x90007118 in mach_msg ()
+#2  0x9249a808 in JVM_NewInstance ()
+#3  0x924a2a20 in JVM_ArrayCopy ()
+#4  0x924b8b48 in JVM_MonitorNotify ()
+#5  0x924b97a8 in JVM_MonitorWait ()
+#6  0x072bb668 in ?? ()
+#7  0x072b968c in ?? ()
+#8  0x072b95cc in ?? ()
+#9  0x072b95cc in ?? ()
+#10 0xa24a3720 in typeinfo name for std::bad_exception ()
+#11 0x9249808c in JVM_CurrentTimeMillis ()
+#12 0x924cd518 in JVM_GetCPClassNameUTF ()
+#13 0x924d2ce4 in JVM_FindClassFromClass ()
+#14 0x924ec170 in JVM_IsSameClassPackage ()
+#15 0x924e66d8 in JVM_GetMethodIxExceptionTableEntry ()
+#16 0x92577054 in JVM_UnloadLibrary ()
+#17 0x924fdc9c in JVM_GetClassMethodsCount ()
+#18 0x900247e8 in _pthread_body ()
+
+Thread 5 (process 18241 thread 0xa403):
+#0  0x900075c8 in mach_msg_trap ()
+#1  0x90007118 in mach_msg ()
+#2  0x9249a808 in JVM_NewInstance ()
+#3  0x924a2a20 in JVM_ArrayCopy ()
+#4  0x924b8b48 in JVM_MonitorNotify ()
+#5  0x924b97a8 in JVM_MonitorWait ()
+#6  0x072bb668 in ?? ()
+#7  0x072b968c in ?? ()
+#8  0x072b968c in ?? ()
+#9  0xa24a3720 in typeinfo name for std::bad_exception ()
+#10 0x9249808c in JVM_CurrentTimeMillis ()
+#11 0x924cd518 in JVM_GetCPClassNameUTF ()
+#12 0x924d2ce4 in JVM_FindClassFromClass ()
+#13 0x924ec170 in JVM_IsSameClassPackage ()
+#14 0x924e66d8 in JVM_GetMethodIxExceptionTableEntry ()
+#15 0x92577054 in JVM_UnloadLibrary ()
+#16 0x924fdc9c in JVM_GetClassMethodsCount ()
+#17 0x900247e8 in _pthread_body ()
+
+Thread 4 (process 18241 thread 0xa103):
+#0  0x900075c8 in mach_msg_trap ()
+#1  0x90007118 in mach_msg ()
+#2  0x9249a89c in JVM_NewInstance ()
+#3  0x924b9f18 in JVM_FillInStackTrace ()
+#4  0x924bf948 in JVM_Send ()
+#5  0x9255173c in JNI_CreateJavaVM_Impl ()
+#6  0x924fdc9c in JVM_GetClassMethodsCount ()
+#7  0x900247e8 in _pthread_body ()
+
+Thread 3 (process 18241 thread 0x9903):
+#0  0x900075c8 in mach_msg_trap ()
+#1  0x90007118 in mach_msg ()
+#2  0x9253c68c in JNI_CreateJavaVM_Impl ()
+#3  0x9253c624 in JNI_CreateJavaVM_Impl ()
+#4  0x924fdc9c in JVM_GetClassMethodsCount ()
+#5  0x900247e8 in _pthread_body ()
+
+Thread 1 (process 18241 local thread 0x1107):
+#0  0x028ab7d0 in nsAString::~nsAString() ()
+#1  0x012a79d4 in txExecutionState::kMaxRecursionDepth ()
+#2  0x8fe17e70 in __dyld__dyld_mod_term_funcs ()
+#3  0x9002c8b8 in exit ()
+#4  0x00002d50 in start ()
+#5  0x00002bc0 in start ()
+
+
+Reproducible: Always
+Steps to Reproduce:
+1.Set CFLAGS to mine, compile firefox.
+2.Run firefox, quit firefox.
+3.Observe Apple crash diaglog box.
+
+Actual Results:  
+Firefox crashes.
+
+Expected Results:  
+Exit gracefully like it used to do.
+
+CFLAGS="-O3 -mcpu=7450 -mtune=7450 -fomit-frame-pointer -faltivec -funroll-loops
+-fsched-interblock -falign-loops=16 -falign-jumps=16 -falign-functions=16
+-falign-jumps-max-skip=15 -falign-loops-max-skip=15 -mpowerpc-gpopt"

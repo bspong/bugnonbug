@@ -1,0 +1,77 @@
+Build process is killed in n building with gcc 4.0 bundled with XCode 2.1
+User-Agent: Mozilla/5.0 (Macintosh; U; PPC Mac OS X Mach-O; en-US; rv:1.8b2) Gecko/20050614 Firefox/1.0+
+Build Identifier: Mozilla/5.0 (Macintosh; U; PPC Mac OS X Mach-O; en-US; rv:1.8b2) Gecko/20050614 Firefox/1.0+
+
+I search on bugzilla using gcc 4.0 and found two open bug which don't match.
+
+So here is the problem.
+
+When I try to build firefox using gcc 4.0 bundled with XCode 2.1 (gcc version
+4.0.0 (Apple Computer, Inc. build 5026)), under Tiger 10.4.1 fully up to date
+and a source code up-to-date until today at 07:00 am mozilla.org time), it gave
+me this killing error :
+
+"Ld "build/Default Plugin.plugin/Contents/MacOS/Default Plugin" normal ppc
+mkdir "build/Default Plugin.plugin/Contents/MacOS"
+cd /Users/frederic/Documents/logs/fox/mozilla/modules/plugin/samples/default/mac
+/usr/bin/g++-4.0 -o "build/Default Plugin.plugin/Contents/MacOS/Default
+Plugin" -Lbuild -L/Developer/SDKs/MacOSX10.3.9.sdk/usr/lib -Fbuild
+-F/Developer/SDKs/MacOSX10.3.9.sdk/System/Library/Frameworks/CoreFoundation.framework
+-filelist
+"/Users/frederic/Documents/logs/fox/mozilla/modules/plugin/samples/default/mac/build/DefaultPlugin.build/Deployment/Default
+Plugin.build/Objects-normal/ppc/Default Plugin.LinkFileList" -framework Carbon
+-framework CoreFoundation -arch ppc -bundle -isysroot
+/Developer/SDKs/MacOSX10.3.9.sdk -Wl,-syslibroot,/Developer/SDKs/MacOSX10.3.9.sdk
+/usr/bin/ld: warning NEXT_ROOT environment variable ignored because -syslibroot
+specified
+/usr/bin/ld: warning -prebind ha no effect with -bundle
+/usr/bin/ld: can't locate file for: -lSystemStubs
+collect2: ld returned 1 exit status
+** BUILD FAILED **
+make[4]: *** [build-plugin] Error 1
+make[3]: *** [libs] Error 2
+make[2]: *** [tier_9] Error 2
+make[1]: *** [default] Error 2
+make: *** [build] Error 2"
+
+
+Here is my .mozconfig :
+
+sh
+# Build configuration script
+#
+# See http://www.mozilla.org/build/unix.html for build instructions.
+#
+
+. $topsrcdir/browser/config/mozconfig
+
+# Options for 'configure' (same a command-line options).
+ac_add_options --with-macos-sdk=/Developer/SDKs/MacOSX10.3.9.sdk
+ac_add_options --disable-tests
+ac_add_options --disable-debug
+ac_add_options --enable-optimize=-Os
+ac_add_options --enable-prebinding
+ac_add_options --enable-canvas
+ac_add_options --disable-shared
+ac_add_options --enable-static
+ac_add_options --enable-svg
+
+Any idea ? Or gcc 4.0 building process is still broken ?
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.Get Tiger up to date and XCode 2.1
+2.Grab source
+3.Build them using this .mozconfig
+4.Wait
+
+Actual Results:
+Crashes in default plugin building
+
+Expected Results:
+Getting a firefox build.
+
+I tried because of those two bug (294244 and 297619) were fixed.
+
+Have I to go back to gcc 3.3 for some time ?

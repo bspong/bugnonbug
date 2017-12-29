@@ -1,0 +1,30 @@
+XMLHttpRequest - character encoding - different behavior on Windows and Linux
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.4) Gecko/20070603 Firefox/2.0.0.4
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.4) Gecko/20070603 Firefox/2.0.0.4
+
+AJAX application retrieving all the data through simple message communication, exchanging JSON object with the server side
+
+at the beginning, client app request for a vocabulary, server side sends JSON hash with all the vocab, the stream is UTF-8 encoded
+
+on Linux, this decodes the data properly and the resulting string are correct UTF-8 string (and when i do something like div.innerHTML=receivedString, it display correctly):
+
+newmessages=eval('('+xmlhttp.responseText+')');
+
+however, on Windows, the string i receive using above code have the correct byte (content), but are not understood a UTF-8 string - so putting them into the page result in wrong display (something like 'retyping' UTF-8 string to ascii)
+
+following code fix the problem on Windows:
+
+newmessages=eval('('+Utf8.decode(xmlhttp.responseText)+')');
+
+where Utf8.decode doesn't do anything else, only read the original string through String.charCodeAt() and based on utf-8 encoding, combine byte which belong together and creates new string through String.fromCharCode()
+
+i.e. it just take the byte a arrived and re-interprets them a UTF-8 content
+
+
+anyone having explanation for this ? is it a bug or OS-related behavior ? is there a way how to get rid of 'if (linux) ....' condition and use unified method for both platform ?
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+unfortunately, i cannot arrange public access to the application in question, should someone be interested, please contact me

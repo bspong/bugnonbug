@@ -1,0 +1,41 @@
+With HTTPS, the Subject Common Name gets ignored if subjectAltName extension is present.
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.0.8) Gecko/20061118 ((Linux)) Galeon/2.0.1
+Build Identifier: Firefox 2.0.0.1
+
+[Tested with Firefox 1.5.0.9 and 2.0.0.1]
+
+If the server's SSL certificate contains the subjectAltName extension,
+the regular Common Name (CN) listed in the subject field gets ignored
+and a wrong security warning is displayed.
+(see attached screenshot).
+
+Adding the CN to the subjectAltName field "solves" the issue, but
+according to RFC 3280 this should not be necessary.
+
+Excerpt from RFC 3280:
+
+   4.2.1.7  Subject Alternative Name
+
+   The subject alternative names extension allows *additional* identities
+   to be bound to the subject of the certificate.
+
+Only if the subjectAltName extension is marked as a "critical" extension
+*and* the Subject field is empty, the subject field itself can be
+ignored by the application.
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Create a server SSL certificate that contains "node.example.com" as its Common Name, and contains a subjectAltName with a DNS attribute for "othernode.example.com".
+
+2. Accessing the Web site with the name "node.example.com" results in a wrong security warning (similar to the screenshot I've attached)
+
+Actual Results:  
+Firefox shows a security warning that the name of the Web site does
+not match the name in the certificate, even though the CN is correctly
+set in the Subject field of the certificate.
+
+Expected Results:  
+The Subject Common Name (if set) must always be checked/used by Firefox
+even if the subjectAltName extension field is present.

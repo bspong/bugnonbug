@@ -1,0 +1,25 @@
+Change the max-len rule in devtools/.eslintrc
+This is our current configuration:
+
+"max-len": [1, 80, 2, {"ignoreUrls": true, "ignorePattern": "^\\s*loader\\.lazy"}],
+
+This mean that line must be under *80* char long otherwise a *warning* will be reported. Except for line that contain URLs, and line that match 'loader.lazy'.
+
+I'm proposing that we change this to:
+
+"max-len": [2, 100, 2, {"ignoreUrls": true, "ignorePattern": "^\\s*const\\s.+=\\s*require\\s*\\(|^\\s*loader\\.lazy"}],
+
+This mean that line must be under *100* char long other an *error* will be reported. Except for line that contain URLs, and line that match 'loaded.lazy' and line that match 'const ... = require('.
+
+Here's the reasoning about this:
+
+- 80 -> 100: I've had a short discussion with 3/4 people last week on IRC about this. From a quick poll it look like: either people don't care/don't have a fixed limit a long a thing look good, or people have 100/120.
+My explanation for having 80 in the first place is that 2,5 year ago, when we discussed our style guide at the Paris work week, the team agreed on 80 because it worked better for a 2 column editor layout and small (macbook air 11'') screens.
+My impression is that a lot of people do use 2 column but tend to use larger (at least 13'') screens.
+
+- warning -> error: see bug 1246904
+
+- adding require to the ignorePattern: this is to avoid really ugly line wrapping
+
+The reason I think we should still have a rule about this, a opposed to no rule at all like we used to, is that I don't want reviewer to have to care too much about this.
+In most cases, the decision of where to wrap a long line isn't really worth discussing between 2 people. So, better have a machine warn user about line that are too long, than a human.

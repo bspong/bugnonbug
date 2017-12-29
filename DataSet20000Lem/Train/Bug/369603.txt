@@ -1,0 +1,31 @@
+Data is not completely posted and refreshes stop occurring entirely when posting form data.
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.8.1.1) Gecko/20061204 Firefox/2.0.0.1
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.8.1.1) Gecko/20061204 Firefox/2.0.0.1
+
+I had a form with a TEXT field, two FILE fields, and a TEXTAREA field. I filled them out, submitted the request, and got back an appropriate response. All data wa transmitted just fine the first time.
+
+I hit refresh and got the messagebox asking whether I should resubmit the POST data. I said OK and the page reloaded, but the file were not uploaded.
+
+I tried a second refresh and this time after hitting OK it did nothing.
+
+I then wrote a custom CGI that basically dumped the environment variables, the timestamp of the request, and the contents. I directed the form to this program and achieved the same results. The first time through it work fine. The second time through it only half works, the file not being uploaded and the CONTENT_LENGTH being appropriately shorter. The third time and any subsequent times, it doe nothing--the server log no connection at all for the request at these points, and the data doe not refresh. After you hit "OK" to resend the POSt data, the client doesn't even act like it's working on anything, no matter how briefly, and the server log confirm the absence of contact.
+
+This happens even when the CGI us the "Cache-Control: no-cache" header.
+
+I've checked both the original CGI program and the tiny debugging one I used to verify this in IE6, and IE6 work fine, refreshing each time, complete with file uploads in their entirety.
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Create a form with a TEXT field, a TEXTAREA field, and two FILE fields.
+2. Fill out and submit the form, including file in the FILE upload fields.
+3. After you get the page back, hit refresh. Notice that the file no longer upload.
+4. Hit refresh again and note that the server isn't even contacted. Note the lack of any browser activity after hitting "OK".
+Actual Results:
+Exactly what I said in my bug description.
+
+Expected Results:
+The -full- POST data should be resubmitted every time the refresh button is hit, in it entirety. The refresh button should not cease actually reloading the page and submitting all included data.
+
+I'd ordinarily say that this is a "normal" severity bug. However, because data is actually lost inasfar a the server is concerned (files are not uploaded the first refresh, and indeed no data is submitted at all upon the second and subsequent refreshes), I'm going with the "critical" severity. Data is actually lost, and this could hamper operation in a business setting, skew data when people think the browser performed correctly, etc.

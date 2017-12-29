@@ -1,0 +1,70 @@
+Firefox get stuck running in background if window is open from onunload event
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.1.3) Gecko/20090824 Firefox/3.5.3 (.NET CLR 3.5.30729)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.1.3) Gecko/20090824 Firefox/3.5.3 (.NET CLR 3.5.30729)
+
+Two simple html pages. First page call window.open in the onunload event.
+When page 1 is closed (popup allowed) page 2 is opened. When page 2 is closed and there are no other window or tab open in Firefox, Firefox continues to run in background.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.Popups allowed
+2.Open page 1 with onunload event with window.open()
+3.Close page 1, page from window.open() pop up
+4.Close popped page
+Actual Results:
+Firefox remains running in background.
+
+Expected Results:
+Firefox close
+
+<!--sample page1-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+
+<head>
+<title>Page 1</title>
+
+<script type="text/javascript" language="JavaScript1.2">
+function Wopen() {
+window.open("page2.htm","_blank","");
+}
+</script>
+</head>
+
+<body onunload="Wopen();">
+<form name="KAT_GT">
+<p>Form1</p>
+</form>
+</body>
+
+</html>
+
+
+<!--sample page2-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+
+<title>Page 2</title>
+
+
+<script type="text/javascript" language="JavaScript1.2">
+function Wndclose() {
+window.close();
+}
+</script>
+
+</head>
+
+<body>
+<form name="FRM_CIS">
+</form>
+
+<p>page2</p>
+
+<script type="text/javascript" language="JavaScript1.2">
+setTimeout('Wndclose();',5000);
+</script>
+</body>
+</html>

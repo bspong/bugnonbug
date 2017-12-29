@@ -1,0 +1,48 @@
+window.open fails whith exception when called in cross frame javascript
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; fr; rv:1.9.0.6) Gecko/2009011913 Firefox/3.0.6
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; fr; rv:1.9.0.6) Gecko/2009011913 Firefox/3.0.6
+
+Erreur : uncaught exception: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMJSWindow.open]" nsresult: "0x80004005 (NS_ERROR_FAILURE)" location: "JS frame :: http://intranet/myscript.js :: pop :: line 10" data: no]
+
+Appens when a function is called from cross frames.
+
+Reproducible: Always
+
+Steps to Reproduce:
+Watch this code :
+
+<html>
+<head>
+<script>
+function pop()
+{
+alert('Ready to go');
+window.open('http://www.mozilla.org', 'mywindow');
+}
+
+function draw()
+{
+document.getElementById('myframe').contentDocument.body.innerHTML = '<a href="javascript:window.parent.pop()">test B</a>';
+}
+</script>
+</head>
+<body onload="draw()">
+<a href="javascript:pop()">test A</a>
+<iframe id="myframe"></iframe>
+</body>
+</html>
+
+This page display two link named "test A" and "test B". The first one is part of the document, the second if part of an iframe.
+
+If you click on "test A", you get an alert message + a opening pop-up
+If you click on "test B", you still get an alert message + an exception. The pop-up is not opened.
+
+The message is a follow (my script is run a a separated JS file and not included in the code a above) :
+
+Erreur : uncaught exception: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMJSWindow.open]" nsresult: "0x80004005 (NS_ERROR_FAILURE)" location: "JS frame :: http://intranet/myscript.js :: pop :: line 10" data: no]
+
+Actual Results:
+no pop-up
+
+Expected Results:
+pop-up

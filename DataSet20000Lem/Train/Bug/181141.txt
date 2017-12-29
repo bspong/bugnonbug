@@ -1,0 +1,67 @@
+Autocomplete dropdown in form remains after focus()
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.3a) Gecko/20021119 Phoenix/0.4
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.3a) Gecko/20021119 Phoenix/0.4
+
+When calling the Javascript function "focus" on a different "input" than the one
+being autocompleted, the autocomplete dropdown box stay up. The dropdown should
+be closed, since the focus is now passed to a different field.
+
+This scenario is frequent on page where the focus is switched when a certain
+number of character is entered in a field.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Create a HTML file with the HTML code I provide below.
+2. Open this HTML file with Phoenix.
+3. Enter some text in Field #1 (you will see that once 4 character entered, the
+focus is passed to the Field #2.)
+4. Click the submit button. The page will reappear.
+5. Start entering the same text in Field #1. The autocomplete dropdown is going
+to appear.
+6. Press the "arrow down" key on your keyboard to highlight the first choice in
+the autocomplete dropdown.
+7. Here's the bug.
+Actual Results:
+The focus ha been passed to Field #2, but the autocomplete dropdown box is
+still there.
+
+Expected Results:
+The autocomplete dropdown box should disappear when the focus pas to Field #2.
+
+<!-- Here's the sample HTML page -->
+
+<HTML>
+<BODY>
+
+<FORM name="mainForm" method="GET" action="test.html">
+Field #1 <INPUT type="text" name="field1" size="4" maxlength="4"
+onKeyDown="autoJump_onKeyDown('field1')"
+onKeyUp="autoJump_onKeyUp('field1','field2',4)"><BR><BR>
+Field #2 <INPUT type="text" name="field2"><BR><BR><BR>
+<INPUT type="submit">
+</FORM>
+
+</BODY>
+</HTML>
+
+<SCRIPT language="JavaScript">
+var activeField;
+
+function autoJump_onKeyDown(fieldName)
+{
+var field = document.mainForm.elements[fieldName];
+activeField = field;
+field.lastValue = field.value;
+}
+
+function autoJump_onKeyUp(fieldName,nextFieldName,maxLength)
+{
+var field = document.mainForm.elements[fieldName];
+var nextField = document.mainForm.elements[nextFieldName];
+if (field == activeField && field.value != field.lastValue &&
+field.value.length >= maxLength)
+nextField.focus();
+activeField = null;
+}
+</SCRIPT>

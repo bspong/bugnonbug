@@ -1,0 +1,24 @@
+"Copy a cURL" is building GET when it should be POST
+I love the new "Copy a cURL" devtools feature added in bug 859059. I wa trying it out in FF31 beta (about:buildconfig say https://hg.mozilla.org/releases/mozilla-beta/rev/a04918ac3197) on one of my webapps, and I noticed that using it on a POST request resulted in a cURL command line that actually doe a GET. It's also lacking the "-d" option to include the JSON data that my app wa submitting with the request.
+
+The network panel had a row that said:
+
+200 POST eventchannel-create
+
+the Headers pane said:
+
+Request URL: http://localhost:59276/api/v1/eventchannel-create
+Request method: POST
+.. and a bunch of Request Headers
+
+and the Params pane said:
+
+{"token":"b3vito63bkux2ghgtfcbun5smu4mwhkxmrkp77qcspaaqofg76vq"}
+
+After hitting "Copy a cURL", the clipboard contained the following string:
+
+curl 'http://localhost:59276/api/v1/eventchannel-create' -H 'Host: localhost:59276' -H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.9; rv:31.0) Gecko/20100101 Firefox/31.0' -H 'Accept: application/json,*/*' -H 'Accept-Language: en-US,en;q=0.5' -H 'Accept-Encoding: gzip, deflate' -H 'DNT: 1' -H 'Referer: http://localhost:59276/control' -H 'Content-Length: 64' -H 'Content-Type: text/plain; charset=UTF-8' -H 'Connection: keep-alive' -H 'Pragma: no-cache' -H 'Cache-Control: no-cache'
+
+The curl command includes a -H option for all the headers, and get the URL right, but I expected it to include a '-X POST' and a -d '{"token":"b3vito63bkux2ghgtfcbun5smu4mwhkxmrkp77qcspaaqofg76vq"}' to represent the POST data properly. Interestingly, it *does* have a "Content-Length: 64", which implies that it's aware of the data. (actually using this curl command result in a stall, a the server wait for 64 byte of data that will never come, even though it's a GET, which isn't supposed to have a request body).
+
+I can reproduce this pretty easily.. let me know if I can help out at all.

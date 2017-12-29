@@ -1,0 +1,120 @@
+Cannot compile gtk2 build of Firefox with Forte 7
+User-Agent: Mozilla/5.0 (X11; U; SunOS sun4u; en-US; rv:1.4b) Gecko/20030523 Mozilla Firebird/0.6
+Build Identifier: Mozilla/5.0 (X11; U; SunOS sun4u; en-US; rv:1.4b) Gecko/20030523 Mozilla Firebird/0.6
+
+Hi there,
+
+I'm having trouble trying to compile a gtk2 build of Firebird 0.6 using Forte 7
+on Solaris 8.
+I can compile Firebird perfectly using gtk1.2.10 on the same machine.
+I also have no problem compiling gtk2 build of Mozilla 1.3.x, 1.4b and 1.4RC1.
+The most surprising wa that 1.4b worked which the Firebird code is based on.
+This problem seems Firebird specific and with the gtk2 toolkit.
+
+My OS and compiler are fully patched to the latest rev and the version of
+GNOME2 i am using is Sun's version.
+
+Here are the detail of the OS and compiler...
+compiler@fabsun136 sh>uname -a
+SunOS fabsun136 5.8 Generic_108528-21 sun4u sparc SUNW,UltraAX-i2
+compiler@fabsun136 sh>CC -V
+CC: Forte Developer 7 C++ 5.4 Patch 111715-07 2003/04/13
+compiler@fabsun136 sh>cc -V
+cc: Forte Developer 7 C 5.4 2002/03/09
+usage: cc [ options] files. Use 'cc -flags' for detail
+
+My .mozconfig look like...
+mk_add_options MOZ_PHOENIX=1
+ac_add_options --enable-crypto
+ac_add_options --enable-ldap
+ac_add_options --enable-js-ultrasparc
+ac_add_options --enable-extensions=default,-irc,-venkman,-inspector,-content-packs
+ac_add_options --enable-optimize=-xO2
+ac_add_options --with-xprint
+ac_add_options --disable-logging
+ac_add_options --disable-mailnews
+ac_add_options --disable-tests
+ac_add_options --disable-debug
+ac_add_options --enable-default-toolkit=gtk2
+ac_add_options --with-glib-prefix=/usr
+ac_add_options --with-gtk-prefix=/usr
+ac_add_options --with-libIDL-prefix=/usr
+ac_add_options --disable-pedantic
+ac_add_options --without-system-nspr
+ac_add_options --without-system-zlib
+ac_add_options --without-system-jpeg
+ac_add_options --without-system-mng
+ac_add_options --without-system-png
+ac_add_options --enable-static
+ac_add_options --disable-shared
+
+My C and CXX flag are a follows...
+CFLAGS="-xstrconst -xbuiltin=%all -mt"
+CXXFLAGS="-xbuiltin=%all -mt -I/usr/openwin/include"
+
+I have tried using minimal option in my .mozconfig file and it does'nt make a
+difference a the problem seems to be solely with gtk2. Has anyone been able to
+compile a build Firebird using the gtk2 toolkit or am i the unlucky first?
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Setup the compiler option a shown
+2. Do a gmake
+3.
+
+Actual Results:
+The compile crashed with the following error...
+
+gmake[4]: Warning: File `../../dist/lib/components/libbrowsercomps.a' ha
+modification time 2.3 s in the future
+CC -o MozillaFirebird-bin -I/usr/openwin/include -xbuiltin=%all -mt
+-I/usr/openwin/include -xbuiltin=%all -mt -DNDEBUG -DTRIMMED -xO2
+nsBrowserApp.o nsStaticComponents.o -xildoff -zlazyload -zcombreloc
+-L../../dist/bin -L../../dist/lib -lsocket -ldl -lm
+-L../../dist/lib/components -lxpcom_compat_c -lxpconnect -luconv -lucvmath
+-li18n -loji -ltransmngr_client -lipcdc -lnecko -lnecko2 -lpref -lcaps -lchrome
+-lrdf -lhtmlpars -lgfxps -lgfx_gtk -lgfxxprint -limgmng -limglib2 -lgkplugin
+-ljsdom -lwidget_gtk2 -lxremote_client -lgklayout -lmork -ldocshell -lprofile
+-lnsprefm -lembedcomponents -lwebbrwsr -leditor -ltxmgr -lcomposer
+-laccessibility -lmozldap -lnsappshell -lfileview -lmozfind -lxremoteservice
+-lappcomps -ltoolkitcomps -lcookie -lwallet -lwalletviewers -lxmlextras -lp3p
+-lautoconfig -lsystem-pref -ltransformiix -luniversalchardet -ltypeaheadfind
+-lwebsrvcs -lpipboot -lpipnss -lpippki -lbrowsercomps -lunicharutil_s
+-lucvutil_s -ljsj -lgtkxtbin -lipcdutil_s -lipcdshared_s -lipcdlock_s
+-ltransmngrcom_s -ltransmngr_s -lnkcache_s -lgfxshared_s -lgfxft2_s -lxlibrgb
+-lgkgfx -lxulapp_s ../../dist/lib/libxulapp_s.a -L../../dist/bin -lmozjs
+-L../../dist/bin -lxpcom
+-L/fab/fabsun108/compiler/mozilla_firebird/mozilla/dist/lib -lplds4 -lplc4
+-lnspr4 -lpthread -ldl -lrt -lgtk-x11-2.0 -lgdk-x11-2.0 -latk-1.0
+-lgdk_pixbuf-2.0 -lm -lpangox-1.0 -lpango-1.0 -lgobject-2.0 -lgmodule-2.0 -ldl
+-lglib-2.0 -L../../dist/lib/components -L../../dist/lib -lmozpng
+-L../../dist/lib -lmozmng -L../../dist/lib -lmozjpeg -L../../dist/lib -lmozz
+-L../../dist/bin -L../../dist/lib ../../dist/lib/libcrmf.a -lsmime3 -lssl3
+-lnss3 -lsoftokn3 -L../../dist/bin -L../../dist/lib -lldap50 -llber50
+-lprldap50 -L/usr/openwin/lib -R/usr/openwin/lib -lXt -L/usr/openwin/lib
+-R/usr/openwin/lib -lXp -lXext -lX11 -L../../dist/lib -lxpcom_compat
+Undefined first referenced
+symbol in file
+nsSystemPref_gModuleInfo nsStaticComponents.o
+inet_addr
+../../dist/lib/components/libprofile.a(nsProfileLock.o) (symbol belongs to
+implicit dependency /usr/lib/libnsl.so.1)
+inet_ntoa
+../../dist/lib/components/libprofile.a(nsProfileLock.o) (symbol belongs to
+implicit dependency /usr/lib/libnsl.so.1)
+ld: fatal: Symbol referencing errors. No output written to MozillaFirebird-bin
+gmake[4]: *** [MozillaFirebird-bin] Error 1
+gmake[4]: Leaving directory
+`/fab/fabsun108/compiler/mozilla_firebird/mozilla/browser/app'
+gmake[3]: *** [libs] Error 2
+gmake[3]: Leaving directory
+`/fab/fabsun108/compiler/mozilla_firebird/mozilla/browser'
+gmake[2]: *** [tier_99] Error 2
+gmake[2]: Leaving directory `/fab/fabsun108/compiler/mozilla_firebird/mozilla'
+gmake[1]: *** [default] Error 2
+gmake[1]: Leaving directory `/fab/fabsun108/compiler/mozilla_firebird/mozilla'
+gmake: *** [build] Error 2
+
+Expected Results:
+The build should compile.

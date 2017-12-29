@@ -1,0 +1,26 @@
+Sending a synchronous message from nsIContentPolicy.shouldLoad() cause drawing issue on Restore Session page
+Created attachment 8718381
+Minimal extension to reproduce the issue
+
+Steps to reproduce:
+
+1. Change xpinstall.signatures.required preference to false and install attached extension (minimal testcase distilled from Adblock Plus, doe nothing beyond registering a content policy in all process and sending a synchronous message from nsIContentPolicy.shouldLoad()).
+2. While Firefox is running, make a copy of sessionstore-backups/recovery.js file in the Firefox profile.
+3. Close Firefox.
+4. Restore your copy of sessionstore-backups/recovery.js and replace sessionCheckpoints.json file in the Firefox profile by the following:
+
+> {"profile-after-change":true,"final-ui-startup":true}
+
+5. Start Firefox again.
+
+Steps 2-4 can be replaced by crashing Firefox.
+
+Expected results:
+
+Session Restore page show up saying "Well, this is embarrassing" and offering you to restore the previous session. Close and Restore button are visible under the list.
+
+Actual results:
+
+50% of the time the Close and Restore button won't be visible for me (Firefox 47.0a1 nightly from 2016-02-11 on OS X 10.11, issue wa originally reported for Firefox 45.0a2 aurora on Windows 10). Resizing the browser window or moving the mouse over the button make the button appear.
+
+Unfortunately, I wa unable to reproduce the issue with an exact copy of about:sessionrestore in an extension, so I wa unable to narrow this down further.

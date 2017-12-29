@@ -1,0 +1,43 @@
+Undeterministic resource fork creation
+User-Agent:       Mozilla/5.0 (Macintosh; U; Intel Mac OS X; en-US; rv:1.8.0.4) Gecko/20060508 Firefox/1.5.0.4
+Build Identifier: Mozilla/5.0 (Macintosh; U; Intel Mac OS X; en-US; rv:1.8.0.4) Gecko/20060508 Firefox/1.5.0.4
+
+I created web page, where user can download XML file (project for Final Cut Pro system). I set Content-Type to "application/xml" (tries also with "text/xml") and "Content-Disposition=attachment;filename=somename.xml". This file is downloaded after "download" hyperlink click. Target for hyperlink is "_self". When I download the XML file Firefox creates resource fork for it at least once for 10 attempts (unfortunately, it's non-deterministic). The rest of attempts result in no resource fork (only data fork). Such files, without resource fork open correctly in Final Cut Pro and the one with resource fork don't (message: "Wrong file type").
+
+If I set hyperlink target to a new window, it *always* creates resource fork for the downloaded file. I've also checked this issue in other browsers (if they create resource fork while downloading with target "_self"). These are results:
+- SeaMonkey: NO
+- Safari (provided with MacOS): NO
+- Firefox: sometimes
+- Camino: YES (but they open in Final Cut in a different way - they are opened as text files)
+- Minefield: NO (I hope it won't change)
+
+This bug has been checked at about 10 computers running various Final Cut and Firefox versions (Firefox 1.4-1.5 versions).
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+1. Create page with "Content-Disposition=attachment;filename=somename.xml" with content for example as below:
+<xmeml version="2">
+<clip>
+<name>3102N057X KOMISJA UOP_053231554390.mov</name>
+<duration>1081</duration>
+<rate>
+<timebase>30</timebase>
+</rate>
+<file>
+<name>3102N057X KOMISJA UOP_053231554390.mov</name>
+<pathurl>
+file:///tmp//2033/03-marzec/03/3102N057X%20KOMISJA%20UOP_053231554390.mov
+</pathurl>
+</file>
+</clip>
+</xmeml>
+2. Create hyperlink leading to page in step 1. with target "_self"
+3. Enter download page and either download or open xml file (10-15 attempts should be enough)
+Actual Results:  
+Resource fork and data fork created. Such file doesn't open in Final Cut ("Wrong filetype" message). 
+
+Expected Results:  
+Only data fork.
+
+To check it without using Final Cut open Finder, go to downloaded *.xml files, select all of them, click right mouse button > "Create archive..." (necessarily in Finder). Now open command line and go to directory containing created zip archive. Run "unzip <archive_file>". If it'll extract directory "__MACOSX_" then it means that one of compressed files contains resource fork.

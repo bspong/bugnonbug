@@ -1,0 +1,42 @@
+Firefox shouldn't try to authenticate without kerberos tickets when browsing smb shares
+User-Agent:       Mozilla/5.0 (X11; U; Linux x86_64; fr; rv:1.9.0.12) Gecko/2009071200 SUSE/3.0.12-0.1.2 Firefox/3.0.12
+Build Identifier: Mozilla/5.0 (X11; U; Linux x86_64; fr; rv:1.9.0.12) Gecko/2009071200 SUSE/3.0.12-0.1.2 Firefox/3.0.12
+
+Using firefox to browse SMB share in a AD environment lock the user account, if
+this user don't have kerberos tickets.
+
+This problem happens only If there is a authentication for the share, firefox
+use kerberos to authenticate, but when there is no tickets he always try to
+authenticate with "null" credentials and failed without displaying any error for
+user.
+If this user try 5 time to access share (by only pressing F5, refresh),
+he's locked by the Domain Controller.
+
+Firefox should prevent users from trying to authenticate without tickets and
+being locked, by :
+ - not trying to authenticate without tickets
+ - (optional) displaying warning
+ - (optional) asking for login/pass (fallback in NTLM auth. mode).
+
+Let me know if you need logs or something.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Use a Linux machine (OpenSUSE, ...)
+2. Join a Active Directory domain
+3. Create a share with a restricted access (only for your account for example)
+4. Open a session in your linux machine with your AD account
+5. Open a terminal console and type "klist" to check that you have kerberos
+tickets (TGT) in your cache
+6. Type : "kdestroy" in your console. That should remove kerberos tickets.
+5. Start Firefox
+6. Browse the share (ie URL : smb://<server>/<share>)
+7. nothing happens
+8. Press F5 (10 times)
+9. Look in your AD for the state of your account : you are locked !
+Actual Results:  
+The AD account is locked.
+
+Expected Results:  
+The AD account should not be locked. Firefox should prevent this by checking if there is kerberos tickets or not.

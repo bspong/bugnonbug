@@ -1,0 +1,15 @@
+unnecessary autocomplete updates (flickering) while entering certain search terms (implement incremental updates)
+As far as I understand, currently autocomplete searches are re-executed each time the user types something into the location bar. Each time the search is run, the results are rebuilt from scratch. For responsiveness reasons the search is executed in small chunks of history.
+
+This leads to the following effect, which is mildly annoying:
+1. Use a relatively long places DB (the one I'm currently seeing this bug on is ~3MB, couple months as far as I can tell; not the slowest PC here).
+2. Find a place you've visited long ago (IIUC, chunking happens by visit_date, so this means the result will be found in the last chunk after a noticeable delay, but without locking up the browser)
+3. Start typing its URL.
+
+Actual results: each time you type another letter the autocomplete results flicker - the autocomplete disappears, then re-appears with the same single result in it.
+
+Expected results: no visible changes while performing the chunked search, unless we know the results have changed.
+
+In case there are lots of matching results with different visit_date, you can see the autocomplete popup flickering, followed by the scrollbar flickering (since after the first chunk, there are few results, then there are more results), followed by gradual growth of the results list. Hard to explain, but it doesn't give very good impression of the app.
+
+Related: bug 413497 and bug 414513.

@@ -1,0 +1,146 @@
+reloadChrome() after selectLocale() crash Mozilla
+Please refer to
+
+http://lxr.mozilla.org/mozilla/source/xpfe/global/resources/content/strres.js#66
+
+66 chromeRegistry.selectLocale(langcode, true);
+67 dump("\n-->set new lang, langcode=" + langcode + "--");
+68 var sbundle = srGetStrBundle("chrome://global/locale/brand.properties");
+69 var alertstr = sbundle.GetStringFromName("langAlert");
+70 alert(alertstr);
+
+Calling nsIChromeRegistry.reloadChrome() after
+nsIChromeRegistry.selectLocale(langcode, true) crash Mozilla.
+
+To reproduce, comment out line 68-70, and add this line after line 67:
+
+chromeRegistry.reloadChrome();
+
+Then, go to "View| Set Language/Region >" and select English (US) (or other
+workable langpack which you might have). Mozilla will crash with the stack trace
+below:
+
+nsDSURIContentListener::OnStartURIOpen(nsDSURIContentListener * const
+0x025cbd20, nsIURI * 0x025d9520, const char * 0x025de030, int * 0x0012de1c) line
+62 + 27 byte
+nsDSURIContentListener::OnStartURIOpen(nsDSURIContentListener * const
+0x025d96f0, nsIURI * 0x025d9520, const char * 0x025de030, int * 0x0012de1c) line
+62 + 30 byte
+nsURILoader::OpenURIVia(nsURILoader * const 0x018894e0, nsIChannel * 0x025da210,
+int 0, const char * 0x025de030, nsISupports * 0x025d3980, unsigned int 0) line 769
+nsURILoader::OpenURI(nsURILoader * const 0x018894e0, nsIChannel * 0x025da210,
+int 0, const char * 0x025de030, nsISupports * 0x025d3980) line 522
+nsDocShell::DoChannelLoad(nsDocShell * const 0x025d3980, nsIChannel *
+0x025da210, int 0, const char * 0x025de030, nsIURILoader * 0x018894e0) line 3460
++ 28 byte
+nsDocShell::DoURILoad(nsDocShell * const 0x025d3980, nsIURI * 0x025d9520, nsIURI
+* 0x00000000, nsISupports * 0x00000000, int 1, int 0, const char * 0x025de030,
+nsIInputStream * 0x00000000, nsIInputStream * 0x00000000) line 3239 + 41 byte
+nsDocShell::InternalLoad(nsDocShell * const 0x025d3980, nsIURI * 0x025d9520,
+nsIURI * 0x00000000, nsISupports * 0x00000000, int 1, int 0, const char *
+0x025de030, nsIInputStream * 0x00000000, nsIInputStream * 0x00000000, unsigned
+int 1, nsISHEntry * 0x00000000) line 3003 + 47 byte
+nsDocShell::LoadURI(nsDocShell * const 0x025d3980, nsIURI * 0x025d9520,
+nsIDocShellLoadInfo * 0x025dc2e0, unsigned int 0) line 427 + 65 byte
+nsHTMLFrameInnerFrame::DoLoadURL(nsIPresContext * 0x0584e0d0) line 990 + 58 byte
+nsHTMLFrameInnerFrame::Reflow(nsHTMLFrameInnerFrame * const 0x02fc7c6c,
+nsIPresContext * 0x0584e0d0, nsHTMLReflowMetrics & {...}, const
+nsHTMLReflowState & {...}, unsigned int & 0) line 1023 + 12 byte
+nsContainerFrame::ReflowChild(nsIFrame * 0x02fc7c6c, nsIPresContext *
+0x0584e0d0, nsHTMLReflowMetrics & {...}, const nsHTMLReflowState & {...}, int
+15, int 15, unsigned int 0, unsigned int & 0) line 693 + 31 byte
+nsHTMLFrameOuterFrame::Reflow(nsHTMLFrameOuterFrame * const 0x02f8e654,
+nsIPresContext * 0x0584e0d0, nsHTMLReflowMetrics & {...}, const
+nsHTMLReflowState & {...}, unsigned int & 0) line 393
+nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState & {...}, nsIPresContext *
+0x0584e0d0, nsHTMLReflowMetrics & {...}, const nsHTMLReflowState & {...},
+unsigned int & 0, int 0, int 0, int 1073741824, int 1073741824, int 1) line 868
+nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState & {...}, nsIPresContext *
+0x0584e0d0, nsHTMLReflowMetrics & {...}, const nsHTMLReflowState & {...},
+unsigned int & 0, int 0, int 0, int 1073741824, int 1073741824, int 0) line 647
+nsBoxToBlockAdaptor::GetPrefSize(nsBoxToBlockAdaptor * const 0x02f8e690,
+nsBoxLayoutState & {...}, nsSize & {...}) line 344 + 50 byte
+nsSprocketLayout::GetPrefSize(nsSprocketLayout * const 0x02c52290, nsIBox *
+0x00dd8a58, nsBoxLayoutState & {...}, nsSize & {...}) line 1211
+nsContainerBox::GetPrefSize(nsContainerBox * const 0x00dd8a58, nsBoxLayoutState
+& {...}, nsSize & {...}) line 447 + 38 byte
+nsBoxFrame::GetPrefSize(nsBoxFrame * const 0x00dd8a58, nsBoxLayoutState & {...},
+nsSize & {...}) line 860 + 20 byte
+nsSprocketLayout::GetPrefSize(nsSprocketLayout * const 0x02c52290, nsIBox *
+0x00dd89c8, nsBoxLayoutState & {...}, nsSize & {...}) line 1211
+nsContainerBox::GetPrefSize(nsContainerBox * const 0x00dd89c8, nsBoxLayoutState
+& {...}, nsSize & {...}) line 447 + 38 byte
+nsBoxFrame::GetPrefSize(nsBoxFrame * const 0x00dd89c8, nsBoxLayoutState & {...},
+nsSize & {...}) line 860 + 20 byte
+nsSprocketLayout::GetPrefSize(nsSprocketLayout * const 0x02c52290, nsIBox *
+0x00dd8594, nsBoxLayoutState & {...}, nsSize & {...}) line 1211
+nsContainerBox::GetPrefSize(nsContainerBox * const 0x00dd8594, nsBoxLayoutState
+& {...}, nsSize & {...}) line 447 + 38 byte
+nsBoxFrame::GetPrefSize(nsBoxFrame * const 0x00dd8594, nsBoxLayoutState & {...},
+nsSize & {...}) line 860 + 20 byte
+nsSprocketLayout::PopulateBoxSizes(nsIBox * 0x00dd7de4, nsBoxLayoutState &
+{...}, nsBoxSize * & 0x02f93460, nsComputedBoxSize * & 0x00000000, int & 6480,
+int & 1073741824, int & 0) line 705
+nsSprocketLayout::Layout(nsSprocketLayout * const 0x02c52290, nsIBox *
+0x00dd7de4, nsBoxLayoutState & {...}) line 152
+nsContainerBox::DoLayout(nsContainerBox * const 0x00dd7de4, nsBoxLayoutState &
+{...}) line 553 + 34 byte
+nsBoxFrame::DoLayout(nsBoxFrame * const 0x00dd7de4, nsBoxLayoutState & {...})
+line 987
+nsBox::Layout(nsBox * const 0x00dd7de4, nsBoxLayoutState & {...}) line 1002
+nsStackLayout::Layout(nsStackLayout * const 0x02c52250, nsIBox * 0x00dd7d54,
+nsBoxLayoutState & {...}) line 256
+nsContainerBox::DoLayout(nsContainerBox * const 0x00dd7d54, nsBoxLayoutState &
+{...}) line 553 + 34 byte
+nsBoxFrame::DoLayout(nsBoxFrame * const 0x00dd7d54, nsBoxLayoutState & {...})
+line 987
+nsBox::Layout(nsBox * const 0x00dd7d54, nsBoxLayoutState & {...}) line 1002
+nsBoxFrame::Reflow(nsBoxFrame * const 0x00dd7d1c, nsIPresContext * 0x0584e0d0,
+nsHTMLReflowMetrics & {...}, const nsHTMLReflowState & {...}, unsigned int & 0)
+line 789
+nsRootBoxFrame::Reflow(nsRootBoxFrame * const 0x00dd7d1c, nsIPresContext *
+0x0584e0d0, nsHTMLReflowMetrics & {...}, const nsHTMLReflowState & {...},
+unsigned int & 0) line 211
+nsContainerFrame::ReflowChild(nsIFrame * 0x00dd7d1c, nsIPresContext *
+0x0584e0d0, nsHTMLReflowMetrics & {...}, const nsHTMLReflowState & {...}, int 0,
+int 0, unsigned int 0, unsigned int & 0) line 693 + 31 byte
+ViewportFrame::Reflow(ViewportFrame * const 0x00dd7ce0, nsIPresContext *
+0x0584e0d0, nsHTMLReflowMetrics & {...}, const nsHTMLReflowState & {...},
+unsigned int & 0) line 546
+nsHTMLReflowCommand::Dispatch(nsHTMLReflowCommand * const 0x04038a40,
+nsIPresContext * 0x0584e0d0, nsHTMLReflowMetrics & {...}, const nsSize & {...},
+nsIRenderingContext & {...}) line 146
+PresShell::ProcessReflowCommands(int 0) line 5106
+PresShell::FlushPendingNotifications(PresShell * const 0x0587e040) line 4184
+nsXULDocument::FlushPendingNotifications(nsXULDocument * const 0x05904300) line 1928
+nsXBLStreamListener::Load(nsIDOMEvent * 0x040e1774) line 400
+nsEventListenerManager::HandleEvent(nsIPresContext * 0x00000000, nsEvent *
+0x0012f930, nsIDOMEvent * * 0x0012f900, nsIDOMEventTarget * 0x050a380c, unsigned
+int 7, nsEventStatus * 0x0012f974) line 1379 + 23 byte
+nsDocument::HandleDOMEvent(nsDocument * const 0x050a37e0, nsIPresContext *
+0x00000000, nsEvent * 0x0012f930, nsIDOMEvent * * 0x0012f900, unsigned int 1,
+nsEventStatus * 0x0012f974) line 3033
+nsXMLDocument::EndLoad(nsXMLDocument * const 0x050a37e0) line 623
+nsXMLContentSink::DidBuildModel(nsXMLContentSink * const 0x050a42b0, int 1) line 291
+CWellFormedDTD::DidBuildModel(CWellFormedDTD * const 0x05883240, unsigned int 0,
+int 1, nsIParser * 0x050a4840, nsIContentSink * 0x050a42b0) line 293 + 20 byte
+nsParser::DidBuildModel(unsigned int 0) line 1435 + 60 byte
+nsParser::ResumeParse(int 1, int 1) line 1954
+nsParser::OnStopRequest(nsParser * const 0x050a4848, nsIChannel * 0x050a4ec0,
+nsISupports * 0x00000000, unsigned int 0, const unsigned short * 0x100a9bc0
+gCommonEmptyBuffer) line 2395 + 19 byte
+nsXBLStreamListener::OnStopRequest(nsXBLStreamListener * const 0x050a6cc0,
+nsIChannel * 0x050a4ec0, nsISupports * 0x00000000, unsigned int 0, const
+unsigned short * 0x100a9bc0 gCommonEmptyBuffer) line 298 + 42 byte
+nsJARChannel::OnStopRequest(nsJARChannel * const 0x050a4ec4, nsIChannel *
+0x050a9ca0, nsISupports * 0x00000000, unsigned int 0, const unsigned short *
+0x100a9bc0 gCommonEmptyBuffer) line 701 + 53 byte
+nsOnStopRequestEvent::HandleEvent(nsOnStopRequestEvent * const 0x050a6270) line
+300 + 46 byte
+nsStreamListenerEvent::HandlePLEvent(PLEvent * 0x050a6280) line 92 + 12 byte
+PL_HandleEvent(PLEvent * 0x050a6280) line 576 + 10 byte
+PL_ProcessPendingEvents(PLEventQueue * 0x00aecb50) line 509 + 9 byte
+_md_EventReceiverProc(HWND__ * 0x000604ca, unsigned int 49450, unsigned int 0,
+long 11455312) line 1054 + 9 byte
+USER32! 77e71820()
+00aecb50()

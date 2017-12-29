@@ -1,0 +1,20 @@
+Firefox 4 fails to interpret included files if mime type not exactly right.
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US) AppleWebKit/534.16 (KHTML, like Gecko) Chrome/10.0.648.204 Safari/534.16
+Build Identifier: 4.0
+
+The behaviour of firefox 4 has changed from 3 (and all other major browser with regards to included css and javascript files). Currently all browser (except for firefox 4) understand the type of included file from the way it is included e.g. <link rel="stylesheet" type="text/css" href="class.css" /> would mean that irrespective of the mime type the server returns that included file would be treated as css. Now if the mime type is returned as text/html instead of text/css the file be it javascript or css is downloaded but ignored. This is a significant issue as combres (and other compression utils) suffers from inability to specify mime type consistently, and any webserver which is missing all mime types configured or css files that don't have an extension for instance (common with compressed files) will not render properly
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Include an external css file (with no extension) in a html page, specifying type as stylesheet, e.g. <link rel="stylesheet" type="text/css" href="/somecssfile-with-no-extension" />
+2. Check server returns css file as not text/css e.g. text/html
+3. Browse to page
+Actual Results:  
+No styles are applied from file, and same applies for javascript 
+
+Expected Results:  
+The browser should be capable of dealing with the file in the way the markup specifies irrespective of content-type header returned in http response. And apply the styles/javascript in the file.
+
+This is breaking a fair number of sites, that use either compression software (which strips the file extension of css and jscript - preventing the correct mime type being set by the server). Although strictly speaking the server should return the correct mime-type, the browser should also understand that a linked file with its type specified in the link should be treated as that type and not just ignored.
+Feel free to contact me if further info required.

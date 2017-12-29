@@ -1,0 +1,97 @@
+stack of load error for about:support
+User Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:31.0) Gecko/20100101 Firefox/31.0 (Beta/Release)
+Build ID: 20140612184002
+
+Steps to reproduce:
+
+Build Firefox from source: ftp://ftp.mozilla.org/pub/firefox/candidates/31.0-candidates/build1/source/
+
+
+
+Actual results:
+
+When opening about:support function are not working correctly and message is being dumped to console from.
+
+setupEventListeners();
+} catch (e) {
+Cu.reportError("stack of load error for about:support: " + e + ": " + e.stack);
+}
+
+Caused by this function
+
+/**
+* Set up event listener for buttons.
+*/
+function setupEventListeners(){
+$("show-update-history-button").addEventListener("click", function (event) {
+var prompter = Cc["@mozilla.org/updates/update-prompt;1"].createInstance(Ci.nsIUpdatePrompt);
+prompter.showUpdateHistory(window);
+});
+$("reset-box-button").addEventListener("click", function (event){
+ResetProfile.openConfirmationDialog(window);
+});
+$("copy-raw-data-to-clipboard").addEventListener("click", function (event){
+copyRawDataToClipboard(this);
+});
+$("copy-to-clipboard").addEventListener("click", function (event){
+copyContentsToClipboard();
+});
+$("profile-dir-button").addEventListener("click", function (event){
+openProfileDirectory();
+});
+}
+
+show-update-history-button is null
+
+in aboutsupport.xhtml
+
+#ifndef ANDROID
+<tr class="no-copy">
+<th class="column">
+&aboutSupport.appBasicsUpdateHistory;
+</th>
+
+<td>
+<button id="show-update-history-button">
+&aboutSupport.appBasicsShowUpdateHistory;
+</button>
+</td>
+</tr>
+#endif
+
+it defined for ANDROID
+
+
+
+
+Expected results:
+
+This error should not show on desktop build.
+
+To fix this simply encapsulate "show-update-history-button" in #ifndef ANDROID
+
+/**
+* Set up event listener for buttons.
+*/
+function setupEventListeners(){
+#ifndef ANDROID
+$("show-update-history-button").addEventListener("click", function (event) {
+var prompter = Cc["@mozilla.org/updates/update-prompt;1"].createInstance(Ci.nsIUpdatePrompt);
+prompter.showUpdateHistory(window);
+});
+#endif
+$("reset-box-button").addEventListener("click", function (event){
+ResetProfile.openConfirmationDialog(window);
+});
+$("copy-raw-data-to-clipboard").addEventListener("click", function (event){
+copyRawDataToClipboard(this);
+});
+$("copy-to-clipboard").addEventListener("click", function (event){
+copyContentsToClipboard();
+});
+$("profile-dir-button").addEventListener("click", function (event){
+openProfileDirectory();
+});
+}
+
+The build then work a expected.

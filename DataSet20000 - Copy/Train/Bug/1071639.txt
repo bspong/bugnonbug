@@ -1,0 +1,22 @@
+Crash after update and bit error in libxul.so
+After an automated update the client started to regulary crash, even in safe mode. I've located the issue to a bit change in libxul.so:
+
+azatoth@azaboxen:/opt$ xxd firefox-bad2/libxul.so > bad
+azatoth@azaboxen:/opt$ xxd firefox/libxul.so > good
+azatoth@azaboxen:/opt$ diff -u good bad
+--- good	2014-09-23 17:24:03.017285166 +0200
++++ bad	2014-09-23 17:23:49.801622792 +0200
+@@ -303835,7 +303835,7 @@
+ 04a2da0: 488b 2b48 89df ff55 3885 c089 c578 1048  H.+H...U8....x.H
+ 04a2db0: 8b03 4c89 e24c 89ee 4889 dfff 1089 c54c  ..L..L..H......L
+ 04a2dc0: 8b23 4889 df41 ff54 2410 89e8 5d5b 5d41  .#H..A.T$...][]A
+-04a2dd0: 5c41 5dc3 662e 0f1f 8400 0000 0000 6690  \A].f.........f.
++04a2dd0: 5c40 5dc3 662e 0f1f 8400 0000 0000 6690  \@].f.........f.
+ 04a2de0: 4155 4885 ff41 bd10 0104 8041 5455 4889  AUH..A.....ATUH.
+ 04a2df0: d553 5048 c702 0000 0000 0f85 b900 0000  .SPH............
+ 04a2e00: 40b7 6049 89f5 e8e5 84cd ff48 8b15 8e3b  @.`I.......H...;
+
+
+Starting firefox with that libxul.so results in further crashes, while starting it with the good one works just fine.
+
+Latest crash report I made is https://crash-stats.mozilla.com/report/index/86a087ff-aeb9-4184-9a45-d2ddc2140923

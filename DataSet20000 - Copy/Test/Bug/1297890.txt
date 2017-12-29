@@ -1,0 +1,18 @@
+DevTools CSS Rules Inspector incorrectly collapses list-valued properties whose list entries are only separated by CSS comments (sometimes changing valid values into invalid ones)
+Created attachment 8784607
+testcase 1
+
+STR:
+ 1. Load attached testcase.
+ 2. Inspect any of the three lines of text, in the CSS "Rules" view.
+ 3. Compare to the "computed style" view to see what actually took effect.
+
+ACTUAL RESULTS:
+- The "rules" view shows the original author-provided styles, with the comments removed, which converts e.g. 1/*ThisIsAComment*/2; into "12", and "5px/**/0/**/0/**/20px/**/;" into "5px0020px".
+- It also strikes out the last one ("5px0020px") as being invalid CSS, despite the fact that the actual declaration (with CSS comments) *does* parse successfully and does get honored, as you can see in the rendering & the computed-style view.
+
+EXPECTED RESULTS:
+- The "rules" view should preserve CSS comments inside of a CSS property's value.  Or, it should collapse them away to "/**/", if needed. Or replace them with a blank space -- that would be fine with these properties, at least, though I'm not sure if it's fine in general.
+
+
+For comparison, Chrome preserves the comments in their entirety, in its equivalent of our DevTools "CSS Rules" view.

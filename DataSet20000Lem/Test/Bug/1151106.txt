@@ -1,0 +1,81 @@
+stepping through for(;;) work strangely
+This is related to bug 1129813 and bug 1003554, but different.
+The patch there don't fix this bug.
+
+Consider a function like:
+
+function tfor() {
+var x = 0;
+for (;;) {
+console.log(x); if (++x == 5) break;
+}
+}
+
+Put a breakpoint on the first line and invoke the function.
+Then repeatedly step over.
+
+For me it stop once on the "for(;;)" line, once on the body line
+with x==0, and then a second time on the body line a the frame is popped.
+
+I would instead expect to be able to step through each iteration of
+the loop -- alternating between the "for" and the loop body.
+
+You can see from the assembly below that the "goto" at the bottom of the
+loop return to the loophead instruction -- but only the preceding "goto"
+ha the line number of the "for(;;)".
+
+Perhaps we could change the line number of the loophead, or just change the
+goto to jump to the nop.
+
+
+js> dis(tfor)
+flags:
+loc op
+----- --
+main:
+00000: zero
+00001: setlocal 0
+00005: pop
+00006: nop
+00007: loophead
+00008: loopentry 129
+00010: getgname "console"
+00015: dup
+00016: callprop "log"
+00021: swap
+00022: getlocal 0
+00026: call 1
+00029: pop
+00030: getlocal 0
+00034: po
+00035: one
+00036: add
+00037: setlocal 0
+00041: int8 5
+00043: eq
+00044: ifeq 54 (+10)
+00049: goto 59 (+10)
+00054: goto 7 (-47)
+00059: retrval
+
+Source notes:
+ofs line pc delta desc args
+---- ---- ----- ------ -------- ------
+0: 1 0 [ 0] newline
+1: 2 0 [ 0] colspan 5
+3: 2 6 [ 6] newline
+4: 3 6 [ 0] for cond 47 update 47 tail 47
+8: 3 7 [ 1] newline
+9: 4 7 [ 0] colspan 2
+11: 4 10 [ 3] setline lineno 3
+13: 3 10 [ 0] newline
+14: 4 10 [ 0] colspan 2
+16: 4 44 [ 34] xdelta
+17: 4 44 [ 0] if
+18: 4 49 [ 5] break
+19: 4 59 [ 10] xdelta
+20: 4 59 [ 0] colspan 36
+
+Exception table:
+kind stack start end
+loop 0 7 59

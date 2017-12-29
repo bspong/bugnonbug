@@ -1,0 +1,89 @@
+Firefox won't exit or load Tabs -- "firefox!wmain(int argc = <Memory access error>, wchar_t ** argv = <Memory access error>) 0x812 ..."
+Created attachment 558170
+Windbg Log showing "Memory access error" in "firefox!wmain()".
+
+It look like there a few problem depicted in this Debug Log; it is hard to say where to start, we may need to split this. You are welcome to alter the Title to something better, I wa trying to choose something unique that reflected ONE of the Problems.
+
+
+Perhaps 20% of the time when Nightly start it won't reload the Tabs from a previous Tab Mix Plus (TM+) Session. Judging (as poorly a I am able) from the Windbg Log it seems that the Problem start long before TM+ (or anything else) starts.
+
+When "Nightly" try to exit the Window close but it leaf the "firefox.exe" (and a couple of "plugin-container.exe") Processes running; that prevents restarting and requires a reboot to terminate them, they can NOT be terminated using the "Task Manager".
+
+
+
+Here is a SHORT List of thing I see in the Debug Log (that seem to be a Problem):
+
+1. In Windbg I can see that "MSVCR90.dll" load twice.
+
+
+2. When I try to exit the Browser the Window close but the Processes do not terminate, I need to use Windbg's Menu's "Break" to enter some Debugging Comands. When I type "|* ~* kp" some of the line show this:
+
+...
+0012f4a4 00401812 xul!XRE_main(int argc = 0n1, char ** argv = 0x003e59e8, struct nsXREAppData * aAppData = 0x02017140)+0xe5e [e:\builds\moz2_slave\m-cen-w32-ntly\build\toolkit\xre\nsapprunner.cpp @ 3591]
+0012ff7c 00401b30 firefox!wmain(int argc = <Memory access error>, wchar_t ** argv = <Memory access error>)+0x812 [e:\builds\moz2_slave\m-cen-w32-ntly\build\toolkit\xre\nswindowswmain.cpp @ 107]
+0012ffc0 7c817077 firefox!__tmainCRTStartup(void)+0x10f [f:\sp\vctools\crt_bld\self_x86\crt\src\crtexe.c @ 594]
+0012fff0 00000000 kernel32!BaseProcessStart+0x23
+...
+0248ffb0 012ae78e xul!base::Thread::ThreadMain(void)+0x77 [e:\builds\moz2_slave\m-cen-w32-ntly\build\ipc\chromium\src\base\thread.cc @ 159]
+0248ffb4 7c80b729 xul!`anonymous namespace'::ThreadFunc(void * closure = 0x00000000)+0x9 [e:\builds\moz2_slave\m-cen-w32-ntly\build\ipc\chromium\src\base\platform_thread_win.cc @ 27]
+0248ffec 00000000 kernel32!BaseThreadStart+0x37
+...
+0259ff44 10002200 xul!nsThread::ThreadFunc(void * arg = <Memory access error>)+0x88 [e:\builds\moz2_slave\m-cen-w32-ntly\build\xpcom\threads\nsthread.cpp @ 272]
+00000000 00000000 nspr4!_PR_NativeRunThread(void * arg = <Memory access error>)+0x120 [e:\builds\moz2_slave\m-cen-w32-ntly\build\nsprpub\pr\src\threads\combined\pruthr.c @ 448]
+...
+
+There are many more "Memory access error" lines, that doe not seem correct.
+
+
+3. The Tabs won't load (the "Throbber" keep spinning) and in Windbg's Log I see line like this:
+
+...
+PRIMARY_PROBLEM_CLASS: APPLICATION_HANG_BlockedOn_NetworkCall
+...
+FOLLOWUP_IP:
+nspr4!SocketSend+81 [e:\builds\moz2_slave\m-cen-w32-ntly\build\nsprpub\pr\src\io\prsocket.c @ 681]
+10005d61 83f8ff cmp eax,0FFFFFFFFh
+
+FAULTING_SOURCE_CODE:
+No source found for 'e:\builds\moz2_slave\m-cen-w32-ntly\build\nsprpub\pr\src\io\prsocket.c'
+...
+
+
+4. Typing "g" and waiting, then using the Menu's "Break" again, give Windbg Log Entries like this:
+
+...
+FAULTING_THREAD: 00000007
+BUGCHECK_STR: HANG
+PROCESS_NAME: firefox.exe
+ERROR_CODE: (NTSTATUS) 0xcfffffff - <Unable to get error code text>
+EXCEPTION_CODE: (NTSTATUS) 0xcfffffff - <Unable to get error code text>
+...
+
+DERIVED_WAIT_CHAIN:
+Dl Eid Cid WaitType
+-- --- ------- --------------------------
+6 25e0.2438 Speculated (Triage) -->
+7 25e0.310 Network
+
+WAIT_CHAIN_COMMAND: ~6s;k;;~7s;k;;
+BLOCKING_THREAD: 00000310
+DEFAULT_BUCKET_ID: APPLICATION_HANG_BlockedOn_NetworkCall
+PRIMARY_PROBLEM_CLASS: APPLICATION_HANG_BlockedOn_NetworkCall
+...
+
+
+5. Typing "g" (again) and waiting, then using the Menu's "Break" again, give slightly different Windbg Log Entries like this:
+
+...
+DERIVED_WAIT_CHAIN:
+Dl Eid Cid WaitType
+-- --- ------- --------------------------
+6 25e0.22e4 Speculated (Triage) -->
+7 25e0.310 Network
+...
+
+
+I am not knowledgeable about Windows Debugging but I have a dozen Logs that show this sort of Problem ("Memory access error", Tabs won't load, Processes won't Terminate, and need to reboot since "Task Manager" can't terminate them either).
+
+
+I am attaching on the the shorter (better?) Windbg Logs (of over a dozen) that might help.

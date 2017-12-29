@@ -1,0 +1,31 @@
+Content type not recognized from corrupted content-disposition
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.4pre) Gecko/20070524 BonEcho/2.0.0.4pre
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.4pre) Gecko/20070524 BonEcho/2.0.0.4pre
+
+Installed AllPeers extension, nightly build version 0.70dev.200707160230 with support for external torrents.
+
+We overlay the Open dialog for the "application/x-bittorrent" file type to let the user download torrent file using the extension. We add new XPCOM category "ext-to-type-mapping": "torrent" to "x-bittorrent" that help identifying file by extension when opening with file:/// URL.
+
+When clicking the provided URL you can see a link DOWNLOAD (http://www.torrentreactor.to/torrents/download_449214) that lead to a torrent file. The response of the request is:
+
+Status=OK - 200
+X-Powered-By=PHP/5.2.1
+Last-Modified=Tue, 10 Jul 2007 13:28:11 GMT
+Cache-Control=post-check=0, pre-check=0, no-store, no-cache, must-revalidate,
+post-check=0, pre-check=0
+Expires=Thu, 19 Nov 1981 08:52:00 GMT
+Pragma=no-cache
+Content-Type=application/x-bittorrent
+content-disposition=attachment; filename="[TorrentReactor.to] - Led Zeppelin -
+Discography - 320K.torrent "
+Content-Length=27692
+Connection=close
+Date=Tue, 10 Jul 2007 13:28:11 GMT
+Server=lighttpd/1.5.0
+
+Please note the trailing space (char 0x20) in the content-disposition header, filename part. This is IMO the only reason why recognition of the content type fails. On line 627 in nsExternalHelperAppService.cpp call to GetFilenameAndExtensionFromChannel return the fileName and fileExtenson with trailing space (char 0x20). Our extension overlay callback are not called when clicking the DOWNLOAD link.
+
+I don't exactly understand why Content-type header is not used to recognize the content type and instead the file extension is used.
+
+
+Reproducible: Always

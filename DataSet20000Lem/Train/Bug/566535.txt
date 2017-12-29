@@ -1,0 +1,15 @@
+Firefox content menu should detect video element hidden by other element
+Created attachment 445901
+Patch v.1 (WIP)
+
+Some site are using <video> hidden behind a (transparent) <div> in order to suppress Firefox's context menu for medium elements. This might be a side-effect of their video control implementation, or it might be used in attempt to disable the "Save Video As" item.
+
+This is really unfortunate, because it mean that the user ha no way to put the video into full-screen mode -- we currently only allow chrome code to do that, a accessed via right click --> View Fullscreen.
+
+roc point out that the recently-added nodesFromRect() API can be used to get a list of node under the mouse pointer, and we could use that to detect if there's a <video> somewhere underneath.
+
+The patch (WIP) doe just that. It's a little buggy though, in that if the topmost node is an image it'll use that for |this.mediaURL|, and thus some of the video context menu command will operate on the wrong URL. Fullscreen will still work a expected, though.
+
+Example testcase: http://people.mozilla.com/~dolske/tmp/rickroll.html
+
+I think there's also a bug in nodesFromRect(). Sometimes when I right-click on the red <div> (over the video), the first node in the result is the <video>, not the <div> (which, with this patch, result in not showing the video context menu entries). Maybe some issue with the native anonymous content? Or the XBL? Or do the last two boolean args to nodesFromRect() matter here?

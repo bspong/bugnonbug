@@ -1,0 +1,28 @@
+Continuous Places activity while idle reduces laptop battery life
+User-Agent:       Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.0.1) Gecko/2008071718 Firefox/3.0.1
+Build Identifier: Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.0.1) Gecko/2008071718 Firefox/3.0.1
+
+Firefox 3.0.1 does continuously modify places.sqlite and places.sqlite-journal while tabs are open and the browser is otherwise idle (tcpdump shows no firefox related activity).
+This happens at irregular intervals of a few minutes, usually at least once within five minutes.
+This prevents the use of disk spin down on laptops and thus causes reduced battery life.
+
+A sample of the changed values in the database from "diff -u" is given below:
+
+-INSERT INTO "moz_places" VALUES(2583,'http://www.heise.de/newsticker/Ohrenschmaus-Koelner-Orgelkonzert-live-in-Berliner-Hightech-Hoersaal-erleben--/meldung/113107','heise online - Ohrenschmaus: Kölner Orgelkonzert live in Berliner Hightech-Hörsaal erleben','ed.esieh.www.',1,0,0,115,70);
++INSERT INTO "moz_places" VALUES(2583,'http://www.heise.de/newsticker/Ohrenschmaus-Koelner-Orgelkonzert-live-in-Berliner-Hightech-Hoersaal-erleben--/meldung/113107','heise online - Ohrenschmaus: Kölner Orgelkonzert live in Berliner Hightech-Hörsaal erleben','ed.esieh.www.',1,0,0,115,50);
+-INSERT INTO "moz_places" VALUES(2635,'http://archives.free.net.ph/message/20080709.121701.1b869479.en.html','[Openswan dev] Fwd: unkown symbol ipsec_nat_encap while insert ipsec.ko','hp.ten.eerf.sevihcra.',1,0,0,NULL,70);
++INSERT INTO "moz_places" VALUES(2635,'http://archives.free.net.ph/message/20080709.121701.1b869479.en.html','[Openswan dev] Fwd: unkown symbol ipsec_nat_encap while insert ipsec.ko','hp.ten.eerf.sevihcra.',1,0,0,NULL,50);
+-INSERT INTO "moz_places" VALUES(5578,'http://linux.derkeiler.com/Mailing-Lists/Kernel/2007-09/msg00883.html','Re: Linux, 2.6.23-rc5, powersaving degradation, (time spend in C0 goes up after a while)','moc.reliekred.xunil.',1,0,0,471,100);
++INSERT INTO "moz_places" VALUES(5578,'http://linux.derkeiler.com/Mailing-Lists/Kernel/2007-09/msg00883.html','Re: Linux, 2.6.23-rc5, powersaving degradation, (time spend in C0 goes up after a while)','moc.reliekred.xunil.',1,0,0,471,70);
+-INSERT INTO "moz_places" VALUES(5766,'http://mosh.nokia.com/search?find=map24&x=0&y=0','MOSH by Nokia','moc.aikon.hsom.',1,0,0,762,100);
++INSERT INTO "moz_places" VALUES(5766,'http://mosh.nokia.com/search?find=map24&x=0&y=0','MOSH by Nokia','moc.aikon.hsom.',1,0,0,762,70);
+
+This means that the frecency entries of moz_places is modified. This modification should only be done when the browser becomes active e.g. when a wb page is reloaded.
+
+
+Reproducible: Always
+
+
+
+
+Don't update on disk data when there is apparently no need to do so to preserve laptop battery life and to allow disk spin down.

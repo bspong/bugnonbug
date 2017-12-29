@@ -1,0 +1,55 @@
+During page loading, a limbo state exists during which clicking link cause unexpected behaviour
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-GB; rv:1.9) Gecko/2008052906 Firefox/3.0
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-GB; rv:1.9) Gecko/2008052906 Firefox/3.0
+
+When a web server start responding with part of the content of the response, Firefox/Mozilla/Gecko go into a limbo state in which unexpected behaviour (described below) occurs while another webpage is still displayed.
+
+Let's call the initial website X, and the website that ha partially responded, we'll call Y.
+
+The duration of the limbo state is variable. Usually it is very short because a substantial part of the new content is transmitted quickly and rendering begin immediately. Sometimes it is long, either because the server actually responds slowly, or because Firefox/Mozilla/Gecko is waiting to retrieve additional item such a JS or CSS. But either way, it's because rendering is delayed.
+
+There are several unexpected behaviour arising during the limbo state:
+
+1) The location bar display the URL of Y, when in fact the page X is
+still displayed.
+
+2) The URL of webpage Y is added to the history, despite the fact that X
+is still displayed. So from the point of view of the user, we never
+left X. If you then click on a link on X that lead to a webpage Z,
+then wait for that to load, then press Back,
+EXPECTED BEHAVIOUR: you should be sent back to X.
+ACTUAL BEHAVIOUR: you are sent to Y.
+
+3) Links on the still-displayed webpage X lose their JavaScript. If you
+have an <a> tag whose onclick event output an alert and return
+false,
+EXPECTED BEHAVIOUR: alert pop up and nothing else happens.
+ACTUAL BEHAVIOUR: the URL in the href is followed a if the
+JavaScript didn't exist.
+
+
+This should be quite easy to fix. At the point where the server responds with part of the content, even if you're not going to render any of it, start the rendering process anyway (causing a blank white page, waiting for more content).
+
+If you were to insist that page X should continue to be displayed for a long a absolutely possible, then a proper fix should delay everything to do with switching page until we have something to render. That includes adding the URL to the history, changing the content of the Location bar, and whatever it is that disables the JavaScript. The limbo state, and associated strange behaviour, happens because rendering start later than all these other actions.
+
+Reproducible: Always
+
+Steps to Reproduce:
+0. Make sure that you have JavaScript enabled.
+1. Visit http://www.csrsupport.com/bug_show_case.php
+2. Click the first link, labeled "Click this first".
+
+EXPECTED BEHAVIOUR: URL in the Location bar should not change any earlier than the current webpage (bug_show_case.php) disappears.
+ACTUAL BEHAVIOUR: URL change at least 2 second earlier (there is a 2-second sleep in the PHP script).
+
+3. Wait for the URL in the Location bar to change, but don't wait too long so
+that the webpage appears.
+4. Click the second link, labeled "Then click this link".
+
+EXPECTED BEHAVIOUR: JavaScript alert pop up.
+ACTUAL BEHAVIOUR: Browser navigates to http://www.mozilla.org/
+
+5. Click "Back" or press Alt+Left.
+
+EXPECTED BEHAVIOUR: Browser go back to bug_show_case.php
+ACTUAL BEHAVIOUR: Browser reattempts to load long_response.php

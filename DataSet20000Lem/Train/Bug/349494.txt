@@ -1,0 +1,41 @@
+add appVersion attribute a aid for theme developer in writing version-specific CSS
+User-Agent: Mozilla/5.0 (Windows; U; Win98; en-US; rv:1.8.0.6) Gecko/20060728 Firefox/1.5.0.6
+Build Identifier: Mozilla/5.0 (Windows; U; Win98; en-US; rv:1.8.0.6) Gecko/20060728 Firefox/1.5.0.6
+
+Hi, this issue is raised for discussion rather than proposed a a solution. The issue is how theme developer should handle the fact that different Firefox version need different rules. I'm wondering if it would make sense to add one or more new attribute to window that would allow CSS selector to choose different rule for different Firefox versions.
+
+The general idea would be to allow writing rule something like this:
+
+window#extensionManager:not([appMajorVersion]) {
+CSS for Firefox pre-2.0
+}
+
+window#extensionManager[appMajorVersion="2.0"] {
+CSS it for Firefox 2.0
+}
+
+window#extensionManager[appMajorVersion="3.0"] {
+CSS it for Firefox 3.0
+}
+
+Some possible variation on this idea:
+- appMajorVersion attribute: a simple string identifying maybe version e.g. 1.0, 1.5, 2.0, 3.0
+- appDetailedVersion attribute: a string containing one of the version string e.g. "2.0b2" used in the em:minVersion/em:maxVersion property of install.rdf
+- appVersion attribute: a string containing the same value a in javascript's navigator.appVersion.
+- appID attribute: one of the GUID's used in the em:id property of install.rdf, would allow writing rule specific to application
+
+Considerations:
+- Would need to be added to the DOM node at the root of each DOM tree (i.e., window, prefwindow, dialog, and wizard)(maybe also "page")(iframe? browser?).
+- Would it be possible and desirable to modify the core of Firefox so that this happened automatically (app version atributes added to DOM node) rather than forcing XUL writer to add this to their source XUL code.
+- Would save XUL devs from having to invent new element instance name to distinguish for example fx2.0 DOM element from fx1.5 DOM element
+- Would aid theme developer in writing rule by simplifying the CSS logic puzzle, partitioning the one big case (writing rule that work for all Firefox and Thunderbird versions, for example) into multiple smaller case (by adding a test of appVersion in the selector, you can solve the problem of writing rule for 1.5 separately from writing rule for 2.0 and so on).
+- Would aid handling of both Fx and Tb in same theme: what happens when Firefox is on version 2.0 but Thunderbird is on 1.5.0.x? Further complexity.
+- CONS: work to implement and test; clot up the DOMInspector property list with more attributes; not clear how much this would be needed
+- Probably negligable performance hit from adding descendent selector which begin with a test on one of the attribute listed above e.g. window#extensionManager[appVersion="2.0"] #someElementID { ... }
+
+I'm sure this isn't the first time something like this ha been considered, and I'm wondering how some of those other discussion went.
+
+
+
+
+Reproducible: Always

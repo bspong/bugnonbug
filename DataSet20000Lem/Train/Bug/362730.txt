@@ -1,0 +1,29 @@
+Gnome-settings-daemon stop & restart hang Firefox
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.0.8) Gecko/20061112 Firefox/1.5.0.8
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.0.8) Gecko/20061112 Firefox/1.5.0.8
+
+Stopping and/or starting the gnome-settings-daemon will send Firefox into an infinite loop, particularly if Firefox is active with many thread (tabs?) opened.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.Start Firefox with lot of thread (either resume a large session or create one with lot of window and/or tabs). [Hundreds may be required -- use all the URLs from the first few page of digg or google query results.]
+2.Kill the gnome-settings-daemon. See note 1.
+3.Restart the gnome-settings-daemon. See note 2.
+
+Notes
+1. Something like "ps -o pid,uid,cmd -C gnome-settings-daemon" should give a list of gnome-settings-daemon process IDs. Kill the one associated with the running firefox (presumably the same uid).
+2. Under gentoo this is /usr/libexec/gnome-settings-daemon but it may have a different location under other Linux variants.
+
+
+Actual Results:
+Firefox hang (windows can be minimized but will not display anything other than an outline when they are opened again). Using the "gnome-system-monitor" or "top" command it can be seen that Firefox CPU usage ha gone to 70-80% of total CPU usage. It stay there (many many minutes, perhaps forever) making the system slower for other process & users. It seems to require killing and restarting firefox to resolve the problem.
+
+Expected Results:
+Firefox should either (a) ignore the loss of the gnome setting (fonts, language, etc.) or (b) adapt to them without hogging the cpu or hanging. Minimally whatever window(s) and/or (tabs) active on the screen should get top CPU priority and over any minimized windows. I should not be staring at a window outline with nothing in it. Firefox ha a real problem a more CPU time demand are made by various extension that it is going to have to prioritize the thread (changing the font in the 23tab of my 41st window that I haven't looked at in 3 day which is in a minimized window doesn't deserve top billing compared to the tab in the window in front of my face). There will still be hundred of million of non 8-core processor in the world in 2008 you know...
+
+It seems repeatable. It look like there is a critical race condition or locking problem a library involved include libnecko.so, libgklayout.so, libwidget_gtk2.so, libdocshell.so, libtoolkitcomps.so, etc. A number of thread appear to be involved in thread locking and/or thread I/O (but I'm not an expert at interpreting the traces).
+
+If the problem happens to be that applying font change to all of the object in a large number of open window would take hour (it take 10 to 20 minute to restart a Firefox session with hundred of open tabs), then there should be an environment variable or switch option that force Firefox to ignore font, language, etc. change so the accidental death of the gnome-settings-daemon isn't a problem.
+
+Gentoo will be transitioning from Gnome 2.14 to 2.16 soon and if my experience is an example problem with the gnome-settings-daemon are quite possible so more user are likely to encounter this problem if they are running Firefox when stopping or starting the gnome-settings-daemon.

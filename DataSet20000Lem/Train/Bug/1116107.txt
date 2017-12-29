@@ -1,0 +1,136 @@
+Startup of an out of the box install should be warning and error free
+User Agent: Mozilla/5.0 (Windows NT 6.1; rv:31.0) Gecko/20100101 Firefox/31.0
+Build ID: 20100101
+
+Steps to reproduce:
+
+Download latest firefox developer edition (36.2a). Remove all extensions, restart.
+Set developer configuration (I followed different mdn article to enable all error reporting, since I wa struggling to get the exception of my own addon to show up in the addon debugger. (actually they still don't, but that's for another issue))
+
+I set the addons page to my home page, so that's the page I'm looking at while all these error occur.
+
+Open error console or browser console.
+
+Using debian testing
+
+
+Actual results:
+
+On startup:
+
+Failed to load native module at path '/xxx/firefox 36 developer/components/libxpcomsample.so': (80004005) /xxx/firefox 36 developer/components/libxpcomsample.so: cannot open shared object file: No such file or directory
+
+
+Warning: Key event not available on some keyboard layouts: key="c" modifiers="accel,alt"
+Source File: chrome://browser/content/browser.xul
+Line: 0
+
+-> note that I didn't press alt-c or anything
+
+Could not read chrome manifest 'file:///xxx/firefox%2036%20developer/browser/extensions/%7B972ce4c6-7e08-4474-a285-3208198ce6fd%7D/chrome.manifest'.
+
+-> note that this is not in the profile directory, but in the installation directory
+
+1419849102325 Services.HealthReport.HealthReporter WARN Saved state file doe not exist.
+1419849102325 Services.HealthReport.HealthReporter WARN No prefs data found.
+
+-> I did disable data reporting, but that's a valid user action which shouldn't give rise to warning
+
+-> Now click the developer monkey wrench and choose toggle tool from the menu (it opened on the storage tab, I have enabled different section of it before)
+
+Timestamp: 29/12/14 11:47:30
+Warning: XUL box for vbox element contained an inline label child, forcing all it child to be wrapped in a block.
+Source File: chrome://browser/content/devtools/storage.xul
+Line: 0
+
+-> select the network tab in the tool window
+
+Timestamp: 29/12/14 11:49:19
+Warning: JavaScript 1.7's let expression are deprecated
+Source File: chrome://browser/content/devtools/netmonitor-view.js
+Line: 2857
+
+-> select the style tab:
+I get 15 different warning in chrome://browser/content/devtools/styleeditor.xul and chrome://browser/content/devtools/codemirror/codemirror.css
+
+-> I now had another look at the browser console (was looking at the error console thinking everything would show up in there), so I don't know exactly at which moment these showed up:
+
+Error: Custom SelectorHighlighterhighlighter cannot be created in a XUL window
+Stack trace:
+exports.CustomHighlighterActor<.initialize@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/actors/highlighter.js:333:1
+constructor@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/commonjs/sdk/core/heritage.js:146:23
+exports.InspectorActor<.getHighlighterByType<@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/actors/inspector.js:3176:14
+actorProto/</handler@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/protocol.js:1004:19
+DSC_onPacket@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/main.js:1485:15
+LocalDebuggerTransport.prototype.send/<@resource://gre/modules/devtools/dbg-client.jsm -> resource://gre/modules/devtools/transport/transport.js:545:11
+makeInfallible/<@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/DevToolsUtils.js:83:14
+makeInfallible/<@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/DevToolsUtils.js:83:14
+protocol.js:898
+"Protocol error (unknownError): Error: Custom SelectorHighlighterhighlighter cannot be created in a XUL window"
+
+-> and
+
+"The selectorHighlighter couldn't be instantiated, element matching hovered selector will not be highlighted"
+
+-> select debugger tab (two more for key v and f):
+
+Timestamp: 29/12/14 11:57:49
+Warning: Key event not available on some keyboard layouts: key="e" modifiers="accel alt"
+Source File: chrome://browser/content/devtools/debugger.xul
+Line: 0
+
+-> switch to inspector tab and hover mouse over the 'Rules' sidebar (50 time the promise chain failed bug)
+
+A promise chain failed to handle a rejection. Did you forget to '.catch', or did you forget to 'return'?
+See https://developer.mozilla.org/Mozilla/JavaScript_code_modules/Promise.jsm/Promise
+
+Date: Mon Dec 29 2014 11:59:29 GMT+0100 (CET)
+Full Message: false
+Full Stack: JS frame :: resource://gre/modules/Promise.jsm -> resource://gre/modules/Promise-backend.js :: PendingErrors.register :: line 165
+JS frame :: resource://gre/modules/Promise.jsm -> resource://gre/modules/Promise-backend.js :: this.PromiseWalker.completePromise :: line 678
+JS frame :: resource://gre/modules/Promise.jsm -> resource://gre/modules/Promise-backend.js :: Handler.prototype.process :: line 906
+JS frame :: resource://gre/modules/Promise.jsm -> resource://gre/modules/Promise-backend.js :: this.PromiseWalker.walkerLoop :: line 749
+JS frame :: resource://gre/modules/Promise.jsm -> resource://gre/modules/Promise-backend.js :: this.PromiseWalker.scheduleWalkerLoop/< :: line 691
+native frame :: <unknown filename> :: <TOP_LEVEL> :: line 0 <unknown>
+
+-> and
+
+Error: Custom SelectorHighlighterhighlighter cannot be created in a XUL window
+Stack trace:
+exports.CustomHighlighterActor<.initialize@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/actors/highlighter.js:333:1
+constructor@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/commonjs/sdk/core/heritage.js:146:23
+exports.InspectorActor<.getHighlighterByType<@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/actors/inspector.js:3176:14
+actorProto/</handler@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/protocol.js:1004:19
+DSC_onPacket@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/main.js:1485:15
+LocalDebuggerTransport.prototype.send/<@resource://gre/modules/devtools/dbg-client.jsm -> resource://gre/modules/devtools/transport/transport.js:545:11
+makeInfallible/<@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/DevToolsUtils.js:83:14
+makeInfallible/<@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/DevToolsUtils.js:83:14
+protocol.js:898
+"Protocol error (unknownError): Error: Custom SelectorHighlighterhighlighter cannot be created in a XUL window"
+
+and ->
+
+1419850979172 addons.update-checker WARN Update manifest for {972ce4c6-7e08-4474-a285-3208198ce6fd} did not contain an update property
+
+-> try to use the eyedropper tool for getting a color (eg. click somewhere in the content area).
+The eydropper freeze and now I no longer have a mouse pointer on any chrome window (that includes error console and the browser console), plus:
+
+Timestamp: 29/12/14 12:12:30
+Error: TypeError: this._colorValue is undefined
+Source File: resource://gre/modules/commonjs/toolkit/loader.js -> resource:///modules/devtools/eyedropper/eyedropper.js
+Line: 532
+
+<unknown>
+Use of getPreventDefault() is deprecated. Use defaultPrevented instead. discovery-min.js:1:0
+
+
+-> Ok, since I can't possibly get a mouse pointer anymore I'm going to give up there, but if you want more, just let me know. I could do crazy stress testing stuff like actually open a web page or a print dialog...
+
+
+
+
+Expected results:
+
+An out of the box product with no content loaded shouldn't throw any error or warnings, shouldn't freeze, make the mouse pointer dissapear, fail to open a print dialog, etc...
+
+I'm not sure how the quality assessment for release at mozilla works, but I could reject 50 release an hour like this on my own, hand down. Good luck with it.

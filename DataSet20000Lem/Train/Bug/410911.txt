@@ -1,0 +1,56 @@
+element disapear from form.elements collection after element id change
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.11) Gecko/20071127 Firefox/2.0.0.11
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.11) Gecko/20071127 Firefox/2.0.0.11
+
+
+if I change the 'id' property of an element of a form, that element will dissapear from the form.elements collection when you try to access by it NAME.
+
+before:
+form.fieldinput2=[object HTMLInputElement]
+form.elements.fieldinput2=[object HTMLInputElement]
+form.elements[1]=[object HTMLInputElement]
+
+after:
+
+form.fieldinput2=undefined
+form.elements.fieldinput2=undefined
+form.elements[1]=[object HTMLInputElement]
+
+
+please note that the field is accessed by it NAME and the fact that the ID wa changed should not affect it NAME in any way.
+
+also note that the element doe not completely disappear from the form. it can still be accessed using it numeric index: form.elements[1]
+
+it doe the same thing on both linux and windows.
+IE6 tested and work correctly
+mozilla 1.7 fails this stripped down test page, but in some more complicated page appear to work while FF2 fails.
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+
+1. create a form
+<form name=f1 id=f1>
+<input name=fieldinput1 value=123456789>
+<input name=fieldinput2 value=555666777 id=fieldinput2 >
+</form>
+
+2. change the ID:
+document.getElementById('fieldinput2').id = 'new_id_for_fieldinput2';
+
+3. now, you get:
+f.fieldinput2=undefined **WRONG**
+f.elements.fieldinput2=undefined **WRONG**
+f.elements[1]=[object HTMLInputElement] CORRECT
+
+
+second case:
+1. create the form
+2. read the value of the field
+3. change the element ID
+t. now, you get:
+f.fieldinput2=[object HTMLInputElement] **CORRECT**
+f.elements.fieldinput2=undefined **WRONG**
+f.elements[1]=[object HTMLInputElement] **CORRECT**

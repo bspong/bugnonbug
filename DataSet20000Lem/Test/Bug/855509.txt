@@ -1,0 +1,23 @@
+actor stop receiving request after sending packet while processing request
+If an actor sends a packet while processing a request, the actor stop receiving subsequent requests, so it request handler don't get called for the duration of the session.
+
+It isn't clear what the right behavior should be. Perhaps the actor shouldn't send a packet while processing a request, and DebuggerServerConnection.send() should throw an exception if the actor try to do that. Either way, though, the server should continue to call the actor to process subsequent requests.
+
+Unfortunately, I don't have a reduced testcase, and I haven't tested on trunk, but here's some code in the Firefox OS Simulator that trigger this bug on the b2g18 branch:
+
+https://github.com/mozilla/r2d2b2g/blob/0c7efa54be7ffdbec056ab89b61fb49ab0bdd5ea/prosthesis/content/dbg-simulator-actors.js#L40-L51
+
+
+To work around it, I plan to send the packet in a timeout:
+
+- this._connection.send({
+- from: this.actorID,
+- type: "geolocationRequest"
+- });
++ let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
++ timer.initWithCallback(function() {
++ this._connection.send({
++ from: this.actorID,
++ type: "geolocationRequest"
++ });
++ }, 0, Ci.nsITimer.TYPE_ONE_SHOT);

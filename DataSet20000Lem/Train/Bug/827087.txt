@@ -1,0 +1,21 @@
+Session restore should be implemented using Storage; sessionstore.js should be deprecated
+Session restore should be implemented using a SQLite database backend, possibly within the bookmark framework and sessionstore.js should be deprecated. Why?
+
+Disadvantages of sessionstore.js:
+
+* sessionstore.js need to be written a a whole very frequently, JSON doe not allow writing only small updates.
+
+* Big session cause big sessionstore.js files, which in my experience lead to UI pause and disk syncing. I have seen it especially where the mozilla profile is stored on SD cards, where writing 1MB hang the whole process for a while. Not to mention the unneeded waste happening for flash storage.
+
+* Browser shutdown is slowed down due to serializing and writing such big data.
+
+* crash many time lead to corrupt sessionstore.js, just search bugzilla for "session restore", there are ten of bugs, e.g. I have personally experienced bug #637020 many times.
+
+
+Advantages of implementing session restore via Places:
+
+* Small, quick, transactional update to previously stored session.
+
+* Use existing bulletproof code to be able to browse the hundred of open tab I have, just like I'm browsing bookmarks. So I imagine opening bookmark manager and seeing a hierarchy of window (window 1, window 2 etc) a folders, each containing their tabs. WIN: free vertical tab by opening bookmark manager in the sidebar, easy selecting and moving of tab across windows.
+
+* Use existing bulletproof code to sync unlimited number of open tabs, just like bookmark are synced today. Ideally I would expect to be able to open bookmark manager at work (Ctrl-Shift-O) and browse the tab I have kept opened from when browsing at home, seen under a special folder with home's Sync ID.

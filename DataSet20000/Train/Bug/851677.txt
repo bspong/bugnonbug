@@ -1,0 +1,93 @@
+xpcshell aborted during make install
+I'm trying to build firefox 17.0.4esr from source using the following commands
+
+MOZCONFIG=$SRC/mozconfig make -f client.mk
+MOZCONFIG=$SRC/mozconfig make -f client.mk DESTDIR=$PKG install
+
+and I get the following during make install stage:
+
+--QUOTE_BEGIN--
+  adding: hyphenation/hyph_de-1901.dic (deflated 54%)
+  adding: hyphenation/hyph_nl.dic (deflated 54%)
+  adding: hyphenation/hyph_gl.dic (deflated 69%)
+  adding: hyphenation/hyph_da.dic (deflated 47%)
+resource:///components/txEXSLTRegExFunctions.js
+resource:///components/nsLoginManagerPrompter.js
+resource:///components/PageThumbsProtocol.js
+resource:///components/storage-Legacy.js
+resource:///components/nsSearchService.js
+resource:///components/FirefoxProfileMigrator.js
+resource:///components/nsSessionStore.js
+resource:///components/jsconsole-clhandler.js
+resource:///components/nsSessionStartup.js
+resource:///components/nsHelperAppDlg.js
+resource:///components/nsContentDispatchChooser.js
+resource:///components/nsUrlClassifierListManager.js
+resource:///components/nsLoginManager.js
+resource:///components/nsWebHandlerApp.js
+resource:///components/nsBrowserGlue.js
+*** glibc detected *** /mnt/var/pkg/pkg-src/firefox-esr_17.0.4-1.63_i686/mozilla-esr17/obj-i686-pc-linux-gnu/dist/bin/xpcshell: free(): invalid next size (fast): 0xafae8808 ***
+/bin/sh: line 1:  1861 Aborted                 /mnt/var/pkg/pkg-src/firefox-esr_17.0.4-1.63_i686/mozilla-esr17/obj-i686-pc-linux-gnu/dist/bin/run-mozilla.sh /mnt/var/pkg/pkg-src/firefox-esr_17.0.4-1.63_i686/mozilla-esr17/obj-i686-pc-linux-gnu/dist/bin/xpcshell -g "$PWD" -a "$PWD" -f /mnt/var/pkg/pkg-src/firefox-esr_17.0.4-1.63_i686/mozilla-esr17/toolkit/mozapps/installer/precompile_cache.js -e "populate_startupcache('GreD', 'omni.ja', 'startupCache.zip');"
+make[2]: *** [install] Error 134
+make[2]: Leaving directory `/mnt/var/pkg/pkg-src/firefox-esr_17.0.4-1.63_i686/mozilla-esr17/obj-i686-pc-linux-gnu/browser/installer'
+make[1]: *** [install] Error 2
+make[1]: Leaving directory `/mnt/var/pkg/pkg-src/firefox-esr_17.0.4-1.63_i686/mozilla-esr17/obj-i686-pc-linux-gnu'
+make: *** [install] Error 2
+--QUOTE_END--
+
+my mozconfig is
+--QUOTE_BEGIN--
+. $topsrcdir/browser/config/mozconfig
+
+mk_add_options MODULE_OPTIMIZE_FLAGS="$CFLAGS"
+mk_add_options MOZ_OPTIMIZE_FLAGS="$CFLAGS"
+mk_add_options OPTIMIZER="$CFLAGS"
+mk_add_options INTERP_OPTIMIZER="$CFLAGS"
+
+ac_add_options --enable-official-branding
+ac_add_options --enable-optimize="$CFLAGS"
+ac_add_options --prefix=/usr
+ac_add_options --with-glib-prefix=/usr
+
+ac_add_options --disable-elf-hack
+ac_add_options --disable-tests
+ac_add_options --disable-glibtest
+ac_add_options --disable-debug-symbols
+
+ac_add_options --disable-jemalloc
+
+ac_add_options --enable-safe-browsing
+ac_add_options --enable-url-classifier
+
+ac_add_options --disable-crashreporter
+ac_add_options --disable-installer
+ac_add_options --disable-updater
+
+ac_add_options --disable-dbus
+ac_add_options --disable-libnotify
+ac_add_options --disable-necko-wifi
+ac_add_options --disable-webm
+ac_add_options --disable-webrtc
+ac_add_options --disable-gconf
+
+ac_add_options --enable-gio
+
+ac_add_options --with-system-nspr
+ac_add_options --with-system-nss
+ac_add_options --with-system-jpeg
+ac_add_options --with-system-zlib
+ac_add_options --with-system-bz2
+ac_add_options --enable-system-ffi
+
+ac_add_options --enable-system-cairo
+ac_add_options --enable-system-pixman
+
+--QUOTE_END--
+
+Excluding everything with $CFLAGS from mozconfig does not help.
+
+What am I doing wrong? Is the way I build firefox correct?
+
+What information can be helpful to fix the issue?
+
+Maybe glibc-2.13 I use is too old for this firefox version?

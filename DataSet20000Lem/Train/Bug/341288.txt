@@ -1,0 +1,83 @@
+Firefox crash in certain usage involving iframe and javascript
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.0.4) Gecko/20060406 Firefox/1.5.0.4 (Debian-1.5.dfsg+1.5.0.4-1)
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.0.4) Gecko/20060406 Firefox/1.5.0.4 (Debian-1.5.dfsg+1.5.0.4-1)
+
+firefox crash in certain usage involving iframe and javascript - see below
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. create a file crashme.html (copy the content between the line with the "=" signs):
+===========================================
+<html>
+<head>
+<title>This is a test</title>
+<script>
+function openWin(){
+var edit_win = document.getElementById("edit_iframe");
+edit_win.style.display = "block";
+edit_win.style.left = 20;
+edit_win.style.top = document.body.scrollTop + 20;
+edit_win.width = 800;
+edit_win.height = 400;
+}
+function closeWin(){
+var edit_win = document.getElementById("edit_iframe");
+edit_win.style.display = "none";
+}
+</script>
+</head>
+<body>
+<iframe name="edit_iframe" id="edit_iframe" style="display: none; position: absolute;" src="crashme-iframe.html"></iframe>
+<BR>
+<BR>
+<a href="javascript:openWin()">Click this</a><BR>
+<a href="javascript:openWin()">Click this</a><BR>
+<a href="javascript:openWin()">Click this</a><BR>
+<BR>
+<BR>
+Some text<BR>
+Some text<BR>
+Some text<BR>
+</body>
+</html>
+===========================================
+
+2. create a file crashme-iframe.html (copy the content between the line with the "=" signs):
+===========================================
+<html>
+<head>
+<title>This is a test</title>
+<script>
+function crashme() {
+if ( confirm("Do you want to continue?") ) {
+if (window.opener && !window.opener.closed)
+window.opener.closeWin();
+else
+parent.top.closeWin();
+}
+}
+</script>
+</head>
+<body bgcolor="#FFFFFF">
+<div align="right">
+<a href="javascript:crashme()">CRASH ME</a>
+</div>
+Some text<BR>
+Some text<BR>
+</body>
+</html>
+===========================================
+
+3. put these file into the same directory, and start "firefox /path/to/crashme.html", where "/path/to/" is the avove-mentioned directory;
+or put both file into a web server, and open the URL with crashme.html
+
+4. click any of the "Click this" link (there are 3 of them); an iframe will become visible; click the "CRASH ME" link; a javascript confirm box will appear;
+click "OK" in that javascript confirm box
+
+Actual Results:
+at this point, firefox crash with "Segmentation fault". (in some case i had to repeat the step 4 2-3 time before this happens)
+
+Expected Results:
+firefox should not crash

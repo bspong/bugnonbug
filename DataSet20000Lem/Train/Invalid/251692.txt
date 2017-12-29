@@ -1,0 +1,63 @@
+bookmark file is overwritten by an empty file in a certain mount sequence
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.6) Gecko/20040207 Firefox/0.8
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.6) Gecko/20040207 Firefox/0.8
+
+The following sequence will cause the bookmark file to be overwritten with an
+empty file:
+
+Say the 'browser.bookmarks.file' setting is ponting to /shared/bookmarks.html
+and the file system that contains this file is not yet mounted.
+
+Start FireFox, internally FireFox creates an empty bookmark file, the
+bookmark menu show empty.
+
+Mount the volume where the bookmark file is located.
+
+Exit FireFox, this cause the empty bookmark file to overwirte the existing
+bookmark file!
+
+notes:
+
+This bug is related to bug 206567 about deleting symbolic link by FireFox.
+
+This bug can commonly occur when user are sharing the bookmark file between
+multiple operating system in a dual boot configuration, or probably sharing it
+on a network volume.
+
+
+Reproducible: Always
+Steps to Reproduce:
+1.Unmount volume containing bookmark file
+2.Start FireFox
+3.Mount volume containing bookmark file
+4.Exit FireFox
+5.Bookmarks file is overwritten without any alert
+
+Actual Results:
+old bookmark file lost
+
+Expected Results:
+1- alert the user at startup, that a new bookmark file ha been created because
+the default bookmark file or the one pointed to by 'browser.bookmarks.file' is
+not accessable for some reason. No action is required here, this is just a
+dialog box with ok.
+
+2- When a new bookmark file is created in memory, the application should keep a
+flag, and then when writing the file for the first time, it should be verified
+that the file doe not exist, if it doe exist, then this is an unexpected
+condition, and the user is alerted, and given choices:
+- to overwrite the file and lose data.
+- to save the bookmark file of the current session to some temp file.
+
+3- it would be much better to avoid data loss, that the application keep a back
+up copy of the old bookmark file, a is common in other applications.
+
+
+
+Bookmark file can be located on network volume or shared partitions, if the
+application is making assumption and acting in silence without alerting the
+user, it can lead to problems. The application should identify abnormal
+situation and alert the user.
+
+I haven't tested when dierectories in the bookmark file path don't exist, am not
+sure if FireFox will create these directory without alert.

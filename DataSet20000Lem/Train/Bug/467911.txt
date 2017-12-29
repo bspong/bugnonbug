@@ -1,0 +1,45 @@
+Registry installation fails silently with invalid path in Software\Mozilla\Firefox\Extensions
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.0.4) Gecko/2008102920 Firefox/3.0.4 (.NET CLR 3.5.30729)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.0.4) Gecko/2008102920 Firefox/3.0.4 (.NET CLR 3.5.30729)
+
+I'm developing an extension which I want to install via Registry (https://developer.mozilla.org/en/Adding_Extensions_using_the_Windows_Registry).
+Everything work briliant if I enter the mentioned registry key using regedit.
+
+I wrote an MSI-Installer which set the registry key mentioned. In addition it add all Registry key above the one (Software\Mozilla, Software\Mozilla\Firefox, Software\Mozilla\Firefox\Extensions). Each key is set to an REG_SZ value with an empty string (I don't know how to avoid this - it seems to be done by the MSI installer itself).
+When installing the extension using this installer it is not recognized by firefox.
+When I remove the empty string from the default value of Software\Mozilla\Firefox\Extensions, the extension _is_ recognized.
+Also when I enter an existing directory into this value, the extension _is_ recognized.
+The problem seems to be in the function WinRegInstallLocation._readAddons:
+I replaced
+dir.initWithPath(key.readStringValue(id));
+
+if (dir.exists() && dir.isDirectory()) {
+this._IDToDirMap[id] = dir;
+this._DirToIDMap[dir.path] = id;
+}
+by
+try {
+dir.initWithPath(key.readStringValue(id));
+
+if (dir.exists() && dir.isDirectory()) {
+this._IDToDirMap[id] = dir;
+this._DirToIDMap[dir.path] = id;
+}
+}
+catch (e) {}
+
+and ith work even with invalid paths.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.prepare registry installation for some extension
+2.enter an invalid path into HKLM\Software\Mozilla\Firefox\Extensions' default Value
+3.Watch Firefox not recognizing the extension
+4.remove HKLM\Software\Mozilla\Firefox\Extensions' default Value
+5.Watch Firefox recognizing the extension
+
+
+
+Expected Results:
+Firefox should recognize the extension even if there are invalid path in HKLM\Software\Mozilla\Firefox\Extensions' default Value

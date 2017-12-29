@@ -1,0 +1,26 @@
+pdf.js: if you scroll quickly through a scanned document, all the decoded pixel data ends up in memory
+(https://github.com/mozilla/pdf.js/issues/1887 is open for this problem. This bug is for tracking the problem on the Mozilla side.)
+
+Consider http://pbadupws.nrc.gov/docs/ML0909/ML090920467.pdf, a scanned PDF with 226 pages, and each page is approximately 34,000,000 bytes when represented in 32-bit RGBA form.
+
+Follow these steps:
+- Start measuring resident memory consumption (RSS), e.g. via top.
+- Open the PDF.
+- Scroll to the document's end as fast as possible by holding down the PgDn key.
+- Wait for all the pages to be decoded and rendered.
+
+On my fast desktop Linux machine, the waiting takes approximately one minute. More relevantly for this bug, RSS gradually climbs in an ascending sawtooth pattern to about 7,800 MiB, whether or not the patches I've written for this bug are applied. And guess what? 226 * 34,000,000 is over 7,328 MiB.
+
+Now, there is a mechanism to discard the imageData: PDFPageProxy.complete(), which calls _tryDestroy(). However, somehow when you scroll quickly the intra-thread messaging ordering occurs in such a way that none of the pages get to complete() until all the subsequent pages have been displayed. The problem is with continueCallback. If defined, it gets called when a page's image is received by the main thread. At this point, the
+page is almost done, and we'd really like to finish processing the last few ops
+in order to reach complete(), whereupon the page's pixel data can be freed.
+
+However, viewer.js tries to be clever. It makes continueCallback (which is
+called after every 15ms of operation processing) return early if the page being
+rendered isn't the "most important" page, which I guess is the page that is
+currently in the viewer. So we end up postponing the completion of every page
+prior to the final page until the final page is rendered, but that doesn't
+happen until all the previous pages have sent their image data to the main
+thread, because the image data sending is in sequential page order.
+
+If we just ignore callback, the peak RSS is about 880 MB instead of 7,800. That's not a reasonable solution, but it shows the potential for improvement.

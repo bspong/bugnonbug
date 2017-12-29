@@ -1,0 +1,35 @@
+Could not write session state file
+User Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:54.0) Gecko/20100101 Firefox/54.0
+Build ID: 20170608105825
+
+Steps to reproduce:
+
+Firefox running for about a week, more than 200 tabs opened. Multiple tabs opened/closed during the time.
+
+
+Actual results:
+
+recovery.js is not updated. 
+Message in the browser console:
+
+22:40:35.485 Could not write session state file  Error: TypeError: invalid 'in' operand exn
+Stack trace:
+postMessage@resource://gre/modules/PromiseWorker.jsm:323:17
+TaskImpl_run@resource://gre/modules/Task.jsm:320:42
+process@resource://gre/modules/Promise.jsm -> resource://gre/modules/Promise-backend.js:925:21
+walkerLoop@resource://gre/modules/Promise.jsm -> resource://gre/modules/Promise-backend.js:806:7
+scheduleWalkerLoop/<@resource://gre/modules/Promise.jsm -> resource://gre/modules/Promise-backend.js:742:11
+ "postMessage@resource://gre/modules/PromiseWorker.jsm:323:17
+TaskImpl_run@resource://gre/modules/Task.jsm:320:42
+process@resource://gre/modules/Promise.jsm -> resource://gre/modules/Promise-backend.js:925:21
+walkerLoop@resource://gre/modules/Promise.jsm -> resource://gre/modules/Promise-backend.js:806:7
+scheduleWalkerLoop/<@resource://gre/modules/Promise.jsm -> resource://gre/modules/Promise-backend.js:742:11
+" 1 SessionFile.jsm:346
+
+
+
+Expected results:
+
+recovery.js should be written without errors.
+It seems session state JSON first completely formed in memory and then written to the file. And now is no free memory available due high fragmentation. Closing tabs didn't help.
+So even browser restart cannot be done without losing session state.

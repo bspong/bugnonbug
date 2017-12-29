@@ -1,0 +1,32 @@
+Apparent silliness with JS parsing; context.getImageData() & Math.ceil()
+User-Agent:       Mozilla/5.0 (Windows NT 5.1; rv:2.0b10pre) Gecko/20110112 Firefox/4.0b10pre
+Build Identifier: Mozilla/5.0 (Windows NT 5.1; rv:2.0b10pre) Gecko/20110112 Firefox/4.0b10pre
+
+I discovered that FF4 b10 has a rather odd dislike of the following piece of JavaScript:
+
+visData = raw.visGradient.getImageData(Math.ceil(z) - 1,0,1,1).data
+
+this causes the following exception to be logged:
+
+[22:51:55.563] uncaught exception: [Exception... "An invalid or illegal string was specified"  code: "12" nsresult: "0x8053000c (NS_ERROR_DOM_SYNTAX_ERR)"  location: "http://svc.sl.marvulous.co.uk/raw2sculpt.js Line: 70"]
+
+However, altering the code to use Math.floor(z) instead of Math.ceil(z) - 1 allows the code to run as expected.
+
+I don't think this is some quirky math rounding error, since the following is also triggers the same error:
+
+visData = raw.visGradient.getImageData(Math.floor(Math.ceil(z) - 1),0,1,1).data
+
+This issue is specific to FF4, as FF3 & Chrome both handle the generation of the texture without a problem.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. In the context of http://svc.sl.marvulous.co.uk/raw2sculpt.js, on line 70 use Math.ceil(z) - 1 instead of Math.floor(z)
+2. drop a Second Life RAW terrain file onto http://svc.sl.marvulous.co.uk/raw2sculpt.html
+Actual Results:  
+Error is thrown when attempting to generate third (terrain visualisation) texture.
+
+Expected Results:  
+Terrain visualisation texture is generated.
+
+example RAW files can be obtained via a link in the raw2sculpt.html document, and a video demonstrating the expected results (albeit under Chrome) is also linked.

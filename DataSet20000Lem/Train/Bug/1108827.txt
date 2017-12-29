@@ -1,0 +1,12 @@
+[e10s] Need an add-on shim for http-on-* observer
+I'm filing this because it came up in bug 1008768 comment 64. Here's an email that Jason wrote about this after we talked in June:
+
+>>>
+So :billm is working on making addons "just work" as-is for desktop e10s, and one issue is thing like "on-modify-request", etc. In single process Firefox addons can do thing like take the channel callback during OMR and QI them to windows, docshells, and other lovely thing that are not actually available in the parent process in e10s. After chatting with Bill for a while, it look like our architecture here will be something where we 1) detect magically that an addon is the thing that's getting an OMR notification, and 2) for addons, replacing the parent nsHttpChannel's callback from being the usual HttpChannelParentListener, and instead insert a CPOW object (Cross-Process Object Wrapper) that can forward all possible object in the callback to the child a needed (using synchronous IPDL call from parent->child). That's gross (it block the parent process the whole time the CPOW runs) but get u full compatibility (hopefully).
+
+I don't think Bill ha bug open on this yet, but I wanted to give y'all a head up that it's happening, so you can jump in with thought and provide help for Bill if/when he ha questions.
+
+Note that we considered an alternate architecture, where we ran thing like OMR in the child (sort of: there'd still be a lot of CPOW-like stuff going on, so it's not apparently any more efficient), but it seems better to hang all this stuff off the parent's events, since there are fewer compatibility issue (the main one I can think of is that by the time on-examine-response is called in the child, we've already set cooky in the parent based on Set-Cookie header in the reply, while if we call it in the parent the addon can remove the header before that and the cookie won't be set. Of course we could fix that with a few more IPDL round trip if we really need to.)
+<<<
+
+We'll need some Necko support here to get the CPOW around the docshell, but I think we should be able to do that without too much trouble. I'll file a separate bug for that once this is further along.

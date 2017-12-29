@@ -1,0 +1,32 @@
+XSLT Transformation fails in unique ways depending on how the document is loaded
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.14) Gecko/20080404 Firefox/2.0.0.14
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.14) Gecko/20080404 Firefox/2.0.0.14
+
+When loading from a local file, the documents presented in the URL presented load fine, and the XSL transform is performed(*) however when loaded from a webserver, an error is presented stating the XSLT stylsheet does not have the mimetype of text/xml
+
+* DTDs are ignored in XSLT transforms.
+
+Reproducible: Always
+
+Steps to Reproduce:
+Load an XML document such as this:
+<blobs><blob /> <blob color="green" /></blobs>
+ tied to a DTD that defines a default value for an element (such as this:
+<!ELEMENT blob EMPTY>
+<!ATTLIST blob color CDATA "black">)
+and an XSLT Transform that makes use of that value
+such as this:
+<xsl:template match="blob"> The color of a blob is <xsl:value-of select="@color"></br> </xsl:template>
+Actual Results:  
+On a local file:
+The color of a blob is <br/>
+The color of a blob is green<br/>
+
+on a remote file:
+The XSLT stylesheet given does not have an XML mimetype
+
+Expected Results:  
+The color of a blob is black<br/>
+The color of a blob is green<br/>
+
+When rendered in IE, there are no problems. tested in Firefox, IE6 and IE7. Firefox always produces the wrong result.

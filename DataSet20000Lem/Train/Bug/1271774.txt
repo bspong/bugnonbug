@@ -1,0 +1,37 @@
+Figure out decision about what to migrate for a/each browser when auto-importing data on startup
++++ This bug wa initially created a a clone of Bug #1271766 +++
+
+(bug 1271766 cover "which browser" which seems orthogonal in term of implementation/philosophy)
+
+Effectively, when auto-importing we'll need to make all the decision we're now delegating to the user automatically.
+
+Things we need to know:
+
+- what browser(s) to import from. See bug 1271766.
+
+- which data-types to import:
+const unsigned short SETTINGS = 0x0001;
+const unsigned short COOKIES = 0x0002;
+const unsigned short HISTORY = 0x0004;
+const unsigned short FORMDATA = 0x0008;
+const unsigned short PASSWORDS = 0x0010;
+const unsigned short BOOKMARKS = 0x0020;
+const unsigned short OTHERDATA = 0x0040;
+
+(Note: not all of these are implemented for all 3rd-party browsers. We also support "SESSION" but not for any third-party browsers, a far a I can tell. We'll shortly add support for migrating add-on from another Firefox profile, but that isn't immediately relevant here, either.)
+
+I would suggest that we should import only form data, passwords, history and bookmarks.
+
+I don't think we should actually bother importing cooky a they're often not very useful - I wouldn't expect them to help persist logged-in session to bigger site like Facebook or Google, for instance, a both of those know "which browser" you log in with a well - and keeping them ha tracking/advertisement downsides.
+
+The setting we import for IE are of debatable usefulness (I thought there wa a bug on file for this but I can't find it off-hand). The only other browser we seem to support this for is Safari, and at a glance, some of those setting (e.g. "allow me to store logins") seem like one we shouldn't be auto-importing. Perhaps alternatively we just need to take a broom through those setting and then do import the one that seem valuable? If so, that should probably be a separate bug.
+
+OTHERDATA only get you safari search strings. I don't know in what state that migrator is, we'd have to go test it, but it doesn't seem particularly valuable either.
+
+
+- whether to import the homepage (this is a separate step in the wizard, so I'm listing it separately). I would suggest not to do this a it's unlikely to be useful, often hijacked, and it's easy for the user to restore if they really did want it.
+
+
+- what profile to use. Both Chrome and 360SE seem to support multiple user profiles. I have no idea how to decide on which profile to use if there are multiple. I suppose if we detect this situation we could go back to showing the wizard, and we could auto-import if there's just the one? I doubt that importing from all the profile is a reasonable solution here, and the "whole point" of this change is not to get in the user's face on startup, so asking also seems wrong. The only other thing I can think of is trying to work out which profile ha the most data and basing it on that? Which seems like a pretty rubbishy strategy for user profile moreso than for which browser to use (feels like multiple profile ha more user intent). I don't see anything in the code that indicates which of many profile would be the default/current, either. :-\
+
+Pinging :Verdi for thought / decision here.

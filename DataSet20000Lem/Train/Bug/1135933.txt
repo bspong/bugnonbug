@@ -1,0 +1,125 @@
+[e10s] "Set As Desktop Background..." in remote browser cause unsafe CPOW usage warning, TypeErrors, and then a NS_ERROR_XPC_CANT_PASS_CPOW_TO_NATIVE if you try to set it
++++ This bug wa initially created a a clone of Bug #1133577 +++
+
+STR:
+
+1) Visit a site with some image on it in an e10s window
+2) Right-click on an image, and choose "Set As Desktop Background..."
+
+This cause some "unsafe CPOW usage" warning in the Browser Console, some TypeErrors, and if you then hit "Set Desktop Background" in the dialog window, you get a "NS_ERROR_XPC_CANT_PASS_CPOW_TO_NATIVE".
+
+In browser/base/content/nsContextMenu.js:
+
+disableSetDesktopBackground: function() {
+// Disable the Set a Desktop Background menu item if we're still trying
+// to load the image or the load failed.
+if (!(this.target instanceof Ci.nsIImageLoadingContent)) <- Causes CPOW warning
+return true;
+
+if (("complete" in this.target) && !this.target.complete) <- Causes CPOW warning
+return true;
+
+if (this.target.currentURI.schemeIs("javascript")) <- Causes CPOW warning
+return true;
+
+var request = this.target <- Causes CPOW warning
+.QueryInterface(Ci.nsIImageLoadingContent)
+.getRequest(Ci.nsIImageLoadingContent.CURRENT_REQUEST);
+if (!request)
+return true;
+
+return false;
+},
+
+setDesktopBackground: function() {
+// Paranoia: check disableSetDesktopBackground again, in case the
+// image changed since the context menu wa initiated.
+if (this.disableSetDesktopBackground())
+return;
+
+var doc = this.target.ownerDocument; <- Causes CPOW warning
+urlSecurityCheck(this.target.currentURI.spec, this.principal); <- Causes CPOW warning
+
+// Confirm since it's annoying if you hit this accidentally.
+const kDesktopBackgroundURL =
+"chrome://browser/content/setDesktopBackground.xul";
+// On non-Mac platforms, the Set Wallpaper dialog is modal.
+openDialog(kDesktopBackgroundURL, "",
+"centerscreen,chrome,dialog,modal,dependent",
+this.target);
+},
+
+
+
+in browser/components/shell/content/setDesktopBackground.js
+
+"TypeError: Argument 1 of CanvasRenderingContext2D.drawImage could not be converted to any of: HTMLImageElement, HTMLCanvasElement, HTMLVideoElement."
+or in the TILE case
+"TypeError: Argument 1 of CanvasRenderingContext2D.createPattern could not be converted to any of: HTMLImageElement, HTMLCanvasElement, HTMLVideoElement."
+
+updatePosition: function ()
+{
+var ctx = this._canvas.getContext("2d");
+ctx.clearRect(0, 0, this._screenWidth, this._screenHeight);
+
+this._position = document.getElementById("menuPosition").value;
+
+switch (this._position) {
+case "TILE":
+ctx.save();
+ctx.fillStyle = ctx.createPattern(this._image, "repeat"); <- Causes TypeError
+ctx.fillRect(0, 0, this._screenWidth, this._screenHeight);
+ctx.restore();
+break;
+case "STRETCH":
+ctx.drawImage(this._image, 0, 0, this._screenWidth, this._screenHeight); <- Causes TypeError
+break;
+case "CENTER":
+var x = (this._screenWidth - this._image.naturalWidth) / 2; <- Causes CPOW warning
+var y = (this._screenHeight - this._image.naturalHeight) / 2; <- Causes CPOW warning
+ctx.drawImage(this._image, x, y); <- Causes TypeError
+break;
+case "FILL":
+//Try maxing width first, overflow height
+var widthRatio = this._screenWidth / this._image.naturalWidth; <- Causes CPOW warning
+var width = this._image.naturalWidth * widthRatio; <- Causes CPOW warning
+var height = this._image.naturalHeight * widthRatio; <- Causes CPOW warning
+if (height < this._screenHeight) {
+//height le than screen, max height and overflow width
+var heightRatio = this._screenHeight / this._image.naturalHeight; <- Causes CPOW warning
+width = this._image.naturalWidth * heightRatio; <- Causes CPOW warning
+height = this._image.naturalHeight * heightRatio; <- Causes CPOW warning
+}
+var x = (this._screenWidth - width) / 2;
+var y = (this._screenHeight - height) / 2;
+ctx.drawImage(this._image, x, y, width, height); <- Causes TypeError
+break;
+case "FIT":
+//Try maxing width first, top and bottom border
+var widthRatio = this._screenWidth / this._image.naturalWidth; <- Causes CPOW warning
+var width = this._image.naturalWidth * widthRatio; <- Causes CPOW warning
+var height = this._image.naturalHeight * widthRatio; <- Causes CPOW warning
+var x = 0;
+var y = (this._screenHeight - height) / 2;
+if (height > this._screenHeight) {
+//height overflow, maximise height, side border
+var heightRatio = this._screenHeight / this._image.naturalHeight; <- Causes CPOW warning
+width = this._image.naturalWidth * heightRatio; <- Causes CPOW warning
+height = this._image.naturalHeight * heightRatio; <- Causes CPOW warning
+x = (this._screenWidth - width) / 2;
+y = 0;
+}
+ctx.drawImage(this._image, x, y, width, height); <- Causes TypeError
+break;
+}
+}
+
+Actually hitting "Set Desktop Background" in the preview dialog fails with "NS_ERROR_XPC_CANT_PASS_CPOW_TO_NATIVE: It's illegal to pas a CPOW to native code arg 0 [nsIShellService.setDesktopBackground]"
+
+setDesktopBackground: function ()
+{
+document.persist("menuPosition", "value");
+this._shell.desktopBackgroundColor = this._hexStringToLong(this._backgroundColor);
+this._shell.setDesktopBackground(this._image, <- Causes NS_ERROR_XPC_CANT_PASS_CPOW_TO_NATIVE
+Ci.nsIShellService["BACKGROUND_" + this._position]);
+},

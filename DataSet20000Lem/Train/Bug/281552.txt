@@ -1,0 +1,58 @@
+"Illegal operation on WrappedNative prototype object" when calling reference to form submit
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.2; en-US; rv:1.7.5) Gecko/20041107 Firefox/1.0
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.2; en-US; rv:1.7.5) Gecko/20041107 Firefox/1.0
+
+It is often useful to perform action before the form is submitted. For it to
+work in all circumstances, setting onsubmit is not enough a it's not called
+when programmatically submitting the form.
+The usual way to do this is to keep a reference to the default submit function
+in a variable and set submit to the new function, where the old one is called
+through the reference.
+It work in IE, but the call through the reference fails with an unexpected
+exception in Firefox 1.0.
+
+I'm setting the severity to major because it ha no workaround and prevents a
+feature of ASP.NET 2.0 from working propertly with Firefox. We may have to
+disable the feature for Gecko browser if this is not fixed or if a workaround
+is not found.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Navigate to this page:
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<body>
+<form id="form1" action="submitcrash.htm" method="get">
+<script type="text/javascript">
+<!--
+var oldSubmit = document.forms["form1"].submit;
+document.forms["form1"].submit = newSubmit;
+
+function newSubmit() {
+alert("Doing something before submitting");
+oldSubmit();
+}
+// -->
+</script>
+<div>
+<input type="button" value="Click me" onclick="this.form.submit()"/>
+</div>
+</form>
+</body>
+</html>
+
+2. Press the button
+Actual Results:
+The alert is shown, but the form is not submitted. Instead, I get the following
+exception:
+
+Error: uncaught exception: [Exception... "Illegal operation on WrappedNative
+prototype object" nsresult: "0x8057000c (NS_ERROR_XPC_BAD_OP_ON_WN_PROTO)"
+location: "JS frame :: http://localhost/glop/submitcrash.htm :: newSubmit ::
+line 12" data: no]
+
+Expected Results:
+When the button is pressed, an alert should be shown and the form should be
+submitted.

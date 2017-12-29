@@ -1,0 +1,24 @@
+JS warning "anonymous function does not always return a value" resource:///modules/devtools/framework/target.js:218
+I noticed this in the output of my debug build today (not sure exactly what triggered it, but that doesn't really matter because the warning is pretty clear on its own):
+{
+JS Component Loader: WARNING resource://gre/modules/commonjs/toolkit/loader.js -> resource:///modules/devtools/framework/target.js:218
+                     anonymous function does not always return a value
+}
+
+The code in question is:
+> 218   get window() {
+> 219     // Be extra careful here, since this may be called by HS_getHudByWindow
+> 220     // during shutdown.
+> 221     if (this._tab && this._tab.linkedBrowser) {
+> 222       return this._tab.linkedBrowser.contentWindow;
+> 223     }
+> 224   },
+https://mxr.mozilla.org/mozilla-central/source/browser/devtools/framework/target.js?rev=aeb0f8faf02b#218
+
+...which, as the warning says, does not always return a value. (It's only got one return statement, which is inside of an "if".)
+
+The function used to be an unconditional return (& hence not trigger this warning), but it was changed to its current form here:
+ https://hg.mozilla.org/mozilla-central/rev/ca621a4ceaa1#l4.124
+for bug 820524. (back when the file was named Target.jsm -- it's been renamed to target.js since then)
+
+CC'ing :past and :jwalker (author and reviewer on that cset), in the hopes that at least one of you might know what the correct fix for this is. :)

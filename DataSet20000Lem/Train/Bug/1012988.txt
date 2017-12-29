@@ -1,0 +1,34 @@
+Connecting to an app increase it memory by 9MB
+Today, when we want to debug an app, it process immediatly bump by 9MB, no matter which actor you start using, even the simpliest possible one.
+
+To get a sense of how big this memory bump is. The template app, which is the smallest possible app take only 6MB. So devtools take more than the whole web engine :/ (ok part of it may be shared with nuwa magic, but still...)
+
+There is many way to lower this memory consumption.
+* the most important one: lazy load, lazy load, lazy load. We do only few lazy loading, so that we end up loading almost always all dependency on startup. Bug 993282 already try to stop loading all actor on startup, so that we start loading actor (and their dependencies) only once we start using them. But that alone doesn't save much a minimal debugger server code already pull a lot of dependencies.
+* compartment for each SDK module cost a lot. bholley recently tried to use one compartment/global per JSM and saw that there is still a significant overhead. We are currently suffering for this overhead (more info in bug 989373)
+* le dependencies, more barebone js, le code: We are using some SDK module that end up pulling many others. protocol.js for ex, pull many language helper and require("devtools/server/protocol") introduce a bump of 930k.
+Here is the impresive list of dependency of protocol.js:
+load: resource://gre/modules/devtools/server/protocol.js
+load: resource://gre/modules/commonjs/sdk/core/heritage.js
+load: resource://gre/modules/commonjs/sdk/event/target.js
+load: resource://gre/modules/commonjs/sdk/event/core.js
+load: resource://gre/modules/commonjs/sdk/core/namespace.js
+load: resource://gre/modules/commonjs/sdk/lang/functional.js
+load: resource://gre/modules/commonjs/sdk/util/deprecate.js
+load: resource://gre/modules/commonjs/sdk/console/traceback.js
+load: resource://gre/modules/commonjs/sdk/net/url.js
+load: resource://gre/modules/commonjs/sdk/core/promise.js
+Cu.import(resource://gre/modules/Promise.jsm)
+load: resource://gre/modules/commonjs/sdk/util/object.js
+load: resource://gre/modules/commonjs/sdk/util/array.js
+Cu.import(resource://gre/modules/NetUtil.jsm)
+load: resource://gre/modules/commonjs/sdk/preferences/service.js
+load: resource://gre/modules/commonjs/sdk/timers.js
+load: resource://gre/modules/commonjs/sdk/system/unload.js
+load: resource://gre/modules/commonjs/sdk/system/events.js
+load: resource://gre/modules/commonjs/sdk/platform/xpcom.js
+load: resource://gre/modules/commonjs/sdk/util/uuid.js
+
+I already have a big patch queue addressing most of these points, and all these effort reduce the memory usage in child process to 900k. (10x less, or "just protocol.js and it dependencies")
+
+I started looking at memory consumption to suggest using the RDP for performance tool (firewatch) and also to give u a chance to have devtools working on next low memory devices.

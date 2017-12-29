@@ -1,0 +1,49 @@
+please handle for the case where jsdthreadstate->stackdepth > 1 in jsd_stak.cpp:109 otherwise it hangs
+User Agent: Mozilla/5.0 (Windows NT 5.2) AppleWebKit/537.15 (KHTML, like Gecko) Chrome/24.0.1294.0 Safari/537.15
+
+Steps to reproduce:
+
+Did printing page which is lengthy
+
+
+
+Actual results:
+
+firefox hangs with following stacktrace. the following appears repeatedly during hang.
+
+ 	ntdll.dll!_RtlLeaveCriticalSection@4()  + 0x23 bytes	
+ 	mozglue.dll!je_calloc(unsigned int num=0x00000020, unsigned int size=0x263e9300)  Line 6490 + 0x121 bytes	C
+>	xul.dll!_addNewFrame(JSDContext * jsdc=0x04f18090, JSDThreadState * jsdthreadstate=0x07033c60, JSScript * script=0x2bb47178, unsigned int pc=0x255cc40c, JSStackFrame * fp=0x045fbdd0)  Line 49 + 0x9 bytes	C++
+ 	xul.dll!jsd_NewThreadState(JSDContext * jsdc=0x04f18090, JSContext * cx=0x113c3940)  Line 109	C++
+ 	xul.dll!jsd_CallExecutionHook(JSDContext * jsdc=0x04f18090, JSContext * cx=0x113c3940, unsigned int type=0x00000005, unsigned int (JSDContext *, JSDThreadState *, unsigned int, void *, JS::Value *)* hook=0x01f9cd6d, void * hookData=0x00000000, JS::Value * rval=0x0012ba38)  Line 133 + 0x1a bytes	C++
+ 	xul.dll!jsd_ThrowHandler(JSContext * cx=0x113c3940, JSScript * script=0x2bb47178, unsigned char * pc=0x255cc496, JS::Value * rval=0x0012ba38, void * closure=0x2b6ef6d0)  Line 117 + 0x10 bytes	C++
+ 	mozjs.dll!js_InternalThrow(js::VMFrame & f={...})  Line 535 + 0x1d bytes	C++
+ 	mozjs.dll!JaegerThrowpoline(js::VMFrame * vmFrame=0x00000000)  Line 897	C++
+ 	xul.dll!XPC_WN_Helper_GetProperty(JSContext * cx=0x00000000, JS::Handle<JSObject *> obj={...}, JS::Handle<int> id={...}, JS::MutableHandle<JS::Value> vp={...})  Line 939 + 0x23 bytes	C++
+
+>	mozjs.dll!js::StackFrame::thisValue()  Line 705 + 0x1 bytes	C++
+ 	mozjs.dll!JS_GetFrameThis(JSContext * cx=0x113c3940, JSStackFrame * fpArg=0x043e8b78, JS::Value * thisv=0x0012b990)  Line 613 + 0x8 bytes	C++
+ 	xul.dll!jsd_NewThreadState(JSDContext * jsdc=0x04f18090, JSContext * cx=0x113c3940)  Line 101 + 0xe bytes	C++
+ 	xul.dll!jsd_CallExecutionHook(JSDContext * jsdc=0x04f18090, JSContext * cx=0x113c3940, unsigned int type=0x00000005, unsigned int (JSDContext *, JSDThreadState *, unsigned int, void *, JS::Value *)* hook=0x01f9cd6d, void * hookData=0x00000000, JS::Value * rval=0x0012ba38)  Line 133 + 0x1a bytes	C++
+ 	xul.dll!jsd_ThrowHandler(JSContext * cx=0x113c3940, JSScript * script=0x2bb47178, unsigned char * pc=0x255cc496, JS::Value * rval=0x0012ba38, void * closure=0x2b6ef6d0)  Line 117 + 0x10 bytes	C++
+ 	mozjs.dll!js_InternalThrow(js::VMFrame & f={...})  Line 535 + 0x1d bytes	C++
+ 	mozjs.dll!JaegerThrowpoline(js::VMFrame * vmFrame=0x00000000)  Line 897	C++
+ 	xul.dll!XPC_WN_Helper_GetProperty(JSContext * cx=0x00000000, JS::Handle<JSObject *> obj={...}, JS::Handle<int> id={...}, JS::MutableHandle<JS::Value> vp={...})  Line 939 + 0x23 bytes	C++
+
+>	mozjs.dll!js::StackSegment::maybefp()  Line 1273 + 0x6 bytes	C++
+ 	mozjs.dll!js::StackSegment::contains(const js::StackFrame * fp=0x04611310)  Line 471 + 0xe bytes	C++
+ 	mozjs.dll!js::StackSpace::containingSegment(const js::StackFrame * target=0x04611310)  Line 634 + 0x9 bytes	C++
+ 	mozjs.dll!js::StackFrame::pcQuadratic(const js::ContextStack & stack={...}, unsigned int maxDepth=0x00000064)  Line 204	C++
+ 	mozjs.dll!JS_GetFramePC(JSContext * cx=0x113c3940, JSStackFrame * fpArg=0x04611310)  Line 526	C++
+ 	xul.dll!jsd_NewThreadState(JSDContext * jsdc=0x04f18090, JSContext * cx=0x113c3940)  Line 93 + 0xd bytes	C++
+ 	xul.dll!jsd_CallExecutionHook(JSDContext * jsdc=0x04f18090, JSContext * cx=0x113c3940, unsigned int type=0x00000005, unsigned int (JSDContext *, JSDThreadState *, unsigned int, void *, JS::Value *)* hook=0x01f9cd6d, void * hookData=0x00000000, JS::Value * rval=0x0012ba38)  Line 133 + 0x1a bytes	C++
+ 	xul.dll!jsd_ThrowHandler(JSContext * cx=0x113c3940, JSScript * script=0x2bb47178, unsigned char * pc=0x255cc496, JS::Value * rval=0x0012ba38, void * closure=0x2b6ef6d0)  Line 117 + 0x10 bytes	C++
+ 	mozjs.dll!js_InternalThrow(js::VMFrame & f={...})  Line 535 + 0x1d bytes	C++
+ 	mozjs.dll!JaegerThrowpoline(js::VMFrame * vmFrame=0x00000000)  Line 897	C++
+ 	xul.dll!XPC_WN_Helper_GetProperty(JSContext * cx=0x00000000, JS::Handle<JSObject *> obj={...}, JS::Handle<int> id={...}, JS::MutableHandle<JS::Value> vp={...})  Line 939 + 0x23 bytes	C++
+
+
+
+Expected results:
+
+doesn't hang

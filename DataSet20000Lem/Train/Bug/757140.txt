@@ -1,0 +1,15 @@
+Message passing from social worker to chrome fails on Windows7/firefox14
+On Aurora (Firefox 14), it appears that message passing from the frameworker back to chrome code is failing.
+
+Specifically, I observe that the worker receives "social.initialize" correctly, and fire a message back, which is routed through AbstractPort.postMessage and WorkerPort._dopost.
+
+This should then land it on the imported _postMessage function (bound into the sandbox by frameworker.js#451) which route to workerWindo.postMessage.
+
+The message appears to disappear at that point.
+
+Replacing the imported _postMessage function with a debugging wrapper show that the message is actually arriving; an error 25 (CLONE error) is raised if the message is passed directly to workerWindow.postMessage, but stringifying the message and passing it that way works.
+
+Bug #751241 suggests that the way we are binding postMessage is incorrect and dangerous, and may be the root cause of this issue. I wa not able to find a bind() construct that made the message passing work.
+
+
+NOTE that this issue appears to have cleared up in Nightly (v15), which mean that this is only an issue for the 14 train. Since we are not currently targeting 14, I think we should close this with a WONTFIX - but it is a definite problem if we want the addon to work in 14.

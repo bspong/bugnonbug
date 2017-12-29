@@ -1,0 +1,34 @@
+prefs API needs to be improved
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.7.6) Gecko/20050317 Firefox/1.0.2
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.7.6) Gecko/20050317 Firefox/1.0.2
+
+current API for preferences is quite hard to work with.
+a few possible improvements:
+- store preferences for extensions/themes by using their ID, but make that ID
+invisible to the extension. Not only that would make it easier for developers to
+name preferences but would also prevent a possible security problem if one
+extension tries to modify another's preference. If it's not a security problem,
+then access to a pref via ID should be optional (nobody wants to write
+"getmypref('{12345-12345-12345-67890-abcde}.foo');" )
+- create access functions that will let an extension to clear all old
+preferences for its ID, set all its preferences to defaults (provided by the
+extension). At the same time, the extension manager/installer should read data
+from install.rdf file and see if any old preferences need to be cleaned up. For
+example, extension A version 1 created two preferences: foo and bar. User set
+foo=true and bar=true because the extension allowed for both. Later, extension A
+is upgraded to version 2, which doesn't let the user set both foo and bar to
+true but doesn't fail if they are both true. Later still, extension A is
+upgraded to version 3, which assumes that everyone is upgrading from v2 (because
+what sensible person would stay with v1 for a year, right? haha, let's just say
+the author forgot about it :P). This time both foo and bar can't be true at the
+same time and the extension fails if they are. Under current preferences
+management, the extension has to clean the preferences manually and has no idea
+from which version it was upgraded. If the installer is given such data as
+"reset all my prefs if previous version was below 1.2" it can easily accomodate
+that request.
+- provide an interface to import/export sets of preferences. Some extensions
+provide such an interface themselves but each extension author has to code it up
+and they all end up being in proprietary formats, etc. It's a pain in the as..neck
+
+
+Reproducible: Always

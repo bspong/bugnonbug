@@ -1,0 +1,26 @@
+Conversion of bytes to unicode prevents pages from being retrieved
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.1) Gecko/2008071615 Fedora/3.0.1-1.fc9 Firefox/3.0.1
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.1) Gecko/2008071615 Fedora/3.0.1-1.fc9 Firefox/3.0.1
+
+If you browse to http://toshio.fedorapeople.org/u/ you'll see a directory listing from apache with two files.  They are both named ½ñ.html (one-half lowercase n with tilde .html).  However, one filename is encoded in iso8859-1 and the other in utf-8.  You can see this by toggling the character encoding for the page (View:Character encoding) between Western (iso-8859-1) to utf-8.
+
+The filename encoded as iso8859-1 has text inside that says "A latin-1 filename".  The utf-8 encoded filename contians text that says "A utf-8 filename". 
+
+The problem is that firefox is converting both of the files into the unicode bytes the first time you attempt to load the files.  ie: clicking on either one of them takes you to the same file.  (The utf-8 file for me... I have a utf-8 locale under linux).  If I specifically load both of the files using their hex escapes in the location bar, I can then click and firefox takes me to the correct place (I have to then move the files to a new directory to repeat the problem).
+
+If you view source of the web page that apache generate you'll see that apache is creating the links with hex escaping.  However firefox seems to be converting both of the hex strings to unicode and then submitting that to the server.  When I mouseover the links, the url shown in the statusbar is the converted URL (ie: ½ñ.html).
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. browse to http://toshio.fedorapeople.org/u/
+2. click on both of the links
+3.
+Actual Results:  
+Receive a page that says "A utf-8 filename" for each.
+
+
+Expected Results:  
+Receive different pages -- one with: "A latin-1 filename" and the other with "A utf-8 filename". 
+
+Remember that once you've accessed both pages manually with the hex strings, firefox will then know about the separate pages.  (possibly has something to do with when firefox looks up the URL in the cache?)

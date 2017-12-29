@@ -1,0 +1,68 @@
+crash at startup
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.10) Gecko/20071115 Firefox/2.0.0.10
+Build Identifier: Firefox/3.0b1 2007110903 Gecko/1.9b1 
+
+I was continuing to use firefox 3.0b1 after fixing an earlier bug.
+I just proceeded to do my normal workflow.
+After about an hour of use, firefox crashed and I could not get a traceback
+from gdb, because it was confused (out of memory?)
+
+I switched back to 2.0.0.10 for awhile and then tried using 3.0b1 again.
+
+It now crashes every time at startup ...
+[ ... ]
+WARNING: NS_ENSURE_TRUE(compMgr) failed: file nsComponentManagerUtils.cpp, line 90
+###!!! ASSERTION: wrong thread: 'NS_IsMainThread()', file /usr/local/src/moz/mozilla/xpcom/ds/nsAtomTable.cpp, line 636
+###!!! ASSERTION: wrong thread: 'NS_IsMainThread()', file /usr/local/src/moz/mozilla/xpcom/ds/nsAtomTable.cpp, line 636
+###!!! ASSERTION: wrong thread: 'NS_IsMainThread()', file /usr/local/src/moz/mozilla/xpcom/ds/nsAtomTable.cpp, line 636
+###!!! ASSERTION: wrong thread: 'NS_IsMainThread()', file /usr/local/src/moz/mozilla/xpcom/ds/nsAtomTable.cpp, line 636
+###!!! ASSERTION: wrong thread: 'NS_IsMainThread()', file /usr/local/src/moz/mozilla/xpcom/ds/nsAtomTable.cpp, line 636
+###!!! ASSERTION: wrong thread: 'NS_IsMainThread()', file /usr/local/src/moz/mozilla/xpcom/ds/nsAtomTable.cpp, line 636
+WARNING: NS_ENSURE_TRUE(compMgr) failed: file nsComponentManagerUtils.cpp, line 90
+WARNING: NS_ENSURE_TRUE(compMgr) failed: file nsComponentManagerUtils.cpp, line 90
+WARNING: Could not get pref service!: file /usr/local/src/moz/mozilla/chrome/src/nsChromeRegistry.cpp, line 511
+WARNING: NS_ENSURE_TRUE(compMgr) failed: file nsComponentManagerUtils.cpp, line 90
+###!!! ASSERTION: Not a nsIFileURL!: 'manifestFileURL', file /usr/local/src/moz/mozilla/chrome/src/nsChromeRegistry.cpp, line 1117
+###!!! ASSERTION: You can't dereference a NULL nsCOMPtr with operator->().: 'mRawPtr != 0', file ../../dist/include/xpcom/nsCOMPtr.h, line 857
+
+Program received signal SIGSEGV, Segmentation fault.
+[Switching to Thread -1244387104 (LWP 30742)]
+0xb4ad0050 in nsChromeRegistry::CheckForNewChrome (this=0x80a3930)
+    at /usr/local/src/moz/mozilla/chrome/src/nsChromeRegistry.cpp:1120
+1120      manifestFileURL->GetFile(getter_AddRefs(manifest));
+Current language:  auto; currently c++
+(gdb) l
+1115
+1116      nsCOMPtr<nsIFileURL> manifestFileURL (do_QueryInterface(manifestURI));
+1117      NS_ASSERTION(manifestFileURL, "Not a nsIFileURL!");
+1118
+1119      nsCOMPtr<nsIFile> manifest;
+1120      manifestFileURL->GetFile(getter_AddRefs(manifest));
+1121      NS_ENSURE_TRUE(manifest, NS_ERROR_FAILURE);
+1122
+1123      PRBool exists;
+1124      rv = manifest->Exists(&exists);
+(gdb) bt
+#0  0xb4ad0050 in nsChromeRegistry::CheckForNewChrome (this=0x80a3930)
+    at /usr/local/src/moz/mozilla/chrome/src/nsChromeRegistry.cpp:1120
+#1  0xb4accdf9 in nsChromeRegistry::Init (this=0x80a3930)
+    at /usr/local/src/moz/mozilla/chrome/src/nsChromeRegistry.cpp:555
+#2  0xb4ac5b29 in nsChromeRegistryConstructor (aOuter=0x0, aIID=@0xb7d4b79c, 
+    aResult=0xbfe49750) at /usr/local/src/moz/mozilla/chrome/src/nsChromeFactory.cpp:49
+#3  0xb5be2c5a in nsGenericFactory::CreateInstance (this=0x809e7a0, aOuter=0x0, 
+    aIID=@0xb7d4b79c, aResult=0xbfe49750) at nsGenericFactory.cpp:80
+#4  0xb7c201de in nsComponentManagerImpl::CreateInstanceByContractID () from ./libxul.so
+#5  0xb7c21886 in nsComponentManagerImpl::GetServiceByContractID () from ./libxul.so
+#6  0xb7bcd42e in CallGetService () from ./libxul.so
+#7  0xb7bcd4b5 in nsGetServiceByContractID::operator() () from ./libxul.so
+#8  0xb7bcc5cc in nsCOMPtr_base::assign_from_gs_contractid () from ./libxul.so
+#9  0xb6f1848d in nsCOMPtr<nsIToolkitChromeRegistry>::nsCOMPtr () from ./libxul.so
+#10 0xb6f10f82 in ScopedXPCOMStartup::SetWindowCreator () from ./libxul.so
+#11 0xb6f15ae5 in XRE_main () from ./libxul.so
+#12 0x08048d56 in main ()
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+startup firefox 3.0b1

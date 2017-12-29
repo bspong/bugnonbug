@@ -1,0 +1,40 @@
+AppendUTF8toUTF16 crash on startup during CycleCollectNow
+User Agent: Mozilla/5.0 (X11; Linux x86_64; rv:20.0) Gecko/20121224 Firefox/20.0
+Build ID: 20121224050603
+
+Steps to reproduce:
+
+I upgraded Nightly to this morning build. When the browser restarted, it just hung. Was completely unresponsive. I killed it and restarted it and I could interact with it once and then it wa dead. I hooked it up to gdb and got the following segfault and stack trace:
+
+Program received signal SIGSEGV, Segmentation fault.
+0xf6eb37b5 in AppendUTF8toUTF16(char const*, nsAString_internal&) () from /home/trevan/Downloads/firefox/libxul.so
+(gdb) bt
+#0 0xf6eb37b5 in AppendUTF8toUTF16(char const*, nsAString_internal&) () from /home/trevan/Downloads/firefox/libxul.so
+#1 0xf6e76efe in dosprintf(SprintfStateStr*, unsigned short const*, char*) () from /home/trevan/Downloads/firefox/libxul.so
+#2 0xf6e77811 in nsTextFormatter::vsmprintf(unsigned short const*, char*) () from /home/trevan/Downloads/firefox/libxul.so
+#3 0xf6e77858 in nsTextFormatter::smprintf(unsigned short const*, ...) () from /home/trevan/Downloads/firefox/libxul.so
+#4 0xf6b08c05 in nsJSContext::CycleCollectNow(nsICycleCollectorListener*, int, bool) () from /home/trevan/Downloads/firefox/libxul.so
+#5 0xf6b08f03 in CCTimerFired(nsITimer*, void*) () from /home/trevan/Downloads/firefox/libxul.so
+#6 0xf6ea1ff8 in nsTimerImpl::Fire() () from /home/trevan/Downloads/firefox/libxul.so
+#7 0xf6ea2120 in nsTimerEvent::Run() () from /home/trevan/Downloads/firefox/libxul.so
+#8 0xf6e9e3cb in nsThread::ProcessNextEvent(bool, bool*) () from /home/trevan/Downloads/firefox/libxul.so
+#9 0xf6e740e9 in NS_ProcessNextEvent_P(nsIThread*, bool) () from /home/trevan/Downloads/firefox/libxul.so
+#10 0xf6df55fb in mozilla::ipc::MessagePump::Run(base::MessagePump::Delegate*) () from /home/trevan/Downloads/firefox/libxul.so
+#11 0xf6ec430c in MessageLoop::Run() () from /home/trevan/Downloads/firefox/libxul.so
+#12 0xf6014dc4 in nsBaseAppShell::Run() () from /home/trevan/Downloads/firefox/libxul.so
+#13 0xf5f38cb3 in nsAppStartup::Run() () from /home/trevan/Downloads/firefox/libxul.so
+#14 0xf6716558 in XREMain::XRE_mainRun() () from /home/trevan/Downloads/firefox/libxul.so
+#15 0xf5a3ea73 in XREMain::XRE_main(int, char**, nsXREAppData const*) () from /home/trevan/Downloads/firefox/libxul.so
+#16 0xf5a3ebee in XRE_main () from /home/trevan/Downloads/firefox/libxul.so
+#17 0x0804fa69 in main ()
+
+I found bug #511135 and thought it might be that. So I moved the sessionstore.js to a different location. It still crashes. I don't have to do a thing. Just start firefox and wait. A few second later, it crashes. I even tried to go into safe mode and that crashed.
+
+I've downloaded a build from Dec 25 and that is running fine with the same profile. So it is between Dec 25 and Jan 2.
+
+The following are all the crash id in about:crashes
+bp-22fe02f0-95c6-4733-b8e0-5e50e2130102
+bp-d5ae638e-ffbe-4549-9299-7094c2130102
+bp-c108d530-522a-4f7c-a534-240982130102
+bp-a9ee9dcf-bb27-46af-992d-4619c2130102
+bp-c023386f-d206-43c7-addb-9f0112130102

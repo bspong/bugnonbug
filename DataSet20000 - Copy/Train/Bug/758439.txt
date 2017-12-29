@@ -1,0 +1,14 @@
+improve startup process
+Currently, the social stuff starts up the very first time someone *gets* registry.enabled() - that first get reads the pref and kicks things off.  However, we currently need to take care that this doesn't happen too early - eg, see the use of '    if (this._enabled) {' in enableProvider() - if 'this.enabled' was used instead, things break.
+
+Even in the best case scenario, this startup happens as the first top-level browser window is opened, probably impacting startup time (we potentially create the sidebar, create a number of workers, etc)
+
+I think a better approach would be:
+
+* At startup registry.enabled returns a false value ('null' or 'undefined' would seem ideal, but regular 'false' would also work).
+
+* We listen for the notification that tells us the session restore is complete, or some other notification that is suitable (can't recall what they are atm, but I'm confident they exist :)
+
+* At that point we check the preference to see if we are enabled or not and perform the actual startup (or set registry().enabled to false).  Anyone who cares should have registered for our 'social-' observers and can take action as we fire them.
+
+This should mean browser startup is not impacted.  However, a downside of this is that the sidebar and toolbar buttons don't get created until after the window has been restored, which may seem "strange" to some users.

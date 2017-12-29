@@ -1,0 +1,18 @@
+SELinux bug or real security issue?
+User Agent: Mozilla/5.0 (X11; Fedora; Linux x86_64; rv:50.0) Gecko/20100101 Firefox/50.0
+Build ID: 20161130084405
+
+Steps to reproduce:
+
+A few months ago, I enabled e10s in Firefox (48, I think), on a number of Fedora 23 & 24 installations. Pretty soon, I started seeing SELinux alerts stating "SELinux is preventing 57656220436F6E74656E74 from 'create' accesses on the rawip_socket Unknown.".
+(see bugs
+https://bugzilla.redhat.com/show_bug.cgi?id=1275961
+https://bugzilla.redhat.com/show_bug.cgi?id=1230052
+)
+As I've mentioned in RHBZ#1275961, these warnings appeared almost on every visit to www.merriam-webster.com and on a few other sites with ad rotators, such as Ars Technica. In the latter cases, the warnings popped up as soon as a particular ad came into view. I haven't been able to pinpoint the ads in question, though.
+
+The latest selinux-policy update (selinux-policy-3.13.1-225.3.fc25) does not audit the creation of rawip sockets any more, so the messages are gone:
+http://pkgs.fedoraproject.org/cgit/rpms/selinux-policy.git/commit/?id=6319c499e49abffa7520a40a11c30851eab9425f
+(++dontaudit mozilla_plugin_t self:rawip_socket create_socket_perms;)
+
+I couldn't find a similar issue in BMO so I had to ask: was this indeed a SELinux bug or could it be something else?

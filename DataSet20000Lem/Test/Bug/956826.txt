@@ -1,0 +1,55 @@
+[Session Restore] Private tab are saved in the session sometimes
+User Agent: Mozilla/5.0 (Windows NT 6.1; rv:26.0) Gecko/20100101 Firefox/26.0 (Beta/Release)
+Build ID: 20131205075310
+
+Steps to reproduce:
+
+(from https://bugzilla.mozilla.org/show_bug.cgi?id=899276#c48)
+
+Testcase for Scratchpad (devtools.chrome.enabled = true + Environment – Browser):
+
+
+// Works fine, private tab isn't saved:
+window.addEventListener("TabOpen", function makeTabPrivate(e) {
+window.removeEventListener("TabOpen", makeTabPrivate, false);
+var tab = e.target;
+var browser = tab.linkedBrowser;
+var privacyContext = PrivateBrowsingUtils.privacyContextFromWindow(browser.contentWindow);
+privacyContext.usePrivateBrowsing = true;
+// Wait some time and try restart
+browser.addEventListener("load", function waitForLoading(e) {
+browser.removeEventListener("load", waitForLoading, true);
+setTimeout(function() {
+Application.restart();
+}, 5e3);
+}, true);
+}, false);
+gBrowser.addTab("https://addons.mozilla.org/");
+
+
+// Doesn't work, private tab saved in the session:
+window.addEventListener("TabOpen", function makeTabPrivate(e) {
+window.removeEventListener("TabOpen", makeTabPrivate, true /* !!! */);
+var tab = e.target;
+var browser = tab.linkedBrowser;
+var privacyContext = PrivateBrowsingUtils.privacyContextFromWindow(browser.contentWindow);
+privacyContext.usePrivateBrowsing = true;
+// Wait some time and try restart
+browser.addEventListener("load", function waitForLoading(e) {
+browser.removeEventListener("load", waitForLoading, true);
+setTimeout(function() {
+Application.restart();
+}, 5e3);
+}, true);
+}, true /* !!! */);
+gBrowser.addTab("https://addons.mozilla.org/");
+
+
+Actual results:
+
+Private tab are saved in the session in second case with useCapture flag in the event listener.
+
+
+Expected results:
+
+Private tab shouldn't be saved in both cases.

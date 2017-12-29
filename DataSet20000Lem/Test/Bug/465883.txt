@@ -1,0 +1,38 @@
+First tab cannot be closed and doesn't get progress listener attached when gBrowser is resolved too early
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9) Gecko/2008052906 Firefox/3.0
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9) Gecko/2008052906 Minefield/3.1b2pre
+
+Please read this bug carefully, otherwise you may miss the point.
+
+Ever since bug 225680, there have been random case of the left-most tab of any given window being stuck and incapable of being closed. Disabling a certain extension will solve it, possibly only temporarily, however, it is difficult to identify any given extension a a culprit.
+
+Another person experiencing the same problem state that the solution is to close Minefield and delete sessionstore.js, but that the problem is happening more frequently: ref: http://forums.mozillazine.org/viewtopic.php?p=5031605#p5031605
+
+When the stuck tab situation occurs, the following exception appears in Error Console:
+
+Error: uncaught exception: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIWebProgress.removeProgressListener]" nsresult: "0x80004005 (NS_ERROR_FAILURE)" location: "JS frame :: chrome://browser/content/tabbrowser.xml :: _beginRemoveTab :: line 1509" data: no]
+
+The step to reproduce, included here, provides a way to use an extension to trigger the bug. These step are for one-time triggering the bug and will not achieve the persistent condition that would require deleting sessionstore.js. To reproduce afterward, you will need to either create a new profile and run through the step again, or install an additional extension and restart
+
+With my regular profile, I personally experience the persistent scenario (i.e. where restarting doe not solve the problem and only disabling extension or possibly deleting sessionstore.js would allow the tab to finally be closed).
+
+And finally, when this bug occurs, the tab is itself usable; only it cannot be closed.
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Create a new profile
+2. Go to Tools -->Options... -->Main and configure startup to "Show my window and tab from last time"
+3. Restart Minefield
+4. LEAVE THE FIRST TWO TABS ALONE (don't change or close them)
+5. Install Nightly Tester Tools: https://addons.mozilla.org/en-US/firefox/addon/6543
+6. Restart Minefield
+7. Go to about:config and set value of general.useragent.extra.firefox to Firefox/3.0.4
+8. Install Smart Middle Click: https://addons.mozilla.org/en-US/firefox/addon/3885
+9. Restart Minefield
+10. Notice that the throbber on the left-most tab is spinning indefinitely
+11. Click that left-most tab's close button. Notice that the tab doe not close
+12. Open Error Console and scroll to the bottom. Notice the following exception:
+
+Error: uncaught exception: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIWebProgress.removeProgressListener]" nsresult: "0x80004005 (NS_ERROR_FAILURE)" location: "JS frame :: chrome://browser/content/tabbrowser.xml :: _beginRemoveTab :: line 1509" data: no]

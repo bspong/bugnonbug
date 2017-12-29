@@ -1,0 +1,58 @@
+Firefox 3.1 doe not build with --enable-static (on Linux)
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.18) Gecko/20081123 Galeon/2.0.4 Firefox/2.0.0.18
+Build Identifier: firefox-3.1b2-source.tar.bz dated 121210 @ 19:16
+
+I only use the shell script configure option to configure builds. Whoever made up the additional option on top of that should IMO be keel-hauled. "configure" ha worked fine for a decade or more for Linux configuration (except when the people editing the script mess up).
+
+
+Now with respect, to the "configure" script and options.
+With Firefox 3.0.6pre, I happen to use option such as:
+--enable-application=browser \
+--enable-optimize="-O2 -g2" \
+--disable-shared \
+--enable-static --disable-libxul \
+--disable-tests \
+
+which *will* produce a workable viable firefox-bin which can be installed and run.
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Attempt to configure a Firefox 3.1 Beta with opptions such as:
+--enable-application=browser \
+--enable-optimize="-O2 -g2" \
+--disable-shared \
+--enable-static --disable-libxul \
+--disable-tests \
+
+2. Attempt to run configure
+3. Configure will fail
+Error:
+configure: error: --enable-static is not supported for building firefox. You probably want --enable-libxul.
+
+4. No. I don't even know what "libxul" is (if someone could point out documentation for it it would be appreciated). I want a *STATIC* browser image (or a close to it a can be produced using the Firefox configuration system.) I know what a "browser" is, e.g. "firefox" and I know what --enable-static is (at least in dozen of other Linux apps -- it mean you produce .a library that can be loaded into a *static* image) [1].
+
+5. So I follow the suggestion of the error message and change the configure to:
+--enable-application=browser \
+--enable-optimize="-O2 -g2" \
+--disable-shared \
+--disable-libxul \
+--disable-tests \
+
+And this doe not work. It seems to produce an extremely small browser/app/firefox-bin and when one attempt a "make install" one gets:
+gmake[1]: Entering directory
+`/src/Firefox/firefox-3.1/mozilla-central/browser/installer'
+Makefile:71: *** you need a "--enable-static or --enable-libxul" build to package a build. Stop.
+gmake[1]: Leaving directory `/src/Firefox/firefox-3.1/mozilla-central/browser/installer'
+
+I removed the "--enable-static" because it resulted in a non-configuration.
+I did not enable "--enable-libxul" because I don't know what libxul is and have
+no interest in it for a Firefox browser based application.
+
+IMO, you could do a much better job with respect to whether various configuration work under Linux. Let me state this VERY explicitly -- I care nothing about whether Firefox 3.0.X run under window -- I only care if I can compile and debug the software under Linux. And in situation where one cannot follow the convention which have existed under Linux for a decade or more and under UNIX for several decade before that -- you are likely to incur significant displeasure on the part of individual who understand the development paths.
+Actual Results:
+Firefox-3.1b2 will not compile and install under Linux given flag which worked properly under firefox-3.0.6pre.
+
+Expected Results:
+Could you at least release Firefox version which are *KNOWN* to compile and build under specific version of Linux (and document that!?!) That mean one doe not release Mozilla specific configuration but one release Linux specific configuration file (i.e. those directly using "configure"). Which can be edited on a switch by switch basis to determine what you haven't bothered to test.

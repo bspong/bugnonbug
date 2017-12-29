@@ -1,0 +1,34 @@
+application/force-download MIME type shouldn't be associated to any type
+Created attachment 570540
+Example mimeType.rdf with wrong associations
+
+When user chooses to open a downloaded file served as application/force-download, Firefox associates this MIME type with the type *detected from the extension*. This is really wrong, since this blocks the detection of file type based on extension for future files, which have no reasons to be of the same type.
+
+For example, on two machines, one running Linux and the other Mac OS X, Firefox 7 was reporting application/force-download files as "Word document". This lead to several issues:
+- the correct handler application wasn't suggested
+- on the Mac, the .pdf extension wasn't preserved when renaming the file
+
+Removing the associations I found in mimeTypes.rdf[1], fixed the problem. Note there's no way to do this from the GUI, since you can change the handler application, but not the *file type*.
+
+So I think this MIME type should be blacklisted, just like application/octet-stream: the "Always perform this action for this file type" checkbox should be greyed out. Also, since users upgrading from previous releases are likely to have added this wrong association by mistake, it should be removed from the config file, or ignored.$
+
+This bug is easily reproducible from a clean configuration in Firefox 7: you just need to open an application/force-download and check the box.
+
+
+1: I found four mentions of this type actually, some of which quite weird. Here are the relevant excerpts, and I'm attaching one of the files.
+    <RDF:li RDF:resource="urn:mimetype:application/force-download"/>
+
+    <NC:externalApplication RDF:resource="urn:mimetype:externalApplication:application/force-download"/>
+    <NC:possibleApplication RDF:resource="urn:handler:local:/usr/lib/firefox-3.5.7"/>
+  </RDF:Description>
+
+  <RDF:Description RDF:about="urn:mimetype:externalApplication:application/force-download"
+                   NC:prettyName="firefox-3.5.7"
+                   NC:path="/usr/lib/firefox-3.5.7" />
+
+ <RDF:Description RDF:about="urn:mimetype:application/force-download"
+                   NC:description="Word document"
+                   NC:value="application/force-download"
+                   NC:editable="true">
+    <NC:handlerProp RDF:resource="urn:mimetype:handler:application/force-download"/>
+  </RDF:Description>

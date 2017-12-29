@@ -1,0 +1,31 @@
+make install fails in a firefox-on-xulrunner build
+(Not sure this is the correct component; taking a guess.)
+
+"make -f client.mk install" succeeds in installing xulrunner, but fails at the start of installing browser, in nsprpub. 
+
+make[2]: quittant le répertoire « /opt/source/mozilla/trunk/objdir/xulrunner+firefox-debug/xulrunner »
+make[1]: quittant le répertoire « /opt/source/mozilla/trunk/mozilla »
+make[1]: entrant dans le répertoire « /opt/source/mozilla/trunk/mozilla »
+Adding client.mk options from /home/chpe/source/mozilla/trunk/xulrunner+firefox-config-debug:
+    MOZ_CO_PROJECT=all
+    MOZ_BUILD_PROJECTS=xulrunner browser
+    MOZ_OBJDIR=$(topsrcdir)/../objdir/xulrunner+firefox-debug
+make  -C /opt/source/mozilla/trunk/mozilla/../objdir/xulrunner+firefox-debug/browser install
+make[2]: entrant dans le répertoire « /opt/source/mozilla/trunk/objdir/xulrunner+firefox-debug/browser »
+/usr/bin/make -C nsprpub install DESTDIR= libdir=/opt/xulrunner+firefox-trunk-debug/lib/firefox-1.6a1 includedir=/opt/xulrunner+firefox-trunk-debug/include/firefox-1.6a1/nspr
+make[3]: entrant dans le répertoire « /opt/source/mozilla/trunk/objdir/xulrunner+firefox-debug/browser/nsprpub »
+cd config; /usr/bin/make -j1 install
+make[4]: entrant dans le répertoire « /opt/source/mozilla/trunk/objdir/xulrunner+firefox-debug/browser/nsprpub/config »
+../config/./nsinstall -t -m 0755 nspr-config /opt/xulrunner+firefox-trunk-debug/bin
+make[4]: ../config/./nsinstall : commande introuvable
+make[4]: *** [install] Erreur 127
+make[4]: quittant le répertoire « /opt/source/mozilla/trunk/objdir/xulrunner+firefox-debug/browser/nsprpub/config »
+make[3]: *** [install] Erreur 2
+make[3]: quittant le répertoire « /opt/source/mozilla/trunk/objdir/xulrunner+firefox-debug/browser/nsprpub »
+make[2]: *** [install] Erreur 2
+make[2]: quittant le répertoire « /opt/source/mozilla/trunk/objdir/xulrunner+firefox-debug/browser »
+make[1]: *** [install] Erreur 2
+make[1]: quittant le répertoire « /opt/source/mozilla/trunk/mozilla »
+make: *** [install] Erreur 2
+
+It seems odd that it's trying to install nsprpub again, since xulrunner already installed it...

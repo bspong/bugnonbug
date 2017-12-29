@@ -1,0 +1,34 @@
+Failure to load and recognize properly multiple dlls extension
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.0.1) Gecko/20060111 Firefox/1.5.0.1
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.0.1) Gecko/20060111 Firefox/1.5.0.1
+
+Properly created and installed native XPCOM extension work only if consists of single dll module. Multi dll extension when installed in typical extension directory tree fail to be recognised properly by extension manager (do not show up in compreg.dat). When forced to be recognized (i.e. by providing identical single dll without dependecies on any other custom dlls) extension doe not work when called. Call to nsIJSCID.CreateInstance for given extension CID fails with error 0x80570015.
+
+Workaround is to install dlls on which main extension module depends into well known location searched during dll loading i.e. directory from which executable loaded, system directory. Symptoms and workaround indicate that extension loading logic is flawed. Instead of providing mechanism for extension encapsulation through containment in single installation point, the real requirement is to install multi dlls extension into privileged place available for user with admin privilege only. Very simple solution to the problem would be to use SetDllDirectory (Win XP SP 1 and 2003 or later) or to add PATH variable pointing to extension directory (older systems).
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Create mutli dll native extension
+2. Install on the system
+3. Componenet is not recognized and doe not appear in compreg.dat
+
+4. Create single dll native extension with identical interface
+5. Install on the system
+6. Component is recognized and appears in compreg.dat
+7. Replace single dll with multi dll extension in installation directory
+8. Try creating object using JavaScript
+9. Call to nsIJSCID.CreateInstance for given extension CID fails with error 0x80570015
+
+10. Copy dependecies to the main extension module into well known location
+11. Call from JavaScript is successfull.
+
+Actual Results:
+Reproducible error a above.
+
+Expected Results:
+Successfull loading of all extension module from extesnion directory tree.
+
+The real problem is that extension modular design is an only reasonable decision when multiple browser are to be supported with different extension technology (XPCOM and COM). Main extension functionality is located in common module and communication interface are in separate browser specific modules. Obviously worker module can be installed into well known directory, and even it should happen if many browser are to be supported at the same time, but this situation would anyway require use of installation technology other than XPInstall. In case of single browser support an XPInstall installation will not be sufficient.

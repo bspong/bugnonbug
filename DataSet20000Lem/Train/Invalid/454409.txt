@@ -1,0 +1,23 @@
+Linking firefox-bin fails due to undefined reference to dbus function
+User-Agent: Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9) Gecko/2008070220 (Gentoo) Firefox/3.0
+Build Identifier: Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9) Gecko/2008070220 (Gentoo) Firefox/3.0
+
+This is with today hg tree, compilation fails in the final firefox-bin linking stage with:
+
+../../staticlib/components/libdocshell.a(nsDBusHandlerApp.o): In function `nsDBusHandlerApp::LaunchWithURI(nsIURI*, nsIInterfaceRequestor*)':
+/home/tomc/devel/src/uriloader/exthandler/nsDBusHandlerApp.cpp:115: undefined reference to `dbus_error_init'
+
+and other undefined reference to dbus function. This is my .mozconfig:
+
+. $topsrcdir/browser/config/mozconfig
+mk_add_options MOZ_OBJDIR=/home/tomc/firefox
+ac_add_options --enable-debug
+ac_add_options --enable-static
+ac_add_options --disable-shared
+ac_add_options --disable-libxul
+ac_add_options --disable-tests
+ac_add_options --enable-optimize="-O2 -g -fno-omit-frame-pointer"
+
+My guess would be that the '--enable-static --disable-shared' is causing the problem. I didn't test without the option though.
+
+Reproducible: Always

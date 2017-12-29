@@ -1,0 +1,66 @@
+Crash in mozilla::a11y::Accessible::HasGenericType(mozilla::a11y::AccGenericType)
+User Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:44.0) Gecko/20100101 Firefox/44.0
+Build ID: 20150923030230
+
+Steps to reproduce:
+
+1. Ran current nightly 44.0a1 (2015-09-23)
+2. Enabled e10s
+3. Visited https://www.mozilla.org/en-US/firefox/all/#en-US
+
+Repeated with a completely blank profile with the same steps and same result.
+
+
+Actual results:
+
+Firefox's content process (all tabs) crashes in mozilla::a11y::Accessible::HasGenericType(mozilla::a11y::AccGenericType)
+
+Stack:
+Frame 	Module 	Signature 	Source
+0 	xul.dll 	mozilla::a11y::Accessible::HasGenericType(mozilla::a11y::AccGenericType) 	accessible/generic/Accessible-inl.h
+1 	xul.dll 	mozilla::a11y::DocAccessibleChild::ShowEvent(mozilla::a11y::AccShowEvent*) 	accessible/ipc/DocAccessibleChild.cpp
+2 	xul.dll 	mozilla::a11y::Accessible::HandleAccEvent(mozilla::a11y::AccEvent*) 	accessible/generic/Accessible.cpp
+3 	xul.dll 	mozilla::a11y::AccessibleWrap::HandleAccEvent(mozilla::a11y::AccEvent*) 	accessible/windows/msaa/AccessibleWrap.cpp
+4 	xul.dll 	mozilla::a11y::HyperTextAccessibleWrap::HandleAccEvent(mozilla::a11y::AccEvent*) 	accessible/windows/msaa/HyperTextAccessibleWrap.cpp
+5 	xul.dll 	nsEventShell::FireEvent(mozilla::a11y::AccEvent*) 	accessible/base/nsEventShell.cpp
+6 	xul.dll 	mozilla::a11y::EventQueue::ProcessEventQueue() 	accessible/base/EventQueue.cpp
+7 	xul.dll 	mozilla::a11y::NotificationController::WillRefresh(mozilla::TimeStamp) 	accessible/base/NotificationController.cpp
+8 	xul.dll 	nsRefreshDriver::Tick(__int64, mozilla::TimeStamp) 	layout/base/nsRefreshDriver.cpp
+9 	xul.dll 	mozilla::RefreshDriverTimer::TickDriver(nsRefreshDriver*, __int64, mozilla::TimeStamp) 	layout/base/nsRefreshDriver.cpp
+10 	xul.dll 	mozilla::RefreshDriverTimer::Tick(__int64, mozilla::TimeStamp) 	layout/base/nsRefreshDriver.cpp
+11 	xul.dll 	mozilla::VsyncRefreshDriverTimer::RunRefreshDrivers(mozilla::TimeStamp) 	layout/base/nsRefreshDriver.cpp
+12 	xul.dll 	mozilla::VsyncRefreshDriverTimer::RefreshDriverVsyncObserver::TickRefreshDriver(mozilla::TimeStamp) 	layout/base/nsRefreshDriver.cpp
+13 	xul.dll 	mozilla::VsyncRefreshDriverTimer::RefreshDriverVsyncObserver::NotifyVsync(mozilla::TimeStamp) 	layout/base/nsRefreshDriver.cpp
+14 	xul.dll 	mozilla::layout::VsyncChild::RecvNotify(mozilla::TimeStamp const&) 	layout/ipc/VsyncChild.cpp
+15 	xul.dll 	mozilla::layout::PVsyncChild::OnMessageReceived(IPC::Message const&) 	obj-firefox/ipc/ipdl/PVsyncChild.cpp
+16 	xul.dll 	mozilla::ipc::PBackgroundChild::OnMessageReceived(IPC::Message const&) 	obj-firefox/ipc/ipdl/PBackgroundChild.cpp
+17 	xul.dll 	mozilla::ipc::MessageChannel::DispatchAsyncMessage(IPC::Message const&) 	ipc/glue/MessageChannel.cpp
+18 	xul.dll 	mozilla::ipc::MessageChannel::DispatchMessageW(IPC::Message const&) 	ipc/glue/MessageChannel.cpp
+19 	xul.dll 	mozilla::ipc::MessageChannel::OnMaybeDequeueOne() 	ipc/glue/MessageChannel.cpp
+20 	xul.dll 	MessageLoop::DoWork() 	ipc/chromium/src/base/message_loop.cc
+21 	xul.dll 	mozilla::ipc::DoWorkRunnable::Run() 	ipc/glue/MessagePump.cpp
+22 	xul.dll 	nsThread::ProcessNextEvent(bool, bool*) 	xpcom/threads/nsThread.cpp
+23 	xul.dll 	mozilla::ipc::MessagePump::Run(base::MessagePump::Delegate*) 	ipc/glue/MessagePump.cpp
+24 	xul.dll 	mozilla::ipc::MessagePumpForChildProcess::Run(base::MessagePump::Delegate*) 	ipc/glue/MessagePump.cpp
+25 	xul.dll 	MessageLoop::RunHandler() 	ipc/chromium/src/base/message_loop.cc
+26 	xul.dll 	MessageLoop::Run() 	ipc/chromium/src/base/message_loop.cc
+27 	xul.dll 	nsBaseAppShell::Run() 	widget/nsBaseAppShell.cpp
+28 	xul.dll 	nsAppShell::Run() 	widget/windows/nsAppShell.cpp
+29 	xul.dll 	XRE_RunAppShell 	toolkit/xre/nsEmbedFunctions.cpp
+30 	xul.dll 	mozilla::ipc::MessagePumpForChildProcess::Run(base::MessagePump::Delegate*) 	ipc/glue/MessagePump.cpp
+31 	xul.dll 	MessageLoop::RunHandler() 	ipc/chromium/src/base/message_loop.cc
+32 	xul.dll 	MessageLoop::Run() 	ipc/chromium/src/base/message_loop.cc
+33 	xul.dll 	XRE_InitChildProcess 	toolkit/xre/nsEmbedFunctions.cpp
+34 	plugin-container.exe 	content_process_main(int, char** const) 	ipc/contentproc/plugin-container.cpp
+35 	plugin-container.exe 	wmain 	toolkit/xre/nsWindowsWMain.cpp
+36 	plugin-container.exe 	__tmainCRTStartup 	f:/dd/vctools/crt/crtw32/startup/crt0.c:255
+37 	kernel32.dll 	BaseThreadInitThunk 	
+38 	ntdll.dll 	__RtlUserThreadStart 	
+39 	ntdll.dll 	_RtlUserThreadStart
+
+
+
+
+Expected results:
+
+No crash ;)

@@ -1,0 +1,22 @@
+Components do not expose disk interfaces
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.12) Gecko/20080201 Firefox/2.0.0.12
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.12) Gecko/20080201 Firefox/2.0.0.12
+
+It was requested at my Mozilla brown bag talk that I provide a list of interfaces that could be improved to make the browser more flexible about writing state to disk. One of the major issues I ran into was that the file output stream was being referred to by CID instead of contract ID in nsUtils, but that seems to be fixed in Firefox 3. However, I am aware of three additional components that do not have preferences or interfaces suitable to prevent their disk access:
+
+@mozilla.org/browser/sessionstore;1
+http://www.xulplanet.com/references/xpcomref/comps/c_browsersessionstore1.html
+The sessionstore has a number of methods to govern attaching additional information to nodes, but no writeToDisk hook that can be reimplemented to preserve the "Undo Close Tab" feature, but prevent browser session from touching disk (or to write it to an alternate location, or encrypt it, etc).
+
+@mozilla.org/dom/storage;1 - http://www.xulplanet.com/references/xpcomref/comps/c_domstorage1.html
+According to http://developer.mozilla.org/en/docs/DOM:Storage, it seems that DOM  storage is eventually supposed to persist on disk in the event of crashes, yet there are no prefs nor interfaces to govern this. This is probably due to Bug 339445.
+
+@mozilla.org/cookiemanager;1
+http://xulplanet.com/references/xpcomref/comps/c_cookiemanager1.html
+It is possible to disable writing of cookies by demoting the cookie manager's lifetime policy to transform everything into session cookies, however this prevents the implementation of "memory-only" cookie jars, or encrypted cookie jars that the user can toggle between without writing them to disk. It may still be possible to do this (with a lot more complicated code) with session cookies and hooking the add method, so perhaps this is a minor concern.
+
+I will add more to this bug as I come across it. The formfill interfaces probably need to be added here, but I have not investigated them in detail yet, since Torbutton just disables formfill and password saving in Tor mode by default for now.
+
+
+
+Reproducible: Always

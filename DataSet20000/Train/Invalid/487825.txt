@@ -1,0 +1,54 @@
+With WinXP 'make installer', Trojan PWS-Banker is caught by McAfee in 7ZSD.SFX after UPX compression
+User-Agent:       Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; SV1; InfoPath.1; .NET CLR 1.1.4322; .NET CLR 3.0.04506.30; .NET CLR 2.0.50727)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.2a1pre) Gecko/20090410 Minefield/3.6a1pre -- http://hg.mozilla.org/mozilla-central/file/4da51fbf7245
+
+When running a build on Windows XP, and then make installer, a Trojan PWS-Banker is caught by McAfee in 7ZSD.SFX after it is UPX compressed.
+
+From the output of make installer:
+Everything is Ok
+make instgen/7zSD.sfx
+make[3]: Entering directory `/c/SRC/clones/mozilla/ff-opt/browser/installer/windows'
+upx --best -o instgen/7zSD.sfx /c/SRC/clones/mozilla/other-licenses/7zstub/firefox/7zSD.sfx
+                       Ultimate Packer for eXecutables
+    Copyright (C) 1996,1997,1998,1999,2000,2001,2002,2003,2004,2005,2006
+UPX 2.03w       Markus Oberhumer, Laszlo Molnar & John Reiser    Nov 7th 2006
+
+        File size         Ratio      Format      Name
+   --------------------   ------   -----------   -----------
+    122368 ->     70144   57.32%    win32/pe     7zSD.sfx
+
+Packed 1 file.
+make[3]: Leaving directory `/c/SRC/clones/mozilla/ff-opt/browser/installer/windows'
+c:/mozilla-build/moztools/bin/nsinstall.exe -D ../../../dist/install/sea/
+cat instgen/7zSD.sfx instgen/app.tag instgen/app.7z > "../../../dist/install/sea/firefox-3.6a1pre.en-US.win32.installer.exe"
+cat: instgen/7zSD.sfx: No such file or directory
+make[2]: *** [installer] Error 1
+make[2]: Leaving directory `/c/SRC/clones/mozilla/ff-opt/browser/installer/windows'
+make[1]: *** [installer] Error 2
+make[1]: Leaving directory `/c/SRC/clones/mozilla/ff-opt/browser/installer'
+make: *** [installer] Error 2
+
+It cannot find the file, because McAfee deleted it.
+
+Reproducible: Didn't try
+
+Steps to Reproduce:
+1. hg clone http://hg.mozilla.org/mozilla-central C:\SRC\clones\mozilla
+2. make -f client.mk build
+3. cd ff-opt
+4. make installer
+
+
+
+##########.mozconfig###########
+ac_add_options --enable-application=browser
+mk_add_options MOZ_CO_PROJECT=browser
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/ff-opt
+ac_add_options --disable-tests
+###############################
+
+Used link to mozilla-build tools. Did not replace msys.dll with given link.
+Unfortunately, I do not have the time to re-clone the repository and verify.
+One should be able to pull only the stub, and run it through upx --best -o.
+
+McAfee VirusScan Enterprise Workstation v. 8.5.0.911

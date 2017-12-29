@@ -1,0 +1,11 @@
+Replace setOverLink's use of set/clearTimeout with set/clearInterval for great performance win
+Created attachment 485119
+patch
+
+Bug 605680 made a large improvement to urlbarBindings's setOverLink performance, but there's room for more.  Once that bug was fixed, I did some more Shark profiling with the test in bug 605680 comment 0 and saw that repeated calls to set/clearTimeout and related calls like nsScriptSecurityManager::CanAccess were taking up nearly half the test time.  It would be better if instead of clearing and setting a timeout for each call to setOverLink, rapid calls subsequent to the first were no-ops.
+
+This patch replaces set/clearTimeout with set/clearInterval.  The first time setOverLink is called, it sets the interval.  If setOverLink isn't called again before the interval fires, then it's just like before: the over-link is updated, and the interval is cleared.  This is what happens when the user mouses over a single link.  But if setOverLink is called again before the interval fires, the interval sees that and doesn't clear itself, and as long as the interval is set, setOverLink is basically a no-op.  When the interval sees that setOverLink has not been called since the last time it was fired, it updates the over-link and clears itself.  This is what happens when the user mouses over many links in rapid succession.
+
+The downside is that when setOverLink is called in rapid succession, the delay for showing or hiding the over link when the user finally stops on a link is non-constant: it's in the range [100ms, 200ms).  And I think this approach is not as easy to understand as the set/clearTimeout one.
+
+The upside is that my test on my debug build goes from 215ms to 21ms (90% win).  In my opt build, 54ms to 2ms (96% win).  2ms is practically nothing and is actually faster than my test on 3.6, where it takes 45ms.

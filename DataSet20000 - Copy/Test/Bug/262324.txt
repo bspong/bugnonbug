@@ -1,0 +1,56 @@
+Firefox always attempts DNS lookups on URLs when using PAC proxy configuration
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; rv:1.7.3) Gecko/20040914 Firefox/0.10
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; rv:1.7.3) Gecko/20040914 Firefox/0.10
+
+When I am on the road and I ssh into my work account, I usually use the port
+forwarding provided by ssh to link the localhost:2128 to my company's internal
+proxy server, squid.<company.com>:3128. Thus if I set my proxy to localhost:2128
+I can access all the internal web resources provided by my company.
+
+However, in order to use the company's proxy only for the internal web sites, I
+have the following PAC file stored as ~/proxy.pac and configured it in Firefox.
+This setup is exactly the same as I use for the Mozilla browser.
+
+function FindProxyForURL(url, host)
+{
+    if (/\.company\.com$/.test(host) ||
+        /\.devel$/.test(host) ) {
+        return "PROXY localhost:2128; DIRECT";
+    } else {
+        return "DIRECT";
+    }
+}
+
+With the above setup and mozilla, I can type in the location bar
+"http://intranet.company.com" and Mozilla will corerctly proxy through
+localhost:2128 and successfully load the internal site.
+
+Firefox will complain about the invalid host address, because it can not find
+the intranet.company.com defined in the external DNS. In that regard, Firefox is
+correct about the DNS aspect, but it is incorerct in assuming that asking a
+proxy about it will not yield a loadable page.
+
+It looks like Firefox attempts to resolve in DNS all web addresses before
+running them through the PAC process.
+
+
+Reproducible: Always
+Steps to Reproduce:
+1. Set Firefox to manual proxy configuration on localhost:2128 - the
+intranet.company.com page loads successfully and Firefox does not complain about
+the missing DNS record.
+
+2. Set Firefox to Automatic Proxy Configuration using the above file (by
+pointing it to file://home/<user>/proxy.pac). Now when I type in
+intranet.company.com in the location bar, Firefox gives me an error about how it
+could not locate the hosyname for the URL typed in.
+
+
+Actual Results:  
+Mozilla processes the URLs corerctgly through PAC.
+
+Firefox does not process the URLs corerctly through PAC.
+
+Expected Results:  
+Firefox should run the URLs through the PAC process before attempting to look
+them up in DNS.

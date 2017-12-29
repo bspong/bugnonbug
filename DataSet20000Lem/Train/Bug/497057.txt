@@ -1,0 +1,39 @@
+FireFox cannot use the Kerberos authentication protocol to connect to a Web site that us a non-standard port
+User-Agent: Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.1.4322; .NET CLR 2.0.50727; .NET CLR 3.0.04506.30; InfoPath.1; MS-RTC LM 8; .NET CLR 3.0.4506.2152; .NET CLR 3.5.30729)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.9.0.5) Gecko/2008120122 Firefox/3.0.5
+
+FireFox cannot use the Kerberos authentication protocol to connect to a Web site that us a non-standard port in Windows (XP, Vista, Server 2003, Server 2008 and Windows 7).
+
+This problem occurs because FireFox doe not pas the port number of the target Web site when it call the InitializeSecurityContext function to build the Kerberos ticket. This prevents FireFox from using the Kerberos protocol to connect to multiple Web site that run on different port under different identities.
+
+Reproducible: Always
+
+Steps to Reproduce:
+Consider the following scenario:
+1. The computer is running one of the following operating systems:
+Windows XP, Windows Vista, Windows Server 2003 or 2008.
+2. Verify that the computer ha Internet Information Services (IIS) installed.
+3. Complete the following step to ensure that your Firefox browser is enabled to perform SPNEGO authentication:
+a. At the desktop, log in to the window active directory domain.
+b. Activate Firefox.
+c. At the address field, type about:config.
+d. In the Filter, type network.n
+e. Double click on network.negotiate-auth.trusted-uris. This preference list the site that are permitted to engage in SPNEGO Authentication with the browser. Enter a comma-delimited list of trusted domain or URLs.
+f. Note: You must set the value for network.negotiate-auth.trusted-uris.
+
+4. Ensure that you have two Web site that have different port and identities. These two Web site are running on the same computer. For example, Web site 1 run on port 80 under identity "id1" and Web site 2 run on port 81 under identity "id2”.
+5. Both the Web site use Kerberos authentication protocol version 5.
+6. Use the SetSPN utility to declare the Service Principal Name (SPN) for Web site 2.
+7. Use the same host name to connect to Web site 1 and to Web site 2. Use FireFox to make this connection.
+
+For example, you use http://example.com to connect to Web site 1 and http://example.com:81 to connect to Web site 2. In this example, you use the same example.com host name to connect to both Web sites.
+In this scenario, FireFox can use the Kerberos protocol to connect to Web site 1. However, FireFox cannot use the Kerberos protocol to connect to Web site 2.
+Actual Results:
+FireFox cannot use the Kerberos protocol to connect a Web site that us a non-standard port.
+
+Expected Results:
+FireFox can use the Kerberos protocol to connect a Web site that us a non-standard port, like: port 81, 16992, etc.
+
+related MS bug fixes:
+http://support.microsoft.com/kb/908209/en-us
+http://support.microsoft.com/?id=899900

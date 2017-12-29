@@ -1,0 +1,33 @@
+Duplicate indexes in nsFaviconService and nsAnnotationService
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 6.0; it; rv:1.8.1.4) Gecko/20070515 Firefox/2.0.0.4
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 6.0; it; rv:1.8.1.4) Gecko/20070515 Firefox/2.0.0.4
+
+nsFaviconService and nsAnnotationService create tables on the fly, but they have duplicated indexes.
+
+example in nsFaviconService:
+
+CREATE TABLE moz_favicons (id INTEGER PRIMARY KEY, url LONGVARCHAR UNIQUE, data BLOB, mime_type VARCHAR(32), expiration LONG)
+
+then it creates an index with:
+
+CREATE INDEX moz_favicons_url ON moz_favicons (url)
+
+That index is a duplicate, there is already a UNIQUE index on url, if you open places.sqlite with sqlite explorer you can clearly see that are present 2 indexes:
+
+moz_favicons_url, not unique, url
+sqlite_autoindex_moz_favicons_1, unique, url
+
+Having 2 indexes could slow down INSERTs because they have to be updated both, and can also slowdown SELECTs because the db engine has to benchmark and choose between the 2 indexes.
+
+Similar problem in nsAnnotationService on table moz_anno_attributes
+
+I attach patches to remove create index, but this is a schema change, so probably something other needs to be done if approved.
+
+Forgive me if this is expected behaviour
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.
+2.
+3.

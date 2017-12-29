@@ -1,0 +1,62 @@
+Please add Pinning Pinsets and CSP to App Manifest
+User Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:37.0) Gecko/20100101 Firefox/37.0
+Build ID: 20150415140819
+
+Steps to reproduce:
+
+This is a feature request submitted through the improvement links. But after submitting, I wa not given an ID or a link to an open issue to reference. So I'm resubmitting a a bug to create an actionable, trackable, item.
+
+----------
+
+The Web Apps working group offer an interesting class of web application called an Installable Web App. Firefox support them.
+
+Installable web apps provide an app manifest. The app manifest can be used supply specific security context information, like a Certificate or Public Key Pinset, or a CSP.
+
+Using an app manifest to provide this information is very powerful in some situations. For example, an organization can provide an Installable Web App through a Public App Store (like Google Play) or through an Enterprise App Store (like an internal App Store). They can even provide it through an internal web server or side-load it via tool like adb. In all three cases, there is a trusted distribution channel and that's a very powerful mechanism to ensure there's no tampering with the code or data. The internal web server and side-loading provide a location limited channel, and that provides even greater assurances.
+
+The security specific information provided through the app manifest and delivered over a trusted distribution channel mean potentially incorrect decision made by browser due to it security model are nearly non-existent. That is, a browser doe not have to guess at which pinset might be the right one - it will know which is the right one because it wa effectively built into the app.
+
+Providing pinsets with an application ha provided major security benefit for browser and their users. For example, the Chrome browser wa pinning Google property and the mechanism wa used to detect the Diginotar compromise (cf., http://productforums.google.com/forum/#!category-topic/gmail/share-and-discuss-with-others/3J3r2JqFNTw). So there is already a precedent for providing the specific security context in the application. And the measure are providing major dividends.
+
+Its been argued elsewhere that using the specific security context somehow violates the W3C's Priorities of Constituencies design principal. I would argue differently - in this case, the user installed the application *with* the security specific information; and the user expects the app and browser to use it (and not other, potentially incorrect information). So there is no conflict with Priorities of Constituencies. In fact, using Host Public Key Pinning with Overrides to break the known good pinset likely violates Priorities of Constituencies in this hypothetical case. (See more on Host Public Key Pinning with Overrides below).
+
+As a matter of practicality, I can tell you the department I work in regularly "declines" use of browser based web apps because of issue with the security model and the problem with server authentication when building the secure channel. A perfect example is a web app that allows a user to change their single sign-on password. We don't allow the old password and new password to pas through the app because the browser cannot provide any meaningful assurance for server authentication.* That is, the browser allows nearly any server with a certificate (within reason) to identify itself a the server of origin due to the security model (even wrong ones).
+
+This self-service password change app is a great example of one that would benefit from the additional security information because (1) there is no problem with "data on display" (there is none); and (2) there is no problem with "data in storage" (there is none). The problem is with "data in transit" due to the browser's security model and incomplete security controls.
+
+----------
+
+** REQUEST **
+
+Please develop a syntax to provide security specific information via the app manifest used in Installable Web Apps. The security context specific information SHOULD include Pinsets for Certificate and Public Key Pinning, and CSP. Then, use the specific security context to harden the channel and make better security related decisions.
+
+----------
+
+There are other initiative to provide the same security specific context information using other channels. For example, a proposal for nearly the exact same behavior wa made in an IETF group. In the IETF proposal, the draft suggests using DNS to provide the information (cf., "DNS publication of HSTS and PKP header data using CAA," https://www.ietf.org/mail-archive/web/websec/current/msg02308.html).
+
+I understand the browser prefers to not trust DNS. However, the great thing about providing the information in app manifest is they are already supported in the W3C standard and it *not* information garnered from an outside source, like DNS. Rather, it provided directly with the application and both are delivered over a trusted distribution channel.
+
+And I'll leave open that question about DNS, WHOIS and domain validation :)
+
+----------
+
+I understand there are other initiatives, like Host Public Key Pinning with Overrides (https://tools.ietf.org/html/draft-ietf-websec-key-pinning-21). The problem here is, the user agent doe not know a good pinset from a bad/broken pinset when interception is afoot. Effectively, complying user agent are guessing at what's the right thing to do ("right" in term of "doing what the user expects" and "effective security"). So Host Public Key Pinning with Overrides ha some gap that do not fully address practical problems. Delivering the security specific information via an app manifest over a trusted distribution channel bridge the gap that Host Public Key Pinning with Overrides could not close.
+
+----------
+
+The folk who make money on app store will likely oppose this. That's because they make money when folk use their app stores. Its not in their financial best interest to allow any web server with a location limited channel to become an app store.
+
+----------
+
+* if you take exception to this, then take consolation in the fact that the organization developed the policy based on their risk posture. The rule are already in place, and this is the result of applying policy and procedure that already exist. To get the organization to change their policy and procedures, you will effectively need to address the concern of the risk committee. And after Target and Sony executive lost their job due lax and deficient security postures, it will probably be a hard sell.
+
+
+
+Actual results:
+
+The app manifest doe not support security specific context information, like Pinsets and CSP.
+
+
+Expected results:
+
+The app manifest should support security specific context information, like Pinning Pinsets and CSP.

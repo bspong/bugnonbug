@@ -1,0 +1,49 @@
+crash in nsLayoutUtils::GetEventCoordinatesRelativeTo() when alt+dragging a folder on the personal toolbar folder
+crash in nsLayoutUtils::GetEventCoordinatesRelativeTo() when alt+dragging a folder on the personal toolbar folder
+
+this was with Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9a7pre) Gecko/2007070418 Minefield/3.0a7pre
+
+haven't had much luck in reproducing this yet, but here is the stack:
+
+>	gklayout.dll!nsLayoutUtils::GetEventCoordinatesRelativeTo(const nsEvent * aEvent=0x0012f28c, nsIFrame * aFrame=0x05e23e84)  Line 609 + 0xa bytes	C++
+ 	gklayout.dll!PresShell::HandleEvent(nsIView * aView=0x040ed6c8, nsGUIEvent * aEvent=0x0012f28c, nsEventStatus * aEventStatus=0x0012f030)  Line 5336 + 0x11 bytes	C++
+ 	gklayout.dll!nsViewManager::HandleEvent(nsView * aView=0x040ed6c8, nsPoint aPoint={...}, nsGUIEvent * aEvent=0x0012f28c, int aCaptured=0)  Line 1295	C++
+ 	gklayout.dll!nsViewManager::DispatchEvent(nsGUIEvent * aEvent=0x0012f28c, nsEventStatus * aStatus=0x0012f170)  Line 1248 + 0x22 bytes	C++
+ 	gklayout.dll!HandleEvent(nsGUIEvent * aEvent=0x0012f28c)  Line 171	C++
+ 	gkwidget.dll!nsWindow::DispatchEvent(nsGUIEvent * event=0x0012f28c, nsEventStatus & aStatus=nsEventStatus_eIgnore)  Line 1111 + 0xc bytes	C++
+ 	gkwidget.dll!nsWindow::DispatchWindowEvent(nsGUIEvent * event=0x0012f28c)  Line 1132	C++
+ 	gkwidget.dll!nsWindow::DispatchMouseEvent(unsigned int aEventType=322, unsigned int wParam=0, long lParam=4653787, int aIsContextMenuKey=0, short aButton=0)  Line 6294 + 0x1a bytes	C++
+ 	gkwidget.dll!ChildWindow::DispatchMouseEvent(unsigned int aEventType=322, unsigned int wParam=0, long lParam=4653787, int aIsContextMenuKey=0, short aButton=0)  Line 6476	C++
+ 	gkwidget.dll!nsWindow::DispatchMouseEvent(unsigned int aEventType=300, unsigned int wParam=0, long lParam=4653787, int aIsContextMenuKey=0, short aButton=0)  Line 6288	C++
+ 	gkwidget.dll!ChildWindow::DispatchMouseEvent(unsigned int aEventType=300, unsigned int wParam=0, long lParam=4653787, int aIsContextMenuKey=0, short aButton=0)  Line 6476	C++
+ 	gkwidget.dll!nsWindow::ProcessMessage(unsigned int msg=512, unsigned int wParam=0, long lParam=4653787, long * aRetValue=0x0012f898)  Line 4678 + 0x24 bytes	C++
+ 	gkwidget.dll!nsWindow::WindowProc(HWND__ * hWnd=0x00020ca8, unsigned int msg=512, unsigned int wParam=0, long lParam=4653787)  Line 1324 + 0x1d bytes	C++
+ 	user32.dll!7e418734() 	
+ 	[Frames below may be incorrect and/or missing, no symbols loaded for user32.dll]	
+ 	user32.dll!7e418816() 	
+ 	user32.dll!7e4189cd() 	
+ 	user32.dll!7e419402() 	
+ 	user32.dll!7e418a10() 	
+ 	gkwidget.dll!nsAppShell::ProcessNextNativeEvent(int mayWait=1)  Line 149	C++
+ 	gkwidget.dll!nsBaseAppShell::DoProcessNextNativeEvent(int mayWait=1)  Line 137 + 0x11 bytes	C++
+ 	gkwidget.dll!nsBaseAppShell::OnProcessNextEvent(nsIThreadInternal * thr=0x00c71d10, int mayWait=1, unsigned int recursionDepth=0)  Line 247 + 0xf bytes	C++
+ 	xpcom_core.dll!nsThread::ProcessNextEvent(int mayWait=1, int * result=0x0012fa84)  Line 472	C++
+ 	xpcom_core.dll!NS_ProcessNextEvent_P(nsIThread * thread=0x00c71d10, int mayWait=1)  Line 227 + 0x16 bytes	C++
+ 	gkwidget.dll!nsBaseAppShell::Run()  Line 154 + 0xc bytes	C++
+ 	tkitcmps.dll!nsAppStartup::Run()  Line 171 + 0x1c bytes	C++
+ 	xul.dll!XRE_main(int argc=1, char * * argv=0x00b896d0, const nsXREAppData * aAppData=0x00b8a918)  Line 2887 + 0x25 bytes	C++
+ 	firefox.exe!main(int argc=1, char * * argv=0x00b896d0)  Line 87 + 0x12 bytes	C++
+ 	firefox.exe!__tmainCRTStartup()  Line 586 + 0x19 bytes	C
+ 	firefox.exe!mainCRTStartup()  Line 403	C
+ 	kernel32.dll!7c816fd7() 	
+
+from the debugger:
+
++		f	0x05e23e84 {mRect={...} mContent=0xdddddddd mStyleContext=0xdddddddd ...}	nsIFrame *
++		aEvent	0x0012f28c {eventStructType='
+' message=322 refPoint={...} ...}	const nsEvent *
++		aFrame	0x05e23e84 {mRect={...} mContent=0xdddddddd mStyleContext=0xdddddddd ...}	nsIFrame *
++		rootView	0x0012ef60 {mViewManager=0x01721493 mParent=0x0012f00c mWindow=0x0171b653 ...}	nsIView *
++		GUIEvent	0x0012f28c {widget=0x040ed78c nativeMsg=0x0012f2f8 }	const nsGUIEvent *
++		rootFrame	0x05e23e84 {mRect={...} mContent=0xdddddddd mStyleContext=0xdddddddd ...}	nsIFrame *
++		widgetToView	{x=1240944 y=24253587 }	nsPoint

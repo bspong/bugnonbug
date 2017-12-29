@@ -1,0 +1,19 @@
+devtools/framework/toolbox.js |doc| getter not e10s friendly
+toolbox.js has a |doc| getter that returns |this.frame.contentDocument;| - this causes a few tests to fail when run in e10s mode.  eg,
+
+35 INFO TEST-PASS | chrome://mochitests/content/browser/browser/devtools/framework/test/browser_devtools_api.js | The tool is no longer registered 
+*************************
+A coding exception was thrown in a Promise resolution callback.
+See https://developer.mozilla.org/Mozilla/JavaScript_code_modules/Promise.jsm/Promise
+Full message: TypeError: this.doc is undefined
+Full stack: Toolbox.prototype.focusTool@resource://gre/modules/commonjs/toolkit/loader.js -> resource:///modules/devtools/framework/toolbox.js:1032:9
+Toolbox.prototype.selectTool/<@resource://gre/modules/commonjs/toolkit/loader.js -> resource:///modules/devtools/framework/toolbox.js:1018:7
+Handler.prototype.process@resource://gre/modules/Promise.jsm -> resource://gre/modules/Promise-backend.js:865:23
+this.PromiseWalker.walkerLoop@resource://gre/modules/Promise.jsm -> resource://gre/modules/Promise-backend.js:744:7
+*************************
+36 INFO TEST-PASS | chrome://mochitests/content/browser/browser/devtools/framework/test/browser_devtools_api.js | gDevTools doesn't know about target 
+37 INFO TEST-PASS | chrome://mochitests/content/browser/browser/devtools/framework/test/browser_devtools_api.js | toolbox doesn't know about target. 
+JavaScript error: chrome://browser/content/devtools/netmonitor-view.js, line 182: TypeError: this._body.selectedPanel is undefined
+38 INFO TEST-FAIL | chrome://mochitests/content/browser/browser/devtools/framework/test/browser_devtools_api.js | A promise chain failed to handle a rejection 
+
+Fixing this doesn't look trivial, so I'm going to propose we disable the affected tests when run in e10s (referencing this bug) - currently I've identified browser_devtools_api.js and browser_toolbox_options_disable_js.js

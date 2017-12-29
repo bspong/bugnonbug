@@ -1,0 +1,40 @@
+Developer Tools Network tab improperly decodes URL-encoded params
+Created attachment 8866097
+firefox54_params_bug.jpg
+
+User Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:54.0) Gecko/20100101 Firefox/54.0
+Build ID: 20170418004027
+
+Steps to reproduce:
+
+Using Firefox 54, both 32-bit Beta and 64-bit Dev Edition
+Mozilla/5.0 (Windows NT 10.0; WOW64; rv:54.0) Gecko/20100101 Firefox/54.0
+
+I'm using the Firefox developer tool to inspect several request that include URL-encoded param value and I started getting worried that the value I wa sending were broken. However upon inspection through Fiddler and comparng with Chrome it seems Firefox is decoding the entire URL before displaying it on the network panel.
+
+Minimal example (can be accessed for live testing at https://jsfiddle.net/zbp5L0dp/1/):
+
+var oReq = new XMLHttpRequest();
+oReq.open("GET", "?a=b&c=d%20e%20%3D%20f%20%26%20g%20%3D%20r");
+oReq.send();
+
+I want to emphasize that this is a devtools issue, the actual request is sending the params correctly in their raw form, the decoding only happens in the inspector UI.
+
+
+
+Actual results:
+
+Network panel show these a the params:
+
+a: "b"
+c: "d e "
+g: " r"
+
+
+
+Expected results:
+
+The actual params on the request are a and c, so:
+
+a: "b"
+c: "d%20e%20%3D%20f%20%26%20g%20%3D%20r"

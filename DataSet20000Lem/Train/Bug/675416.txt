@@ -1,0 +1,40 @@
+Fetching bookmark information during onBeforeItemRemove may break the bookmark cache
+User Agent: Mozilla/5.0 (Windows NT 5.0; rv:6.0) Gecko/20100101 Firefox/6.0
+Build ID: 20110721152715
+
+Steps to reproduce:
+
+Using nsINavBookmarkService I did the following:
+
+1. Created a folder titled "Bookmarks" under the bookmark menu
+2. Added a bookmark titled "Wired Science" to the folder created in step 1
+3. Removed the folder created in step 1
+4. Created a new folder titled "Science" under the bookmark menu
+5. Created a new folder titled "Blogs" under the folder created in step 4
+
+The following code snippet duplicate the step above:
+
+var b = Components.classes["@mozilla.org/browser/nav-bookmarks-service;1"].getService( Components.interfaces.nsINavBookmarksService );
+var io = Components.classes["@mozilla.org/network/io-service;1"].getService( Components.interfaces.nsIIOService );
+
+var folder = bs.createFolder( bs.bookmarksMenuFolder, "Bookmarks", bs.DEFAULT_INDEX );
+bs.insertBookmark( folder, ios.newURI( "http:/www.wired.com/wiredscience", null, null), bs.DEFAULT_INDEX , "Wired Science" );
+
+bs.removeItem( folder );
+
+var folder1 = bs.createFolder( bs.bookmarksMenuFolder, "Science", bs.DEFAULT_INDEX );
+var folder2 = bs.createFolder( folder1, "Blogs", bs.DEFAULT_INDEX );
+
+// folder2 title should be "Blogs" but is "Wired Science" instead
+if (bs.getItemTitle( folder2 ) != "Blogs") alert( "Folder name incorrect" );
+
+
+
+Actual results:
+
+The folder created in step 5 get the title "Wired Science"
+
+
+Expected results:
+
+The folder should have received the title "Blogs" that wa specified in the call to createFolder. In fact, this is what happens under Firefox 5 but not under Firefox 6 betas.

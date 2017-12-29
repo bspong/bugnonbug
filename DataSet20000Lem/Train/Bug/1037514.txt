@@ -1,0 +1,11 @@
+Merging all client into a single map break detaching from top-level actor
+Bug 797621 introduced a change that merged all top-level client (tabs, addons, threads) into a single map. This caused one of my patch in bug 1035206 to break.
+
+The problem is with this line:
+http://lxr.mozilla.org/mozilla-central/source/toolkit/devtools/client/dbg-client.jsm#901
+
+Previously, this condition would only hold true if the type of the packet wa in ThreadStateTypes *and* we had a corresponding thread client for the packet's actor id.
+
+Note however, TabClient, AddonClient, and WorkerClient can also receive "detached" packets, even though they dont have an onThreadState method. This wasn't a problem before, but now that we've thrown all client together in a single map, we try to call onThreadState for these client a well when we receive a "detached" packet (for some reason this trigger a silent error, any idea why that is?).
+
+I've been unable to find a test that properly exercise TabClient.detach, which is probably why this didn't turn up during testing. We do of course call TabClient.detach when the client connection is closed, but since close return immediately, we would never notice if the callback for the first call to TabClient.detach never got called.

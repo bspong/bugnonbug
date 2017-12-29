@@ -1,0 +1,38 @@
+Array.every and Array.some do not behave consistently with empty arrays
+User-Agent:       Mozilla/5.0 (Macintosh; U; Intel Mac OS X; en-US; rv:1.8.1.3) Gecko/20070309 Firefox/2.0.0.3
+Build Identifier: Mozilla/5.0 (Macintosh; U; Intel Mac OS X; en-US; rv:1.8.1.3) Gecko/20070309 Firefox/2.0.0.3
+
+Logically, you would expect that if someArray.every(fun) returns true that someArray.some(fun) would like wise return true; if every item passes the test the some items must pass the test. However this is not the case if someArray happens to be empty. [].every(function (){return false;}); always returns returns true and [].some(function (){return false;});
+
+I am of two mind about what should be returned by these function when applied to an empty array. I see two possible options, either they return false (because the method never returned true) or they return undefined (for the same reason that [][0] is undefined). 
+
+Reproducible: Always
+
+Steps to Reproduce:
+The following JavaScript exercises the problems I'm seeing and could be incorporated into any unit tests. 
+
+alert("[].every should be false or undefined but it is: " + [].every(function (){return true;}));
+alert("[].some should be false or undefined but it is: " + [].some(function (){return true;}));
+alert("[].some === equal [].every should be true but it is: " + ([].every(function (){return true;}) == [].some(function (){return true;})));
+
+Obviously the alerts illustrate both what should be seen
+
+Actual Results:  
+Evaluations give:
+
+true
+false
+false
+
+Expected Results:  
+false
+false
+true
+
+or
+
+undefined
+undefined
+true
+
+The compatibility code is similarly flawed and should be updated.

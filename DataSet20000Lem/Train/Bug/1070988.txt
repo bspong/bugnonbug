@@ -1,0 +1,27 @@
+Installer should remove leftover chrome.manifest (on Windows) Startup (crash at pave-over upgrade of Firefox 31 with unpacked omni.ja)
+Reproducible with:
+Firefox 32.0.2 - BuildID: 20140917194002
+Firefox 33 Beta 5 - BuildID: 20140918174809
+Latest Firefox 34 Aurora - BuildID: 20140922004004
+Latest Firefox 35 Nightly - BuildID: 20140922030204
+
+Environment: Windows 7 x64
+
+Steps to reproduce:
+1. Install Firefox 31 cleanly in a new empty folder.
+2. In the installation folder rename omni.ja to omni.zip.
+3. Using Windows Explorer extract all content of omni.zip to the installation folder.
+4. Rename omni.zip back to omni.ja.
+5. Download one of the affected build (32.0.2, 33, 34, 35) and choose to install it at the same location where 31 is, thus performing a pave-over upgrade.
+6. When upgrade completes, choose to launch Firefox.
+
+Expected results:
+Firefox start correctly without any issues.
+
+Actual results:
+Firefox crash on startup with two different signature:
+a) 32.0.2 & 33 Beta 5 - [@ nsFrame::BoxReflow(nsBoxLayoutState&, nsPresContext*, nsHTMLReflowMetrics&, nsRenderingContext*, int, int, int, int, bool)] (same a in bug 1063052)
+b) 34 & 35 - [@ mozalloc_abort(char const* const) | NS_DebugBreak | ErrorLoadingBuiltinSheet ] - see bp-25124030-ba65-4bf1-9829-086a42140922 (https://crash-stats.mozilla.com/report/index/bp-25124030-ba65-4bf1-9829-086a42140922)
+
+Notes:
+- this issue is a follow up on bug 1063052 (startup crash in installation with unpacked omni.ja). Prior to this fix all branch were crashing with nsFrame::BoxReflow.

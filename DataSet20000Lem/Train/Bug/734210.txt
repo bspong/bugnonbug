@@ -1,0 +1,25 @@
+set desktop background image leak the page
+I accidentally clicked on "Set a Desktop Background" yesterday, then I cancelled out. This morning while examining the cycle collector graph, I noticed that the page that I had clicked on for Set a Desktop Background wa still in memory. It appears to be kept alive via a node in the chrome://browser/content/setDesktopBackground.xul document. I'll try to reproduce this later today.
+
+If anybody else want to try this, about:ccdump is probably the way to go ( https://addons.mozilla.org/en-us/firefox/addon/cycle-collector-analyzer/ ). Basically, go to a page, do set a desktop background, cancel out of it, then close the page. Go to about:memory and run some GCs and CCs, then see if the document for the page you closed is still around.
+
+Here's the start of the path if that is useful:
+
+0x131da98b0 [nsGenericElement (XUL) command id='Tools:PrivateBrowsing' chrome://browser/content/setDesktopBackground.xul]
+--[[via hash] mListenerManager]-> 0x1398e9c80 [nsEventListenerManager]
+--[mListeners[i] mListener]-> 0x136db7a80 [nsJSEventListener]
+--[mScopeObject]-> 0x1208c7100 [JS Object (ChromeWindow)]
+--[]-> 0x15bac0240 [JS Object (Array)]
+--[]-> 0x12d228340 [JS Object (Proxy)]
+--[]-> 0x132ae2820 [JS Object (HTMLImageElement)]
+--[xpc_GetJSPrivate(obj)]-> 0x12ed5a510 [XPCWrappedNative (HTMLImageElement)]
+
+From there, it connects to an img DOM node, and from there it leak the entire page, it look like.
+
+It isn't just that one element of the setDesktopBackground document, there are many other one that are being held alive somehow:
+
+0x1352c67d0 [nsGenericElement (XUL) menuitem id='historyRestoreLastSession' class='restoreLastSession' chrome://browser/content/setDesktopBackground.xul]
+0x134fa9a10 [nsGenericElement (XUL) menu chrome://browser/content/setDesktopBackground.xul]
+0x134dc60d0 [nsGenericElement (XUL) menu chrome://browser/content/setDesktopBackground.xul]
+
+The reference to the XUL document itself are all accounted for, so it is just some element of it that are being held alive somehow.

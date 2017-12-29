@@ -1,0 +1,16 @@
+JS debugger: use of promises in server doesn't preserve request/reply ordering
+The remote protocol says that actors reply to requests in the order the requests were received. This is what make pipelined requests work: the client can send many requests to a server, and store the handlers in a FIFO, to be paired up with replies.
+
+However, when we use promises (or any defer-to-later-event-tick mechanisms, really) in the server to handle requests, it's possible for the server to send replies to pipelined requests out of order.
+
+I believe this bug can occur when source maps are in use. However, DebuggerClient currently takes care never to pipeline requests, so until we pipeline, this is only a theoretical problem.
+
+I'm still a little foggy about event-driven programming, so let me spell everything out for my own sake. The following sequence is possible:
+
+- An actor receives a request. The response depends on the result of some I/O operation, so the actor creates a promise of the result, with a 'then' function that sends the reply. Control returns to the event loop.
+
+- The actor receives a second request, and things proceed as for the first: a second promise is created to send this request's reply, and the tick ends.
+
+- The I/O operations complete out of order, so the second request's promise is resolved first, and its reply is sent before the first request's reply.
+
+I'm sure this could be fixed in the server in a way that preserves all our opportunities for parallelism, but I haven't thought it through. Surely there is prior art.

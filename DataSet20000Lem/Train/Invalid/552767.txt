@@ -1,0 +1,98 @@
+Windows Server 2008 R2 Crash Due To firefox.exe
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.2) Gecko/20100115 Firefox/3.6
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.2) Gecko/20100115 Firefox/3.6
+
+Minidump file indicates that firefox.exe caused one of our Windows Server 2008 R2 box to crash on 3/15/10 while 20 user were logged into Remote Desktop Services session (formerly Terminal Services). Being listed under the Bugcheck Analysis section, we are thinking that it hit a bad spot of memory, but we are seeking verification or another answer, if appropriate.
+
+Reproducible: Couldn't Reproduce
+
+Steps to Reproduce:
+1. Users logged into RDS session after server reboot.
+2. Users opened Firefox for web browsing and custom application usage.
+3. Users closed browser and logged off RDS sessions.
+Actual Results:
+No further crash of server a of yet.
+
+Expected Results:
+Crashed server again.
+
+
+
+*******************************************************************************
+* *
+* Bugcheck Analysis *
+* *
+*******************************************************************************
+
+APC_INDEX_MISMATCH (1)
+This is a kernel internal error. The most common reason to see this
+bugcheck is when a filesystem or a driver ha a mismatched number of
+call to disable and re-enable APCs. The key data item is the
+Thread->KernelApcDisable field. A negative value indicates that a driver
+ha disabled APC call without re-enabling them. A positive value indicates
+that the reverse is true. This check is made on exit from a system call.
+Arguments:
+Arg1: fffff80001db8762, address of system function (system call)
+Arg2: 0000000000000000, Thread->ApcStateIndex << 8 | Previous ApcStateIndex
+Arg3: 000000000000fffd, Thread->KernelApcDisable
+Arg4: 0000000000000000, Previous KernelApcDisable
+
+Debugging Details:
+------------------
+
+
+FAULTING_IP:
+nt!KeUserModeCallback+e6
+fffff800`01db8762 8bd8 mov ebx,eax
+
+CUSTOMER_CRASH_COUNT: 1
+
+DEFAULT_BUCKET_ID: DRIVER_FAULT_SERVER_MINIDUMP
+
+BUGCHECK_STR: 0x1
+
+PROCESS_NAME: firefox.exe
+
+CURRENT_IRQL: 0
+
+LAST_CONTROL_TRANSFER: from fffff80001ac0aad to fffff80001ac8f00
+
+STACK_TEXT:
+fffff880`115b04a8 fffff800`01ac0aad : 00000000`00000001 fffff800`01db8762 00000000`00000000 00000000`0000fffd : nt!KeBugCheckEx
+fffff880`115b04b0 fffff800`01db8762 : 00000000`00000000 fffff800`01a15b7f fffffa80`3a152230 fffff960`001f85f5 : nt!KiCallUserMode+0x26d
+fffff880`115b05f0 fffff960`0019883e : fffffa80`0000004e fffff880`115b06a0 fffff900`c2646eb0 fffff900`c0cc4c30 : nt!KeUserModeCallback+0xe6
+fffff880`115b0670 fffff960`0015ecfe : fffff900`c2646eb0 fffff900`c0cc4c30 fffff960`00116bc4 00000000`00000002 : win32k!xxxClientCallWinEventProc+0x76
+fffff880`115b06e0 fffff960`0015ede0 : 00000000`00016ba4 00000000`00000001 fffffa80`399b03b0 00000000`000004d5 : win32k!xxxProcessNotifyWinEvent+0x172
+fffff880`115b0760 fffff960`000e6a02 : fffff900`c28f3b30 00000000`00000001 fffffa80`399b03b0 fffff900`c0e82610 : win32k!xxxFlushDeferredWindowEvents+0x30
+fffff880`115b0790 fffff960`000e5b1b : 00000000`00000000 fffff960`0010f0dd 00000374`0000045e fffff900`80000012 : win32k!zzzSetFMouseMoved+0x3e2
+fffff880`115b0900 fffff960`00179e8b : fffff900`c0e43140 00000000`00000000 00000000`00000001 ffffffff`ffffffed : win32k!zzzLockDisplayAreaAndInvalidateDCCache+0x53
+fffff880`115b0950 fffff960`0012b9e4 : 00000000`ffffffed 00000000`00000000 00000000`00000002 00000000`00000001 : win32k!xxxScrollWindowEx+0x787
+fffff880`115b0ae0 fffff800`01ac8153 : fffffa80`3915e630 00000000`0021db38 00000000`0000003b fffff880`115b0b68 : win32k!NtUserScrollWindowEx+0x140
+fffff880`115b0bb0 00000000`753907aa : 00000000`00000000 00000000`00000000 00000000`00000000 00000000`00000000 : nt!KiSystemServiceCopyEnd+0x13
+00000000`0021da90 00000000`00000000 : 00000000`00000000 00000000`00000000 00000000`00000000 00000000`00000000 : 0x753907aa
+
+
+STACK_COMMAND: kb
+
+FOLLOWUP_IP:
+nt!KeUserModeCallback+e6
+fffff800`01db8762 8bd8 mov ebx,eax
+
+SYMBOL_STACK_INDEX: 2
+
+SYMBOL_NAME: nt!KeUserModeCallback+e6
+
+FOLLOWUP_NAME: MachineOwner
+
+MODULE_NAME: nt
+
+IMAGE_NAME: ntkrnlmp.exe
+
+DEBUG_FLR_IMAGE_TIMESTAMP: 4a5bc600
+
+FAILURE_BUCKET_ID: X64_0x1_SysCallNum_10be_nt!KeUserModeCallback+e6
+
+BUCKET_ID: X64_0x1_SysCallNum_10be_nt!KeUserModeCallback+e6
+
+Followup: MachineOwner
+---------

@@ -1,0 +1,84 @@
+non-cachable content is cached for some seconds
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.9) Gecko/20050711 Firefox/1.0.5
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.9) Gecko/20050711 Firefox/1.0.5
+
+I have the following php code on the web server:
+
+---------------------------------------
+<?php
+	// Date in the past
+	header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");
+
+	// always modified
+	header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");
+
+	// HTTP/1.1
+	header("Cache-Control: no-store, no-cache, must-revalidate");
+	header("Cache-Control: post-check=0, pre-check=0", false);
+
+	// HTTP/1.0
+	header("Pragma: no-cache");
+
+	session_start();
+	print( "Counter: ". ( $_SESSION[ "counter" ] ++ ) );
+	
+	$self = $_SERVER[ "PHP_SELF" ];
+	sleep(1);
+	print "<hr><a href=\"$self\">reload</a>";
+?>
+---------------------------------------
+
+Calling this script, it is printing
+- the actual value of a counter and 
+- a "reload" link. 
+Clicking the link should reload the content by an incremented value of the
+counter. The header commands say not to cache the content because it is varying. 
+
+I start to increment the value by repeatedly clicking the reload link.
+Unfortunatelly it is reloading only one time per about three seconds, in the
+cases of the remaining "reload" clicks the content is not refreshed. 
+
+The web server log is saying that the client request is not arriving in these
+missing cases. The sleep(1) helps to realize a real loading because it takes a
+little time. In the missing cases the (unchanged) content (with the old counter
+value) is redisplayed at once. This says too that the browser does not reload it
+from the server. 
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Visit the page at the URL above
+2. Try to click the "reload" link several times (about one click per second)
+3. Experience that some "reload" requests are missing and the counter is not
+increasing every time.
+
+Actual Results:  
+I experienced that some "reload" requests were missing and the counter was not
+increasing in these cases.
+
+Expected Results:  
+It should not re-get the content from it's cache but it should re-fetch it from
+the server and displaying the new value after each reloading.
+
+1.
+If I remember right then it was working in the earlier (1.0.4) version of Firefox.
+
+2.
+My browser.cache.check_doc_frequency value is 3.
+
+3.
+Under Microsft Internet Explorer 6.0 it works fine.
+
+4.
+Under several other browsers it is working fine.
+
+5.
+A non-expert user has no idea why is not refreshing the content of his chat site
+or whatever else. That's why I think this is an important bug a should be fixed
+immediately. 
+
+6. 
+I am very angry because of this silly bug. It required a lot of time for me to
+find it out where the problem is.

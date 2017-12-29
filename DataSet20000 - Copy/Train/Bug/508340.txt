@@ -1,0 +1,52 @@
+User-level "dictionaries" directory is not checked for files
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; pl-PL; rv:1.9.1.2) Gecko/20090729
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; pl-PL; rv:1.9.1.2) Gecko/20090729
+
+I have defined symbolic links to dictionary files in my profile directory:
+
+ $ ll ~/.mozilla/firefox/5fci9dad.default/dictionaries/
+total 12
+drwxr-xr-x  2  2048 08-04 19:27 ./
+drwx------ 19 10240 08-04 21:10 ../
+lrwxrwxrwx  1    34 08-04 19:27 en_US.aff -> /usr/share/myspell/dicts/en_US.aff
+lrwxrwxrwx  1    34 08-04 19:27 en_US.dic -> /usr/share/myspell/dicts/en_US.dic
+lrwxrwxrwx  1    34 08-04 19:21 pl-PL.aff -> /usr/share/myspell/dicts/pl_PL.aff
+lrwxrwxrwx  1    34 08-04 19:21 pl-PL.dic -> /usr/share/myspell/dicts/pl_PL.dic
+
+but I haven't access to Polish dictionary from right-click context menu. If I create link in system-wide firefox directory (e.g /usr/local/lib/firefox-3.5.2/dictionaries/) then directories are accessible for choice from menu.
+
+In opposite to http://kb.mozillazine.org/Dictionaries#Installing_by_using_an_extension, firefox even doesn't search "dictionaries" directly in profile directory, but does it in extension's subdirectories:
+
+ $strace -f firefox 2>&1 | grep dictionaries
+[pid  5584] access("/usr/local/lib/firefox-3.5.2/dictionaries", F_OK) = 0
+[pid  5584] stat64("/usr/local/lib/firefox-3.5.2/dictionaries", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+[pid  5584] open("/usr/local/lib/firefox-3.5.2/dictionaries", O_RDONLY|O_NONBLOCK|O_LARGEFILE|O_DIRECTORY|O_CLOEXEC) = 62
+[pid  5584] access("/usr/local/lib/firefox-3.5.2/dictionaries/en-US.aff", F_OK) = 0
+[pid  5584] access("/usr/local/lib/firefox-3.5.2/dictionaries", F_OK) = 0
+[pid  5584] stat64("/usr/local/lib/firefox-3.5.2/dictionaries", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+[pid  5584] open("/usr/local/lib/firefox-3.5.2/dictionaries", O_RDONLY|O_NONBLOCK|O_LARGEFILE|O_DIRECTORY|O_CLOEXEC) = 62
+[pid  5584] access("/usr/local/lib/firefox-3.5.2/dictionaries/en-US.aff", F_OK) = 0
+[pid  5584] access("/home/szambo/.mozilla/firefox/5fci9dad.default/extensions/{d10d0bf8-f5b5-c8b4-a8b2-2b9879e08c5d}/dictionaries", F_OK) = -1 ENOENT (No such file or directory)
+[pid  5584] access("/home/szambo/.mozilla/firefox/5fci9dad.default/extensions/uploader@adblockfilters.mozdev.org/dictionaries", F_OK) = -1 ENOENT (No such file or directory)
+[pid  5584] access("/home/szambo/.mozilla/firefox/5fci9dad.default/extensions/{d40f5e7b-d2cf-4856-b441-cc613eeffbe3}/dictionaries", F_OK) = -1 ENOENT (No such file or directory)
+[pid  5584] access("/home/szambo/.mozilla/firefox/5fci9dad.default/extensions/dendzones@captaincaveman.nl/dictionaries", F_OK) = -1 ENOENT (No such file or directory)
+[pid  5584] access("/home/szambo/.mozilla/firefox/5fci9dad.default/extensions/firebug@software.joehewitt.com/dictionaries", F_OK) = -1 ENOENT (No such file or directory)
+[pid  5584] access("/home/szambo/.mozilla/firefox/5fci9dad.default/extensions/firefox@ghostery.com/dictionarie ", F_OK) = -1 ENOENT (No such file or directory)
+[pid  5584] access("/home/szambo/.mozilla/firefox/5fci9dad.default/extensions/{e4a8a97b-f2ed-450b-b12d-ee082ba24781}/dictionaries", F_OK) = -1 ENOENT (No such file or directory)
+[pid  5584] access("/home/szambo/.mozilla/firefox/5fci9dad.default/extensions/{ba7fbd23-a697-401e-bb13-7432eaf68747}/dictionaries", F_OK) = -1 ENOENT (No such file or directory)
+[pid  5584] access("/home/szambo/.mozilla/firefox/5fci9dad.default/extensions/{73a6fe31-595d-460b-a920-fcc0f8843232}/dictionaries", F_OK) = -1 ENOENT (No such file or directory)
+[pid  5584] access("/home/szambo/.mozilla/firefox/5fci9dad.default/extensions/{e0204bd5-9d31-402b-a99d-a6aa8ffebdca}/dictionaries", F_OK) = -1 ENOENT (No such file or directory)
+[pid  5584] access("/home/szambo/.mozilla/firefox/5fci9dad.default/extensions/{340c2bbc-ce74-4362-90b5-7c26312808ef}/dictionaries", F_OK) = -1 ENOENT (No such file or directory)
+[pid  5584] access("/home/szambo/.mozilla/firefox/5fci9dad.default/extensions/{340c2bbc-ce74-4362-90b5-7c26312808ef}/platform/Linux/dictionaries", F_OK) = -1 ENOENT (No such file or directory)
+[pid  5584] access("/home/szambo/.mozilla/firefox/5fci9dad.default/extensions/{340c2bbc-ce74-4362-90b5-7c26312808ef}/platform/Linux_x86-gcc3/dictionaries", F_OK) = -1 ENOENT (No such file or directory)
+[pid  5584] access("/home/szambo/.mozilla/firefox/5fci9dad.default/extensions/{84b24861-62f6-364b-eba5-2e5e2061d7e6}/dictionaries", F_OK) = -1 ENOENT (No such file or directory)
+[pid  5584] open("/usr/local/lib/firefox-3.5.2/dictionaries/en-US.aff", O_RDONLY) = 62
+[pid  5584] open("/usr/local/lib/firefox-3.5.2/dictionaries/en-US.dic", O_RDONLY) = 62
+[pid  5584] open("/usr/local/lib/firefox-3.5.2/dictionaries/en-US.aff", O_RDONLY) = 62
+
+What happens wrong? This behaviour exists both in binary Firefox version or from source.
+
+________
+Sorry for my poor English.
+
+Reproducible: Always

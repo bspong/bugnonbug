@@ -1,0 +1,37 @@
+Inconsistent global scope for extension between OSX and Window/Linux
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.7.3) Gecko/20041026 Firefox/0.9.2 StumbleUpon/1.993
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.7.3) Gecko/20041026 Firefox/0.9.2 StumbleUpon/1.993
+
+In trying to figure out why OutSidebar 0.8 work under Windows and Linux but not
+under OSX, I discovered an inconsistency between the platforms. I don't have an
+OSX machine readily available, so I haven't been able to analyze it a deeply a
+I would normally like to before submitting a bug, but the behavior is clearly
+inconsistent, so I figured I'd go ahead and submit it.
+
+
+Reproducible: Always
+Steps to Reproduce:
+My extension override the default toggleSidebar() function found in browser.js,
+like so:
+
+function newToggleSidebar(aCommandID, forceOpen) {
+// My code executes here...
+
+// Invoke the original toggleSidebar function
+oldToggleSidebar (aCommandID, forceOpen);
+}
+
+// Save a reference to the original toggleSidebar
+oldToggleSidebar = toggleSidebar;
+// Replace the original toggleSidebar function with my implementation
+toggleSidebar = newToggleSidebar;
+
+Actual Results:
+In Mac OSX, my newToggleSidebar() function never get called. This lead me to
+believe that extension don't share the same global scope with browser.js under
+Mac OSX the way they do under Windows and Linux
+
+Expected Results:
+Under Windows and Linux, my newToggleSidebar() function replaces the original
+toggleSidebar() implementation, and invokes that original implementation after
+executing it own custom action (resizing and re-positioning the browser).

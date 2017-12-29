@@ -1,0 +1,32 @@
+Relative URLs in Live Bookmark link elements not resolved
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.3) Gecko/20040928 Firefox/0.10
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.3) Gecko/20040928 Firefox/0.10
+
+If a <link> element in an Atom or RSS feed contains a relative URL, Live
+Bookmarks doesn't attempt to resolve the absolute URL, it just tries to open the
+relative URL as-is.
+
+In Atom, the situation is clear-cut: xml:base processing is required for
+relative URLs, so you just walk up the tree, gathering path parts, until you hit
+an xml:base attribute with a scheme and host, or until you get to the top
+without, when you use the feed URL as a base.
+
+In RSS, it's fuzzier: the specs all predate xml:base, and fail to mention
+anything that should be used as a base, so RFC 2396 says you should use the feed
+URL, but because most people using <img src="images/me-on-pony.jpg"> mean
+/blog/images/ rather than /xml/images/, aggregators traditionally use the
+channel/link (the feed "home page") as a base URL, rather than using the feed
+URL, for resolving all relative URLs, not just in content. Correct, or work
+right? Dunno.
+
+Reproducible: Always
+Steps to Reproduce:
+1. Add the above URL as a Live Bookmark.
+2. Select any item.
+3. Pout.
+
+Actual Results:  
+Browser attempted to load a page from the site www.1852.html
+
+Expected Results:  
+Load www.intertwingly.net/blog/1852.html

@@ -1,0 +1,33 @@
+Request for relative uri after 302 redirect is occasionally relative to the original request
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.2.3) Gecko/20100401 Firefox/3.6.3 (.NET CLR 3.5.30729)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.2.3) Gecko/20100401 Firefox/3.6.3 (.NET CLR 3.5.30729)
+
+We've observed this behavior sporadically in FF 3.5.8, 3.6.2 and 3.6.3 on both Windows XP and Mac OS X.
+
+The user types in a URL like
+http://myserver/ctx/svlt/doit
+The server responds with a 302 redirect:
+Location: http://myserver/ctx/blah/
+
+The browser issues the GET to that url, and the server responds with an HTML page which includes relative references to CSS and JS files, such as:
+<link rel="stylesheet" href="mystyle.css?123" type="text/css">
+<script type="text/javascript" src="myscript.js?123"></script>
+
+Almost all the time, FireFox does the right thing: it issues GET requests for
+http://myserver/ctx/mystyle.css?123
+and
+http://myserver/ctx/myscript.js?123
+
+However, once in a while, it makes the requests relative to the original request (the one that resulted in a redirect), not relative to the target of the redirect. In other words, it requests
+http://myserver/ctx/svlt/mystyle.css?123
+and
+http://myserver/ctx/svlt/myscript.js?123
+
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+Our app is not available to the internet at large, so I can describe this only in conceptual terms.
+1. Create a setup as described in the bug report details. That is, a servlet that redirects to another url on the same server; the redirected-to url responds with HTML that includes relative references (we've seen the problem with CSS and JavaScript files; I don't know if the same problem would occur with image files).
+2. Create a bookmark to the original url (the one that will result in a redirect). 
+3. Navigate to the bookmarked url. After it redirects and you get the page displayed, click on the bookmark again. Repeat many times until you see the problem.

@@ -1,0 +1,16 @@
+Add inner window ID and timestamp to nsIScriptError2
+As discussed with dcamp, I am opening a bug about the possibility of adding a timestamp and an inner window ID property to all of the nsIScriptError2 messages.
+
+For background please see bug 611032 comment 58 and 60.
+
+We need to display cached errors that belong to a specific window based on the inner ID, so we don't show too many messages from too many pages that share the same outer window ID. This needs to happen when the Web Console is open.
+
+We want to use the existing messages cache (the nsIConsoleService), but nsIScriptError2 messages do not have timestamps, and we cannot order them in the output.
+
+The lack of inner window IDs would force us to do something like getInnerWindowID(getOuterWindowById(error.outerWindowID)) for each message, then compare it to inner ID of the window where the Web Console is open, which is quite ugly. Even more so, we'd have to compare the inner ID with each inner ID of all of the iframes/frames in the current page.
+
+It would be more efficient to have the innerWindowID property already available on the error object and just filter the messages accordingly.
+
+Thoughts? Is it worth adding an innerWindowID to nsIScriptError2 messages or we should just do the manual checks in the Web Console?
+
+Thank you!

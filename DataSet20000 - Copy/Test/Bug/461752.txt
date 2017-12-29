@@ -1,0 +1,53 @@
+A bug of http auth in Firefox 3 -- when access two resources, the http auth pop-up shows
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.0; zh-CN; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.0; zh-CN; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3
+
+I configured two resources in the server side which need basic
+authentication. The authentication is very simple: if the password is
+'123456', then it's a valid request, otherwise return status 401.
+
+And here is the test code in the client side:
+
+<html>
+ <body onload="testXhr();">
+   <head>
+     <script language="JavaScript">
+     var urls = ["/first_resources.json", "/second_resources.json"];
+     var count = 0;
+
+     function testXhr() {
+       var resource_url = urls[count%2];
+       var username = "guest";
+       var password = "123456";
+
+       var xhr = new XMLHttpRequest();
+       xhr.onreadystatechange = xhrCallback;
+       xhr.open("GET", resource_url, true, username, password);
+       xhr.send(null);
+       count++;
+
+       setTimeout(testXhr, 8000);
+     }
+
+     function xhrCallback() {
+     }
+     </script>
+   </head>
+ </body>
+</html>
+
+In the statement "setTimeout", if I use a below value such as 1000,
+http auth pop-up shows. I must set it to a very high value to wait the
+resend of last request fully completed.
+I think this behavior is a bug, I had never seen this behavor in IE.
+
+BTW, If you want to test this behavior in your local host, you must
+clean the cached data of Firefox first.
+
+Reproducible: Always
+
+Actual Results:  
+the http auth pop-up shows
+
+Expected Results:  
+the http auth pop-up shouldn't show

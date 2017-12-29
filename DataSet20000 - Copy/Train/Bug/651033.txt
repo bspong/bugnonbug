@@ -1,0 +1,33 @@
+Registering nsISHistoryListener seems to cause Session Store to lose its own listener
+User-Agent:       Mozilla/5.0 (X11; Linux i686; rv:2.0) Gecko/20100101 Firefox/4.0
+Build Identifier: Mozilla/5.0 (X11; Linux i686; rv:2.0) Gecko/20100101 Firefox/4.0
+
+I'm developing an extension that tracks session history through nsISHistoryListeners so it can build a tree of the navigations in each tab. For some reason, it seems that registering my own nsISHistoryListeners at the right point during session restore is causing the Session Store service to lose its own listeners (or at least that's my guess as to what the error message means, since I encountered it on my own code at one point).
+
+The symptoms of this bug (that only the number of tabs specified in browser.sessionstore.max_concurrent_tabs are loaded and the rest stay blank) were first reported in bug 648856. Although that was resolved invalid due to my extension being isolated as a proximal cause, further investigation on my part strongly suggests that the underlying cause really is in Mozilla code. Specifically, I reduced my extension to a near-minimum required to trigger the behavior, and I can't see anything really wrong with it.
+
+Error: Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsISHistory.removeSHistoryListener]
+Source file: resource://gre/components/nsSessionStore.js
+Line: 3957
+
+I have the test case prepared, but I'm not sure in what form you want it. Would a XPI uploaded here be okay? I'll go ahead and upload it, but let me know if you want something else.
+
+I will admit that I'm not 100% sure this isn't really something I'm doing wrong, though it's hard to imagine that simply registering my own listener would properly cause such an issue.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Install my reduced extension (to be uploaded, or something).
+2. Load a session with more tabs than the value of browser.sessionstore.max_concurrent_tabs. Having it load at startup by configuring "Show my windows and tabs from last time" works, at least.
+
+Actual Results:  
+The following error appears in the console (using Console²) some time after SSTabRestored events fire (the relevant registration of my handlers happens in between):
+
+Error: Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsISHistory.removeSHistoryListener]
+Source file: resource://gre/components/nsSessionStore.js
+Line: 3957
+
+As a result of the error, all of the tabs that weren't already being loaded never do load.
+
+Expected Results:  
+Registering an nsISHistoryListener should never cause others to disappear, assuming that's what's happening.

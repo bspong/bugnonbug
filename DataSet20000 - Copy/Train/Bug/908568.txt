@@ -1,0 +1,40 @@
+Responsive Design View incorrectly calculates documentElement.clientWidth until DOMContentLoaded fires
+User Agent: Mozilla/5.0 (Windows NT 6.2; WOW64; rv:23.0) Gecko/20100101 Firefox/23.0 (Beta/Release)
+Build ID: 20130814063812
+
+Steps to reproduce:
+
+When trying to test the viewport size, I noticed that in the new floating-scrollbar Responsive Design View, documentElement.clientWidth is miscalculated (thinking it has a scrollbar) until the DOMContentLoaded event fires.
+
+Using the following code:
+
+console.log('event, window.innerWidth, documentElement.clientWidth');
+console.log('inline', window.innerWidth, document.documentElement.clientWidth);
+
+document.onreadystatechange = function() {
+	console.log('domready', document.readyState, window.innerWidth, document.documentElement.clientWidth);
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+	console.log('domcontentloaded', window.innerWidth, document.documentElement.clientWidth);
+});
+
+window.onload = function() {
+	console.log('onload', window.innerWidth, document.documentElement.clientWidth);
+};
+
+Also available as a fiddle: http://fiddle.jshell.net/stowball/Jwyyg/show/light/ & http://jsfiddle.net/stowball/Jwyyg/
+
+
+Actual results:
+
+When in Responsive Design View, the console logs that window.innerWidth & document.documentElement.clientWidth are different until DOMContentLoaded, when they become the same.
+
+
+Expected results:
+
+Responsive Design View no longer has scrollbars, so the standard scrollbar width should never be taken in to account making document.documentElement.clientWidth === window.innerWidth - just as it does when not in RWD view.
+
+I have a written a plugin called mqGenie (https://github.com/stowball/mqGenie) which normalises the viewport differences cross-browser, but this bug is making it break - as it's incorrectly changing media queries in RWD View when it shouldn't.
+
+I'll have to run the plugin on DOMContentLoaded instead of immediately in the head if this bug persists.

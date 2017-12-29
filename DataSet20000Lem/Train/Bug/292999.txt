@@ -1,0 +1,54 @@
+Possible leak in nsScriptSecurityManager::~nsScriptSecurityManager
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.7) Gecko/20050505 Firefox/1.0.3
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.7) Gecko/20050505 Firefox/1.0.3
+
+valgrind trace:
+=11613== 16798 (9170 direct, 7628 indirect) byte in 223 block are definitely
+lost in loss record 259 of 273
+==11613== at 0x341462B4: malloc (vg_replace_malloc.c:130)
+==11613== by 0x3415D3A0: JS_malloc (in
+/.share/usr/app/firefox-1.0.3-test/libmozjs.so)
+==11613== by 0x341C3BB8: js_NewStringCopyN (in
+/.share/usr/app/firefox-1.0.3-test/libmozjs.so)
+==11613== by 0x341C3591: js_InitRuntimeStringState (in
+/.share/usr/app/firefox-1.0.3-test/libmozjs.so)
+==11613== by 0x34167B25: js_NewContext (in
+/.share/usr/app/firefox-1.0.3-test/libmozjs.so)
+==11613== by 0x3415C833: JS_NewContext (in
+/.share/usr/app/firefox-1.0.3-test/libmozjs.so)
+==11613== by 0x34EC2479: (within
+/.share/usr/app/firefox-1.0.3-test/components/libxpconnect.so)
+==11613== by 0x34EC2B32: (within
+/.share/usr/app/firefox-1.0.3-test/components/libxpconnect.so)
+==11613== by 0x352F6937: nsScriptSecurityManager::GetSafeJSContext() (in
+/.share/usr/app/firefox-1.0.3-test/components/libcaps.so)
+==11613== by 0x352FF568: nsScriptSecurityManager::Init() (in
+/.share/usr/app/firefox-1.0.3-test/components/libcaps.so)
+==11613== by 0x352FFBD6: nsScriptSecurityManager::GetScriptSecurityManager()
+(in /.share/usr/app/firefox-1.0.3-test/components/libcaps.s
+==11613== by 0x35308800: (within
+/.share/usr/app/firefox-1.0.3-test/components/libcaps.so)
+
+GetScriptSecurityManager():
+if (!gScriptSecMan) {
+<...allocates ssManager...>
+gScriptSecMan = ssManager;
+}
+return gScriptSecMan;
+
+Seems that gScriptSecMan is subsequently leaked here:
+
+nsScriptSecurityManager.cpp:
+nsScriptSecurityManager::~nsScriptSecurityManager(void)
+{
+delete mOriginToPolicyMap;
+delete mDefaultPolicy;
+delete mCapabilities;
+
+gScriptSecMan = nsnull; <=== how'bout delete first?
+}
+
+
+Reproducible: Always
+
+Steps to Reproduce:

@@ -1,0 +1,54 @@
+DevTools: indexeddb entry not showing in the developer tool when debugging background script
+User Agent: Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.106 Safari/537.36 OPR/38.0.2220.41
+
+Steps to reproduce:
+
+I'm building WebExtension using indexeddb.
+
+All of the use of indexeddb is in the background script.
+
+Its working a expected but i can't debug it.
+
+When i go to:
+about:debugging
+Then click debug (on my extension)
+Then look at storage pane, in the indexeddb section i can't see my db entry there.
+
+However the indexeddb API work a expexted.
+
+
+
+Steps to reproduce:
+Go to: about:debugging
+Click debug on one of the extensions.
+Run the following code:
+
+var open = indexedDB.open("MyDatabase", 1);
+
+open.onupgradeneeded = function() {
+var db = open.result;
+var store = db.createObjectStore("MyObjectStore", {keyPath: "id"});
+var index = store.createIndex("NameIndex", ["name.last", "name.first"]);
+};
+
+open.onsuccess = function() {
+var db = open.result;
+var tx = db.transaction("MyObjectStore", "readwrite");
+var store = tx.objectStore("MyObjectStore");
+var index = store.index("NameIndex");
+
+store.put({id: 12345, name: {first: "John", last: "Doe"}, age: 42});
+store.put({id: 67890, name: {first: "Bob", last: "Smith"}, age: 35});
+
+var getJohn = store.get(12345);
+var getBob = index.get(["Smith", "Bob"]);
+
+getJohn.onsuccess = function() { console.log(getJohn.result.name.first); };
+getBob.onsuccess = function() { console.log(getBob.result.name.first); };
+tx.oncomplete = function() {db.close(); };
+}
+
+
+
+
+You should see the content of indexeddb in the storage pane.

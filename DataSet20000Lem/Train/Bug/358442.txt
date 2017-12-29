@@ -1,0 +1,33 @@
+during build, it error out with `kCGBitmapByteOrder32Host' undeclared
+User-Agent: Mozilla/5.0 (Macintosh; U; PPC Mac OS X Mach-O; en-US; rv:1.8.0.7) Gecko/20060909 Firefox/1.5.0.7
+Build Identifier: ftp://ftp.mozilla.org/pub/mozilla.org/firefox/releases/2.0/source/firefox-2.0-source.tar.bz2
+
+I am building Firefox 2.0 (the stable release) on Mac OSX 10.4.7 with an iBook G3 700mhz. GCC is "gcc version 3.3 20030304". I am using the optimize flag, but everything else is default. I installed libIDL from source (all the latest prerequisite a well from source) because the configure step failed. I then ran the "make -f client.mk build" step again and it looked a if it wa working. The compilation continued until it got to the file "mozilla/gfx/cairo/cairo/src/cairo-quartz-surface.c", at which point it failed with a "`kCGBitmapByteOrder32Host' undeclared" error.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Type 'make -f "client.mk" build' into the command line while in mozilla dir.
+2. Wait until the compilation process get to file cairo-quartz-surface.c
+Actual Results:
+gcc -o cairo-quartz-surface.o -c -DMOZILLA_INTERNAL_API -DOSTYPE=\"Darwin8.7.0\" -DOSARCH=\"Darwin\" -DBUILD_ID=0000000000 -I/Users/rob/Desktop/mozilla/gfx/cairo/cairo/src -I/Users/rob/Desktop/mozilla/gfx/cairo/cairo/src/../../libpixman/src -I../../../../dist/include/png -I../../../../dist/include/zlib -I../../../../dist/include/libpixman -I../../../../dist/include/cairo -I../../../../dist/include -I../../../../dist/include/nspr -I../../../../dist/sdk/include -fPIC -Wall -W -Wno-unused -Wpointer-arith -Wcast-align -Wno-long-long -fpascal-strings -no-cpp-precomp -fno-common -I/Developer/Headers/FlatCarbon -pipe -DNDEBUG -DTRIMMED -O -include ../../../../mozilla-config.h -DMOZILLA_CLIENT -Wp,-MD,.deps/cairo-quartz-surface.pp /Users/rob/Desktop/mozilla/gfx/cairo/cairo/src/cairo-quartz-surface.c
+/Users/rob/Desktop/mozilla/gfx/cairo/cairo/src/cairo-quartz-surface.c: In function `_cairo_quartz_surface_acquire_source_image':
+/Users/rob/Desktop/mozilla/gfx/cairo/cairo/src/cairo-quartz-surface.c:115: error: `kCGBitmapByteOrder32Host' undeclared (first use in this function)
+/Users/rob/Desktop/mozilla/gfx/cairo/cairo/src/cairo-quartz-surface.c:115: error: (Each undeclared identifier is reported only once
+/Users/rob/Desktop/mozilla/gfx/cairo/cairo/src/cairo-quartz-surface.c:115: error: for each function it appears in.)
+/Users/rob/Desktop/mozilla/gfx/cairo/cairo/src/cairo-quartz-surface.c: At top level:
+/Users/rob/Desktop/mozilla/gfx/cairo/cairo/src/cairo-quartz-surface.c:227: warning: missing initializer
+/Users/rob/Desktop/mozilla/gfx/cairo/cairo/src/cairo-quartz-surface.c:227: warning: (near initialization for `cairo_quartz_surface_backend.fill_path')
+make[5]: *** [cairo-quartz-surface.o] Error 1
+make[4]: *** [libs] Error 2
+make[3]: *** [libs] Error 2
+make[2]: *** [tier_9] Error 2
+make[1]: *** [default] Error 2
+make: *** [build] Error 2
+Nile:~/Desktop/mozilla rob$ gcc -v
+Reading spec from /usr/libexec/gcc/darwin/ppc/3.3/specs
+Thread model: posix
+gcc version 3.3 20030304 (Apple Computer, Inc. build 1809)
+
+Expected Results:
+the successful compilation of the software

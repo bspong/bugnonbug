@@ -1,0 +1,12 @@
+Silent exception when inspecting debugger variables on old actors (b2g-18 ones)
+While working bug 817580, I noticed that variable inspection was silently failing when being connected on old actors (using m-c 18 branch). Both sides seem to work correctly as exchanged packets look correct:
+
+{"to":"conn1.child1016:obj55","type":"prototypeAndProperties"}                
+=>
+{"from":"conn1.child1016:obj55","prototype":{"type":"object","class":"Object","actor":"conn1.child1016:obj84"},"ownProperties":{"name":{"configurable":true,"enumerable":true,"writable":true,"value":"touchStartedState"},"init":{"configurable":true,"enumerable":true,"writable":true,"value":{"type":"object","class":"Function","actor":"                   | conn1.child1016:obj33"}},"touchstart":{"configurable":true,"enumerable":true,"writable":true,"value":{"type":"object","class":"Function","actor":"conn1.child1016:obj80"}},"touchmove":{"configurable":true,"enumerable":true,"writable":true ,"value":{"type":"object","class":"Function","actor":"conn1.child1016:obj81"}},"touchend":{"configurable":true,"enumerable":true,"writable":true,"value":{"type":"object","class":"Function","actor":"conn1.child1016:obj82"}},"holdtimeout":        {"configurable":true,"enumerable":true,"writable":true,"value":{"type":"object","class":"Function","actor":"conn1.child1016:obj83"}}}}
+
+But this code is throwing an exception:
+http://mxr.mozilla.org/mozilla-central/source/browser/devtools/shared/widgets/VariablesViewController.jsm#126
+  let { ownProperties, prototype, safeGetterValues } = aResponse;
+
+As b2g18's actor doesn't send the safeGetterValues property...

@@ -1,0 +1,78 @@
+Firefox freezes
+User Agent: Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/37.0.2062.94 Chrome/37.0.2062.94 Safari/537.36
+
+Steps to reproduce:
+
+Use the program for some time. After a while it will freeze. It may be associated with flash; it's tough for me to tell. Sometimes I can run for hours without it freezing. Sometimes it's minutes. 
+
+I'm running Ubuntu 14.04, patched recently. 
+
+This has been going on for a while, but it seems worse in the last while. Perhaps I'm deluded about that though. 
+
+
+Actual results:
+
+It freezes. I can't switch between tabs, click on anything, scroll with the scroll bars; nothing.
+
+The one thing I can do (as far as I'm aware) is close it. It pops up the regular warning that I'm about to close multiple tabs and then closes. The pid goes away and I can restart it. I've attached to it with gdb when it's frozen and this is the 'bt'.
+
+(gdb) bt
+#0  0xb7746424 in __kernel_vsyscall ()
+#1  0xb74dd56b in poll () at ../sysdeps/unix/syscall-template.S:81
+#2  0xb320b20b in g_poll () from /lib/i386-linux-gnu/libglib-2.0.so.0
+#3  0xb420ab02 in PollWrapper (ufds=0xa8c616c0, nfsd=7, timeout_=-1)
+    at /build/buildd/firefox-32.0+build1/widget/gtk/nsAppShell.cpp:40
+#4  0xb31fc3e8 in ?? () from /lib/i386-linux-gnu/libglib-2.0.so.0
+#5  0xb31fc528 in g_main_context_iteration ()
+   from /lib/i386-linux-gnu/libglib-2.0.so.0
+#6  0xb420ab7c in nsAppShell::ProcessNextNativeEvent (this=0xae6bb600, 
+    mayWait=true)
+    at /build/buildd/firefox-32.0+build1/widget/gtk/nsAppShell.cpp:141
+#7  0xb423fdd9 in nsBaseAppShell::DoProcessNextNativeEvent (
+    this=this@entry=0xae6bb600, mayWait=true, 
+    recursionDepth=recursionDepth@entry=0)
+    at /build/buildd/firefox-32.0+build1/widget/xpwidgets/nsBaseAppShell.cpp:140
+#8  0xb423ff30 in nsBaseAppShell::OnProcessNextEvent (this=0xae6bb600, 
+    thr=0xb7172400, mayWait=true, recursionDepth=0)
+    at /build/buildd/firefox-32.0+build1/widget/xpwidgets/nsBaseAppShell.cpp:298
+#9  0xb384cc75 in nsThread::ProcessNextEvent (this=0xb7172400, aMayWait=true, 
+    aResult=0xbf9f5b4f)
+    at /build/buildd/firefox-32.0+build1/xpcom/threads/nsThread.cpp:737
+---Type <return> to continue, or q <return> to quit---
+#10 0xb380114b in NS_ProcessNextEvent (thread=<optimized out>, 
+    mayWait=mayWait@entry=true)
+    at /build/buildd/firefox-32.0+build1/xpcom/glue/nsThreadUtils.cpp:263
+#11 0xb3a24d30 in mozilla::ipc::MessagePump::Run (this=0xb184b9a0, 
+    aDelegate=0xb7124b40)
+    at /build/buildd/firefox-32.0+build1/ipc/glue/MessagePump.cpp:136
+#12 0xb3a180ba in MessageLoop::RunInternal (this=this@entry=0xb7124b40)
+    at /build/buildd/firefox-32.0+build1/ipc/chromium/src/base/message_loop.cc:229
+#13 0xb3a181e2 in RunHandler (this=0xb7124b40)
+    at /build/buildd/firefox-32.0+build1/ipc/chromium/src/base/message_loop.cc:222
+#14 MessageLoop::Run (this=0xb7124b40)
+    at /build/buildd/firefox-32.0+build1/ipc/chromium/src/base/message_loop.cc:196
+#15 0xb4238e81 in nsBaseAppShell::Run (this=0xae6bb600)
+    at /build/buildd/firefox-32.0+build1/widget/xpwidgets/nsBaseAppShell.cpp:164
+#16 0xb4c45bbb in nsAppStartup::Run (this=0xabd1ab50)
+    at /build/buildd/firefox-32.0+build1/toolkit/components/startup/nsAppStartup.cpp:278
+#17 0xb4c16bbb in XREMain::XRE_mainRun (this=this@entry=0xbf9f5d90)
+    at /build/buildd/firefox-32.0+build1/toolkit/xre/nsAppRunner.cpp:4012
+---Type <return> to continue, or q <return> to quit---
+#18 0xb4c16e8a in XREMain::XRE_main (this=this@entry=0xbf9f5d90, 
+    argc=argc@entry=1, argv=argv@entry=0xbf9f70c4, 
+    aAppData=aAppData@entry=0xbf9f5ef0)
+    at /build/buildd/firefox-32.0+build1/toolkit/xre/nsAppRunner.cpp:4083
+#19 0xb4c170cf in XRE_main (argc=1, argv=0xbf9f70c4, aAppData=0xbf9f5ef0, 
+    aFlags=0)
+    at /build/buildd/firefox-32.0+build1/toolkit/xre/nsAppRunner.cpp:4297
+#20 0xb776c973 in do_main (argc=1, argv=0xbf9f70c4, xreDirectory=0xb7170480)
+    at /build/buildd/firefox-32.0+build1/browser/app/nsBrowserApp.cpp:282
+#21 0xb776bfc9 in main (argc=1, argv=0xbf9f70c4)
+    at /build/buildd/firefox-32.0+build1/browser/app/nsBrowserApp.cpp:643
+
+
+
+
+Expected results:
+
+Not freezing.

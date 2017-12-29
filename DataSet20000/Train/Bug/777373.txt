@@ -1,0 +1,12 @@
+CssRuleView.jsm uses invalid weak map keys
+Line 490 in CssRuleView.jsm uses (I think) a nsIDOMCSSStyleDeclaration as a key in the weak map |disabled| [1].  Unfortunately, this is not okay because the only C++ things we support as weak map keys are nodes (for technical reasons, we only can only support objects that support wrapper preservation, and just allowing nodes was a simple way to do that).
+
+The current behavior is that the key will be successfully added (with a warning), but it can eventually get its entry in the weak map thrown out during a later GC.  In bug 761620, I am planning to make it so that unsupported keys are not added, and an exception is thrown, so it is more obvious that something has gone wrong.
+
+To fix this, you either have to switch to using some other kind of key, which could be tricky.  If you can get back and forth between the style and its node maybe that would work.  Otherwise, you may need to switch to another data structure, like a map, though then you have to be more careful to avoid leaks.
+
+In the longer term, in bug 753517, CSS things are going to be converted over to the new DOM bindings, which I believe means they will be wrapper cached, and thus we can loosen the restriction on weak map keys to include these CSS things.  But you probably want to fix this before that.
+
+CCing Boris who understands what is going on with wrapper preservation of CSS stuff.
+
+[1] http://mxr.mozilla.org/mozilla-central/source/browser/devtools/styleinspector/CssRuleView.jsm#490

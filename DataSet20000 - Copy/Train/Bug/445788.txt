@@ -1,0 +1,24 @@
+distribution.ini fails to set the correct RSS Feed handler Order
+Created attachment 330053
+screenshot
+
+Problem was found during the Tests for the Japan Partner Repacks (Bug https://bugzilla.mozilla.org/show_bug.cgi?id=441441#c29 and 441444 comment #19). A change in the RSS Order is made via the distribution.ini to have as example Yahoo as first RSS Handler:
+
+browser.contentHandlers.types.0.title="My Yahoo!"
+browser.contentHandlers.types.0.uri="http://add.my.yahoo.co.jp/rss?url=%s"
+browser.contentHandlers.types.1.title="Google"
+browser.contentHandlers.types.1.uri="http://www.google.co.jp/ig/add?feedurl=%s"
+
+In the Build its still the default values (see screenshot) and Google is still the default RSS Feed Handler.
+
+Also Minotaur fails to catch this Problem, because Minotaur reports:
+<l>browser.contentHandlers.types.0.title|data:text/plain,browser.contentHandlers.types.0.title=My Yahoo!</l> 
+ <l>browser.contentHandlers.types.0.type|application/vnd.mozilla.maybe.feed</l> 
+<l>browser.contentHandlers.types.0.uri|data:text/plain,browser.contentHandlers.types.0.uri=http://add.my.yahoo.co.jp/rss?url=%s</l> 
+<l>browser.contentHandlers.types.1.title|data:text/plain,browser.contentHandlers.types.1.title=Google</l> 
+<l>browser.contentHandlers.types.1.type|application/vnd.mozilla.maybe.feed</l> 
+<l>browser.contentHandlers.types.1.uri|data:text/plain,browser.contentHandlers.types.1.uri=http://www.google.co.jp/ig/add?feedurl=%s</l>
+
+so there is a Problem between the Settings and the actual Feed Handler Order (and our testtools fail to catch this too :(
+
+We should fix this Problem because its in the cases of the Japanese Builds a Problem with the Requirements for this Partner Build.

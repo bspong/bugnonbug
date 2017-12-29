@@ -1,0 +1,417 @@
+[e10s] Windows debug browser/base/content/test/general application crashed [@ mozilla::LinkedList<js::WeakMapBase>::~LinkedList<js::WeakMapBase>()] (Assertion failure: isEmpty(), at LinkedList.h:332) on shutdown
+I'm having a hard time making sense of this crash, but it's hitting WinXP and Win8 debug both w/ e10s force-enabled on Try. Interestingly, it doesn't appear to be hitting Win7 in production. Starting with JS::GC given the first crash stack and the LinkedList assert, but the second patch is maybe pointing at GFX? Any thoughts, Terrence?
+
+https://treeherder.mozilla.org/logviewer.html#?job_id=17673560&repo=try
+
+08:23:25 INFO - Assertion failure: isEmpty() (failing this assertion mean this LinkedList's creator is buggy: it should have removed all this list's element before the list's destruction), at c:\builds\moz2_slave\try-w32-d-00000000000000000000\build\src\obj-firefox\dist\include\mozilla/LinkedList.h:332
+08:23:26 INFO - TEST-INFO | Main app process: exit 1
+08:23:26 INFO - 705 INFO checking window state
+08:23:26 INFO - 706 INFO TEST-START | Shutdown
+08:23:26 INFO - 707 INFO Browser Chrome Test Summary
+08:23:26 INFO - 708 INFO Passed: 9080
+08:23:26 INFO - 709 INFO Failed: 0
+08:23:26 INFO - 710 INFO Todo: 18
+08:23:26 INFO - 711 INFO *** End BrowserChrome Test Results ***
+08:23:26 WARNING - TEST-UNEXPECTED-FAIL | browser/base/content/test/general/browser_wyciwyg_urlbarCopying.js | application terminated with exit code 1
+08:23:26 INFO - runtests.py | Application ran for: 0:17:43.334000
+
+08:23:43 WARNING - PROCESS-CRASH | browser/base/content/test/general/browser_wyciwyg_urlbarCopying.js | application crashed [@ mozilla::LinkedList<js::WeakMapBase>::~LinkedList<js::WeakMapBase>()]
+08:23:43 INFO - Crash dump filename: c:\docume~1\cltbld~1.t-x\locals~1\temp\tmpnzz1xv.mozrunner\minidumps\14a89484-33f7-4582-aa06-f0287090dae1.dmp
+08:23:43 INFO - Operating system: Windows NT
+08:23:43 INFO - 5.1.2600 Service Pack 3
+08:23:43 INFO - CPU: x86
+08:23:43 INFO - GenuineIntel family 6 model 30 stepping 5
+08:23:43 INFO - 8 CPUs
+08:23:43 INFO - Crash reason: EXCEPTION_BREAKPOINT
+08:23:43 INFO - Crash address: 0x5dc1ab0
+08:23:43 INFO - Process uptime: 1063 second
+08:23:43 INFO - Thread 0 (crashed)
+08:23:43 INFO - 0 xul.dll!mozilla::LinkedList<js::WeakMapBase>::~LinkedList<js::WeakMapBase>() [LinkedList.h:b3b07c447281 : 329 + 0x9d]
+08:23:43 INFO - eip = 0x05dc1ab0 esp = 0x0012f820 ebp = 0x0012f860 ebx = 0x0fbe65c0
+08:23:43 INFO - esi = 0x002a42b5 edi = 0x1000368c eax = 0x00000000 ecx = 0x002b0ad9
+08:23:43 INFO - edx = 0x00370ea0 efl = 0x00000212
+08:23:43 INFO - Found by: given a instruction pointer in context
+08:23:43 INFO - 1 xul.dll!JS::Zone::~Zone() [Zone.cpp:b3b07c447281 : 65 + 0x56]
+08:23:43 INFO - eip = 0x05dc2733 esp = 0x0012f828 ebp = 0x0012f860
+08:23:43 INFO - Found by: call frame info
+08:23:43 INFO - 2 xul.dll!js::gc::GCRuntime::sweepZones(js::FreeOp *,bool) [jsgc.cpp:b3b07c447281 : 3795 + 0x10]
+08:23:43 INFO - eip = 0x05d3e00c esp = 0x0012f838 ebp = 0x0012f860
+08:23:43 INFO - Found by: call frame info
+08:23:43 INFO - 3 xul.dll!js::gc::GCRuntime::incrementalCollectSlice(js::SliceBudget &,JS::gcreason::Reason) [jsgc.cpp:b3b07c447281 : 6130 + 0xe]
+08:23:43 INFO - eip = 0x05d22c58 esp = 0x0012f868 ebp = 0x0012f910
+08:23:43 INFO - Found by: call frame info
+08:23:43 INFO - 4 xul.dll!js::gc::GCRuntime::gcCycle(bool,js::SliceBudget &,JS::gcreason::Reason) [jsgc.cpp:b3b07c447281 : 6318 + 0xb]
+08:23:43 INFO - eip = 0x05d1b421 esp = 0x0012f918 ebp = 0x0012f95c
+08:23:43 INFO - Found by: call frame info
+08:23:43 INFO - 5 xul.dll!js::gc::GCRuntime::collect(bool,js::SliceBudget,JS::gcreason::Reason) [jsgc.cpp:b3b07c447281 : 6424 + 0x18]
+08:23:43 INFO - eip = 0x05d0b9d8 esp = 0x0012f964 ebp = 0x0012f9e0
+08:23:43 INFO - Found by: call frame info
+08:23:43 INFO - 6 xul.dll!js::gc::GCRuntime::gc(JSGCInvocationKind,JS::gcreason::Reason) [jsgc.cpp:b3b07c447281 : 6482 + 0x52]
+08:23:43 INFO - eip = 0x05d1b21f esp = 0x0012f9e8 ebp = 0x0012fa38
+08:23:43 INFO - Found by: call frame info
+08:23:43 INFO - 7 xul.dll!JSRuntime::~JSRuntime() [Runtime.cpp:b3b07c447281 : 417 + 0xb]
+08:23:43 INFO - eip = 0x05ee6acd esp = 0x0012fa40 ebp = 0x0012fac0
+08:23:43 INFO - Found by: call frame info
+08:23:43 INFO - 8 xul.dll!JS_DestroyRuntime(JSRuntime *) [jsapi.cpp:b3b07c447281 : 482 + 0xe]
+08:23:43 INFO - eip = 0x05d95042 esp = 0x0012fac8 ebp = 0x0012facc
+08:23:43 INFO - Found by: call frame info
+08:23:43 INFO - 9 xul.dll!mozilla::CycleCollectedJSRuntime::~CycleCollectedJSRuntime() [CycleCollectedJSRuntime.cpp:b3b07c447281 : 447 + 0x8]
+08:23:43 INFO - eip = 0x032922ef esp = 0x0012fad4 ebp = 0x0012faec
+08:23:43 INFO - Found by: call frame info
+08:23:43 INFO - 10 xul.dll!XPCJSRuntime::`scalar deleting destructor'(unsigned int) + 0xb
+08:23:43 INFO - eip = 0x03a05835 esp = 0x0012fae8 ebp = 0x0012faec
+08:23:43 INFO - Found by: call frame info
+08:23:43 INFO - 11 xul.dll!nsXPConnect::~nsXPConnect() [nsXPConnect.cpp:b3b07c447281 : 102 + 0xe]
+08:23:43 INFO - eip = 0x03a2a63b esp = 0x0012faf4 ebp = 0x0012fb04
+08:23:43 INFO - Found by: call frame info
+08:23:43 INFO - 12 xul.dll!nsXPConnect::Release() [nsXPConnect.cpp:b3b07c447281 : 39 + 0x9f]
+08:23:43 INFO - eip = 0x03a3d941 esp = 0x0012fafc ebp = 0x0012fb04
+08:23:43 INFO - Found by: call frame info
+08:23:43 INFO - 13 xul.dll!nsXPConnect::ReleaseXPConnectSingleton() [nsXPConnect.cpp:b3b07c447281 : 150 + 0x6]
+08:23:43 INFO - eip = 0x03a3da13 esp = 0x0012fb0c ebp = 0x0012fb30
+08:23:43 INFO - Found by: call frame info
+08:23:43 INFO - 14 xul.dll!xpcModuleDtor() [XPCModule.cpp:b3b07c447281 : 22 + 0x5]
+08:23:43 INFO - eip = 0x03a24731 esp = 0x0012fb14 ebp = 0x0012fb30
+08:23:43 INFO - Found by: call frame info
+08:23:43 INFO - 15 xul.dll!nsComponentManagerImpl::KnownModule::~KnownModule() [nsComponentManager.h:b3b07c447281 : 236 + 0x2]
+08:23:43 INFO - eip = 0x032ed328 esp = 0x0012fb18 ebp = 0x0012fb30
+08:23:43 INFO - Found by: call frame info
+08:23:43 INFO - 16 xul.dll!nsAutoPtr<nsComponentManagerImpl::KnownModule>::~nsAutoPtr<nsComponentManagerImpl::KnownModule>() [nsAutoPtr.h:b3b07c447281 : 78 + 0xd]
+08:23:43 INFO - eip = 0x032ed0f0 esp = 0x0012fb20 ebp = 0x0012fb30
+08:23:43 INFO - Found by: call frame info
+08:23:43 INFO - 17 xul.dll!nsTArray_Impl<nsAutoPtr<nsComponentManagerImpl::KnownModule>,nsTArrayInfallibleAllocator>::DestructRange(unsigned int,unsigned int) [nsTArray.h:b3b07c447281 : 2012 + 0xf]
+08:23:43 INFO - eip = 0x032ee55c esp = 0x0012fb28 ebp = 0x0012fb30
+08:23:43 INFO - Found by: call frame info
+08:23:43 INFO - 18 xul.dll!nsTArray_Impl<nsAutoPtr<nsComponentManagerImpl::KnownModule>,nsTArrayInfallibleAllocator>::RemoveElementsAt(unsigned int,unsigned int) [nsTArray.h:b3b07c447281 : 1656 + 0x9]
+08:23:43 INFO - eip = 0x032f1714 esp = 0x0012fb38 ebp = 0x0012fb4c
+08:23:43 INFO - Found by: call frame info
+08:23:43 INFO - 19 xul.dll!nsComponentManagerImpl::Shutdown() [nsComponentManager.cpp:b3b07c447281 : 910 + 0x11]
+08:23:43 INFO - eip = 0x032f196c esp = 0x0012fb54 ebp = 0x0012fb8c
+08:23:43 INFO - Found by: call frame info
+08:23:43 INFO - 20 xul.dll!mozilla::ShutdownXPCOM(nsIServiceManager *) [XPCOMInit.cpp:b3b07c447281 : 974 + 0x5]
+08:23:43 INFO - eip = 0x0332a6ab esp = 0x0012fb68 ebp = 0x0012fb8c
+08:23:43 INFO - Found by: call frame info
+08:23:43 INFO - 21 xul.dll!ScopedXPCOMStartup::~ScopedXPCOMStartup() [nsAppRunner.cpp:b3b07c447281 : 1471 + 0x7]
+08:23:43 INFO - eip = 0x05715695 esp = 0x0012fb94 ebp = 0x0012fbac
+08:23:43 INFO - Found by: call frame info
+08:23:43 INFO - 22 xul.dll!mozilla::DefaultDelete<ScopedXPCOMStartup>::operator()(ScopedXPCOMStartup *) [UniquePtr.h:b3b07c447281 : 494 + 0xe]
+08:23:43 INFO - eip = 0x05715bac esp = 0x0012fbb4 ebp = 0x0012fbb4
+08:23:43 INFO - Found by: call frame info
+08:23:43 INFO - 23 xul.dll!XREMain::XRE_main(int,char * * const,nsXREAppData const *) [nsAppRunner.cpp:b3b07c447281 : 4450 + 0x12]
+08:23:43 INFO - eip = 0x0571b2db esp = 0x0012fbbc ebp = 0x0012fbdc
+08:23:43 INFO - Found by: call frame info
+08:23:43 INFO - 24 xul.dll!XRE_main [nsAppRunner.cpp:b3b07c447281 : 4526 + 0x12]
+08:23:43 INFO - eip = 0x0571dd44 esp = 0x0012fbe4 ebp = 0x0012fcf0
+08:23:43 INFO - Found by: call frame info
+08:23:43 INFO - 25 firefox.exe!do_main [nsBrowserApp.cpp:b3b07c447281 : 220 + 0x1c]
+08:23:43 INFO - eip = 0x004025de esp = 0x0012fcf8 ebp = 0x0012fe90
+08:23:43 INFO - Found by: call frame info
+08:23:43 INFO - 26 firefox.exe!NS_internal_main(int,char * *,char * *) [nsBrowserApp.cpp:b3b07c447281 : 360 + 0xf]
+08:23:43 INFO - eip = 0x00401edc esp = 0x0012fe98 ebp = 0x0012ff3c
+08:23:43 INFO - Found by: call frame info
+08:23:43 INFO - 27 firefox.exe!wmain [nsWindowsWMain.cpp:b3b07c447281 : 135 + 0xd]
+08:23:43 INFO - eip = 0x00402966 esp = 0x0012ff44 ebp = 0x0012ff78
+08:23:43 INFO - Found by: call frame info
+08:23:43 INFO - 28 firefox.exe!__tmainCRTStartup [crt0.c : 255 + 0x12]
+08:23:43 INFO - eip = 0x00404d09 esp = 0x0012ff80 ebp = 0x0012ffc0
+08:23:43 INFO - Found by: call frame info
+08:23:43 INFO - 29 kernel32.dll!BaseProcessStart + 0x23
+08:23:43 INFO - eip = 0x7c817067 esp = 0x0012ffc8 ebp = 0x0012fff0
+08:23:43 INFO - Found by: call frame info
+
+08:23:57 WARNING - PROCESS-CRASH | browser/base/content/test/general/browser_wyciwyg_urlbarCopying.js | application crashed [@ mozilla::dom::TabChild::RecvShow(mozilla::gfx::IntSizeTyped<mozilla::ScreenPixel> const &,mozilla::dom::ShowInfo const &,mozilla::layers::TextureFactoryIdentifier const &,unsigned __int64 const &,mozilla::layout::PRenderFrameChild *,bool const &,nsSizeMode const &)]
+08:23:57 INFO - Crash dump filename: c:\docume~1\cltbld~1.t-x\locals~1\temp\tmpnzz1xv.mozrunner\minidumps\ee208363-247f-4758-baa0-6d91b5f6b458.dmp
+08:23:57 INFO - Operating system: Windows NT
+08:23:57 INFO - 5.1.2600 Service Pack 3
+08:23:57 INFO - CPU: x86
+08:23:57 INFO - GenuineIntel family 6 model 30 stepping 5
+08:23:57 INFO - 8 CPUs
+08:23:57 INFO - Crash reason: EXCEPTION_BREAKPOINT
+08:23:57 INFO - Crash address: 0x11bf8939
+08:23:57 INFO - Assertion: Unknown assertion type 0x00000000
+08:23:57 INFO - Process uptime: 84 second
+08:23:57 INFO - Thread 0 (crashed)
+08:23:57 INFO - 0 xul.dll!mozilla::dom::TabChild::RecvShow(mozilla::gfx::IntSizeTyped<mozilla::ScreenPixel> const &,mozilla::dom::ShowInfo const &,mozilla::layers::TextureFactoryIdentifier const &,unsigned __int64 const &,mozilla::layout::PRenderFrameChild *,bool const &,nsSizeMode const &) [TabChild.cpp:b3b07c447281 : 1601 + 0x22]
+08:23:57 INFO - eip = 0x11bf8939 esp = 0x00129508 ebp = 0x00129510 ebx = 0x02836400
+08:23:57 INFO - esi = 0x00000641 edi = 0x00000000 eax = 0x13ac97a8 ecx = 0x016f0ad9
+08:23:57 INFO - edx = 0x017b0ea0 efl = 0x00000202
+08:23:57 INFO - Found by: given a instruction pointer in context
+08:23:57 INFO - 1 xul.dll!mozilla::dom::TabChild::DoFakeShow(mozilla::layers::TextureFactoryIdentifier const &,unsigned __int64 const &,mozilla::layout::PRenderFrameChild *,mozilla::dom::ShowInfo const &) [TabChild.cpp:b3b07c447281 : 1486 + 0x2a]
+08:23:57 INFO - eip = 0x11befe97 esp = 0x00129518 ebp = 0x00129544
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 2 xul.dll!mozilla::dom::ContentChild::ProvideWindowCommon(mozilla::dom::TabChild *,mozIDOMWindowProxy *,bool,unsigned int,bool,bool,bool,nsIURI *,nsAString_internal const &,nsACString_internal const &,bool *,mozIDOMWindowProxy * *) [ContentChild.cpp:b3b07c447281 : 933 + 0x2d]
+08:23:57 INFO - eip = 0x11bc551e esp = 0x0012954c ebp = 0x001299c0
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 3 xul.dll!mozilla::dom::TabChild::ProvideWindow(mozIDOMWindowProxy *,unsigned int,bool,bool,bool,nsIURI *,nsAString_internal const &,nsACString_internal const &,bool *,mozIDOMWindowProxy * *) [TabChild.cpp:b3b07c447281 : 1148 + 0x31]
+08:23:57 INFO - eip = 0x11bf4942 esp = 0x001299c8 ebp = 0x00129a10
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 4 xul.dll!nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy *,char const *,char const *,char const *,bool,bool,bool,nsITabParent *,nsIArray *,mozIDOMWindowProxy * *) [nsWindowWatcher.cpp:b3b07c447281 : 671 + 0x99]
+08:23:57 INFO - eip = 0x12360fee esp = 0x00129a18 ebp = 0x00129d18
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 5 xul.dll!nsWindowWatcher::OpenWindow2(mozIDOMWindowProxy *,char const *,char const *,char const *,bool,bool,bool,nsITabParent *,nsISupports *,mozIDOMWindowProxy * *) [nsWindowWatcher.cpp:b3b07c447281 : 447 + 0x28]
+08:23:57 INFO - eip = 0x123607f1 esp = 0x00129d20 ebp = 0x00129d54
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 6 xul.dll!nsGlobalWindow::OpenInternal(nsAString_internal const &,nsAString_internal const &,nsAString_internal const &,bool,bool,bool,bool,bool,nsIArray *,nsISupports *,JSContext *,nsPIDOMWindowOuter * *) [nsGlobalWindow.cpp:b3b07c447281 : 11514 + 0x75]
+08:23:57 INFO - eip = 0x10d515a9 esp = 0x00129d5c ebp = 0x00129eec
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 7 xul.dll!nsGlobalWindow::OpenJS(nsAString_internal const &,nsAString_internal const &,nsAString_internal const &,nsPIDOMWindowOuter * *) [nsGlobalWindow.cpp:b3b07c447281 : 7800 + 0x24]
+08:23:57 INFO - eip = 0x10d5191d esp = 0x00129ef4 ebp = 0x00129f28
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 8 xul.dll!nsGlobalWindow::OpenOuter(nsAString_internal const &,nsAString_internal const &,nsAString_internal const &,mozilla::ErrorResult &) [nsGlobalWindow.cpp:b3b07c447281 : 7757 + 0x23]
+08:23:57 INFO - eip = 0x10d519f5 esp = 0x00129f30 ebp = 0x00129f4c
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 9 xul.dll!nsGlobalWindow::Open(nsAString_internal const &,nsAString_internal const &,nsAString_internal const &,mozilla::ErrorResult &) [nsGlobalWindow.cpp:b3b07c447281 : 7766 + 0x6e]
+08:23:57 INFO - eip = 0x10d50cdf esp = 0x00129f54 ebp = 0x00129f70
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 10 xul.dll!mozilla::dom::WindowBinding::open [WindowBinding.cpp:b3b07c447281 : 2143 + 0x16]
+08:23:57 INFO - eip = 0x113e032c esp = 0x00129f78 ebp = 0x0012a16c
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 11 xul.dll!mozilla::dom::WindowBinding::genericMethod [WindowBinding.cpp:b3b07c447281 : 13712 + 0x1a]
+08:23:57 INFO - eip = 0x113c9de2 esp = 0x0012a174 ebp = 0x0012a1c4
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 12 xul.dll!js::CallJSNative(JSContext *,bool (*)(JSContext *,unsigned int,JS::Value *),JS::CallArgs const &) [jscntxtinlines.h:b3b07c447281 : 235 + 0xe]
+08:23:57 INFO - eip = 0x12d6138a esp = 0x0012a1cc ebp = 0x0012a1ec
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 13 xul.dll!js::Invoke(JSContext *,JS::CallArgs const &,js::MaybeConstruct) [Interpreter.cpp:b3b07c447281 : 478 + 0xf]
+08:23:57 INFO - eip = 0x12d74b9a esp = 0x0012a1f4 ebp = 0x0012a23c
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 14 xul.dll!Interpret [Interpreter.cpp:b3b07c447281 : 2802 + 0xf]
+08:23:57 INFO - eip = 0x12d6d707 esp = 0x0012a244 ebp = 0x0012abe4
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 15 xul.dll!js::RunScript(JSContext *,js::RunState &) [Interpreter.cpp:b3b07c447281 : 428 + 0xd]
+08:23:57 INFO - eip = 0x12d78a53 esp = 0x0012abec ebp = 0x0012ac98
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 16 xul.dll!js::Invoke(JSContext *,JS::CallArgs const &,js::MaybeConstruct) [Interpreter.cpp:b3b07c447281 : 496 + 0xa]
+08:23:57 INFO - eip = 0x12d74bf7 esp = 0x0012aca0 ebp = 0x0012ace4
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 17 xul.dll!js::Invoke(JSContext *,JS::Value const &,JS::Value const &,unsigned int,JS::Value const *,JS::MutableHandle<JS::Value>) [Interpreter.cpp:b3b07c447281 : 530 + 0xf]
+08:23:57 INFO - eip = 0x12d74e1d esp = 0x0012acec ebp = 0x0012ada4
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 18 xul.dll!JS::Call(JSContext *,JS::Handle<JS::Value>,JS::Handle<JS::Value>,JS::HandleValueArray const &,JS::MutableHandle<JS::Value>) [jsapi.cpp:b3b07c447281 : 2892 + 0x14]
+08:23:57 INFO - eip = 0x12c3a9f1 esp = 0x0012adac ebp = 0x0012addc
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 19 xul.dll!mozilla::dom::EventListener::HandleEvent(JSContext *,JS::Handle<JS::Value>,mozilla::dom::Event &,mozilla::ErrorResult &) [EventListenerBinding.cpp:b3b07c447281 : 48 + 0x59]
+08:23:57 INFO - eip = 0x1153c6db esp = 0x0012ade4 ebp = 0x0012aed0
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 20 xul.dll!mozilla::dom::EventListener::HandleEvent<mozilla::dom::EventTarget *>(mozilla::dom::EventTarget * const &,mozilla::dom::Event &,mozilla::ErrorResult &,char const *,mozilla::dom::CallbackObject::ExceptionHandling,JSCompartment *) [EventListenerBinding.h:b3b07c447281 : 54 + 0x1a]
+08:23:57 INFO - eip = 0x1174cb40 esp = 0x0012aed8 ebp = 0x0012b058
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 21 xul.dll!mozilla::EventListenerManager::HandleEventSubType(mozilla::EventListenerManager::Listener *,nsIDOMEvent *,mozilla::dom::EventTarget *) [EventListenerManager.cpp:b3b07c447281 : 1097 + 0x21]
+08:23:57 INFO - eip = 0x117583d7 esp = 0x0012b060 ebp = 0x0012b0a4
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 22 xul.dll!mozilla::EventListenerManager::HandleEventInternal(nsPresContext *,mozilla::WidgetEvent *,nsIDOMEvent * *,mozilla::dom::EventTarget *,nsEventStatus *) [EventListenerManager.cpp:b3b07c447281 : 1269 + 0x16]
+08:23:57 INFO - eip = 0x117581a4 esp = 0x0012b0ac ebp = 0x0012b1e0
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 23 xul.dll!mozilla::EventListenerManager::HandleEvent(nsPresContext *,mozilla::WidgetEvent *,nsIDOMEvent * *,mozilla::dom::EventTarget *,nsEventStatus *) [EventListenerManager.h:b3b07c447281 : 350 + 0x12]
+08:23:57 INFO - eip = 0x11743dc8 esp = 0x0012b1e8 ebp = 0x0012b200
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 24 xul.dll!mozilla::EventTargetChainItem::HandleEvent(mozilla::EventChainPostVisitor &,mozilla::ELMCreationDetector &) [EventDispatcher.cpp:b3b07c447281 : 225 + 0x1d]
+08:23:57 INFO - eip = 0x11743e7c esp = 0x0012b208 ebp = 0x0012b228
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 25 xul.dll!mozilla::EventTargetChainItem::HandleEventTargetChain(nsTArray<mozilla::EventTargetChainItem> &,mozilla::EventChainPostVisitor &,mozilla::EventDispatchingCallback *,mozilla::ELMCreationDetector &) [EventDispatcher.cpp:b3b07c447281 : 315 + 0xb]
+08:23:57 INFO - eip = 0x11743f7a esp = 0x0012b230 ebp = 0x0012b250
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 26 xul.dll!mozilla::EventDispatcher::Dispatch(nsISupports *,nsPresContext *,mozilla::WidgetEvent *,nsIDOMEvent *,nsEventStatus *,mozilla::EventDispatchingCallback *,nsTArray<mozilla::dom::EventTarget *> *) [EventDispatcher.cpp:b3b07c447281 : 654 + 0xa]
+08:23:57 INFO - eip = 0x1173ddea esp = 0x0012b258 ebp = 0x0012b30c
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 27 xul.dll!nsGenericHTMLElement::Click() [nsGenericHTMLElement.cpp:b3b07c447281 : 2702 + 0x18]
+08:23:57 INFO - eip = 0x1180ef66 esp = 0x0012b314 ebp = 0x0012b400
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 28 xul.dll!mozilla::dom::HTMLElementBinding::click [HTMLElementBinding.cpp:b3b07c447281 : 785 + 0xc]
+08:23:57 INFO - eip = 0x115b4b84 esp = 0x0012b408 ebp = 0x0012b40c
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 29 xul.dll!mozilla::dom::GenericBindingMethod(JSContext *,unsigned int,JS::Value *) [BindingUtils.cpp:b3b07c447281 : 2731 + 0x17]
+08:23:57 INFO - eip = 0x1163ed4d esp = 0x0012b414 ebp = 0x0012b468
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 30 xul.dll!js::CallJSNative(JSContext *,bool (*)(JSContext *,unsigned int,JS::Value *),JS::CallArgs const &) [jscntxtinlines.h:b3b07c447281 : 235 + 0xe]
+08:23:57 INFO - eip = 0x12d6138a esp = 0x0012b470 ebp = 0x0012b490
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 31 xul.dll!js::Invoke(JSContext *,JS::CallArgs const &,js::MaybeConstruct) [Interpreter.cpp:b3b07c447281 : 478 + 0xf]
+08:23:57 INFO - eip = 0x12d74b9a esp = 0x0012b498 ebp = 0x0012b4e0
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 32 xul.dll!Interpret [Interpreter.cpp:b3b07c447281 : 2802 + 0xf]
+08:23:57 INFO - eip = 0x12d6d707 esp = 0x0012b4e8 ebp = 0x0012be88
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 33 xul.dll!js::RunScript(JSContext *,js::RunState &) [Interpreter.cpp:b3b07c447281 : 428 + 0xd]
+08:23:57 INFO - eip = 0x12d78a53 esp = 0x0012be90 ebp = 0x0012bf3c
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 34 xul.dll!js::Invoke(JSContext *,JS::CallArgs const &,js::MaybeConstruct) [Interpreter.cpp:b3b07c447281 : 496 + 0xa]
+08:23:57 INFO - eip = 0x12d74bf7 esp = 0x0012bf44 ebp = 0x0012bf88
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 35 xul.dll!js::Invoke(JSContext *,JS::Value const &,JS::Value const &,unsigned int,JS::Value const *,JS::MutableHandle<JS::Value>) [Interpreter.cpp:b3b07c447281 : 530 + 0xf]
+08:23:57 INFO - eip = 0x12d74e1d esp = 0x0012bf90 ebp = 0x0012c048
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 36 xul.dll!js::DirectProxyHandler::call(JSContext *,JS::Handle<JSObject *>,JS::CallArgs const &) [DirectProxyHandler.cpp:b3b07c447281 : 77 + 0x1f]
+08:23:57 INFO - eip = 0x12cbced8 esp = 0x0012c050 ebp = 0x0012c084
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 37 xul.dll!js::CrossCompartmentWrapper::call(JSContext *,JS::Handle<JSObject *>,JS::CallArgs const &) [CrossCompartmentWrapper.cpp:b3b07c447281 : 289 + 0xd]
+08:23:57 INFO - eip = 0x12cbcd42 esp = 0x0012c08c ebp = 0x0012c0b4
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 38 xul.dll!js::Proxy::call(JSContext *,JS::Handle<JSObject *>,JS::CallArgs const &) [Proxy.cpp:b3b07c447281 : 391 + 0xe]
+08:23:57 INFO - eip = 0x12cbd001 esp = 0x0012c0bc ebp = 0x0012c114
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 39 xul.dll!js::proxy_Call(JSContext *,unsigned int,JS::Value *) [Proxy.cpp:b3b07c447281 : 683 + 0x12]
+08:23:57 INFO - eip = 0x12cc1adf esp = 0x0012c11c ebp = 0x0012c14c
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 40 xul.dll!js::CallJSNative(JSContext *,bool (*)(JSContext *,unsigned int,JS::Value *),JS::CallArgs const &) [jscntxtinlines.h:b3b07c447281 : 235 + 0xe]
+08:23:57 INFO - eip = 0x12d6138a esp = 0x0012c154 ebp = 0x0012c174
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 41 xul.dll!js::Invoke(JSContext *,JS::CallArgs const &,js::MaybeConstruct) [Interpreter.cpp:b3b07c447281 : 466 + 0x8]
+08:23:57 INFO - eip = 0x12d74add esp = 0x0012c17c ebp = 0x0012c1c4
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 42 xul.dll!Interpret [Interpreter.cpp:b3b07c447281 : 2802 + 0xf]
+08:23:57 INFO - eip = 0x12d6d707 esp = 0x0012c1cc ebp = 0x0012cb6c
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 43 xul.dll!js::RunScript(JSContext *,js::RunState &) [Interpreter.cpp:b3b07c447281 : 428 + 0xd]
+08:23:57 INFO - eip = 0x12d78a53 esp = 0x0012cb74 ebp = 0x0012cc20
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 44 xul.dll!js::Invoke(JSContext *,JS::CallArgs const &,js::MaybeConstruct) [Interpreter.cpp:b3b07c447281 : 496 + 0xa]
+08:23:57 INFO - eip = 0x12d74bf7 esp = 0x0012cc28 ebp = 0x0012cc6c
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 45 xul.dll!js::fun_call(JSContext *,unsigned int,JS::Value *) [jsfun.cpp:b3b07c447281 : 1205 + 0xe]
+08:23:57 INFO - eip = 0x12b74883 esp = 0x0012cc74 ebp = 0x0012ccac
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 46 xul.dll!js::CallJSNative(JSContext *,bool (*)(JSContext *,unsigned int,JS::Value *),JS::CallArgs const &) [jscntxtinlines.h:b3b07c447281 : 235 + 0xe]
+08:23:57 INFO - eip = 0x12d6138a esp = 0x0012ccb4 ebp = 0x0012ccd4
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 47 xul.dll!js::Invoke(JSContext *,JS::CallArgs const &,js::MaybeConstruct) [Interpreter.cpp:b3b07c447281 : 478 + 0xf]
+08:23:57 INFO - eip = 0x12d74b9a esp = 0x0012ccdc ebp = 0x0012cd24
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 48 xul.dll!Interpret [Interpreter.cpp:b3b07c447281 : 2802 + 0xf]
+08:23:57 INFO - eip = 0x12d6d707 esp = 0x0012cd2c ebp = 0x0012d6cc
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 49 xul.dll!js::RunScript(JSContext *,js::RunState &) [Interpreter.cpp:b3b07c447281 : 428 + 0xd]
+08:23:57 INFO - eip = 0x12d78a53 esp = 0x0012d6d4 ebp = 0x0012d780
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 50 xul.dll!js::Invoke(JSContext *,JS::CallArgs const &,js::MaybeConstruct) [Interpreter.cpp:b3b07c447281 : 496 + 0xa]
+08:23:57 INFO - eip = 0x12d74bf7 esp = 0x0012d788 ebp = 0x0012d7cc
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 51 xul.dll!js::Invoke(JSContext *,JS::Value const &,JS::Value const &,unsigned int,JS::Value const *,JS::MutableHandle<JS::Value>) [Interpreter.cpp:b3b07c447281 : 530 + 0xf]
+08:23:57 INFO - eip = 0x12d74e1d esp = 0x0012d7d4 ebp = 0x0012d88c
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 52 xul.dll!js::DirectProxyHandler::call(JSContext *,JS::Handle<JSObject *>,JS::CallArgs const &) [DirectProxyHandler.cpp:b3b07c447281 : 77 + 0x1f]
+08:23:57 INFO - eip = 0x12cbced8 esp = 0x0012d894 ebp = 0x0012d8c8
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 53 xul.dll!js::CrossCompartmentWrapper::call(JSContext *,JS::Handle<JSObject *>,JS::CallArgs const &) [CrossCompartmentWrapper.cpp:b3b07c447281 : 289 + 0xd]
+08:23:57 INFO - eip = 0x12cbcd42 esp = 0x0012d8d0 ebp = 0x0012d8f8
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 54 xul.dll!js::Proxy::call(JSContext *,JS::Handle<JSObject *>,JS::CallArgs const &) [Proxy.cpp:b3b07c447281 : 391 + 0xe]
+08:23:57 INFO - eip = 0x12cbd001 esp = 0x0012d900 ebp = 0x0012d958
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 55 xul.dll!js::proxy_Call(JSContext *,unsigned int,JS::Value *) [Proxy.cpp:b3b07c447281 : 683 + 0x12]
+08:23:57 INFO - eip = 0x12cc1adf esp = 0x0012d960 ebp = 0x0012d990
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 56 xul.dll!js::CallJSNative(JSContext *,bool (*)(JSContext *,unsigned int,JS::Value *),JS::CallArgs const &) [jscntxtinlines.h:b3b07c447281 : 235 + 0xe]
+08:23:57 INFO - eip = 0x12d6138a esp = 0x0012d998 ebp = 0x0012d9b8
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 57 xul.dll!js::Invoke(JSContext *,JS::CallArgs const &,js::MaybeConstruct) [Interpreter.cpp:b3b07c447281 : 466 + 0x8]
+08:23:57 INFO - eip = 0x12d74add esp = 0x0012d9c0 ebp = 0x0012da08
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 58 xul.dll!Interpret [Interpreter.cpp:b3b07c447281 : 2802 + 0xf]
+08:23:57 INFO - eip = 0x12d6d707 esp = 0x0012da10 ebp = 0x0012e3b0
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 59 xul.dll!js::RunScript(JSContext *,js::RunState &) [Interpreter.cpp:b3b07c447281 : 428 + 0xd]
+08:23:57 INFO - eip = 0x12d78a53 esp = 0x0012e3b8 ebp = 0x0012e464
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 60 xul.dll!js::Invoke(JSContext *,JS::CallArgs const &,js::MaybeConstruct) [Interpreter.cpp:b3b07c447281 : 496 + 0xa]
+08:23:57 INFO - eip = 0x12d74bf7 esp = 0x0012e46c ebp = 0x0012e4b0
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 61 xul.dll!js::Invoke(JSContext *,JS::Value const &,JS::Value const &,unsigned int,JS::Value const *,JS::MutableHandle<JS::Value>) [Interpreter.cpp:b3b07c447281 : 530 + 0xf]
+08:23:57 INFO - eip = 0x12d74e1d esp = 0x0012e4b8 ebp = 0x0012e570
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 62 xul.dll!JS_CallFunctionValue(JSContext *,JS::Handle<JSObject *>,JS::Handle<JS::Value>,JS::HandleValueArray const &,JS::MutableHandle<JS::Value>) [jsapi.cpp:b3b07c447281 : 2845 + 0x36]
+08:23:57 INFO - eip = 0x12c42ce6 esp = 0x0012e578 ebp = 0x0012e5b0
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 63 xul.dll!nsFrameMessageManager::ReceiveMessage(nsISupports *,nsIFrameLoader *,bool,nsAString_internal const &,bool,mozilla::dom::ipc::StructuredCloneData *,mozilla::jsipc::CpowHolder *,nsIPrincipal *,nsTArray<mozilla::dom::ipc::StructuredCloneData> *) [nsFrameMessageManager.cpp:b3b07c447281 : 1256 + 0x44]
+08:23:57 INFO - eip = 0x10d321f6 esp = 0x0012e5b8 ebp = 0x0012e860
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 64 xul.dll!nsFrameMessageManager::ReceiveMessage(nsISupports *,nsIFrameLoader *,nsAString_internal const &,bool,mozilla::dom::ipc::StructuredCloneData *,mozilla::jsipc::CpowHolder *,nsIPrincipal *,nsTArray<mozilla::dom::ipc::StructuredCloneData> *) [nsFrameMessageManager.cpp:b3b07c447281 : 1053 + 0x22]
+08:23:57 INFO - eip = 0x10d328da esp = 0x0012e868 ebp = 0x0012e88c
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 65 xul.dll!mozilla::dom::TabChild::RecvAsyncMessage(nsString const &,mozilla::dom::ClonedMessageData const &,nsTArray<mozilla::jsipc::CpowEntry> &&,IPC::Principal const &) [TabChild.cpp:b3b07c447281 : 2284 + 0x27]
+08:23:57 INFO - eip = 0x11bf54bd esp = 0x0012e894 ebp = 0x0012e90c
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 66 xul.dll!mozilla::dom::PBrowserChild::OnMessageReceived(IPC::Message const &) [PBrowserChild.cpp:b3b07c447281 : 2450 + 0x20]
+08:23:57 INFO - eip = 0x1074fc35 esp = 0x0012e914 ebp = 0x0012ee94
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 67 xul.dll!mozilla::dom::PContentChild::OnMessageReceived(IPC::Message const &) [PContentChild.cpp:b3b07c447281 : 6217 + 0x6]
+08:23:57 INFO - eip = 0x107c9268 esp = 0x0012ee9c ebp = 0x0012f5e8
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 68 xul.dll!mozilla::ipc::MessageChannel::DispatchAsyncMessage(IPC::Message const &) [MessageChannel.cpp:b3b07c447281 : 1454 + 0xe]
+08:23:57 INFO - eip = 0x104aab35 esp = 0x0012f5f0 ebp = 0x0012f604
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 69 xul.dll!mozilla::ipc::MessageChannel::DispatchMessageW(IPC::Message const &) [MessageChannel.cpp:b3b07c447281 : 1390 + 0x6]
+08:23:57 INFO - eip = 0x104ab066 esp = 0x0012f60c ebp = 0x0012f67c
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 70 xul.dll!mozilla::ipc::MessageChannel::OnMaybeDequeueOne() [MessageChannel.cpp:b3b07c447281 : 1357 + 0xb]
+08:23:57 INFO - eip = 0x104ae278 esp = 0x0012f684 ebp = 0x0012f6ac
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 71 xul.dll!MessageLoop::RunTask(Task *) [message_loop.cc:b3b07c447281 : 364 + 0xe]
+08:23:57 INFO - eip = 0x10480741 esp = 0x0012f6b4 ebp = 0x0012f6cc
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 72 xul.dll!MessageLoop::DeferOrRunPendingTask(MessageLoop::PendingTask const &) [message_loop.cc:b3b07c447281 : 372 + 0x7]
+08:23:57 INFO - eip = 0x1047bab6 esp = 0x0012f6d4 ebp = 0x0012f6d8
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 73 xul.dll!MessageLoop::DoWork() [message_loop.cc:b3b07c447281 : 459 + 0x5]
+08:23:57 INFO - eip = 0x1047c346 esp = 0x0012f6e0 ebp = 0x0012f708
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 74 xul.dll!mozilla::ipc::DoWorkRunnable::Run() [MessagePump.cpp:b3b07c447281 : 220 + 0x7]
+08:23:57 INFO - eip = 0x104b197d esp = 0x0012f710 ebp = 0x0012f718
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 75 xul.dll!nsThread::ProcessNextEvent(bool,bool *) [nsThread.cpp:b3b07c447281 : 994 + 0xe]
+08:23:57 INFO - eip = 0x101b3e13 esp = 0x0012f720 ebp = 0x0012f800
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 76 xul.dll!NS_ProcessNextEvent(nsIThread *,bool) [nsThreadUtils.cpp:b3b07c447281 : 297 + 0xd]
+08:23:57 INFO - eip = 0x101e2ac7 esp = 0x0012f808 ebp = 0x0012f814
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 77 xul.dll!mozilla::ipc::MessagePump::Run(base::MessagePump::Delegate *) [MessagePump.cpp:b3b07c447281 : 95 + 0xa]
+08:23:57 INFO - eip = 0x104b1bf9 esp = 0x0012f81c ebp = 0x0012f844
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 78 xul.dll!mozilla::ipc::MessagePumpForChildProcess::Run(base::MessagePump::Delegate *) [MessagePump.cpp:b3b07c447281 : 289 + 0x8]
+08:23:57 INFO - eip = 0x104b1d77 esp = 0x0012f84c ebp = 0x0012f85c
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 79 xul.dll!MessageLoop::RunInternal() [message_loop.cc:b3b07c447281 : 234 + 0xf]
+08:23:57 INFO - eip = 0x104806fd esp = 0x0012f864 ebp = 0x0012f87c
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 80 xul.dll!MessageLoop::RunHandler() [message_loop.cc:b3b07c447281 : 227 + 0x5]
+08:23:57 INFO - eip = 0x104806b5 esp = 0x0012f884 ebp = 0x0012f8b0
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 81 xul.dll!MessageLoop::Run() [message_loop.cc:b3b07c447281 : 201 + 0x7]
+08:23:57 INFO - eip = 0x104803ff esp = 0x0012f8b8 ebp = 0x0012f8d0
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 82 xul.dll!nsBaseAppShell::Run() [nsBaseAppShell.cpp:b3b07c447281 : 156 + 0xc]
+08:23:57 INFO - eip = 0x11db9fbf esp = 0x0012f8d8 ebp = 0x0012f8e0
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 83 xul.dll!nsAppShell::Run() [nsAppShell.cpp:b3b07c447281 : 257 + 0x8]
+08:23:57 INFO - eip = 0x11e0f080 esp = 0x0012f8e8 ebp = 0x0012f8f0
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 84 xul.dll!XRE_RunAppShell [nsEmbedFunctions.cpp:b3b07c447281 : 786 + 0xe]
+08:23:57 INFO - eip = 0x125cef91 esp = 0x0012f8f8 ebp = 0x0012f904
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 85 xul.dll!mozilla::ipc::MessagePumpForChildProcess::Run(base::MessagePump::Delegate *) [MessagePump.cpp:b3b07c447281 : 259 + 0x5]
+08:23:57 INFO - eip = 0x104b1cae esp = 0x0012f90c ebp = 0x0012f918
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 86 xul.dll!MessageLoop::RunInternal() [message_loop.cc:b3b07c447281 : 234 + 0xf]
+08:23:57 INFO - eip = 0x104806fd esp = 0x0012f920 ebp = 0x0012f938
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 87 xul.dll!MessageLoop::RunHandler() [message_loop.cc:b3b07c447281 : 227 + 0x5]
+08:23:57 INFO - eip = 0x104806b5 esp = 0x0012f940 ebp = 0x0012f96c
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 88 xul.dll!MessageLoop::Run() [message_loop.cc:b3b07c447281 : 201 + 0x7]
+08:23:57 INFO - eip = 0x104803ff esp = 0x0012f974 ebp = 0x0012f98c
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 89 xul.dll!XRE_InitChildProcess [nsEmbedFunctions.cpp:b3b07c447281 : 622 + 0xb]
+08:23:57 INFO - eip = 0x125ceb19 esp = 0x0012f994 ebp = 0x0012ff24
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 90 plugin-container.exe!content_process_main(int,char * * const) [plugin-container.cpp:b3b07c447281 : 237 + 0xb]
+08:23:57 INFO - eip = 0x00406a49 esp = 0x0012ff2c ebp = 0x0012ff44
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 91 plugin-container.exe!wmain [nsWindowsWMain.cpp:b3b07c447281 : 131 + 0x7]
+08:23:57 INFO - eip = 0x00406dab esp = 0x0012ff4c ebp = 0x0012ff78
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 92 plugin-container.exe!__tmainCRTStartup [crt0.c : 255 + 0x12]
+08:23:57 INFO - eip = 0x00443f62 esp = 0x0012ff80 ebp = 0x0012ffc0
+08:23:57 INFO - Found by: call frame info
+08:23:57 INFO - 93 kernel32.dll!BaseProcessStart + 0x23
+08:23:57 INFO - eip = 0x7c817067 esp = 0x0012ffc8 ebp = 0x0012fff0
+08:23:57 INFO - Found by: call frame info

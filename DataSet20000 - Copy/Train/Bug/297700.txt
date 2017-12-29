@@ -1,0 +1,93 @@
+postscript print shifted to right 2inch per page
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.8) Gecko/20050511 Firefox/1.0.4
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.8) Gecko/20050511 Firefox/1.0.4
+
+View e.g. page http://gamblincolors.com/newsletters/newsletter12.html
+
+- Renders fine in browser.
+- Html is fine (no spurious <div>, <table>, ...)
+- anything print-related shows a bug shifting the contents
+  after page 3 to the right out of the visible area.
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. view specified page
+2. set media size to A4 
+   (probably necessary to force the page boundary to
+    catch the picture "just right", if I guess correctly
+    * please check this *
+    setting media size to letter or legal seems to just
+    catch other pictures at page break time for me; 
+    still triggering the error, though not necessarily
+    between page 3/4.)
+3. either print this page
+   or     print to file and ghostview the result
+   or     print-preview
+
+Actual Results:  
+page output is shifted to right a constant offset
+per page after the bug is being triggered. 
+
+Media setting is A4, with default borders.
+
+Pages 1,2: ok
+Page  3:   <2 images side by side>
+           top of the left image is shown, cut off
+Page  4:   everything shifted 1+ inch to the right,
+           top contains both pictures, with the top
+           of the left one "blanked"
+Page  5:   shifted 2+ inches, though no more pictures
+           across page boundary 
+
+Expected Results:  
+printed without the text/pictures being shifted-to-right out
+of visible page.
+
+optional: it shouldn't have printed partial pictures at all, but
+          moved them to the next page (splitting only makes sense,
+          if picture size is a significant fraction of page size)
+
+really optional: 
+          would be nice, if a mode <try to avoid truncating/shrinking
+          but use a new page instead for the whole picture> would be
+          available in the options.
+
+possibly 294591 is a dupe of this one 
+(but I couldn't locate its example and verify this).
+
+
+The output for legal was interesting: 
+
+page 1 ends with a paragraph between 2 pictures.
+This paragraph and both pictures are "cut" correctly
+between the pages, without triggering the shift.
+(images part of <p>)
+
+page 2 ends with a cut image without text by its side
+(actually: <div><img1><img2></div>), where img1 is
+cut as per the bug above, with the remnant on page 3).
+And page 3 displays the first shift-to-right. 
+
+
+another tidbit:
+
+all the text is in cascaded <div> paragraphs,
+so divs with <p>embedded text</p> seem to be save,
+even if containing pictures.
+
+The trigger I suspect <div><img1><img2></div>,
+centers the pictures in both print and 
+browser window.
+
+At page break time, it centers ONLY img1 and just
+displays the top of it (INSTEAD of centering
+both images and displaying their topmost portions).
+
+The next page (and all following, regardless of
+pictures) are shifted.
+
+I aligned the next page below, assuming both
+images would have been centered, and it looked
+ok.

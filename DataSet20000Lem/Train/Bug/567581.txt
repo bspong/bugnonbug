@@ -1,0 +1,38 @@
+Firefox doesn't cache page with "Vary: Cookie" header
+User-Agent: Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.2.3) Gecko/20100423 Ubuntu/10.04 (lucid) Firefox/3.6.3
+Build Identifier: Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.2.3) Gecko/20100423 Ubuntu/10.04 (lucid) Firefox/3.6.3
+
+If a page return a "Vary" header, firefox doesn't cache it at all, instead of just considering the header enumerated in "Vary" to be additional lookup keys.
+
+It work fine with Squid.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Go to http://www.lll.lu/~aknaff/bug-reports/mozillaVary/
+2. Click on set cookie to 1
+3. Click on read cookie
+4. Click on read cookie again
+5. Click on set cookie to 2
+6. Click on read cookie again.
+7. Click on set cookie to 1
+8. Click on read cookie again.
+
+Actual Results:
+At step 4, the date changes.
+
+Expected Results:
+The date should stay the same at step 4 => doe not work.
+At step 6, the cookie value should be shown a 2 (and the date changed) => work ok
+At step 8, the cookie value should be shown a 1, and the same would ideally be the same a on step 3 => doe not work
+
+
+The read-cookie echo back current date and the cookie.
+It set Cache-Control: max-age=3600 to make sure that the page can be cached.
+It also set a Vary: Cookie header
+
+It work fine when surfing through squid, which basically cache a different version per cookie value.
+
+"In the wild", Vary header are used by many CMS'es (such a Plone) and similar software in order to support different page content for different spoken languages, or for giving a different vision to logged-in user that for unauthenticated users. This firefox behavior mean that page served by such software cannot be cached, leading to a negative performance impact.
+
+If it is too difficult to implement a cache that is indexed by header a well a URL, maybe we could settle for a half solution where the request header of the cached version would be stored along with the contents, and the entry would be considered stale if the header of the new request didn't match the one of the previous. This would fix the problem at step 6 (common case), although still triggering a refetch at step 8.

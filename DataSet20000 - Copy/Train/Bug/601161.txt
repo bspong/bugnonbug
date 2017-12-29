@@ -1,0 +1,34 @@
+Race condition (shallow copy) with setBrowserState() when when browser.sessionstore.resume_from_crash is false
+This is broken off from bug 600545, but the root cause is the same.
+
+Bug 587299 added processing to strip out non-app tabs from the browser session when _getCurrentState is called from saveState(), if the browser is running and the browser.sessionstore.resume_from_crash is false.  It is designed to remove non-app tabs from the saved session data, but it has the side effect of also removing them from SessionStore's internal current browser state.  This results in the wrong browser state being returned by getBrowserState().  That is documented in bug 600545.
+
+An additional problem can occur if the setBrowserState() or setWindowState() is called with a state that causes new windows to open.  When a new window is opened as a result of a call to either of those two API calls, the state for that window is stored in the this._statesToRestore variable (in _openWindowWithState()) which is read on the onLoad event for the window to do the actual restore.  The problem occurs if the saveState periodic kicks off between the time of the _openWindowWithState() call and the onLoad event.  What happens is that the following code in _getCurrentState() strips out the the tabs from the local variable "total", which is actually contains a shallow copy of this._statesToRestore, so the tabs are stripped out of this._statesToRestore as a result.
+
+    // collect the data for all windows yet to be restored
+    for (ix in this._statesToRestore) {
+      for each (let winData in this._statesToRestore[ix].windows) {
+        total.push(winData);
+        if (!winData.isPopup)
+          nonPopupCount++;
+      }
+    }
+
+...
+
+    if (aPinnedOnly) {
+      total = total.filter(function (win) {
+        win.tabs = win.tabs.filter(function (tab) tab.pinned);
+        return win.tabs.length > 0;
+      });
+      if (total.length == 0)
+        return null;
+
+      lastClosedWindowsCopy = [];
+    }
+
+The result is that if the periodic saveState() function triggers between the restoreWindow() and onLoad() calls, that the newly open window won't contain any tabs.  This can also happen when restoring a closed window.
+
+Note that the second code fragment above, also strips out the tabs from this._windows[ix] as well.  This, along with code in _saveWindowHistory, is what causes sister bug 600545.
+
+I'm not sure the best way to fix this.  Making sure that winData is a deep copy of this._statesToRestore[ix].windows would result in a performance hit on a periodic function. It was suggested to convert this._statesToRestore to a JSON string, but I'm not sure that's any better.

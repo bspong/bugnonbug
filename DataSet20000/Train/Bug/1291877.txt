@@ -1,0 +1,10 @@
+Source map optimization in console due to Unique Locations
+Right now, we cache multiple location calls over RDP, but if we have multiple unique locations for a non-source mapped file, we make redundant calls to the server.
+
+We can implement a map of URL to SOURCE_MAP_STATUS, either true, false or undefined, defaulting all logged locations to undefined. Upon location resolve, if undefined or true for that URL, we continue attempt to resolve. If we get back the same location (is this possible with a valid source map? Or maybe we can also return the source meta with the `isSourceMapped` property?), then we can tag the URL's SOURCE_MAP_STATUS as `false`, and all other attempts to resolve locations with this URL are just a resolve-noop.
+
+On 'source-updated', if a valid event (passing the conditionals), we can then tag or retag the SOURCE_MAP_STATUS for that URL are `true` if the source isSourceMapped, and within `onSourceUpdated`, we resolve all current locations anyway to reattempt, which would resolve to the new source mapped version.
+
+This is a potential plan Jaideep and I discussed, but wondering if it's worth the effort with client side source mapping on the horizon.
+
+I can explain more clearly if needed, I'm sure.

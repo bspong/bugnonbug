@@ -1,0 +1,37 @@
+libxul.so us 100% CPU
+User Agent: Mozilla/5.0 (X11; Linux x86_64; rv:32.0) Gecko/20100101 Firefox/32.0
+Build ID: 20140911151253
+
+Steps to reproduce:
+
+I started firefox, initiated my session with my session manager. All my window and tab opened. After a while of browsing cpu started to burst at 100%.
+
+
+Actual results:
+
+There is a firefox thread which is highly using cpu.
+
+Using gdb to inspect the thread I see:
+(gdb) bt
+#0 0x00007f47180cd63c in ?? () from /opt/firefox/libxul.so
+#1 0x00007f47181afdf1 in ?? () from /opt/firefox/libxul.so
+#2 0x00007f47181cd1b3 in ?? () from /opt/firefox/libxul.so
+#3 0x00007f47181cd377 in ?? () from /opt/firefox/libxul.so
+#4 0x00007f47181cd412 in ?? () from /opt/firefox/libxul.so
+#5 0x00007f47181cfc52 in ?? () from /opt/firefox/libxul.so
+#6 0x00007f47181d374f in ?? () from /opt/firefox/libxul.so
+#7 0x00007f4717e385d4 in ?? () from /opt/firefox/libxul.so
+#8 0x00007f47181d3857 in ?? () from /opt/firefox/libxul.so
+#9 0x00007f471caeaa05 in ?? () from /opt/firefox/libnspr4.so
+#10 0x00007f471dd99b50 in start_thread (arg=<optimized out>) at pthread_create.c:304
+#11 0x00007f471cf38e6d in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:112
+#12 0x0000000000000000 in ?? ()
+
+That's what "perf top" shows.
+75,73% libxul.so [.] 0x1b21d0
+2,05% libpthread-2.13.so [.] pthread_mutex_lock
+2,01% libpthread-2.13.so [.] __pthread_mutex_unlock_usercnt
+1,95% python2.7 [.] 0x95c82
+1,34% libavcodec.so.53.35.0 [.] 0x207c02
+1,01% libsamplerate.so.0.1.8 [.] 0x3d7a
+0,87% libpthread-2.13.so [.] pthread_self

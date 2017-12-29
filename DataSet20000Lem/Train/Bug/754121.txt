@@ -1,0 +1,36 @@
+POST request without body doesn't work with @mozilla.org/network/io-service
+User Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.7; rv:12.0) Gecko/20100101 Firefox/12.0
+Build ID: 20120420145725
+
+Steps to reproduce:
+
+I'm using sandboxed HTTP connection (https://developer.mozilla.org/en/Creating_Sandboxed_HTTP_Connections#Creating_HTTP_POSTs) in my extension. It wa working fine until Firefox 12 then started acting up on Firefox 13 and later.
+
+One of request I'm making is POST request without body data: (OAuth request_token method: https://dev.twitter.com/docs/api/1/post/oauth/request_token) The code is something like this:
+
+postData = ""; // no body for this POST request
+.....
+var inputStream = Components.classes["@mozilla.org/io/string-input-stream;1"]
+.createInstance(Components.interfaces.nsIStringInputStream);
+inputStream.setData(postData, postData.length);
+
+var uploadChannel = gChannel.QueryInterface(Components.interfaces.nsIUploadChannel);
+uploadChannel.setUploadStream(inputStream, "application/x-www-form-urlencoded", -1);
+httpChannel.requestMethod = "POST";
+
+
+This function no longer work on Firefox 13 and later, so I have to do some workaround like this:
+
+if (postData.length != 0) {
+inputStream.setData(postData, postData.length);
+}
+else {
+inputStream.setData("", 1);
+}
+
+I tried couple other parameter such a
+inputStream.setData(null, 0);
+or
+inputStream.setData(null, -1);
+
+but only ("", 1) combination works. I'm not this is the correct way to handle this, but this seems bug to me and should work with ("", 0) like used to.

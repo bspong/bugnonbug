@@ -1,0 +1,38 @@
+Build failure due to missing codegen.pp
+Trying to build from the 52.0a1 on NetBSD fails with:
+
+gmake[3]: Entering directory '/usr/pkgobj/wip/firefox-hg/work/build/dom/bindings'
+Makefile:52: codegen.pp: No such file or directory
+CSS2Properties.webidl
+/usr/pkgobj/wip/firefox-hg/work/build/_virtualenv/bin/python -m mozbuild.action.file_generate /usr/pkgobj/wip/firefox-hg/work/mozilla/dom/bindings/GenerateCSS2PropertiesWebIDL.py generate CSS2Properties.webidl .deps/CSS2Properties.webidl.pp /usr/pkgobj/wip/firefox-hg/work/mozilla/dom/webidl/CSS2Properties.webidl.in /usr/pkgobj/wip/firefox-hg/work/mozilla/layout/style/PythonCSSProps.h
+Traceback (most recent call last):
+  File "/usr/pkg/lib/python2.7/runpy.py", line 174, in _run_module_as_main
+    "__main__", fname, loader, pkg_name)
+  File "/usr/pkg/lib/python2.7/runpy.py", line 72, in _run_code
+    exec code in run_globals
+  File "/usr/pkgobj/wip/firefox-hg/work/mozilla/python/mozbuild/mozbuild/action/file_generate.py", line 108, in <module>
+    sys.exit(main(sys.argv[1:]))
+  File "/usr/pkgobj/wip/firefox-hg/work/mozilla/python/mozbuild/mozbuild/action/file_generate.py", line 63, in main
+    ret = module.__dict__[method](output, *args.additional_arguments)
+  File "/usr/pkgobj/wip/firefox-hg/work/mozilla/dom/bindings/GenerateCSS2PropertiesWebIDL.py", line 22, in generate
+    preprocessed = subprocess.check_output(cpp)
+  File "/usr/pkg/lib/python2.7/subprocess.py", line 567, in check_output
+    process = Popen(stdout=PIPE, *popenargs, **kwargs)
+  File "/usr/pkg/lib/python2.7/subprocess.py", line 711, in __init__
+    errread, errwrite)
+  File "/usr/pkg/lib/python2.7/subprocess.py", line 1343, in _execute_child
+    raise child_exception
+OSError: [Errno 13] Permission denied
+backend.mk:8: recipe for target 'CSS2Properties.webidl' failed
+gmake[3]: *** [CSS2Properties.webidl] Error 1
+gmake[3]: *** Deleting file 'CSS2Properties.webidl'
+gmake[3]: Leaving directory '/usr/pkgobj/wip/firefox-hg/work/build/dom/bindings'
+/usr/pkgobj/wip/firefox-hg/work/mozilla/config/recurse.mk:79: recipe for target 'dom/bindings/export' failed
+gmake[2]: *** [dom/bindings/export] Error 2
+gmake[2]: Leaving directory '/usr/pkgobj/wip/firefox-hg/work/build'
+/usr/pkgobj/wip/firefox-hg/work/mozilla/config/recurse.mk:32: recipe for target 'export' failed
+gmake[1]: *** [export] Error 2
+
+I guess codegen.pp should be generated from security/sandbox/chromium/sandbox/linux/bpf_dsl/codegen.cc and that is not build for NetBSD (not quite sure whether it should yet).
+
+I am also not sure if the "Permission denied" error is refering to the same thing.

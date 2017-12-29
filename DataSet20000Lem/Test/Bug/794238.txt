@@ -1,0 +1,32 @@
+Problems with getting clean VS C++ debug build with Gecko SDK
+User Agent: Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; WOW64; Trident/4.0; GTB7.4; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729; Media Center PC 6.0; InfoPath.3; .NET4.0C; .NET4.0E)
+
+Steps to reproduce:
+
+This is probably related to a presumable move of bulds of Windows Gecko SDK to Visual Studio 2010 between version 10 and 17.
+
+If I produce a debug build against Windows Gecko sdk with VS 2008, warning similar to the come out:
+
+xpcomglue_s.lib(nsTArray.obj) : warning LNK4229: invalid directive '/FAILIFMISMATCH:_MSC_VER=1600' encountered; ignored
+xpcomglue_s.lib(nsTArray.obj) : warning LNK4229: invalid directive '/FAILIFMISMATCH:_ITERATOR_DEBUG_LEVEL=0' encountered; ignored
+
+According to http://social.msdn.microsoft.com/Forums/en-US/vcgeneral/thread/76af63c9-dba7-4323-9fd2-87f5a33e75e7 Microsoft publication, the level of risk of having problem because of using VS 2008 with the library built with VS 2010 is very low, and is only related to the usage of C++ standard library.
+
+Nevertheless, there is some risk, and I'd guess there wa a reason behind introducing this feature by Microsoft.
+
+If I build the same code with VS 2010, I get error similar to the following:
+
+xpcomglue_s.lib(nsTArray.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in MozillaBasicNodeHelper.obj
+
+Release build in VS 2010 doe not have such problems.
+
+
+
+Actual results:
+
+I tried other incarnation of xpcomglue, like xpcomglue.lib with the same result.
+
+
+Expected results:
+
+Looks like at least some .lib file that come with Gecko SDK shoud come in two version -- Relase and Debug, like many other libraries, both from Microsoft and other sources, so that developer can build debug version of their C++ application .

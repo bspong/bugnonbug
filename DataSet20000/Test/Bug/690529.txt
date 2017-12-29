@@ -1,0 +1,12 @@
+Scratchpad should evaluate expressions in the scope of the content window, not in a sandbox
+Expressions entered into the Web Console and the Scratchpad are evaluated in a sandbox global whose prototype is the content window: this.__proto__ === window.
+
+This has some nice effects: variables declared in a Scratchpad are effectively local to that scratchpad, instead of polluting content's global; you can play around. If one does want to create a global variable visible to content, one can always simply create a property on window: 'window.newGlobal = "fruit"'.
+
+However, I suspect this is actually not helpful. The simplest mental model for developers is for code entered in the Web Console / Scratchpad to be evaluated just like the contents of their <script> elements. Explaining why 'x' shows the content's x but 'x = 5' doesn't change it (but 'x.y = 5' *is* visible to content!) involves a degree of detail that only more engaged developers have any interest in.
+
+It's certainly valuable to provide utility functions that aren't present in content; but that can be done by evaluating expressions in the scope of a 'with' expression applied to an object with the utility functions as its properties. 'With' isn't my favorite construct, but since we completely control the object's properties, the shortcomings of 'with' use in general don't apply; once you've decided to introduce some Web Console-only functions, the behavior of 'with' is pretty much what you need. (Don't forget that the following creates bindings for x and y on the global:
+
+    with (o) { var x = 5; y = 6; }
+
+So 'with' doesn't re-introduce the sandbox problems I mention above.)

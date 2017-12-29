@@ -1,0 +1,80 @@
+java jfilechooser causes firefox to crash when called from javascript.
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.2; en-US; rv:1.9.0.1) Gecko/2008070208 Firefox/3.0.1
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.2; en-US; rv:1.9.0.1) Gecko/2008070208 Firefox/3.0.1
+
+When calling a java function from javascript that displays a JFileChooser it causes firefox to crash (becomes unresponsive, I have to open the the task manager and kill the process manually).  Sometimes it doesn't crash, it hangs but if I switch to a different window and then back to firefox then it becomes responsive again.  If you look at the url I entered, if you click the link then the problem happens about 50% of the time.  Clicking the button works fine, since it isn't called from javascript.  Here's my applet code, it is signed:
+
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
+
+import javax.swing.JApplet;
+import javax.swing.JButton;
+import javax.swing.JFileChooser;
+import javax.swing.UIManager;
+
+
+public class TestJFileChooser extends JApplet{
+
+	public void init(){
+		JButton jb = new JButton("test");
+		jb.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent arg0) {
+				selectLocalFiles();
+			}			
+		});
+		this.add(jb);
+	}
+	
+	public void selectLocalFiles(){
+		AccessController.doPrivileged(new PrivilegedAction<Object>(){
+			public Object run() {
+				try {
+					UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+				} catch (Exception e) { }
+				JFileChooser jfc = new JFileChooser();
+				jfc.setMultiSelectionEnabled(true);
+
+				int returnval = jfc.showOpenDialog(null);
+				if(returnval == JFileChooser.APPROVE_OPTION){
+					
+				}
+				return null;
+			}			
+		});		
+	}
+}
+
+and here is the html to test with:
+<html>
+<body>
+
+<applet id='imagemgr' name='imagemgr' code='TestJFileChooser.class' archive="TestJFileChooser6.jar" mayscript width=100 height=100></applet>
+
+
+<a href="javascript: addAttachment()">Test JFileChooser</a>
+
+<script>
+function addAttachment(){
+	var selectedfile = new Array();
+	var startpos = 0;
+	setTimeout("document.getElementById(\"imagemgr\").selectLocalFiles();", 500);
+}
+</script>
+</body>
+</html>
+
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+1. Go to the webpage I entered.
+2. Click the link 'TestJFileChooser'
+Actual Results:  
+Causes firefox to become unresponsive, I have to kill firefox from the task manager.  Sometimes if I switch to a different screen and back to firefox then it becomes responsive again.
+
+Expected Results:  
+Should execute exactly the same and calling the function from java (click the 'test' button on the webpage I entered)
+
+This problem happens to a lesser extent on the mac and linux, but it still happens occasionally.  It happens a lot (>50% of the time) on all versions of windows (32 bit and 64 bit as well).  Seems to have gotten worse on firefox 3 as compared to firefox 2.  Clients have reported this problem to us, so a workaround or a fix would be greatly appreciated.

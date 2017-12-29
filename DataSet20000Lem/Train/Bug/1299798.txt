@@ -1,0 +1,24 @@
+checkForPendingCrashReports() raise "TypeError: win is null"
+With bug 1269998 the method checkForPendingCrashReports() got added. As we have seen in our firefox-ui-update test it can fail if no browser window is open. It mean in case of applying update it can happen that the browser window is closed first, followed by the about window. I believe that this is the situation here.
+
+The following assertion is thrown:
+
+05:54:25 INFO - *************************
+05:54:25 INFO - A coding exception wa thrown in a Promise resolution callback.
+05:54:25 INFO - See https://developer.mozilla.org/Mozilla/JavaScript_code_modules/Promise.jsm/Promise
+05:54:25 INFO - Full message: TypeError: win is null
+05:54:25 INFO - Full stack: onSuccess@resource://app/components/nsBrowserGlue.js:758:17
+05:54:25 INFO - Handler.prototype.process@resource://gre/modules/Promise.jsm -> resource://gre/modules/Promise-backend.js:937:23
+05:54:25 INFO - this.PromiseWalker.walkerLoop@resource://gre/modules/Promise.jsm -> resource://gre/modules/Promise-backend.js:816:7
+05:54:25 INFO - Promise*this.PromiseWalker.scheduleWalkerLoop@resource://gre/modules/Promise.jsm -> resource://gre/modules/Promise-backend.js:747:11
+05:54:25 INFO - this.PromiseWalker.schedulePromise@resource://gre/modules/Promise.jsm -> resource://gre/modules/Promise-backend.js:779:7
+05:54:25 INFO - this.PromiseWalker.completePromise@resource://gre/modules/Promise.jsm -> resource://gre/modules/Promise-backend.js:714:7
+05:54:25 INFO - get _worker/worker.onmessage@resource://gre/modules/PromiseWorker.jsm:231:9
+05:54:25 INFO - Spinner.prototype.observe@resource://gre/modules/AsyncShutdown.jsm:551:9
+05:54:26 INFO - *************************
+
+As it can be seen by the following code we blindly assume that there is at least one browser window open:
+
+https://dxr.mozilla.org/mozilla-central/rev/b7f7ae14590aced450bb0b0469dfb38edd2c0ace/browser/components/nsBrowserGlue.js#758
+
+I would say we should early return if we cannot get a reference to the global notification box, and should try again in showing the notification when Firefox got updated. Brad, can you please check that? Thanks.

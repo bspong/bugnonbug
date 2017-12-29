@@ -1,0 +1,29 @@
+infinite loop, when iframe is created in framed page.
+User-Agent:       Mozilla/5.0 (Macintosh; U; PPC Mac OS X Mach-O; en-US; rv:1.8a6) Gecko/20050111 Firefox/1.0+
+Build Identifier: Mozilla/5.0 (Macintosh; U; PPC Mac OS X Mach-O; en-US; rv:1.8a6) Gecko/20050111 Firefox/1.0+
+
+In a page that has frames on it, using javascript to create an iframe causes
+mozilla to enter into some sort of an infinite loop.  It says "Loading..." and
+the wheel keeps circling.  It hits the CPU harder.  
+
+Other than that, everything seems to work.  The rest of the JS on a page, the
+browser interface, ...  It just goes into some sort of an infinite loop.
+
+This only happens if the iframe is created in the onload function, or a function
+called by it.  Therefore, a good workaround is to call the iframe-creating
+function with a setInterval of 0ms.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.  In a page inside of a frameset, create a funciton to be called with the
+page's onload.  Let's call that function init()
+
+2.  Have init() create an iframe (with any src) and attach it to the body. 
+
+Actual Results:  
+The title of the page is always "Loading..." and the little circle keeps on
+moving around.  It hits the CPU harder, evidently in an infinite loop.
+
+Expected Results:  
+Recognized that it has finished loading the page, and quit drawing CPU resources.

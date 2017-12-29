@@ -1,0 +1,89 @@
+DOM Inspector not on Tools menu. When I manually add it, an error in debug occurs.
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.6b) Gecko/20031126 Firebird/0.7+ (Optimized for Athlon XP by Yek)
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.6b) Gecko/20031201 Firebird/0.7+ (Optimized for Athlon XP by Yek)
+
+Somewhere between 30Nov and 01Dec, several of us (ref:
+http://forums.mozillazine.org/viewtopic.php?t=38019)  began to have problems
+with DOM Inspector. 
+
+In my case: The Tools/DOM Inspector menu choice is missing entirely. I added it
+manually as it was defined in browser-menubars.inc 2 days ago when it worked.
+I've done this many times in the past, but it seems as if the actual function
+name may have changed. 
+
+I built FB in debug and captured some debug output after I clicked on DOM
+Inspector as follows:
+
+-----------debug------------
+*********** click on DOM Inspector here and then on Inspect page ********
+
+Thread 1166052272 (LWP 23486)]JavaScript error: line 0: missing ; before
+statementJavaScript error: line 0: inspectDOMDocument is not defined
+
+***********click on Javascript Debugger here *********
+WEBSHELL+ = 4
+vnk: Application venkman, 'JavaScript Debugger' loaded.
+vnk: init {[New Thread 1174621104 (LWP 23593)]
+###!!! ASSERTION: Unable to locate an XBL binding.: 'protoBinding', file
+nsXBLService.cpp, line 894Break: at file nsXBLService.cpp, line 894
+
+vnk:   initDebugger {} initDebugger 2.626 sec
+WEBSHELL+ = 5
+WARNING: nsTimeoutImpl::Release() proceeding without context., file
+nsGlobalWindow.cpp, line 5090WEBSHELL- = 4
+vnk:   onclose
+vnk:   Application venkman, 'JavaScript Debugger' unloading.
+WEBSHELL- = 3
+
+------------end DOMI (and venkman afterwards as well which isn't working ----
+
+Another person is getting a javascript error that shows up in the JS console,
+but see the thread I noted above for that. 
+
+
+
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Pull CVS as of ~1500 PST
+2. Build using this mozconfig.
+. $topsrcdir/browser/config/mozconfig
+ac_add_options --disable-tests
+ac_add_options --enable-debug #or disable whatever.. 
+ac_add_options --enable-optimize="-O3 -march=athlon-xp -msse"
+ac_add_options --enable-jsd
+ac_add_options --enable-xft
+ac_add_options --enable-default-toolkit=gtk2
+ac_add_options --enable-extensions=venkman
+
+3. Run FB and click on Tools / DOM Inspector 
+4. In this build also try Tools/Javascript Debugger. 
+
+
+Actual Results:  
+I received the debug error noted in "Details" above. 
+Same for Venkman but for Venkman, I got a blank venkman-like window as if the
+overlay weren't there. 
+
+Expected Results:  
+Should have opened DOM Inspector window with some context. 
+For Venkman, should have opened Javascript debugger with context. 
+
+Platform: Athlon XP on NF7 abit Motherboard.
+OS: Fedora Core 1, completely up to date, 
+gcc: 3.3.2-2 -- glibc 2.3.2-101.1
+
+mozconfig is above. 
+
+I ran firebird after moving the old profile to another directory. 
+I also tried it with the old profile. 
+I installed firebird into a new directory. 
+I downloaded an official build which didn't work for me either (the 31-Nov gtk2
+build)
+I downloaded someone else's build without gtk2 which *did* work (or at least had
+DOMi). 
+I'm running KDE 3.1.4 desktop and gnome 2.4 devel and gconf2 for the registry
+needs.

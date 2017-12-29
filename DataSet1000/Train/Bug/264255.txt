@@ -1,0 +1,55 @@
+Forms don't work with ISO-2022-CN
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.3) Gecko/20041013 Firefox/0.10
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.3) Gecko/20041013 Firefox/0.10
+
+I worked with a web page developer whose page used the ISO-2022-CN Chinese
+character set.  It turns out that form data does not get transmitted back to the
+server with this character set.  Using the GET method, all that shows in the URL
+is the equals sign, not the field name or contents.
+
+Reproducible: Always
+Steps to Reproduce:
+1. Run script CGI included below.
+2. Enter some text in the box
+3. Submit.
+4. Look at the URL  
+
+Actual Results:  
+The page reference will fail, but that isn't a problem.  The URL will have an =
+without the field name beforehand or the contents afterwards.
+
+Expected Results:  
+The field name and contents should be in the URL.
+
+CGI script to demonstrate the problem.  I don't have a handy public server to
+demonstrate the problem from.
+
+
+----------------------------------------------
+
+#!/usr/bin/perl -T
+
+use strict;
+
+use CGI qw/:standard/;
+
+print header(-charset => 'ISO-2022-CN'),
+        start_html(-title => "A simple example");
+print '<form action="bin/echo-form.cgi" method=get>
+
+<p>This form uses the get method.
+
+<p>Click the Submit query button.
+
+<p><input type=text name=textinput value="Hello, world.">
+
+<p><input type=submit>
+
+<p>After you click the Submit query button, check the Location: box.
+
+<p>The original URL should have the following string appended to it:
+
+<p>?text_input=Hello%2C+world.
+
+</form>',
+        end_html;

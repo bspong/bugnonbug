@@ -1,0 +1,29 @@
+Password manager cannot store zero length passwords, still attempts to
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 6.0; en-GB; rv:1.9.0.4) Gecko/2008102920 Firefox/3.0.4
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 6.0; en-GB; rv:1.9.0.4) Gecko/2008102920 Firefox/3.0.4
+
+Background: The password manager is incapable of storing zero length passwords as the password field is mandatory in nsILoginManager [1].
+
+When a user enters a username but no password into a BasicAuth dialog, the password manager still appears asking if the user would like to store the password. Clicking 'Remember Password' does nothing and the Remember Password bar does not disappear.
+
+The eror reported in the JavaScript console (when signon.debug is enabled) is:
+
+Error: uncaught exception: [Exception... "'Can't add a login with a null or empty password.' when calling method: [nsILoginManager::addLogin]"  nsresult: "0x8057001e (NS_ERROR_XPC_JS_THREW_STRING)"  location: "JS frame :: file:///C:/Program%20Files/Mozilla%20Firefox%203/components/nsLoginManagerPrompter.js :: anonymous :: line 628"  data: no]
+
+The password manager should either not offer to remember zero length passwords (possibly offering a friendly notice saying that it cannot store zero length passwords), or it should be modified so it can accept zero length passwords.
+
+[1]: https://developer.mozilla.org/en/Using_nsILoginManager#Storing_a_password
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Visit http://tortoisesvn.tigris.org/svn/tortoisesvn/trunk/src/Changelog.txt . This page is protected with BasicAuth and required the username 'guest' and a blank password to access.
+2. Enter the username 'guest' and a blank password.
+3. Click the 'Remember' button when the password manager asks if you'd like to store the password.
+
+You can view the error in the Javascript console by setting signon.debug to true in about:config.
+Actual Results:  
+The 'Remember' button has no effect and the remember password bar remains.
+
+Expected Results:  
+Either the password gets remembered, or the browser reminds the user that blank passwords cannot be stored.

@@ -1,0 +1,19 @@
+Need smarter policies for searching with location bar.
+User-Agent:       Mozilla/5.0 (Macintosh; Intel Mac OS X 10.6; rv:2.0b6pre) Gecko/20100903 Firefox/4.0b6pre
+Build Identifier: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.6; rv:2.0b6pre) Gecko/20100903 Firefox/4.0b6pre
+
+Awesomebar could do web searches by modifying the keyword.URL. 
+Since the landing of bug 565966, however, it's now a default action. Compared to Google Chrome's omnibar, we need to come up with smarter policies for determining the type of input string(text or link?).
+Most problems happen when there are dots(periods, full-stops) in the string.
+
+Here are some things I noticed:
+1. Since each field of an IPv4 address is a number between 0~255 and there are only four of them in a set. Strings like "1.2.3.256" or "1.2.3.4.5" are recognized as normal strings and bring up search in Chrome. For now Minefield still thinks they're addresses and tries to connect, this one is a rather easy fix I suppose.
+2. For more complicated strings like "a.b.c.d.e" and "a.b.c.d.ee", Chrome seems to have its mysterious way to distinguish them. Take the above two for instances, "a.b.c.d.e" is treated as a string, "a.b.c.d.ee" becomes an address(and "a.b.c.d.ff" a normal string again). Most basic and easiest way is considering country code top-level domain(ccTLD), but since there's no one as the ".ee" suffix, I suspect Google made up some handsome rule lists using their enormous search and domain database. This one's got to be worked hard on if we're going to achieve it.
+3. If Minefield can't decide(better yet, even if it could), offer to let the user decide.
+See the screenie, http://cl.ly/1ccfb94315e1dd6928e5
+
+There are more patterns, and all those will benefit not only search in location bar, but also "Paste and Go" or "Paste and Search", context menu "Search Google for" or "Open Link".
+
+Please look into it. Thanks.
+
+Reproducible: Always

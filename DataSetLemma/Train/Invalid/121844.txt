@@ -1,0 +1,54 @@
+ASSERTION: NS_ENSURE_TRUE(aParser) failed: 'aParser'
+freebsd cv trunk build from last weekend
+
+###!!! ASSERTION: NS_ENSURE_TRUE(aParser) failed: 'aParser', file /home/timeless/mozilla/htmlparser/src/nsDTDUtils.cpp, line 1514
+###!!! Break: at file /home/timeless/mozilla/htmlparser/src/nsDTDUtils.cpp, line 1514
+#2 0x282d35c9 in nsDebug::Assertion (aStr=0x2898af40 "NS_ENSURE_TRUE(aParser) failed", aExpr=0x2898af33 "aParser",
+aFile=0x2898acc0 "/home/timeless/mozilla/htmlparser/src/nsDTDUtils.cpp", aLine=1514) at /home/timeless/mozilla/xpcom/base/nsDebug.cpp:290
+#3 0x282d38d4 in nsDebug::WarnIfFalse (aStr=0x2898af40 "NS_ENSURE_TRUE(aParser) failed", aExpr=0x2898af33 "aParser",
+aFile=0x2898acc0 "/home/timeless/mozilla/htmlparser/src/nsDTDUtils.cpp", aLine=1514) at /home/timeless/mozilla/xpcom/base/nsDebug.cpp:396
+#4 0x28926837 in nsObserverEntry::Notify (this=0x80ca400, aNode=0x8e64020, aParser=0x0, aWebShell=0x882b134)
+at /home/timeless/mozilla/htmlparser/src/nsDTDUtils.cpp:1514
+#5 0x292444a9 in HTMLContentSink::NotifyTagObservers (this=0x9180e00, aNode=0x8e64020)
+at /home/timeless/mozilla/content/html/document/src/nsHTMLContentSink.cpp:3843
+#6 0x28934656 in CNavDTD::WillHandleStartTag (this=0x87d0200, aToken=0x8796280, aTag=eHTMLTag_html, aNode=@0x8e64020)
+at /home/timeless/mozilla/htmlparser/src/CNavDTD.cpp:1395
+#7 0x289353f4 in CNavDTD::HandleStartToken (this=0x87d0200, aToken=0x8796280) at /home/timeless/mozilla/htmlparser/src/CNavDTD.cpp:1642
+#8 0x28933198 in CNavDTD::HandleToken (this=0x87d0200, aToken=0x8796280, aParser=0x8c66500)
+at /home/timeless/mozilla/htmlparser/src/CNavDTD.cpp:895
+#9 0x28931e97 in CNavDTD::BuildModel (this=0x87d0200, aParser=0x8c66500, aTokenizer=0x8c04700, anObserver=0x0, aSink=0x9180e00)
+at /home/timeless/mozilla/htmlparser/src/CNavDTD.cpp:525
+#10 0x28947f30 in nsParser::BuildModel (this=0x8c66500) at /home/timeless/mozilla/htmlparser/src/nsParser.cpp:1981
+#11 0x28947b3e in nsParser::ResumeParse (this=0x8c66500, allowIteration=1, aIsFinalChunk=1, aCanInterrupt=1)
+at /home/timeless/mozilla/htmlparser/src/nsParser.cpp:1847
+#12 0x28946cd7 in nsParser::ContinueParsing (this=0x8c66500) at /home/timeless/mozilla/htmlparser/src/nsParser.cpp:1495
+#13 0x292a2405 in CSSLoaderImpl::Cleanup (this=0x882ee00, aKey=@0xbfbfedbc, aLoadData=0x8ea1280)
+at /home/timeless/mozilla/content/html/style/src/nsCSSLoader.cpp:809
+#14 0x292a2b8c in CSSLoaderImpl::SheetComplete (this=0x882ee00, aSheet=0x0, aLoadData=0x8ea1280)
+at /home/timeless/mozilla/content/html/style/src/nsCSSLoader.cpp:919
+
+hrm, apparently u!=up .. after carelessly using 'u' a few time i ended up here:
+#0 0x28931e97 in CNavDTD::BuildModel (this=0x87d0200, aParser=0x8c66500, aTokenizer=0x8c04700, anObserver=0x0, aSink=0x9180e00)
+at /home/timeless/mozilla/htmlparser/src/CNavDTD.cpp:525
+#1 0x28947f30 in nsParser::BuildModel (this=0x8c66500) at /home/timeless/mozilla/htmlparser/src/nsParser.cpp:1981
+#2 0x28947b3e in nsParser::ResumeParse (this=0x8c66500, allowIteration=1, aIsFinalChunk=1, aCanInterrupt=1)
+at /home/timeless/mozilla/htmlparser/src/nsParser.cpp:1847
+#3 0x28946cd7 in nsParser::ContinueParsing (this=0x8c66500) at /home/timeless/mozilla/htmlparser/src/nsParser.cpp:1495
+#4 0x292a2405 in CSSLoaderImpl::Cleanup (this=0x882ee00, aKey=@0xbfbfedbc, aLoadData=0x8ea1280)
+at /home/timeless/mozilla/content/html/style/src/nsCSSLoader.cpp:809
+#5 0x292a2b8c in CSSLoaderImpl::SheetComplete (this=0x882ee00, aSheet=0x0, aLoadData=0x8ea1280)
+at /home/timeless/mozilla/content/html/style/src/nsCSSLoader.cpp:919
+#6 0x292a2de3 in CSSLoaderImpl::ParseSheet (this=0x882ee00, aIn=0x8a527c0, aLoadData=0x8ea1280, aCompleted=@0xbfbfef64, aSheet=@0xbfbfef60)
+at /home/timeless/mozilla/content/html/style/src/nsCSSLoader.cpp:953
+#7 0x292a2f84 in CSSLoaderImpl::DidLoadStyle (this=0x882ee00, aLoader=0x8cd2740, aStyleData=0x8a527e0, aLoadData=0x8ea1280, aStatus=0)
+at /home/timeless/mozilla/content/html/style/src/nsCSSLoader.cpp:990
+#8 0x292a2119 in SheetLoadData::OnStreamComplete (this=0x8ea1280, aLoader=0x8cd2740, aContext=0x0, aStatus=0, aStringLen=64,
+aString=0x8ea1700 "/* empty cs file. rule are appended to this dynamically */\n\n\n")
+at /home/timeless/mozilla/content/html/style/src/nsCSSLoader.cpp:744
+#9 0x28c4ede0 in nsStreamLoader::OnStopRequest (this=0x8cd2740, request=0x8ea1380, ctxt=0x0, aStatus=0)
+at /home/timeless/mozilla/netwerk/base/src/nsStreamLoader.cpp:161
+#10 0x28ca717d in nsJARChannel::OnStopRequest (this=0x8ea1380, jarExtractionTransport=0x82eb404, context=0x0, aStatus=0)
+at /home/timeless/mozilla/netwerk/protocol/jar/src/nsJARChannel.cpp:611
+#11 0x28ccaa99 in nsOnStopRequestEvent::HandleEvent (this=0x8cd2e80) at /home/timeless/mozilla/netwerk/base/src/nsRequestObserverProxy.cpp:212
+#12 0x28c37810 in nsARequestObserverEvent::HandlePLEvent (plev=0x8cd2e80)
+at /home/timeless/mozilla/netwerk/base/src/nsRequestObserverProxy.cpp:115

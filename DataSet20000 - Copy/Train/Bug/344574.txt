@@ -1,0 +1,103 @@
+Assertion failure in js_GetAtom: JS_ASSERT(map->vector && i < map->length)
+User-Agent:       Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.1.4322; .NET CLR 2.0.50727)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.0.4) Gecko/20060616 Firefox/1.5.0.4
+
+This crashes about 50% of the time on the same assertion when
+debugging this script with Komodo's JSD-based debugger.  The
+interpreter is not in the debugger when the crash occurs, but is
+about to invoke a closure.
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+1. Start Komodo 4.0, alpha 1 and 2 have shipped.
+2. Install the Komodo JavaScript debugger XPI, and the prerequisite jslib.xpi if needed
+3. Start debugging the fractals.html program.
+4. Set a breakpoint at the line that invokes setTimeout
+5. Keep running.  Firefox will sometimes die at this assertion when it's
+about to invoke the closure.
+
+Actual Results:  
+Assertion failure, followed by Firefox crashing
+
+Expected Results:  
+I expected to see the debugger step into the closure code.
+
+JS Stack trace (via {,,xpc3250}DumpJSStack():
+
+0 doTest1() ["http://localhost/fractals/fractals.js":217]
+    a = 0,2,4,5,6,8,10,11,12,2,4
+    myList = [object Object]
+    idx = "jkl"
+    b = 1,,-1,1,1,1,,-1,1,1,,,,,,,,,,,,,,what about sparse arrays?,0,2,4,5,6,8,1
+0,11,12,2,4,
+    b_idx = 10
+    a_idx = 11
+    obj1 = [object Object]
+    obj2 = [object Object]
+    obj3 = [object Object]
+    obj3a = [object Object]
+    obj3b = [object Object]
+    obj4 = [object Object]
+    a1 = [object Object],[object Object],[object Object],[object Object],[object
+ Object]
+    a2 = [object Object],[object Object],[object Object]
+    a2a = [object Object],[object Object],just a string
+    a3 = [object Object],[object Object],[object Object],[object Object],[object
+ Object],[object Object],[object Object],[object Object],[object Object],[object
+ Object],[object Object]
+    a4 = [object Object],[object Object],[object Object],[object Object],[object
+ Object],[object Object],[object Object],[object Object],[object Object]
+    a4a = [object Object],[object Object],[object Object],[object Object],[objec
+t Object],[object Object],[object Object],[object Object],just a string
+    clearField2 = [function]
+    this = [object Window @ 0x4827a28 (native @ 0x4823e30)]
+1 onclick(event = [object MouseEvent @ 0x4e83d10 (native @ 0x4e838e0)]) ["http:/
+/localhost/fractals/jsfractals.html":2]
+    this = http://localhost/fractals/jsfractals.html
+2 [native frame]
+
+C++ stack trace:
+ 	ntdll.dll!7c901230() 	
+ 	js3250.dll!JS_Assert(const char * s=0x100ec2e4, const char * file=0x100ec2c0, int ln=897)  Line 63	C
+>	js3250.dll!js_GetAtom(JSContext * cx=0x0407a000, JSAtomMap * map=0x04888ab8, unsigned long i=21282)  Line 897 + 0x29	C
+ 	js3250.dll!js_Interpret(JSContext * cx=0x0407a000, unsigned char * pc=0x04888d85, long * result=0x0012d9fc)  Line 3639 + 0x27	C
+ 	js3250.dll!js_Invoke(JSContext * cx=0x0407a000, unsigned int argc=0, unsigned int flags=0)  Line 1208 + 0x13	C
+ 	js3250.dll!js_Interpret(JSContext * cx=0x0407a000, unsigned char * pc=0x04e53e30, long * result=0x0012e4cc)  Line 3583 + 0xf	C
+ 	js3250.dll!js_Invoke(JSContext * cx=0x0407a000, unsigned int argc=1, unsigned int flags=2)  Line 1208 + 0x13	C
+ 	js3250.dll!js_InternalInvoke(JSContext * cx=0x0407a000, JSObject * obj=0x04df6310, long fval=81748760, unsigned int flags=0, unsigned int argc=1, long * argv=0x0012e758, long * rval=0x0012e760)  Line 1285 + 0x14	C
+ 	js3250.dll!JS_CallFunctionValue(JSContext * cx=0x0407a000, JSObject * obj=0x04df6310, long fval=81748760, unsigned int argc=1, long * argv=0x0012e758, long * rval=0x0012e760)  Line 4171 + 0x1f	C
+ 	gklayout.dll!nsJSContext::CallEventHandler(JSObject * aTarget=0x04df6310, JSObject * aHandler=0x04df6318, unsigned int argc=1, long * argv=0x0012e758, long * rval=0x0012e760)  Line 1411 + 0x21	C++
+ 	gklayout.dll!nsJSEventListener::HandleEvent(nsIDOMEvent * aEvent=0x04e838e0)  Line 186 + 0x2d	C++
+ 	gklayout.dll!nsEventListenerManager::HandleEventSubType(nsListenerStruct * aListenerStruct=0x048b0f90, nsIDOMEvent * aDOMEvent=0x04e838e0, nsIDOMEventTarget * aCurrentTarget=0x04e72bf8, unsigned int aSubType=4, unsigned int aPhaseFlags=7)  Line 1687 + 0x27	C++
+ 	gklayout.dll!nsEventListenerManager::HandleEvent(nsPresContext * aPresContext=0x048228f8, nsEvent * aEvent=0x0012edf8, nsIDOMEvent * * aDOMEvent=0x0012ea84, nsIDOMEventTarget * aCurrentTarget=0x04e72bf8, unsigned int aFlags=7, nsEventStatus * aEventStatus=0x0012f318)  Line 1791	C++
+ 	gklayout.dll!nsGenericElement::HandleDOMEvent(nsPresContext * aPresContext=0x048228f8, nsEvent * aEvent=0x0012edf8, nsIDOMEvent * * aDOMEvent=0x0012ea84, unsigned int aFlags=7, nsEventStatus * aEventStatus=0x0012f318)  Line 2173	C++
+ 	gklayout.dll!nsGenericHTMLElement::HandleDOMEventForAnchors(nsPresContext * aPresContext=0x048228f8, nsEvent * aEvent=0x0012edf8, nsIDOMEvent * * aDOMEvent=0x00000000, unsigned int aFlags=1, nsEventStatus * aEventStatus=0x0012f318)  Line 1489 + 0x1f	C++
+ 	gklayout.dll!nsHTMLAnchorElement::HandleDOMEvent(nsPresContext * aPresContext=0x048228f8, nsEvent * aEvent=0x0012edf8, nsIDOMEvent * * aDOMEvent=0x00000000, unsigned int aFlags=1, nsEventStatus * aEventStatus=0x0012f318)  Line 295	C++
+ 	gklayout.dll!PresShell::HandleEventInternal(nsEvent * aEvent=0x0012edf8, nsIView * aView=0x00000000, unsigned int aFlags=1, nsEventStatus * aStatus=0x0012f318)  Line 6379 + 0x31	C++
+ 	gklayout.dll!PresShell::HandleEventWithTarget(nsEvent * aEvent=0x0012edf8, nsIFrame * aFrame=0x048c059c, nsIContent * aContent=0x048b0d40, unsigned int aFlags=1, nsEventStatus * aStatus=0x0012f318)  Line 6276 + 0x16	C++
+ 	gklayout.dll!nsEventStateManager::CheckForAndDispatchClick(nsPresContext * aPresContext=0x048228f8, nsMouseEvent * aEvent=0x0012f5ac, nsEventStatus * aStatus=0x0012f318)  Line 3038 + 0x42	C++
+ 	gklayout.dll!nsEventStateManager::PostHandleEvent(nsPresContext * aPresContext=0x048228f8, nsEvent * aEvent=0x0012f5ac, nsIFrame * aTargetFrame=0x048c059c, nsEventStatus * aStatus=0x0012f318, nsIView * aView=0x04894390)  Line 2016 + 0x17	C++
+ 	gklayout.dll!PresShell::HandleEventInternal(nsEvent * aEvent=0x0012f5ac, nsIView * aView=0x04894390, unsigned int aFlags=1, nsEventStatus * aStatus=0x0012f318)  Line 6451 + 0x3d	C++
+ 	gklayout.dll!PresShell::HandleEvent(nsIView * aView=0x04894390, nsGUIEvent * aEvent=0x0012f5ac, nsEventStatus * aEventStatus=0x0012f318, int aForceHandle=0, int & aHandled=1)  Line 6215 + 0x19	C++
+ 	gklayout.dll!nsViewManager::HandleEvent(nsView * aView=0x04863610, nsGUIEvent * aEvent=0x0012f5ac, int aCaptured=0)  Line 2559	C++
+ 	gklayout.dll!nsViewManager::DispatchEvent(nsGUIEvent * aEvent=0x0012f5ac, nsEventStatus * aStatus=0x0012f488)  Line 2246 + 0x14	C++
+ 	gklayout.dll!HandleEvent(nsGUIEvent * aEvent=0x0012f5ac)  Line 174	C++
+ 	gkwidget.dll!nsWindow::DispatchEvent(nsGUIEvent * event=0x0012f5ac, nsEventStatus & aStatus=nsEventStatus_eIgnore)  Line 1258 + 0xa	C++
+ 	gkwidget.dll!nsWindow::DispatchWindowEvent(nsGUIEvent * event=0x0012f5ac)  Line 1279	C++
+ 	gkwidget.dll!nsWindow::DispatchMouseEvent(unsigned int aEventType=301, unsigned int wParam=0, nsPoint * aPoint=0x00000000)  Line 6017 + 0x15	C++
+ 	gkwidget.dll!ChildWindow::DispatchMouseEvent(unsigned int aEventType=301, unsigned int wParam=0, nsPoint * aPoint=0x00000000)  Line 6271	C++
+ 	gkwidget.dll!nsWindow::ProcessMessage(unsigned int msg=514, unsigned int wParam=0, long lParam=27852975, long * aRetValue=0x0012fa84)  Line 4615 + 0x1c	C++
+ 	gkwidget.dll!nsWindow::WindowProc(HWND__ * hWnd=0x00240858, unsigned int msg=514, unsigned int wParam=0, long lParam=27852975)  Line 1440 + 0x1b	C++
+ 	user32.dll!77d48734() 	
+ 	user32.dll!77d48816() 	
+ 	user32.dll!77d489cd() 	
+ 	user32.dll!77d49402() 	
+ 	user32.dll!77d48a10() 	
+ 	gkwidget.dll!nsAppShell::Run()  Line 135	C++
+ 	tkitcmps.dll!nsAppStartup::Run()  Line 150 + 0x1a	C++
+ 	firefox.exe!XRE_main(int argc=2, char * * argv=0x009c7290, const nsXREAppData * aAppData=0x00423090)  Line 2374 + 0x23	C++
+ 	firefox.exe!main(int argc=2, char * * argv=0x009c7290)  Line 61 + 0x12	C++
+ 	firefox.exe!mainCRTStartup()  Line 398 + 0x11	C
+ 	kernel32.dll!7c816d4f() 	
+ 	kernel32.dll!7c8399f3()

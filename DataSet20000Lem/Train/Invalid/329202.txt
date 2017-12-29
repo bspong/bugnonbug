@@ -1,0 +1,42 @@
+The URL bar encodes non-Latin URLs a $LANG/hex instead of UTF8/hex
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.0.1) Gecko/20060209 Debian/1.5.dfsg+1.5.0.1-2 Firefox/1.5.0.1
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.0.1) Gecko/20060209 Debian/1.5.dfsg+1.5.0.1-2 Firefox/1.5.0.1
+
+
+This issue is about the way Firefox automatically translates Unicode symbol typed into the address bar by the user a part of the URL path or query. The HTML standard recommends that browser will represent the user input a a sequence of Unicode symbol and encode it with UTF-8, then HEX before sending the HTTP GET request. [The reason for this recommendation is that the browser is unaware about the encoding preferred by the server or used by the page].
+
+Pasting the Unicode Cyrillic (U+0x400..U+0x4ff) link generated below into the Firefox'es address bar and hitting Enter will unexpectedly transform it to the 8-bit (0..0xff) Cyrillic character set KOI8-R before encoding it with UTF-8/HEX. My environment variable LANG is set to "ru_RU.KOI8-R".
+
+The second link us Latin (U+0..U+0xff) character only. It is encoded correctly. Perhaps, the unexpected transformation of Unicode symbol to the 8-bit character set specified in $LANG (KOI8-R) happens to be identical.
+
+Curiously, clicking a Unicode Cyrillic link inside a UTF-8 web page work a expected. I.e., the Unicode symbol are encoded directly to UTF-8/HEX.
+
+
+function decode_utf_hex() {
+UTFHEX="$1"
+decoded=$(echo -n "$UTFHEX" \
+| perl -pe 's/%([a-fA-F0-9]{2,2})/chr(hex($1))/eg;')
+url="http://en.wikipedia.org/wiki/$decoded"
+echo "$url" > /tmp/f
+gedit --encoding=utf-8 /tmp/f
+}
+
+
+# "kirillitsa" in U+0x400..U+0x4ff
+decode_utf_hex "%D0%BA%D0%B8%D1%80%D0%B8%D0%BB%D0%BB%D0%B8%D1%86%D0%B0"
+
+# "Re'sume'" in U+0..U+0xff
+decode_utf_hex "R%C3%A9sum%C3%A9"
+
+-----------------
+
+Note 1. Using Wikipedia here is just a convenience.
+
+Note 2. There isn't any assumed conversion/redirection of the link on the server side.
+
+Note 3. I am intentionally avoiding any Unicode symbol in the text of this bug because this Bugzilla's server character set isn't UTF-8.
+
+
+Reproducible: Always
+
+Steps to Reproduce:

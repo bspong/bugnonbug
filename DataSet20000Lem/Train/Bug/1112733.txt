@@ -1,0 +1,35 @@
+Partially restored tab storage can use a lot of memory
+In following up on bug 1054660 about "unrestored" using too much memory I found that for some page the |tabData| associated with the the partially restored tab (__SS_data) is using up several MiB of memory.
+
+The problem seems two-fold:
+1) The data is duplicated.
+2) We're loading tabData before the tab is fully restored, ideally this
+would be lazily loaded.
+
+STR:
+1) Open browser
+2) Load http://www.samsung.com/us/
+3) Open an additional blank tab
+4) Close browser
+5) Open browser
+6) Restore session
+7) Measure memory usage w/ about:memory before selecting the samsung tab
+
+You'll find that there are 2 copy of a 1MiB string. By grepping through a gc log I wa able to find the offending string and using:
+|find_roots.py gc.log -sp <addr_of_str> |
+I wa able to determine that the data is being held alive by the sessionstore.
+
+Copy 1:
+
+> via XPCWrappedNative::mFlatJSObject :[ContentFrameMessageManager 7f04c2f08be0] --[gContentRestore]-->
+> [Proxy] --[private]--> [Object] --[resetRestore]--> [Function] --[**UNKNOWN SLOT 0**]-->
+> [Object] --[_tabData]--> [Proxy] --[private]--> [Object] --[storage]--> [Object]
+> --[http://www.samsung.com]--> [Object] --[FSR_SAMSUNGCOM_BLOB]-->
+> [string <length 523973 (truncated)> {"start":141869]
+
+Copy 2:
+
+> via nsXPCWrappedJS::mJSObj :[Object] --[_browserTokenMap]--> [WeakMap 7f04d254c060]
+> --[WeakMap entry key]--> [XULElement] --[__SS_data]--> [Proxy] --[private]--> [Object]
+> --[storage]--> [Object] --[http://www.samsung.com]--> [Object] --[FSR_SAMSUNGCOM_BLOB]-->
+> [string <length 523973 (truncated)> {"start":141869]

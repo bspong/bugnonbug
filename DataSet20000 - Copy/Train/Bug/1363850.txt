@@ -1,0 +1,14 @@
+Make the new preferences Nightly-only for now
+Upon further discussion with UX & UR, there's some concern that the pref reorg from bug 1335907 isn't _quite_ ready to ship. The implementation is fine, but they'd like to revisit the design of the reorganization to improve the grouping. A new plan should be available in the next week.
+
+With the next uplift only a month away (June 12th), we should consider this not ready to ride the 55 train, and revert to the old pref code.
+
+So let's activate the killswitch from bug 1343682. We can #ifdef it to be Nightly-only, to ensure it stays on Nightly until it's ready to ship (likely 56/57).
+
+2 small complications to consider:
+
+1) Mike points out that even with the pref flip, we will still break XUL addons that overlay prefs (because they would need to overlay chrome://browser/content/preferences/in-content-old/ instead of .../in-content/).
+
+We could rename things so that the old prefs namespace stays the same, and the new stuff becomes .../in-content-new/. If that's trivial, let's do so and just avoid the problem. (Do we know how big of a problem this is from when we switched to in-content prefs? If it's non-trivial to do, we could consider just taking the breakage risk.)
+
+2) We should get some QA testing on the old prefs, since they've been disabled on Nightly for a while now. We could even revert Nightly to the old prefs for the last couple weeks of Nightly, if that help with mitigating Beta-uplift risk.

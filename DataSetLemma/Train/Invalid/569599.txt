@@ -1,0 +1,42 @@
+e10s: test-ipc.xul drop dead on on failed GetInterface for HttpChannelParent
+Looks like somebody try to get an nsILoadContext out of it. I'm looking into precisely who and where now.
+
+(gdb) bt
+#0 0x00e60416 in __kernel_vsyscall ()
+#1 0x00aa5a81 in raise () from /lib/libc.so.6
+#2 0x00aa734a in abort () from /lib/libc.so.6
+#3 0x00489f84 in mozalloc_abort (msg=0xbfffd0e0 "###!!! ABORT: file /home/t_mattjo/src/firefox/electrolysis/netwerk/protocol/http/src/HttpChannelParent.cpp, line 281")
+at /home/t_mattjo/src/firefox/electrolysis/memory/mozalloc/mozalloc_abort.cpp:73
+#4 0x02444f06 in Abort (aMsg=0xbfffd0e0 "###!!! ABORT: file /home/t_mattjo/src/firefox/electrolysis/netwerk/protocol/http/src/HttpChannelParent.cpp, line 281") at /home/t_mattjo/src/firefox/electrolysis/xpcom/base/nsDebugImpl.cpp:371
+#5 0x02444e2a in NS_DebugBreak_P (aSeverity=3, aStr=0x0, aExpr=0x0, aFile=0x271f1d8 "/home/t_mattjo/src/firefox/electrolysis/netwerk/protocol/http/src/HttpChannelParent.cpp", aLine=281)
+at /home/t_mattjo/src/firefox/electrolysis/xpcom/base/nsDebugImpl.cpp:329
+#6 0x01230586 in mozilla::net::HttpChannelParent::GetInterface (this=0xb21a2b50, aIID=..., result=0xbfffd628) at /home/t_mattjo/src/firefox/electrolysis/netwerk/protocol/http/src/HttpChannelParent.cpp:281
+#7 0x024502d9 in NS_InvokeByIndex_P () at /home/t_mattjo/src/firefox/electrolysis/xpcom/reflect/xptcall/src/md/unix/xptcinvoke_gcc_x86_unix.cpp:69
+#8 0x01d5799d in CallMethodHelper::Invoke (this=0xbfffd5f4) at /home/t_mattjo/src/firefox/electrolysis/js/src/xpconnect/src/xpcwrappednative.cpp:2983
+#9 0x01d55e22 in CallMethodHelper::Call (this=0xbfffd5f4) at /home/t_mattjo/src/firefox/electrolysis/js/src/xpconnect/src/xpcwrappednative.cpp:2308
+#10 0x01d5237f in XPCWrappedNative::CallMethod (ccx=..., mode=CALL_METHOD) at /home/t_mattjo/src/firefox/electrolysis/js/src/xpconnect/src/xpcwrappednative.cpp:2272
+#11 0x01d614c0 in XPC_WN_CallMethod (cx=0xb6f59c00, obj=0xb2529600, argc=1, argv=0xb58fe0f8, vp=0xb58fe140) at /home/t_mattjo/src/firefox/electrolysis/js/src/xpconnect/src/xpcwrappednativejsops.cpp:1789
+#12 0x001c5101 in js_Invoke (cx=0xb6f59c00, args=..., flags=2) at /home/t_mattjo/src/firefox/electrolysis/js/src/jsinterp.cpp:639
+#13 0x001b3348 in js_Interpret (cx=0xb6f59c00) at /home/t_mattjo/src/firefox/electrolysis/js/src/jsops.cpp:2156
+#14 0x001c5178 in js_Invoke (cx=0xb6f59c00, args=..., flags=0) at /home/t_mattjo/src/firefox/electrolysis/js/src/jsinterp.cpp:648
+#15 0x01d4aa23 in nsXPCWrappedJSClass::CallMethod (this=0xb1e752e0, wrapper=0xb39bf240, methodIndex=3, info=0xb55a5470, nativeParams=0xbfffe2fc) at /home/t_mattjo/src/firefox/electrolysis/js/src/xpconnect/src/xpcwrappedjsclass.cpp:1689
+#16 0x01d4271b in nsXPCWrappedJS::CallMethod (this=0xb39bf240, methodIndex=3, info=0xb55a5470, params=0xbfffe2fc) at /home/t_mattjo/src/firefox/electrolysis/js/src/xpconnect/src/xpcwrappedjs.cpp:570
+#17 0x02450557 in PrepareAndDispatch (methodIndex=3, self=0xb1dc4d10, args=0xbfffe3d4) at /home/t_mattjo/src/firefox/electrolysis/xpcom/reflect/xptcall/src/md/unix/xptcstubs_gcc_x86_unix.cpp:95
+#18 0x0114b63d in nsIOService::OnChannelRedirect (this=0xb57f5080, oldChan=0xb7d94e10, newChan=0xb7d95550, flags=1) at /home/t_mattjo/src/firefox/electrolysis/netwerk/base/src/nsIOService.cpp:339
+#19 0x0120daf8 in nsHttpHandler::OnChannelRedirect (this=0xb38dd260, oldChan=0xb7d94e10, newChan=0xb7d95550, flags=1) at /home/t_mattjo/src/firefox/electrolysis/netwerk/protocol/http/src/nsHttpHandler.cpp:540
+#20 0x0122194e in nsHttpChannel::ProcessRedirection (this=0xb7d94de0, redirectType=302) at /home/t_mattjo/src/firefox/electrolysis/netwerk/protocol/http/src/nsHttpChannel.cpp:2869
+#21 0x0121a3ae in nsHttpChannel::ProcessResponse (this=0xb7d94de0) at /home/t_mattjo/src/firefox/electrolysis/netwerk/protocol/http/src/nsHttpChannel.cpp:906
+#22 0x01226401 in nsHttpChannel::OnStartRequest (this=0xb7d94de0, request=0xb1db74c0, ctxt=0x0) at /home/t_mattjo/src/firefox/electrolysis/netwerk/protocol/http/src/nsHttpChannel.cpp:4336
+#23 0x01147043 in nsInputStreamPump::OnStateStart (this=0xb1db74c0) at /home/t_mattjo/src/firefox/electrolysis/netwerk/base/src/nsInputStreamPump.cpp:441
+#24 0x01146e81 in nsInputStreamPump::OnInputStreamReady (this=0xb1db74c0, stream=0xb1db898c) at /home/t_mattjo/src/firefox/electrolysis/netwerk/base/src/nsInputStreamPump.cpp:397
+#25 0x0240d70a in nsInputStreamReadyEvent::Run (this=0xb3444a80) at /home/t_mattjo/src/firefox/electrolysis/xpcom/io/nsStreamUtils.cpp:112
+#26 0x02436510 in nsThread::ProcessNextEvent (this=0xb7d7f790, mayWait=0, result=0xbfffe7ac) at /home/t_mattjo/src/firefox/electrolysis/xpcom/threads/nsThread.cpp:547
+#27 0x023d0fe1 in NS_ProcessNextEvent_P (thread=0xb7d7f790, mayWait=0) at nsThreadUtils.cpp:250
+#28 0x022a33c2 in mozilla::ipc::MessagePump::Run (this=0xb7dcbbb0, aDelegate=0xb7d33600) at /home/t_mattjo/src/firefox/electrolysis/ipc/glue/MessagePump.cpp:118
+#29 0x024a37a5 in MessageLoop::RunInternal (this=0xb7d33600) at /home/t_mattjo/src/firefox/electrolysis/ipc/chromium/src/base/message_loop.cc:216
+#30 0x024a3725 in MessageLoop::RunHandler (this=0xb7d33600) at /home/t_mattjo/src/firefox/electrolysis/ipc/chromium/src/base/message_loop.cc:199
+#31 0x024a36c9 in MessageLoop::Run (this=0xb7d33600) at /home/t_mattjo/src/firefox/electrolysis/ipc/chromium/src/base/message_loop.cc:173
+#32 0x02157b1e in nsBaseAppShell::Run (this=0xb387ca10) at /home/t_mattjo/src/firefox/electrolysis/widget/src/xpwidgets/nsBaseAppShell.cpp:175
+#33 0x01ee7f25 in nsAppStartup::Run (this=0xb38fbcd0) at /home/t_mattjo/src/firefox/electrolysis/toolkit/components/startup/src/nsAppStartup.cpp:192
+#34 0x011138c9 in XRE_main (argc=3, argv=0xbfffee94, aAppData=0xb7d0e380) at /home/t_mattjo/src/firefox/electrolysis/toolkit/xre/nsAppRunner.cpp:3620
+#35 0x08049807 in main (argc=3, argv=0xbfffee94) at /home/t_mattjo/src/firefox/electrolysis/browser/app/nsBrowserApp.cpp:158

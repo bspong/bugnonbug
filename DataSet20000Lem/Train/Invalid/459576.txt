@@ -1,0 +1,39 @@
+onbeforeunload event not fired after an ajax call
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; fr; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3 ImageShackToolbar/5.0.0
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; fr; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3 ImageShackToolbar/5.0.0
+
+I use a javascript onbeforeunload event to prevent the user from closing the window. It work perfectly BEFORE I use an ajax call. The ajax call is successful but the event is no more fired (I put a trace in the function). I tried with the xmlhttprequest api and also with some ajax librairies (dojo and jquery) and the result is the same : the event is no more fired. For information, it's working on IE.
+To submit the datas, a use a very huge form (250 field !). If I use a regular call (not ajax), the event is fired after the call.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.
+2.
+3.
+
+
+
+Here is my code to set the event :
+
+window.onbeforeunload = controleFermeture ;
+
+function controleFermeture (evt) {
+var mode_type = document.getElementById("mode_type");
+if ((mode_type.value == "modif" || mode_type.value == "creation" || mode_type.value == "ajout") && typeof next_taction == "undefined") {
+var evt = evt || window.event;
+var message = "ATTENTION !!! Pour éviter de problèmes avec le données (lock), il est obligatoire de sortir proprement.\nPour cela, appuyez sur Annuler (et surtout pa OK !!!) pour fermer cette boîte de dialogue, puis sur un de boutons de la page.";
+window.focus();
+if (evt) { // for IE and FF
+evt.returnValue = message;
+} // if
+return message; // for other browser
+} // if
+} // function
+
+Here is a sample of the ajax call with jquery which use a form to submit datas:
+$('#form1').ajaxSubmit({
+url: 'gestion_client_ajax.php',
+dataType: 'xml',
+success: processResponse // callback function
+});

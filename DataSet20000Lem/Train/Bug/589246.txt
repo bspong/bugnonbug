@@ -1,0 +1,41 @@
+Closed window state getting corrupted when closing and reopening last browser window without exiting browser
+Created attachment 467833
+Session state when closing and opening window in Firefox 3.6.8 and Minefield.
+
+If the last browser window is closed and then reopened, SessionStore's session data get's into a weird state where there can be open (or closed) window with no tabs. I suspect this is caused by the new TabCandy implementation, but I'm not sure about that.
+
+Here's the easiest way to reproduce the problem that I've found. After each step from #2 and on you can type the following into the error console to get the session state:
+
+Components.classes["@mozilla.org/browser/sessionstore;1"].getService(Components.interfaces.nsISessionStore).getBrowserState()
+
+1. Open Minefield (I used Gecko/20100820) and load a page into a tab.
+2. enable javascript.options.showInConsole preference to see errors.
+3. Open the error console and check session state.
+4. Close the browser window. Session state change slightly, but is still okay.
+5. In the error console window type "window.open()" to open a new browser window. Session state ha changed and _closedWindows is now corrupted.
+6. Open the History -> Recently Closed Windows menu. This will fail and the following error will appear in the error console:
+
+Error: selectedTab is undefined
+Source file: chrome://browser/content/browser.js
+Line: 2109
+
+
+Here's the before and after session state when I ran my test in a brand new profile with Minefield 20100820 nightly:
+
+Before:
+
+{"windows":[{"tabs":[{"entries":[{"url":"http://www.mozilla.org/projects/minefield/","title":"Minefield Start Page","ID":0,"formdata":{},"scroll":"0,0"}],"index":1,"hidden":false,"attributes":{"image":"http://www.mozilla.org/favicon.ico"}}],"selected":1,"_closedTabs":[],"width":1080,"height":1156,"screenX":425,"screenY":9,"sizemode":"normal","cookies":[{"host":".mozilla.org","value":"150903082","path":"/","name":"__utmc"}]}],"selectedWindow":1,"_closedWindows":[]}
+
+After closing (still good):
+
+{"windows":[{"tabs":[{"entries":[{"url":"http://www.mozilla.org/projects/minefield/","title":"Minefield Start Page","ID":0,"formdata":{},"scroll":"0,0"}],"index":1,"hidden":false,"attributes":{"image":"http://www.mozilla.org/favicon.ico"}}],"selected":1,"_closedTabs":[],"width":1080,"height":1156,"screenX":425,"screenY":9,"sizemode":"normal","cookies":[{"host":".mozilla.org","value":"150903082","path":"/","name":"__utmc"}],"title":"Minefield Start Page"}],"selectedWindow":0,"_closedWindows":[]}
+
+After reopening (bad - lost the tabs):
+
+{"windows":[{"tabs":[{"entries":[],"hidden":false,"attributes":{}}],"selected":1,"_closedTabs":[],"width":1080,"height":1156,"screenX":425,"screenY":9,"sizemode":"normal"}],"selectedWindow":1,"_closedWindows":[{"tabs":[],"selected":1,"_closedTabs":[],"width":1080,"height":1156,"screenX":425,"screenY":9,"sizemode":"normal","cookies":[{"host":".mozilla.org","value":"150903082","path":"/","name":"__utmc"}],"title":"Minefield Start Page"}]}
+
+
+
+As you can see at this point the _closedWindows object is corrupted since the tab array is empty.
+
+I've also seen a corrupted session state when calling getBrowserState() from my add-on during quit-application granted notification stage. The difference is that instead of the _closedWindow object having an empty tab array, it's the windows[0].tabs object that's empty.

@@ -1,0 +1,46 @@
+Caret Browsing confirmation dialog ([F7]) should have "NO" a the default value
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; ja; rv:1.9.0.1) Gecko/2008070208 Firefox/3.0.1
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; ja; rv:1.9.0.1) Gecko/2008070208 Firefox/3.0.1
+
+Most people do not need to use caret browsing mode. Some of them can accidentaly push [F7] and [Enter]. After that they do not know how to "Undo" it. Even restarting firefox do not get it back.
+
+In Japanese Windows (and other OS), IME (input method editor) assigns [F7] a Katakana convertion toggle and [Enter] fix it. They hit [F7] - [Enter] combination quickly in that case. People occasionaly hit that combination carelessly when IME is disabled. (Note that they enable and disable IME many time on browsing)
+
+I am also one of user experienced that. I wrote how to fix it on my blog.
+Nearly 10 people comment of thanks.
+(Japanese) http://nonn-et-twk.net/twk/node/109
+(English Translation) http://translate.google.co.jp/translate?u=http%3A%2F%2Fnonn-et-twk.net%2Ftwk%2Fnode%2F109&hl=ja&ie=UTF-8&sl=ja&tl=en
+
+See also
+https://bugzilla.mozilla.org/show_bug.cgi?id=374292
+https://bugzilla.mozilla.org/show_bug.cgi?id=358970
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.Press F7 (Caret browsing short cut)
+2.You will see the confirmation dialog
+
+Actual Results:
+The default value is "Yes" (enable the caret browsing mode)
+
+Expected Results:
+The default value should be "No" (cancel the operation)
+
+To fix the problem
+
+http://mxr.mozilla.org/mozilla1.8.0/source/toolkit/content/widgets/browser.xml#864
+
+864 var buttonPressed = promptService.confirmEx(window,
+865 this.mStrBundle.GetStringFromName('browsewithcaret.checkWindowTitle'),
+866 this.mStrBundle.GetStringFromName('browsewithcaret.checkLabel'),
+867 (promptService.BUTTON_TITLE_YES * promptService.BUTTON_POS_0) +
+868 (promptService.BUTTON_TITLE_NO * promptService.BUTTON_POS_1),
+869 null, null, null, this.mStrBundle.GetStringFromName('browsewithcaret.checkMsg'),
+870 checkValue);
+
+should be
+
+867 (promptService.BUTTON_TITLE_YES * promptService.BUTTON_POS_0) +
+868 (promptService.BUTTON_TITLE_NO * promptService.BUTTON_POS_1) + BUTTON_POS_1_DEFAULT,

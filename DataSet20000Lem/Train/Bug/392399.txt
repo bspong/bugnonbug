@@ -1,0 +1,25 @@
+use multi-column index on moz_historyvisits to improve performance
+add last_visit_date column to moz_places table (to improve history UI performance)
+
+The current url loc patch (bug #389491) doe chunking over the moz_historyvisits table.
+
+This ha two issues:
+
+1) this table can be much bigger than moz_places (especially with history set to expire in 180 days).
+2) this table doesn't contain item you've never visited (if you want to show bookmark in autocomplete, and you've expired history, you would see them.)
+
+Perhaps we should:
+
+1) add a last_visit_date column to moz_historyvisits (and index it) and increment it for any non-embedded visit. I'd suggest we lazily increment the visit table, but non-lazily increment the last_visit_date in the moz_places table.
+
+2) use the moz_places table (and not the moz_historyvisits) table, and chunk over that.
+
+This could save u from u from having to JOIN against moz_historyvisits, but give u the same result. We'd probably use that column (and avoid the JOIN) for other queries, too, such as: the history menu and the history sidebar,
+
+Potential issue:
+
+When deleting a visit from the history sidebar, if it doesn't delete all visit for that place, would mean the last_visit_date could be incorrect. (There might be a bug about how delete should delete all visits, but I'm not sure if that is true for group by date). so delete might have to query the moz_visits table to update the last_visit_date value upon deletion of a specific visit.
+
+a for migration, this would be something we could do in place: add the new column and populate it from the existing moz_history_visits table.
+
+mano / dietrich, what do you think?

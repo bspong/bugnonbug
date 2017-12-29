@@ -1,0 +1,34 @@
+"compile" text files before .jar-ing them
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.7.5) Gecko/20041107 Firefox/1.0
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.7.5) Gecko/20041107 Firefox/1.0
+
+Javascript, css and xul files are kept in the .jar archives in exactly the same
+form as in source tree. However, once they are part of the executable end-user
+binary, they don't need to be human-readable - we can remove all the whitespaces
+and comments while building the product.
+
+The obvious advantage is less memory used, reduced stress on the parser and
+zlib. Also, a smaller installer.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Imagine how zlib opens, say, browser.jar
+
+Actual Results:  
+zlib wastes memory and clock cycles to parse comments and whitespaces
+
+Expected Results:  
+waste is minimized
+
+I made a test: I used w3compiler (by port80 software) to "optimize" the contents
+of toolkit.jar, which is the biggest .jar in Firefox. It ignored .xul files and
+only processed .css, .js and .html. In all cases, it saved 34% of their size by
+removing whitespaces and comments.
+
+Once I packed the files back ito a .jar, the jar was 20% smaller. Once I 7zipped
+the jar, the result was 22% smaller (compared to 7zipped original file).
+
+The only question is "how", and I guess the only method is to write a small
+command-line utility that would remove the whitespaces, and compile & use this
+utility when building firefox.

@@ -1,0 +1,29 @@
+Firebug theme: fix CSS for rule view property
+This is a follow up for bug 1274760
+
+From:
+https://bugzilla.mozilla.org/show_bug.cgi?id=1274760#c7
+
+--
+
+One more thing!
+The rule that follows at the end of the change:
+
+ .theme-firebug .ruleview-enableproperty:not([checked]) ~ .ruleview-computedlist * {
+   color: #CCCCCC;
+ }
+
+seems wrong.  The reason for that is that .ruleview-enableproperty and .ruleview-computedlist are not siblings since Firefox 40 (they were siblings in Firefox 39). The rule is intended to make gray the listed (sub) properties from a shorthand property when that shorthand property is disabled.  Given these are not siblings any longer it is hard to fix this with just css.  The best I am able to do is to replace the rule with:
+
+.theme-firebug .ruleview-overridden > * > .ruleview-computed:not(.ruleview-overridden),
+.theme-firebug .ruleview-overridden > * > .ruleview-computed:not(.ruleview-overridden) > .ruleview-propertyname,
+.theme-firebug .ruleview-overridden > * > .ruleview-computed:not(.ruleview-overridden) > .ruleview-propertyvalue {
+  color: #CCCCCC;
+}
+
+This works for me but has a problem when disabling a property overridden in another rule.  In such case, it will not apply until inspecting another node.
+
+Also see a screenshot:
+https://bugzilla.mozilla.org/attachment.cgi?id=8761782&action=edit
+
+Honza

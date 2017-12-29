@@ -1,0 +1,201 @@
+Investigate the frequent OSX 10.8 debug mochitest-4 shutdown hang
+Created attachment 8361160
+screenshot from the log
+
+Bug 957693 made the shutdown hang situation significantly better than it wa before. However, OSX 10.8 debug mochitest-4 is still showing frequent shutdown hang like the log below.
+
+Benjamin, you were suggested a someone who might have some idea for how to investigate. Your thoughts?
+
+Example:
+https://tbpl.mozilla.org/php/getParsedLog.php?id=33109253&tree=Fx-Team
+
+08:49:16 INFO - 15491 INFO TEST-END | /tests/layout/base/tests/test_scroll_event_ordering.html | finished in 199ms
+08:49:16 INFO - [Parent 1193] WARNING: NS_ENSURE_TRUE(mDoneSetup) failed: file ../../../../editor/composer/src/nsEditingSession.cpp, line 1315
+08:49:16 INFO - [Child 1205] WARNING: '!compMgr', file ../../../xpcom/glue/nsComponentManagerUtils.cpp, line 59
+08:49:16 INFO - ++DOMWINDOW == 43 (0x159d5deb8) [pid = 1193] [serial = 3164] [outer = 0x11dec5178]
+08:49:16 INFO - nsStringStats
+08:49:16 INFO - => mAllocCount: 9489
+08:49:16 INFO - => mReallocCount: 265
+08:49:16 INFO - => mFreeCount: 9489
+08:49:16 INFO - => mShareCount: 11273
+08:49:16 INFO - => mAdoptCount: 271
+08:49:16 INFO - => mAdoptFreeCount: 271
+08:49:16 INFO - => Process ID: 1205, Thread ID: 140735198577024
+08:49:16 INFO - [Parent 1193] WARNING: waitpid failed pid:1203 errno:10: file ../../../ipc/chromium/src/base/process_util_posix.cc, line 254
+08:49:16 INFO - 15492 INFO TEST-START | Shutdown
+08:49:16 INFO - 15493 INFO Passed: 11182
+08:49:16 INFO - 15494 INFO Failed: 0
+08:49:16 INFO - 15495 INFO Todo: 1937
+08:49:16 INFO - 15496 INFO Slowest: 37096ms - /tests/image/test/mochitest/test_bug733553.html
+08:49:16 INFO - 15497 INFO SimpleTest FINISHED
+08:49:16 INFO - 15498 INFO TEST-INFO | Ran 1 Loops
+08:49:16 INFO - 15499 INFO SimpleTest FINISHED
+08:49:16 INFO - ++DOMWINDOW == 44 (0x152989cd8) [pid = 1193] [serial = 3165] [outer = 0x11dec5178]
+08:49:16 INFO - --DOCSHELL 0x11209f920 == 8 [pid = 1193] [id = 3]
+08:49:16 INFO - --DOCSHELL 0x10d512800 == 7 [pid = 1193] [id = 11]
+08:49:16 INFO - --DOCSHELL 0x10726db70 == 6 [pid = 1193] [id = 1]
+08:49:17 INFO - --DOCSHELL 0x1536e7640 == 5 [pid = 1193] [id = 857]
+08:49:17 INFO - --DOCSHELL 0x1120a2bb0 == 4 [pid = 1193] [id = 4]
+08:49:17 INFO - --DOCSHELL 0x113af3260 == 3 [pid = 1193] [id = 12]
+08:49:17 INFO - --DOCSHELL 0x10709f3c0 == 2 [pid = 1193] [id = 2]
+08:49:17 INFO - --DOCSHELL 0x113d3e280 == 1 [pid = 1193] [id = 5]
+08:49:17 INFO - --DOMWINDOW == 43 (0x15c0ab3b8) [pid = 1193] [serial = 3119] [outer = 0x0] [url = about:blank]
+08:49:17 INFO - --DOMWINDOW == 42 (0x15bae6378) [pid = 1193] [serial = 3115] [outer = 0x0] [url = about:blank]
+08:49:17 INFO - --DOMWINDOW == 41 (0x15882eee8) [pid = 1193] [serial = 3113] [outer = 0x0] [url = about:blank]
+08:49:17 INFO - --DOMWINDOW == 40 (0x15be75308) [pid = 1193] [serial = 3141] [outer = 0x0] [url = about:blank]
+08:49:17 INFO - --DOMWINDOW == 39 (0x159359718) [pid = 1193] [serial = 3139] [outer = 0x0] [url = about:blank]
+08:49:17 INFO - --DOMWINDOW == 38 (0x14fa8b688) [pid = 1193] [serial = 3135] [outer = 0x0] [url = about:blank]
+08:49:17 INFO - --DOMWINDOW == 37 (0x15bb6f608) [pid = 1193] [serial = 3121] [outer = 0x0] [url = about:blank]
+08:49:17 INFO - --DOMWINDOW == 36 (0x14fa82848) [pid = 1193] [serial = 3109] [outer = 0x0] [url = about:blank]
+08:49:17 INFO - --DOMWINDOW == 35 (0x1535ea128) [pid = 1193] [serial = 3137] [outer = 0x0] [url = about:blank]
+08:49:17 INFO - --DOMWINDOW == 34 (0x153443288) [pid = 1193] [serial = 3117] [outer = 0x0] [url = about:blank]
+08:49:17 INFO - --DOMWINDOW == 33 (0x15295dc68) [pid = 1193] [serial = 3145] [outer = 0x0] [url = about:blank]
+08:49:17 INFO - --DOMWINDOW == 32 (0x1597e1088) [pid = 1193] [serial = 3017] [outer = 0x0] [url = http://mochi.test:8888/tests/layout/base/tests/test_reftests_with_caret.html]
+08:49:17 INFO - --DOMWINDOW == 31 (0x1536afa98) [pid = 1193] [serial = 3143] [outer = 0x0] [url = about:blank]
+08:49:17 INFO - --DOMWINDOW == 30 (0x15bab78f8) [pid = 1193] [serial = 3147] [outer = 0x0] [url = about:blank]
+08:49:17 INFO - --DOMWINDOW == 29 (0x159bcbbe8) [pid = 1193] [serial = 3149] [outer = 0x0] [url = about:blank]
+08:49:17 INFO - --DOMWINDOW == 28 (0x159bf1d28) [pid = 1193] [serial = 3131] [outer = 0x159723318] [url = about:blank]
+08:49:17 INFO - --DOMWINDOW == 27 (0x15c0e02d8) [pid = 1193] [serial = 3099] [outer = 0x0] [url = about:blank]
+08:49:17 INFO - --DOMWINDOW == 26 (0x15ba7bd98) [pid = 1193] [serial = 3127] [outer = 0x159d662e8] [url = about:blank]
+08:49:17 INFO - [Parent 1193] WARNING: SQL statement 'SELECT f.url FROM moz_places h JOIN moz_favicons f ON h.favicon_id = f.id WHERE h.url = :page_url' (58741cf0) should have been finalized before closing the connection: file ../../../storage/src/mozStorageConnection.cpp, line 855
+08:49:17 INFO - [Parent 1193] WARNING: SQL statement 'UPDATE moz_places SET title = :title, hidden = :hidden, typed = :typed, guid = :guid WHERE id = :page_id ' (21820260) should have been finalized before closing the connection: file ../../../storage/src/mozStorageConnection.cpp, line 855
+08:49:17 INFO - [Parent 1193] WARNING: SQL statement 'SELECT id, visit_date FROM moz_historyvisits WHERE place_id = (SELECT id FROM moz_places WHERE url = :page_url) ORDER BY visit_date DESC ' (1189ad20) should have been finalized before closing the connection: file ../../../storage/src/mozStorageConnection.cpp, line 855
+08:49:17 INFO - [Parent 1193] WARNING: SQL statement 'UPDATE moz_places SET title = :page_title WHERE id = :page_id ' (1ea72bd0) should have been finalized before closing the connection: file ../../../storage/src/mozStorageConnection.cpp, line 855
+08:49:17 INFO - [Parent 1193] WARNING: SQL statement 'UPDATE moz_places SET hidden = 0 WHERE id = :page_id AND frecency <> 0' (197cfd70) should have been finalized before closing the connection: file ../../../storage/src/mozStorageConnection.cpp, line 855
+08:49:17 INFO - [Parent 1193] WARNING: SQL statement 'UPDATE moz_places SET frecency = CALCULATE_FRECENCY(:page_id) WHERE id = :page_id' (197d0a80) should have been finalized before closing the connection: file ../../../storage/src/mozStorageConnection.cpp, line 855
+08:49:17 INFO - [Parent 1193] WARNING: SQL statement 'SELECT id, visit_date FROM moz_historyvisits WHERE place_id = (SELECT id FROM moz_places WHERE url = :page_url) AND visit_date = :visit_date ' (197c7940) should have been finalized before closing the connection: file ../../../storage/src/mozStorageConnection.cpp, line 855
+08:49:17 INFO - [Parent 1193] WARNING: SQL statement 'INSERT INTO moz_historyvisits (from_visit, place_id, visit_date, visit_type, session) VALUES (:from_visit, :page_id, :visit_date, :visit_type, 0) ' (197cbeb0) should have been finalized before closing the connection: file ../../../storage/src/mozStorageConnection.cpp, line 855
+08:49:17 INFO - [Parent 1193] WARNING: SQL statement 'INSERT INTO moz_places (url, title, rev_host, hidden, typed, frecency, guid) VALUES (:url, :title, :rev_host, :hidden, :typed, :frecency, :guid) ' (197ca720) should have been finalized before closing the connection: file ../../../storage/src/mozStorageConnection.cpp, line 855
+08:49:17 INFO - [Parent 1193] WARNING: SQL statement 'SELECT guid, id, title, hidden, typed, frecency FROM moz_places WHERE url = :page_url ' (197c9690) should have been finalized before closing the connection: file ../../../storage/src/mozStorageConnection.cpp, line 855
+08:49:17 INFO - [Parent 1193] WARNING: SQL statement 'UPDATE moz_places SET favicon_id = :icon_id WHERE id = :page_id' (72e5d40) should have been finalized before closing the connection: file ../../../storage/src/mozStorageConnection.cpp, line 855
+08:49:17 INFO - [Parent 1193] WARNING: SQL statement 'INSERT OR REPLACE INTO moz_favicons (id, url, data, mime_type, expiration, guid) VALUES ((SELECT id FROM moz_favicons WHERE url = :icon_url), :icon_url, :data, :mime_type, :expiration, COALESCE(:guid, (SELECT guid FROM moz_favicons WHERE url = :icon_url), GENERATE_GUID()))' (72e7230) should have been finalized before closing the connection: file ../../../storage/src/mozStorageConnection.cpp, line 855
+08:49:17 INFO - [Parent 1193] WARNING: SQL statement 'SELECT h.id, h.favicon_id, h.guid, ( SELECT h.url FROM moz_bookmarks b WHERE b.fk = h.id UNION ALL SELECT url FROM moz_places WHERE id = ( SELECT COALESCE(grandparent.place_id, parent.place_id) a r_place_id FROM moz_historyvisits dest LEFT JOIN moz_historyvisits parent ON parent.id = dest.from_visit AND dest.visit_type IN (5, 6) LEFT JOIN moz_historyvisits grandparent ON parent.from_visit = grandparent.id AND parent.visit_type IN (5, 6) WHERE dest.place_id = h.id AND EXISTS(SELECT 1 FROM moz_bookmarks b WHERE b.fk = r_place_id) LIMIT 1 ) ) FROM moz_places h WHERE h.url = :page_url' (72e5f10) should have been finalized before closing the connection: file ../../../storage/src/mozStorageConnection.cpp, line 855
+08:49:17 INFO - [Parent 1193] WARNING: SQL statement 'SELECT id, expiration, data, mime_type FROM moz_favicons WHERE url = :icon_url' (72e2000) should have been finalized before closing the connection: file ../../../storage/src/mozStorageConnection.cpp, line 855
+08:49:17 INFO - [Parent 1193] WARNING: SQL statement '/* do not warn (bug 659740 - SQLite may ignore index if few visit exist) */SELECT ROUND((strftime('%s','now','localtime','utc') - v.visit_date/1000000)/86400), IFNULL(r.visit_type, v.visit_type), v.visit_date FROM moz_historyvisits v LEFT JOIN moz_historyvisits r ON r.id = v.from_visit AND v.visit_type BETWEEN 5 AND 6 WHERE v.place_id = :page_id ORDER BY v.visit_date DESC ' (72e51a0) should have been finalized before closing the connection: file ../../../storage/src/mozStorageConnection.cpp, line 855
+08:49:17 INFO - [Parent 1193] WARNING: SQL statement 'SELECT typed, hidden, visit_count, (SELECT count(*) FROM moz_historyvisits WHERE place_id = :page_id), EXISTS (SELECT 1 FROM moz_bookmarks WHERE fk = :page_id), (url > 'place:' AND url < 'place;') FROM moz_places WHERE id = :page_id ' (72e3830) should have been finalized before closing the connection: file ../../../storage/src/mozStorageConnection.cpp, line 855
+08:49:17 INFO - --DOMWINDOW == 25 (0x159d662e8) [pid = 1193] [serial = 3126] [outer = 0x0] [url = http://mochi.test:8888/tests/layout/base/tests/bug746993-1.html]
+08:49:17 INFO - --DOMWINDOW == 24 (0x159723318) [pid = 1193] [serial = 3130] [outer = 0x0] [url = http://mochi.test:8888/tests/layout/base/tests/bug746993-1-ref.html]
+08:49:17 INFO - [Parent 1193] WARNING: NS_ENSURE_TRUE(mTextInputHandler) failed: file ../../../widget/cocoa/nsChildView.mm, line 5294
+08:49:17 INFO - NOTE: child process received `Goodbye', closing down
+08:49:17 INFO - [1199] WARNING: '!compMgr', file ../../../xpcom/glue/nsComponentManagerUtils.cpp, line 49
+08:49:17 INFO - [Parent 1193] WARNING: nsAppShell::Exit() called redundantly: file ../../../widget/cocoa/nsAppShell.mm, line 760
+08:49:17 INFO - [Parent 1193] WARNING: '!mMainThread', file ../../../xpcom/threads/nsThreadManager.cpp, line 265
+08:49:17 INFO - [Parent 1193] WARNING: '!mMainThread', file ../../../xpcom/threads/nsThreadManager.cpp, line 265
+08:49:17 INFO - --DOCSHELL 0x11dec4820 == 0 [pid = 1193] [id = 6]
+08:49:17 INFO - nsStringStats
+08:49:17 INFO - => mAllocCount: 183
+08:49:17 INFO - => mReallocCount: 1
+08:49:17 INFO - => mFreeCount: 183
+08:49:17 INFO - => mShareCount: 135
+08:49:17 INFO - => mAdoptCount: 0
+08:49:17 INFO - => mAdoptFreeCount: 0
+08:49:17 INFO - => Process ID: 1199, Thread ID: 140735198577024
+08:49:17 INFO - [Parent 1193] WARNING: waitpid failed pid:1203 errno:10: file ../../../ipc/chromium/src/base/process_util_posix.cc, line 254
+08:49:17 INFO - --DOMWINDOW == 23 (0x1138f2568) [pid = 1193] [serial = 9] [outer = 0x1120a03c8] [url = about:blank]
+08:49:17 INFO - --DOMWINDOW == 22 (0x113a88628) [pid = 1193] [serial = 30] [outer = 0x10d5131f8] [url = data:application/vnd.mozilla.xul+xml;charset=utf-8,<window%20id='win'/>]
+08:49:17 INFO - --DOMWINDOW == 21 (0x119704768) [pid = 1193] [serial = 10] [outer = 0x1120a3758] [url = about:blank]
+08:49:17 INFO - --DOMWINDOW == 20 (0x10d5131f8) [pid = 1193] [serial = 28] [outer = 0x0] [url = data:application/vnd.mozilla.xul+xml;charset=utf-8,<window%20id='win'/>]
+08:49:17 INFO - --DOMWINDOW == 19 (0x1120a3758) [pid = 1193] [serial = 6] [outer = 0x0] [url = about:blank]
+08:49:17 INFO - --DOMWINDOW == 18 (0x1120a03c8) [pid = 1193] [serial = 5] [outer = 0x0] [url = about:blank]
+08:49:18 INFO - --DOMWINDOW == 17 (0x159752818) [pid = 1193] [serial = 3160] [outer = 0x0] [url = http://mochi.test:8888/tests/SimpleTest/iframe-between-tests.html]
+08:49:18 INFO - --DOMWINDOW == 16 (0x152989cd8) [pid = 1193] [serial = 3165] [outer = 0x0] [url = about:blank]
+08:49:18 INFO - --DOMWINDOW == 15 (0x159d5deb8) [pid = 1193] [serial = 3164] [outer = 0x0] [url = http://mochi.test:8888/tests/SimpleTest/iframe-between-tests.html]
+08:49:18 INFO - --DOMWINDOW == 14 (0x11ea4dc58) [pid = 1193] [serial = 12] [outer = 0x0] [url = http://mochi.test:8888/tests/?autorun=1&closeWhenDone=1&consoleLevel=INFO&totalChunks=5&thisChunk=4&chunkByDir=4&hideResultsTable=1&dumpOutputDirectory=%2Fvar%2Ffolders%2F48%2Flhw5r9md7k706sy9km0t8zkm00000w%2FT]
+08:49:18 INFO - --DOMWINDOW == 13 (0x1588d6ce8) [pid = 1193] [serial = 3162] [outer = 0x0] [url = http://mochi.test:8888/tests/SimpleTest/iframe-between-tests.html]
+08:49:18 INFO - --DOMWINDOW == 12 (0x1070a47a8) [pid = 1193] [serial = 4] [outer = 0x0] [url = about:blank]
+08:49:18 INFO - --DOMWINDOW == 11 (0x1593a9c78) [pid = 1193] [serial = 3161] [outer = 0x0] [url = http://mochi.test:8888/tests/layout/base/tests/test_remote_passpointerevents.html]
+08:49:18 INFO - --DOMWINDOW == 10 (0x15931ec78) [pid = 1193] [serial = 550] [outer = 0x0] [url = http://mochi.test:8888/tests/dom/workers/test/test_xhr_system.html]
+08:49:18 INFO - --DOMWINDOW == 9 (0x111c59738) [pid = 1193] [serial = 34] [outer = 0x0] [url = about:newtab]
+08:49:18 INFO - --DOMWINDOW == 8 (0x113aead08) [pid = 1193] [serial = 32] [outer = 0x0] [url = about:newtab]
+08:49:18 INFO - --DOMWINDOW == 7 (0x14fab0c68) [pid = 1193] [serial = 3159] [outer = 0x0] [url = http://mochi.test:8888/tests/layout/base/tests/test_remote_frame.html]
+08:49:18 INFO - --DOMWINDOW == 6 (0x10d5cd288) [pid = 1193] [serial = 2] [outer = 0x0] [url = about:blank]
+08:49:18 INFO - --DOMWINDOW == 5 (0x107271bc8) [pid = 1193] [serial = 1] [outer = 0x0] [url = chrome://browser/content/hiddenWindow.xul]
+08:49:18 INFO - --DOMWINDOW == 4 (0x15b862278) [pid = 1193] [serial = 3158] [outer = 0x0] [url = http://mochi.test:8888/tests/SimpleTest/iframe-between-tests.html]
+08:49:18 INFO - --DOMWINDOW == 3 (0x1090ae0a8) [pid = 1193] [serial = 3163] [outer = 0x0] [url = http://mochi.test:8888/tests/layout/base/tests/test_scroll_event_ordering.html]
+08:49:18 INFO - --DOMWINDOW == 2 (0x113d3ee28) [pid = 1193] [serial = 7] [outer = 0x0] [url = http://mochi.test:8888/tests/?autorun=1&closeWhenDone=1&consoleLevel=INFO&totalChunks=5&thisChunk=4&chunkByDir=4&hideResultsTable=1&dumpOutputDirectory=%2Fvar%2Ffolders%2F48%2Flhw5r9md7k706sy9km0t8zkm00000w%2FT]
+08:49:18 INFO - --DOMWINDOW == 1 (0x11dec5178) [pid = 1193] [serial = 13] [outer = 0x0] [url = about:blank]
+08:49:18 INFO - --DOMWINDOW == 0 (0x1070a1b28) [pid = 1193] [serial = 3] [outer = 0x0] [url = chrome://browser/content/browser.xul]
+08:49:18 INFO - [Parent 1193] WARNING: not an nsIRDFRemoteDataSource: 'remote != nullptr', file ../../../../rdf/datasource/src/nsLocalStore.cpp, line 279
+08:49:18 INFO - [Parent 1193] WARNING: not an nsIRDFRemoteDataSource: 'remote != nullptr', file ../../../../rdf/datasource/src/nsLocalStore.cpp, line 279
+08:49:18 INFO - [Parent 1193] WARNING: not an nsIRDFRemoteDataSource: 'remote != nullptr', file ../../../../rdf/datasource/src/nsLocalStore.cpp, line 279
+08:49:18 INFO - [Parent 1193] WARNING: not an nsIRDFRemoteDataSource: 'remote != nullptr', file ../../../../rdf/datasource/src/nsLocalStore.cpp, line 279
+08:49:18 INFO - [Parent 1193] WARNING: '!compMgr', file ../../../xpcom/glue/nsComponentManagerUtils.cpp, line 59
+08:54:48 WARNING - TEST-UNEXPECTED-FAIL | Shutdown | application timed out after 330 second with no output
+08:54:48 INFO - libpng warning: zero length keyword
+08:54:48 INFO - libpng warning: Empty language field in iTXt chunk
+08:55:00 INFO - SCREENSHOT:
+08:55:03 WARNING - TEST-UNEXPECTED-FAIL | Shutdown | application terminated with exit code 5
+08:55:03 INFO - INFO | runtests.py | Application ran for: 0:14:04.422733
+08:55:03 INFO - INFO | zombiecheck | Reading PID log: /var/folders/48/lhw5r9md7k706sy9km0t8zkm00000w/T/tmpHd1FeEpidlog
+08:55:16 WARNING - PROCESS-CRASH | Shutdown | application crashed [@ libsystem_kernel.dylib + 0x12386]
+08:55:16 INFO - Crash dump filename: /var/folders/48/lhw5r9md7k706sy9km0t8zkm00000w/T/tmptvbFnw/minidumps/BE178AA6-A6A8-45AB-BB31-8B509BC94343.dmp
+08:55:16 INFO - Operating system: Mac OS X
+08:55:16 INFO - 10.8.0 12A269
+08:55:16 INFO - CPU: amd64
+08:55:16 INFO - family 6 model 42 stepping 7
+08:55:16 INFO - 8 CPUs
+08:55:16 INFO - Crash reason: EXC_SOFTWARE / SIGABRT
+08:55:16 INFO - Crash address: 0x7fff8c52c386
+08:55:16 INFO - Thread 0 (crashed)
+08:55:16 INFO - 0 libsystem_kernel.dylib + 0x12386
+08:55:16 INFO - rbx = 0x000000000000a303 r12 = 0x00007fff7784c180
+08:55:16 INFO - r13 = 0x0000000107781000 r14 = 0x00007fff7784c180
+08:55:16 INFO - r15 = 0x0000000000000000 rip = 0x00007fff8c52c386
+08:55:16 INFO - rsp = 0x00007fff5fbfec58 rbp = 0x00007fff5fbfecd0
+08:55:16 INFO - Found by: given a instruction pointer in context
+08:55:16 INFO - 1 libsystem_c.dylib + 0x9ece4
+08:55:16 INFO - rip = 0x00007fff8a1e7ce5 rsp = 0x00007fff5fbfec60
+08:55:16 INFO - rbp = 0x00007fff5fbfecd0
+08:55:16 INFO - Found by: stack scanning
+08:55:16 INFO - 2 libsystem_c.dylib + 0x17887
+08:55:16 INFO - rip = 0x00007fff8a160888 rsp = 0x00007fff5fbfec78
+08:55:16 INFO - rbp = 0x00007fff5fbfecd0
+08:55:16 INFO - Found by: stack scanning
+08:55:16 INFO - 3 XUL!base::Time::Now() [time_mac.cc : 39 + 0x4]
+08:55:16 INFO - rip = 0x000000010177a379 rsp = 0x00007fff5fbfeca0
+08:55:16 INFO - rbp = 0x00007fff5fbfecd0
+08:55:16 INFO - Found by: stack scanning
+08:55:16 INFO - 4 XUL!base::Thread::Stop() [thread.cc : 115 + 0x8]
+08:55:16 INFO - rip = 0x0000000101779e56 rsp = 0x00007fff5fbfece0
+08:55:16 INFO - rbp = 0x00007fff5fbfed30
+08:55:16 INFO - Found by: call frame info
+08:55:16 INFO - 5 XUL!mozilla::ipc::BrowserProcessSubThread::~BrowserProcessSubThread() [BrowserProcessSubThread.cpp : 57 + 0x4]
+08:55:16 INFO - rbx = 0x0000000107203f60 r14 = 0x00000001072c66f0
+08:55:16 INFO - r15 = 0x0000000104ff0818 rip = 0x000000010178a909
+08:55:16 INFO - rsp = 0x00007fff5fbfed40 rbp = 0x00007fff5fbfed50
+08:55:16 INFO - Found by: call frame info
+08:55:16 INFO - 6 XUL!mozilla::ShutdownXPCOM(nsIServiceManager*) [nsXPComInit.cpp : 849 + 0x5]
+08:55:16 INFO - rbx = 0x0000000104dc299c r14 = 0x00000001072c66f0
+08:55:16 INFO - r15 = 0x0000000104ff0818 rip = 0x000000010141d1a4
+08:55:16 INFO - rsp = 0x00007fff5fbfed60 rbp = 0x00007fff5fbfedd0
+08:55:16 INFO - Found by: call frame info
+08:55:16 INFO - 7 XUL!ScopedXPCOMStartup::~ScopedXPCOMStartup() [nsAppRunner.cpp:77a46ed99b7c : 1163 + 0x7]
+08:55:16 INFO - rbx = 0x0000000000000000 r12 = 0x0000000000000000
+08:55:16 INFO - r13 = 0x00007fff5fbff1a8 r14 = 0x0000000107203010
+08:55:16 INFO - r15 = 0x0000000000000000 rip = 0x000000010353a52a
+08:55:16 INFO - rsp = 0x00007fff5fbfede0 rbp = 0x00007fff5fbfee10
+08:55:16 INFO - Found by: call frame info
+08:55:16 INFO - 8 XUL!XREMain::XRE_main(int, char**, nsXREAppData const*) [nsAppRunner.cpp:77a46ed99b7c : 1144 + 0x7]
+08:55:16 INFO - rbx = 0x0000000107203010 r12 = 0x0000000000000000
+08:55:16 INFO - r13 = 0x00007fff5fbff1a8 r14 = 0x00007fff5fbfee90
+08:55:16 INFO - r15 = 0x0000000000000000 rip = 0x0000000103541b7a
+08:55:16 INFO - rsp = 0x00007fff5fbfee20 rbp = 0x00007fff5fbfee70
+08:55:16 INFO - Found by: call frame info
+08:55:16 INFO - 9 XUL!XRE_main [nsAppRunner.cpp:77a46ed99b7c : 4331 + 0x18]
+08:55:16 INFO - rbx = 0x00007fff5fbfef40 r12 = 0x0000000000000005
+08:55:16 INFO - r13 = 0x00007fff5fbfee90 r14 = 0x00007fff5fbfefa0
+08:55:16 INFO - r15 = 0x00007fff7784b4b0 rip = 0x0000000103541efe
+08:55:16 INFO - rsp = 0x00007fff5fbfee80 rbp = 0x00007fff5fbff020
+08:55:16 INFO - Found by: call frame info
+08:55:16 INFO - 10 firefox!main [nsBrowserApp.cpp:77a46ed99b7c : 280 + 0xd]
+08:55:16 INFO - rbx = 0x0000000100501060 r12 = 0x00007fff5fbff680
+08:55:16 INFO - r13 = 0x000000010146c440 r14 = 0x0000000000000005
+08:55:16 INFO - r15 = 0x0000000000000005 rip = 0x00000001000022ac
+08:55:16 INFO - rsp = 0x00007fff5fbff030 rbp = 0x00007fff5fbff660
+08:55:16 INFO - Found by: call frame info
+08:55:16 INFO - 11 firefox!start + 0x33
+08:55:16 INFO - rbx = 0x0000000000000000 r12 = 0x0000000000000000
+08:55:16 INFO - r13 = 0x0000000000000000 r14 = 0x0000000000000000
+08:55:16 INFO - r15 = 0x0000000000000000 rip = 0x00000001000017a4
+08:55:16 INFO - rsp = 0x00007fff5fbff670 rbp = 0x00007fff5fbff670
+08:55:16 INFO - Found by: call frame info

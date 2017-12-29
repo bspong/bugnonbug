@@ -1,0 +1,37 @@
+Live bookmark fails to load RSS 0.9 feed
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; rv:1.7.3) Gecko/20040913 Firefox/0.10
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; rv:1.7.3) Gecko/20040913 Firefox/0.10
+
+Live bookmark 0.91 spec do not load.
+
+Trying to hand edit the failing r feed cross-comparing with a working one
+(http://www.kuro5hin.org/backend.rdf) I found that the following are minimal
+item in order for the live bookmark to load:
+
+* The root rdf:RDF tag must have both of these items:
+xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+xmlns="http://purl.org/rss/1.0/"
+
+* The channel item must have an <items> sequence, e.g.:
+<items>
+<rdf:Seq>
+<rdf:li rdf:resource="http://www.postgresql.org/news/229.html" />
+</rdf:Seq>
+</items>
+
+* The <item>s must have rdf:about attrs matching the <items> sequence, e.g.:
+<item rdf:about="http://www.postgresql.org/news/229.html"> ... </item>
+
+
+Reproducible: Always
+Steps to Reproduce:
+1. Add a live bookmark to a version 0.91 RSS feed
+2. Expand the bookmark
+
+
+Actual Results:
+Live bookmark did not load RSS url
+
+Expected Results:
+Should have loaded the RSS feed based on the <link> tag in all the <item> tag
+independent of the 1.0 xmlns and the <items> sequence.

@@ -1,0 +1,19 @@
+ContentSearch.jsm: TypeError: msg.target.messageManager is undefined
+Created attachment 8425995
+check for null messageManager
+
+After bug 1009313 landed, when I run the TART test locally I often but not always see:
+
+> A coding exception was thrown in a Promise resolution callback.
+> 
+> Full message: TypeError: msg.target.messageManager is undefined
+> See https://developer.mozilla.org/Mozilla/JavaScript_code_modules/Promise.jsm/Promise
+> Full stack: this.ContentSearch._reply@resource:///modules/ContentSearch.jsm:123:5
+> this.ContentSearch.onGetState@resource:///modules/ContentSearch.jsm:74:5
+> this.ContentSearch.receiveMessage/<@resource:///modules/ContentSearch.jsm:68:9
+> Handler.prototype.process@resource://gre/modules/Promise.jsm -> resource://gre/modules/Promise-backend.js:863:11
+> this.PromiseWalker.walkerLoop@resource://gre/modules/Promise.jsm -> resource://gre/modules/Promise-backend.js:742:7
+
+TART rapidly opens and closes tabs, and the problem is that the asynchronicity added by bug 1009313 means that the browser that ContentSearch is responding to can be destroyed before ContentSearch responds to it.
+
+So the chain of events looks like this: the browser sends a message ("GetState" in this case), ContentSearch.receiveMessage is called, receiveMessage calls _initService which is async, sometime before _initService finishes the browser is destroyed, _initService finishes, onGetState is called, _reply is called.

@@ -1,0 +1,12 @@
+Multiple-second main thread hang on first load of Dropbox directories or shared images
+The first time you hit a Dropbox shared file URL or hit your Dropbox directory page, Firefox's main thread hangs for multiple seconds. This reproduces consistently across Windows and Mac and between Developer Edition and Nightly.
+
+The bug is roughly the same with e10s on and off. With e10s off the hang is an empty void in the built-in Firefox profiler and examining it with Visual Studio just seems to show a bunch of hung threads waiting on objects.
+
+When profiled with e10s on, the entire hang appears to be inside of a setTimeout, running a recently loaded js script tag of some sort. I'll attach a flame chart showing the profiler's idea of the JS stack.
+
+If you examine the hang with visual studio with e10s enabled, the content process's main appears to be hanging in SendRPCMessage, and that call is indirectly triggered by JS. From setting breakpoints, the RPC message appears to be 'Useragent:GetOverride', but I'm not 100% certain because there's no way for me to disable that message.
+
+I typically can't reproduce this in an empty profile, but I've verified that it reproduces with all my addons disabled, and it has a 100% reproduction rate if I hit Dropbox on a fresh instance of Firefox.
+
+URL is a sample share link for Dropbox. You might need to be logged into a Dropbox account to reproduce this, and it may only repro if your Dropbox is full of stuff... haven't got any easy way to test those things since I don't have a spare empty Dropbox account lying around.

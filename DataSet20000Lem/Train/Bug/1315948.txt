@@ -1,0 +1,21 @@
+Simplify openLinkIn in utilityOverlay.js
+The code here is complex and used by a lot of consumers. It would be great if we could simplify it. In particular, we're dealing with potentially a number of different windows, tab and browser that are hard to keep track of, making it bug-prone. In no particular order:
+
+Windows:
+1) the current toplevel window
+2) it parent, if the toplevel is a popup window
+3) the window from which a load wa requested. This is almost always identical to (1) but there are edgecases where load are async and therefore they are not the same (see also bug 1000458 which had this issue but with tabs).
+
+Tabs and browser (similar to above, but a little more complicated):
+1) current selected tab/browser in toplevel window
+2) same, but in the parent if we're a popup
+3) the tab from which a load wa requested (might no longer be selected)
+4) new tab in which we're loading content (could be 1 or 2 or 3 or a new tab, which may or may not be selected immediately)
+
+
+We should see if we can simplify the code so that it's more obvious which tabs/browsers we're manipulating and what role they're playing in the loading process. In particular, maybe we could rewrite it so that we distinguish the following tab and window clearly:
+
+a) tab in which we're loading content (and it chrome window)
+b) tab where the user / code requested the load (and it chrome window)
+
+which are really the bit we care about. We should handle the popup case separately and then clarify (a) and (b) before doing anything else.

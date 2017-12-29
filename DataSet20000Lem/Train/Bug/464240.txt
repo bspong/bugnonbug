@@ -1,0 +1,85 @@
+File drop event is hidden from the extension
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.1b1) Gecko/20081007 Firefox/3.1b1
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.1b1) Gecko/20081007 Firefox/3.1b1
+
+On file drag and drop operation 'dragdrop' event is not received by the extension event handler attached to the main window. Only 'dragexit' event is seen by the extension.
+This break Google Toolbar integration with Google Documents--toolbar used to handle file drop for supported file type with upload to Google Docs. Plugging into later (content handling) stage will prevent user from uploading multiple files--default dnd handler discard all file except one.
+
+Reproducible: Always
+
+Steps to Reproduce:
+Test extension:
+
+content/dnd-test.xul
+
+<?xml version="1.0"?>
+<!DOCTYPE overlay [
+<!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd"> %globalDTD;
+]>
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<overlay id="dndTestOverlay"
+xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<window id="main-window">
+
+<script id="dnd-test">
+dump('dnd overlay loaded\n');
+function trace(event) {
+dump('event: ' + event.type + '\n');
+}
+addEventListener('dragenter', trace, true);
+addEventListener('dragover', trace, true);
+addEventListener('drag', trace, true);
+addEventListener('dragdrop', trace, true);
+addEventListener('dragexit', trace, true);
+addEventListener('dragend', trace, true);
+</script>
+</window>
+</overlay>
+
+chrome.manifest
+
+overlay chrome://browser/content/browser.xul chrome://dnd-test/content/dnd-test.xul
+content dnd-test content/
+
+install.rdf
+
+<?xml version="1.0"?>
+
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+
+<Description about="urn:mozilla:install-manifest">
+<em:id>dnd-test@google.com</em:id>
+<em:version>1.0</em:version>
+
+<!-- For Up-To-Date Documentation of this Format Please See:
+http://www.mozilla.org/projects/firefox/extensions/packaging/extensions.html
+-->
+<em:targetApplication>
+<Description>
+<em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
+<em:minVersion>2.0</em:minVersion>
+<em:maxVersion>3.*</em:maxVersion>
+</Description>
+</em:targetApplication>
+<em:name>Drag drop event test</em:name>
+<em:creator>Google Inc.</em:creator>
+<em:homepageURL>http://www.google.com/</em:homepageURL>
+</Description>
+</RDF>
+
+
+1. create .xpi from the above file
+2. Install to Firefox 3.1
+3. Enable dump, launch Firefox with console visible
+4. Drag and drop file to the Firefox window
+5. Check console, last event should be dragdrop and drag exit
+Actual Results:
+No dragdrop event is seen, lase dragover event is followed by drag exit, action choice dialog (open, download) is shown for msoffice file types.
+
+Expected Results:
+dragdrop event should be seen along with dragexit and action choice dialog
+
+This doesn't happen in Firefox 2 and 3, only 3.1beta1 is affected

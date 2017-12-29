@@ -1,0 +1,17 @@
+Move themes/*/devtools/computedview.css into themes/shared/devtools/computedview.css
+As part of the process of DRYing up our CSS, we should move the computed-view CSS file into the shared folder.
+
+The main steps for merging these files into one are:
+
+1) Make sure there aren't any differences between the windows/linux/osx versions of the files.  You can use a diffing tool for this, or just look at them:
+
+  diff browser/themes/linux/devtools/computedview.css browser/themes/osx/devtools/computedview.css
+  diff browser/themes/linux/devtools/computedview.css browser/themes/windows/devtools/computedview.css
+
+2) If there are no changes, then all we need to do is delete the two of the versions then hg rename the other (to preserve history):
+
+hg rename browser/themes/linux/devtools/computedview.css browser/themes/shared/devtools/computedview.css
+
+2a) If there are minor changes between OS, then the new file will have to have a * in front of it in the jar.mn files, and we will need to add some conditions, like %ifdef XP_MACOSX to handle them specifically.
+
+3) Modify browser/themes/*/jar.mn to replace (devtools/computedview.css) with (../shared/devtools/computedview.css).  Note that the windows/jar.mn file has two places that need to change.

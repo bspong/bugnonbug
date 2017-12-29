@@ -1,0 +1,19 @@
+this.mainViewNode is null error is causing major test failure on mozilla-beta and Cedar
+Here's a stack:
+
+[task 2017-08-01T16:03:50.580286Z] 16:03:50 INFO - Console message: [JavaScript Error: "TypeError: this.mainViewNode is null" {file: "chrome://browser/content/browser-pageActions.js" line: 43}]
+[task 2017-08-01T16:03:50.583316Z] 16:03:50 INFO - get mainViewBodyNode@chrome://browser/content/browser-pageActions.js:43:5
+[task 2017-08-01T16:03:50.586298Z] 16:03:50 INFO - placeActionInPanel@chrome://browser/content/browser-pageActions.js:98:7
+[task 2017-08-01T16:03:50.590435Z] 16:03:50 INFO - placeAction@chrome://browser/content/browser-pageActions.js:72:5
+[task 2017-08-01T16:03:50.592522Z] 16:03:50 INFO - init@chrome://browser/content/browser-pageActions.js:51:7
+[task 2017-08-01T16:03:50.594536Z] 16:03:50 INFO - onLoad@chrome://browser/content/browser.js:1393:5
+[task 2017-08-01T16:03:50.596625Z] 16:03:50 INFO - onload@chrome://browser/content/browser.xul:1:1
+[task 2017-08-01T16:03:50.598555Z] 16:03:50 INFO -
+[task 2017-08-01T16:03:50.602123Z] 16:03:50 INFO - Buffered message logged at 16:02:19
+[task 2017-08-01T16:03:50.604483Z] 16:03:50 INFO - Longer timeout required, waiting longer... Remaining timeouts: 1
+[task 2017-08-01T16:03:50.606428Z] 16:03:50 INFO - Buffered message finished
+[task 2017-08-01T16:03:50.608860Z] 16:03:50 INFO - TEST-UNEXPECTED-FAIL | browser/base/content/test/captivePortal/browser_CaptivePortalWatcher.js | Test timed out -
+
+I suspect that this is because we're initting the BrowserPageActions object regardless of whether or not Photon is enabled.
+
+We should probably put the initialization of BrowserPageActions behind either a build-time or run-time conditional.

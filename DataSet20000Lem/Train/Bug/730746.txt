@@ -1,0 +1,16 @@
+Intermittent leak of 1 AsyncFetchAndSetIconFromNetwork and a lot more, including 2 domwindows opened by test_bug589543.html
+This feel awfully familiar, though I might be remembering the network hit and the decision to just wait until shutting off network access make the feed preview page's request for the favicons for feed reader just quickly and quietly fail. The intermittency is certainly extreme, since I landed the test a year and a half ago.
+
+https://tbpl.mozilla.org/php/getParsedLog.php?id=9646682&full=1&branch=mozilla-inbound
+Rev3 Fedora 12 mozilla-inbound debug test mochitests-1/5 on 2012-02-26 18:24:04 PST for push ef47598bb1e0
+
+nsTraceRefcntImpl::DumpStatistics: 1427 entry
+TEST-UNEXPECTED-FAIL | automationutils.processLeakLog() | leaked 1495315 byte during test execution
+TEST-UNEXPECTED-FAIL | automationutils.processLeakLog() | leaked 1 instance of AsyncFetchAndSetIconFromNetwork with size 176 byte
+TEST-UNEXPECTED-FAIL | automationutils.processLeakLog() | leaked 1 instance of AsyncStatement with size 48 byte
+TEST-UNEXPECTED-FAIL | automationutils.processLeakLog() | leaked 1615 instance of AtomImpl with size 20 byte each (32300 byte total)
+TEST-UNEXPECTED-FAIL | automationutils.processLeakLog() | leaked 1 instance of BackstagePass with size 24 byte
+TEST-UNEXPECTED-FAIL | automationutils.processLeakLog() | leaked 1 instance of BodyRule with size 16 byte
+(etc. etc., all the thing you get from leaking a window or two)
+
+The test load the feed preview page, which we want to do in a test (bug 589543 wa about a time when we totally broke it), and the feed preview page load favicons async, which we want to do, and the existence of this leak probably mean that the test can sometimes finish when the favicon load is in the wrong place to get finished off. If it's possible to know when all the favicon load are done, I guess it could sit twiddling it thumb until then, or, we could just wait for the network access block to solve it, and live with a leak once every 18 months.

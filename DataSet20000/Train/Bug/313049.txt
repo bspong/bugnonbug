@@ -1,0 +1,82 @@
+settin innerHTML with the current innerHTML causes problems when position style is absolute or overflow is hidden
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.2) Gecko/20040803
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.12) Gecko/20050915 Firefox/1.0.7
+
+If with JavaScript you put an element innerHTML inside the same element
+innerHTML (without modifying it at all!) you get problems in the layout flow.
+I provide a sample page (succesfully validated on http://validator.w3.org/
+
+Reproducible: Always
+
+Steps to Reproduce:
+please try this page, it explain everything:
+
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Gecko BUG!</title>
+</head>
+<body>
+
+<table width="100%">
+<tr><td>Content 1</td><td width="50%">Content 2</td></tr>
+<tr><td>Content 3</td><td width="50%">
+
+<div id="shell"
+style="height:100%;width:100%;background:yellow;border:1px solid
+black;position:relative;overflow:hidden;">
+<div id="problematic" style="position:absolute;">
+Content 4
+</div>
+</div>
+
+</td></tr>
+<tr><td>Content 5</td><td width="50%">Content 6</td></tr>
+</table>
+
+
+
+<div style="border-top: 3px solid rgb(192,192,192)">
+<span id="begin">
+As you can expect if you resize the window the columns in this table remain 50%
+width both!<br>
+Now <b>(1)</b> maximize the window, <b>(2)</b> <b
+style="color:blue;cursor:pointer;" onclick="damnBug();">click here</b>, <b>(3)</b>
+see what happens!
+</span>
+<span id="end" style="display:none;">
+<b>Now restore the window</b>. Do you see it? What happens here is that if
+you try to shrink the window the columns do not remain 50%! In fact the yellow
+box does not shrink to sizes smaller
+than the one it had before executing:<br>'shell.innerHTML=shell.innerHTML;'<br><br>
+<b>IMPORTANT NOTE:</b> the problem <span style='color:red;'>does not happen at
+all</span> if the internal &lt;div&gt;
+with the id 'problematic' does not have the 'position' style set to 'absolute',
+or the external one (with id 'shell')
+does not have the 'overflow' set to 'hidden'.
+</span>
+</div>
+
+
+<p><img src="http://www.w3.org/Icons/valid-html401" alt="Valid HTML 4.01
+Transitional" height="31" width="88"></p>
+
+<script type="text/javascript">
+
+function damnBug()
+{
+ var shell=document.getElementById("shell");
+
+ shell.innerHTML=shell.innerHTML;   // <---- the BUG happens only here, the rest
+is just for explaining
+
+ document.getElementById("begin").style.display="none";
+ document.getElementById("end").style.display="block";
+};
+
+</script>
+
+</body>
+</html>

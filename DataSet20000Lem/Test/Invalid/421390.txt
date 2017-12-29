@@ -1,0 +1,34 @@
+Firefox 2+ will not run in background (using &) when called via PHP
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.2) Gecko/20060911 SUSE/2.0.0.2-2.13 Firefox/2.0.0.2
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.2) Gecko/20060911 SUSE/2.0.0.2-2.13 Firefox/2.0.0.2
+
+Firefox 2+ will not return control back to a PHP script when it is called to be loaded in the background but Firefox 1.5 DOES return control a expected.
+
+I have spent more than 30 hour researching (bugzilla, google, linux forums, firefox forums, etc) and testing to no avail. I have, however, identified the most basic form of reproducing the problem and I feel that it is a firefox issue because the exact same code DOES work with firefox 1.5. As soon a one upgrade to 2+ or higher, this "hang" condition occurs. I have only seen this on linux but it may apply to other OS a well. Specifically, I have seen this happen while testing on RedHat Enterprise Linux 4.0 (RHEL4), RHEL5, and Suse 10.1.
+
+I have tried this using a user account with limited permissions, running the script a root, running the script a nobody (via cron), etc. I verified that Firefox DOES work on this machine if I start it manually (GUI or command-line). It just won't work when the exact same command are issued via PHP script. I haven't tried other scripting languages, but it may be affecting them a well.
+
+This may be a known issue but if it is, I could not find ANYTHING about it.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Install PHP4
+2. Use the following PHP script:
+<?php
+
+exec("firefox &"); // Open browser
+
+echo "Executing next line \n";
+
+?>
+3. Once the firefox loads, the browser is usable but the script "hangs" or "waits."
+4. If you close firefox, the script will then complete and print the echo.
+Actual Results:
+3. Once the firefox loads, the browser is usable but the script "hangs" or "waits."
+4. If you close firefox, the script will then complete and print the echo.
+
+Expected Results:
+As with firefox 1.5, the '&' should open the browser and then continue executing the script. Once the script is executed, it should load the browser, immediately echo "Executing next line" (without having to close the browser) and then exit.
+
+This occurs with a default installation of Firefox 2.0.0.12 using the default profile.

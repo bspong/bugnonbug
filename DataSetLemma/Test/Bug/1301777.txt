@@ -1,0 +1,192 @@
+heap-use-after-free in nsINode::ReplaceOrInsertBefore
+Created attachment 8789918
+crash.html (testcase)
+
+The latest ASAN build of Firefox (BuildID=20160908153010) crash a follows when loading the following testcase:
+
+crash.html:
+
+<script>
+function start() {
+s=[];
+o57=document.documentElement;
+document.documentElement.addEventListener('DOMNodeRemoved',f1);
+o582=document.createElement('head');
+o583=document.createElement('style');
+o582.appendChild(o583);
+o583.after("a");
+o583.replaceWith("a",o57,"a");
+}
+function f1() {
+o582.textContent+="a";
+fuzzPriv.CC();
+location.reload();
+}
+</script>
+<body onload="start()"></body>
+
+ASAN output:
+
+=================================================================
+==16478==ERROR: AddressSanitizer: heap-use-after-free on address 0x60d0000a1278 at pc 0x7fa0eab7c59e bp 0x7fff668bbb10 sp 0x7fff668bbb08
+READ of size 8 at 0x60d0000a1278 thread T0 (Web Content)
+#0 0x7fa0eab7c59d in GetParentNode /home/nils/ffbuild/mozilla-central/dom/base/nsINode.h:929:12
+#1 0x7fa0eab7c59d in nsINode::ReplaceOrInsertBefore(bool, nsINode*, nsINode*, mozilla::ErrorResult&) /home/nils/ffbuild/mozilla-central/dom/base/nsINode.cpp:2143
+#2 0x7fa0eab786d8 in InsertBefore /home/nils/ffbuild/mozilla-central/dom/base/nsINode.h:1861:12
+#3 0x7fa0eab786d8 in nsINode::ReplaceWith(mozilla::dom::Sequence<mozilla::dom::OwningNodeOrString> const&, mozilla::ErrorResult&) /home/nils/ffbuild/mozilla-central/dom/base/nsINode.cpp:1813
+#4 0x7fa0ec4bfbc2 in mozilla::dom::ElementBinding::replaceWith(JSContext*, JS::Handle<JSObject*>, mozilla::dom::Element*, JSJitMethodCallArgs const&) /home/nils/ffbuild/mozilla-central/objdir-ff-asan/dom/bindings/ElementBinding.cpp:3639:9
+#5 0x7fa0ec895c22 in mozilla::dom::GenericBindingMethod(JSContext*, unsigned int, JS::Value*) /home/nils/ffbuild/mozilla-central/dom/bindings/BindingUtils.cpp:2812:13
+#6 0x7fa0f2d3f2fe in CallJSNative /home/nils/ffbuild/mozilla-central/js/src/jscntxtinlines.h:235:15
+#7 0x7fa0f2d3f2fe in js::InternalCallOrConstruct(JSContext*, JS::CallArgs const&, js::MaybeConstruct) /home/nils/ffbuild/mozilla-central/js/src/vm/Interpreter.cpp:454
+#8 0x7fa0f2d24a24 in CallFromStack /home/nils/ffbuild/mozilla-central/js/src/vm/Interpreter.cpp:505:12
+#9 0x7fa0f2d24a24 in Interpret(JSContext*, js::RunState&) /home/nils/ffbuild/mozilla-central/js/src/vm/Interpreter.cpp:2916
+#10 0x7fa0f2d083d6 in js::RunScript(JSContext*, js::RunState&) /home/nils/ffbuild/mozilla-central/js/src/vm/Interpreter.cpp:400:12
+#11 0x7fa0f2d3fa7b in js::InternalCallOrConstruct(JSContext*, JS::CallArgs const&, js::MaybeConstruct) /home/nils/ffbuild/mozilla-central/js/src/vm/Interpreter.cpp:472:15
+#12 0x7fa0f2d404e1 in js::Call(JSContext*, JS::Handle<JS::Value>, JS::Handle<JS::Value>, js::AnyInvokeArgs const&, JS::MutableHandle<JS::Value>) /home/nils/ffbuild/mozilla-central/js/src/vm/Interpreter.cpp:518:10
+#13 0x7fa0f283e39d in JS::Call(JSContext*, JS::Handle<JS::Value>, JS::Handle<JS::Value>, JS::HandleValueArray const&, JS::MutableHandle<JS::Value>) /home/nils/ffbuild/mozilla-central/js/src/jsapi.cpp:2835:12
+#14 0x7fa0ec3f93f6 in mozilla::dom::EventHandlerNonNull::Call(JSContext*, JS::Handle<JS::Value>, mozilla::dom::Event&, JS::MutableHandle<JS::Value>, mozilla::ErrorResult&) /home/nils/ffbuild/mozilla-central/objdir-ff-asan/dom/bindings/EventHandlerBinding.cpp:259:37
+#15 0x7fa0ecce4313 in Call<nsISupports *> /home/nils/ffbuild/mozilla-central/objdir-ff-asan/dist/include/mozilla/dom/EventHandlerBinding.h:361:12
+#16 0x7fa0ecce4313 in mozilla::JSEventHandler::HandleEvent(nsIDOMEvent*) /home/nils/ffbuild/mozilla-central/dom/events/JSEventHandler.cpp:214
+#17 0x7fa0eccb1d16 in mozilla::EventListenerManager::HandleEventSubType(mozilla::EventListenerManager::Listener*, nsIDOMEvent*, mozilla::dom::EventTarget*) /home/nils/ffbuild/mozilla-central/dom/events/EventListenerManager.cpp:1136:51
+#18 0x7fa0eccb37bf in mozilla::EventListenerManager::HandleEventInternal(nsPresContext*, mozilla::WidgetEvent*, nsIDOMEvent**, mozilla::dom::EventTarget*, nsEventStatus*) /home/nils/ffbuild/mozilla-central/dom/events/EventListenerManager.cpp:1289:17
+#19 0x7fa0ecc9d663 in mozilla::EventTargetChainItem::HandleEventTargetChain(nsTArray<mozilla::EventTargetChainItem>&, mozilla::EventChainPostVisitor&, mozilla::EventDispatchingCallback*, mozilla::ELMCreationDetector&) /home/nils/ffbuild/mozilla-central/dom/events/EventDispatcher.cpp:380:16
+#20 0x7fa0ecca10e5 in mozilla::EventDispatcher::Dispatch(nsISupports*, nsPresContext*, mozilla::WidgetEvent*, nsIDOMEvent*, nsEventStatus*, mozilla::EventDispatchingCallback*, nsTArray<mozilla::dom::EventTarget*>*) /home/nils/ffbuild/mozilla-central/dom/events/EventDispatcher.cpp:711:9
+#21 0x7fa0eeefc928 in nsDocumentViewer::LoadComplete(nsresult) /home/nils/ffbuild/mozilla-central/layout/base/nsDocumentViewer.cpp:998:7
+#22 0x7fa0efd7c3e9 in nsDocShell::EndPageLoad(nsIWebProgress*, nsIChannel*, nsresult) /home/nils/ffbuild/mozilla-central/docshell/base/nsDocShell.cpp:7606:21
+#23 0x7fa0efd786cf in nsDocShell::OnStateChange(nsIWebProgress*, nsIRequest*, unsigned int, nsresult) /home/nils/ffbuild/mozilla-central/docshell/base/nsDocShell.cpp:7406:7
+#24 0x7fa0efd7f5af in non-virtual thunk to nsDocShell::OnStateChange(nsIWebProgress*, nsIRequest*, unsigned int, nsresult) /home/nils/ffbuild/mozilla-central/docshell/base/nsDocShell.cpp:7303:13
+#25 0x7fa0e9b211b9 in nsDocLoader::DoFireOnStateChange(nsIWebProgress*, nsIRequest*, int&, nsresult) /home/nils/ffbuild/mozilla-central/uriloader/base/nsDocLoader.cpp:1255:3
+#26 0x7fa0e9b1ff6c in nsDocLoader::doStopDocumentLoad(nsIRequest*, nsresult) /home/nils/ffbuild/mozilla-central/uriloader/base/nsDocLoader.cpp:840:14
+#27 0x7fa0e9b1ca6a in nsDocLoader::DocLoaderIsEmpty(bool) /home/nils/ffbuild/mozilla-central/uriloader/base/nsDocLoader.cpp:730:9
+#28 0x7fa0e9b1ed0c in nsDocLoader::OnStopRequest(nsIRequest*, nsISupports*, nsresult) /home/nils/ffbuild/mozilla-central/uriloader/base/nsDocLoader.cpp:612:5
+#29 0x7fa0e9b1fb6c in non-virtual thunk to nsDocLoader::OnStopRequest(nsIRequest*, nsISupports*, nsresult) /home/nils/ffbuild/mozilla-central/uriloader/base/nsDocLoader.cpp:468:14
+#30 0x7fa0e777268c in mozilla::net::nsLoadGroup::RemoveRequest(nsIRequest*, nsISupports*, nsresult) /home/nils/ffbuild/mozilla-central/netwerk/base/nsLoadGroup.cpp:633:28
+#31 0x7fa0eaacc540 in nsDocument::DoUnblockOnload() /home/nils/ffbuild/mozilla-central/dom/base/nsDocument.cpp:8635:18
+#32 0x7fa0eabb7c9f in nsUnblockOnloadEvent::Run() /home/nils/ffbuild/mozilla-central/dom/base/nsDocument.cpp:8588:11
+#33 0x7fa0e758e0cd in nsThread::ProcessNextEvent(bool, bool*) /home/nils/ffbuild/mozilla-central/xpcom/threads/nsThread.cpp:1058:14
+#34 0x7fa0e761480a in NS_ProcessNextEvent(nsIThread*, bool) /home/nils/ffbuild/mozilla-central/xpcom/glue/nsThreadUtils.cpp:290:10
+#35 0x7fa0e8597781 in mozilla::ipc::MessagePump::Run(base::MessagePump::Delegate*) /home/nils/ffbuild/mozilla-central/ipc/glue/MessagePump.cpp:96:21
+#36 0x7fa0e848ebcd in RunInternal /home/nils/ffbuild/mozilla-central/ipc/chromium/src/base/message_loop.cc:232:10
+#37 0x7fa0e848ebcd in RunHandler /home/nils/ffbuild/mozilla-central/ipc/chromium/src/base/message_loop.cc:225
+#38 0x7fa0e848ebcd in MessageLoop::Run() /home/nils/ffbuild/mozilla-central/ipc/chromium/src/base/message_loop.cc:205
+#39 0x7fa0ee61464f in nsBaseAppShell::Run() /home/nils/ffbuild/mozilla-central/widget/nsBaseAppShell.cpp:156:27
+#40 0x7fa0f08f6069 in XRE_RunAppShell /home/nils/ffbuild/mozilla-central/toolkit/xre/nsEmbedFunctions.cpp:844:22
+#41 0x7fa0e848ebcd in RunInternal /home/nils/ffbuild/mozilla-central/ipc/chromium/src/base/message_loop.cc:232:10
+#42 0x7fa0e848ebcd in RunHandler /home/nils/ffbuild/mozilla-central/ipc/chromium/src/base/message_loop.cc:225
+#43 0x7fa0e848ebcd in MessageLoop::Run() /home/nils/ffbuild/mozilla-central/ipc/chromium/src/base/message_loop.cc:205
+#44 0x7fa0f08f56f8 in XRE_InitChildProcess /home/nils/ffbuild/mozilla-central/toolkit/xre/nsEmbedFunctions.cpp:674:34
+#45 0x50d26e in content_process_main /home/nils/ffbuild/mozilla-central/browser/app/../../ipc/contentproc/plugin-container.cpp:197:19
+#46 0x50d26e in main /home/nils/ffbuild/mozilla-central/browser/app/nsBrowserApp.cpp:369
+#47 0x7fa102f9282f in __libc_start_main /build/glibc-GKVZIf/glibc-2.23/csu/../csu/libc-start.c:291
+#48 0x41d8e8 in _start (/home/nils/ffbuild/mozilla-central/objdir-ff-asan/dist/bin/firefox+0x41d8e8)
+
+0x60d0000a1278 is located 40 byte inside of 136-byte region [0x60d0000a1250,0x60d0000a12d8)
+freed by thread T0 (Web Content) here:
+#0 0x4d2ea0 in __interceptor_cfree.localalias.1 (/home/nils/ffbuild/mozilla-central/objdir-ff-asan/dist/bin/firefox+0x4d2ea0)
+#1 0x7fa0e746d185 in SnowWhiteKiller::~SnowWhiteKiller() /home/nils/ffbuild/mozilla-central/xpcom/base/nsCycleCollector.cpp:2681:25
+#2 0x7fa0e745d03d in nsCycleCollector::FreeSnowWhite(bool) /home/nils/ffbuild/mozilla-central/xpcom/base/nsCycleCollector.cpp:2855:3
+#3 0x7fa0e74623b9 in nsCycleCollector::BeginCollection(ccType, nsICycleCollectorListener*) /home/nils/ffbuild/mozilla-central/xpcom/base/nsCycleCollector.cpp:3832:3
+#4 0x7fa0e7461c32 in nsCycleCollector::Collect(ccType, js::SliceBudget&, nsICycleCollectorListener*, bool) /home/nils/ffbuild/mozilla-central/xpcom/base/nsCycleCollector.cpp:3657:9
+#5 0x7fa0e7464b04 in nsCycleCollector_collect(nsICycleCollectorListener*) /home/nils/ffbuild/mozilla-central/xpcom/base/nsCycleCollector.cpp:4151:21
+#6 0x7fa0eab8e22f in nsJSContext::CycleCollectNow(nsICycleCollectorListener*, int) /home/nils/ffbuild/mozilla-central/dom/base/nsJSEnvironment.cpp:1440:3
+#7 0x7fa0ea71211d in nsDOMWindowUtils::CycleCollect(nsICycleCollectorListener*, int) /home/nils/ffbuild/mozilla-central/dom/base/nsDOMWindowUtils.cpp:1338:3
+#8 0x7fa0e75b7c62 in NS_InvokeByIndex /home/nils/ffbuild/mozilla-central/xpcom/reflect/xptcall/md/unix/xptcinvoke_x86_64_unix.cpp:180:23
+#9 0x7fa0e96709ac in Invoke /home/nils/ffbuild/mozilla-central/js/xpconnect/src/XPCWrappedNative.cpp:2065:12
+#10 0x7fa0e96709ac in Call /home/nils/ffbuild/mozilla-central/js/xpconnect/src/XPCWrappedNative.cpp:1384
+#11 0x7fa0e96709ac in XPCWrappedNative::CallMethod(XPCCallContext&, XPCWrappedNative::CallMode) /home/nils/ffbuild/mozilla-central/js/xpconnect/src/XPCWrappedNative.cpp:1351
+#12 0x7fa0e96778fe in XPC_WN_CallMethod(JSContext*, unsigned int, JS::Value*) /home/nils/ffbuild/mozilla-central/js/xpconnect/src/XPCWrappedNativeJSOps.cpp:1143:12
+#13 0x7fa0f2d3f2fe in CallJSNative /home/nils/ffbuild/mozilla-central/js/src/jscntxtinlines.h:235:15
+#14 0x7fa0f2d3f2fe in js::InternalCallOrConstruct(JSContext*, JS::CallArgs const&, js::MaybeConstruct) /home/nils/ffbuild/mozilla-central/js/src/vm/Interpreter.cpp:454
+#15 0x7fa0f2d24a24 in CallFromStack /home/nils/ffbuild/mozilla-central/js/src/vm/Interpreter.cpp:505:12
+#16 0x7fa0f2d24a24 in Interpret(JSContext*, js::RunState&) /home/nils/ffbuild/mozilla-central/js/src/vm/Interpreter.cpp:2916
+#17 0x7fa0f2d083d6 in js::RunScript(JSContext*, js::RunState&) /home/nils/ffbuild/mozilla-central/js/src/vm/Interpreter.cpp:400:12
+#18 0x7fa0f2d3fa7b in js::InternalCallOrConstruct(JSContext*, JS::CallArgs const&, js::MaybeConstruct) /home/nils/ffbuild/mozilla-central/js/src/vm/Interpreter.cpp:472:15
+#19 0x7fa0f2d404e1 in js::Call(JSContext*, JS::Handle<JS::Value>, JS::Handle<JS::Value>, js::AnyInvokeArgs const&, JS::MutableHandle<JS::Value>) /home/nils/ffbuild/mozilla-central/js/src/vm/Interpreter.cpp:518:10
+#20 0x7fa0f283c058 in JS_CallFunctionValue(JSContext*, JS::Handle<JSObject*>, JS::Handle<JS::Value>, JS::HandleValueArray const&, JS::MutableHandle<JS::Value>) /home/nils/ffbuild/mozilla-central/js/src/jsapi.cpp:2776:12
+#21 0x7fa0e95b2698 in xpc::FunctionForwarder(JSContext*, unsigned int, JS::Value*) /home/nils/ffbuild/mozilla-central/js/xpconnect/src/ExportHelpers.cpp:353:18
+#22 0x7fa0f2d3f2fe in CallJSNative /home/nils/ffbuild/mozilla-central/js/src/jscntxtinlines.h:235:15
+#23 0x7fa0f2d3f2fe in js::InternalCallOrConstruct(JSContext*, JS::CallArgs const&, js::MaybeConstruct) /home/nils/ffbuild/mozilla-central/js/src/vm/Interpreter.cpp:454
+#24 0x7fa0f2d24a24 in CallFromStack /home/nils/ffbuild/mozilla-central/js/src/vm/Interpreter.cpp:505:12
+#25 0x7fa0f2d24a24 in Interpret(JSContext*, js::RunState&) /home/nils/ffbuild/mozilla-central/js/src/vm/Interpreter.cpp:2916
+#26 0x7fa0f2d083d6 in js::RunScript(JSContext*, js::RunState&) /home/nils/ffbuild/mozilla-central/js/src/vm/Interpreter.cpp:400:12
+#27 0x7fa0f2d3fa7b in js::InternalCallOrConstruct(JSContext*, JS::CallArgs const&, js::MaybeConstruct) /home/nils/ffbuild/mozilla-central/js/src/vm/Interpreter.cpp:472:15
+#28 0x7fa0f2d404e1 in js::Call(JSContext*, JS::Handle<JS::Value>, JS::Handle<JS::Value>, js::AnyInvokeArgs const&, JS::MutableHandle<JS::Value>) /home/nils/ffbuild/mozilla-central/js/src/vm/Interpreter.cpp:518:10
+#29 0x7fa0f283e39d in JS::Call(JSContext*, JS::Handle<JS::Value>, JS::Handle<JS::Value>, JS::HandleValueArray const&, JS::MutableHandle<JS::Value>) /home/nils/ffbuild/mozilla-central/js/src/jsapi.cpp:2835:12
+#30 0x7fa0ec3fbc73 in mozilla::dom::EventListener::HandleEvent(JSContext*, JS::Handle<JS::Value>, mozilla::dom::Event&, mozilla::ErrorResult&) /home/nils/ffbuild/mozilla-central/objdir-ff-asan/dom/bindings/EventListenerBinding.cpp:47:8
+#31 0x7fa0eccb1ccf in HandleEvent<mozilla::dom::EventTarget *> /home/nils/ffbuild/mozilla-central/objdir-ff-asan/dist/include/mozilla/dom/EventListenerBinding.h:64:12
+#32 0x7fa0eccb1ccf in mozilla::EventListenerManager::HandleEventSubType(mozilla::EventListenerManager::Listener*, nsIDOMEvent*, mozilla::dom::EventTarget*) /home/nils/ffbuild/mozilla-central/dom/events/EventListenerManager.cpp:1133
+#33 0x7fa0eccb37bf in mozilla::EventListenerManager::HandleEventInternal(nsPresContext*, mozilla::WidgetEvent*, nsIDOMEvent**, mozilla::dom::EventTarget*, nsEventStatus*) /home/nils/ffbuild/mozilla-central/dom/events/EventListenerManager.cpp:1289:17
+#34 0x7fa0ecc9d663 in mozilla::EventTargetChainItem::HandleEventTargetChain(nsTArray<mozilla::EventTargetChainItem>&, mozilla::EventChainPostVisitor&, mozilla::EventDispatchingCallback*, mozilla::ELMCreationDetector&) /home/nils/ffbuild/mozilla-central/dom/events/EventDispatcher.cpp:380:16
+#35 0x7fa0ecca10e5 in mozilla::EventDispatcher::Dispatch(nsISupports*, nsPresContext*, mozilla::WidgetEvent*, nsIDOMEvent*, nsEventStatus*, mozilla::EventDispatchingCallback*, nsTArray<mozilla::dom::EventTarget*>*) /home/nils/ffbuild/mozilla-central/dom/events/EventDispatcher.cpp:711:9
+#36 0x7fa0ea6d1996 in nsContentUtils::MaybeFireNodeRemoved(nsINode*, nsINode*, nsIDocument*) /home/nils/ffbuild/mozilla-central/dom/base/nsContentUtils.cpp:4237:5
+
+previously allocated by thread T0 (Web Content) here:
+#0 0x4d3058 in __interceptor_malloc (/home/nils/ffbuild/mozilla-central/objdir-ff-asan/dist/bin/firefox+0x4d3058)
+#1 0x50e2dd in moz_xmalloc /home/nils/ffbuild/mozilla-central/memory/mozalloc/mozalloc.cpp:83:17
+#2 0x7fa0eaaaaf9f in operator new /home/nils/ffbuild/mozilla-central/objdir-ff-asan/dist/include/mozilla/mozalloc.h:194:12
+#3 0x7fa0eaaaaf9f in nsIDocument::CreateTextNode(nsAString_internal const&) const /home/nils/ffbuild/mozilla-central/dom/base/nsDocument.cpp:5511
+#4 0x7fa0eab77d64 in GetNodeFromNodeOrString /home/nils/ffbuild/mozilla-central/dom/base/nsINode.cpp:1667:18
+#5 0x7fa0eab77d64 in ConvertNodesOrStringsIntoNode(mozilla::dom::Sequence<mozilla::dom::OwningNodeOrString> const&, nsIDocument*, mozilla::ErrorResult&) /home/nils/ffbuild/mozilla-central/dom/base/nsINode.cpp:1685
+#6 0x7fa0eab7814b in nsINode::After(mozilla::dom::Sequence<mozilla::dom::OwningNodeOrString> const&, mozilla::ErrorResult&) /home/nils/ffbuild/mozilla-central/dom/base/nsINode.cpp:1785:5
+#7 0x7fa0ec4bf532 in mozilla::dom::ElementBinding::after(JSContext*, JS::Handle<JSObject*>, mozilla::dom::Element*, JSJitMethodCallArgs const&) /home/nils/ffbuild/mozilla-central/objdir-ff-asan/dom/bindings/ElementBinding.cpp:3578:9
+#8 0x7fa0ec895c22 in mozilla::dom::GenericBindingMethod(JSContext*, unsigned int, JS::Value*) /home/nils/ffbuild/mozilla-central/dom/bindings/BindingUtils.cpp:2812:13
+#9 0x7fa0f2d3f2fe in CallJSNative /home/nils/ffbuild/mozilla-central/js/src/jscntxtinlines.h:235:15
+#10 0x7fa0f2d3f2fe in js::InternalCallOrConstruct(JSContext*, JS::CallArgs const&, js::MaybeConstruct) /home/nils/ffbuild/mozilla-central/js/src/vm/Interpreter.cpp:454
+#11 0x7fa0f2d24a24 in CallFromStack /home/nils/ffbuild/mozilla-central/js/src/vm/Interpreter.cpp:505:12
+#12 0x7fa0f2d24a24 in Interpret(JSContext*, js::RunState&) /home/nils/ffbuild/mozilla-central/js/src/vm/Interpreter.cpp:2916
+#13 0x7fa0f2d083d6 in js::RunScript(JSContext*, js::RunState&) /home/nils/ffbuild/mozilla-central/js/src/vm/Interpreter.cpp:400:12
+#14 0x7fa0f2d3fa7b in js::InternalCallOrConstruct(JSContext*, JS::CallArgs const&, js::MaybeConstruct) /home/nils/ffbuild/mozilla-central/js/src/vm/Interpreter.cpp:472:15
+#15 0x7fa0f2d404e1 in js::Call(JSContext*, JS::Handle<JS::Value>, JS::Handle<JS::Value>, js::AnyInvokeArgs const&, JS::MutableHandle<JS::Value>) /home/nils/ffbuild/mozilla-central/js/src/vm/Interpreter.cpp:518:10
+#16 0x7fa0f283e39d in JS::Call(JSContext*, JS::Handle<JS::Value>, JS::Handle<JS::Value>, JS::HandleValueArray const&, JS::MutableHandle<JS::Value>) /home/nils/ffbuild/mozilla-central/js/src/jsapi.cpp:2835:12
+#17 0x7fa0ec3f93f6 in mozilla::dom::EventHandlerNonNull::Call(JSContext*, JS::Handle<JS::Value>, mozilla::dom::Event&, JS::MutableHandle<JS::Value>, mozilla::ErrorResult&) /home/nils/ffbuild/mozilla-central/objdir-ff-asan/dom/bindings/EventHandlerBinding.cpp:259:37
+#18 0x7fa0ecce4313 in Call<nsISupports *> /home/nils/ffbuild/mozilla-central/objdir-ff-asan/dist/include/mozilla/dom/EventHandlerBinding.h:361:12
+#19 0x7fa0ecce4313 in mozilla::JSEventHandler::HandleEvent(nsIDOMEvent*) /home/nils/ffbuild/mozilla-central/dom/events/JSEventHandler.cpp:214
+#20 0x7fa0eccb1d16 in mozilla::EventListenerManager::HandleEventSubType(mozilla::EventListenerManager::Listener*, nsIDOMEvent*, mozilla::dom::EventTarget*) /home/nils/ffbuild/mozilla-central/dom/events/EventListenerManager.cpp:1136:51
+#21 0x7fa0eccb37bf in mozilla::EventListenerManager::HandleEventInternal(nsPresContext*, mozilla::WidgetEvent*, nsIDOMEvent**, mozilla::dom::EventTarget*, nsEventStatus*) /home/nils/ffbuild/mozilla-central/dom/events/EventListenerManager.cpp:1289:17
+#22 0x7fa0ecc9d663 in mozilla::EventTargetChainItem::HandleEventTargetChain(nsTArray<mozilla::EventTargetChainItem>&, mozilla::EventChainPostVisitor&, mozilla::EventDispatchingCallback*, mozilla::ELMCreationDetector&) /home/nils/ffbuild/mozilla-central/dom/events/EventDispatcher.cpp:380:16
+#23 0x7fa0ecca10e5 in mozilla::EventDispatcher::Dispatch(nsISupports*, nsPresContext*, mozilla::WidgetEvent*, nsIDOMEvent*, nsEventStatus*, mozilla::EventDispatchingCallback*, nsTArray<mozilla::dom::EventTarget*>*) /home/nils/ffbuild/mozilla-central/dom/events/EventDispatcher.cpp:711:9
+#24 0x7fa0eeefc928 in nsDocumentViewer::LoadComplete(nsresult) /home/nils/ffbuild/mozilla-central/layout/base/nsDocumentViewer.cpp:998:7
+#25 0x7fa0efd7c3e9 in nsDocShell::EndPageLoad(nsIWebProgress*, nsIChannel*, nsresult) /home/nils/ffbuild/mozilla-central/docshell/base/nsDocShell.cpp:7606:21
+#26 0x7fa0efd786cf in nsDocShell::OnStateChange(nsIWebProgress*, nsIRequest*, unsigned int, nsresult) /home/nils/ffbuild/mozilla-central/docshell/base/nsDocShell.cpp:7406:7
+#27 0x7fa0efd7f5af in non-virtual thunk to nsDocShell::OnStateChange(nsIWebProgress*, nsIRequest*, unsigned int, nsresult) /home/nils/ffbuild/mozilla-central/docshell/base/nsDocShell.cpp:7303:13
+#28 0x7fa0e9b211b9 in nsDocLoader::DoFireOnStateChange(nsIWebProgress*, nsIRequest*, int&, nsresult) /home/nils/ffbuild/mozilla-central/uriloader/base/nsDocLoader.cpp:1255:3
+#29 0x7fa0e9b1ff6c in nsDocLoader::doStopDocumentLoad(nsIRequest*, nsresult) /home/nils/ffbuild/mozilla-central/uriloader/base/nsDocLoader.cpp:840:14
+#30 0x7fa0e9b1ca6a in nsDocLoader::DocLoaderIsEmpty(bool) /home/nils/ffbuild/mozilla-central/uriloader/base/nsDocLoader.cpp:730:9
+#31 0x7fa0e9b1ed0c in nsDocLoader::OnStopRequest(nsIRequest*, nsISupports*, nsresult) /home/nils/ffbuild/mozilla-central/uriloader/base/nsDocLoader.cpp:612:5
+#32 0x7fa0e9b1fb6c in non-virtual thunk to nsDocLoader::OnStopRequest(nsIRequest*, nsISupports*, nsresult) /home/nils/ffbuild/mozilla-central/uriloader/base/nsDocLoader.cpp:468:14
+#33 0x7fa0e777268c in mozilla::net::nsLoadGroup::RemoveRequest(nsIRequest*, nsISupports*, nsresult) /home/nils/ffbuild/mozilla-central/netwerk/base/nsLoadGroup.cpp:633:28
+#34 0x7fa0eaacc540 in nsDocument::DoUnblockOnload() /home/nils/ffbuild/mozilla-central/dom/base/nsDocument.cpp:8635:18
+
+SUMMARY: AddressSanitizer: heap-use-after-free /home/nils/ffbuild/mozilla-central/dom/base/nsINode.h:929:12 in GetParentNode
+Shadow byte around the buggy address:
+0x0c1a8000c1f0: fd fd fd fa fa fa fa fa fa fa fa fa fd fd fd fd
+0x0c1a8000c200: fd fd fd fd fd fd fd fd fd fd fd fd fd fd fa fa
+0x0c1a8000c210: fa fa fa fa fa fa fd fd fd fd fd fd fd fd fd fd
+0x0c1a8000c220: fd fd fd fd fd fd fd fa fa fa fa fa fa fa fa fa
+0x0c1a8000c230: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+=>0x0c1a8000c240: 00 00 fa fa fa fa fa fa fa fa fd fd fd fd fd[fd]
+0x0c1a8000c250: fd fd fd fd fd fd fd fd fd fd fd fa fa fa fa fa
+0x0c1a8000c260: fa fa fa fa 00 00 00 00 00 00 00 00 00 00 00 00
+0x0c1a8000c270: 00 00 00 00 00 fa fa fa fa fa fa fa fa fa 00 00
+0x0c1a8000c280: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 fa
+0x0c1a8000c290: fa fa fa fa fa fa fa fa 00 00 00 00 00 00 00 00
+Shadow byte legend (one shadow byte represents 8 application bytes):
+Addressable: 00
+Partially addressable: 01 02 03 04 05 06 07
+Heap left redzone: fa
+Freed heap region: fd
+Stack left redzone: f1
+Stack mid redzone: f2
+Stack right redzone: f3
+Stack after return: f5
+Stack use after scope: f8
+Global redzone: f9
+Global init order: f6
+Poisoned by user: f7
+Container overflow: fc
+Array cookie: ac
+Intra object redzone: bb
+ASan internal: fe
+Left alloca redzone: ca
+Right alloca redzone: cb
+==16478==ABORTING

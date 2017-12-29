@@ -1,0 +1,32 @@
+Implement remote debugging protocol support for observing promise and their fulfillments/rejections
+Warning: a bunch of brain dump going on here.
+
+Types of thing we should support over the RDP, and how we can go about it:
+
+a) When the frontend first start observing promises, we can find all live promise in the
+debuggees via `Debugger.prototype.findObjects({ class: "Promise" })` to populate the
+frontend's display.
+
+b) We can use the Debugger.prototype.onNewPromise hook to notify the frontend of new promise
+allocations, so it can keep it list of promise up to date.
+
+c) We can use the Debuger.prototype.onPromiseSettled hook to notify the frontend of state
+changes, so it can keep each promise it is displaying up to date.
+
+d) To get the various bit of internal data out of promises, we have the PromiseDebugging
+webidl interface. This requires operating on actual Promise instances, not Debugger.Object
+wrappers. Rather than unwrapping D.Os everywhere, I think we should monkey patch the
+`Debugger.Object.prototype` object with a corresponding method for each of the method on
+PromiseDebugging that doe the unwrapping, get the data and return it. This way we can
+encapsulate the unwrapping and the debugger logic doesn't ever have to deal with unwrapped
+debuggee object directly.
+
+We should use those above method to extend the ObjectActor's form + request type a it
+make sense to expose data about individual promise over the RDP. This might happen in
+another bug. Originally, the plan wa to do this part in bug 1033153, but it seems taken
+over a a meta bug for general "private data that can be exposed a PromiseDebugging
+methods" type bugs. Maybe that's still the best place to do it.
+
+Still need to think about the exact implementation of packet forms, notifications, and request/response interactions. I'm leaning towards a "live list" (like the root actor's tab list), where you can get the whole list up front and then once you've done that you can get a single notification when that the list ha changed and if you want the new list after that, you just re-request the whole list (or maybe the subset of the list that is new?). This avoids too much RDP traffic for every single change, and doesn't require any synchronization work by the client. I think sending a packet per promise (like we do with sources, for example) could become too much RDP traffic.
+
+Maybe we can do the same thing for settlements? A single notification when at least one promise we are observing ha settled, and then you can request all the promise state at once or maybe just the state of promise that have settled since last time you requested these states. The thing is, we will definitely need a per-promise state request type just to show promise state for promise that come in scope a you step in the debugger. Maybe we should only do that latter, per-promise state request option, if we have to implement it anyways. Why duplicate work?

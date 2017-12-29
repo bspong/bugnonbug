@@ -1,0 +1,37 @@
+Creation of a dhtml window with a shaded background cause the screen to flash the body background color
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1) Gecko/20060601 Firefox/2.0 (Ubuntu-edgy)
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1) Gecko/20060601 Firefox/2.0 (Ubuntu-edgy)
+
+We have a popup window that lately (only on Firefox for Windows, all other browser and platform work fine) cause the entire screen to flash the body's background color before coming into focus.
+
+After digging around, I've narrowed the problem to a "grey out" div set to the document's width and height. Basically, when it is added to the document via javascript, every element on the page disappears for a moment, then flash back into the page. We would love to not have this happen, and figured there might be something in the browser rendering code causing the behaviour.
+
+Here is the relevant section of javascript code:
+
+popupWindowShade = document.createElement("div");
+popupWindowShade.style.opacity = 0;
+popupWindowShade.style.filter = "alpha(opacity = 0)";
+popupWindowShade.style.position = "absolute";
+popupWindowShade.style.top = "0px";
+popupWindowShade.style.left = "0px";
+popupWindowShade.id = "popupShader";
+
+var x,y;
+if (document.body.scrollHeight > document.body.offsetHeight) {
+x = document.body.scrollWidth;
+y = document.body.scrollHeight;
+} else {
+x = document.body.offsetWidth;
+y = document.body.offsetHeight;
+}
+
+popupWindowShade.style.height = y+"px";
+popupWindowShade.style.background = "#AAAAAA";
+popupWindowShade.style.width = "100%";
+popupWindowShade.style.zIndex = 20;
+if(document.all) {
+popupWindowShade.style.width = document.body.clientWidth;
+}
+document.body.appendChild(popupWindowShade);
+
+Reproducible: Always

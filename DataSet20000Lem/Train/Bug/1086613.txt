@@ -1,0 +1,37 @@
+RegisteredActorFactory us wrong constructor name
+(follow up for bug 977443)
+
+The current actor registration us actor constructor name to identify the actor. The name is used later when the actor is unregistered (by removeTabActor or removeGlobalActor).
+
+The problem is that actor are created using Class object (coming from sdk/core/heritage module) that us implicit constructor function. The name of this constructor is always "constructor"
+https://github.com/mozilla/addon-sdk/blob/master/lib/sdk/core/heritage.js#L143
+
+The ctor name is used by RegisteredActorFactory (in common.js)
+https://github.com/mozilla/gecko-dev/blob/fx-team/toolkit/devtools/server/actors/common.js#L60
+
+(the option argument passed in the RegisteredActorFactory function is the actor constructor created by Class() object e.g. MyActor)
+
+https://github.com/mozilla/gecko-dev/blob/fx-team/toolkit/devtools/server/main.js#L913
+
+An example:
+
+// ActorClass us Class (see protocol.js)
+let MyActor = protocol.ActorClass({
+typeName: "myactor",
+});
+
+
+// Registration: factory is e.g. MyActor
+DebuggerServer.addGlobalActor(factory, name);
+
+https://github.com/mozilla/gecko-dev/blob/fx-team/toolkit/devtools/server/main.js#L133
+
+Later it's used to unregister the actor:
+
+// factory is e.g. MyActor
+DebuggerServer.removeTabActor(factory);
+
+https://github.com/mozilla/gecko-dev/blob/fx-team/toolkit/devtools/server/main.js#L138
+
+
+Honza

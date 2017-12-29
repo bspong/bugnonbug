@@ -1,0 +1,42 @@
+Dialog to resubmit POST data still appears when Location header is added on second refresh
+User-Agent:       Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.7.6) Gecko/20050226 Firefox/1.0.1
+Build Identifier: Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.7.6) Gecko/20050226 Firefox/1.0.1
+
+When a POST form is submitted to an application that does not redirect upon
+receiving the data, a consequent Reload of the page will have the browser ask if
+the user is sure he/she wants to resubmit the POSTDATA.
+
+There is some undesireable behavior when a Location header is sent after the
+user chooses to resubmit the POSTDATA. When the location header is sent at this
+point, the user is redirected to the given URL; However, if the user hits the
+reload button again, the browser still asks if the user is sure he wants to
+resubmit the POSTDATA.
+
+This type of behavior is not consistent with what normally happens when an
+application redirects the user with the Location header. When redirected, the
+user should not be asked to resubmit POSTDATA since there actually is no
+POSTDATA being submitted after the user is redirected. The POSTDATA referenced
+in the dialog now refers to the request before the last request.
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+A PHP script has been prepared at http://sh.nu/post_page.php
+
+To manually recreate this, some form of server-side programming is required:
+
+1. Submit a POST form to a application that will not send a Location header back
+to the browser. Leave the client in that state (the client has just submitted a
+form)
+2. Add code to the application that will now redirect the user to the same file.
+Return to your browser.
+3. Hit the reload button in the browser. The header is received by the browser
+this time and the browser is redirected to the location in the Location header.
+4. Hit the reload button again, the dialog to resubmit POSTDATA appears.
+
+Actual Results:  
+The dialog appears again.
+
+Expected Results:  
+The dialog should NOT appear after redirection.

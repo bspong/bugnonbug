@@ -1,0 +1,39 @@
+browser.xml's destructor can over-remove observer, causing exception
+I've seen exception (NS_ERROR_FAILURE) occur in two place when calling
+nsIObserverService::removeObserver . These are:
+
+[Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE)
+[nsIObserverService.removeObserver]" nsresult: "0x80004005 (NS_ERROR_FAILURE)"
+location: "JS frame :: chrome://global/content/bindings/browser.xml :: destroy
+:: line 578" data: no]
+
+[Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE)
+[nsIObserverService.removeObserver]" nsresult: "0x80004005 (NS_ERROR_FAILURE)"
+location: "JS frame :: chrome://browser/content/browser.js :: Shutdown :: line
+837" data: no]
+
+The latter of these exception is pretty much guaranteed to cause memory leak
+because the code following fails to be executed.
+
+I think what's happening is this:
+* browser.js and browser.xml both register and unregister the *same* observer
+for the same thing ("browser:purge-session-history")
+* browser.xml ha a destroy method that's called by tabbrowser, and it also
+call that destroy method again itself (in it <destructor>). This mean that
+the browser.xml code register the observer once and unregisters it twice.
+
+The observer service tolerates having the same observer registered multiple
+time -- it just need to be removed the same number of time that it's added.
+I think the reason that the location of the exception varies is that (since we
+have two add and three removes) the order of the remove varies, and it's
+always the third one that throws.
+
+The easy (and safe, I think) fix is to make browser.xml not unregister thing
+twice. I'll attach a patch to do that. I haven't seen the exception happen
+since I started running with that patch. (That said, I never figured out the
+exact condition under which they occur.)
+
+However, I'm not really sure if this code is still needed:
+http://bonsai.mozilla.org/cvsblame.cgi?file=mozilla/browser/base/content/browser.js&rev=1.382&mark=691-692,905#686
+However, I've done enough poking at this code already, so I'll leave that to
+somebody else to figure out, if they want to.

@@ -1,0 +1,39 @@
+Session Restore should handle invalid XPaths better
+Created attachment 369630
+Small test case with input element in a <class=text> element.
+
+Build identifier: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.4; en-US; rv:1.9.1b3) Gecko/20090305 Firefox/3.1b3
+
+Build identifier: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.4; en-US; rv:1.9.2a1pre) Gecko/20090326 Minefield/3.6a1pre
+
+
+If a page of HTML tag soup contains something like <class=text><input type="text"> session restore will write out an XPath like: "/HTML/BODY/FORM[@name='bug']/CLASS=TEXT/INPUT", which the restore code doesn't seem to like too much:
+
+Error: uncaught exception: [Exception... "The expression cannot be converted to return the specified type." code: "52" nsresult: "0x805b0034 (NS_ERROR_DOM_TYPE_ERR)" location: "file:///Users/jag/Applications/Firefox.app/Contents/MacOS/components/nsSessionStore.js Line: 2627"]
+
+We shouldn't be writing out invalid XPaths, but this could also be handled by catching any error thrown by the parser and just skipping restoring that control.
+
+Due to the above exception session restore doesn't finish fixing up the form, and every time the page is reloaded (in this tab) the form will be restored from the value a stored in sessionstore.js.
+
+To reproduce, either set browser.sessionstore.privacy_level to 0 (don't forget to reset it when you're done) or put the attached test case on a non http server; have Firefox when it start show window and tab from last time; and then:
+
+1) Load the test case
+2) Select "Bad" and type something in all three text box
+3) Quit Firefox
+4) Start Firefox
+
+- the 2nd and 3rd text box are empty; at least the 3rd one shouldn't be
+
+5) Select "Ugly" and type something in the empty text box
+6) Reload the test case
+
+- it say "Bad"; should be "Ugly"
+
+7) Select "Ugly" again
+8) Hard (shift) reload the test case
+
+- it say "Bad"; should be "Good"
+- the first text box isn't empty
+
+
+If you check the Error Console you'll notice the above exception for each reload, indicating that session restore is being triggered when it shouldn't be.

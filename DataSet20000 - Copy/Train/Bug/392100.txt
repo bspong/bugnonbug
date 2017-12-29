@@ -1,0 +1,29 @@
+click "add to ebay watchlist" calls localhost's webdav authentication
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; de; rv:1.8.1.6) Gecko/20070809 Firefox/2.0.0.6
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; de; rv:1.8.1.6) Gecko/20070809 Firefox/2.0.0.6
+
+Clicking the "add to watchlist"-link in an ebay window brings up localhost's .htpasswd-dialog, with my own description string.
+
+I have an apache running locally, for controlling remote access to some media folders. Served via WebDAV, and users authenticate against a static setup including a .htpasswd file. Authentication is triggered by clicking a link in ebay website. weird.
+
+My apache logs show this looong string, a GET request:
+
+127.0.0.1 - - [13/Aug/2007:22:53:05 +0200] "GET /b/ss/ebay0/1/G.6-Pd-R/s03472436703109?[AQB]&ndh=1&t=13/7/2007%2022%3A53%3A5%201%20-120&ce=UTF-8&pageName=DE%3B%3BViewItem_Active_NoneStores&ch=Germany&server=cgi.ebay.de&events=event7&cc=USD&c1=DE%3B%3BViewItem_Active_NoneStores%3B14675&c2=DE%3B%3BViewItem_Active_NoneStores%3B9394&c3=DE%3B%3BViewItem_Active_NoneStores%3B40564&c4=DE%3B%3BViewItem_Active_NoneStores%3B24014&c5=DE%3B%3BViewItem_Active_NoneStores%3BC014675%3BC19394%3BC240564%3BC324014%3BC4%3BST1%3BPR10%3BFO4%3BFB100%3BRE0%3BCU1%3BTR12%3BNB0%3BFT0&c6=DE%3B%3BViewItem_Active_NoneStores%3BState1&c7=DE%3B%3BViewItem_Active_NoneStores%3BPrice10&v10=DE%3B%3BMERC_VI_RSEE_PR4_PCY_BIN_STORES_IT&c11=DE%3B%3BViewItem_Active_NoneStores%3BFB100&c12=DE%3B%3BViewItem_Active_NoneStores%3Bundefined&c15=DE%3B%3BViewItem_Active_NoneStores%3BRes0&c16=DE%3B%3BViewItem_Active_NoneStores%3BC1&v17=DE%3B%3BViewItem_Active_NoneStores%3B14675&c18=DE%3B%3BViewItem_Active_NoneStores%3BMERC_VI_RSEE_PR4_PCY_BIN_STORES_IT&v19=DE%3B%3Bebay%3ADE%3B%3BViewItem_Active_NoneStores%3BMERC_VI_RSEE_PR4_PCY_BIN_STORES_IT&c21=DE%3B%3BViewItem_Active_NoneStores%3BB0&c22=DE%3B%3BViewItem_Active_NoneStores%3Bundefined&c25=DE%3B%3BViewItem_Active_NoneStores%3Bundefined&c26=DE%3B%3BViewItem_Active_NoneStores%3Bundefined&g=http%3A//cgi.ebay.de/ws/eBayISAPI.dll%3FViewItem%26item%3D160142859103%26ssPageName%3DMERC_VI_RSEE_Pr4_PcY_BIN_Stores_IT%26refitem%3D160142999372%26itemcount%3D4%26refwidgetloc%3Dactive_view_item%26usedrule1%3DStoreCatToStoreCat%26refwidgettype%3Dcross_promot_widget&r=http%3A//promo.ebay.de/ws/eBayISAPI.dll%3FGetCrossPromos%26strsellerid%3D*web2buy*%26seller%3D178317502%26item%3D160142999372%26storecats%3D3%26category%3D24014%26listedsite%3D77%26method%3D1%26CurrentPage%3DVI%26shipdiscount%3D0%26track%3DMERC_VI%26storeid%3D2265232%26promohostid%3D12%26random%3D869&s=1024x768&c=24&j=1.3&v=Y&k=Y&bw=1018&bh=595&p=Shockwave%20Flash%3BJava%28TM%29%20Plug-in%201.5.0_12-b04%3BHelix%20DNA%20Plugin%3A%20RealPlayer%20G2%20Plug-In%20Compatible%3B&[AQE] HTTP/1.1" 401 468
+
+possibly this is Helixplayer-related, or actually depending on flashblock extension. Will try to reproduce without flashblock.
+
+Security issue: if there is no local authenticaton, what will the request actually try to GET from localhost? Could it be triggering something?
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. follow a "this product on ebay" link here: http://www.call-magazin.de/handy-mobilfunk/handy/samsung-sgh-e590/ (may work with any model :P )
+2. see ebay results, choose one for details. Worked here: http://cgi1.ebay.de/ws/eBayISAPI.dll?MakeTrack&item=160142999311&ssPageName=VIP:watchlink:top:de
+3. click the link "add to watchlist", log in, and see localhost's apache responding
+Actual Results:  
+Authentication popup coming evey time that ebay link is clicked.
+
+Expected Results:  
+It should never even ask localhost/127.0.0.1 for anything.
+
+Vanilla Firefox on very recent Gentoo (x86 architecture, no ~x86 keyword involved). Very few extensions installed, but including flashblock. No theme but default.

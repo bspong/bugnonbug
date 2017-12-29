@@ -1,0 +1,49 @@
+Page that sets cookie is called twice
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.5) Gecko/20031007 Firebird/0.7
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.5) Gecko/20031007 Firebird/0.7
+
+In a PHP hit logging script, that uses a 15 minute long cookie to determine a
+new hit or a subsequent hit, The logs show that Mozilla 0.6 and 0.7 hit the page
+twice everytime, with a second or so between them.
+
+The script tests for a cookie by name, and records to a Db accordingly. 
+
+So on first entry (no cookie set), a hit is logged and  the cookie is set,
+causing another hit to be logged for this page access. 
+
+Moving to a different page logs a hit, the timeout for the cookie is reset by
+this page which in turn causes another hit to be logged. 
+
+Thus always double logging with Moz 0.6/0.7, this does not happen with IE6,Opera
+7, or Netscape 7.0 on Win2k or Win98.
+
+To ensure it was double hitting, I checked my Apache access log, here's a
+typical Mozilla 0.6/0.7 page hit (index.php called twice):
+[15/Oct/2003:15:48:07 +0100] "GET /index.php...
+[15/Oct/2003:15:48:07 +0100] "GET /css/menuimg/20.gif...
+[15/Oct/2003:15:48:08 +0100] "GET /someinclude.php...
+[15/Oct/2003:15:48:08 +0100] "GET /index.php...
+
+ 
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.simple PHP script to check for a named cookie. If set, refresh the time, if
+not set, set it.
+2. check time of access against server access log, look for double page call.
+3. Repeat with other browsers, esp. Netscape 7.0, and note this does not happen.
+
+Actual Results:  
+server log for Moz. shows second page call as above
+server log for same page with Netscape 7.0, shows page (index.php) is called
+only once.
+
+Expected Results:  
+Should not recall page when a cookie is set/refreshed.
+
+Noticed on Mozilla 0.6, downloaded Mozilla 0.7 with default theme, no
+improvement.  Sample scripts have been tested many times, cookies deleted and
+tests carried out again each time.
+Has been tested on Win98 and Win2k only.
+Cannot replicate this issue in any other browsers.

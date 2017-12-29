@@ -1,0 +1,14 @@
+Don't sync system or hidden addons.
+A profile in my house if failing to Sync addons on every sync:
+
+> 1464053967594 Sync.Engine.Addons DEBUG Switching local ID to incoming: AVOHqDrjCmgy -> EdsvHAQrCuNN
+> 1464053967600 Sync.AddonsReconciler INFO Saving reconciler state to file: addonsreconciler
+> 1464053967631 Sync.Engine.Addons WARN Failed to reconcile incoming record EdsvHAQrCuNN: Error: Addon sync GUID conflict for addon app-system-addons:loop@mozilla.org: app-system-defaults:loop@mozilla.org already ha GUID EdsvHAQrCuNN (resource://gre/modules/addons/XPIProvider.jsm -> resource://gre/modules/addons/XPIProviderUtils.js:1389:13) JS Stack trace: this.XPIDatabase.setAddonSyncGUID@XPIProviderUtils.js:1389:13 < AddonWrapper.prototype.syncGUID@XPIProvider.jsm:7034:7 < changeItemID@addons.js:442:5 < SyncEngine.prototype._reconcile@engines.js:1352:9 < SyncEngine.prototype._processIncoming/newitems.recordHandler@engines.js:1096:23 < Collection.prototype.recordHandler/this._onProgress@record.js:623:9 < Channel_onDataAvail@resource.js:554:7 < waitForSyncCallback@async.js:98:7 < Res__request@resource.js:398:14 < Res_get@resource.js:425:12 < SyncEngine.prototype._processIncoming@engines.js:1185:18 < SyncEngine.prototype._sync@engines.js:1551:7 < WrappedNotify@util.js:146:21 < Engine.prototype.sync@engines.js:670:5 < _syncEngine@enginesync.js:213:7 < sync@enginesync.js:163:15 < onNotify@service.js:1262:7 < WrappedNotify@util.js:146:21 < WrappedLock@util.js:101:16 < _lockedSync@service.js:1252:12 < sync/<@service.js:1244:14 < WrappedCatch@util.js:75:16 < sync@service.js:1232:5
+> 1464053967633 Sync.Engine.Addons DEBUG Records that failed to apply: EdsvHAQrCuNN
+> 1464053967633 Sync.Engine.Addons INFO Records: 0 applied, 0 successfully, 1 failed to apply, 0 newly failed to apply, 0 reconciled.
+> 1464053967651 Sync.Engine.Addons ERROR Failed to set previousFailed: null
+
+
+I haven't dug any further, but do note that I only noticed this due to error log being written, which is the last line above - but that's actually a bug that we fixed in bug 1262329 (there wa no error setting previousFailed) - so we should also consider having the WARN with the specific error message log at the ERROR level so this kind of problem always creates error logs.
+
+Flagging a P1 because this relates to a system addon rather than one the user chose to install, so it's reasonable to speculate many user have this problem.

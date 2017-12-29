@@ -1,0 +1,33 @@
+Firefox misunderstands '>' character in XML processing instruction in local file
+Please see bug 258868 first.
+
+The same bug appears when trying to read a local file; it doe not appear (as
+described in above mentioned bug) when using a document from a web server.
+
+Firefox should see that the local file contains XML and handle it a if it wa
+served with application/xhtml+xml. Currently, it behaves a if the file
+contained text/html. The XML declaration should be sufficient to find out that
+the file doe not contain text/html, but application/xhtml+xml.
+
+
+-----BEGIN testcase-----
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?php
+header('Link: <styles>; rel="stylesheet"; type="text/css"; charset="UTF-8"', false);
+?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" version="-//W3C//DTD XHTML 1.1//EN"
+xml:lang="en" dir="ltr">
+<head>
+<title>Test document</title>
+</head>
+<body>
+
+<!-- ... -->
+
+</body>
+</html>
+-----END testcase-----
+
+The problem is caused by the wrong handling of the '>' character in the Link
+header (line 3) in this example.

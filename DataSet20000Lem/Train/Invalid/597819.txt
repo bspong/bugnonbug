@@ -1,0 +1,25 @@
+browser freeze on loading applet in Java 6 / 64-bit on OSX 10.5
+User-Agent: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.5; en-US; rv:1.9.2.10) Gecko/20100914 Firefox/3.6.10
+Build Identifier: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.5; en-US; rv:1.9.2.10) Gecko/20100914 Firefox/3.6.10
+
+Firefox lock up when opening a page that includes a java applet, if OSX 10.5 Java preference is set to only allow use of Java SE 6 64-bit in web-browsers.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Open Applications/Utilities/JavaPreferences.app
+2. Select "Run applets: Within the browser process" (I have not tested with "in their own process" selected)
+3. Drag "Java SE 6 64-bit" to the top of the preference order (in the upper list box, used by web browsers)
+4. Uncheck "J2SE 5.0 32-bit" and "J2SE 5.0 64-bit" and any other option other than "Java SE 6 64-bit" in the upper list box
+5. Close Java Preferences
+6. Open Firefox (if open, close and re-open Firefox)
+7. Open any page that contains a Java applet, for example http://java.sun.com/applets/jdk/1.4/demo/applets/ArcTest/example1.html
+Actual Results:
+Browser hangs, completely stop responding. The loading icon freezes, and it is not possible to select a different browser tab. Hang is not detected by the operating system, Firefox must be terminated by opening Activity Monitor (Applications/Utilities/ActivityMonitor.app), double clicking the Firefox process, clicking "quit", and then "force quit" to kill the process. No crash report is generated.
+
+
+At least for user of OSX 10.5, this is only likely to affect Java applet developer that are guaranteeing that their applet load in Java 6 by leaving it a the only option in Java preferences, resetting the preference order to the default solves the issue (though I have not tested with an applet that requires Java 6).
+
+Firefox did not hang last spring under the same settings, so it wa likely introduced in a recent version, must have been at least after the middle of May. It may be related to bug 290671, which describes a browser freeze in Linux when loading a Java applet; however, that bug indicates that processor usage spike in association with the freeze, which is not the case here (CPU usage remained around 5%, Firefox normally us between 5% and 45% on my system, depending on number of tab open and their contents), so it may be a different problem.
+
+Google Chrome is still able to load java applet without crashing under these same settings, so it is not a universal issue with using Java 6.0 for web-browsers under Mac OS 10.5 (assuming Chrome honor those settings).

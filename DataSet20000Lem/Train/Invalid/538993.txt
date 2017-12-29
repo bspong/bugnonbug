@@ -1,0 +1,71 @@
+Trying to cancel the vote when enabling Private Browsing through a session fails
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.1.7) Gecko/20100106 Ubuntu/9.10 (karmic) Firefox/3.5.7
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.1.7) Gecko/20100106 Ubuntu/9.10 (karmic) Firefox/3.5.7
+
+I get an following error on the console
+
+Error: [Exception... "'JavaScript component doe not have a method named: "observe"' when calling method: [nsIObserver::observe]" nsresult: "0x80570030 (NS_ERROR_XPC_JSOBJECT_HAS_NO_FUNCTION_NAMED)" location: "JS frame :: file:///usr/lib/firefox-3.5.7/components/nsPrivateBrowsingService.js :: PBS__canEnterPrivateBrowsingMode :: line 206" data: no]
+Source File: file:///usr/lib/firefox-3.5.7/components/nsPrivateBrowsingService.js
+Line: 206
+
+Here is the code I am executing in my extension content/overlay.js
+
+<code>
+var disableprivatebrowsing = {
+onLoad: function() {
+// initialization code
+this.initialized = true;
+this.strings = document.getElementById("disableprivatebrowsing-strings");
+document.getElementById("contentAreaContextMenu")
+.addEventListener("popupshowing", function(e) { this.showContextMenu(e); }, false);
+
+var o = Components.classes["@mozilla.org/observer-service;1"]
+.getService(Components.interfaces.nsIObserverService);
+os.addObserver(function (aSubject, aTopic, aData) {
+aSubject.QueryInterface(Components.interfaces.nsISupportsPRBool);
+// if another extension ha not already canceled entering the private mode
+if (!aSubject.data) {
+if (aData == "enter") { // if we are leaving the private mode
+/* you should display some user interface here */
+aSubject.data = true; // cancel the operation
+}
+}
+}, "private-browsing-cancel-vote", false);
+
+
+
+},
+
+showContextMenu: function(event) {
+// show or hide the menuitem based on what the context menu is on
+// see http://kb.mozillazine.org/Adding_items_to_menus
+document.getElementById("context-disableprivatebrowsing").hidden = gContextMenu.onImage;
+},
+onMenuItemCommand: function(e) {
+var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+.getService(Components.interfaces.nsIPromptService);
+promptService.alert(window, this.strings.getString("helloMessageTitle"),
+this.strings.getString("helloMessage"));
+},
+
+};
+window.addEventListener("load", function(e) { disableprivatebrowsing.onLoad(e); }, false);
+</code>
+
+
+Any ideas?
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.Add the extension
+2.Disable private browsing
+3.Inspect Error Console
+Actual Results:
+Private Browsing is enabled
+
+Expected Results:
+Private Browsing is not enabled
+
+Not caused and error.

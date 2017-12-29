@@ -1,0 +1,37 @@
+misleading download URI listed when downloading a file from a nested URI (e.g. view-source:)
+Created attachment 631187
+mozFileDownloadSourceSpoof.html
+
+User Agent: Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/536.5 (KHTML, like Gecko) Chrome/19.0.1084.52 Safari/536.5
+
+Steps to reproduce:
+
+I am using the following techniques to hide the source of an executable file which is downloaded:
+1- "alert" box in "onbeforeunload" to create a delay
+2- loading a legitimate page such as Mozilla download page in "onbeforeunload" 
+3- loading a fake executable file as the destination of the page
+4- use "view-source:" protocol in front of the downloadable file to hide the download source ("view-source:http://0me.me/fake/calc.php")
+5- "Content-Type: application/octet-stream" can be downloaded even via "view-source:" protocol.
+6- user "Worker" to create "alert" boxes without having the "do not show again" option.
+7- loading the destination page in an image tag to be cached; to reduce the loading time.
+
+As a result it opens the download panel in front of the legitimate website.
+
+In the following PoC, I have used "cmd.exe" which has renamed to "Firefox Setup.exe":
+http://0me.me/demo/mozilla/firefox/mozFileDownloadSourceSpoof.html
+
+I will attach this file here as well.
+
+
+
+Actual results:
+
+a download panel will opened in front of the "Mozilla Firefox" download website. Its source has been set to "view-source:". 
+
+
+Expected results:
+
+1- download panel should not be opened in front of another page in another website
+2- its source should be equal to the real source
+3- "view-source" should not download the file
+4- "alert" boxes via Worker, should also have the hide option.

@@ -1,0 +1,40 @@
+SOAPCall is not defined
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.9.0.1) Gecko/2008070208 Firefox/3.0.1
+Build Identifier: Firefox/3.0.1
+
+Today I upgraded Firefox from 2.0.0.16 to 3.0.1. We have a commercial package installed on our intranet and when I tried to access it I got an error message saying: "SOAPCall is not defined" and the line number and file name where the error occurred. It is the 3rd line in the following excerpt. After removing 3.0.1 and reinstalling 2.0.0.16 the problem disappeared.
+
+...
+PPSoapCall.prototype.mozExecute = function (callback, errorHandler) {
+	var soapparameters = this.mozConvertPPParamsToSoapParams(this.parameters);
+	var call = new SOAPCall();
+	call.transportURI = this.endpoint;
+	call.encode(0, this.methodname, PPSoapCall.NAMESPACE, 0, null, soapparameters.length, soapparameters);
+	this.call = call;
+	if (callback != null) {
+		// If a callback is specified, we run in asynchronous mode.
+		this.callback = callback;
+		this.errorHandler = errorHandler;
+		setTimeout(this.mozAsyncRun, 0);
+	} else {
+		// Otherwise we execute immediately, block, and return the result.
+		var response = call.invoke();
+		var fault = response.fault;
+		if (fault != null) {
+			return this.processMozSoapFault(fault);
+		} else {
+			return this.processMozSoapResponseParams(response);
+		}
+	}
+}
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+This happens when trying to access the login screen to the Web Port product from Accelrys.
+Actual Results:  
+An error box pops up with the message: "SOAPCall is not defined".
+
+Expected Results:  
+The login screen should appear.

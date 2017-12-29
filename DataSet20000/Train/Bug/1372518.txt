@@ -1,0 +1,37 @@
+The area on the left side of the location bar flickers right after first paint
+Created attachment 8877069
+first-paint-flickering.mp4
+
+See the attached screen recording of first paint on the quantum reference hardware.
+
+We are loading about:home as the homepage here.
+
+The first frame showing the browser UI has:
+- "New Tab" as the tab title.
+- reload button disabled
+- light grey (i) icon in the location bar.
+
+~40 frames later, we have:
+- the reload button is replaced by an enabled stop button
+- the (i) icon disappears.
+- 'Nightly' appears in the identity area of the location bar, causing the location bar placeholder to shift to the right.
+- the tab title becomes "Nightly Start Page"
+
+After 8 frames, we display the favicon in the tab.
+Another 2 frames and we display the globe icon next to "Nightly".
+
+After another 10 frames, the stop button is replaced by a disabled reload button.
+
+~30 more frames and the reload button becomes enabled. 
+
+
+I think we can significantly improve this. It's fine to have icons painted a bit later, but things should be at the correct place immediately.
+
+The things I think we should fix:
+- the stop button should never appear while loading about:home
+- "Nightly" should already be visible in the identity area before first paint, to avoid the flicker when the "Search or enter address" placeholder shifts to the right.
+- we should not display the grey (i) icon (it's fine if the globe icon takes slightly longer to appear)
+- we should never display "New Tab" as the tab title. Either we should already show the final page title at first paint, or we should leave the tab empty until we have the correct title.
+- (maybe) make the new tab white "+" button appear at first paint
+
+I suspect some of these things can be fixed at once, but if some of this turns out to be unrelated code, we can turn this into a meta bug.

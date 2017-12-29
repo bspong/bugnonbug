@@ -1,0 +1,19 @@
+Fix a bug in test_promises_object_timetosettle-02.js.
+While refactoring the script actors to use protocol.js in bug 1037992, this test started failing for me. After some investigation, there seem to be a couple of things wrong with this test:
+
+- The test sends an attach request to a promise front. The attach handler of the   
+  promise actor eventually calls createSourceActors on TabSources. TabSources   
+  needs this._thread to be set to the ThreadActor in order to work properly. 
+  This field won't be set until we attach to a Chrome or TabActor. Nowhere in 
+  the test do we actually attach to either of these. I'm not sure why the test 
+  worked before, but it seems to be by pure chance: making a minor change in one 
+  of the script actors causes this to fail. Explicitly attaching to either the 
+  Chrome or TabActor makes the problem go away again.
+- If that were the only problem, we could simply fix the test. However, the test
+  checks that it always takes about 100ms for the promise to settle. I don't
+  understand how we can actually guarantee this, and it seems likely to me that
+  in fact were not, and again this only happens to work by chance. After fixing
+  the above issue, promise settle time occasionally rises to 200-300ms, causing
+  the test to fail intermittently.
+
+Given these issues, I'd argue that the test is probably fundamentally broken, and needs to be rethought. Given that this test is blocking me on bug 1037992, I'd like to suggest that we disable it in the meantime.

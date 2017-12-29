@@ -1,0 +1,42 @@
+Updating session cookie expiry to 0 does not delete cookie
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.8.0.4) Gecko/20060508 Firefox/1.5.0.4
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.8.0.4) Gecko/20060508 Firefox/1.5.0.4
+
+When logging out from a JBoss served web-app, the app attempts to expire the session cookie.  This request is received by Firefox, but apparently ignored as the same cookie persists with expiry = end of session.
+
+Here you will see the server request to set the cookie, and the next packet sent back to the server refers to the same cookie (in IE there is no packet sent back, and so it works okay):
+
+HTTP/1.1 200 OK
+Server: Apache-Coyote/1.1
+X-Powered-By: Servlet 2.4; JBoss-4.0.2 (build: CVSTag=JBoss_4_0_2 date=200505022023)/Tomcat-5.5
+Cache-control: max-age=3600
+Set-Cookie: JSESSIONID=5DEB94DD8BC5C1BCBF04D8810D492997; Expires=Thu, 01-Jan-1970 00:00:10 GMT
+Pragma: No-cache
+Expires: Thu, 01 Jan 1970 01:00:00 GMT
+Content-Type: text/html;charset=utf-8
+Transfer-Encoding: chunked
+Content-Encoding: gzip
+Vary: Accept-Encoding
+Date: Tue, 25 Jul 2006 10:52:38 GMT
+
+GET /ilogistics/controller?E_id=E_init&E_z=k7cf_0 HTTP/1.1
+Host: 192.168.225.111:8080
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.0.4) Gecko/20060508 Firefox/1.5.0.4
+Accept: */*
+Accept-Language: en-us,en;q=0.5
+Accept-Encoding: gzip,deflate
+Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7
+Keep-Alive: 300
+Connection: keep-alive
+Referer: http://192.168.225.111:8080/ilogistics/controller
+Cookie: JSESSIONID=5DEB94DD8BC5C1BCBF04D8810D492997
+
+The cookie has path="/" and Send For = "Any type of connection".
+
+I believe that the problem is that the packet sent back to the server with the expired cookie details causes the server to resurrect the cookie and send out a new one with expiry "end of session".  So I need to know why Firefox can send back an expired cookie, or why it is not being expired correctly.
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.  Unfortunately this app is running behind a vpn so I cannot show you how to reproduce!!  I guess I am just hoping that someone with half a clue runs into the same problem which CAN be reproduced.

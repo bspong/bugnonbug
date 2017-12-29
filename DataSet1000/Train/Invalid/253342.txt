@@ -1,0 +1,45 @@
+linux firefox clobber build dies on FC2
+Building from a clean aviary tree pulled on 0727 around 4pm results in:
+
+gmake[3]: Entering directory
+`/home/vladimir/proj/mozilla-cvs/firefox/netwerk/resources'
++++ making chrome /home/vladimir/proj/mozilla-cvs/firefox/netwerk/resources  =>
+../../dist/bin/chrome/comm.jar
++++ adding chrome ../../dist/bin/chrome/installed-chrome.txt
++++     content,install,url,jar:resource:/chrome/comm.jar!/content/necko/
+        zip warning: ../comm.jar not found or empty
+  adding: content/necko/redirect_loop.xul (stored 0%)
++++ overriding content/necko/contents.rdf 
+  adding: content/necko/contents.rdf (stored 0%)
++++ making chrome /home/vladimir/proj/mozilla-cvs/firefox/netwerk/resources  =>
+../../dist/bin/chrome/en-US.jar
+error: file '../../../mozilla/toolkit/locales/en-US/chrome/necko/contents.rdf'
+doesn't exist at ../../../mozilla/config/make-jars.pl line 418, <STDIN> line 9.
+gmake[3]: *** [libs] Error 2
+
+mozconfig is:
+. $topsrcdir/browser/config/mozconfig
+ac_add_options --enable-debug
+ac_add_options --enable-chrome-format=symlink
+ac_add_options --enable-default-toolkit=gtk2 --enable-xft
+
+objdir build, gmake 3.80, perl 5.8.3.
+
+Doesn't happen on the tinderboxen -- madcow (dep build) goes through this part with:
+
+gmake[4]: Entering directory
+`/builds/tinderbox/firefox-branch/Linux_2.4.20-28.8_Depend/mozilla/netwerk/resources'
++++ making chrome
+/builds/tinderbox/firefox-branch/Linux_2.4.20-28.8_Depend/mozilla/netwerk/resources
+ => ../../dist/bin/chrome/comm.jar
++++ adding chrome ../../dist/bin/chrome/installed-chrome.txt
++++	content,install,url,jar:resource:/chrome/comm.jar!/content/necko/
+	zip warning: ../comm.jar not found or empty
+  adding: content/necko/redirect_loop.xul (stored 0%)
++++ overriding content/necko/contents.rdf 
+  adding: content/necko/contents.rdf (stored 0%)
+gmake[4]: Leaving directory
+`/builds/tinderbox/firefox-branch/Linux_2.4.20-28.8_Depend/mozilla/netwerk/resources'
+
+I'm not sure why my build is trying to do anything with en-US.jar here. Setting
+severity to major, not sure if it should be higher/lower..

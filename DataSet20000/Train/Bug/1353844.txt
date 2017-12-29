@@ -1,0 +1,6 @@
+Send permissions to the content process before restoring sessionStorage
+Currently we don't send permissions to the content process before restoring sessionstorage. I will attach a patch to support sending that data down.
+
+While solving this issue, I also noticed an issue where in SessionStorage::collect, the full `origin` of the principal is captured, while in SessionStorage::restore, that origin string is interpreted as a URI. I have updated the code in another patch to correctly treat that string as an origin string, and thus faithfully replicate the origin attributes for the new sessionStorage data.
+
+I have one worry about this new implementation, but it would only affect an edge case which would already not work very well in our code base. This new implementation will act slightly differently than our current one if we restore a session which was loaded in container A into a different container B, in that in the old code the session info would be available in B (or not available - in some cases the old code would fail to compute the new principal, as the old principal had originAttributes attached to it), while in the new code it would not. I believe that this is superior behavior in this odd edge case which we probably don't want to support anyways, but I figured I should bring it up.

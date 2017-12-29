@@ -1,0 +1,29 @@
+[rule view] UI disappears and error thrown when entering new property `0: `
+STR:
+- Open any page
+- Open the inspector and switch to the rule view
+- Select any element in the page
+- In the rule view's element {} selector, make sure there's already at least 1 declaration (if there's none, create one, say `background:red;`)
+- Start to create a new declaration:
+- enter `0` for the name
+- submit your change by either entering `:` or pressing <enter>
+
+=> Expected : even if 0 isn't a valid declaration name, the name 0 should appear and the value field should be focused.
+=> Actual : the rule view becomes empty and the following JS error is thrown in the console:
+
+Message: TypeError: CSS2Properties doesn't have an indexed property setter.
+Stack:
+OutputParser.prototype._cssPropertySupportsValue@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/output-parser.js:304
+OutputParser.prototype.parseCssProperty@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/output-parser.js:95
+TextPropertyEditor.prototype.update@resource://gre/modules/commonjs/toolkit/loader.js -> resource:///modules/devtools/styleinspector/rule-view.js:2131
+TextProperty.prototype.updateEditor@resource://gre/modules/commonjs/toolkit/loader.js -> resource:///modules/devtools/styleinspector/rule-view.js:920
+Rule.prototype.refresh@resource://gre/modules/commonjs/toolkit/loader.js -> resource:///modules/devtools/styleinspector/rule-view.js:762
+ElementStyle.prototype._maybeAddRule@resource://gre/modules/commonjs/toolkit/loader.js -> resource:///modules/devtools/styleinspector/rule-view.js:257
+ElementStyle.prototype.populate/populated...
+
+This is due to the output-parser testing the validity of the given declaration by doing:
+`dummyElement.style[name] = value;`
+Since name is "0" it's not a settable property on the style object and everything blow up.
+This would be better:
+`dummyElement.style.setProperty(name, value);`
+However it seems to make other test fail when running the bc test suite.

@@ -1,0 +1,53 @@
+hang and zombies
+Created attachment 662015
+lsof output after 3 zombies
+
+User Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:15.0) Gecko/20100101 Firefox/15.0.1
+Build ID: 20120905151427
+
+Steps to reproduce:
+
+[reporting this from VirtualBox/Win7/FF]
+
+Linux 9/17/2012 Nightly crashed several times (auto-reported) earlier today.  Away for a while; returned to system and FF18 was hung.  Tried closing windows but they stayed open and zombie remains.
+
+
+
+Actual results:
+
+Zombie will not clean up.  Tried killing process; no change.  Thinking process may only be in process table, tried starting FF.  This just created another zombie.  Repeated; same result.  Looks like this is going to require a much hated reboot; including VBox/Win7
+
+strace -p 8641 refused to attach:
+# strace -p 8641
+attach: ptrace(PTRACE_ATTACH, ...): Operation not permitted
+
+$ ps aux | grep fire
+root       212  0.0  0.0      0     0 ?        S<   Sep14   0:00 [firewire]
+root      2370  0.0  0.0      0     0 ?        S    Sep14   0:00 [firegl]
+root      2371  0.0  0.0      0     0 ?        S    Sep14   0:00 [firegl]
+root      2372  0.0  0.0      0     0 ?        S    Sep14   0:00 [firegl]
+pfortin   8641 10.7  7.0 2035552 575760 pts/2  tl   14:55  42:03 ./firefox
+pfortin   8761  2.9  1.5 787208 130212 pts/2   Sl   14:55  11:35 /home/usrlocal/bin/firefox18.0a1/plugin-container /home/usrlocal/bin/firefox18.0a1/plugins/libflashplayer.so -greomni /home/usrlocal/bin/firefox18.0a1/omni.ja 8641 true plugin
+pfortin  16049  0.0  6.5 2036824 535552 pts/2  S    16:57   0:00 ./firefox
+pfortin  31970  0.0  0.0   9688   892 pts/2    S+   21:24   0:00 grep --color fire
+
+After a couple attempts to start FF:
+$ ps aux | grep fire
+root       212  0.0  0.0      0     0 ?        S<   Sep14   0:00 [firewire]
+root      2370  0.0  0.0      0     0 ?        S    Sep14   0:00 [firegl]
+root      2371  0.0  0.0      0     0 ?        S    Sep14   0:00 [firegl]
+root      2372  0.0  0.0      0     0 ?        S    Sep14   0:00 [firegl]
+pfortin   4169  0.0  0.2 218308 19064 pts/2    S    22:37   0:00 ./firefox
+pfortin   4170  0.0  0.0      0     0 pts/2    Z    22:37   0:00 [firefox] <defunct>
+pfortin   4877  0.8  0.2 218308 19064 pts/2    S    22:48   0:00 ./firefox
+pfortin   4878  3.3  0.0      0     0 pts/2    Z    22:48   0:00 [firefox] <defunct>
+pfortin   4886  0.0  0.0   9688   896 pts/2    S+   22:48   0:00 grep --color fire
+pfortin   8641  8.8  0.0      0     0 pts/2    Zl   14:55  42:03 [firefox] <defunct>   <== original zombie
+pfortin  16049  0.0  6.5 2036824 535552 pts/2  S    16:57   0:00 ./firefox
+
+
+
+
+Expected results:
+
+No hang and no zombies...

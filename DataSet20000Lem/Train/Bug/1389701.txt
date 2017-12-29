@@ -1,0 +1,42 @@
+Newly loaded child RemotePageManager can register page too late to properly manage created document
+In the process of investigating bug 1382373, I made a video from holding cmd-T and noticed some tab ended up erroring:
+
+JavaScript error: resource://activity-stream/data/content/activity-stream.bundle.js, line 754: ReferenceError: addMessageListener is not defined
+
+This is well after opening many about:newtab page successfully, so RemotePageManager is handling most of them. For some reason it miss some. This happens even with newtab.preload=false (as there's too many browser needed to wait to use the preloaded one anyway).
+
+I added some dump to portCreated@RemotePageManager and on "RemotePage:Load" and opened 10 tab from the browser console:
+
+for (i = 0; i < 10; i++) BrowserOpenTab()
+
+command line showed:
+
+JavaScript error: resource://activity-stream/data/content/activity-stream.bundle.js, line 754: ReferenceError: addMessageListener is not defined
+port created 85642:0
+port created 85642:1
+port created 85633:2
+port created 85633:3
+JavaScript error: resource://activity-stream/data/content/activity-stream.bundle.js, line 754: ReferenceError: addMessageListener is not defined
+port loaded 85642:0
+port loaded 85642:1
+port loaded 85633:2
+JavaScript error: resource://activity-stream/data/content/activity-stream.bundle.js, line 754: ReferenceError: addMessageListener is not defined
+JavaScript error: resource://activity-stream/data/content/activity-stream.bundle.js, line 754: ReferenceError: addMessageListener is not defined
+port loaded 85633:3
+JavaScript error: resource://activity-stream/data/content/activity-stream.bundle.js, line 754: ReferenceError: addMessageListener is not defined
+JavaScript error: resource://activity-stream/data/content/activity-stream.bundle.js, line 754: ReferenceError: addMessageListener is not defined
+
+In this latter set of 10, the resulting tab shown along with the tab hover title:
+
+1: bad 85640
+2: bad 85641
+3: good 85642
+4: good 85633
+5: bad 85640
+6: bad 85641
+7: good 85642
+8: good 85633
+9: bad 85640
+10: bad 85641
+
+Mossop: any suggestion on how to debug? Or maybe we can just work around by detecting missing addMessageListener and reloading the page (note: addMessageListener never appears later, so something got lost in creating the port).

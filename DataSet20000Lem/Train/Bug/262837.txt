@@ -1,0 +1,24 @@
+Does not find libXinerama
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; rv:1.7.3) Gecko/20041001 Firefox/0.10
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; rv:1.7.3) Gecko/20041001 Firefox/0.10
+
+firefox fails to build under RH rawhide environment when
+'--enable-freetype --disable-xft' is specified:
+
+
+| c++ -I/usr/X11R6/include -fno-rtti -fno-exceptions -Wall -Wconversion -Wpointer-arith -Wcast-align -Woverloaded-virtual -Wsynth -Wno-ctor-dtor-privacy -Wno-non-virtual-dtor -Wno-long-long -pedantic -fshort-wchar -pthread -pipe -DNDEBUG -DTRIMMED -Os -g -pipe -m32 -march=i386 -mtune=pentium4 -DXTHREADS -D_REENTRANT -DXUSE_MTSAFE_API -I/usr/include/gtk-2.0 -I/usr/lib/gtk-2.0/include -I/usr/X11R6/include -I/usr/include/atk-1.0 -I/usr/include/pango-1.0 -I/usr/include/freetype2 -I/usr/include/freetype2/config -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include -fPIC -shared -Wl,-h -Wl,libgfx_gtk.so -o libgfx_gtk.so nsPrintdGTK.o gtk2drawing.o nsDeviceContextGTK.o nsDeviceContextSpecFactoryG.o nsDeviceContextSpecG.o nsDrawingSurfaceGTK.o nsGfxFactoryGTK.o nsGraphicsStateGTK.o nsImageGTK.o nsGCCache.o nsRenderingContextGTK.o nsScreenGtk.o nsScreenManagerGtk.o nsPrintOptionsGTK.o nsFontMetricsUtils.o nsAntiAliasedGlyph.o nsFontFreeType.o nsFT2FontNode.o nsFT2FontCatalog.o nsX11AlphaBlend.o nsXFontAAScaledBitmap.o nsXFontNormal.o nsFontMetricsGTK.o nsGdkUtils.o nsRegionGTK2.o nsNativeThemeGTK.o -Wl,--whole-archive ../../../dist/lib/libgfxft2_s.a -Wl,--no-whole-archive -Wl,--version-script -Wl,../../../build/unix/gnu-ld-scripts/components-version-script -Wl,-Bsymbolic -L../../../dist/bin -lxpcom -L../../../dist/bin -L/usr/src/redhat/BUILD/mozilla/dist/lib -lplds4 -lplc4 -lnspr4 -lpthread -ldl -lgkgfx -lgfxshared_s -lXinerama -L../../../dist/bin -lmozjs ../../../dist/lib/libunicharutil_s.a -Wl,--export-dynamic -lgtk-x11-2.0 -lgdk-x11-2.0 -latk-1.0 -lgdk_pixbuf-2.0 -lm -lpangoxft-1.0 -lpangox-1.0 -lpango-1.0 -lgobject-2.0 -lgmodule-2.0 -ldl -lglib-2.0 -ldl -lm
+| /usr/bin/ld: cannot find -lXinerama
+| collect2: ld returned 1 exit status
+| gmake[5]: *** [libgfx_gtk.so] Error 1
+| gmake[5]: Leaving directory `/usr/src/redhat/BUILD/mozilla/gfx/src/gtk'
+
+
+
+Somewhere a '-L/usr/X11R6/lib' (XLDFLAGS ha this value is missing).
+
+
+Reproducible: Always
+Steps to Reproduce:
+1. get firefox-0.10.1-1.0PR1.8.src.rpm or previous from a fedora devel side
+2. replace '-enable-xft' with '-disable-xft' & '-enable-freetype' in mozconfig
+3. rebuild the package

@@ -1,0 +1,94 @@
+Using Javascript to change HTML element attribute doe not work correctly with CSS style based on attribute selector
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.2) Gecko/2008092318 Fedora/3.0.2-1.fc9 Firefox/3.0.2
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.2) Gecko/2008092318 Fedora/3.0.2-1.fc9 Firefox/3.0.2
+
+There appears to be some problem with disabling/enabling a form element and styling it using CSS selectors.
+
+1. Though the field appears to need to be set using .disabled, the attribute doe not look at this parameter, and vice versa.
+2. The existence of the 'disabled' attribute in HTML,regardless of the value associated with it, make the field disabled.
+
+(Note: This wa submitted a 426490, but appears to have been closed without testing whether the reason given fixed wa adequate)
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>Dynamic attribute selector</title>
+<style>
+input[disabled='true'],
+textarea[disabled='true'],
+input[disabled='disabled'],
+textarea[disabled='disabled'] {
+color:#ff0000;
+}
+</style>
+
+<script type="text/javascript">
+function switchit() {
+var firstOn = !(document.getElementById('1').disabled);
+
+//alert('disabled='+document.getElementById('1').disabled+", "+
+// 'dis attr='+document.getElementById('1').getAttribute('disabled'));
+
+document.getElementById('1').disabled = firstOn;
+document.getElementById('2').disabled = firstOn;
+document.getElementById('3').disabled = !firstOn;
+document.getElementById('4').disabled = !firstOn;
+
+//setAttributes part
+var setDisAttr = firstOn ? 'true' : 'false';
+document.getElementById('1').setAttribute('disabled',setDisAttr);
+document.getElementById('2').setAttribute('disabled',setDisAttr);
+setDisAttr = firstOn ? 'false' : 'true';
+document.getElementById('3').setAttribute('disabled',setDisAttr);
+document.getElementById('4').setAttribute('disabled',setDisAttr);
+}
+</script>
+</head>
+<body>
+<form>
+<input id='1' type="text" value="xxxxxx"><br>
+<textarea id='2'>yyyyyyyyyyyyy</textarea>
+<hr>
+<input id='3' type="text" value="xxxxxx" disabled="true"><br>
+<textarea id='4' disabled="true">yyyyyyyyyyyyy</textarea>
+
+<input type="button" onclick="switchit()" value="switch it">
+
+<hr>
+Note: there is no way to add a 'false' value to the boolean disabled attr:<br>
+<input id='1' type="text" value="xxxxxx" disabled="false"><br>
+<textarea id='2' disabled="false">yyyyyyyyyyyyy</textarea>
+
+</form>
+</body>
+</html>
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Use the attached script
+2. Uncomment the alert, notice that the HTML attr and the getAttribute attr do not stay the same.
+3. Comment out the setAttribute part of the j and run. Notice that the CSS is not picked up, but that the field switch on/off.
+4. Run with the setAttribute part of the code on, notice that the field switching stops, but that the CSS work twice (and then stops).
+5. Replace setDisAttr with firstOn on the setAttribute, notice that boolean value don't work here.
+
+
+Actual Results:
+(see above)
+
+Expected Results:
+I would expect a few things:
+1. I do not need to do 2 different type of thing that are both controlled by a single HTML attribute -- even if 1 might be considered a 'shortcut' mechanism.
+
+2. If the .disabled attribute control the field, that it would also control the CSS attribute selector
+
+3. setting the HTML disabled attribute to 'false' should not make the field disabled (whether it coming from the HTML or from using the setAttribute method).
+
+(the same problem exist on Windows)
+
+I know the solution for this is to use setAttribute/removeAttribute - that's not the issue. The issue is that if this is supported:
+
+document.getElementById('1').disabled = true;
+
+it should work for everything not just part of it.

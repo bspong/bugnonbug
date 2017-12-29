@@ -1,0 +1,26 @@
+Firefox 1.5.0.5 doe not return valid XHTML from innerHTML when Doctype XHTML 1.0 Strict
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.8.0.5) Gecko/20060719 Firefox/1.5.0.5
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.8.0.5) Gecko/20060719 Firefox/1.5.0.5
+
+alert(document.getElementById(someid).innerHTML) will give the element contents, but if there are single element like img, br, input etc. they will not be closed properly like e.g <br/> - instead <br> is returned.
+
+This violates the XHTML 1.0 spec, and also mean that innerHTML can not be used a proper XML - even if the Doctype is set to XHTML 1.0 Strict which requires a valid document with closed single elements.
+
+One application for proper XHTML from innerHTML is e.g from Adobe Flash ActionScript and ExternalInterface.call() . For now developer need to write a small parser to fix the mangled source before using the innerHTML result.
+
+innerHTML is a central part of something like AHAH ( http://en.wikipedia.org/wiki/AHAH ) and also enjoys significant speed advantage over traditional DOM methods.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. alert(document.getElementById(someid).innerHTML)
+2. someid is an element containing an img-, br- or similar element.
+3.
+
+Actual Results:
+For source of <div id="someid"><br/></div> and innerHTML on someid, "<br>" is returned.
+
+Expected Results:
+Especially when Doctype XHTML 1.0 Strict is used, result should be according to standard mode - and "<br/>" (with the closing '/') should be returned.
+
+It seems a minor forget, but for XHTML 1.0 Strict it's arguably the correct way to return non-mangled source results.

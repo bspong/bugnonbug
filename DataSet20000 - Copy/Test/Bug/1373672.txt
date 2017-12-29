@@ -1,0 +1,20 @@
+FormDataListener.handleEvent() is extremely expensive when running speedometer
+See this profile that I captured running about 100 or so tests into a full run of the Speedometer test suite at http://speedometer2.benj.me/:
+
+https://perfht.ml/2sGyu12
+
+The code: <https://searchfox.org/mozilla-central/rev/20d16dadd336e0c6b97e3e19dc4ff907744b5734/browser/components/sessionstore/content/content-sessionStore.js#452>
+
+We are spending a whopping 118 *ms* only in this function.  As far as I can tell, this is all time being spent in cross-compartment wrappers and Xray wrappers code.  The JS code is trying to see whether the event's global is a frame that has been created after the load event by checking to see if it appears in a map (gFrameTree) which is what creates all of this overhead.
+
+Note also that this benchmark has a lot of checkboxes inside it, for which we issue "input" and "change" events immediately after each other, so this code has 2x overhead for that <https://searchfox.org/mozilla-central/rev/20d16dadd336e0c6b97e3e19dc4ff907744b5734/dom/html/HTMLInputElement.cpp#4333>.  I'm not sure why it needs to handle both events at all.
+
+Just to get a rough sense of the amount this is hurting Speedometer, commenting out these two lines on my super fast machine increases our benchmark score by about 4-6 points!
+
+I'd like to discuss what we can do with this code.  We can probably improve things a bit by:
+
+ * Moving FrameTree.jsm into content-sessionStore.js to eliminate the cross-compartment wrappers in between the objects.
+ * Not listening on change events (as I think we should fire input events for everything we care about here)
+ * Moving FrameTree.jsm logic into C++ somehow (I haven't studied it very closely to figure out what it does yet)
+ * Move the entire thing into C++ (my preferred approach)
+ * Consider something entirely different, such as not saving this information until the user interacts with the form control or something along those lines.

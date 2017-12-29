@@ -1,0 +1,37 @@
+[SessionStore] getWindowState & getBrowserState function return data that cause an "invalid field" when "eval"ed.
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.1) Gecko/20061204 Firefox/2.0.0.1
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.1) Gecko/20061204 Firefox/2.0.0.1
+
+I am trying to use the eval function to create an object out of the data returned by the SessionStore getWindowState and getBrowserState functions, but any attempt to do so result in an "invalid field" exception pointing to the first colon in the returned data.
+
+The reason this is occurring is because the returned data is not in the correct format. It is missing wrapping straight brackets.
+
+The returned data look like this:
+{ "windows" : [ { ... } ] }
+
+when it should look like this:
+[ { "windows" : [ { ... } ] } ]
+
+Either that or take out the "windows" part and return:
+[ { ... } ]
+
+The former throw the exception, white the later works. This can be worked around by wrapping the returned state data in bracket and then reverse it when calling the set functions, but the API user really shouldn't have to do that. Especially since the getClosedTabData function work fine with eval.
+
+Reproducible: Always
+
+Steps to Reproduce:
+Assuming the following:
+
+mSessionStore: Components.classes["@mozilla.org/browser/sessionstore;1"].getService(Components.interfaces.nsISessionStore),
+
+The following code generates an "invalid field" exception.
+
+var state = this.mSessionStore.getWindowState(window);
+state = eval(state);
+Actual Results:
+Above code generates an "invalid field" exception.
+
+Expected Results:
+Should not generate an exception.
+
+Also fails in the latest trunk version of Minefield.

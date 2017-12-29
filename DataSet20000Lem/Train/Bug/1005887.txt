@@ -1,0 +1,29 @@
+Memory leak in Firefox 29
+Created attachment 8417371
+Memory usage with clean profile
+
+User Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/34.0.1847.132 Safari/537.36
+
+Steps to reproduce:
+
+This issue wa observed on Firefox 29.0+build1-0ubuntu0.14.04.2 (trusty-updates) on Ubuntu Gnome 14.04 (amd64). The previous version (28.0+build2-0ubuntu2 (trusty)) did not show the leak, and could be left unattended for week without issue.
+
+Leaving Firefox unattended with open tab is enough to observe the issue. The first time I noticed the leak, I had left Firefox open all night and the computer wa basically unusable in the morning -- I had to kill the firefox process from a terminal so that I could use the computer to do anything else. After this, I made a few test with different configurations.
+
+In my first test, I tried selecting a subset of the extension I use; on the second test, I created a clean profile with "firefox -P" and used only the Ubuntu modifications. In both case I used a set of 69 tabs: the 66 tab I had open when I found the leak, plus "about:config", "about:addons" and "about:memory". I can provide a list of the tab and extensions, but since the leak wa verified without any extensions, I feel only the former might be potentially useful.
+
+In order to measure memory usage, I used a script (see http://pastebin.com/D0P3Dew5 ) that periodically polled the resident size and virtual memory size of Firefox 29, and plotted the result using Gnuplot (with this script: http://pastebin.com/GnYBL6Gq ). The latter script must be saved a "~/gnuplot.script" so the first script can find it.
+
+In all tests, Firefox wa left completely unattended after the measurement started taking place.
+
+
+Actual results:
+
+While the amount of memory used after the garbage collection cycle wa basically constant, the average and maximum memory used between cycle steadily climbed in all my tests. I have attacked the plot created with the clean profile; I can give the raw data a well, but it did not fit in pastebin. The plot with a limited selection of extension wa basically the same, but memory usage wa higher throughout. I don't know what caused the spike in the 25000-30000 range.
+
+A linear regression ignoring the initial tab loading (the first ~1000 points) show that memory wa being leaked at slightly le than 25kB/s on average.
+
+
+Expected results:
+
+The minimum, average and maximum memory usage after the tab finished loading should have remained constant since Firefox wa left unattended, instead of only the minimum.

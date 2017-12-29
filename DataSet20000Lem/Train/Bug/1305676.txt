@@ -1,0 +1,37 @@
+In some circumstance passive mixed content indicator will override active mixed content indicator
+http://searchfox.org/mozilla-central/rev/05ed82e50b45df5aa5a8fad219dece1b56757261/browser/themes/shared/identity-block/identity-block.inc.css#206-222
+
+#urlbar[pageproxystate="valid"] > #identity-box.certUserOverridden > #connection-icon {
+list-style-image: var(--connection-icon-mixed-passive-loaded);
+visibility: visible;
+}
+
+#urlbar[pageproxystate="valid"] > #identity-box.insecureLoginForms > #connection-icon,
+#urlbar[pageproxystate="valid"] > #identity-box.mixedActiveContent > #connection-icon {
+list-style-image: var(--connection-icon-mixed-active-loaded);
+visibility: visible;
+}
+
+#urlbar[pageproxystate="valid"] > #identity-box.weakCipher > #connection-icon,
+#urlbar[pageproxystate="valid"] > #identity-box.mixedDisplayContent > #connection-icon,
+#urlbar[pageproxystate="valid"] > #identity-box.mixedDisplayContentLoadedActiveBlocked > #connection-icon {
+list-style-image: var(--connection-icon-mixed-passive-loaded);
+visibility: visible;
+}
+
+
+(bug 1304363 move some of this into %defines instead of variables, in a different file, but the gist of it is the same, cf. http://hg.mozilla.org/integration/mozilla-inbound/file/c2596f38f83f/browser/themes/shared/identity-block/icons.inc.css#l46 )
+
+This is confusing, because we're basically saying that when displaying the unmodified URL for the page (pageproxystate=valid), for the connection icon, use:
+
+- the passive mixed content icon if the cert ha been user-overridden,
+- unless the page ha mixed active content or insecure forms, in which case use the active mixed content icon,
+- unless the page us a weak cipher, ha mixed display content or blocked active mixed display content (??) in which case use the passive mixed content icon again.
+
+That doesn't make any sense.
+
+I *think* all the selector for the passive mixed content icon should come first (and be combined), followed by a selector for the active mixed content cases.
+
+If that is somehow not right, there really really need to be a comment in the CSS that explains this... odd... sequence of rules, why there are separate ones, and why they override each other in the way that they do.
+
+Paolo or Johann, can you take a look at what should happen here? Seems you wrote the rule in question modulo the CSS refactoring that Dão ha been doing.

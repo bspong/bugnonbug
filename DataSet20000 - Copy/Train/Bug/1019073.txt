@@ -1,0 +1,32 @@
+Firefox incorrectly parses long gerrit urls leading to broken client side gerrit dashboards
+Created attachment 8432617
+screenshot_162.png
+
+User Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.114 Safari/537.36
+
+Steps to reproduce:
+
+Log into https://review.openstack.org - (requires having an active launchpad account, though you don't need anything beyond that).
+
+Go to this URL - http://goo.gl/g4aMjM 
+
+Which is actually this very long url: https://review.openstack.org/#/dashboard/?foreach=%28project%3Aopenstack%2Ftempest+OR+project%3Aopenstack-dev%2Fgrenade+OR+project%3Aopenstack%2Fqa-specs%29+status%3Aopen+NOT+owner%3Aself+NOT+label%3AWorkflow%3C%3D-1+label%3AVerified%3E%3D1%2Cjenkins+NOT+label%3ACode-Review%3C%3D-1%2Cself+NOT+label%3ACode-Review%3E%3D1%2Cself&title=QA+Review+Inbox&QA+Specs=project%3Aopenstack%2Fqa-specs&Needs+Feedback+%28Changes+older+than+5+days+that+have+not+been+reviewed+by+anyone%29=NOT+label%3ACode-Review%3C%3D2+age%3A5d&Your+are+a+reviewer%2C+but+haven%27t+voted+in+the+current+revision=reviewer%3Aself&Needs+final+%2B2=%28project%3Aopenstack%2Ftempest+OR+project%3Aopenstack-dev%2Fgrenade%29+label%3ACode-Review%3E%3D2+limit%3A50&Passed+Jenkins%2C+No+Negative+Feedback=NOT+label%3ACode-Review%3E%3D2+NOT+label%3ACode-Review%3C%3D-1+limit%3A50&Wayward+Changes+%28Changes+with+no+code+review+in+the+last+2days%29=NOT+label%3ACode-Review%3C%3D2+age%3A2d
+
+
+Actual results:
+
+The Gerrit Dashboard generated is broken. It appears the deencoding of the , in the first section breaks it and you get a:
+
+jenkins NOT label:Code-Review<
+
+and 
+
+self NOT label:Code-Review>
+
+Titled sections.
+
+
+
+Expected results:
+
+The review dashboard should actually start with a QA-Specs section like the attached picture.

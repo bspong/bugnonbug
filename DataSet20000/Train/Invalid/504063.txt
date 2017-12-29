@@ -1,0 +1,135 @@
+Crashed Intel graphics driver igxpmp32+0xd981
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.1) Gecko/20090624 Firefox/3.5 FirePHP/0.3
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.1) Gecko/20090624 Firefox/3.5 FirePHP/0.3
+
+i got the following in windows debuging tool.
+
+ *******************************************************************************
+*                                                                             *
+*                        Bugcheck Analysis                                    *
+*                                                                             *
+*******************************************************************************
+
+Use !analyze -v to get detailed debugging information.
+
+BugCheck 1000008E, {80000004, 806ecae1, a90a4310, 0}
+
+Unable to load image igxpmp32.sys, Win32 error 0n2
+*** WARNING: Unable to verify timestamp for igxpmp32.sys
+*** ERROR: Module load completed but symbols could not be loaded for igxpmp32.sys
+Probably caused by : pci.sys ( pci!PciReadWriteConfigSpace+38 )
+
+Followup: MachineOwner
+---------
+
+0: kd> !analyze -v
+*******************************************************************************
+*                                                                             *
+*                        Bugcheck Analysis                                    *
+*                                                                             *
+*******************************************************************************
+
+KERNEL_MODE_EXCEPTION_NOT_HANDLED_M (1000008e)
+This is a very common bugcheck.  Usually the exception address pinpoints
+the driver/function that caused the problem.  Always note this address
+as well as the link date of the driver/image that contains this address.
+Some common problems are exception code 0x80000003.  This means a hard
+coded breakpoint or assertion was hit, but this system was booted
+/NODEBUG.  This is not supposed to happen as developers should never have
+hardcoded breakpoints in retail code, but ...
+If this happens, make sure a debugger gets connected, and the
+system is booted /DEBUG.  This will let us see why this breakpoint is
+happening.
+Arguments:
+Arg1: 80000004, The exception code that was not handled
+Arg2: 806ecae1, The address that the exception occurred at
+Arg3: a90a4310, Trap Frame
+Arg4: 00000000
+
+Debugging Details:
+------------------
+
+
+EXCEPTION_CODE: (HRESULT) 0x80000004 (2147483652) - No such interface supported
+
+FAULTING_IP: 
+hal!WRITE_PORT_ULONG+9
+806ecae1 c20800          ret     8
+
+TRAP_FRAME:  a90a4310 -- (.trap 0xffffffffa90a4310)
+ErrCode = 00000000
+eax=80001090 ebx=00000090 ecx=00000090 edx=00000cf8 esi=806f1420 edi=a90a440c
+eip=806ecae1 esp=a90a4384 ebp=a90a4394 iopl=0         nv up ei ng nz na pe nc
+cs=0008  ss=0010  ds=0023  es=0023  fs=0030  gs=0000             efl=00000286
+hal!WRITE_PORT_ULONG+0x9:
+806ecae1 c20800          ret     8
+Resetting default scope
+
+CUSTOMER_CRASH_COUNT:  1
+
+DEFAULT_BUCKET_ID:  DRIVER_FAULT
+
+BUGCHECK_STR:  0x8E
+
+PROCESS_NAME:  firefox.exe
+
+LAST_CONTROL_TRANSFER:  from 806ea153 to 806ecae1
+
+STACK_TEXT:  
+a90a4380 806ea153 00000cf8 80001090 806f1420 hal!WRITE_PORT_ULONG+0x9
+a90a4394 806e9f0f 806f1420 a90a43b4 a90a44e0 hal!HalpPCIWriteUlongType1+0x23
+a90a43c8 806ea337 a90a4400 00000002 a90a44e0 hal!HalpPCIConfig+0x4d
+a90a43e8 806eb14d a90a440c 00000002 a90a44e0 hal!HalpWritePCIConfig+0x2d
+a90a4478 f73bdae0 00000000 00000000 00000002 hal!HaliPciInterfaceWriteConfig+0x33
+a90a449c f73bdb74 86dc6428 00000002 a90a44e0 pci!PciReadWriteConfigSpace+0x38
+a90a44bc f73bdfcc 86da7838 a90a44e0 00000090 pci!PciWriteDeviceConfig+0x1e
+a90a45e4 f73c0cbd 86da7838 a90a466c 00000090 pci!PciExternalWriteDeviceConfig+0x1ac
+a90a4608 f73bd34d 86da7838 00000000 a90a466c pci!PciWriteDeviceSpace+0x5d
+a90a4628 f6c67212 86da7838 00000000 a90a466c pci!PciWriteAgpConfig+0x1d
+a90a4644 f6c87981 86ca54a8 00000004 00000000 VIDEOPRT!VideoPortSetBusData+0x3a
+WARNING: Stack unwind information not available. Following frames may be wrong.
+a90a4678 f6c9b21d 86ca54a8 000000ea 00000000 igxpmp32+0xd981
+a90a46c8 f6c6735b 86ca54a8 000000ea 86c5b000 igxpmp32+0x2121d
+a90a46ec f6c74114 a90a4784 00000000 85f62e08 VIDEOPRT!pVpGeneralBugcheckHandler+0x61
+a90a47ac 804ef19f 85f62288 86a4cad8 00000000 VIDEOPRT!pVideoPortDispatch+0x4aa
+a90a47bc bf85a12c 00000000 00000000 00000000 nt!IopfCallDriver+0x31
+a90a47ec bf93cdb8 85f62288 0023002c 00000000 win32k!GreDeviceIoControl+0x93
+a90a4814 bf960d13 00000000 00000000 a90a486c win32k!DrvPrepareForEARecovery+0x26
+a90a4834 bf8059aa e19becf0 a90a48bc e19abe80 win32k!HandleStuckThreadException+0x24
+a90a486c bf809c99 e19abe90 e116e018 00000000 win32k!WatchdogDrvCopyBits+0x77
+a90a4900 8054162c e19abe80 bf9a6328 e2362de0 win32k!NtGdiBitBlt+0x51c
+a90a4900 7c90e514 e19abe80 bf9a6328 e2362de0 nt!KiFastCallEntry+0xfc
+0013f18c 00000000 00000000 00000000 00000000 0x7c90e514
+
+
+STACK_COMMAND:  kb
+
+FOLLOWUP_IP: 
+pci!PciReadWriteConfigSpace+38
+f73bdae0 3b4518          cmp     eax,dword ptr [ebp+18h]
+
+SYMBOL_STACK_INDEX:  5
+
+SYMBOL_NAME:  pci!PciReadWriteConfigSpace+38
+
+FOLLOWUP_NAME:  MachineOwner
+
+MODULE_NAME: pci
+
+IMAGE_NAME:  pci.sys
+
+DEBUG_FLR_IMAGE_TIMESTAMP:  480252bb
+
+FAILURE_BUCKET_ID:  0x8E_pci!PciReadWriteConfigSpace+38
+
+BUCKET_ID:  0x8E_pci!PciReadWriteConfigSpace+38
+
+Followup: MachineOwner
+
+Reproducible: Couldn't Reproduce
+
+Actual Results:  
+restrted with blue screen.
+
+
+non

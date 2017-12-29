@@ -1,0 +1,135 @@
+heap-buffer-overflow in mozilla::gfx::FilterProcessing::ApplyMorphologyHorizontal_SSE2
+Created attachment 8340200
+Testcase
+
+==14095==ERROR: AddressSanitizer: heap-buffer-overflow on address 0x6060001b0170 at pc 0x7fb2b6cc6474 bp 0x7fff0d1ede90 sp 0x7fff0d1ede88
+READ of size 16 at 0x6060001b0170 thread T0
+#0 0x7fb2b6cc6473 in long long __vector(2) mozilla::gfx::simd::Load8<long long __vector(2)>(unsigned char const*) gfx/2d/SIMD.h:806:10
+#1 0x7fb2b6d0cd55 in _ZN7mozilla3gfx30ApplyMorphologyHorizontal_SIMDILNS0_18MorphologyOperatorE1EDv2_xS3_EEvPhiS4_iRKNS0_12IntRectTypedINS0_12UnknownUnitsEEEi gfx/2d/FilterProcessingSIMD-inl.h:401:25
+#2 0x7fb2b6cb1218 in _ZN7mozilla3gfx30ApplyMorphologyHorizontal_SIMDIDv2_xS2_EEvPhiS3_iRKNS0_12IntRectTypedINS0_12UnknownUnitsEEEiNS0_18MorphologyOperatorE gfx/2d/FilterProcessingSIMD-inl.h:430
+#3 0x7fb2b6cb09d6 in mozilla::gfx::FilterProcessing::ApplyMorphologyHorizontal_SSE2(unsigned char*, int, unsigned char*, int, mozilla::gfx::IntRectTyped<mozilla::gfx::UnknownUnits> const&, int, mozilla::gfx::MorphologyOperator) gfx/2d/FilterProcessingSSE2.cpp:42
+#4 0x7fb2b6e293e9 in mozilla::gfx::FilterProcessing::ApplyMorphologyHorizontal(unsigned char*, int, unsigned char*, int, mozilla::gfx::IntRectTyped<mozilla::gfx::UnknownUnits> const&, int, mozilla::gfx::MorphologyOperator) gfx/2d/FilterProcessing.cpp:63
+#5 0x7fb2b6dec718 in mozilla::gfx::ApplyMorphology(mozilla::gfx::IntRectTyped<mozilla::gfx::UnknownUnits> const&, mozilla::gfx::DataSourceSurface*, mozilla::gfx::IntRectTyped<mozilla::gfx::UnknownUnits> const&, int, int, mozilla::gfx::MorphologyOperator) gfx/2d/FilterNodeSoftware.cpp:1064
+#6 0x7fb2b6deab4c in mozilla::gfx::FilterNodeMorphologySoftware::Render(mozilla::gfx::IntRectTyped<mozilla::gfx::UnknownUnits> const&) gfx/2d/FilterNodeSoftware.cpp:1110
+#7 0x7fb2b6dd9ebc in mozilla::gfx::FilterNodeSoftware::GetOutput(mozilla::gfx::IntRectTyped<mozilla::gfx::UnknownUnits> const&) gfx/2d/FilterNodeSoftware.cpp:613
+#8 0x7fb2b6ddd07c in mozilla::gfx::FilterNodeSoftware::GetInputDataSourceSurface(unsigned int, mozilla::gfx::IntRectTyped<mozilla::gfx::UnknownUnits> const&, mozilla::gfx::FilterNodeSoftware::FormatHint, mozilla::gfx::ConvolveMatrixEdgeMode, mozilla::gfx::IntRectTyped<mozilla::gfx::UnknownUnits> const*) gfx/2d/FilterNodeSoftware.cpp:690
+#9 0x7fb2b6e25e82 in mozilla::gfx::FilterNodeCropSoftware::Render(mozilla::gfx::IntRectTyped<mozilla::gfx::UnknownUnits> const&) gfx/2d/FilterNodeSoftware.cpp:2757
+#10 0x7fb2b6dd9ebc in mozilla::gfx::FilterNodeSoftware::GetOutput(mozilla::gfx::IntRectTyped<mozilla::gfx::UnknownUnits> const&) gfx/2d/FilterNodeSoftware.cpp:613
+#11 0x7fb2b6ddd07c in mozilla::gfx::FilterNodeSoftware::GetInputDataSourceSurface(unsigned int, mozilla::gfx::IntRectTyped<mozilla::gfx::UnknownUnits> const&, mozilla::gfx::FilterNodeSoftware::FormatHint, mozilla::gfx::ConvolveMatrixEdgeMode, mozilla::gfx::IntRectTyped<mozilla::gfx::UnknownUnits> const*) gfx/2d/FilterNodeSoftware.cpp:690
+#12 0x7fb2b6e2763c in mozilla::gfx::FilterNodeUnpremultiplySoftware::Render(mozilla::gfx::IntRectTyped<mozilla::gfx::UnknownUnits> const&) gfx/2d/FilterNodeSoftware.cpp:2818
+#13 0x7fb2b6dd9ebc in mozilla::gfx::FilterNodeSoftware::GetOutput(mozilla::gfx::IntRectTyped<mozilla::gfx::UnknownUnits> const&) gfx/2d/FilterNodeSoftware.cpp:613
+#14 0x7fb2b6ddd07c in mozilla::gfx::FilterNodeSoftware::GetInputDataSourceSurface(unsigned int, mozilla::gfx::IntRectTyped<mozilla::gfx::UnknownUnits> const&, mozilla::gfx::FilterNodeSoftware::FormatHint, mozilla::gfx::ConvolveMatrixEdgeMode, mozilla::gfx::IntRectTyped<mozilla::gfx::UnknownUnits> const*) gfx/2d/FilterNodeSoftware.cpp:690
+#15 0x7fb2b6dfa4a1 in mozilla::gfx::FilterNodeComponentTransferSoftware::Render(mozilla::gfx::IntRectTyped<mozilla::gfx::UnknownUnits> const&) gfx/2d/FilterNodeSoftware.cpp:1544
+#16 0x7fb2b6dd9ebc in mozilla::gfx::FilterNodeSoftware::GetOutput(mozilla::gfx::IntRectTyped<mozilla::gfx::UnknownUnits> const&) gfx/2d/FilterNodeSoftware.cpp:613
+#17 0x7fb2b6ddd07c in mozilla::gfx::FilterNodeSoftware::GetInputDataSourceSurface(unsigned int, mozilla::gfx::IntRectTyped<mozilla::gfx::UnknownUnits> const&, mozilla::gfx::FilterNodeSoftware::FormatHint, mozilla::gfx::ConvolveMatrixEdgeMode, mozilla::gfx::IntRectTyped<mozilla::gfx::UnknownUnits> const*) gfx/2d/FilterNodeSoftware.cpp:690
+#18 0x7fb2b6e26b9c in mozilla::gfx::FilterNodePremultiplySoftware::Render(mozilla::gfx::IntRectTyped<mozilla::gfx::UnknownUnits> const&) gfx/2d/FilterNodeSoftware.cpp:2789
+#19 0x7fb2b6dd9ebc in mozilla::gfx::FilterNodeSoftware::GetOutput(mozilla::gfx::IntRectTyped<mozilla::gfx::UnknownUnits> const&) gfx/2d/FilterNodeSoftware.cpp:613
+#20 0x7fb2b6d6deb1 in mozilla::gfx::FilterNodeSoftware::Draw(mozilla::gfx::DrawTarget*, mozilla::gfx::RectTyped<mozilla::gfx::UnknownUnits> const&, mozilla::gfx::PointTyped<mozilla::gfx::UnknownUnits> const&, mozilla::gfx::DrawOptions const&) gfx/2d/FilterNodeSoftware.cpp:572
+#21 0x7fb2b6d6d2c8 in mozilla::gfx::DrawTargetCairo::DrawFilter(mozilla::gfx::FilterNode*, mozilla::gfx::RectTyped<mozilla::gfx::UnknownUnits> const&, mozilla::gfx::PointTyped<mozilla::gfx::UnknownUnits> const&, mozilla::gfx::DrawOptions const&) gfx/2d/DrawTargetCairo.cpp:567
+#22 0x7fb2a324c44b in mozilla::gfx::FilterSupport::RenderFilterDescription(mozilla::gfx::DrawTarget*, mozilla::gfx::FilterDescription const&, mozilla::gfx::RectTyped<mozilla::gfx::UnknownUnits> const&, mozilla::gfx::SourceSurface*, mozilla::gfx::IntRectTyped<mozilla::gfx::UnknownUnits> const&, mozilla::gfx::SourceSurface*, mozilla::gfx::IntRectTyped<mozilla::gfx::UnknownUnits> const&, mozilla::gfx::SourceSurface*, mozilla::gfx::IntRectTyped<mozilla::gfx::UnknownUnits> const&, nsTArray<nsRefPtr<gfxASurface> >&) gfx/src/FilterSupport.cpp:1118
+#23 0x7fb2af630eb6 in nsSVGFilterInstance::Render(gfxContext*) layout/svg/nsSVGFilterInstance.cpp:475
+#24 0x7fb2af62f798 in nsSVGFilterFrame::PaintFilteredFrame(nsRenderingContext*, nsIFrame*, nsSVGFilterPaintCallback*, nsRect const*, nsIFrame*) layout/svg/nsSVGFilterFrame.cpp:454
+#25 0x7fb2af6a432e in nsSVGIntegrationUtils::PaintFramesWithEffects(nsRenderingContext*, nsIFrame*, nsRect const&, nsDisplayListBuilder*, mozilla::layers::LayerManager*) layout/svg/nsSVGIntegrationUtils.cpp:519
+#26 0x7fb2aebace26 in nsDisplaySVGEffects::PaintAsLayer(nsDisplayListBuilder*, nsRenderingContext*, mozilla::layers::LayerManager*) layout/base/nsDisplayList.cpp:4617
+#27 0x7fb2ae88fa1c in mozilla::PaintInactiveLayer(nsDisplayListBuilder*, mozilla::layers::LayerManager*, nsDisplayItem*, gfxContext*, nsRenderingContext*) layout/base/FrameLayerBuilder.cpp:2090
+#28 0x7fb2ae88eca0 in mozilla::FrameLayerBuilder::PaintItems(nsTArray<mozilla::FrameLayerBuilder::ClippedDisplayItem>&, nsIntRect const&, gfxContext*, nsRenderingContext*, nsDisplayListBuilder*, nsPresContext*, nsIntPoint const&, float, float, int) layout/base/FrameLayerBuilder.cpp:3376
+#29 0x7fb2ae89284c in mozilla::FrameLayerBuilder::DrawThebesLayer(mozilla::layers::ThebesLayer*, gfxContext*, nsIntRegion const&, mozilla::layers::DrawRegionClip, nsIntRegion const&, void*) layout/base/FrameLayerBuilder.cpp:3550
+#30 0x7fb2a3a782dd in mozilla::layers::BasicThebesLayer::PaintBuffer(gfxContext*, nsIntRegion const&, nsIntRegion const&, nsIntRegion const&, bool, mozilla::layers::DrawRegionClip, void (*)(mozilla::layers::ThebesLayer*, gfxContext*, nsIntRegion const&, mozilla::layers::DrawRegionClip, nsIntRegion const&, void*), void*) gfx/layers/basic/BasicThebesLayer.h:114
+#31 0x7fb2a3a294bd in mozilla::layers::BasicThebesLayer::Validate(void (*)(mozilla::layers::ThebesLayer*, gfxContext*, nsIntRegion const&, mozilla::layers::DrawRegionClip, nsIntRegion const&, void*), void*) gfx/layers/basic/BasicThebesLayer.cpp:203
+#32 0x7fb2a3a29cf4 in non-virtual thunk to mozilla::layers::BasicThebesLayer::Validate(void (*)(mozilla::layers::ThebesLayer*, gfxContext*, nsIntRegion const&, mozilla::layers::DrawRegionClip, nsIntRegion const&, void*), void*) objdir-ff-asan-sym/gfx/layers/Unified_cpp_gfx_layers1.cpp:219
+#33 0x7fb2a3a0cf41 in mozilla::layers::BasicContainerLayer::Validate(void (*)(mozilla::layers::ThebesLayer*, gfxContext*, nsIntRegion const&, mozilla::layers::DrawRegionClip, nsIntRegion const&, void*), void*) gfx/layers/basic/BasicContainerLayer.cpp:124
+#34 0x7fb2a3a0d3c4 in non-virtual thunk to mozilla::layers::BasicContainerLayer::Validate(void (*)(mozilla::layers::ThebesLayer*, gfxContext*, nsIntRegion const&, mozilla::layers::DrawRegionClip, nsIntRegion const&, void*), void*) objdir-ff-asan-sym/gfx/layers/Unified_cpp_gfx_layers1.cpp:130
+#35 0x7fb2a3a0cf41 in mozilla::layers::BasicContainerLayer::Validate(void (*)(mozilla::layers::ThebesLayer*, gfxContext*, nsIntRegion const&, mozilla::layers::DrawRegionClip, nsIntRegion const&, void*), void*) gfx/layers/basic/BasicContainerLayer.cpp:124
+#36 0x7fb2a3a0d3c4 in non-virtual thunk to mozilla::layers::BasicContainerLayer::Validate(void (*)(mozilla::layers::ThebesLayer*, gfxContext*, nsIntRegion const&, mozilla::layers::DrawRegionClip, nsIntRegion const&, void*), void*) objdir-ff-asan-sym/gfx/layers/Unified_cpp_gfx_layers1.cpp:130
+#37 0x7fb2a3a148c8 in mozilla::layers::BasicLayerManager::EndTransactionInternal(void (*)(mozilla::layers::ThebesLayer*, gfxContext*, nsIntRegion const&, mozilla::layers::DrawRegionClip, nsIntRegion const&, void*), void*, mozilla::layers::LayerManager::EndTransactionFlags) gfx/layers/basic/BasicLayerManager.cpp:596
+#38 0x7fb2a3a13f71 in mozilla::layers::BasicLayerManager::EndTransaction(void (*)(mozilla::layers::ThebesLayer*, gfxContext*, nsIntRegion const&, mozilla::layers::DrawRegionClip, nsIntRegion const&, void*), void*, mozilla::layers::LayerManager::EndTransactionFlags) gfx/layers/basic/BasicLayerManager.cpp:530
+#39 0x7fb2aeb4722e in nsDisplayList::PaintForFrame(nsDisplayListBuilder*, nsRenderingContext*, nsIFrame*, unsigned int) const layout/base/nsDisplayList.cpp:1202
+#40 0x7fb2aeb445b0 in nsDisplayList::PaintRoot(nsDisplayListBuilder*, nsRenderingContext*, unsigned int) const layout/base/nsDisplayList.cpp:1060
+#41 0x7fb2aebf5c2b in nsLayoutUtils::PaintFrame(nsRenderingContext*, nsIFrame*, nsRegion const&, unsigned int, unsigned int) layout/base/nsLayoutUtils.cpp:2325
+#42 0x7fb2ae7a9bb3 in PresShell::Paint(nsView*, nsRegion const&, unsigned int) layout/base/nsPresShell.cpp:5842
+#43 0x7fb2aa850499 in nsViewManager::ProcessPendingUpdatesForView(nsView*, bool) view/src/nsViewManager.cpp:420
+#44 0x7fb2aa8555b9 in nsViewManager::ProcessPendingUpdates() view/src/nsViewManager.cpp:1053
+#45 0x7fb2ae827283 in nsRefreshDriver::Tick(long, mozilla::TimeStamp) layout/base/nsRefreshDriver.cpp:1208
+#46 0x7fb2ae846919 in mozilla::RefreshDriverTimer::TickDriver(nsRefreshDriver*, long, mozilla::TimeStamp) layout/base/nsRefreshDriver.cpp:168
+#47 0x7fb2ae845fbf in mozilla::RefreshDriverTimer::Tick() layout/base/nsRefreshDriver.cpp:160
+#48 0x7fb2ae8454c6 in mozilla::RefreshDriverTimer::TimerTick(nsITimer*, void*) layout/base/nsRefreshDriver.cpp:185
+#49 0x7fb29f06f215 in nsTimerImpl::Fire() xpcom/threads/nsTimerImpl.cpp:551
+#50 0x7fb29f0707d6 in nsTimerEvent::Run() xpcom/threads/nsTimerImpl.cpp:635
+#51 0x7fb29f0557e3 in nsThread::ProcessNextEvent(bool, bool*) xpcom/threads/nsThread.cpp:612
+#52 0x7fb29eac38e2 in NS_ProcessNextEvent(nsIThread*, bool) xpcom/glue/nsThreadUtils.cpp:263
+#53 0x7fb2a116cf98 in mozilla::ipc::MessagePump::Run(base::MessagePump::Delegate*) ipc/glue/MessagePump.cpp:85
+#54 0x7fb2a0e3eed7 in MessageLoop::RunInternal() ipc/chromium/src/base/message_loop.cc:220
+#55 0x7fb2a0e3eb2a in MessageLoop::RunHandler() ipc/chromium/src/base/message_loop.cc:213
+#56 0x7fb2a0e3ea05 in MessageLoop::Run() ipc/chromium/src/base/message_loop.cc:187
+#57 0x7fb2a88ec5ef in nsBaseAppShell::Run() widget/xpwidgets/nsBaseAppShell.cpp:161
+#58 0x7fb2b2c691ff in nsAppStartup::Run() toolkit/components/startup/nsAppStartup.cpp:267
+#59 0x7fb2b24af6f6 in XREMain::XRE_mainRun() toolkit/xre/nsAppRunner.cpp:3974
+#60 0x7fb2b24b3f9a in XREMain::XRE_main(int, char**, nsXREAppData const*) toolkit/xre/nsAppRunner.cpp:4042
+#61 0x7fb2b24b68f4 in XRE_main toolkit/xre/nsAppRunner.cpp:4244
+#62 0x44dc07 in do_main(int, char**, nsIFile*) browser/app/nsBrowserApp.cpp:280
+#63 0x44abe5 in main browser/app/nsBrowserApp.cpp:647
+#64 0x7fb2c6c0b76c in __libc_start_main /build/buildd/eglibc-2.15/csu/libc-start.c:226
+#65 0x44a33c in _start
+0x6060001b017f is located 0 byte to the right of 63-byte region [0x6060001b0140,0x6060001b017f)
+allocated by thread T0 here:
+#0 0x434065 in malloc _asan_rtl_
+#1 0x7fb2c20e421a in moz_malloc memory/mozalloc/mozalloc.cpp:62
+#2 0x7fb2b70b154e in operator new[](unsigned long, std::nothrow_t const&) objdir-ff-asan-sym/gfx/2d/../../dist/include/mozilla/mozalloc.h:219
+#3 0x7fb2b70b154e in mozilla::gfx::AlignedArray<unsigned char, 16>::Realloc(unsigned long) gfx/2d/Tools.h:113
+#4 0x7fb2b70b154e in mozilla::gfx::SourceSurfaceAlignedRawData::Init(mozilla::gfx::IntSizeTyped<mozilla::gfx::UnknownUnits> const&, mozilla::gfx::SurfaceFormat) gfx/2d/SourceSurfaceRawData.cpp:33
+#5 0x7fb2b6dd29fd in mozilla::gfx::Factory::CreateDataSourceSurface(mozilla::gfx::IntSizeTyped<mozilla::gfx::UnknownUnits> const&, mozilla::gfx::SurfaceFormat) gfx/2d/Factory.cpp:647
+#6 0x7fb2b6dd8a0e in mozilla::gfx::GetDataSurfaceInRect(mozilla::gfx::SourceSurface*, mozilla::gfx::IntRectTyped<mozilla::gfx::UnknownUnits> const&, mozilla::gfx::IntRectTyped<mozilla::gfx::UnknownUnits> const&, mozilla::gfx::ConvolveMatrixEdgeMode) gfx/2d/FilterNodeSoftware.cpp:436
+#7 0x7fb2b6ddd91f in mozilla::gfx::FilterNodeSoftware::GetInputDataSourceSurface(unsigned int, mozilla::gfx::IntRectTyped<mozilla::gfx::UnknownUnits> const&, mozilla::gfx::FilterNodeSoftware::FormatHint, mozilla::gfx::ConvolveMatrixEdgeMode, mozilla::gfx::IntRectTyped<mozilla::gfx::UnknownUnits> const*) gfx/2d/FilterNodeSoftware.cpp:717
+#8 0x7fb2b6dea632 in mozilla::gfx::FilterNodeMorphologySoftware::Render(mozilla::gfx::IntRectTyped<mozilla::gfx::UnknownUnits> const&) gfx/2d/FilterNodeSoftware.cpp:1098
+#9 0x7fb2b6dd9ebc in mozilla::gfx::FilterNodeSoftware::GetOutput(mozilla::gfx::IntRectTyped<mozilla::gfx::UnknownUnits> const&) gfx/2d/FilterNodeSoftware.cpp:613
+#10 0x7fb2b6ddd07c in mozilla::gfx::FilterNodeSoftware::GetInputDataSourceSurface(unsigned int, mozilla::gfx::IntRectTyped<mozilla::gfx::UnknownUnits> const&, mozilla::gfx::FilterNodeSoftware::FormatHint, mozilla::gfx::ConvolveMatrixEdgeMode, mozilla::gfx::IntRectTyped<mozilla::gfx::UnknownUnits> const*) gfx/2d/FilterNodeSoftware.cpp:690
+#11 0x7fb2b6e25e82 in mozilla::gfx::FilterNodeCropSoftware::Render(mozilla::gfx::IntRectTyped<mozilla::gfx::UnknownUnits> const&) gfx/2d/FilterNodeSoftware.cpp:2757
+#12 0x7fb2b6dd9ebc in mozilla::gfx::FilterNodeSoftware::GetOutput(mozilla::gfx::IntRectTyped<mozilla::gfx::UnknownUnits> const&) gfx/2d/FilterNodeSoftware.cpp:613
+#13 0x7fb2b6ddd07c in mozilla::gfx::FilterNodeSoftware::GetInputDataSourceSurface(unsigned int, mozilla::gfx::IntRectTyped<mozilla::gfx::UnknownUnits> const&, mozilla::gfx::FilterNodeSoftware::FormatHint, mozilla::gfx::ConvolveMatrixEdgeMode, mozilla::gfx::IntRectTyped<mozilla::gfx::UnknownUnits> const*) gfx/2d/FilterNodeSoftware.cpp:690
+#14 0x7fb2b6e2763c in mozilla::gfx::FilterNodeUnpremultiplySoftware::Render(mozilla::gfx::IntRectTyped<mozilla::gfx::UnknownUnits> const&) gfx/2d/FilterNodeSoftware.cpp:2818
+#15 0x7fb2b6dd9ebc in mozilla::gfx::FilterNodeSoftware::GetOutput(mozilla::gfx::IntRectTyped<mozilla::gfx::UnknownUnits> const&) gfx/2d/FilterNodeSoftware.cpp:613
+#16 0x7fb2b6ddd07c in mozilla::gfx::FilterNodeSoftware::GetInputDataSourceSurface(unsigned int, mozilla::gfx::IntRectTyped<mozilla::gfx::UnknownUnits> const&, mozilla::gfx::FilterNodeSoftware::FormatHint, mozilla::gfx::ConvolveMatrixEdgeMode, mozilla::gfx::IntRectTyped<mozilla::gfx::UnknownUnits> const*) gfx/2d/FilterNodeSoftware.cpp:690
+#17 0x7fb2b6dfa4a1 in mozilla::gfx::FilterNodeComponentTransferSoftware::Render(mozilla::gfx::IntRectTyped<mozilla::gfx::UnknownUnits> const&) gfx/2d/FilterNodeSoftware.cpp:1544
+#18 0x7fb2b6dd9ebc in mozilla::gfx::FilterNodeSoftware::GetOutput(mozilla::gfx::IntRectTyped<mozilla::gfx::UnknownUnits> const&) gfx/2d/FilterNodeSoftware.cpp:613
+#19 0x7fb2b6ddd07c in mozilla::gfx::FilterNodeSoftware::GetInputDataSourceSurface(unsigned int, mozilla::gfx::IntRectTyped<mozilla::gfx::UnknownUnits> const&, mozilla::gfx::FilterNodeSoftware::FormatHint, mozilla::gfx::ConvolveMatrixEdgeMode, mozilla::gfx::IntRectTyped<mozilla::gfx::UnknownUnits> const*) gfx/2d/FilterNodeSoftware.cpp:690
+#20 0x7fb2b6e26b9c in mozilla::gfx::FilterNodePremultiplySoftware::Render(mozilla::gfx::IntRectTyped<mozilla::gfx::UnknownUnits> const&) gfx/2d/FilterNodeSoftware.cpp:2789
+#21 0x7fb2b6dd9ebc in mozilla::gfx::FilterNodeSoftware::GetOutput(mozilla::gfx::IntRectTyped<mozilla::gfx::UnknownUnits> const&) gfx/2d/FilterNodeSoftware.cpp:613
+#22 0x7fb2b6d6deb1 in mozilla::gfx::FilterNodeSoftware::Draw(mozilla::gfx::DrawTarget*, mozilla::gfx::RectTyped<mozilla::gfx::UnknownUnits> const&, mozilla::gfx::PointTyped<mozilla::gfx::UnknownUnits> const&, mozilla::gfx::DrawOptions const&) gfx/2d/FilterNodeSoftware.cpp:572
+#23 0x7fb2b6d6d2c8 in mozilla::gfx::DrawTargetCairo::DrawFilter(mozilla::gfx::FilterNode*, mozilla::gfx::RectTyped<mozilla::gfx::UnknownUnits> const&, mozilla::gfx::PointTyped<mozilla::gfx::UnknownUnits> const&, mozilla::gfx::DrawOptions const&) gfx/2d/DrawTargetCairo.cpp:567
+#24 0x7fb2a324c44b in mozilla::gfx::FilterSupport::RenderFilterDescription(mozilla::gfx::DrawTarget*, mozilla::gfx::FilterDescription const&, mozilla::gfx::RectTyped<mozilla::gfx::UnknownUnits> const&, mozilla::gfx::SourceSurface*, mozilla::gfx::IntRectTyped<mozilla::gfx::UnknownUnits> const&, mozilla::gfx::SourceSurface*, mozilla::gfx::IntRectTyped<mozilla::gfx::UnknownUnits> const&, mozilla::gfx::SourceSurface*, mozilla::gfx::IntRectTyped<mozilla::gfx::UnknownUnits> const&, nsTArray<nsRefPtr<gfxASurface> >&) gfx/src/FilterSupport.cpp:1118
+#25 0x7fb2af630eb6 in nsSVGFilterInstance::Render(gfxContext*) layout/svg/nsSVGFilterInstance.cpp:475
+#26 0x7fb2af62f798 in nsSVGFilterFrame::PaintFilteredFrame(nsRenderingContext*, nsIFrame*, nsSVGFilterPaintCallback*, nsRect const*, nsIFrame*) layout/svg/nsSVGFilterFrame.cpp:454
+#27 0x7fb2af6a432e in nsSVGIntegrationUtils::PaintFramesWithEffects(nsRenderingContext*, nsIFrame*, nsRect const&, nsDisplayListBuilder*, mozilla::layers::LayerManager*) layout/svg/nsSVGIntegrationUtils.cpp:519
+#28 0x7fb2aebace26 in nsDisplaySVGEffects::PaintAsLayer(nsDisplayListBuilder*, nsRenderingContext*, mozilla::layers::LayerManager*) layout/base/nsDisplayList.cpp:4617
+#29 0x7fb2ae88fa1c in mozilla::PaintInactiveLayer(nsDisplayListBuilder*, mozilla::layers::LayerManager*, nsDisplayItem*, gfxContext*, nsRenderingContext*) layout/base/FrameLayerBuilder.cpp:2090
+#30 0x7fb2ae88eca0 in mozilla::FrameLayerBuilder::PaintItems(nsTArray<mozilla::FrameLayerBuilder::ClippedDisplayItem>&, nsIntRect const&, gfxContext*, nsRenderingContext*, nsDisplayListBuilder*, nsPresContext*, nsIntPoint const&, float, float, int) layout/base/FrameLayerBuilder.cpp:3376
+#31 0x7fb2ae89284c in mozilla::FrameLayerBuilder::DrawThebesLayer(mozilla::layers::ThebesLayer*, gfxContext*, nsIntRegion const&, mozilla::layers::DrawRegionClip, nsIntRegion const&, void*) layout/base/FrameLayerBuilder.cpp:3550
+Shadow byte around the buggy address:
+0x0c0c8002dfd0: fa fa fa fa fd fd fd fd fd fd fd fa fa fa fa fa
+0x0c0c8002dfe0: 00 00 00 00 00 00 00 00 fa fa fa fa fd fd fd fd
+0x0c0c8002dff0: fd fd fd fa fa fa fa fa fd fd fd fd fd fd fd fa
+0x0c0c8002e000: fa fa fa fa fd fd fd fd fd fd fd fa fa fa fa fa
+0x0c0c8002e010: fd fd fd fd fd fd fd fa fa fa fa fa 00 00 00 00
+=>0x0c0c8002e020: 00 00 00 00 fa fa fa fa 00 00 00 00 00 00[00]07
+0x0c0c8002e030: fa fa fa fa 00 00 00 00 00 00 00 00 fa fa fa fa
+0x0c0c8002e040: 00 00 00 00 00 00 00 07 fa fa fa fa fa fa fa fa
+0x0c0c8002e050: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+0x0c0c8002e060: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+0x0c0c8002e070: 00 00 00 00 00 00 00 00 fa fa fa fa fa fa fa fa
+Shadow byte legend (one shadow byte represents 8 application bytes):
+Addressable: 00
+Partially addressable: 01 02 03 04 05 06 07
+Heap left redzone: fa
+Heap right redzone: fb
+Freed heap region: fd
+Stack left redzone: f1
+Stack mid redzone: f2
+Stack right redzone: f3
+Stack partial redzone: f4
+Stack after return: f5
+Stack use after scope: f8
+Global redzone: f9
+Global init order: f6
+Poisoned by user: f7
+ASan internal: fe
+==14095==ABORTING

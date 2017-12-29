@@ -1,0 +1,87 @@
+Handle exited add-on actor when reloading via remote debugger
+STR
+- Start Firefox
+- Using the remote debugger, install an add-on temporarily (actor support landed in bug 1273183)
+- Trigger a reload with the debug client (actor support landed in bug 1246030)
+- Wait about 20 seconds. During this time, some add-on will be automatically uninstalled due to compatibility (I think).
+- Trigger another reload
+
+What should happen: The reload should work just fine. The add-on that get uninstalled are not needed for any part of the reload process.
+
+What actually happens: You get a stack trace which look to be caused by the uninstalled add-ons.
+
+Stack trace:
+
+TypeError: this._contextPool is null
+Stack: BAA_form@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/server/actors/addon.js:78:7
+RootActor.prototype.onListAddons/</<.addons<@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/server/actors/root.js:359:49
+RootActor.prototype.onListAddons/<@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/server/actors/root.js:359:19
+Handler.prototype.process@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/Promise-backend.js:937:23
+this.PromiseWalker.walkerLoop@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/Promise-backend.js:816:7
+Promise*this.PromiseWalker.scheduleWalkerLoop@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/Promise-backend.js:747:11
+this.PromiseWalker.schedulePromise@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/Promise-backend.js:779:7
+this.PromiseWalker.completePromise@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/Promise-backend.js:714:7
+BrowserAddonList.prototype.getList/<@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/server/actors/webbrowser.js:2302:5
+safeCall@resource://gre/modules/AddonManager.jsm:179:5
+AddonManagerInternal.getAddonsByTypes/<.noMoreObjects@resource://gre/modules/AddonManager.jsm:2495:9
+AsyncObjectCaller.prototype.callNext@resource://gre/modules/AddonManager.jsm:367:7
+AddonManagerInternal.getAddonsByTypes/<.nextObject/<@resource://gre/modules/AddonManager.jsm:2490:11
+this.Experiments.PreviousExperimentProvider.prototype<.getAddonsByTypes@resource:///modules/experiments/Experiments.jsm:2207:5
+callProviderAsync@resource://gre/modules/AddonManager.jsm:254:12
+AddonManagerInternal.getAddonsByTypes/<.nextObject@resource://gre/modules/AddonManager.jsm:2485:9
+AsyncObjectCaller.prototype.callNext@resource://gre/modules/AddonManager.jsm:373:7
+AddonManagerInternal.getAddonsByTypes/<.nextObject/<@resource://gre/modules/AddonManager.jsm:2490:11
+SocialAddonProvider.getAddonsByTypes@resource://gre/modules/SocialService.jsm:920:5
+callProviderAsync@resource://gre/modules/AddonManager.jsm:254:12
+AddonManagerInternal.getAddonsByTypes/<.nextObject@resource://gre/modules/AddonManager.jsm:2485:9
+AsyncObjectCaller.prototype.callNext@resource://gre/modules/AddonManager.jsm:373:7
+AddonManagerInternal.getAddonsByTypes/<.nextObject/<@resource://gre/modules/AddonManager.jsm:2490:11
+PluginProvider.getAddonsByTypes@resource://gre/modules/addons/PluginProvider.jsm:154:5
+callProviderAsync@resource://gre/modules/AddonManager.jsm:254:12
+AddonManagerInternal.getAddonsByTypes/<.nextObject@resource://gre/modules/AddonManager.jsm:2485:9
+AsyncObjectCaller.prototype.callNext@resource://gre/modules/AddonManager.jsm:373:7
+AddonManagerInternal.getAddonsByTypes/<.nextObject/<@resource://gre/modules/AddonManager.jsm:2490:11
+GMPProvider.getAddonsByTypes@resource://gre/modules/addons/GMPProvider.jsm:672:5
+callProviderAsync@resource://gre/modules/AddonManager.jsm:254:12
+AddonManagerInternal.getAddonsByTypes/<.nextObject@resource://gre/modules/AddonManager.jsm:2485:9
+AsyncObjectCaller.prototype.callNext@resource://gre/modules/AddonManager.jsm:373:7
+AddonManagerInternal.getAddonsByTypes/<.nextObject/<@resource://gre/modules/AddonManager.jsm:2490:11
+this.LightweightThemeManager.getAddonsByTypes@resource://gre/modules/LightweightThemeManager.jsm:454:5
+callProviderAsync@resource://gre/modules/AddonManager.jsm:254:12
+AddonManagerInternal.getAddonsByTypes/<.nextObject@resource://gre/modules/AddonManager.jsm:2485:9
+AsyncObjectCaller.prototype.callNext@resource://gre/modules/AddonManager.jsm:373:7
+AddonManagerInternal.getAddonsByTypes/<.nextObject/<@resource://gre/modules/AddonManager.jsm:2490:11
+this.XPIProvider.getAddonsByTypes/<@resource://gre/modules/addons/XPIProvider.jsm:4043:7
+makeSafe/<@resource://gre/modules/addons/XPIProvider.jsm -> resource://gre/modules/addons/XPIProviderUtils.js:168:17
+asyncMap_gotValue@resource://gre/modules/addons/XPIProvider.jsm -> resource://gre/modules/addons/XPIProviderUtils.js:203:7
+asyncMap/</<@resource://gre/modules/addons/XPIProvider.jsm -> resource://gre/modules/addons/XPIProviderUtils.js:210:9
+completeAddon@resource://gre/modules/addons/XPIProvider.jsm -> resource://gre/modules/addons/XPIProviderUtils.js:157:5
+this.AddonRepository.getCachedAddonByID<@resource://gre/modules/addons/AddonRepository.jsm:578:7
+TaskImpl_run@resource://gre/modules/Task.jsm:319:40
+TaskImpl@resource://gre/modules/Task.jsm:280:3
+createAsyncFunction/asyncFunction@resource://gre/modules/Task.jsm:254:14
+getRepositoryAddon@resource://gre/modules/addons/XPIProvider.jsm -> resource://gre/modules/addons/XPIProviderUtils.js:159:3
+asyncMap/<@resource://gre/modules/addons/XPIProvider.jsm -> resource://gre/modules/addons/XPIProviderUtils.js:209:7
+asyncMap@resource://gre/modules/addons/XPIProvider.jsm -> resource://gre/modules/addons/XPIProviderUtils.js:207:3
+this.XPIDatabase.getAddonList/<@resource://gre/modules/addons/XPIProvider.jsm -> resource://gre/modules/addons/XPIProviderUtils.js:1099:9
+Handler.prototype.process@resource://gre/modules/Promise.jsm -> resource://gre/modules/Promise-backend.js:937:23
+this.PromiseWalker.walkerLoop@resource://gre/modules/Promise.jsm -> resource://gre/modules/Promise-backend.js:816:7
+Promise*this.PromiseWalker.scheduleWalkerLoop@resource://gre/modules/Promise.jsm -> resource://gre/modules/Promise-backend.js:747:11
+this.PromiseWalker.schedulePromise@resource://gre/modules/Promise.jsm -> resource://gre/modules/Promise-backend.js:779:7
+Promise.prototype.then@resource://gre/modules/Promise.jsm -> resource://gre/modules/Promise-backend.js:454:5
+this.XPIDatabase.getAddonList@resource://gre/modules/addons/XPIProvider.jsm -> resource://gre/modules/addons/XPIProviderUtils.js:1096:5
+this.XPIDatabase.getVisibleAddons@resource://gre/modules/addons/XPIProvider.jsm -> resource://gre/modules/addons/XPIProviderUtils.js:1179:5
+this.XPIProvider.getAddonsByTypes@resource://gre/modules/addons/XPIProvider.jsm:4042:5
+callProviderAsync@resource://gre/modules/AddonManager.jsm:254:12
+AddonManagerInternal.getAddonsByTypes/<.nextObject@resource://gre/modules/AddonManager.jsm:2485:9
+AsyncObjectCaller.prototype.callNext@resource://gre/modules/AddonManager.jsm:373:7
+AsyncObjectCaller@resource://gre/modules/AddonManager.jsm:353:3
+AddonManagerInternal.getAddonsByTypes@resource://gre/modules/AddonManager.jsm:2483:5
+AddonManagerInternal.getAllAddons@resource://gre/modules/AddonManager.jsm:2515:5
+this.AddonManager.getAllAddons@resource://gre/modules/AddonManager.jsm:3369:5
+BrowserAddonList.prototype.getList@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/server/actors/webbrowser.js:2294:3
+RootActor.prototype.onListAddons@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/server/actors/root.js:340:12
+DSC_onPacket@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/server/main.js:1648:15
+DebuggerTransport.prototype._onJSONObjectReady/<@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/shared/transport/transport.js:479:11
+exports.makeInfallible/<@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/shared/ThreadSafeDevToolsUtils.js:101:14
+exports.makeInfallible/<@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/shared/ThreadSafeDevToolsUtils.js:101:14

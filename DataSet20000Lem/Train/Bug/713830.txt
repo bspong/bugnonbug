@@ -1,0 +1,17 @@
+New Safari Migrator: RSS issue
+Safari's RSS feature work quite differently from Firefox's. In general, RSS is a little bit more promoted and feature-rich.
+
+The RSS icon still is in the location bar, and there's a preference pane just for RSS. In this pane, you can choose either to use Safari itself a the default reader or an external application (with no option to use online readers, a in Fx). However, the built in RSS reader is what we consider the "preview page". In Fx, that page asks serf a an agent for live bookmark and external feed reader (both OS apps and web based readers). In Safari, the page itself serf a the reader. Users can bookmark this page, and if they do so, the bookmark folder in which the feed is bookmarked would also have a "View all RSS articles" item, which load the reader page with article from *all feeds* in that bookmark folder.
+
+Internally, Safari store feed item a feed://[THE HTTP URL]. This incidentally match the way we load the RSS preview page. As a result, in both old and new Safari migrator, feed item from Safari result a bookmark to our RSS preview page (with the right feed loaded, thankfully).
+
+While not intentional at all, I'm not sure it's all that bad. After all, we are not really prompting live bookmark anymore, and the RSS preview page give the user the choice to decide what RSS reader to use instead of Safari, live bookmark being an option.
+
+We can, however, do something along these lines:
+(1) Check if there is a default external RSS reader set in Safari, and migrate that preference.
+* If it's not set, bookmark feed:// item in safari a live bookmark
+* If it's set
+* [option 1] bookmark these feed a regular bookmark - this will result in bookmark that would open the feed in external applications. This is what happens in Safari if you bookmark a feed and then choose an external RSS reader. Note that In Firefox, you can get into the precisely the same situation by bookmarking the preview page for a feed, and then, at some point, set a default RSS reader from the preview page or from the preference window. However, being able to bookmark the preview page is kind of a bug in Fx, and not something we expect user to do. In Safari, it seems to be the normal workflow.
+* [option 2] don't migrate feed item if an external feed reader is set.
+
+For the initial landing of the new migrator, I'm keeping the current behavior.

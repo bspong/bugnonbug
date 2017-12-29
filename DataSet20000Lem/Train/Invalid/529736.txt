@@ -1,0 +1,40 @@
+image element created with File.getAsDataURL() sometimes incorrectly have 0 width and height
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.2b3) Gecko/20091115 Firefox/3.6b3
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.2b3) Gecko/20091115 Firefox/3.6b3
+
+Here is some JavaScript that reveals this problem. Note 'dbg()' appends it argument to a DIV element on the web page for debugging purpose
+
+ctlr.handleDrop = function(event) {
+event.stopPropagation(); event.preventDefault();
+var w, h, img, file = event.dataTransfer.files
+dbg("hello from handleDrop")
+for (var i = 0; i < files.length; i++) {
+dbg("doing image: " + i )
+img = $('<img>')[0] // yes this is a jQueryism
+img.className = 'uploading'
+img.src = files[i].getAsDataURL()
+tmp = files[i].getAsDataURL()
+w=img.width; h= img.height
+img.id = MD5(tmp)
+dbg("image.id=" + img.id + ", image_width=" + w + ", img_height=" + h)
+etc., etc,
+
+This code fragment is part of a photo-layout-editor and is exercised when I drag and drop one or more jpeg file from the desktop to a dropZone (an element for which 'handleDrop' is defined). The same jpeg file usually result in an image with non-zero width and height, but sometimes it result in an image with 0 width and height.
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+1. drag a jpeg file onto the dropZone on the web page
+2. check to see that a thumbnail image show up
+3. if it doe not show up, check the debugging zone to see what dimension the browser think that the image created from the dropped file has.
+Actual Results:
+hello from handleDrop
+doing image: 0
+image.id=f8f8cbd0d2f52d2cb03259ebab84c07c, image_width=0, img_height=0
+
+Expected Results:
+hello from handleDrop
+doing image: 0
+image.id=f8f8cbd0d2f52d2cb03259ebab84c07c, image_width=401, img_height=439
+
+When a jpeg file is dropped on a web page, and an image element is created through JavaScript from the file using getAsDataURL(), the resulting image element should consistently have the width and height property set to the height and width of the image in the jpeg file

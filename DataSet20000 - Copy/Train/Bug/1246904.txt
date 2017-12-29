@@ -1,0 +1,24 @@
+Consider turning all eslint warnings into errors
+I just realized that the ES job that runs in our CI environment only fails if there are ESLint errors.
+ESLint warnings are fine, they don't fail the build.
+
+This means that it's possible to land a patch that removes some exclusions in .eslintignore even if the corresponding files still have warnings.
+
+And this happened in bug 1242278.
+Since that landed, all ESLint jobs report the following warnings:
+
+TEST-UNEXPECTED-WARNING | devtools/client/inspector/markup/markup.js:667:15 | "prev" is already declared in the upper scope. (no-shadow)
+TEST-UNEXPECTED-WARNING | devtools/client/inspector/markup/markup.js:680:15 | "next" is already declared in the upper scope. (no-shadow)
+TEST-UNEXPECTED-WARNING | devtools/client/inspector/markup/markup.js:958:25 | "added" is already declared in the upper scope. (no-shadow)
+TEST-UNEXPECTED-WARNING | devtools/client/inspector/markup/markup.js:1504:1 | Line 1504 exceeds the maximum line length of 80. (max-len)
+TEST-UNEXPECTED-WARNING | devtools/client/inspector/markup/markup.js:1519:13 | "container" is already declared in the upper scope. (no-shadow)
+TEST-UNEXPECTED-WARNING | devtools/client/inspector/markup/markup.js:2852:14 | "val" is already declared in the upper scope. (no-shadow)
+TEST-UNEXPECTED-WARNING | devtools/client/inspector/markup/markup.js:2892:17 | "name" is already declared in the upper scope. (no-shadow)
+
+I would like to argue that if we're going to turn a rule ON, we might as well make it report errors, not warnings.
+I see very little purpose in having warnings only if they're not going to be reported anywhere visible to developers.
+
+When you're *writing* code, having warnings and errors in your IDE seems fine. As a developer you could use this information as: an error is something that just won't work if I test my code now (syntax error), and a warning is something that isn't really nice, and that I should fix before committing the code, but I can still work on my own thing before doing that.
+
+This only works if both errors and warnings would fail the CI ESLint job.
+If only errors do, then we should just forget about warnings.

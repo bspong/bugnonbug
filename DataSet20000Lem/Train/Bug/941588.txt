@@ -1,0 +1,21 @@
+No error returned on XHR call to unauthorized domain from non-origin sources.
+User Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:25.0) Gecko/20100101 Firefox/25.0 (Beta/Release)
+Build ID: 20131028112810
+
+Steps to reproduce:
+
+1. Create an HTML page with performs an AJAX request on any URL which doe not return a "Access-Control-Allow-Origin" header, such a http://dotancohen.com
+2. Save this page to disk and load it with the file:// protocol, a opposed to using the http:// protocol (i.e. don't use Apache to serve the page, but load it in Firefox directly from the file system)
+3. With Inspect Element open, notice that the AJAX request show a having succeeded (HTTP/1.1 200 OK 323ms) however the resource is no available (i.e. call to JQuery's Ajax success function do not run)
+
+It seems that the issue is that the origin is not set (i.e. NULL) and therefore "Access-Control-Allow-Origin" cannot be verified. However there is no indication of such and the developer is left wondering why nothing works.
+
+
+Actual results:
+
+Absolutely nothing!
+
+
+Expected results:
+
+Firefox should have thrown an error in the JS console along the line of "Access-Control-Allow-Origin cannot be matched due to your origin being NULL".

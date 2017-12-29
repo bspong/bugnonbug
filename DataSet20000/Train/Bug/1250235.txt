@@ -1,0 +1,29 @@
+Firefox should better report the reason for any failure
+User Agent: Mozilla/5.0 (X11; Fedora; Linux x86_64; rv:44.0) Gecko/20100101 Firefox/44.0
+Build ID: 20160211124446
+
+Steps to reproduce:
+
+A fresh installation of Firefox 44 on a fresh installation of Fedora 23 server edition. All packages installed directly from the Fedora repos.  According to dnf, there are no missing dependencies. I see the same behavior on about 25 new machines.
+
+
+Actual results:
+
+Starting Firefox from an icon shows an entry in the panel for a few seconds, then nothing. Starting it from the command line in a shell window returns a new prompt after a few seconds. The exit code is zero and there is nothing recorded in syslog or the systemd journal. No Firefox window ever appears.
+
+I've also tried adding the -preferences and/or -private switches with the same result. The only thing I see strange is a new file in the saved-telemetry-pings directory each time I try to start Firefox. If FF is trying to use telemetry by default before I get a chance to disable it, FF will fail because it will never get through the proxy.
+
+I have one machine where FF works. This is also running Fedora 23 but was installed from the live DVD rather than using PXE as were those which are failing. It has FF 42 rather than FF 44.  Thus far, I've tried these remedies without success.
+
+* Downgrade FF to 42 on a failing machine.
+
+* Compare the list of packages installed on both machines and install on the failing machine any which were previously only on the working one.  (In fact, the working machine has several hundred /fewer/ packages installed but had a few extra ones as well.
+
+* Per an online suggestion, verified that both machines have NSS installed and configured identically. Neither is using LDAP.
+
+In all cases, FF exits with a zero status. I've run both the working and failing copies under strace and compared the output (there's a lot of output!). Certainly there are differences but nothing stands out as an indicator of the problem.
+
+
+Expected results:
+
+Firefox should tell me why it fails! This report is NOT about the specific situation described (though I'd welcome a solution to that problem), that is NOT why I'm opening this ticket. THIS ticket is about the fact that Firefox doesn't give me any way to discover the cause of the problem. It should never return a zero exit status when it fails!

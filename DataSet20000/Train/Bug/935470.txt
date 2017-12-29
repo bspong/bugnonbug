@@ -1,0 +1,19 @@
+Fix source notes for lazy scripts
+Copy paste from IRC because I'm too lazy to paraphrase:
+
+04:53 < shu> past: http://dxr.mozilla.org/mozilla-central/source/toolkit/devtools/server/actors/script.js#l1373 should be innermost: true
+04:53 < shu> past: this has never surfaced because the full gc every debug mode toggle has been concealing it
+04:54 < shu> past: but if you look at http://mxr.mozilla.org/mozilla-central/source/browser/devtools/debugger/test/code_script-switching-02.js
+04:54 < shu> past: there are 4 (!) scripts in that file
+04:54 < shu> past: the top-level script, the script for secondCall, the script for eval, and the script for foo
+04:55 < shu> past: the test requests a breakpoint at line 4
+04:55 < shu> past: it so happens the top-level script's bytecode consists of a sole JSOP_RETRVAL, which source notes says is at line 4
+04:55 < shu> past: before my patch to get rid of the massive GC, this top script just got swept by that GC and so didn't get iterated over
+04:56 < past> shu: I think we didn't want the innermost script on purpose at that point, but I can't remember why at the moment
+04:56 < past> shu: could it be that the test is wrong, but not the code?
+04:57 < shu> past: possible, but i can't imagine the usefulness of setting a breakpoint at the retrval of the toplevel script
+04:58 < past> shu: yes, I don't think line 4 is particularly important here
+04:58 < past> line 5 would be sufficient, too
+04:59 < shu> past: setting a breakpoint at the line of the fundef is a very real use case though
+04:59 < past> that's true
+04:59 < shu> past: intuitively we would break at the first pc of the function

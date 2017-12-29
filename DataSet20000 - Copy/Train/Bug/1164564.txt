@@ -1,0 +1,8 @@
+Implement WorkerActor.connect
+Bug 1164077 makes it possible to attach to a worker. This allows you to listen for state changes on the worker, but it does not yet fire up a debugger in the worker. In general, loading a debugger server in a worker is expensive, so we want to avoid doing so unless absolutely necessary.
+
+This bug will be about making it possible to connect to a worker actor. This will fire up a debugger in the worker, load the debugger server, and create a thread actor. We then set up a form of packet forwarding, similar to what we do for child processes, to make it seem that the thread actor really lives in the debugger server on the main thread.
+
+This bug will be a bit more work than the previous ones, because we need to implement some prerequisites first. First, I want to clean up the worker loader  bit, to better reflect the way the worker debugger API now looks. Second, we need to refactor Promise.jsm so it can be loaded as a CommonJS module (we don't support JSMs in workers). Third, we need to define an instance of the worker loader that can run in the main thread. Four, we need a new typ of DebuggerTransport that uses the worker debugger API to send messages from one server to another.
+
+Finally, we have to implement a bootstrap script that fires up a debugger server in the worker, and implement the packet forwarding logic we need so that the main server can talk to it.

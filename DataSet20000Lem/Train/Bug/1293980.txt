@@ -1,0 +1,37 @@
+NetMonitor fails to get security info of a request intercepted by service worker
+Steps to reproduce:
+1. Run the test devtools/client/netmonitor/test/browser_net_service-worker-status.js in debug/e10s mode
+2. Watch the output
+
+It report an assertion in the content process:
+
+INFO - [Child 2154] ###!!! ASSERTION: Unimplemented on content process: 'Not Reached', file /builds/slave/try-m64-d-00000000000000000000/build/src/security/manager/ssl/nsNSSCertificateFakeTransport.cpp, line 78
+INFO - #01: NS_InvokeByIndex [xpcom/reflect/xptcall/md/unix/xptcinvoke_x86_64_unix.cpp:180]
+INFO - #02: CallMethodHelper::Call() [js/xpconnect/src/XPCWrappedNative.cpp:1393]
+INFO - #03: XPC_WN_GetterSetter(JSContext*, unsigned int, JS::Value*) [js/xpconnect/src/XPCWrappedNative.cpp:1360]
+
+And a JS exception:
+
+INFO - Handler function threw an exception: [Exception... "Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIX509Cert.commonName]" nsresult: "0x80004001 (NS_ERROR_NOT_IMPLEMENTED)" location: "JS frame :: resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/shared/webconsole/network-helper.js :: NetworkHelper.parseCertificateInfo :: line 678" data: no]
+INFO - Stack: NetworkHelper.parseCertificateInfo@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/shared/webconsole/network-helper.js:678:9
+INFO - NetworkHelper.parseSecurityInfo@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/shared/webconsole/network-helper.js:628:19
+INFO - NetworkResponseListener.prototype._getSecurityInfo<@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/shared/webconsole/network-monitor.js:508:16
+INFO - exports.makeInfallible/<@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/shared/ThreadSafeDevToolsUtils.js:101:14
+INFO - NetworkResponseListener.prototype.onStartRequest@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/shared/webconsole/network-monitor.js:459:5
+
+Why?
+
+The test ha a service worker that is making a network request, and it's inspecting this request with NetworkMonitor. This involves getting it security info, i.e., accessing the channel.securityInfo.SSLStatus.serverCert.commonName property (follow the call sequence from [1] to [2]).
+
+But service worker request happen in the content process, where the nsIX509Cert interface is defined a nsNSSCertificateFakeTransport (see [3]), which just asserts and throw NS_ERROR_NOT_IMPLEMENTED on all methods.
+
+This mean that it's impossible to get security info out of a request happening in the content process, i.e., in a service worker.
+
+Ben, how do you think this could be fixed? Seems like NSS prohibits working with security-sensitive data in the content process, which is at odds with the service worker doing it work there.
+
+Ryan, is it OK that a test that hit an assert can actually succeed? The behavior on asserts is governed by the XPCOM_DEBUG_BREAK environment variable, which is set to "warn" in this test suite. If it wa "stack-and-abort", the test would fail on this assertion (and on many others). The log at [4] is a live example how this assertion happens in a 100% green try run.
+
+[1] http://searchfox.org/mozilla-central/source/devtools/shared/webconsole/network-monitor.js#459
+[2] http://searchfox.org/mozilla-central/source/devtools/shared/webconsole/network-helper.js#678
+[3] http://searchfox.org/mozilla-central/source/security/manager/ssl/nsNSSModule.cpp#193-195
+[4] https://treeherder.mozilla.org/logviewer.html#?job_id=25288635&repo=try#L13724

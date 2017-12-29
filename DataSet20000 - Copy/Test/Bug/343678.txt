@@ -1,0 +1,50 @@
+OCSP client requires presence of optional AlgorithmIdentifier.parameter field
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.0.4) Gecko/20060508 Firefox/1.5.0.4
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.0.4) Gecko/20060508 Firefox/1.5.0.4
+
+OCSP requests and responses identify the certificate being validated using
+hashes of the certificate issuer's name and public key, plus the
+certificate's serial number. To ensure interoperability, the identifier
+includes an AlgorithmIdentifier structure specifying the hash algorithm used
+to hash the issuer name and key.
+
+The AlgorithmIdentifier structure has an OPTIONAL field for algorithm
+parameters. This field is not used when identifying standard hash algorithms
+such as SHA-1. Unfortunately, an ambiguity in the standard allows for two
+different encodings of this "empty" parameter field. In the first encoding,
+the field is omitted entirely. In the second encoding, the field is
+populated with the ASN.1 type NULL.
+
+The two encodings have identical meaning and the difference in encoding has
+been a source of difficulty for many applications. RFC 3370, which defines
+algorithms for use in the Cryptographic Message Syntax, states the following
+in section 2.1, which describes SHA-1:
+
+   The correct encoding is to omit the parameters field; however,
+   implementations MUST also handle a SHA-1 AlgorithmIdentifier
+   parameters field which contains a NULL.
+
+   The AlgorithmIdentifier parameters field is OPTIONAL.  If present,
+   the parameters field MUST contain a NULL.  Implementations MUST
+   accept SHA-1 AlgorithmIdentifiers with absent parameters.
+   Implementations MUST accept SHA-1 AlgorithmIdentifiers with NULL
+   parameters.  Implementations SHOULD generate SHA-1
+   AlgorithmIdentifiers with absent parameters.
+
+While this description is presented in the context of CMS, the
+AlgorithmIdentifier structure is used throughout various PKIX RFCs and
+I believe this guidance is sound for all uses of
+AlgorithmIdentifier, including OCSP.
+
+The current Mozilla/Firefox OCSP client is incorrectly requiring that
+the parameters field be encoded as NULL when it should accept
+either encoding. 
+
+Reproducible: Always
+
+Steps to Reproduce:
+Unfortunately, reproducing the problem requires hitting a server that does not include the optional parameter.  Many public servers do include the NULL parameter.
+
+When Firefox has OCSP turned on and hits a server that leaves off the parameter, it reports "unknown certificate" and refuses to proceed with the page.  If the parameter is added to the response, everything works fine.
+
+Contact me at the listed email address if you need us to set up a public test server to reproduce this.

@@ -1,0 +1,50 @@
+browser_canvas-frontend-open.js leak toolbox when running the mochitests a a standalone directory
+I am trying to land --run-by-dir for devtools, it is landed for regular runs, but with e10s I had to turn it off due to:
+https://treeherder.mozilla.org/logviewer.html#?job_id=4076967&repo=mozilla-inbound
+
+I went to reproduce this locally on my linux64 development machine:
+./mach mochitest-devtools --e10s browser/devtools/canvasdebugger/test
+
+it reproduces easily and reliably:
+1019 INFO TEST-PASS | chrome://mochitests/content/browser/browser/devtools/canvasdebugger/test/browser_canvas-frontend-stepping.js | The last context call should now be selected.
+1020 INFO Destroying the specified canvas debugger.
+1021 INFO Waiting for event: 'destroyed' on [object Object].
+1022 INFO Removing tab.
+1023 INFO Tab removed and finished closing.
+1024 INFO finish() wa called, cleaning up...
+1025 INFO Forcing GC after canvas debugger test.
+1026 INFO MEMORY STAT vsize after test: 896876544
+1027 INFO MEMORY STAT residentFast after test: 198012928
+1028 INFO MEMORY STAT heapAllocated after test: 77889600
+1029 INFO TEST-OK | chrome://mochitests/content/browser/browser/devtools/canvasdebugger/test/browser_canvas-frontend-stepping.js | took 751ms
+1030 INFO checking window state
+WARNING: At least one completion condition is taking too long to complete. Conditions: [{"name":"DevTools: Wait until toolbox is destroyed","state":"(none)","filename":"resource://gre/modules/commonjs/toolkit/loader.js -> resource:///modules/devtools/framework/toolbox.js","lineNumber":1664,"stack":["resource://gre/modules/commonjs/toolkit/loader.js -> resource:///modules/devtools/framework/toolbox.js:Toolbox.prototype.destroy/leakCheckObserver:1664","chrome://mochikit/content/browser-test.js:Tester.prototype.nextTest</<:548","chrome://mochikit/content/tests/SimpleTest/SimpleTest.js:SimpleTest.waitForFocus/maybeRunTests/<:683","null:null:0"]}] Barrier: ShutdownLeaks: Wait for cleanup to be finished before checking for leak
+1031 INFO Console message: 1416499426861 Services.HealthReport.HealthReporter WARN Saved state file doe not exist.
+1032 INFO Console message: 1416499426861 Services.HealthReport.HealthReporter WARN No prefs data found.
+FATAL ERROR: AsyncShutdown timeout in ShutdownLeaks: Wait for cleanup to be finished before checking for leak Conditions: [{"name":"DevTools: Wait until toolbox is destroyed","state":"(none)","filename":"resource://gre/modules/commonjs/toolkit/loader.js -> resource:///modules/devtools/framework/toolbox.js","lineNumber":1664,"stack":["resource://gre/modules/commonjs/toolkit/loader.js -> resource:///modules/devtools/framework/toolbox.js:Toolbox.prototype.destroy/leakCheckObserver:1664","chrome://mochikit/content/browser-test.js:Tester.prototype.nextTest</<:548","chrome://mochikit/content/tests/SimpleTest/SimpleTest.js:SimpleTest.waitForFocus/maybeRunTests/<:683","null:null:0"]}] At least one completion condition failed to complete within a reasonable amount of time. Causing a crash to ensure that we do not leave the user with an unresponsive process draining resources.
+[Parent 10632] ###!!! ABORT: file resource://gre/modules/commonjs/toolkit/loader.js -> resource:///modules/devtools/framework/toolbox.js, line 1664
+[Parent 10632] ###!!! ABORT: file resource://gre/modules/commonjs/toolkit/loader.js -> resource:///modules/devtools/framework/toolbox.js, line 1664
+###!!! [Child][MessageChannel::SendAndWait] Error: Channel error: cannot send/recv
+TEST-INFO | Main app process: killed by SIGSEGV
+1033 ERROR TEST-UNEXPECTED-FAIL | chrome://mochitests/content/browser/browser/devtools/canvasdebugger/test/browser_canvas-frontend-stepping.js | application terminated with exit code 11
+runtests.py | Application ran for: 0:01:27.008439
+zombiecheck | Reading PID log: /tmp/tmp1HtxkFpidlog
+==> process 10632 launched child process 10675
+zombiecheck | Checking for orphan process with PID: 10675
+PROCESS-CRASH | chrome://mochitests/content/browser/browser/devtools/canvasdebugger/test/browser_canvas-frontend-stepping.js | application crashed [None]
+Crash dump filename: /tmp/tmp3K2nz4.mozrunner/minidumps/6f25ba62-4232-318f-4b99789b-34dae9d2.dmp
+MINIDUMP_STACKWALK not set, can't process dump.
+Stopping web server
+Stopping web socket server
+Stopping ssltunnel
+WARNING | leakcheck | refcount logging is off, so leak can't be detected!
+runtests.py | Running tests: end.
+SUITE-END | took 88s
+
+
+I did a bit of test debugging and removing and found that doing this in the browser.ini will let it pas locally:
+[browser_canvas-frontend-open.js]
+skip-if = e10s
+
+
+of course I would rather see the root cause fixed if that is easy.

@@ -1,0 +1,85 @@
+Don't capture thumbnail when 'Cache-Control: no-store' is given in a meta tag (instead of a HTTP header)
+I wa not aware that there were already supposed to be measure in place to prevent the caching of a thumbnail for my bank account page when I filed bug 822516. I initially just filed it because I noticed a thumbnail of a logged-in Bugzilla screenshot and later tested with my bank. Apparently it's not supposed to be saving a screenshot of the latter...
+
+I've filed this with the security flag set out of paranoia, but I don't think I'll be posting anything too private.
+
+Let me start with the caveat that I think I've used Live HTTP Headers maybe once before and I'm not exactly an expert with it.
+
+The testing here is now with the latest Firefox nightly on Linux in a new profile.
+
+Build identifier: Mozilla/5.0 (X11; Linux i686; rv:20.0) Gecko/20121218 Firefox/20.0
+
+Starting from a new profile, going straight to pncbank.com and logging in, I can then check the thumbnail dir for that profile and see a couple thumb of the front page with my username half typed in and another thumb of my logged in account page. If I start again with a fresh profile but first go to about:config and set browser.cache.disk_cache_ssl to false, I only get the first two screenshots not the latter. That pref is off by default, however, so in the normal case I get a thumbnail for my logged in account. Even with it on it is caching two (?) thumbnail for an HTTPS page a well. I've also got two thumbnail for the first-run page for some reason.
+
+Digging into the header returned for the account page I see the following headers, with a few part redacted:
+
+------------------------------------------------------------
+https://www.onlinebanking.pnc.com/alservlet/OnlineBankingServlet
+
+POST /alservlet/OnlineBankingServlet HTTP/1.1
+Host: www.onlinebanking.pnc.com
+User-Agent: Mozilla/5.0 (X11; Linux i686; rv:20.0) Gecko/20121218 Firefox/20.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate
+Referer: https://www.pnc.com/webapp/unsec/Homepage.do?siteArea=/PNCCorp/PNC/Home/Personal
+Connection: keep-alive
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 83
+hiddenAcctTypeLetter=<REDACTED>
+
+HTTP/1.1 200 OK
+Date: Wed, 19 Dec 2012 03:43:14 GMT
+Set-Cookie: TLTSID=<REDACTED>; Path=/; Domain=.pnc.com
+Set-Cookie: TLTUID=<REDACTED>; Path=/; Domain=.pnc.com; Expires=Wed, 19-12-2022 03:43:14 GMT
+Set-Cookie: JSESSIONID=<REDACTED>; Path=/
+Set-Cookie: JSESSIONID=<REDACTED>; Path=/
+Set-Cookie: <REDACTED>;path=/;secure
+Set-Cookie: <REDACTED>;path=/;secure
+X-HP-CAM-COLOR: V=1;ServerAddr=<REDACTED>
+ntCoent-Length: 4786
+Expires: Thu, 01 Dec 1994 16:00:00 GMT
+Cache-Control: no-cache="set-cookie, set-cookie2"
+Keep-Alive: timeout=60, max=277
+Connection: Keep-Alive
+Content-Type: text/html;charset=ISO-8859-1
+Content-Language: en-US
+Content-Encoding: gzip
+Content-Length: 1645
+------------------------------------------------------------
+
+------------------------------------------------------------
+https://www.onlinebanking.pnc.com/alservlet/MyAccountsServlet
+
+GET /alservlet/MyAccountsServlet HTTP/1.1
+Host: www.onlinebanking.pnc.com
+User-Agent: Mozilla/5.0 (X11; Linux i686; rv:20.0) Gecko/20121218 Firefox/20.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate
+Referer: <REDACTED>
+Cookie: <REDACTED>
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Date: Wed, 19 Dec 2012 03:43:22 GMT
+X-HP-CAM-COLOR: V=1;ServerAddr=<REDACTED>
+Pragma: no-cache
+Expires: Tue, 04 Dec 1993 21:29:02 GMT
+Cache-Control: no-cache, max-age=0, s-maxage=0, must-revalidate, proxy-revalidate, no-store, private
+Keep-Alive: timeout=60, max=260
+Connection: Keep-Alive
+Content-Type: text/html;charset=ISO-8859-1
+Content-Language: en-US
+Content-Encoding: gzip
+Transfer-Encoding: chunked
+
+------------------------------------------------------------
+
+This URL is the one displayed in the location bar:
+https://www.onlinebanking.pnc.com/alservlet/OnlineBankingServlet
+
+This URL is a frame inside that with the actual content:
+https://www.onlinebanking.pnc.com/alservlet/MyAccountsServlet
+
+If I click "Account Activity" that switch the page in the frame to the page for that and the screenshot is updated to show my transaction history. If I then right-click on the "Summary" link (which point back to initial page) and open that in a new tab, I've now got the "MyAccountsServlet" URL open without the frame and no new screenshot is created for it. My initial guess is that the first page's header is not enough to make Firefox not save a thumbnail so it save the whole thing even though the page in the frame is set not to be cached.

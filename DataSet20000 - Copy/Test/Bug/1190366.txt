@@ -1,0 +1,51 @@
+Accessibility label for Search Engine AutoComplete item is wrong
+Since the introduction of the new ability to perform a search right from the Awesome Bar, the accessibility label constructed for the AutoComplete item is wrong. For example:
+
+1. Open a new tab.
+2. Start typing in something that is not www or a protocol, but any kind of search term.
+3. Focus lands on the first item in the AutoComplete list. Screen readers now speak something like shown in the following protocol excerpt:
+
+INFO - globalCommands.GlobalCommands.script_navigatorObject_devInfo (15:32:23):
+Developer info for navigator object:
+name: u'Google moz-action:searchengine,{"engineName":"Google","input":"news","searchQuery":"news"} Search'
+role: ROLE_LISTITEM
+states: STATE_FOCUSABLE, STATE_SELECTABLE, STATE_FOCUSED, STATE_SELECTED
+isFocusable: True
+hasFocus: True
+Python object: <NVDAObjects.IAccessible.mozilla.BrokenFocusedState object at 0x056FE210>
+Python class mro: (<class 'NVDAObjects.IAccessible.mozilla.BrokenFocusedState'>, <class 'NVDAObjects.IAccessible.mozilla.Mozilla'>, <class 'NVDAObjects.IAccessible.IAccessible'>, <class 'NVDAObjects.window.Window'>, <class 'NVDAObjects.NVDAObject'>, <class 'baseObject.ScriptableObject'>, <class 'baseObject.AutoPropertyObject'>, <type 'object'>)
+description: u''
+location: (77, 156, 317, 89)
+value: None
+appModule: <'firefox' (appName u'firefox', process ID 4072) at address 528ec70>
+appModule.productName: u'Nightly'
+appModule.productVersion: u'42.0a1'
+TextInfo: <class 'NVDAObjects.NVDAObjectTextInfo'>
+windowHandle: 197194L
+windowClassName: u'MozillaDropShadowWindowClass'
+windowControlID: 0
+windowStyle: -1778384896
+windowThreadID: 4076
+windowText: u''
+displayText: u''
+IAccessibleObject: <POINTER(IAccessible2) ptr=0xc2bf284 at 52a08a0>
+IAccessibleChildID: 0
+IAccessible event parameters: windowHandle=197194, objectID=-4, childID=-1031
+IAccessible accName: u'Google moz-action:searchengine,{"engineName":"Google","input":"news","searchQuery":"news"} Search'
+IAccessible accRole: ROLE_SYSTEM_LISTITEM
+IAccessible accState: STATE_SYSTEM_SELECTABLE, STATE_SYSTEM_SELECTED, STATE_SYSTEM_FOCUSED, STATE_SYSTEM_FOCUSABLE, STATE_SYSTEM_VALID (3145734)
+IAccessible accDescription: u''
+IAccessible accValue: None
+IAccessible2 windowHandle: 197194
+IAccessible2 uniqueID: -1031
+IAccessible2 role: ROLE_SYSTEM_LISTITEM
+IAccessible2 states: IA2_STATE_OPAQUE, IA2_STATE_ACTIVE (1025)
+IAccessible2 attributes: u'margin-left:0px;text-align:start;text-indent:0px;setsize:12;margin-right:0px;tag:richlistitem;class:autocomplete-richlistitem;margin-top:0px;posinset:1;margin-bottom:0px;display:-moz-box;explicit-name:true;'
+
+The important part for this bug is:
+
+name: u'Google moz-action:searchengine,{"engineName":"Google","input":"news","searchQuery":"news"} Search'
+
+This looks like a JSON object to me. When constructing the text to be spoken for the screen reader, it should be something more sensible like "Search for [search term] with [readable engine name]". And of course, this should be localizable.
+
+Please follow the guide provided by the code snippets to construct the label for bookmarks or tags.

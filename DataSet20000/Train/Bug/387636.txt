@@ -1,0 +1,122 @@
+firefox freeze in xpcom
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; zh-CN; rv:1.8.1.4) Gecko/20070515 Firefox/2.0.0.4
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; zh-CN; rv:1.8.1.4) Gecko/20070515 Firefox/2.0.0.4
+
+i get firefox freeze sometimes when navigating some sites, such as pages in http://bbs.hftogo.com.
+the probability of freezing is no connected with amount of pictures in the page. the firefox just
+freeze, all its tabs and its separate modules are freezed, no responding. and the CPU utilization
+is almost 100%, only END TASK can end it.
+
+my firefox version tag : Mozilla/5.0 (Windows; U; Windows NT 5.1; zh-CN; rv:1.8.1.4) Gecko/20070515 Firefox/2.0.0.4
+
+==============
+
+i started OllyDbg and attach to the freezed process, and i found the deadlock maybe occurs in the xpcom module.
+i checked the stack and make some breakpoints, one is 005A4749 at firefox module :
+
+	005A471A    50              push    eax
+	005A471B    FF51 70         call    dword ptr [ecx+70]
+	005A471E    85C7            test    edi, eax
+	005A4720    8945 FC         mov     dword ptr [ebp-4], eax
+	005A4723    74 08           je      short 005A472D
+	005A4725    889E 90010000   mov     byte ptr [esi+190], bl
+	005A472B  ^ EB C8           jmp     short 005A46F5
+	005A472D    389E 94010000   cmp     byte ptr [esi+194], bl
+	005A4733    0F85 D5000000   jnz     005A480E
+	005A4739    C686 95010000 0>mov     byte ptr [esi+195], 1
+	005A4740    8B45 F8         mov     eax, dword ptr [ebp-8]
+	005A4743    50              push    eax
+	005A4744    8B08            mov     ecx, dword ptr [eax]
+	005A4746    FF51 20         call    dword ptr [ecx+20]
+	005A4749  * 389E 95010000   cmp     byte ptr [esi+195], bl
+	005A474F  ^ 75 EF           jnz     short 005A4740
+	005A4751    8B86 88010000   mov     eax, dword ptr [esi+188]
+	005A4757    FF75 F8         push    dword ptr [ebp-8]
+	005A475A    8B08            mov     ecx, dword ptr [eax]
+	005A475C    50              push    eax
+	005A475D    FF51 24         call    dword ptr [ecx+24]
+	005A4760    8B76 B8         mov     esi, dword ptr [esi-48]
+	005A4763    68 BC15A400     push    00A415BC
+	005A4768    56              push    esi
+	005A4769    8D4D 08         lea     ecx, dword ptr [ebp+8]
+	005A476C    895D 08         mov     dword ptr [ebp+8], ebx
+	005A476F    FF15 CCA19600   call    dword ptr [<&xpcom_core.nsCOMPtr_base::assign_from_qi>]    ; xpcom_co.nsCOMPtr_base::assign_from_qi
+	005A4775    395D 08         cmp     dword ptr [ebp+8], ebx
+
+the stack list :
+
+	0013E8D0   0013EAF8
+	0013E8D4   0013EC98
+	0013E8D8   01B5CF0A
+	0013E8DC   77C05C94  msvcrt._except_handler3
+	0013E8E0   77BE2070  msvcrt.77BE2070
+	0013E8E4   FFFFFFFF
+	0013E8E8   77BFC2E3  RETURN to msvcrt.77BFC2E3 from msvcrt.77C0745B
+	0013E8EC   004E11EE  RETURN to firefox.004E11EE from xpcom_co.NS_Free_P
+	0013E8F0   029B9A70
+	0013E8F4   029B9AB8
+	0013E8F8   0013EC98
+	0013E8FC   00A32CC0  firefox.00A32CC0
+	0013E900   016A6464
+	0013E904   600EF5E9  RETURN to js3250.600EF5E9 from nspr4.PR_Unlock
+	0013E908   016A6448
+	0013E90C   05C0FAD8
+	0013E910   0000005A
+	0013E914   00000000
+	0013E918   016A4010
+	0013E91C   02823B18  ASCII "Mozilla/5.0 (Windows; U; Windows NT 5.1; zh-CN; rv:1.8.1.4) Gecko/20070515 Firefox/2.0.0.4"
+	0013E920   00000001
+	0013E924   016C5A34
+	0013E928   02AF71EE
+	0013E92C   016A4008
+	0013E930  /0013E964
+	0013E934  |600D2A7E  RETURN to js3250.600D2A7E from js3250.600EF2FE
+	0013E938  |0282E4F0
+
+look at the tag "RETURN to firefox.004E11EE", i also make breakpoint at 4E11EE, but never hits. so i think
+the deadlock occurs after the 4E11EE ...
+
+	004E11A7    8D4D 10         lea     ecx, dword ptr [ebp+10]
+	004E11AA    FF15 94A29600   call    dword ptr [<&xpcom_core.nsCOMPtr_base::~nsCOMPtr_base>]    ; xpcom_co.nsCOMPtr_base::~nsCOMPtr_base
+	004E11B0    8B35 FCA19600   mov     esi, dword ptr [<&xpcom_core.nsAString_internal::~nsAStrin>; xpcom_co.nsAString_internal::~nsAString_internal
+	004E11B6    8D4D C4         lea     ecx, dword ptr [ebp-3C]
+	004E11B9    FFD6            call    esi
+	004E11BB    8D8D 80FEFFFF   lea     ecx, dword ptr [ebp-180]
+	004E11C1    FFD6            call    esi
+	004E11C3    8D8D 18FFFFFF   lea     ecx, dword ptr [ebp-E8]
+	004E11C9    FFD6            call    esi
+	004E11CB    8B75 FC         mov     esi, dword ptr [ebp-4]
+	004E11CE    8D4D B4         lea     ecx, dword ptr [ebp-4C]
+	004E11D1    FF15 B8A19600   call    dword ptr [<&xpcom_core.nsACString_internal::~nsACString_i>; xpcom_co.nsACString_internal::~nsACString_internal
+	004E11D7    8D4D F8         lea     ecx, dword ptr [ebp-8]
+	004E11DA    FF15 94A29600   call    dword ptr [<&xpcom_core.nsCOMPtr_base::~nsCOMPtr_base>]    ; xpcom_co.nsCOMPtr_base::~nsCOMPtr_base
+	004E11E0    385D F1         cmp     byte ptr [ebp-F], bl
+	004E11E3    74 0A           je      short 004E11EF
+	004E11E5    FF75 EC         push    dword ptr [ebp-14]
+	004E11E8    FF15 20A29600   call    dword ptr [<&xpcom_core.NS_Free_P>]                        ; xpcom_co.NS_Free_P
+	004E11EE    59              pop     ecx
+	004E11EF    8BC6            mov     eax, esi
+	004E11F1    EB 02           jmp     short 004E11F5
+	004E11F3    33C0            xor     eax, eax
+	004E11F5    5F              pop     edi
+	004E11F6    5E              pop     esi
+	004E11F7    5B              pop     ebx
+	004E11F8    C9              leave
+	004E11F9    C2 2800         retn    28
+
+so the deadlock maybe inside xpcom_core.NS_Free_P. this is my simple analysis, could anyone solve the problem ?
+i installed firefox on many PCs of XP system, and got the freezeing every instance, so i do not think it is only
+my problem ...
+
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+1.open bbs.hftogo.com
+2.navigate
+3.and navigate ...
+Actual Results:  
+freeze sometimes
+
+Expected Results:  
+navigate smoothly

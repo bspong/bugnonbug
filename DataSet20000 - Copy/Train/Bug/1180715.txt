@@ -1,0 +1,25 @@
+support nsIFileURL for "moz-page-thumb://" URLs
+This will allow the imgLoader to re-use the cached imgRequest when loading the thumbnail for the same page in separate about:newtab pages.
+
+(In reply to Seth Fowler [:seth] from bug #1162953 comment #16)
+> (In reply to Oliver Henshaw from bug #1162953 comment #9)
+> > I'm not sure why the cached image request needs validating in the first
+> > place. Seems like another bg to me, or is this expected?
+> > ShouldRevalidateEntry() returns true because the expiration time is 0 so the
+> > moz-page-thumb will always be popping in and out of the cache. Then the
+> > onStartRequest decides not to re-use the original imgRequest because
+> > cacheChan = null: does this look correct?
+> 
+> This much is more-or-less as designed, though we could have designed it
+> better. =)
+> 
+> IIRC moz-page-thumb:// is a layer on top of file://, and thus it's not a
+> caching channel. That leads us to conclude that we have no information about
+> whether the channel contents will be different or not, and to reload the
+> image from scratch. We could potentially check the mtime of the file -
+> that's not totally sound, but it's probably good enough in practice. That
+> sounds like something Necko probably already supports; I'll ask around.
+
+The image loader does check the mtime of the file, but first it has to know the the url is backed by a file (i.e. "url instanceof Ci.nsIFileURL" must be true)
+
+This can be done by inheriting from nsStandardURL.h, as e.g. resource:// URLs do. But the mapping from moz-page-thumb:// urls to the underlying file:// urls should probably continue to live with all the other page thumbnailing logic, i.e. in javascript. Fortunately it seems to be possible to inherit from an xpcom "standard-url" instance.

@@ -1,0 +1,27 @@
+Create UITour event framework
+A number of the dependents of bug 1080942 need a new event framework in UITour, to allow parts of Firefox to tell a tour webpage that something happened. Let's use this bug to figure out what that should look like, so it's not spread among those other existing bugs.
+
+There are basically 3 parts to this:
+
+* Define a content API for tour pages to register and receive events
+* Define a chrome API for Firefox code to easily trigger such events
+* Implement the UITour.jsm / uitour.js code to glue #1 and #2 together
+
+I think it would make sense to base this on something similar to DOM event listeners, especially on the content-exposed side. [But minimally so, no bubbling/capturing/cancelable etc. The intent isn't to exactly clone addEventListener] So, something like:
+
+* addTourListener(eventType, callback)
+
+  e.g. UITour.addTourListener("party", function onParty(event) { ... });
+  where |event| is a JS object with event.type == "party" and event.data an
+  arbitrary object supplied from chrome.
+
+* removeTourListener(eventType, callback)
+
+ (If we even need it; I'd suspect we don't)
+
+* dispatchTourEvent(eventType, data) [from chrome code]
+  e.g. dispatchTourEvent("party", { likeItIs: 1999 })
+
+The UITour module would be responsible for routing dispatchTourEvent() calls to any open tour page.
+
+Consider this as starting point for discussion, I'm not beholden to any specifics.

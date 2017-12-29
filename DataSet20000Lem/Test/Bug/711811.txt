@@ -1,0 +1,18 @@
+Create omni.jar at install-time to reduce installer size
+User Agent: Mozilla/5.0 (Ubuntu; X11; Linux i686; rv:8.0) Gecko/20100101 Firefox/8.0
+Build ID: 20111115184056
+
+Steps to reproduce:
+
+To shave off some weight from the installer, we should avoid putting the compressed omni.jar in the installer but rather it content and have the installer produce the jar/zip file.
+
+As a quick test I just downloaded the en-us window installer of fx8.0.1, uncompessed the content of the sfx in a folder and run
+7z a -t7z -mx -m0=lzma lzma.7z core setup.exe (*)
+then I unpacked the content of core/omni.jar in the directory core/omni.jar/, deleted the jar file and re-run the same 7z command.
+The size of the resulting file were 15.9 MB and 14.2MB respectively for the original and unpacked versions, i.e. the unpacked version is about 89-90% of the original.
+
+The downside is obviously the need, for the installer, to perform an additional task (i.e. compressing the content of the omni.jar folder).
+
+Now, if we think this installer/size saving are worth it, there are two way of tackling the problem. Either we roll our own solution (i.e. modify the build system to not produce the omni.jar file but to leave just it content in a folder; modify the installer to take the content of the folder and compress it in the omni.jar archive) or we contribute a 7zip filter that doe all of this transparently (i.e. when a file A of a known archive type is inserted inside another archive B, the content of A are decompressed before being archived in B; upon decompression of B, the content of A are compressed again in A's original format. note: this is likely not a "lossless" operation, i.e. the original A and the decompressed A will likely be different, even though their content will be the same)
+
+(*) I'm aware that the sfx of the installer is compressed using 7zip's manual stream binding voodoo; this is just a quick PoC

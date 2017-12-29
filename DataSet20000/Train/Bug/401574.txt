@@ -1,0 +1,67 @@
+firefox -remote 'openurl(...,new-tab)' returns error if the process has no controlling terminal
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.8) Gecko/20071015 SUSE/2.0.0.8-1.1 Firefox/2.0.0.8
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.8) Gecko/20071015 SUSE/2.0.0.8-1.1 Firefox/2.0.0.8
+
+A firefox 2.0.0.8 process that has no controlling terminal (i.e. all applications launched from the desktop), and which was called as:
+
+      firefox -remote 'openurl(...,new-tab)'
+
+returns the error:
+
+    "Error: Failed to send command: 500 command not parseable"
+
+The issue did not show with version 2.0.0.7. Therefore, it's likely that the issue was introduced in version 2.0.0.8
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. An initial instance of the firefox browser must be running (PROCESS_1).
+
+2 Another process (PROCESS_2) tries to send a command to the already
+running instance, using the "-remote openurl($URL,new-tab)" command line
+option. I've been using the following bash command:
+
+  /usr/bin/firefox -remote 'openurl(http://www.google.com,new-tab)' 2>
+/tmp/ff.out
+
+*Important*
+PROCESS_2 must have been launched *without* a controlling
+terminal. The simplest way to achieve that is to create a desktop icon
+or a desktop panel item, and make it execute the above command line.
+Ensure that any (advanced) option w.r.t. "run in terminal" is
+deselected when creating the desktop item. I'm using the KDE desktop,
+and hence KDE terminology. Therefore, these features may be called
+differently, depending on which desktop you're using.
+
+Note:
+If PROCESS_2 was launched *with* a terminal attached, then firefox behaves as it should.
+
+Actual Results:  
+PROCESS_2 returns the following error message in /tmp/ff.out:
+
+    "Error: Failed to send command: 500 command not parseable"
+
+  and the google web page is not being loaded.
+
+
+Expected Results:  
+- PROCESS_2 ought not return an error
+- /tmp/ff.out ought be an empty file
+- PROCESS_1 ought load the google web page in a separate tab.
+
+
+Note: The reproducible steps are outlined for linux because that's where I encounter the issue. That does not mean that other execution environments are unaffected (see below for a specification of the execution environment).
+
+Specification of the execution environment
+==========================================
+Linux distro: openSuSE 10.2
+
+> firefox -v
+Mozilla Firefox 2.0.0.8, Copyright (c) 1998 - 2007 mozilla.org- firefox
+> kwin -v
+Qt: 3.3.7
+KDE: 3.5.5 "release 45.6"
+KWin: 3.0
+> Xorg -version
+X Window System Version 7.1.99.902 (7.2.0 RC 2)

@@ -1,0 +1,30 @@
+XEmbed not detected by gnash plugin
+User-Agent:       Mozilla/5.0 (X11; U; Linux ppc64; en-US; rv:1.8.0.2) Gecko/20060419 Fedora/1.5.0.2-1.2.fc5 Firefox/1.5.0.2 pango-text
+Build Identifier: Mozilla/5.0 (X11; U; Linux ppc64; en-US; rv:1.8.0.2) Gecko/20060419 Fedora/1.5.0.2-1.2.fc5 Firefox/1.5.0.2 pango-text
+
+The sample code at
+http://www.mozilla.org/projects/plugins/xembed-plugin-extension.html suggests
+that you should use this code to detect XEmbed...
+
+    PRBool supportsXEmbed = PR_FALSE;
+
+    err = CallNPN_GetValueProc(gNetscapeFuncs.getvalue, NULL,
+                               NPNVSupportsXEmbedBool,
+                               (void *)&supportsXEmbed);
+
+    if (err != NPERR_NO_ERROR || supportsXEmbed != PR_TRUE)
+        return NPERR_INCOMPATIBLE_VERSION_ERROR;
+
+This doesn't seem to work though. PRBool seems to be an int -- its size is 4
+bytes. The CallNPN_GetValueProc() call sets only the first byte and leaves the
+others untouched. So on a big-endian machine, supportsXEmbed gets set to
+0x01000000, which != PR_TRUE.
+
+Is this a bug in the documentation, or in firefox?
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Build gnash (http://www.gnu.org/software/gnash/)
+2. Hack your firefox startup script so you actually see messages to stderr
+3. See it say "WARNING: No xEmbed support in this Mozilla version!"

@@ -1,0 +1,50 @@
+Alerts when I tried to close a popup that is in the process of trying to establish a secure connection.
+User-Agent: Mozilla/5.0 (Windows; U; Win98; en-US; rv:1.7.5) Gecko/20041107 Firefox/1.0
+Build Identifier: Mozilla/5.0 (Windows; U; Win98; en-US; rv:1.7.5) Gecko/20041107 Firefox/1.0
+
+This is a wierd, mainly cosmetic bug actually. I wa researching a domain name
+registration at:
+
+http://www.networksolutions.com/en_US/whois/index.jhtml
+
+After entering the domain name and viewing the record for it, I closed the tab I
+had opened for networksolutions. Upon closing the tab and leaving the
+networksolutions web site, networksolutions automatically sends a large popup,
+then a small popup with a secure connection. The problem is that I right-clicked
+the small popup window on the task bar and selected "Close" before the popup had
+fully loaded. This caused Firefox to generate an alert saying something about
+http protocol not supported. I kept clicking OK on the alert which recurred
+repeatedly while I also tried to close the popup window, each time adding http
+to the description of the offending protocol a in:
+
+http
+httpshttps
+httpshttpshttps, etc.
+
+This ha got to be a timing bug that then caused an endless loop in the close
+window/security connection thread related to the popup window. Fix would be to
+kill the popup's thread which is trying to establish a secure connection upon
+the user opting to close the popup window. This is a minor bug a I tend to be
+really quick on the keyboard/mouse when browsing the internet. Most user will
+not likely encounter it.
+
+
+Reproducible: Sometimes
+Steps to Reproduce:
+1. Any site which throw (generates) popup window upon leaving their site.
+2. User right-clicks the popup window's button on the task bar before the
+popup's secure connection ha been fully established. Probably only occurs when
+interrupting the establishment of a secure http protocol for the popup, since
+that's two way activity.
+3.
+
+Actual Results:
+Endless loop of clicking OK on the alert message and trying to close the popup
+window.
+
+Expected Results:
+Fix would be to kill the popup's thread which is trying to establish a secure
+connection upon the user opting to close the popup window. In other words, if
+the user selects to close the popup window (or tab or new window for that
+matter), then all connection protocol for the window to be closed should be
+terminated immediately without throwing any errors.

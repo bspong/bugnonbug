@@ -1,0 +1,39 @@
+when searching by collection in the bookmark organizer, clearing the search box does not show all items in the collection
+when searching by collection in the bookmark organizer, clearing the search box does not show all items in the collection
+
+steps to reproduce:
+
+1) open the bookmarks manager
+2) select a folder x
+3) edit | find in folder x
+4) type "foo" in the search box
+5) hit delete three times in the search box
+
+expected results:  see all the items in folder x
+actual results:  see items in folder x that match "f"
+
+I think the problem is here:  http://lxr.mozilla.org/seamonkey/source/browser/components/places/content/places.js#375
+
+368   search: function PSB_search(filterString) {
+369     // for non-"bookmarks" collections, 
+370     // do not search for "" since it will match all history. Assume if the user
+371     // deleted everything that they want to type something else and don't 
+372     // update the view.
+373     if (PlacesSearchBox.filterCollection != "bookmarks" &&
+374         (filterString == "" || this.searchFilter.hasAttribute("empty")))
+375       return;
+
+What I think we want to do is fix this code, so that if filterString == "", we call PlacesOrganizer.onPlaceSelected(), like we do when the collection is "bookmarks".
+
+380     switch (PlacesSearchBox.filterCollection) {
+381     case "collection":
+382       var folderId = PlacesOrganizer._places.selectedNode.itemId;
+383       content.applyFilter(filterString, true, [folderId], OptionsFilter);
+384       PO.setHeaderText(PO.HEADER_TYPE_SEARCH, filterString);
+385       break;
+386     case "bookmarks":
+387       if (filterString != "")
+388         content.applyFilter(filterString, true);
+389       else
+390         PlacesOrganizer.onPlaceSelected();
+391       break;

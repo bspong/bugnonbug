@@ -1,0 +1,28 @@
+Sessionstore not clearing completly on clean browser exit; giving false restore session alert
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.2.4) Gecko/20100611 Firefox/3.6.4
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.2.4) Gecko/20100611 Firefox/3.6.4
+
+A problem in the sessionstore engine which allows the session store file (sessionstore.js) to be kept on clean exists, thus crating problems like a never-shrinking/always-growing sessionstore.js file, false notices of restoring past session.
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+1a.Optionally: under Tools > Options > General tab > When Firefox starts: set it to Show my windows and tabs from last time.
+1b.Optionally but advised, in about:config set browser.sessionstore.max_tabs_undo to 30 or higher and browser.sessionstore.postdata to 1. This will cause the sessionstore.js to get bigger faster.
+2.Browse heavily. Most notably facebook and youtube on long sessions, these two sites have shown to be taken seriously by the sessionstore engine, the js file growing a lot. I haven't managed to make more than a 3 MB sessionstore.js file but who knows.
+3.Close all tabs, leave only the one blank tab.
+4.Close the browser and wait until it terminates itself, sometimes it takes a few seconds.
+Actual Results:  
+Since the last tab was a blank tab, the session store engine would not need to store anything and the sessionstore.js file should be deleted as it is the case explained by in the note below. It is not deleted! And this causes one of two problems:
+
+1. If Firefox finds an error (screen will be posted later) a window is displayed asking the user to restore the previous session, which in fact was a blank tab, so there's nothing to restore. Well, not quite... it restores some of the tabs active prior to their closure and replacement by the one blank tab.
+
+2. If no. 1 doesn't trigger, sessionstore continue to use the same sessionstore.js file, growing without the need to, creating mixed or dirty sessions, preserving data which might be sensitive even if the used explicitly denied this by leaving just the clean tab at the end of the session. This ever-growing file also makes paying youtube videos (and not only) as well as other sites with plain HTML/JS content and general interactivity with the browser jitter every 10 seconds, supposedly when Firefox dumps the json in the file on the disk. It won't be noticeable if the profile or the sessionstore.js file itself is on a ram drive or an SSD but it will create this unwanted behavior on a regular HDD.
+
+Expected Results:  
+The sessionstore.js file should be deleted or cleaned otherwise from tabs that were closed/terminated prior closing the browser and the history should not be kept unless the sessionstore engine resumed from a crash or an actual session left by the user (tabs and windows open, etc).
+
+Note: this I just found pout today, thus I could write this bug report.
+The behavior doesn't show if the option When Firefox starts: in General tab is set to show a blank page. I  this case, after each termination of the browser, the file sessionstore.js is actually deleted and when rerunning the application the session is clean and the browser doesn't experience any more "oops"es and messages like that.
+
+I know that the workaround would be to just disable saving of tabs upon closing the browser, but that would defeat the purpose of its functionality, which is a needed feature.

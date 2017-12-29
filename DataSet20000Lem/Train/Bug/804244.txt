@@ -1,0 +1,16 @@
+We assume font like DejaVu Serif exist on systems, this cause 2 check to fail
+I am running the unittests on very vanilla linux 32 bit VMs. While running the a11y tests, I find that two of them fail consistently:
+2481 ERROR TEST-UNEXPECTED-FAIL | chrome://mochitests/content/a11y/accessible/attributes/test_text.html | Attribute 'font-family' ha wrong value for area16 at offset 27 - got Nimbus Roman No9 L, expected DejaVu Serif
+2487 ERROR TEST-UNEXPECTED-FAIL | chrome://mochitests/content/a11y/accessible/attributes/test_text.html | Attribute 'font-family' ha wrong value for area16 at offset 27 - got Nimbus Roman No9 L, expected DejaVu Serif
+
+In looking at test_text.html, I see that we set the cursive font family:
+http://mxr.mozilla.org/mozilla-central/source/accessible/tests/mochitest/attributes/test_text.html?force=1#484
+
+Then in attributes.js, we assume that is DejaVu:
+http://mxr.mozilla.org/mozilla-central/source/accessible/tests/mochitest/attributes.js#240
+
+Ahh, this make sense. I don't have dejavu font installed on my system and this test fails.
+
+Solutions could be:
+1) require test machine to have DejaVu font
+2) determine inside the test if we have the expected font on the system, otherwise skip the tests.

@@ -1,0 +1,69 @@
+Link hover in location bar: show full destination URL instead of truncating after hovering for a few seconds
+Filing bug 587908 comment 73 - bug 587908 comment 75 as a new bug.
+
+With the current truncation system, there is no way to view the full destination URL. There's less space up in the address bar area for this then there was in the status bar. Previously, the destination URL shown in the status bar could use up to the full width of the window. Now it's only the right portion of just the address bar. It's around a 60% reduction in space and even moderately long URLs can get truncated. This reduces the user's ability to know where what they click takes them.
+
+Copied from bug 587908:
+
+(In reply to Frank Yan [:fryn] in bug 587908 comment #71)
+> Any suggestions on how it should truncate?
+
+bug 587908 comment 39 -> drop the scheme, domain, and port if they are identical to the origin's
+
+bug 587908 comment 36 -> consider sometimes doing a marquee instead of just truncating
+
+Possible route for long destination URLs:
+
+1) drop domain if it's duplicate info:
+
+http://example.com/here  >  .../there
+
+2) if the destination URL still doesn't fit, then truncate at the end:
+
+http://example.com/here  >  .../there/at/some/long/path/that/doesnotfit...
+
+3) after a second or two of hovering, marquee the full destination URL. The
+shown part goes to the left revealing the end part that was truncated, cycling
+around to show the beginning and repeat.
+
+This would truncate smartly but still allow for the ability to see everything
+if needed.
+
+Oh, and to state what should be obvious, I am *not* suggesting the use of the
+actual <marquee> tag, just a marquee effect. :)
+
+or 2b) smart truncate out the middle, then revert to end truncation when the
+marquee starts. (just brainstorming here)
+
+Thus we start as:
+
+http://example.com/here  >  .../there/at/some/long/.../reallylong/page.html
+
+then after 1 or 2 seconds the destination URL changes to the following, which
+doesn't fit anymore:
+
+http://example.com/here  >  .../there/at/some/long/path/that/doesnotfit/because/the/path/is/reallylong/page.html
+
+but is truncated to fit (without the "..."):
+
+http://example.com/here  >  .../there/at/some/long/path/that/doesnotfit/beca
+
+which then slides to the left to show more of the right portion and cycles
+around to the beginning and repeats. Eventually we get this:
+
+http://example.com/here  >  doesnotfit/because/the/path/is/reallylong/page.h
+
+then:
+
+http://example.com/here  >  path/is/reallylong/page.html  .../there/at/some/
+
+then continued cycling at least once more so the user can see the full URL
+again
+
+(I hope that was somewhat clear)
+
+The later part not fitting would marquee around showing less on the left and
+more on the right, continually cycling until the full destination URL is shown
+at least twice, then eventually reverting to normal origin only state after
+5-10 seconds as proposed above. Bit complex, but it shows some minimal info
+simply but also gives a route to show it all.

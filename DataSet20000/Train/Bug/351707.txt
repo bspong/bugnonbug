@@ -1,0 +1,92 @@
+Method call on object is delegated directly to one of the object's properties
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.12) Gecko/20050922 Fedora/1.0.7-1.1.fc3 Firefox/1.0.7
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.12) Gecko/20050922 Fedora/1.0.7-1.1.fc3 Firefox/1.0.7
+
+Hi,
+
+I have a method like this on a ViewHandler object:
+
+	getComponentClass: function(node)
+	{	alert('here');
+		componentTag = this.calculateComponentTag(node);
+		alert(componentTag);
+		//componentClass = this.namespacedTagToComponentClassMap.entry(componentTag);
+		//return tag ? clazz : -1;
+		//We really never return -1 because an exception is thrown...but dojo.raise needs to be fixed.
+		//TODO Update when dojo.raise is fixed. 
+	},
+
+I have the same method on 
+
+namespacedTagToComponentClassMap
+
+and it looks like this:
+
+getComponentClass: function(tag)
+	{
+		if (this.contains(tag)) 
+		{
+			return this.entry(tag); 
+		}
+		else 
+		{
+			throw Error("Component does not exist");
+			//dojo.raise("Can not find component class for tag: " + tag, Error("Component does not exist"));
+		}		
+	}
+
+When I call the getComponentClass method on the ViewHandler reference object, it delegates directly to the 
+namespacedTagToComponentClassMap
+method, 
+
+I tested this by renaming the getComponentClass method on the viewHandler, and it gets called when renamed, but not when it has the same name as method on the map object contained within itself.
+
+If you email me at ole_ersoy@yahoo.com I can send you the test cases, along with the code.
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+You should be able to reproduce by like this:
+
+dojo.provide("dojo.presentation.application.NamespacedTagToComponentClassMap");
+dojo.require("dojo.collections.Dictionary");
+
+/*
+ * This has to be initialized by the page loading the component libraries
+ */
+dojo.declare(	"dojo.presentation.application.NamespacedTagToComponentClassMap", 
+				dojo.collections.Dictionary,
+{
+	getComponentClass: function(tag)
+	{
+		if (this.contains(tag)) 
+		{
+			return this.entry(tag); 
+		}
+		else 
+		{
+			throw Error("Component does not exist");
+			//dojo.raise("Can not find component class for tag: " + tag, Error("Component does not exist"));
+		}		
+	}
+});
+
+
+Now create another class AnotherClass that also has a 
+	getComponentClass: function(tag)
+method on it.
+
+Create an AnotherClass instance,
+anOtherClass
+
+and call getComponentClass on it, which will delegate to the referenced
+dojo.presentation.application.NamespacedTagToComponentClassMap
+
+getComponentClass method.
+
+It will go directly to this method, instead of calling the container's getComponentClass method....
+
+Cheers,
+- Ole

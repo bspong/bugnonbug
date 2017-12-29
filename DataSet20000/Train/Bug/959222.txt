@@ -1,0 +1,17 @@
+Make browserid_identity a first-class identity module
+Created attachment 8359271
+Make-browserid_identity-a-first-class-identity-modul.patch
+
+Currently sync initializes with the legacy identity provider.  When the final-ui-startup observer fires, we wait 10 seconds, then replace the identity module with browserid_identity and do the Fxa dance - ie, it's kinda a "second class" identity module as it gets monkey-patches in.  Among the problems with this, one is that sync may initialize before the timer fires (eg, when sync options is shown) causing a number of issues.
+
+This patch tries to make browserid_identity a "first class" provider.  It:
+
+* Changes status.js so that _authManager is a getter which determines what provider to use based on the same preference Weave.js currently uses.
+
+* Changes service.js so that identity is a getter, which simply delegates to status._authManager.
+
+* Adds a new promise-based method initializeIdentityManager to both providers - this is a noop for the legacy provider, and all of the maybeInitWithFxAccountsAndEnsureLoaded() logic is moved from Weave.js into this new method in bid_identity.
+
+* Weave.js's ensureLoaded now calls initializeIdentityManager for the current provider.
+
+The end result should be that this makes the browserid_identity module a first-class identity module, and moves much of the Fxa-specific code out of Weave.js and back into bid_identity where it belongs.

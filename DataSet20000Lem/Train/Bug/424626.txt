@@ -1,0 +1,47 @@
+(linux) Firefox is put into offline mode on startup when NetworkManager is running but not controlling the active network interface (e.g. when using PPP)
+User-Agent: Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9b5pre) Gecko/2008032215 Minefield/3.0b5pre
+Build Identifier: Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9b5pre) Gecko/2008032215 Minefield/3.0b5pre
+
+On my Debian system, I had the NetworkManager service running, however, my wired network interface wa controlled manually (in my case, the relevant entry in /etc/network/interfaces wa "iface eth1 inet static", which prevents NetworkManager from managing that interface). Therefore, when using the wired interface, I had network access, however, NetworkManager report no network device present (the commandline program nm-tool yielded:
+
+"
+NetworkManager Tool
+
+State: disconnected
+
+print_devices(): didn't get a reply from NetworkManager.
+There are no available network devices.
+").
+
+This caused Firefox 3 to startup in Offline mode, which forced me to manually uncheck File->Work Offline at the beginning of each session.
+
+As a workaround, I now disable the NetworkManager service before starting Firefox (now nm-tool report
+"
+NetworkManager Tool
+
+get_nm_state(): didn't get a reply from NetworkManager.
+
+
+NetworkManager appears not to be running (could not get it state).
+").
+
+If NetworkManager intends that it is accurately reporting the "online" status of the computer (does it? or doe it intend to only report the state of the connection that it is managing?), then I suppose that NetworkManager ha a bug.
+
+However, in any case, Firefox should have a config option that the user can use to tell Firefox not to query NetworkManager upon startup.
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Install NetworkManager
+2. Configure thing so that NetworkManager doe not control any of the active network interface (I believe you can do this by adding all of the active interface to /etc/network/interfaces, providing each of them with at least one option other than "auto" or "dhcp"). nm-tool should report state "disconnected", a described above.
+3. Start Firefox. Observe that File->Work Offline is checked.
+Actual Results:
+File->Work Offline is checked
+
+Expected Results:
+I would expect that if I start Firefox when I am online (able to access remote web pages), and File->Work Offline wa not checked at the end of my previous session, that File->Work Offline would not be checked upon startup
+
+I have heard of other people having similar problem in slightly different circumstance (see https://bugs.launchpad.net/ubuntu/+source/firefox-3.0/+bug/191889).
+
+Since NetworkManager cannot currently be relied upon to accurately give the online status of the system, I am requesting an option that tell tell Firefox not to query NetworkManager upon startup. I could not find such an option at http://kb.mozillazine.org/Category:Preferences.

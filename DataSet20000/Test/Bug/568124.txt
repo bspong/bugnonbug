@@ -1,0 +1,22 @@
+can't open local file with semicolon in path; attempts to open path prefix before semicolon instead
+User-Agent:       Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; en-US; rv:1.9.2.3) Gecko/20100401 Firefox/3.6.3
+Build Identifier: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; en-US; rv:1.9.2.3) Gecko/20100401 Firefox/3.6.3
+
+If I attempt to open a local file in Firefox with at least one semicolon in its path (be it the name of the file, or a directory or volume containing it at any level up) by double-clicking it, by right-clicking it and selecting Open With -> Firefox, by drag-dropping it onto Firefox's icon in the Dock or in Finder, clicking it on the dock, or by sending an Apple Event (as by running an AppleScript), Firefox will attempt to open the part of the path preceding the first (and possibly only) semicolon therein, whether there is a file system object at this path or not, and regardless of what type of object it might be. [So: If there is nothing at this path, Firefox will show a "File not found" error page. If there is a an object at this path, Firefox will open it if it is a file or list it if it is a directory (even a volume). If the semicolon is the first character of the name, Firefox will list its parent directory.] Additionally, if I send an Apple Event to open a path containing a semicolon for which no object exists, Firefox will exhibit the same behaviour, opening or listing (as appropriate) an object at the path preceding the semicolon if one exists, or showing the "File not found" error page. In any case, the location bar will reflect the truncated path which Firefox attempted to open.
+
+If, on the other hand, I open the item by selecting Firefox's File -> Open menu item [or command+O], by directly navigating to the file through the location bar, by navigating to its parent directory and opening it from the directory listing, by drag-and-dropping onto a Firefox browser window's location bar, tab bar, or content area, or by using the "open" command-line utility, Firefox's behaviour is correct in this regard.
+
+Reproducible: Always
+
+Steps to Reproduce:
+[Presuming Firefox is your default browser:]
+1. Open a file named "foo;bar.html" through Finder or the Dock.
+1. Open a file named "baz.html" in a directory named "foo;bar" through the same.
+1. Oprn a file named ";qux.html" through the same.
+Actual Results:  
+In the first two cases, if there is no item "foo" in the same directory as the file "foo;bar.html" or the directory "foo;bar", then you'll see a "File not found" error page. If there is a "foo" there, Firefox will open "foo". In both these cases, the path in the location bar will end in "foo".
+
+In the third case, Firefox will list the directory in which ";qux.html" is.
+
+Expected Results:  
+Firefox should open "foo;bar.html", "foo;bar/baz.html", or ";qux.html".

@@ -1,0 +1,33 @@
+Firefox session restore fails and is not GREEN (excessive CPU use)
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.12pre) Gecko/2009071319 Firefox/3.0.12pre
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.12pre) Gecko/2009071319 Firefox/3.0.12pre
+
+The attached session fails to restore under a "typical" firefox configuration.  It appears that a combination of synchronous X error reporting, NoScript and/or Adblock checking, Javascript and unloaded tab "spinner" activity max out the CPU and prevent Firefox from reloading and resuming a session.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Install the attached session.  Install the noscript and adblock extensions, enable javascript in prefs.js.
+2. Start firefox-bin --nosync
+3. wait, and wait, and wait...
+Actual Results:  
+The tabs never load (all tabs are shown as waiting and active "unloaded spinners").  CPU use is effectively 100% (between firefox and X).  This can go on for an hour or more (normal restart times for sessions near this size is 15-20 minutes).
+
+Expected Results:  
+Firefox should always allow one to restart a session.  Firefox should enable *by default* minimal useless CPU activity (i.e. a "GREEN" perspective) during session restarts.
+
+This session was a fairly active X session that could still be used though its CPU consumption was high (20-30%) presumably in part due to the problem outlined in Bug #504990 as well as the fact that many of the windows in the session have active "low overhead" Javascript use.
+
+When I tried to restart this session it would always hang and consume an hour or more of CPU before I killed it.  In order to get it to reload I had to:
+
+1) Completely disable javascript (user_pref("javascript.enabled", false); in prefs.js);
+2) Completely remove the two "normally" installed extensions (NoScript & AdBlock) by renaming the extensions directory.
+3) Remove the "--sync" argument from the firefox startup lines in my script files.  (I normally use the --sync arg to get a better handle on what causes the long standing "window unexpectedly destroyed" bugs and the more recent BadIdChoice problem).
+
+Only when all of those options were disabled was the session able to reload.  I believe there are at least 2, perhaps 3, significant problems.
+
+1. Restarting lots of tabs generates lots of tab "spinners".  This in turn seems to result in lots of CPU consumption by Firefox and X (presumably spinning the spinners).  Spinners should be disabled (most GREEN) or have a minimal spin rate (based on # active spinners) until all tab/window restoration is complete.  I do *NOT* need Firefox to tell me it is "busy" -- on Linux the Gnome panel system monitor is perfectly capable of tracking both the CPU and Network use so I can get back to the session when it has finished reloading pages and redrawing windows.  Firefox wasting CPU time (and electricity) on eye-candy and delaying the resumption of the session is completely unnecessary.
+
+2. NoScript may have recently added a "CPU/network timeout" tracker (Thread.js, line 62).  When this detects a heavy load situation it generates a popup window asking whether to continue or stop the script (or this may be a recent Firefox enhancement -- I don't know).  Hitting either continue or stop (many times) appears to have no effect.  The CPU use continues and the popup window is continually present (either it never goes away or is immediately redrawn).  Javascript use, in various extensions, may need to be disabled until the session restore is complete.
+
+3. I normally run with NoScript preventing Javascript from running by default (people who do not run this way have mush for brains).  I would disable Javascript completely were it not for the fact that there are some sites that can be viewed as "safe" (e.g. PubMed) where it enhances browsing capabilities.  So Javascript is normally on for these sites.  If the sites use timeouts they have the side effect of generating a random CPU load (unless they are clever about how they use them).  That is ok if one has started the tabs at random times during browsing and the timeouts are spaced far enough apart to not run all-at-once.  If however one attempts to restart all of these tabs at the same time the timeouts may all activate in close proximity generating thread or CPU race conditions.  Again the only solution appears to be imposing completely preventing javascript from running during restarts or perhaps require minimal between timeout delays when one has multiple tabs running multiple timeouts.

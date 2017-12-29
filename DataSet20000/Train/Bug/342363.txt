@@ -1,0 +1,36 @@
+tab drop indicator should be a few more pixels to the right in a certain case
+drop indicator should be a few (1/2 the width of the drop indicator) more pixels to the right in certain case
+
+here's the scenario:  when you are dragging and dropping a tab and you don't have enough tabs where you get the scrolling effect (see bug #318168), and you attempt to drop the tab to the far right, it will not be placed in the exact spot it should.
+
+instead, it will be a few pixels to the left of where it should be, and the entire indicator is visible. 
+
+we are setting the marginLeft of the drop indicator, and if we set it any further to the right, it will flex and stretch the containing hbox which will in turn flex and stretch the url bar, and this is not good.
+
+I'll attach a screen shot of what it looks like now, and what I want it to look like.
+
+from bug #318168, I have this comment:
+
+1)  fix this code and make it so the drop indicator, if drawn on the far right
+(or far left, if rtl) is clipped as it is on the far left (or far right, if
+rtl)
+
+here's the code I don't especially like:
+
++                // make sure we don't place the tab drop indicator past the
++                // edge, or the containing box will flex and stretch
++                // the tab drop indicator bar, which will flex the url bar.  
++                // XXX todo
++                // just use first value if you can figure out how to get
++                // the tab drop indicator to crop instead of flex and stretch
++                // the tab drop indicator bar.
++                var maxMarginRight = Math.min(
++                  (minMarginRight + tabStripBoxObject.width), 
++                  (ib.boxObject.x + ib.boxObject.width -
+ind.boxObject.width));
+
+discusssing it with michael wu, he gave me an idea of how to do what I want.
+
+one suggestion is to not use marginLeft, but instead use relative positioning of the background image, so that it will crop instead of affect the containing hbox.
+
+I'll investigate.

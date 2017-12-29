@@ -1,0 +1,87 @@
+Unknown Javascript causing severe Browser hang
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.12) Gecko/20050915 Firefox/1.0.7
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.12) Gecko/20050915 Firefox/1.0.7
+
+Please bear with me on this, it's a little difficult to explain.
+
+I am using FF version 1.0.7 because 1.5 doe not work for me, install is fine and the browser executes without a problem, but no connection to a website is ever made. No errors, just no connections. But that's a different issue.
+
+I found something interesting in the eBay source code that I thought might allow me to include a greeting to a viewing member of an online auction. I don't think it work anyway, but that's beside the point. In the process, I stumbled upon something.
+
+As strange a it sounds, it only appears to be reproducable whilst submitting an auction to eBay, obviously using a live account, therefore such is a prerequisite in any testing you might carry out. It doe not work by simply creating a local HTML file.
+
+I honestly don't understand how or why this problem occurs, but what I do know is that it is indeed a problem and potentially exploitable. There must be something in the javascript file on the eBay site that's causing it, but I have no idea what or where that would be.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. For those with an eBay account and can submit a live auction...
+2. Proceed to create an auction (no need to actually submit it).
+3. In the item description, input the following (remove the comments)...
+
+<!--script src="http://include.ebaystatic.com/js/e449/uk/ebaybase_e4492uk.js">
+</script>
+<script>
+ebay.oDocument._getControl("greetings")._exec(
+
+"writePersonalHeader",
+"Sign in",
+"",
+"register",
+"",
+"Sign out",
+"",
+
+'Hello! ##1## or ##2##.',
+'Hello, ##1##!',
+'Hello, ##2##!',
+'Hello eBay Guest!',
+
+1,null);
+</script-->
+
+4. Preview the description
+
+You should now see "Hello [username]!" This is normal, thing are working a they should.
+
+5. Now try this...
+
+<!--script src="http://include.ebaystatic.com/js/e449/uk/ebaybase_e4492uk.js">
+</script>
+<script>
+ebay.oDocument._getControl("greetings")._exec(
+
+"writePersonalHeader",
+"Sign in",
+"register",
+"Sign out",
+
+'Hello! ##1## or ##2##.',
+'Hello, ##1##!',
+'Hello, ##2##!',
+'Hello eBay Guest!',
+
+1,null);
+</script-->
+
+6. Preview the description once again.
+7. I expect the browser is now unresponsive.
+
+Note that the "", bit have been taken out of the second example. I thought they were irrelevant, but I guess not. One or more of them are the cause.
+Actual Results:
+Browser hangs, forced to end the process when task manager finally shows.
+
+Expected Results:
+Browser should execute the script without or without error, but certainly not causing the hang that I witness.
+
+Not repoducable at all in IE, it doesn't even accept the script.
+
+Computer specs...
+
+XP Home Edition
+512MB DDR 333mHz RAM
+2gHz Athlon XP Processor
+64mb AGP ASUS Graphics
+
+FireFox 1.0.7
+2mb Broadband

@@ -1,0 +1,24 @@
+FUEL calls with nsIVariant parameter or return value not thread safe in Trunk
+My add-on has a background thread that runs once at startup.  The thread used to contain code that reads preference values using the nsIPrefBranch component.  That worked fine in the latest Nightly Minefield load (20100511).  I changed my code to use the FUEL preference component (extIPreferenceBranch) instead, specifically the fuelIApplication.prefs.getValue(xxx) function.  This caused the following abort in Minefield:
+
+http://crash-stats.mozilla.com/report/index/bp-c97b9fbf-8eae-4b46-999d-0f4532100512
+
+###!!! ABORT: Main-thread-only object used off the main thread: file e:/builds/moz2_slave/mozilla-central-win32-nightly/build/xpcom/base/nsCycleCollector.cpp, line 1199
+### ERROR: WalkStack64: The handle is invalid.
+###!!! ABORT: Main-thread-only object used off the main thread: file e:/builds/moz2_slave/mozilla-central-win32-nightly/build/xpcom/base/nsCycleCollector.cpp, line 1199
+
+
+I changed the code to use fuelIApplication.prefs.get(xxx).value which also ABORTS if the preference exists (it does nothing otherwise).  The crash stack for that is similar, but slightly different.
+
+http://crash-stats.mozilla.com/report/index/b54b9cba-b6c6-40cd-824a-8e3662100512
+
+
+Both work fine in Firefox 3.6.4b3 and earlier.  My code that used to use nsIPrefBranch is virtually identical to the code in fuelApplication.js.
+
+
+Here's a test case. Paste the following into the error console.  For me it works in Firefox 3.6.4b3, but causes an exception for Minefield (without triggering Crash Reporter).:
+
+var Cc = Components.classes; var backgroundThread = { run: function(){ Application.prefs.all; }, QueryInterface: function(iid) { if (iid.equals(Ci.nsIRunnable) || iid.equals(Ci.nsISupports)) { return this; } throw Cr.NS_ERROR_NO_INTERFACE; }}; var thread = Cc["@mozilla.org/thread-manager;1"].getService().newThread(0); thread.dispatch(backgroundThread, thread.DISPATCH_NORMAL);
+
+
+Since the FUEL calls that are throwing aborts are ones that take or return an nsIVariant, I think the problem is with the nsIVariant, but I'm not 100%.  For example, "Application.prefs.all", "Application.prefs.getValue(...)" and "Application.prefs.get(...).value"

@@ -1,0 +1,27 @@
+Firefox check to see if it default and return always false, even when true.
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.10) Gecko/2009042316 Firefox/3.0.10
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.9.0.10) Gecko/2009060621 Minefield/3.0.10
+
+I built firefox 3.0.10 from source on window XP. This bug is not present in XP installation but is in Vista.
+
+The problem lie in chrome://browser/content/preferences/advanced.js's gAdvancedPane.checkNow function.
+
+This function make a call to shellSvc.isDefaultBrowser , which always return false, regardless of if firefox is the default browser. This will cause the advanced.[js|xul] duo to make a popup alert asking you if you would like to make firefox the default browser, despite the fact that it already is the default browser. Bug becomes very noticeable when the configuration is set for firefox to check at startup.
+
+Most likely cause: the isDefaultBrowser function is probably poorly written. In the context of checkNow, it is used in an if statement a "!shellSvc.isDefaultBrowser(false)". This is needlessly complicated for what should be a simple function, and the function's design probably reflects this. The name implies a simple truth value, but counter-intuitively it receives a boolean parameter whose value in this case is the opposite of the expected outcome, and the resulting value is further reversed by a '!', by this time the function is le reliable simply for the fact that is hard to use. Hard to use function are rarely the result of elegantly written code.
+
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.Build firefox on an XP system.
+2.Make an installer and install on a Vista system
+3.Go to preferences>advanced and set firefox to always check to see if it is the default browser at startup.
+4.Restart firefox and opt to make firefox the default browser. Repeat this step continuously.
+Actual Results:
+Firefox check to see if it is the default browser and always indicates that it is not.
+
+Expected Results:
+Firefox check to see if it is the default browser and indicates the proper result.

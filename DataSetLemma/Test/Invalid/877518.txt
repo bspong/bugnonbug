@@ -1,0 +1,37 @@
+duplicate encoding of audio
+The captured audio data will be encoded twice in GIPS. One is in VoEBaseImpl::RecordedDataIsAvailable from capture thread and the other is in VoEExternalMediaImpl::ExternalRecordingInsertData from MSG thread. Here are the call stacks.
+
+#0 webrtc::voe::Channel::EncodeAndSend (this=0x10d20c200) at /Users/yy/workspace/mozilla-central-2/media/webrtc/trunk/webrtc/voice_engine/channel.cc:5911
+#1 0x0000000104d532e8 in webrtc::voe::TransmitMixer::EncodeAndSend (this=0x14fd58c00) at /Users/yy/workspace/mozilla-central-2/media/webrtc/trunk/webrtc/voice_engine/transmit_mixer.cc:470
+#2 0x0000000104d5a24f in webrtc::VoEBaseImpl::RecordedDataIsAvailable (this=0x14fcab5c8, audioSamples=0x14fd5ac6a, nSamples=480, nBytesPerSample=4 '\004', nChannels=2 '\002', samplesPerSec=48000, totalDe
+layMS=10185, clockDrift=0, currentMicLevel=0, newMicLevel=@0x152f0c614) at /Users/yy/workspace/mozilla-central-2/media/webrtc/trunk/webrtc/voice_engine/voe_base_impl.cc:206
+#3 0x0000000104d5a38f in non-virtual thunk to webrtc::VoEBaseImpl::RecordedDataIsAvailable(void const*, unsigned int, unsigned char, unsigned char, unsigned int, unsigned int, int, unsigned int, unsigned int&) (this=0x14fcab5d0, audioSamples=0x14fd5ac6a, nSamples=480, nBytesPerSample=4 '\004', nChannels=2 '\002', samplesPerSec=48000, totalDelayMS=10185, clockDrift=0, currentMicLevel=0, newMicLevel=@0x152f0c614) at /Users/yy/workspace/mozilla-central-2/media/webrtc/trunk/webrtc/voice_engine/voe_base_impl.cc:231
+#4 0x0000000104d7b2fb in webrtc::AudioDeviceBuffer::DeliverRecordedData (this=0x14fd5ac38) at /Users/yy/workspace/mozilla-central-2/media/webrtc/trunk/webrtc/modules/audio_device/audio_device_buffer.cc:5
+04
+#5 0x0000000104d88cdd in webrtc::AudioDeviceMac::CaptureWorkerThread (this=0x14fccb400) at /Users/yy/workspace/mozilla-central-2/media/webrtc/trunk/webrtc/modules/audio_device/mac/audio_device_mac.cc:321
+1
+#6 0x0000000104d81b35 in webrtc::AudioDeviceMac::RunCapture (ptrThis=0x14fccb400) at /Users/yy/workspace/mozilla-central-2/media/webrtc/trunk/webrtc/modules/audio_device/mac/audio_device_mac.cc:3134
+#7 0x0000000104c4a273 in webrtc::ThreadPosix::Run (this=0x14dbf9210) at /Users/yy/workspace/mozilla-central-2/media/webrtc/trunk/webrtc/system_wrappers/source/thread_posix.cc:338
+#8 0x0000000104c4a025 in StartThread (lp_parameter=0x14dbf9210) at /Users/yy/workspace/mozilla-central-2/media/webrtc/trunk/webrtc/system_wrappers/source/thread_posix.cc:95
+#9 0x00007fff8d2eb7a2 in _pthread_start ()
+#10 0x00007fff8d2d81e1 in thread_start ()
+
+#0 webrtc::voe::Channel::EncodeAndSend (this=0x15b14d600) at /Users/yy/workspace/mozilla-central-2/media/webrtc/trunk/webrtc/voice_engine/channel.cc:5900
+#1 0x0000000104d532e8 in webrtc::voe::TransmitMixer::EncodeAndSend (this=0x15b147600) at /Users/yy/workspace/mozilla-central-2/media/webrtc/trunk/webrtc/voice_engine/transmit_mixer.cc:470
+#2 0x0000000104d649f9 in webrtc::VoEExternalMediaImpl::ExternalRecordingInsertData (this=0x15b194138, speechData10ms=0x1584175d0, lengthSamples=160, samplingFreqHz=16000, current_delay_ms=150) at /Users/
+yy/workspace/mozilla-central-2/media/webrtc/trunk/webrtc/voice_engine/voe_external_media_impl.cc:255
+#3 0x0000000104e518d7 in mozilla::WebrtcAudioConduit::SendAudioFrame (this=0x126bdba40, audio_data=0x1584175d0, lengthSamples=160, samplingFreqHz=16000, capture_delay=150) at AudioConduit.cpp:517
+#4 0x0000000104ebec55 in mozilla::MediaPipelineTransmit::PipelineListener::ProcessAudioChunk (this=0x15330d880, conduit=0x126bdba40, rate=16000, chunk=@0x158d82fd8) at MediaPipeline.cpp:756
+#5 0x0000000104ebe561 in mozilla::MediaPipelineTransmit::PipelineListener::NotifyQueuedTrackChanges (this=0x15330d880, graph=0x15840b1f0, tid=2, rate=16000, offset=500267, events=0, queued_media=@0x1146f
+0a20) at MediaPipeline.cpp:664
+#6 0x0000000102638202 in mozilla::TrackUnionStream::CopyTrackData (this=0x15768a6a0, aInputTrack=0x158dda260, aMapIndex=0, aFrom=32902917, aTo=32939268, aOutputTrackFinished=0x14d780a0f) at TrackUnionStr
+eam.h:245
+#7 0x0000000102637975 in mozilla::TrackUnionStream::ProduceOutput (this=0x15768a6a0, aFrom=32902917, aTo=32939268) at TrackUnionStream.h:70
+#8 0x000000010262a97d in mozilla::MediaStreamGraphImpl::RunThread (this=0x15840b1f0) at /Users/yy/workspace/mozilla-central-2/content/media/MediaStreamGraph.cpp:1011
+#9 0x000000010262f699 in mozilla::(anonymous namespace)::MediaStreamGraphThreadRunnable::Run (this=0x126bab080) at /Users/yy/workspace/mozilla-central-2/content/media/MediaStreamGraph.cpp:1138
+#10 0x00000001041de206 in nsThread::ProcessNextEvent (this=0x158413280, mayWait=true, result=0x14d780dde) at /Users/yy/workspace/mozilla-central-2/xpcom/threads/nsThread.cpp:627
+#11 0x000000010413bfa9 in NS_ProcessNextEvent (thread=0x158413280, mayWait=true) at nsThreadUtils.cpp:238
+#12 0x00000001041dcbf7 in nsThread::ThreadFunc (arg=0x158413280) at /Users/yy/workspace/mozilla-central-2/xpcom/threads/nsThread.cpp:265
+#13 0x0000000101236245 in _pt_root ()
+#14 0x00007fff8d2eb7a2 in _pthread_start ()
+#15 0x00007fff8d2d81e1 in thread_start ()

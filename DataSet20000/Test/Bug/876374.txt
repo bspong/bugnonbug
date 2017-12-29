@@ -1,0 +1,9 @@
+adjustTabstrip() call in addTab() causes unnecessary uninterruptible reflow when opening a second tab
+Created attachment 754400
+eliminate uninterruptible reflow caused by calling adjustTabstrip() in addTab()
+
+Bug 722681 added the tabContainer.adjustTabstrip() call in addTab() when starting the tabopen animation. While it helps with perceived performance this degrades actual performance because the getBoundingClientRect() call in adjustTabstrip() causes an uninterruptible reflow.
+
+Most of the logic in adjustTabstrip() is not needed in order to achieve the same thing as bug 722681 intended. I moved this into a separate adjustTabstripForTabOpen() method that doesn't contain a getBoundingClientRect() call as it's *highly* unlikely that the tab width is lower than tabClipWidth with only two tabs. In the edge case of it we'll just 'closebuttons' to 'activetab' after the animation has ended. I think we can really omit the edge case here in favor of speeding up every addTab() call.
+
+The second thing this patch does is add a adjustTabstripForTabClose() method because I figured we also want to immediately hide the first tab's close button when closing one of two tabs. We could just call adjustTabstrip() here but most of the logic isn't needed for this effect and we'd somehow need to pass a parameter that tells it to ignore the closing tab. I figured having this as a separate method as well is cleaner.

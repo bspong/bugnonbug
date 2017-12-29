@@ -1,0 +1,61 @@
+Source maps does not work in Web Workers
+Created attachment 8546165
+source-map-web-workers.png
+
+User Agent: Mozilla/5.0 (X11; Linux x86_64; rv:34.0) Gecko/20100101 Firefox/34.0
+Build ID: 20141201111703
+
+Steps to reproduce:
+
+Write a simple web worker in coffeescript, for example, 
+
+```coffee
+throwError = -> throw new Error('hello world')
+throwError()
+```
+Install coffeescript via npm, 
+
+```shell
+npm install coffee-script
+```
+
+Compile that code via the coffescript compiler with source maps turned on.
+
+```shell
+./node_modules/coffee-script/bin/coffee -m -c test.coffee
+```
+
+Build a simple html page to load that web worker, 
+
+```html
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title></title>
+    <script>
+      var worker = new Worker('test.js');
+      worker.onerror = function(e) { console.log(e); };
+    </script>
+  </head>
+  <body>
+  </body>
+</html>
+
+```
+
+And load that page in firefox. 
+
+
+Actual results:
+
+The error message is correctly logged in the console, but is shows a refrence to the javascript source, not the source map. Attached is an screen shot of the console output. 
+
+
+Expected results:
+
+Actually I am not sure what _should_ happen. Ideal Firefox would support source maps in web workers. Should maybe this is a feature request not a bug report. 
+
+Please let me know if you need anymore information, or if this is simply not supported and Firefox does not plan on supporting this. 
+
+Thanks.

@@ -1,0 +1,30 @@
+SSL server chain not resolved (broken) by Firefox (sec_error_unknown_issuer) with a known root CA .
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; fr; rv:1.9.1.5) Gecko/20091109 Ubuntu/9.10 (karmic) Firefox/3.5.5
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; fr; rv:1.9.1.5) Gecko/20091102 Firefox/3.5.5
+
+Go to https://testcb.application.equipement.gouv.fr/, Firefox issue a warning "sec_error_unknown_issuer" although the root CA (PM/SGDN - IGC/A) is present in Firefox and all the intermediate CA chain is sent by web server.
+=> This warning is not issued with Internet Explorer, openssl s_client or Opera (with root CA added to Opera).
+
+This website is authentified with a SSL certificate included in the following chain :
+website certificate (testcb...) > AC Serveurs > AC Ministere > IGC/A
+- The upper (root) CA is included in Firefox build.
+- intermediate level are send by Apache web server.
+=> Firefox resolve the first level only (AC Serveurs) and ignore others levels.
+
+Links to this CA and host certificate :
+- Root CA : build in Firefox.
+- Other certificate for test : https://testcb.application.equipement.gouv.fr/certificates.zip
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Use a recent Firefox version (e.g. 3.5.5)
+2. Connect to https://testcb.application.equipement.gouv.fr : "sec_error_unknown_issuer" warning
+3. With openssl, use "openss s_client -showcerts -connect testcb.application.equipement.gouv.fr:443 -CAfile CA-igc-rsa.pem" : no warning.
+4. Try with Internet Explorer : no warning too.
+
+Actual Results:
+Warning "sec_error_unknown_issuer".
+
+Expected Results:
+No warning (root CA in Firefox and all the chain sent by web server).

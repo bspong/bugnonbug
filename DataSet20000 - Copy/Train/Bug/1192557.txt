@@ -1,0 +1,51 @@
+Firefox becomes zombie, defunct with home directory on NFS share
+User Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:39.0) Gecko/20100101 Firefox/39.0
+Build ID: 20150806192140
+
+Steps to reproduce:
+
+Used firefox, wanted to see a flash video.
+
+
+Actual results:
+
+Firefox got a zombie, which couldn't be killed.
+
+$ sudo  ps aux | grep -i firefox
+<...>   3128  8.1 27.6 3274672 2239232 ?     tl   Aug06 322:02 /usr/lib/firefox/firefox
+<...>   3183 40.7 11.2 2469728 913544 ?      Sl   Aug06 1614:25 /usr/lib/firefox/plugin-container /usr/lib/adobe-flashplugin/libflashplayer.so -greomni /usr/lib/firefox/omni.ja -appomni /usr/lib/firefox/browser/omni.ja -appdir /usr/lib/firefox/browser 3128 true plugin
+<...>  17265  0.0 26.5 3274868 2150992 ?     S    20:24   0:00 /usr/lib/firefox/firefox
+
+
+$ sudo kill -9 3183
+$ sudo  ps aux | grep -i firefox
+<...>   3128  8.1 27.6 3274672 2239232 ?     tl   Aug06 322:02 /usr/lib/firefox/firefox
+<...>  17265  0.0 26.5 3274868 2150992 ?     S    20:24   0:00 /usr/lib/firefox/firefox
+
+
+$ sudo strace -p 17265
+Process 17265 attached
+wait4(3171, 
+
+^CProcess 17265 detached
+ <detached ...>
+
+$ sudo kill -9 3128
+$ sudo  ps aux | grep -i firefox
+<...>   3128  8.1  0.0      0     0 ?        Zl   Aug06 322:02 [firefox] <defunct>
+<...>  17265  0.0 26.5 3274868 2150992 ?     S    20:24   0:00 /usr/lib/firefox/firefox
+
+$ sudo kill -9 17265
+$ sudo  ps aux | grep -i firefox
+<...>   3128  8.1  0.0      0     0 ?        Zl   Aug06 322:02 [firefox] <defunct>
+<...>  17265  0.0  0.0      0     0 ?        Z    20:24   0:00 [firefox] <defunct>
+
+
+
+Home directory is on an nfs share.
+Using Linux Mint 17.2
+
+
+Expected results:
+
+Video should have been played

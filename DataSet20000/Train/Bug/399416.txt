@@ -1,0 +1,21 @@
+bad behavior due to insufficient error checking/reporting when profile filesystem is full
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.6) Gecko/20070723 Iceweasel/2.0.0.6 (Debian-2.0.0.6-0etch1)
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.6) Gecko/20070723 Iceweasel/2.0.0.6 (Debian-2.0.0.6-0etch1)
+
+When the filesystem containing the profile directory (usually the fs containing /home) becomes full firefox will behave badly in some cases. This is probably due to not checking file read/write error codes, or at least not reporting those errors to the user.
+
+I have noticed two cases where this is a problem, although there may be several functions which are impaired by this. The first is that trying to add a bookmark adds it to the bookmark list but the add dialog is not dismissed and the bookmarks are not saved to disk (not there on next browser start). The second is when I tried to get more disk space by clearing the cache from Edit->Preferences it did not work, I needed to clear the cache manually by removing Cache/* in the profile directory.
+
+Fortunately filesystem fillups do not happen that often so the severity of the bug is somewhat reduced.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Completely fill the filesystem containing the profile directory
+2. Try adding new bookmarks or clearing the disk cache
+
+Actual Results:  
+1) bookmarks not saved, 2) nothing
+
+Expected Results:  
+At the very least display an error dialog informing the user that the filesystem is full and the operation could not be completed. Also, clearing the disk cache should succeed even when the filesystem is full. Automatically trying to clear the disk cache when something else fails due to full filesystem would be worth considering but not strictly necessary.

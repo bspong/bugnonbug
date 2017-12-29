@@ -1,0 +1,102 @@
+paste item of context menu is not updated correctly
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.6) Gecko/20061201 Firefox/2.0.0.6 (Ubuntu-feisty)
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.6) Gecko/20061201 Firefox/2.0.0.6 (Ubuntu-feisty)
+
+It is possible to have situation when "Paste" item of context menu is disabled but I can paste using Ctrl-V. Here is an original bug filed against Java -
+http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6584971
+
+I have also created small native test which only copy XA_STRING into clipboard and I've got the same result :(
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. compile the test
+(gcc -s -O -o xclipboard xclipboard.c -I /usr/X11R6/include -L /usr/X11R6/lib -lX11)
+2. run it
+3. open context menu in firefox (e.g. for address bar) verify that "paste" item is disabled
+4. paste text into address bar using Ctrl-V you should see "It Works"
+Actual Results:
+"paste" item is disabled, but it is possible to paste using clipboard
+
+Expected Results:
+"paste" item should be enabled
+
+here is the test:
+
+#include <X11/Xlib.h>
+#include <X11/Xatom.h>
+#include <assert.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+Atom XA_CLIPBOARD;
+
+main()
+{
+Display *dpy = XOpenDisplay(NULL);
+assert(dpy);
+Window w = XCreateSimpleWindow(dpy, DefaultRootWindow(dpy), 0, 0,
+200, 100, 0, 0, 0);
+XSelectInput(dpy, w, StructureNotifyMask);
+XMapWindow(dpy, w);
+XSelectionRequestEvent *req;
+XEvent e, respond;
+for(;;) {
+XNextEvent(dpy, &e);
+if (e.type == MapNotify) break;
+}
+XFlush(dpy);
+//
+XA_CLIPBOARD = XInternAtom(dpy, "CLIPBOARD", False);
+Atom a1, a2, a3, type;
+XSelectInput(dpy, w, StructureNotifyMask+ExposureMask);
+int format, result;
+unsigned long len, bytes_left, dummy;
+unsigned char *data;
+Window Sown;
+
+XSetSelectionOwner (dpy, XA_CLIPBOARD, w, CurrentTime);
+XFlush (dpy);
+
+for (;;) {
+XNextEvent (dpy, &e);
+if (e.type == SelectionRequest)
+//
+// Somebody want our data
+//
+{
+req=&(e.xselectionrequest);
+printf ("Selection Request from Mr %i I am %i\n",
+(int)e.xselection.requestor, (int)w);
+printf ("prop:%i tar:%i sel:%i\n", req->property,
+req->target, req->selection);
+if (req->target == XA_STRING)
+{
+XChangeProperty (dpy,
+req->requestor,
+req->property,
+XA_STRING,
+8,
+PropModeReplace,
+(unsigned char*) "It Works",
+8);
+respond.xselection.property=req->property;
+}
+else // Strings only please
+{
+printf ("No String %i\n",
+(int)req->target);
+respond.xselection.property= None;
+}
+respond.xselection.type= SelectionNotify;
+respond.xselection.display= req->display;
+respond.xselection.requestor= req->requestor;
+respond.xselection.selection=req->selection;
+respond.xselection.target= req->target;
+respond.xselection.time = req->time;
+XSendEvent (dpy, req->requestor,0,0,&respond);
+XFlush (dpy);
+}
+}
+}

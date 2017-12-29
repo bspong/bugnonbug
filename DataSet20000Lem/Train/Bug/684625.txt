@@ -1,0 +1,12 @@
+Display a warning when DOM full-screen mode entered or restricted key pressed
+I've landed bug 545812 (preffed off) which add API to enable content to request that an arbitrary element be made the full-screen element. This put the browser window into full-screen mode (using the same mechanism a browser F11 full-screen mode) and add style rule to make the requesting full-screen element cover the entire window area.
+
+To make this secure in the face of phishing attacks, we need UI to make it obvious to the user that they've entered DOM full-screen mode. We should provide a dismissible warning saying something to the effect of "press escape to exit full-screen mode". This warning should auto-hide after some time period.
+
+Note that we're taking a similar permission model to flash's full-screen API, in that we don't require the user to approve request for full-screen, we automatically grant request for full-screen when they're in user generated event handlers, and pop up a warning to ensure they're aware they've entered full-screen mode.
+
+I imagine this warning could be implemented in browser.js in the window's "fullscreen" event handler. The document.mozFullscreen property (yes, on the chrome document) can be used to distinguish between DOM and browser full-screen modes. This will still work in e10s (once bug 684620 lands).
+
+So in summary: when the browser enters DOM full-screen mode, display/pop down a dismissible warning (which dismisses itself after some time period) to warn the user that they've entered full-screen mode.
+
+We need this before we can enable the DOM full-screen API on release branches. We'd like to target Fx10.

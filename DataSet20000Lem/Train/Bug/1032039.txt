@@ -1,0 +1,94 @@
+Sync.BrowserIDManager ERROR Non-authentication error in _fetchTokenForUser: TypeError: invalid 'in' operand result
+User Agent: Mozilla/5.0 (X11; Linux x86_64; rv:30.0) Gecko/20100101 Firefox/30.0 (Beta/Release)
+Build ID: 20140611060104
+
+Steps to reproduce:
+
+Firefox 30 can not sync with a fresh own Sync-1.5 Server.
+
+Steps to reproduce:
+1. Followed installation instruction at https://docs.services.mozilla.com/howtos/run-sync-1.5.html. syncserver.ini wasn't modified.
+2. Created a new sync account at Firefox Accounts.
+3. Redirected Firefox 30 to local installation
+4. Closed and opened Firefox 30. Waited for first sync.
+
+
+Actual results:
+
+Sync stop with error "Non-authentication error in _fetchTokenForUser: TypeError: invalid 'in' operand result".
+
+Firefox sync log:
+1404106154594 Sync.Service INFO Loading Weave 1.32.0
+1404106154595 Sync.Engine.Clients DEBUG Engine initialized
+1404106154595 Sync.Engine.Clients DEBUG Resetting client last sync time
+1404106154598 Sync.Engine.Bookmarks DEBUG Engine initialized
+1404106154600 Sync.Engine.Forms DEBUG Engine initialized
+1404106154601 Sync.Engine.History DEBUG Engine initialized
+1404106154603 Sync.Engine.Passwords DEBUG Engine initialized
+1404106154604 Sync.Engine.Prefs DEBUG Engine initialized
+1404106154605 Sync.Engine.Tabs DEBUG Engine initialized
+1404106154606 Sync.Engine.Tabs DEBUG Resetting tab last sync time
+1404106154608 Sync.Engine.Addons DEBUG Engine initialized
+1404106154609 Sync.Service INFO Mozilla/5.0 (X11; Linux x86_64; rv:30.0) Gecko/20100101 Firefox/30.0
+1404106154611 Sync.SyncScheduler DEBUG Clearing sync trigger and the global score.
+1404106154611 Sync.Status DEBUG Status.service: success.status_ok => success.status_ok
+1404106154612 Sync.Service DEBUG Caching URLs under storage user base: https://sync-58-us-west-2.sync.services.mozilla.com/1.5/3448016/
+1404106154612 Sync.Status DEBUG Status.service: success.status_ok => success.status_ok
+1404106154612 Sync.AddonsReconciler INFO Registering a Add-on Manager listener.
+1404106154612 Sync.AddonsReconciler DEBUG Adding change listener.
+1404106154613 Sync.Tracker.History INFO Adding Places observer.
+1404106154615 Sync.Status DEBUG Status.service: success.status_ok => success.status_ok
+1404106154616 Sync.Status DEBUG Status.service: success.status_ok => success.status_ok
+1404106154618 FirefoxAccounts DEBUG got keyPair
+1404106154618 FirefoxAccounts DEBUG getCertificateSigned: true true
+1404106155717 FirefoxAccounts DEBUG (Response) /certificate/sign: code: 200 - Status text: OK
+1404106155717 FirefoxAccounts DEBUG Clock offset v https://api.accounts.firefox.com/v1: -717
+1404106155717 FirefoxAccounts DEBUG getCertificate got a new one: true
+1404106155717 FirefoxAccounts DEBUG getAssertionFromCert
+1404106155718 FirefoxAccounts DEBUG getAssertionFromCert returning signed: true
+1404106155718 Sync.BrowserIDManager DEBUG Getting a token
+1404106155726 Sync.BrowserIDManager ERROR Non-authentication error in _fetchTokenForUser: TypeError: invalid 'in' operand result
+1404106155726 Sync.Status DEBUG Status.login: success.login => error.login.reason.network
+1404106155726 Sync.Status DEBUG Status.service: success.status_ok => error.login.failed
+1404106155726 Sync.SyncScheduler DEBUG Clearing sync trigger and the global score.
+1404106155726 Sync.SyncScheduler DEBUG Next sync in 3600000 ms.
+
+
+Communication between Firefox 30 and local sync server (recorded with Charles proxy)
+
+Request:
+GET /1.0/sync/1.5 HTTP/1.1
+Host: localhost:5000
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:30.0) Gecko/20100101 Firefox/30.0
+Accept: application/json
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate
+Authorization: BrowserID eyJhbGciOiJSUzI1NiJ9.eyJmeGEtZ2VuZXJhdGlvbiI6MTQwNDA0NjU5NDAxMCwiZnhhLWxhc3RBdXRoQXQiOjE0MDQwNDY1OTQsImZ4YS12ZXJpZmllZEVtYWlsIjoiZmYxQHNva29sLXdlYi5kZSIsInB1YmxpYy1rZXkiOnsiYWxnb3JpdGhtIjoiRFMiLCJ5IjoiYWFhOTQzNWY5Nzc0NGQzN2I1ODVlMTNkMGViZjFhZWQyZjk3NWI0ZTcwMjk2MGJlYjVjM2JiYThiODFmOTQ1OGNmMTc0MjE3MWQ0YjNmYzAwY2FjNjhjZDRmNGE5NDk3YjVkNGU3MGZlOGU0ZDBlN2E0ZGRkYTI1Y2EzMjNjNjc2MDFkYjAyNTMyNThmZTFhN2Y2NGVjYmQ4YjkxOTJmYmU1NmU2ZTE1ZTEwOGZiNjA5MjY3ZTEwZWNjN2RhNWJlNTFiMmJhYjg3MGI0ZjgzNzNjOWJhZDkzZGVkMTI3YzdhNzVjZTU2YTI1OGZmMTQ4ZjE2MWJiNzdmM2FmZTI3MiIsInAiOiJmZjYwMDQ4M2RiNmFiZmM1YjQ1ZWFiNzg1OTRiMzUzM2Q1NTBkOWYxYmYyYTk5MmE3YThkYWE2ZGMzNGY4MDQ1YWQ0ZTZlMGM0MjlkMzM0ZWVlYWFlZmQ3ZTIzZDQ4MTBiZTAwZTRjYzE0OTJjYmEzMjViYTgxZmYyZDVhNWIzMDVhOGQxN2ViM2JmNGEwNmEzNDlkMzkyZTAwZDMyOTc0NGE1MTc5MzgwMzQ0ZTgyYTE4YzQ3OTMzNDM4Zjg5MWUyMmFlZWY4MTJkNjljOGY3NWUzMjZjYjcwZWEwMDBjM2Y3NzZkZmRiZDYwNDYzOGMyZWY3MTdmYzI2ZDAyZTE3IiwicSI6ImUyMWUwNGY5MTFkMWVkNzk5MTAwOGVjYWFiM2JmNzc1OTg0MzA5YzMiLCJnIjoiYzUyYTRhMGZmM2I3ZTYxZmRmMTg2N2NlODQxMzgzNjlhNjE1NGY0YWZhOTI5NjZlM2M4MjdlMjVjZmE2Y2Y1MDhiOTBlNWRlNDE5ZTEzMzdlMDdhMmU5ZTJhM2NkNWRlYTcwNGQxNzVmOGViZjZhZjM5N2Q2OWUxMTBiOTZhZmIxN2M3YTAzMjU5MzI5ZTQ4MjliMGQwM2JiYzc4OTZiMTViNGFkZTUzZTEzMDg1OGNjMzRkOTYyNjlhYTg5MDQxZjQwOTEzNmM3MjQyYTM4ODk1YzlkNWJjY2FkNGYzODlhZjFkN2E0YmQxMzk4YmQwNzJkZmZhODk2MjMzMzk3YSJ9LCJwcmluY2lwYWwiOnsiZW1haWwiOiIyNjM1NmFmNWM1ODc0MWM5YjJjYTg1YmNiMzhhNjlhN0BhcGkuYWNjb3VudHMuZmlyZWZveC5jb20ifSwiaWF0IjoxNDA0MTA2MTQ1NTY0LCJleHAiOjE0MDQxMjc3NTU1NjQsImlzcyI6ImFwaS5hY2NvdW50cy5maXJlZm94LmNvbSJ9.Vos5Qhr7s0zQc4c5TkJyg5y30f8ZBsJEBuNHVKPCas01epAevdbGAgDPoCJuTlvwRBGU1XX_m8xG2CdPWChsMdTJSS1FHTPTpesYQJVlmKKZHYY8sj-nibFDN-e6hSoNZSrOqXFX-16x8ydT9UQHuwgZioGRmP1jzZFWxGYVSYH9TqLz7WI0X_lMimQcSkbx3xN_8cotqIlxYQy3qTyapONYOq6NSwE7zJquJO8cZTG18gXHkaz5b9yyESFipQn4THjEW6y0pfC9MdED1Hp9caeV6LwmsRM3V64_2OG0HM-tbirfr5NzFNP3vrZXMotXM-6mbxlb4gaJXK4j6boCQw~eyJhbGciOiJEUzEyOCJ9.eyJleHAiOjIxOTI1MDYxNTUwMDAsImF1ZCI6Imh0dHA6Ly9sb2NhbGhvc3Q6NTAwMCJ9.A9kJan-g0Cqp_upGPpOITz5awAUwC-gdj27WAVnPWTDQkPLS9BTz-Q==
+x-client-state: 21fc9ecd4254841ac4ea3f034a8d890b
+Connection: keep-alive
+Pragma: no-cache
+Cache-Control: no-cache
+
+Response:
+HTTP/1.0 404 Not Found
+Server: PasteWSGIServer/0.5 Python/2.7.5
+Date: Mon, 30 Jun 2014 05:29:15 GMT
+X-Weave-Timestamp: 1404106155.72
+Content-Length: 1
+Content-Type: application/json; charset=UTF-8
+X-Timestamp: 1404106155
+
+0
+
+Sync Server output on console:
+[me@worstation bin]$ ./pserve ../../syncserver.ini
+Starting server in PID 5611.
+serving on 0.0.0.0:5000 view at http://127.0.0.1:5000
+INFO:mozsvc.metrics:{"code": 200, "request_time": 0.0008878707885742188, "remoteAddressChain": ["127.0.0.1"], "agent": "Mozilla/5.0 (X11; Linux x86_64; rv:30.0) Gecko/20100101 Firefox/30.0", "path": "http://localhost:5000/1.0/sync/1.5", "method": "GET"}
+
+
+
+
+Expected results:
+
+Successful sync a if https://token.services.mozilla.com/1.0/sync/1.5 wa in use.

@@ -1,0 +1,13 @@
+test_423060.xul fails on SeaMonkey (though the error is reported on test_428653.xul); and test_autocomplete2.xul can fail/leak too
+When SeaMonkey switched to using places, we discovered we suddenly had turned on test_423060.xul, which is a large structural mess in form of a testcase:
+It test a toolkit/components/feeds fix by using a browser/components/feeds feature and is living in toolkit/components/places - probably because it us some other file that conveniently happened to already sit in place tests.
+
+It must have been clear that this call for problem - for one, in any config that us place but not feeds, but even more, in any config that us toolkit/ but not browser/ (which is the case SeaMonkey is running into here, a nothing say that chrome mochitests shouldn't be run with anything else than Firefox).
+
+I see two option to clean this up:
+1) move it to browser/components/feeds a it's heavily using browser-only code (which I'd prefer)
+2) move it to toolkit/components/feeds a it test a toolkit fix, and ifdef it out for SeaMonkey a long a that one doesn't provide web feed handler
+
+In both cases, we probably need to copy the demohandler and sample feed from place to the respective location.
+
+I'm willing to do some work on this to get SeaMonkey fixed, but I'd need some advice on which direction to go.

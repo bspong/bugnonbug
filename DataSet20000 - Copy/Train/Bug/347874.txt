@@ -1,0 +1,32 @@
+MSAA properties incorrect in Customize Character Encoding dialog
+Test environment:
+   Windows XP, Firefox 2 (Bon Echo) build 20060807, Inspect32 (Inspect Objects), Accevent (Accessible Event watcher)
+   Optional: screen reader (JAWS 7.1 or Window-Eyes 5.5N (latest beta))
+
+Description: 
+
+In the Available Character Encodings list, in the Customize Character Encoding dialog, the MSAA properties are being set incorrectly:
+
+1. The "Description" property contains the phrase "n of 13", where "n" starts at 1 for the first item in the list, and is incremented for each subsequent list item,  max-ing out at 13.  (i.e., 1 of 13, 2 of 13, ... 13 of 13, 13 of 13, 13 of 13...  The last 60 or so items in the list have a description of "13 of 13".)  There are about 80 items in the list, so the description should contain "1 of 80", "2 of 80",..."79 of 80", "80 of 80",  instead of "n of 13". 
+
+2. When you tab from the "Available Character Encodings" list to the "Active Character Encodings" list, the MSAA properties and focus events do not reflect the visual focus in the dialog.
+
+Steps to recreate:
+1. Start Firefox, Inspect Objects, and (optionally) a screen reader (JAWS or Window-Eyes)
+2.  Press Alt+V to open View pulldown in Firefox.
+3. Press "C" to select "Character Encoding" submenu.
+4. Press "C" again to select "Customize List..." option.  This will open the "Customize Character Encoding" dialog.
+5. Arrow down through the list of "Available Character Encodings".
+6. Note the Inspect Objects output: the MSAA Description shows "1 of 13", "2 of 13", etc.  All List items after the 13th entry show "13 of 13".
+7. Screen reader output: Both JAWS and Window-Eyes announce the "n of 13" description found in the description property, instead of the correct total number of items in the list.
+
+8.  Stop Inspect Objects and start the Accessibility Event watcher (accevent)
+9. Arrow Up and Down through "Available Character Encodings" list to highlight an item in the list.  (Note the accevent output shows an OBJ_FOCUS event and other events showing which item in the list currently has focus.)
+10. Press Tab.  This moves visual focus to the "Add" button.  Note the accevent output shows an OBJ_FOCUS event indicating focus is now on the Add button.
+11. Press Tab again.  This moves visual focus to the "Active Character Encodings" list.  
+12. Note the accevent output:  There are 2 OBJ_FOCUS events... the first shows a focus change to "Active Character Encodings" list.  The 2nd shows the focus changes back to the selected item in the "Available" list.  (If you run inspect32 instead of accevent, you will see it shows focus in this scenario remains on the item in the "available" list also.)
+13. Screen reader output: after tabbing to the "Active character encodings" list, both screen readers announce the previously highlighted item selected in the other list, instead of the item that shows visual focus in the dialog.  (screen reader output is a little unpredictable in this case.)
+
+Expected results:
+1. The MSAA Description property should contain the correct total number of elements in the list (not 13).  If this is corrected, the screen readers will probably announce the correct "n of x" information.
+2. The MSAA program focus should be in sync with the visual focus in the window (i.e., if the visual focus is in the "Active Character Encodings" list, the last OBJ_FOCUS event should reflect that.  The screen reader should announce the current visual focus location, and not the previous focus location.

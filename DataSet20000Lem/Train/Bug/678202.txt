@@ -1,0 +1,42 @@
+Delay in Opening Firefox Omni.Jar linked
+User Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:5.0) Gecko/20100101 Firefox/5.0
+Build ID: 20110615151330
+
+Steps to reproduce:
+
+When opening Firefox - have done this a few time and using ProcMon from System Internals on Windows 7 x64 Sp1 have been seeing what is delaying the start up of Firefox
+
+
+
+
+Actual results:
+
+There is a call to HKLM\Software\Wow6432Node\Microsoft\Avalon.Graphics key
+
+This took place at 16.04.25.4204563 and the response from the OS wa key not found
+
+The next call wa at 16.04.26.904464 with the creation so ProcMon report it of omni.jar
+with a sucessful read of the file
+
+16:04:25.2986045 firefox.exe 884 RegOpenKey HKCR\Wow6432Node\CLSID\{F7747266-777D-4F61-A175-DD5ADF1E37DF} NAME NOT FOUND Desired Access: Read
+16:04:25.2986410 firefox.exe 884 RegCloseKey HKCU\Software\Classes SUCCESS
+16:04:25.4203954 firefox.exe 884 RegQueryKey HKLM SUCCESS Query: HandleTags, HandleTags: 0x0
+16:04:25.4204563 firefox.exe 884 RegOpenKey HKLM\Software\Wow6432Node\Microsoft\Avalon.Graphics NAME NOT FOUND Desired Access: Read
+16:04:26.9044064 firefox.exe 884 CreateFile C:\Program Files (x86)\Mozilla Firefox\omni.jar SUCCESS Desired Access: Read Attributes, Disposition: Open, Options: Open Reparse Point, Attributes: n/a, ShareMode: Read, Write, Delete, AllocationSize: n/a, OpenResult: Opened
+16:04:26.9045991 firefox.exe 884 QueryBasicInformationFile C:\Program Files (x86)\Mozilla Firefox\omni.jar SUCCESS CreationTime: 09/05/2011 07:47:17, LastAccessTime: 23/06/2011 08:03:01, LastWriteTime: 23/06/2011 08:03:01, ChangeTime: 23/06/2011 08:03:01, FileAttributes: A
+16:04:26.9046624 firefox.exe 884 CloseFile C:\Program Files (x86)\Mozilla Firefox\omni.jar SUCCESS
+
+
+A few action later again there wa a delay waiting for omni.jar of over 3 second
+
+16:04:27.9064668 firefox.exe 884 LockFile F:\Firefox Profiles\Nigel\places.sqlite-shm SUCCESS Exclusive: False, Offset: 124, Length: 1, Fail Immediately: True
+16:04:27.9066210 firefox.exe 884 UnlockFileSingle F:\Firefox Profiles\Nigel\places.sqlite-shm SUCCESS Offset: 124, Length: 1
+16:04:30.3778394 firefox.exe 884 CreateFile C:\Program Files (x86)\Mozilla Firefox\omni.jar SUCCESS Desired Access: Read Attributes, Disposition: Open, Options: Open Reparse Point, Attributes: n/a, ShareMode: Read, Write, Delete, AllocationSize: n/a, OpenResult: Opened
+
+
+
+Expected results:
+
+Delayed processing seems to be related to omni.jar - two call prior to the call to omni.jar are responsible for most of the wait between action
+
+Using Firefox 5

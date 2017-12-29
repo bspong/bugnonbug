@@ -1,0 +1,81 @@
+keyword 'overflow': scrollbar with no functionality, rendering of page sometimes to the right side out of the screen
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.0; de-DE; rv:1.7.10) Gecko/20050717 Firefox/1.0.6
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.0; de-DE; rv:1.7.10) Gecko/20050717 Firefox/1.0.6
+
+Problem with the keyword 'overflow': 
+
+- a scrollbar with no functionality is rendered.
+- Rendering of whole page sometimes results in parts of the content moved to the
+right side out of the screen.
+- behaviour is different in Firefox and Internet Explorer
+
+
+Pages that make use of the keyword 'overflow':
+----------------------------------------------
+http://www.applicate.de/etl-tool/versionen/editionen_preise.jsp (long contents)
+http://www.applicate.de/ (short contents)
+
+
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. call "http://www.applicate.de/etl-tool/versionen/editionen_preise.jsp"
+
+
+
+Actual Results:  
+see two scrollbars on the right hand side of the browser
+
+the inner scrollbar has no functionality
+
+Expected Results:  
+no inner scrollbar or only an inner scrollbar with functionality
+
+We prepared a special feature to test different options for the keyword
+'overflow' using URL parameters:
+--------------------------------------------------------------------------------------------------------
+http://www.applicate.de?overflow=auto 
+http://www.applicate.de/etl-tool/versionen/editionen_preise.jsp?overflow=auto 
+
+Using the follwing keywords we see the following behaviour:
+
+auto: ok in IE / Firefox shows often the content shifted to the right side out
+of the screen
+visible: IE without scrollbar and text overrides bottom of page / Firefox with
+scrollbar
+hidden: IE without scrollbar / Firefox with scrollbar
+scroll: IE always with horizontal and vertical scrollbar / Firefox with 2
+scrollbars at the right side
+without overflow: IE without scrollbar / Firefox with scrollbar
+
+
+
+
+To realize this 'special feature' we use the following code:
+
+               String sOverflow = request.getParameter("overflow");
+               sOverflow = (null == sOverflow) ? null :
+sOverflow.trim().toLowerCase();
+               if (null != sOverflow) {
+                 if ("".equals(sOverflow)) {%>
+                   <div style=';height:100%; '>
+                 <% } else { %>
+                   <div style='overflow:<%=sOverflow%>;height:100%; '>
+                 <% } 
+               } else {
+                 de.applicate.util.servlet.BrowserInfo browserInfo = new
+de.applicate.util.servlet.BrowserInfo(request);
+                 if
+(de.applicate.util.servlet.BrowserInfo.IE.equals(browserInfo.getName()) == true) {%>
+                  <div style='overflow:auto;height:100%; '>
+                 <% } else { %> 
+                  <div style='overflow:scroll;height:100%; '>
+                 <%}
+               }
+
+Behaviour: Set the value for the attribute 'overflow'. If you don't use the
+parameter 'overflow' at all, IE is using <div style='overflow:auto;height:100%;
+'> and otherwise we have <div style='overflow:scroll;height:100%; '>

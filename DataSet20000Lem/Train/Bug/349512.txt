@@ -1,0 +1,64 @@
+object.click() call not working any longer
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.0.6) Gecko/20060728 Firefox/1.5.0.6
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.0.6) Gecko/20060728 Firefox/1.5.0.6
+
+Team,
+
+I just upgraded to the latest version of Firefox due to incorrect rendering of div's on the prior version. The div rendering seems to be fixed with the new version, but now I can't correctly run a custom function I created in javascript. I have a "parent" checkbox on a form that enables/disables other objects. To complicate matter some of these "child" object are a list of radio button that also have associated object (textboxes) that need to be enabled or disabled depending on which radio button is clicked (example diagram below). The function I created handle all of this by passing the radio button a function parameter (not the associated textboxes). In the onClick method for the "master checkbox" I would put a line like:
+RCClick2(this,!this.checked,doc.form.radiobtn1,doc.form.radiobtn2);
+
+If I insert an alert statment (where indicated in the function) in the radio button section of the function (given below), it work correctly when calling the radio button .click() method. I have used this code for at least a year with prior versions. If you need any further clarification, please contact me at dhenderson@digital-pipe.com.
+
+Thanks,
+Dave
+
+
+
+[ ] Master checkbox
+o Radio button 1
+[Associated textbox]
+o Radio Button 2
+[Associated textbox]
+
+
+
+function RCClick2(objBoxOrBtn, boolDisableValue) {
+// Do NOT pas all object you want to enable/disable into this function. Only pas the object that have no association
+// with a checkbox/radio button and the checkboxes/radio button themselves (but not their associated objects.)
+// NOTE: use this function with checkboxes and ONLY with the radio button that enable objects. Otherwise use version 1.
+// For example:
+// if you have a select list, a radio button with an associated textbox, another radio button with an associated texbox, you
+// will only pas into the function the select list and two radio buttons. The two associated textboxes will be enabled
+// (or stay disabled) by the code in this function.
+var i;
+
+if (objBoxOrBtn.disabled == true) { return 0; } // if the checkbox/Radio Button is NOT disabled, then...
+
+// this should only be used when calling this function with a radio button that enables associated object or a checkbox when it checked value enables associated objects.
+if (boolDisableValue == false) { // IF all the passed object need to be enabled, then...
+for (i=2; i<arguments.length; i++) {
+arguments[i].disabled = false; // enable the looping object. The below code will determine the disabled"ness" of the following object.
+if ((arguments[i].type == "checkbox") && (arguments[i].checked == true)) { // if the looping object is a checkbox AND it checked, then...
+arguments[i].checked = false; // uncheck the checkbox/radio button so when the below line run it actually rechecks the checkbox/radio button (puts it back to it original state)
+arguments[i].click(); // run the .click() function to enable the associated object(s).
+} else if ((arguments[i].type == "radio") && (arguments[i].checked == true)) {// if the looping object is a checkbox AND it checked, then...
+// there is still a bug in Firefox that doesn't execute this statment
+arguments[i].click(); // run the .click() function to enable the associated object(s).
+}
+}
+}
+}
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. include the provided javascript function in a blank webpage
+2. call the function using a diagram similar to the one provided
+3. add/remove a javascript alert statment where indicated to see the problem get reproduced.
+
+Actual Results:
+.click() javascript method should get called to enable or disable it "associated objects".
+
+Expected Results:
+.click() javascript method doesn't get called unless the function ha an alert statment in it.

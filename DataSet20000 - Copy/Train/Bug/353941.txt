@@ -1,0 +1,20 @@
+Error message when launching app with url from start -> run and other methods (DDECache reg key)
+This does not affect the trunk for some unknown reason... perhaps a change in MSVC8. Changing the following in nsNativeAppSupportWin.cpp fixes this bug but is obviously wallpaper. If this is used #ifdef MOZ_PHOENIX should probably be added as well. Even if the app is still running removing this key does no harm though I suspect there is a slight perf impact. I have not been able to find any info about the DDECache reg key addition.
+
+     // get rid of it as we are shutting down.
+     // Note:  Destroy calls DestroyWindow, which will only work on a window
+     //  created by the same thread.
+     MessageWindow mw;
+     mw.Destroy();
+
+     if ( mInstance ) {
+         // Undo registry setting if we need to.
+-        if ( mSupportingDDEExec && isDefaultBrowser() ) {
+-            mSupportingDDEExec = PR_FALSE;
+ #if MOZ_DEBUG_DDE
+-            printf( "Deleting ddexec subkey on exit\n" );
++        printf( "Deleting Firefox DDECache registry key on exit\n" );
+ #endif
+-            deleteKey( HKEY_CLASSES_ROOT, "http\\shell\\open\\ddeexec" );
+-        }
++        deleteKey( HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\DDECache\\Firefox\\WWW_OpenURL" );

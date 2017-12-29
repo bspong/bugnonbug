@@ -1,0 +1,11 @@
+Calling insertItem on a toolbar causes any non-displayed toolbar items to be removed from "currentset" attribute.
+When calling the insertItem on the Toolbar in Firefox 28, it clears out any item not currently in the toolbar from the "currentset" attribute of that toolbar.  It still persists since if I open a new window the item gets added back to the "currentset" attribute of the toolbar in that window.
+
+Since my Session Manager bootstrap add-on can add two items to the toolbar, I now need to collect the location of both items from "currentset" prior to installing any of them.  If I don't and both items are in the same toolbar, then when I add the first one, the second one gets removed from "currentset" in that toolbar.  When my addon goes to find where the next item should go, it won't be able to find it.  Since the item is still in the toolbar as far as Firefox is concerned, the item is effectively lost at that point since it won't show up in the Customize tab either.
+
+As stated, this does not affect the persisted state, so if I remove the first item and then open a new window, the second item will show up since it is now found in the "currentset".
+
+I currently work around this in my Session Manager addon, by collecting the locations of both toolbar items before trying to add either of them.  This could cause issues for other add-ons if they look at the "currentset" attribute.  I did not check the currentSet JS object to see if that was correct.
+
+
+On a side note, the reason I use my own method of adding toolbar items in a bootstrap add-on instead of using the SDK is because of bug 854226, which wasn't fixed until very recently.

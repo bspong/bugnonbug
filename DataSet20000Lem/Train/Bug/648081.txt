@@ -1,0 +1,30 @@
+Add support for multiple session restore from History menu
+User-Agent: Mozilla/5.0 (Windows NT 5.1; rv:2.0) Gecko/20100101 Firefox/4.0
+Build Identifier: Mozilla/5.0 (Windows NT 5.1; rv:2.0) Gecko/20100101 Firefox/4.0
+
+Serious data loss issue exist in Firefox 4.0, both for people who haven't discovered the undocumented on-demand session restore - Bug 636777 - and those who have - Bug 637148, Bug 636716.
+
+The severity of these and other related bug could be greatly reduced by adding a basic form of multiple session restore, for instance by turning 'Restore Previous Session' on the History menu into a parent menu. Example submenu item would be a follows:
+
+Session 1 (1 Window, 1 Tab, 1 Group)
+Session 2 (2 Windows, 53 Tabs, 2 Groups)
+
+So if, in the example above, Session 1 wa the instance of about:home from Bug 637148, the user could easily locate their main session, Session 2. (The button on about:home would always restore Session 1.)
+
+The menu would hold the last 5 or so sessions. (Each session is just a small database of windows, tabs, tab order, favicons, etc, so ha a small filesize.) It would certainly be desirable to also have a way to delete individual sessions, but the primary issue here is of widespread data loss - potentially for ten of million of users. The solution here would alter that to data misplacement.
+
+Note that selecting Session 2 in the above example would make it Session 1 - in other words, no session would be lost just by looking for the relevant session. Exiting at this point would retain it a Session 1. (By naming the session file sessionstore1.js, sessionstore2.js, etc, advanced user could delete an unwanted session with the browser closed; if sessionstore1.js wa not found by Firefox on restart it would rename sessionstore2.js to 1 and so on.)
+
+Bug 645554 suggests a way to opt out of a session restore on startup. What would probably be more useful would be a way to escape from a session load already in progress, for instance by pressing the Escape key. Tabs that were yet to partially load would be automatically closed, and partially loaded one would be stopped from loading further. Therefore, if the user had a couple of 10-tab session on the History menu they could quickly determine the important one, by halting it if wrong. (Again, note that halting doesn't delete it; it would be retained a Session 1 - the most recently accessed.)
+
+Multiple session support actually already exists in the program: It's possible to have nested instance of the about:sessionrestore tab saved, and these work correctly. But while that sort of graphic user interface - which show individual tab name with favicons - would be desirable, a basic submenu a above would be sufficient to avoid data loss in most cases. Fancier solution could be developed later. But it's critically important to have some sort of solution _built into the browser_ (not in the form of an add-on) asap.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. See relevant bugs.
+Actual Results:
+Session is lost
+
+Expected Results:
+Session is located

@@ -1,0 +1,25 @@
+90% CPU utilization while shutting down
+User-Agent:       Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; .NET CLR 1.1.4322; .NET CLR 2.0.50727; .NET CLR 3.0.04506.30; .NET CLR 3.0.04506.648)
+Build Identifier: Firefox 3.0 Beta 4
+
+I spent a few minutes looking at a site I'm developing and playing with Firebug, then tried to shut down Firefox. It won't shut down. It's at 90% CPU utilization. (At this point, I'm not sure if it was eating CPU before I shut it down, but I think it was.)
+
+I attached WinDbg to the process. Thread 0 seems to be busywaiting in an infinite loop. Every time I let it run, then break into it, I see this callstack:
+0:004> ~0k
+ChildEBP RetAddr  
+0012faf4 7e4193e9 ntdll!KiFastSystemCallRet
+0012fb20 7e419402 USER32!NtUserPeekMessage+0xc
+0012fb4c 60506dc2 USER32!PeekMessageW+0xbc
+WARNING: Stack unwind information not available. Following frames may be wrong.
+0012fb84 604f0de0 xul!NS_Free_P+0x12312
+0012fb94 60506f3e xul!gfxWindowsPlatform::FontEnumProc+0x7810
+0012fb9c 605053b9 xul!NS_Free_P+0x1248e
+0012fba8 600bf37d xul!NS_Free_P+0x10909
+0012fbc8 60513018 nspr4!PR_MillisecondsToInterval+0x3d
+00000000 00000000 xul!NS_Free_P+0x1e568
+
+I've uploaded a 25KB debugger minidump to http://www.georgevreilly.com/temp/firefox3b4-shutdown-1.dmp.
+
+I also have a full memory dump that I can upload tomorrow, if need be, but it's 88MB.
+
+Reproducible: Didn't try

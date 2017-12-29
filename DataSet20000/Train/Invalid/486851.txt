@@ -1,0 +1,33 @@
+Tab Isolation/Status Check Fail
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.8) Gecko/2009032609 Firefox/3.0.8 (.NET CLR 3.5.30729)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.8) Gecko/2009032609 Firefox/3.0.8 (.NET CLR 3.5.30729)
+
+Optional Quickdrag extension for easy demonstration. Settings: Open clickable links in new tab selected, all other options disabled.
+
+This is a potential bug/security risk(?) demonstrated using the behaviour of Quickdrag
+
+On any page with 2 or more links: Click 1 link then immediately use Quickdrag to drag & drop on a white space.  No new tab will open.  Instead this opens the page in the current tab forcing the back button to be used to navigate to the link that was clicked first.
+
+On initial look this appears to be a bug with Quickdrag, however, it illustrates an underlying problem with the way Tabs are functioning.  Quickdrag appears to be looking at the state of the current tab and seeing it as a blank or unused tab instead.  This allows for a race condition which could be exploited.  
+
+Any installed extension could hijack the user's browsing intermittently or permanently to malicious/ad sites.  Could also perform a DNS attack using this method by looping a url request, so long as the loop triggered a new request before the prior one returned a result.  
+
+This may also allow for an overflow to occur though I have not tested this, unsure of result of looping a url request infinitely if this would crash out properly or allow escalation???
+
+Theories only, not tested.
+
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+1. Install Quickdrag
+2. Configure so that only "Open links in new tab" is selected
+3. Navigate to any page with 2 links
+4. Click 1 link
+5. Quickdrag 2nd link
+6. Observe how even though 1st link is received (as it appears in back button) the 2nd link is what is displayed.
+Actual Results:  
+2nd page request appears in current tab
+
+Expected Results:  
+1st request appears in current tab, 2nd request appears in new tab

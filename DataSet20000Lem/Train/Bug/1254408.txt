@@ -1,0 +1,16 @@
+Expose animation performance information in DevTools
+Bug 1196114 add a new chrome-only API that provides the following information:
+
+1. *Which* animation property are being run on the compositor (until now there ha just been a single flag say if one or more of the property is running on the compositor)
+
+2. For animation that normally *could* be run on the compositor but aren't, the reason why.
+
+An example of 2 is if the is an element where we're animating the 'left' property at the same time a the 'transform' property, we'll deliberately *not* run the transform animation on the compositor because it will look odd because the different thing affecting the element's position won't be synchronized.
+
+(Some background I forgot to add: currently *only* 'transform' and 'opacity' can be animated on the compositor. In future, we'll add 'scale', 'translate', 'rotate' etc.)
+
+Another example of 2, is if we animate 'transform' but the element ha an SVG transform attribute or a backface-visibility property then we don't do the animation on the compositor due to limitation in Gecko.
+
+In any case, the idea is that by exposing that information to developers, they can analyze and optimize their content. e.g. Perhaps when we hit one of those type-2 scenarios, the lightning bolt could be outlined and have a tooltip explaining why the property wasn't run on the compositor?
+
+CC'ing Helen since she might have some idea about how this could look.

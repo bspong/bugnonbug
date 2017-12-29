@@ -1,0 +1,107 @@
+linux 64 bit build do not properly load system plugins or extension
+Created attachment 515193
+this patch set the location of the system plugins and extension folder based on being a 64bit o instead of the libdir setting
+
+I have noticed that while running nighlties that system installed plugins (i.e. plugins installed through apt/yum) aren't detected by minefield.
+
+Using strace I found that these build are actually scanning /usr/lib/mozilla/plugins instead of /usr/lib64/mozilla/plugins on linux64. The way that the code currently figure out whether to use /usr/lib64 or /usr/lib is to search for 'lib64' in the autoconf libdir [1]. Instead, I think it should be set to a commonly used value that work on the majority of distributions.
+
+The patch I have attached change the system plugin path from being based on the libdir autoconf.mk value to choosing the path based on whether the system is a 64bit Linux OS. I have verified that the /usr/lib64/mozilla/plugins is the default for CentOS [2] and Fedora [3] and /usr/lib64 is a symlink for /usr/lib on Debian[4] and Ubuntu [5] which make this change invisible.
+
+I have also verified that this patch fix the behaviour on my system. I have made the same change for the system extension directory which used the same method of figuring out whether or not to use /usr/lib64.
+
+With my patch applied I have verified that my build is finding my system plugins and extensions.
+
+Plugins:
+
+access("/usr/lib64/mozilla/plugins", F_OK) = 0
+open("/usr/lib64/mozilla/plugins", O_RDONLY|O_NONBLOCK|O_DIRECTORY|O_CLOEXEC) = 67
+getdents(67, /* 8 entry */, 32768) = 352
+lstat("/usr", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+lstat("/usr/lib64", {st_mode=S_IFDIR|0555, st_size=73728, ...}) = 0
+lstat("/usr/lib64/mozilla", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+lstat("/usr/lib64/mozilla/plugins", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+lstat("/usr/lib64/mozilla/plugins/libtotem-narrowspace-plugin.so", {st_mode=S_IFREG|0755, st_size=84488, ...}) = 0
+stat("/usr/lib64/mozilla/plugins/libtotem-narrowspace-plugin.so", {st_mode=S_IFREG|0755, st_size=84488, ...}) = 0
+<snip>
+
+Extensions:
+
+access("/usr/lib64/mozilla/plugins", F_OK) = 0
+open("/usr/lib64/mozilla/plugins", O_RDONLY|O_NONBLOCK|O_DIRECTORY|O_CLOEXEC) = 67
+getdents(67, /* 8 entry */, 32768) = 352
+lstat("/usr", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+lstat("/usr/lib64", {st_mode=S_IFDIR|0555, st_size=73728, ...}) = 0
+lstat("/usr/lib64/mozilla", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+lstat("/usr/lib64/mozilla/plugins", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+lstat("/usr/lib64/mozilla/plugins/libtotem-narrowspace-plugin.so", {st_mode=S_IFREG|0755, st_size=84488, ...}) = 0
+stat("/usr/lib64/mozilla/plugins/libtotem-narrowspace-plugin.so", {st_mode=S_IFREG|0755, st_size=84488, ...}) = 0
+
+(this is extension is from the beagle-firefox-0.3.9-19.fc14.x86_64 package)
+
+The same end can be achieved without modifying the build system by setting
+
+PREFIX=/usr/local
+ac_add_options --prefix=${PREFIX}
+ac_add_options --libdir=${PREFIX}/lib64
+
+but doe not address the root problem.
+
+[1] http://mxr.mozilla.org/mozilla-central/source/toolkit/xre/Makefile.in#236
+[2]
+[jhford@localhost ~]$ cat /etc/issue.net
+CentOS release 5.5 (Final)
+Kernel \r on an \m
+[jhford@localhost ~]$ file /usr/lib64
+/usr/lib64: directory
+[jhford@localhost ~]$ l /usr/lib64/mozilla/plugins
+[jhford@localhost ~]$ yum provides /usr/lib64/mozilla/plugins/*.so
+<snip>
+totem-mozplugin-2.16.7-7.el5.x86_64 : Mozilla plugin for Totem
+Repo : update
+Matched from:
+Filename : /usr/lib64/mozilla/plugins/libtotem-basic-plugin.so
+Filename : /usr/lib64/mozilla/plugins/libtotem-narrowspace-plugin.so
+Filename : /usr/lib64/mozilla/plugins/libtotem-complex-plugin.so
+Filename : /usr/lib64/mozilla/plugins/libtotem-gmp-plugin.so
+Filename : /usr/lib64/mozilla/plugins/libtotem-mully-plugin.so
+
+[3]
+[jhford@singe ~]$ cat /etc/issue.net
+Fedora release 14 (Laughlin)
+Kernel \r on an \m (\l)
+[jhford@singe ~]$ file /usr/lib64
+/usr/lib64: directory
+[jhford@singe ~]$ l /usr/lib64/mozilla/plugins
+libjavaplugin.so libtotem-gmp-plugin.so
+librhythmbox-itms-detection-plugin.so libtotem-mully-plugin.so
+libtotem-cone-plugin.so libtotem-narrowspace-plugin.so
+[jhford@singe ~]$ yum provides /usr/lib64/mozilla/plugins/librhythmbox-itms-detection-plugin.so
+<snip>
+rhythmbox-0.13.3-1.fc14.x86_64 : Music Management Application
+Repo : installed
+Matched from:
+Other : Provides-match:
+: /usr/lib64/mozilla/plugins/librhythmbox-itms-detection-plugin.so
+[4]
+jhford@debian6-64bit:~$ cat /etc/issue.net
+Debian GNU/Linux 6.0
+jhford@debian6-64bit:~$ file /usr/lib64
+/usr/lib64: symbolic link to `lib'
+jhford@debian6-64bit:~$ l /usr/lib64/mozilla/plugins
+flash-mozilla.so libtotem-gmp-plugin.so
+librhythmbox-itms-detection-plugin.so libtotem-mully-plugin.so
+libtotem-cone-plugin.so libtotem-narrowspace-plugin.so
+jhford@debian6-64bit:~$
+
+[5]
+jhford@ubuntu1010-vm:~$ cat /etc/issue.net
+Ubuntu 10.10
+jhford@ubuntu1010-vm:~$ file /usr/lib64
+/usr/lib64: symbolic link to `lib'
+jhford@ubuntu1010-vm:~$ l /usr/lib64/mozilla/plugins
+flashplugin-alternative.so libtotem-gmp-plugin.so
+libjavaplugin.so libtotem-mully-plugin.so
+librhythmbox-itms-detection-plugin.so libtotem-narrowspace-plugin.so
+libtotem-cone-plugin.so
+jhford@ubuntu1010-vm:~$

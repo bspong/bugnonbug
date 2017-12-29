@@ -1,0 +1,66 @@
+Cannot package static build using make 3.81
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9a1) Gecko/20060531 Firefox/3.0a1
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9a1) Gecko/20060531 Firefox/3.0a1
+
+Simple to describe. I want to use static trunk build under my Ubuntu 6.06 (based on Gnome 2.14.1, so on GTK 2.8), and I have to apply patches from bug 305185 and from bug 328964.
+
+Build process runs ok. But when I enter the "make -C browser/installer" in order to create the firefox archive, I get this error :
+
+"rm -f -rf ../../dist/xpt
+/usr/bin/perl -I../../xpinstall/packager -e 'use Packager; \
+          Packager::Copy("../../dist", "../../dist/firefox", \
+                         "packages-static", "unix", 1, 0, 1);'
+Error: package file "SCALAR(0x814c69c)" is not a file or is unreadable.
+See '-e --help' for more information.
+Exiting...
+make[1]: *** [firefox-3.0a1.en-US.linux-i686.tar.bz2] Error 4
+make[1]: leaving directory « /home/fred/logs/fox/mozilla/browser/installer »
+make: *** [all] Error 2
+make: leaving directory « /home/fred/logs/fox/mozilla/browser/installer »"
+
+Using "make -C xpinstall/packager/ works.
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+See details
+
+Actual Results:  
+package is not created.
+
+Expected Results:  
+having a tar.bz2 file with firefox in it.
+
+My .mozconfig :
+
+"#
+# See http://www.mozilla.org/build/ for build instructions.
+#
+
+. $topsrcdir/browser/config/mozconfig
+
+# Options for 'configure' (same as command-line options).
+ac_add_options --enable-default-toolkit=cairo-gtk2
+ac_add_options --disable-freetype2
+ac_add_options --enable-pango
+ac_add_options --enable-canvas
+ac_add_options --enable-svg
+ac_add_options --disable-installer
+ac_add_options --disable-updater
+ac_add_options --disable-debug
+ac_add_options --disable-tests
+ac_add_options --enable-optimize="-Os -pipe -march=pentium4"
+ac_add_options --enable-strip
+ac_add_options --disable-pedantic
+ac_add_options --enable-static
+ac_add_options --disable-shared"
+
+Gcc used is :
+
+"$ gcc -v
+Utilisation des specs internes.
+Cible : i486-linux-gnu
+Configuré avec: ../src/configure -v --enable-languages=c,c++,java,f95,objc,ada,treelang --prefix=/usr --enable-shared --with-system-zlib --libexecdir=/usr/lib --without-included-gettext --enable-threads=posix --enable-nls --program-suffix=-4.0 --enable-__cxa_atexit --enable-clocale=gnu --enable-libstdcxx-debug --enable-java-awt=gtk-default --enable-gtk-cairo --with-java-home=/usr/lib/jvm/java-1.4.2-gcj-4.0-1.4.2.0/jre --enable-mpfr --disable-werror --with-tune=pentium4 --enable-checking=release i486-linux-gnu
+Modèle de thread: posix
+version gcc 4.0.3 (Ubuntu 4.0.3-1ubuntu5)"

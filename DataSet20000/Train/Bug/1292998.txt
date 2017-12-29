@@ -1,0 +1,41 @@
+Replace simple in-tree consumer of non-standard Iterator() with Object.{values,entries} in devtools/
+separated from bug 1290637.
+see bug 1290637 for the details.
+
+Required code changes are following:
+  * Check each usage of non-standard Iterator [1] function,
+    and replace it with Object.entries [2] or Object.values [3],
+    or something appropriate for the specific usage
+
+Here's the rough list for Iterator() usage (not exhaustive)
+https://dxr.mozilla.org/mozilla-central/search?q=%22+Iterator(%22+path%3Adevtools+-path%3Avendor%2Fimmutable.js+-path%3Adebugger%2Fnew%2Fbundle.js+-path%3Atest-bug-632347-iterators-generators.html&redirect=false
+
+for example:
+  for (let [k, v] in Iterator(obj)) {
+    ...
+  }
+can be replaced to:
+  for (let [k, v] of Object.entries(obj)) {
+    ...
+  }
+
+another example:
+  for (let [, v] in Iterator(array)) {
+    ...
+  }
+can be replaced to:
+  for (let v of array) {
+    ...
+  }
+
+There is one more usage in test-bug-632347-iterators-generators.html
+https://dxr.mozilla.org/mozilla-central/rev/6b65dd49d4f045c0a9753ce60bdb4b7b4aaedcf8/devtools/client/webconsole/test/test-bug-632347-iterators-generators.html#23
+> _container.iter1 = Iterator(obj);
+but it looks like it's testing Iterator itself, from browser_webconsole_bug_632347_iterators_generators.js
+https://dxr.mozilla.org/mozilla-central/rev/6b65dd49d4f045c0a9753ce60bdb4b7b4aaedcf8/devtools/client/webconsole/test/browser_webconsole_bug_632347_iterators_generators.js#46
+>   result = container.iter1.next();
+so I'd like to leave it for now (maybe, until we actually remove Iterator).
+
+[1] https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator
+[2] https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/entries
+[3] https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/values

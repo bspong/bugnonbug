@@ -1,0 +1,34 @@
+[meta] CodeMirror as an alternative to Orion
+Created attachment 686837
+Proof-of-concept: CodeMirror 2 as our source editor.
+
+This bug is an experiment to see how well CodeMirror 2 stacks up to Orion for our Source Editor needs. I understand that there were many hours spent on integrating Orion but I think it is worth it to do a comparison.
+
+Attached patch is a proof-of-concept. Since SE was nicely written with multiple editors in mind all I had to do is to write another SourceEditor object that can be enabled via the devtools.editor.component config.
+
+I ported just enough methods to make all Scratchpad tests to pass. Other tools (style editor, debugger, etc.) will most likely fail simply because I didn't get around porting all methods before creating this ticket. Will update the patch once I have more.
+
+As you can see in source-editor-codemirror.jsm you don't really need to write lots of code to implement all the features we need. Most methods are two-three liners.
+
+That said, we _will_ need to compare both editors on large minified (emscripten generated) scripts. When I was profiling debugger for bug 757408 the main culprit was our source editor.
+
+Advantages:
+
+ * Only 3k lines of code.
+ * Author (Marijn Haverbeke, CC'ed here) is a mozillian and is willing to personally help with integration.
+ * Has nice support for inline widgets and marker ranges[1] which allows us to write things like Irakli's interactivate[2] and other cool stuff.
+ * WebKit devs did a similar experiment and reported that CodeMirror's runtime footprint and file loading speed was better than their old editor[3]. Of course, we will have to run our own benchmarks.
+ * (subjective) Source is easier to understand.
+
+Disadvantages:
+
+ * Lots of hours spent on integrating Orion.
+ * Mihai and others are familiar with Orion code base.
+ * CodeMirror was already considered in past but the team found that it lacked some features[4] (I couldn't find what features specifically).
+ * + Add more in comments. My only experience with Orion so far was in bug 737803 and bug 757408. See this comment[5] for some of Orion's limitations. 
+
+[1] http://marijnhaverbeke.nl/blog/codemirror-marked-ranges.html
+[2] http://jeditoolkit.com/2012/11/12/interactivate.html
+[3] https://bugs.webkit.org/show_bug.cgi?id=92769
+[4] https://wiki.mozilla.org/DevTools/Features/CodeEditor
+[5] https://bugzilla.mozilla.org/show_bug.cgi?id=737803#c7

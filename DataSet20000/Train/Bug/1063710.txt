@@ -1,0 +1,14 @@
+Make Reset Profile write the reset's timestamp to times.json
+Broken down from bug 860238.
+
+I'm not sure if we want to record "reset" times or "migration" (from another Firefox profile) times.  The two technically aren't the same since theoretically migration from another Firefox profile could happen without a reset, maybe... but probably not in practice?
+
+If we really need reset times, then it looks like times.json could be updated either by the front end: http://mxr.mozilla.org/mozilla-central/source/toolkit/modules/ResetProfile.jsm
+
+Or the back end, somewhere around here: http://mxr.mozilla.org/mozilla-central/source/toolkit/xre/nsAppRunner.cpp?rev=5c930eeebcac#3959
+
+If migration times are sufficient, then it should probably happen here: http://mxr.mozilla.org/mozilla-central/source/browser/components/migration/FirefoxProfileMigrator.js
+
+But right now that only defines/overrides getResources(), which probably shouldn't have the side effect of changing a file.  So FirefoxProfileMigrator may need to also override migrate(), or something else.  MigratorPrototype in MigrationUtils.jsm should probably not be changed since it's used as the prototype for all types of migrators (i.e., migration from IE, Safari) and not only from other Firefox profiles.
+
+But also note that it looks like the names of profiles that are created on reset are suffixed with a timestamp, so maybe writing to times.json isn't even necessary: http://mxr.mozilla.org/mozilla-central/source/toolkit/xre/ProfileReset.cpp?rev=5a9badd6db00#34

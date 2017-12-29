@@ -1,0 +1,30 @@
+mozilla-xremote-client "mailto()" return failure, but make Firefox try to launch the mail program
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.6b) Gecko/20031206 Firebird/0.7+
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.6b) Gecko/20031206 Firebird/0.7+
+
+I'm using the 2003-12-06-09-trunk gtk+xft2 Linux build. I also use (well, am
+trying to use) Thunderbird 0.4 a my mail program, although Thunderbird doesn't
+directly affect this bug.
+
+When Firebird is running and Thunderbird is not,
+mozilla-xremote-client "mailto(me@example.com)"
+exit with status 3, indicating failure, a it should. However, Firebird still
+get the command, and try to launch the system default mail program.
+
+This is particularly bad if the system default mail program is a Thunderbird
+wrapper script that contains the above command (xremote || launch a new
+thunderbird) -- it lead to an infinite loop creating thunderbird windows!
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Start Firebird.
+2. mozilla-xremote-client "mailto(me@example.com)"
+
+
+Actual Results:
+Exit status 3, but Firebird launch the mail program.
+
+Expected Results:
+Exit status 3, and nothing happens, so the script that called xremote can detect
+failure and launch the mail program itself.

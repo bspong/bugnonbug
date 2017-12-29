@@ -1,0 +1,20 @@
+[e10s] content crashes not being counted as submitted if "Try Again" not clicked
+When a e10s tab or window crashes and the user has "Tell Mozilla about this crash so they can fix it." selected, closing the window or tab won't count the crash as submitted. The only way the crash is counted as a submitted crash is if the user directly selects "Try Again".
+
+I think if "Tell Mozilla about this crash so they can fix it." is selected, closing the window or tab should count the crashes even though the user didn't click on "Try Again".
+
+Steps to reproduce:
+
+1) Download & Install the latest m-c
+2) Open a new e10s window
+3) Crash the e10s process by either using kill -n SIGABRT PID in OSX/Linux or crashfirefox.exe for Win (https://developer.mozilla.org/en-US/docs/How_to_Report_a_Hung_Firefox)
+4) Once crashed, rather than selecting "Try Again", close the window without selecting "Try Again"
+
+Checking FHR Data:
+
+- devtools.chrome.enabled;true
+- Force FHR refresh under the browser console using: Cu.import("resource://gre/modules/CrashManager.jsm"); CrashManager.Singleton.runMaintenanceTasks();
+- restart fx
+- about:healthreport -> Raw Data
+
+You'll notice that "content-crash-submission-succeeded" won't be incremented. So basically, if "Tell Mozilla about this crash so they can fix it." is selected and the user doesn't select "Try Again", should that count as a "submission-succeeded"??

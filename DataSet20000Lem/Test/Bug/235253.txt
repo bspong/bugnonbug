@@ -1,0 +1,33 @@
+Twin Page View for new windows....
+on wide aspect displays, create two virtual screen within the display,
+constrain new window staggering within the two side by side virtual screen for
+"side by side" page view.
+
+Some code for browser.js...
+
+else {
+var prevWindow = window.opener;
+if (prevWindow) {
+var prevOuterWidth =
+parseInt(prevWindow.document.documentElement.getAttribute("width"));
+var prevScreenX = prevWindow.screenX;
+
+var requestedX = parseInt(document.documentElement.getAttribute("screenX"));
+var requestedY = parseInt(document.documentElement.getAttribute("screenY"));
+var requestedW = parseInt(document.documentElement.getAttribute("width"));
+var requestedH = parseInt(document.documentElement.getAttribute("height"));
+var screenMgr =
+Components.classes["@mozilla.org/gfx/screenmanager;1"].getService(Components.interfaces.nsIScreenManager);
+var ourScreen = screenMgr.screenForRect(requestedX, requestedY,
+requestedW, requestedH);
+
+var sx = { }, sy = { }, sw = { }, sh = { };
+ourScreen.GetAvailRect(sx, sy, sw, sh);
+
+if ((sw.value - (prevScreenX + prevOuterWidth) - 22 - 5) > requestedW)
+requestedX = prevScreenX + prevOuterWidth + 22;
+else
+requestedX = 10;
+document.documentElement.setAttribute("screenX", requestedX);
+}
+}

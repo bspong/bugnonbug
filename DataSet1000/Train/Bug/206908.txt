@@ -1,0 +1,218 @@
+Problem with pop-up blocking warning alert [@ GlobalWindowImpl::RunTimeout]
+User-Agent:       Mozilla/5.0 (Macintosh; U; PPC Mac OS X Mach-O; en-US; rv:1.4b) Gecko/20030516 Mozilla Firebird/0.6
+Build Identifier: Mozilla/5.0 (Macintosh; U; PPC Mac OS X Mach-O; en-US; rv:1.4b) Gecko/20030516 Mozilla Firebird/0.6
+
+The page referred to by this URL uses Javascript code I wrote to tell the user
+when a session is about to time-out. For the purpose of this demo, I've pared
+down the page to a bare minimum and started the timer at 80 seconds.
+
+When the timer hits 60 seconds, a popup window should appear. If you've never
+use Firebird before, a warning alert will appear, telling you that the site has
+been blocked. If you leave this alert up and wait for the timer to completely
+expire, then click past this alert and the one in my code, Firebird will crash
+with the crash log appearing below.
+
+Note that I've had trouble getting this to reoccur, because I can't figure out
+how to get Firebird to give me that alert again.
+
+
+Reproducible: Couldn't Reproduce
+
+Steps to Reproduce:
+1. Start with a virgin install of Firebird (no prefs)
+2. Access the URL, above.
+3. Wait for the full 80 seconds.
+
+
+
+
+
+**********
+
+Date/Time:  2003-05-23 13:14:55 -0400
+OS Version: 10.2.6 (Build 6L60)
+Host:       [deleted]
+
+Command:    MozillaFirebird-bin
+PID:        4418
+
+Exception:  EXC_BAD_ACCESS (0x0001)
+Codes:      KERN_PROTECTION_FAILURE (0x0002) at 0x00000000
+
+Thread 0 Crashed:
+ #0   0x02d32874 in GlobalWindowImpl::RunTimeout(nsTimeoutImpl*)
+ #1   0x02d32f9c in GlobalWindowImpl::TimerCallback(nsITimer*, void*)
+ #2   0x002aed04 in nsTimerImpl::Fire()
+ #3   0x002aee2c in handleTimerEvent(TimerEventType*)
+ #4   0x002aa138 in PL_HandleEvent
+ #5   0x002aa030 in PL_ProcessPendingEvents
+ #6   0x002aa530 in _md_EventReceiverProc
+ #7   0x969a2c54 in DispatchEventToHandlers
+ #8   0x969a2fbc in SendEventToEventTargetInternal
+ #9   0x969a63d0 in SendEventToEventTargetWithOptions
+ #10  0x969b2940 in ToolboxEventDispatcherHandler(OpaqueEventHandlerCallRef*,
+OpaqueEventRef*, void*)
+ #11  0x969a2d0c in DispatchEventToHandlers
+ #12  0x969a2fbc in SendEventToEventTargetInternal
+ #13  0x969b5494 in SendEventToEventTarget
+ #14  0x969b7258 in ToolboxEventDispatcher(OpaqueEventRef*)
+ #15  0x969c8740 in CallEventDispatchHook
+ #16  0x969b3c90 in TryEventDispatcher
+ #17  0x969a4570 in GetOrPeekEvent
+ #18  0x969a4330 in GetNextEventMatchingMask
+ #19  0x969a8054 in WNEInternal
+ #20  0x969adf0c in WaitNextEvent
+ #21  0x00b3d474 in nsMacMessagePump::GetEvent(EventRecord&)
+ #22  0x00b3d350 in nsMacMessagePump::DoMessagePump()
+ #23  0x00b30f80 in nsAppShell::Run()
+ #24  0x00005a10 in main1(int, char**, nsISupports*, nsXREAppData const&)
+ #25  0x000060c0 in xre_main(int, char**, nsXREAppData const&)
+ #26  0x00002b44 in main
+ #27  0x0000283c in _start
+ #28  0x000026bc in start
+
+Thread 1:
+ #0   0x9002578c in select
+ #1   0x001be9e4 in poll
+ #2   0x001bb1d4 in _pr_poll_with_poll
+ #3   0x0080d9f4 in nsSocketTransportService::Run()
+ #4   0x002aca38 in nsThread::Main(void*)
+ #5   0x001bc640 in _pt_root
+ #6   0x90020d28 in _pthread_body
+
+Thread 2:
+ #0   0x9003ea88 in semaphore_wait_signal_trap
+ #1   0x9003e8a4 in _pthread_cond_wait
+ #2   0x001b77ec in PR_WaitCondVar
+ #3   0x00816154 in nsDNSService::DequeuePendingQ()
+ #4   0x00815b88 in nsDNSService::Run()
+ #5   0x002aca38 in nsThread::Main(void*)
+ #6   0x001bc640 in _pt_root
+ #7   0x90020d28 in _pthread_body
+
+Thread 3:
+ #0   0x90073c28 in mach_msg_trap
+ #1   0x90005f70 in mach_msg
+ #2   0xc0007758 in __ape_internal
+ #3   0xc0001160 in __ape_agent
+ #4   0x90020d28 in _pthread_body
+
+Thread 4:
+ #0   0x90073c28 in mach_msg_trap
+ #1   0x90005f70 in mach_msg
+ #2   0x928ec28c in JNI_CreateJavaVM_Impl
+ #3   0x928ec224 in JNI_CreateJavaVM_Impl
+ #4   0x928a51fc in JVM_GetClassMethodsCount
+ #5   0x90020d28 in _pthread_body
+
+Thread 5:
+ #0   0x90073c28 in mach_msg_trap
+ #1   0x90005f70 in mach_msg
+ #2   0x9283de9c in JVM_NewInstance
+ #3   0x9285eae4 in JVM_FillInStackTrace
+ #4   0x928647a0 in JVM_Send
+ #5   0x9290114c in JNI_CreateJavaVM_Impl
+ #6   0x928a51fc in JVM_GetClassMethodsCount
+ #7   0x90020d28 in _pthread_body
+
+Thread 6:
+ #0   0x90073c28 in mach_msg_trap
+ #1   0x90005f70 in mach_msg
+ #2   0x9283ddf4 in JVM_NewInstance
+ #3   0x92845d80 in JVM_ArrayCopy
+ #4   0x9285d620 in JVM_MonitorNotify
+ #5   0x9285e2f8 in JVM_MonitorWait
+ #6   0x03e48678 in 0x3e48678
+ #7   0x03e4668c in 0x3e4668c
+ #8   0x03e4668c in 0x3e4668c
+ #9   0xa2843c38 in typeinfo name for std::bad_exception
+ #10  0x92838bdc in JVM_CurrentTimeMillis
+ #11  0x92878c28 in JVM_FindClassFromClass
+ #12  0x92892c90 in JVM_IsSameClassPackage
+ #13  0x9288cf70 in JVM_GetMethodIxExceptionTableEntry
+ #14  0x928787a0 in JVM_FindClassFromClass
+ #15  0x928a51fc in JVM_GetClassMethodsCount
+ #16  0x90020d28 in _pthread_body
+
+Thread 7:
+ #0   0x90073c28 in mach_msg_trap
+ #1   0x90005f70 in mach_msg
+ #2   0x9283ddf4 in JVM_NewInstance
+ #3   0x92845d80 in JVM_ArrayCopy
+ #4   0x9285d620 in JVM_MonitorNotify
+ #5   0x9285e2f8 in JVM_MonitorWait
+ #6   0x03e48678 in 0x3e48678
+ #7   0x03e4668c in 0x3e4668c
+ #8   0x03e465cc in 0x3e465cc
+ #9   0x03e465cc in 0x3e465cc
+ #10  0xa2843c38 in typeinfo name for std::bad_exception
+ #11  0x92838bdc in JVM_CurrentTimeMillis
+ #12  0x92878c28 in JVM_FindClassFromClass
+ #13  0x92892c90 in JVM_IsSameClassPackage
+ #14  0x9288cf70 in JVM_GetMethodIxExceptionTableEntry
+ #15  0x928787a0 in JVM_FindClassFromClass
+ #16  0x928a51fc in JVM_GetClassMethodsCount
+ #17  0x90020d28 in _pthread_body
+
+Thread 8:
+ #0   0x90073c28 in mach_msg_trap
+ #1   0x90005f70 in mach_msg
+ #2   0x9283de9c in JVM_NewInstance
+ #3   0x92844e18 in JVM_GetClassLoader
+ #4   0x92844ba4 in JVM_GetClassLoader
+ #5   0x928a51fc in JVM_GetClassMethodsCount
+ #6   0x90020d28 in _pthread_body
+
+Thread 9:
+ #0   0x90073c28 in mach_msg_trap
+ #1   0x90005f70 in mach_msg
+ #2   0x9283ddf4 in JVM_NewInstance
+ #3   0x9285eb40 in JVM_FillInStackTrace
+ #4   0x92903300 in JVM_InitProperties
+ #5   0x92903138 in JVM_InitProperties
+ #6   0x928787a0 in JVM_FindClassFromClass
+ #7   0x928a51fc in JVM_GetClassMethodsCount
+ #8   0x90020d28 in _pthread_body
+
+Thread 10:
+ #0   0x90073c28 in mach_msg_trap
+ #1   0x90005f70 in mach_msg
+ #2   0x9283ddf4 in JVM_NewInstance
+ #3   0x9285eb40 in JVM_FillInStackTrace
+ #4   0x9288890c in JVM_StartThread
+ #5   0x92876c10 in JVM_FindLoadedClass
+ #6   0x928787a0 in JVM_FindClassFromClass
+ #7   0x928a51fc in JVM_GetClassMethodsCount
+ #8   0x90020d28 in _pthread_body
+
+Thread 11:
+ #0   0x90042668 in semaphore_timedwait_signal_trap
+ #1   0x9003e894 in _pthread_cond_wait
+ #2   0x001b75b0 in pt_TimedWait
+ #3   0x001b7800 in PR_WaitCondVar
+ #4   0x002b0484 in TimerThread::Run()
+ #5   0x002aca38 in nsThread::Main(void*)
+ #6   0x001bc640 in _pt_root
+ #7   0x90020d28 in _pthread_body
+
+Thread 12:
+ #0   0x9003ea88 in semaphore_wait_signal_trap
+ #1   0x9003e8a4 in _pthread_cond_wait
+ #2   0x001b77ec in PR_WaitCondVar
+ #3   0x002adb60 in nsThreadPool::GetRequest(nsIThread*)
+ #4   0x002ae42c in nsThreadPoolRunnable::Run()
+ #5   0x002aca38 in nsThread::Main(void*)
+ #6   0x001bc640 in _pt_root
+ #7   0x90020d28 in _pthread_body
+
+PPC Thread State:
+  srr0: 0x02d32874 srr1: 0x0200f030                vrsave: 0x00000000
+   xer: 0x20000000   lr: 0x02d32854  ctr: 0x001c24a4   mq: 0x00000000
+    r0: 0x02d32854   r1: 0xbfffee90   r2: 0x7d000000   r3: 0x00000000
+    r4: 0x02d32f74   r5: 0x0ab97900   r6: 0x0000000a   r7: 0x00000000
+    r8: 0x7d000000   r9: 0x00000000  r10: 0x00000000  r11: 0x00000000
+   r12: 0x00000000  r13: 0x00000000  r14: 0xbffffd70  r15: 0xbffffe80
+   r16: 0x00303f88  r17: 0xbfffef40  r18: 0xbfffefe0  r19: 0x077a8578
+   r20: 0x02d673c0  r21: 0x00000000  r22: 0xbfffeee0  r23: 0x00000000
+   r24: 0xbfffef50  r25: 0x00000001  r26: 0x077a8500  r27: 0x00000000
+   r28: 0x560410b1  r29: 0x00000000  r30: 0x0ab97900  r31: 0x02d324b0

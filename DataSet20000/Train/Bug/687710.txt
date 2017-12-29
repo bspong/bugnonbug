@@ -1,0 +1,44 @@
+Restoring session causes hang from nsSHEntry parent loop
+For the last 2 or 3 nightlies, I've been getting some very, very slow responses, and now sometimes complete hangs.
+
+For this latest nightly, I downloaded symbols and attached with gdb. It shows a pair of nsSHEntry objects that are parented to each other:
+
+(gdb) p result->mURI.mRawPtr
+$25 = (nsStandardURL *) 0x7f8bcf24d860 "http://www.google.com/" (22 more characters)
+...walk through the loop, allowing it to do GetParent...
+(gdb) p result->mURI.mRawPtr
+$26 = (nsStandardURL *) 0x7f8bcfe73ba0 "http://arstechnica.com/tech-policy/news/2011/08/week-in-tech-how-fast-is-your-internet-edition.ars" (98 more characters)
+
+(This is with jdm's archer-mozilla extensions partly applied, which is why I can see the strings.)
+
+If I continue walking the loop, it toggles between those two.
+
+It's now hanging fast enough that I'm having difficulty getting the about:buildconfig from it, but application.ini says:
+
+Vendor=Mozilla
+Name=Firefox
+Version=9.0a1
+BuildID=20110918030911
+SourceRepository=http://hg.mozilla.org/mozilla-central
+SourceStamp=06445f55f009
+ID={ec8030f7-c20a-464f-9b0e-13a3a9e97384}
+
+(gdb) bt
+#0  GetRootSHEntry (aEntry=<value optimized out>) at /builds/slave/m-cen-lnx64-ntly/build/docshell/base/nsDocShell.cpp:10471
+#1  0x00007f8c0a9885af in nsDocShell::SetHistoryEntry (this=0x7f8bf5c1d000, aPtr=0x7f8bf5c1d288, aEntry=0x7f8be1828780) at /builds/slave/m-cen-lnx64-ntly/build/docshell/base/nsDocShell.cpp:10488
+#2  0x00007f8c0a98f8d1 in nsDocShell::InternalLoad (this=<value optimized out>, aURI=0x7f8bd6393080, aReferrer=0x7f8bd6393160, aOwner=<value optimized out>, aFlags=<value optimized out>, aWindowTarget=<value optimized out>, aTypeHint=0x7f8c0bd13d20 "", aPostData=0x0, aHeadersData=0x0, aLoadType=<value optimized out>, aSHEntry=0x7f8be1828780, aFirstParty=1, aDocShell=0x0, aRequest=0x0) at /builds/slave/m-cen-lnx64-ntly/build/docshell/base/nsDocShell.cpp:8678
+#3  0x00007f8c0a99cc00 in nsDocShell::LoadHistoryEntry (this=0x7f8bf5c1d000, aEntry=<value optimized out>, aLoadType=<value optimized out>) at /builds/slave/m-cen-lnx64-ntly/build/docshell/base/nsDocShell.cpp:10217
+#4  0x00007f8c0a99158b in nsDocShell::LoadURI (this=0x7f8bf5c1d000, aURI=0x7f8bd6393080, aLoadInfo=<value optimized out>, aLoadFlags=<value optimized out>, aFirstParty=0) at /builds/slave/m-cen-lnx64-ntly/build/docshell/base/nsDocShell.cpp:1364
+#5  0x00007f8c0a9c047c in nsSHistory::InitiateLoad (this=<value optimized out>, aFrameEntry=<value optimized out>, aFrameDS=0x7f8bf5c1d100, aLoadType=<value optimized out>) at /builds/slave/m-cen-lnx64-ntly/build/docshell/shistory/src/nsSHistory.cpp:1772
+#6  0x00007f8c0a9c0d4d in nsSHistory::LoadEntry (this=0x7f8bf5c52160, aIndex=5, aLoadType=2, aHistCmd=3) at /builds/slave/m-cen-lnx64-ntly/build/docshell/shistory/src/nsSHistory.cpp:1639
+#7  0x00007f8c0a9bf958 in nsSHistory::ReloadCurrentEntry (this=0x7f8bf5c52160) at /builds/slave/m-cen-lnx64-ntly/build/docshell/shistory/src/nsSHistory.cpp:925
+#8  0x00007f8c0aca5aca in NS_InvokeByIndex_P (that=<value optimized out>, methodIndex=<value optimized out>, paramCount=<value optimized out>, params=<value optimized out>) at ../../../../../../../xpcom/reflect/xptcall/src/md/unix/xptcinvoke_x86_64_unix.cpp:195
+#9  0x00007f8c0a902f23 in XPCWrappedNative::CallMethod(XPCCallContext&, XPCWrappedNative::CallMode) () from /home/sfink/Downloads/firefox/libxul.so
+#10 0x00007f8c0a90a3a0 in XPC_WN_CallMethod(JSContext*, unsigned int, unsigned long*) () from /home/sfink/Downloads/firefox/libxul.so
+#11 0x00007f8c0b039d92 in CallCompiler::generateNativeStub() () from /home/sfink/Downloads/firefox/libxul.so
+#12 0x00007f8c0b037d93 in js::mjit::ic::NativeCall(js::VMFrame&, js::mjit::ic::CallICInfo*) () from /home/sfink/Downloads/firefox/libxul.so
+#13 0x00007f8bf63f9748 in ?? ()
+#14 0x0000000500000000 in ?? ()
+#15 0x0000000000000142 in ?? ()
+#16 0x00007fffae0abf60 in ?? ()
+#17 0x0000000000000000 in ?? ()

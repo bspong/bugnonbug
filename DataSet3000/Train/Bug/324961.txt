@@ -1,0 +1,27 @@
+live bookmark is shown in UTF8 even if should be ISO-8859-1
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9a1) Gecko/20060127 Firefox/1.6a1
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9a1) Gecko/20060127 Firefox/1.6a1
+
+This live bookmark worked fine until nightly 20060125. Broken in nightly 20060127. According to Boris Zbarsky the live bookmark code was wrong before and the checkin for bug 230275 is now causing this behavior here.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Add http://www.heise.de/newsticker/heise.rdf as a live bookmark
+2. Open dropdown menu of this live bookmark
+
+
+Actual Results:  
+German special chars are replaced with boxes with question mark. Strings are wrongly handled as UTF8 but rss feed is declared being ISO-8859-1
+
+Expected Results:  
+Strings handled with declared char set
+
+Quote Boris Zbarsky in bug 230275
+| Please file a bug on that?  The live bookmark code is just broken -- it 
+| passes random data (ISO-88589-1) to a method that takes UTF8.  It used 
+| to "work" because the method was broken and didn't treat the data as 
+| UTF8, but this bug fixed that.
+|
+| Really, I'd think the live bookmark code should be using ParseAsync 
+| anyway -- it fits their use case much better.

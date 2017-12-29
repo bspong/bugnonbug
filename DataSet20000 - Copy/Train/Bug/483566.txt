@@ -1,0 +1,37 @@
+When clearing visited pages on shutdown, saved data is saved or lost depending on shutdown method.
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.1b3) Gecko/20090305 Firefox/3.1b3 (.NET CLR 3.5.30729)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.2a1pre) Gecko/20090315 Minefield/3.2a1pre (.NET CLR 3.5.30729)
+
+Starting with Firefox 3.1b3, whether or not SessionStore saves the current browser state at shutdown when the user sets Firefox to clear the visited pages at browser shutdown, depends on how shutdown is triggered.  
+
+If shutdown is triggered via the File->Exit menu, than the current browser state will be saved.
+
+If shutdown is triggered by closing the last browser window, than the current browser state will be cleared in the sessionstore.js file.
+
+I'm not sure what the desired action should be if the user sets the browser to clear the visited pages on shutdown, but it should not be dependent on how the browser is shut down.
+
+The problem also occurs on the nightly trunk.
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. On the General tab, set the startup option to "Show my Windows and Tabs From Last Time".
+2. On the privacy tab, check the "Always clear my private data when I close ..." checkbox and make sure the "Visited Pages" box is checked in the Clear Private Data settings.
+3. Open Firefox and load a page.  Click on File->Exit
+4. Open Firefox again and once page loads, close it by clicking the "X" in the top right corner (Windows version).
+
+Actual Results:  
+
+When the browser is exited using the File->Exit command, the current browser state is saved in sessionstore.js and then restored the next time the browser is run.  
+When the browser is exited by closing the last browser window, the state is set to ({"windows":[],"selectedWindow":0,"session":{"state":"stopped","lastUpdate":1237180299539}}) in sessionstore.js so it is not restored the next time the browser is run.
+
+Expected Results:  
+
+Either the state should be cleared on all instances of shutdown or it should be saved on all instances of shutdown.
+
+
+Calling the SessionStore API's getBrowserState() during the quit-application notification state results in cleared out session data when when closing the last browser window.  When using File->Exit, the actual current state is return.
+
+This most likely has to do with the order that the observer notifications are coming in when closing the last window as opposed to when using the File->Exit shutdown method.

@@ -1,0 +1,99 @@
+Applet becomes unusable due to focus problem in Mozilla browser window.
+User-Agent: Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; (R1 1.5); .NET CLR 1.1.4322)
+Build Identifier: Mozilla 1.7.5 and Mozilla 1.7.12
+
+Problem:
+
+Using IBM Java 1.4.2 or Java 1.5.0 plugin with Mozilla 1.7.5 or Mozilla 1.7.8 or Mozilla 1.7.12 running on Unix platform,
+if one ha an applet with textfield component, and once the focus is gained on another window's component,
+the same cannot be regained back on the applet's TextField component.
+However, it wa found that the focus is returned to the browser, instead of the applet.
+
+After we return from the child window or dialog box, we are in a state, where the applet is made unusable.
+No amount of clicking will make it to work.
+
+----------------------------------------------------------------------------------------------------------------------------
+TestCase:
+
+PluginFocusTest.java->
+
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.*;
+
+public class PluginFocusTest extends JApplet implement ActionListener {
+final String OPEN = "openwin";
+final String CLOSE = "close";
+JFrame frame0;
+JTextField t0;
+JButton btn0, btn1;
+public void init() {
+Container c = getContentPane();
+c.setLayout(new BorderLayout());
+c.add(new JLabel("Set Window Title"), BorderLayout.NORTH);
+t0 = new JTextField("Title");
+c.add(t0, BorderLayout.CENTER);
+btn0 = new JButton("Open new window");
+c.add(btn0, BorderLayout.SOUTH);
+btn0.addActionListener(this);
+btn0.setActionCommand(OPEN);
+frame0 = new JFrame();
+c = frame0.getContentPane();
+c.setLayout(new FlowLayout());
+btn1 = new JButton("Close");
+btn1.addActionListener(this);
+btn1.setActionCommand(CLOSE);
+c.add(btn1);
+frame0.setSize(300, 100);
+}
+public void actionPerformed(ActionEvent ev) {
+String cmd = ev.getActionCommand();
+if (cmd.equals(OPEN)) {
+t0.requestFocus();
+frame0.setTitle(t0.getText());
+frame0.setVisible(true);
+btn1.requestFocus();
+} else if (cmd.equals(CLOSE)) {
+frame0.setVisible(false);
+}
+}
+}
+
+focus.html->
+
+<html>
+<body>
+<APPLET CODE=PluginFocusTest.class WIDTH=300 HEIGHT=100>
+</APPLET>
+</body>
+</html>
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.After the running the given testcase a textfield and a button can be seen
+2.Ensure the focus initially is on the applet. Always keep the mouse pointer on top of textfield.
+3.click on the button to open a dialog box.
+4.click on space bar to close the window.
+5.Now the focus is not regained by the applet. <====== Problem
+
+Note:During the whole operation, please ensure that the "noxembed" option is set to true and keep the mouse pointer on top of the textfield.
+
+Keeping the Mouse pointer on top of textarea is a Mozilla Bug,No-101082.
+Actual Results:
+The focus is with the browser window.
+
+Expected Results:
+The focus should be regained by the applet.
+
+The following are the reason which make me to think that the problem is with Mozilla Browser:
+
+1. The problem is seen in Mozilla 1.7.5,Mozilla 1.7.8,Mozilla 1.7.12 and not seen in Mozilla 1.4.2, with
+Java142 and Java150.
+Note:Rest of Mozilla version I have not checked and Netscape doesnot give any problem.
+
+2.The problem is not seen when a pop up applet is used which would be using java-plugin and Mozilla Browser.
+This is not using Mozilla browser focus traversal policy. So,this focus traversal policy or the embedded
+applet mechanism may be the problem. I'm of the opinion that this may not be a problem with Java Plug-in.
+
+So, I tend to think that the focus traversal policy of the browser may be the root cause of the problem.

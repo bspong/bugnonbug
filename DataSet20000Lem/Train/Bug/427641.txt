@@ -1,0 +1,51 @@
+Crashes caused by being able to copy&paste a bookmark into 'Tags' virtual folder
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9b5) Gecko/2008032619 Firefox/3.0b5
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9b5) Gecko/2008032619 Firefox/3.0b5
+
+From the bookmark editor, you can copy&paste an ordinary bookmark into the 'Tags' folder. Note that this may cause 20-second or longer pause thereafter when using the bookmark editor. After placing an ordinary bookmark into the 'tags' folder, I've gotten some unrepeatable crash afterwards that occurred when clicking the 'star' on the address bar, and clicking the little arrow to open up a tag list.
+
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+1. Open bookmark editor.
+2. Copy a bookmark. (control-C)
+3. Open the 'Tags' folder.
+4. Paste the bookmark. (control-V)
+5. Close the bookmark editor.
+6. Reopen the bookmark editor.
+6. Open up a website, click 'star' twice, then select the tag editor.
+7. Observe that the webpage is listed a a tag.
+8. Go to the address bar.
+9. Click star twice to file the added bookmark.
+10. Open the tag editor minidialog.
+11. Tag with the bookmark by checking the check next to the title of the bookmark added in step 4.
+12. Click OK.
+13. System crashes.
+
+
+Firefox may appear to freeze for 20+ second in step 4,6,11,12,13, and the the crash may not be repeatable.
+
+Actual Results:
+1. Bookmarks is pasted into Tags virtual folder.
+2. (sometimes?) Crash.
+
+Expected Results:
+Should deny the paste.
+
+Also, possibly related to these experiments, I may have semantically corrupted places.sqlite when dragging around these bookmarks. I wa
+unable to 'star' www.google.com, which wa already bookmarked or control-D to add it in. In either case, nothing happened. Patching
+the sqlite database per the following fixed the problem:
+
+sqlite> select * from moz_places where url LIKE '%google.com/';
+13112|http://www.google.com/|Google|moc.elgoog.www.|1|0|1|182|-1
+
+sqlite> select * from moz_bookmarks where fk = 13112;
+1920|1|13112|1918|0||||1207603704133743|
+
+sqlite> select * from moz_bookmarks where id=1918;
+** Nothing **
+
+sqlite> delete from moz_bookmarks where id=1920;
+
+** And that fixed the problem **

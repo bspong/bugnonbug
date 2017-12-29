@@ -1,0 +1,98 @@
+Segfault in executing replace/regular expression (SpiderMonkey 1.5)
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.0.2) Gecko/20060308 Firefox/1.5.0.2
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.0.2) Gecko/20060308 Firefox/1.5.0.2
+
+When executing replace() over a particular string argument, a segmentation violation occurs during an array access.
+
+Interestingly, the segv doesn't occur on other string of similar structure and length.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Run the sample program (C source code and data attached)
+
+
+Actual Results:
+SIGSEGV inside SimpleMatch():
+
+Program received signal SIGSEGV, Segmentation fault.
+[Switching to Thread -1218492384 (LWP 11700)]
+0x001ac5dc in SimpleMatch (gData=0xbfff8ce0, x=0x9cdbe18, op=REOP_FLAT,
+startpc=0xbfff8c10, update=1) at jsregexp.c:2258
+(gdb) bt
+#0 0x001ac5dc in SimpleMatch (gData=0xbfff8ce0, x=0x9cdbe18, op=REOP_FLAT,
+startpc=0xbfff8c10, update=1) at jsregexp.c:2258
+#1 0x001acad2 in ExecuteREBytecode (gData=0xbfff8ce0, x=0x9cdbe18)
+at jsregexp.c:2378
+#2 0x001adc7b in MatchRegExp (gData=0xbfff8ce0, x=0x9cdbe18) at jsregexp.c:2847
+#3 0x001ae12d in js_ExecuteRegExp (cx=0x9cc7df8, re=0x9cd7280, str=0x9cca018,
+indexp=0xbfff8da0, test=1, rval=0xbfff8f80) at jsregexp.c:2946
+#4 0x001bba7c in match_or_replace (cx=0x9cc7df8, obj=0x9cca138, argc=2,
+argv=0x9cd86ac, glob=0x1bc98d <replace_glob>, data=0xbfff8e10, rval=0xbfff8f80)
+at jsstr.c:1152
+#5 0x001bce9e in str_replace (cx=0x9cc7df8, obj=0x9cca138, argc=2, argv=0x9cd86ac,
+rval=0xbfff8f80) at jsstr.c:1600
+#6 0x0016f22e in js_Invoke (cx=0x9cc7df8, argc=2, flags=0) at jsinterp.c:1280
+#7 0x0017e040 in js_Interpret (cx=0x9cc7df8, result=0xbfff962c) at jsinterp.c:3372
+#8 0x0016f2ac in js_Invoke (cx=0x9cc7df8, argc=1, flags=2) at jsinterp.c:1300
+#9 0x0016f60b in js_InternalInvoke (cx=0x9cc7df8, obj=0x9cc9348, fval=164405288,
+flags=0, argc=1, argv=0x9cd65e8, rval=0xbfff97cc) at jsinterp.c:1377
+#10 0x0014021a in JS_CallFunction (cx=0x9cc7df8, obj=0x9cc9348, fun=0x9cd4dd8,
+argc=1, argv=0x9cd65e8, rval=0xbfff97cc) at jsapi.c:3676
+#11 0x080490b4 in main (argc=3, argv=0xbfff9d04) at javascript.c:144
+
+
+Expected Results:
+No segv.
+
+Valgrind output:
+
+==11815== Invalid read of size 2
+==11815== at 0x40B95DC: SimpleMatch (jsregexp.c:2258)
+==11815== by 0x40B9AD1: ExecuteREBytecode (jsregexp.c:2378)
+==11815== by 0x40BAC7A: MatchRegExp (jsregexp.c:2847)
+==11815== by 0x40BB12C: js_ExecuteRegExp (jsregexp.c:2946)
+==11815== by 0x40C8A7B: match_or_replace (jsstr.c:1152)
+==11815== by 0x40C9E9D: str_replace (jsstr.c:1600)
+==11815== by 0x407C22D: js_Invoke (jsinterp.c:1280)
+==11815== by 0x408B03F: js_Interpret (jsinterp.c:3372)
+==11815== by 0x407C2AB: js_Invoke (jsinterp.c:1300)
+==11815== by 0x407C60A: js_InternalInvoke (jsinterp.c:1377)
+==11815== by 0x404D219: JS_CallFunction (jsapi.c:3676)
+==11815== by 0x80490B3: main (javascript.c:144)
+==11815== Address 0x43234B0 is 0 byte after a block of size 24 alloc'd
+==11815== at 0x401A639: malloc (vg_replace_malloc.c:149)
+==11815== by 0x4047EBE: JS_malloc (jsapi.c:1464)
+==11815== by 0x409C68F: js_NewObject (jsobj.c:1833)
+==11815== by 0x40BD279: js_NewRegExpObject (jsregexp.c:3786)
+==11815== by 0x40C05D9: js_GetToken (jsscan.c:1265)
+==11815== by 0x40C0A51: js_MatchToken (jsscan.c:1420)
+==11815== by 0x40B10F1: ArgumentList (jsparse.c:2669)
+==11815== by 0x40B165D: MemberExpr (jsparse.c:2779)
+==11815== by 0x40B0FE9: UnaryExpr (jsparse.c:2639)
+==11815== by 0x40B0AB7: MulExpr (jsparse.c:2501)
+==11815== by 0x40B09F0: AddExpr (jsparse.c:2483)
+==11815== by 0x40B0960: ShiftExpr (jsparse.c:2468)
+==11815== by 0x40B086D: RelExpr (jsparse.c:2436)
+==11815== by 0x40B07BF: EqExpr (jsparse.c:2412)
+==11815== by 0x40B074C: BitAndExpr (jsparse.c:2400)
+==11815== by 0x40B06D9: BitXorExpr (jsparse.c:2387)
+==11815== by 0x40B0666: BitOrExpr (jsparse.c:2374)
+==11815== by 0x40B05F7: AndExpr (jsparse.c:2363)
+==11815== by 0x40B0588: OrExpr (jsparse.c:2352)
+==11815== by 0x40B0419: CondExpr (jsparse.c:2312)
+==11815==
+==11815== Conditional jump or move depends on uninitialised value(s)
+==11815== at 0x40B95E0: SimpleMatch (jsregexp.c:2258)
+==11815== by 0x40B9AD1: ExecuteREBytecode (jsregexp.c:2378)
+==11815== by 0x40BAC7A: MatchRegExp (jsregexp.c:2847)
+==11815== by 0x40BB12C: js_ExecuteRegExp (jsregexp.c:2946)
+==11815== by 0x40C8A7B: match_or_replace (jsstr.c:1152)
+==11815== by 0x40C9E9D: str_replace (jsstr.c:1600)
+==11815== by 0x407C22D: js_Invoke (jsinterp.c:1280)
+==11815== by 0x408B03F: js_Interpret (jsinterp.c:3372)
+==11815== by 0x407C2AB: js_Invoke (jsinterp.c:1300)
+==11815== by 0x407C60A: js_InternalInvoke (jsinterp.c:1377)
+==11815== by 0x404D219: JS_CallFunction (jsapi.c:3676)
+==11815== by 0x80490B3: main (javascript.c:144)
+==11815==

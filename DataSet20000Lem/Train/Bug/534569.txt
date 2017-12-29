@@ -1,0 +1,75 @@
+When transforming an XML source to HTML the resulting DOM is case sensitive
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.5) Gecko/2008120122 Firefox/3.0.5 (.NET CLR 3.5.30729)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.5) Gecko/2008120122 Firefox/3.0.5 (.NET CLR 3.5.30729)
+
+When transforming an XML source to HTML using client side XSLT the resulting DOM is case sensitive if a default namespace is defined in the XSL making key DOM method such a Node.getElementsByTagName fail.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Save the XSL I have included below a cdcatalog.xsl somewhere you can view it from a webserver.
+2. Save the XML from this location in the same directory a the XSL you just created: http://www.w3schools.com/xsl/cdcatalog_with_xsl.xml
+3. Load the XML you just saved in Firefox, you will see an alert indicating that Node.getElementsByTagName is case sensitive.
+4. Remove this attribute from the xsl:stylesheet element in cdcatalog.xsl:
+xmlns="http://www.w3.org/1999/xhtml"
+5. Reload the XML, you will see an alert indicating that Node.getElementsByTagName is no longer case sensitive.
+
+
+
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<xsl:stylesheet version="1.0"
+xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+xmlns:html="http://www.w3.org/1999/xhtml"
+xmlns="http://www.w3.org/1999/xhtml">
+
+<xsl:output method="html"
+doctype-system="http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"
+doctype-public="-//W3C//DTD XHTML 1.0 Strict//EN"
+indent="yes"
+omit-xml-declaration="yes"/>
+<xsl:template match="/">
+<html>
+<body>
+<h2>My CD Collection</h2>
+<table border="1">
+<tr bgcolor="#9acd32">
+<th>Title</th>
+<th>Artist</th>
+</tr>
+<xsl:for-each select="catalog/cd">
+<tr>
+<td><xsl:value-of select="title"/></td>
+<td><xsl:value-of select="artist"/></td>
+</tr>
+</xsl:for-each>
+</table>
+<script type="text/javascript">
+(function(){
+var container = document.getElementsByTagName('TR');
+container = container[container.length - 1];
+var ucaseCellCount = container.getElementsByTagName('TD').length;
+var lcaseCellCount = container.getElementsByTagName('td').length;
+if(ucaseCellCount === lcaseCellCount)
+{
+alert('I am not case sensitive, YAY!');
+}
+else
+{
+alert('I am case sensitive, BOO!');
+}
+})();
+</script>
+</body>
+</html>
+</xsl:template>
+</xsl:stylesheet>
+Actual Results:
+At step 3 I get the alert saying "I am case sensitive, BOO!"
+
+Expected Results:
+At step 3 I get the alert saying "I am not case sensitive, YAY!"
+
+- This issue doe not affect document.getElementsByTagName
+- This issue affect the Node.tagName property (some are uppercase some are lowercase)
+- This issue affect document.evaluate where node name are treated a case sensitive in the XPATH.
+- Looks like the same issue is referred to here: http://ajaxandxml.blogspot.com/2008/12/omg-jquery-tag-selectors-are-case.html

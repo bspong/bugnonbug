@@ -1,0 +1,49 @@
+Firefox Instrumented build on x86_64 system including Ubuntu64 Bit and RHEL5 64bit crash at start-up
+User-Agent: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.5; en-US; rv:1.9.1b2) Gecko/20081201 Firefox/3.1b2
+Build Identifier:
+
+./firefox
+*** Registering component in: Apprunner
+
+Program ./firefox-bin (pid = 12312) received signal 11.
+Stack:
+UNKNOWN [/lib/libpthread.so.0 +0x0000E7D0]
+strlen+0x00000010 [/lib/libc.so.6 +0x0007B060]
+UNKNOWN [./libthebes.so +0x0009B93D]
+UNKNOWN [./libthebes.so +0x0005804E]
+UNKNOWN [./libthebes.so +0x00235292]
+Sleeping for 300 seconds.
+Type 'gdb ./firefox-bin 12312' to attach your debugger to this thread.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.Build Mozilla Firefox using the attached .mozconfig ( this work perfectly well on all 32 bit Unix/Linux platform )
+2.Start the firefox using the regular command ./firefox in the OBJ_DIR/dist/bin
+3.The Firefox app crash with the error given in details.
+Actual Results:
+It should run in instrumented mode.
+
+Expected Results:
+Crashes
+
+The used .mozconfig file content are a follows
+
+export CFLAGS="-fprofile-arcs -ftest-coverage"
+export CXXFLAGS="-fprofile-arcs -ftest-coverage"
+export LDFLAGS="-lgcov -static-libgcc"
+export EXTRA_DSO_LDFLAGS="-lgcov -static-libgcc"
+ac_add_options --enable-application=browser
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/../mozcentral-dbg
+
+
+ac_add_options --enable-debug
+ac_add_options --enable-tests
+ac_add_options --enable-mochitest
+ac_add_options --disable-optimize
+ac_add_options --disable-optimize
+ac_add_options --enable-chrome-format=flat
+
+mk_add_options MOZ_MAKE_FLAGS="-j3"
+
+mk_add_options AUTOCONF=autoconf2.13

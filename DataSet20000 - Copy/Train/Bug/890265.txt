@@ -1,0 +1,46 @@
+`onBuild` for widget type "custom" seems not called if the widget is in the PANEL area
+In the new Button in jetpack, we use currently the type custom. It seems that `onBuild` is called only if the button is in the navbar. Step to reproduce it:
+
+1. Create a custom widget via CustomizableUI in NAVBAR
+2. Customize the UI, and move the widget in the PANEL
+3. Close Firefox
+4. Reopen Firefox
+5. The Widget is in the panel, but `onBuild` is not called – so all the customization are not applied.
+
+This is a blocker for us to land our new UI components; not sure if I'm doing something strange but basically here the `createWidget` code I'm using:
+
+  CustomizableUI.createWidget({
+    id: toWidgetID(id),
+    type: 'custom',
+    removable: true,
+    defaultArea: AREA_NAVBAR,
+    allowedAreas: [ AREA_PANEL, AREA_NAVBAR ],
+
+    onBuild: function(document) {
+      let window = document.defaultView;
+
+      let node = document.createElementNS(XUL_NS, 'toolbarbutton');
+
+      if (ignoreWindow(window))
+        node.style.display = 'none';
+
+      node.setAttribute('id', this.id);
+      node.setAttribute('class', 'toolbarbutton-1 chromeclass-toolbar-additional');
+      node.setAttribute('width', SIZE[size] || 16);
+      node.setAttribute('type', type);
+
+      views[id] = {
+        events: bus,
+        area: this.currentArea
+      };
+
+      node.addEventListener('command', function(event) {
+        if (views[id])
+          emit(views[id].events, 'click', event);
+      });
+
+      return node;
+    }
+  });
+
+Notice that if I change the position of the widget in the NAVBAR, the `onBuild` is called, and the position is updated in the profile.

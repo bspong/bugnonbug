@@ -1,0 +1,33 @@
+should we delay creation of index until after import of history/bookmarks from fx 2?
+creating index before import
+
+looking over the patch from bug #319455, I noticed dietrich added the call to create the moz_places_titleindex index in three places, one of them being nsNavHistory::CreateLookupIndexes()
+
+It appears the point of that is, for new profiles, to delay the creation of index until after we've imported. (That make sense, a we'll be doing a ton of writes during import.)
+
+Running trunk on a fx 2 profile, here's what I see:
+
+1) In nsNavHistory::InitDB(), we create the moz_places_titleindex index (and other indexes)
+2) then we call nsNavHistory::CreateLookupIndexes(), which creates them again. (note, we don't call "CREATE INDEX IF NOT EXISTS moz_places_titleindex ON moz_places (title)" but we should, and then we can check the return value
+
+// nsNavHistory::CreateLookupIndexes
+//
+// This creates some index on the history table which are expensive to
+// update when we're doing many insertions, a with history import. Instead,
+// we defer creation of the index until import is finished.
+//
+// FIXME: We should check if the index exists (bug 327317) and then not
+// try to create it. That way we can check for errors. Currently we ignore
+// error since the indeices may already exist.
+
+3) then in nsNavHistory::Init() we import from mork
+
+4) then from nsBrowserGlue.js do we import bookmark
+
+I think we should:
+
+a) confirm that not creating index will improve performance
+b) if so, delay our index creation until after import from history / bookmarks.
+c) then do "CREATE INDEX IF NOT EXISTS" where necessary so we can check return values.
+
+Note, I don't believe this is the big import performance issue (bug #380134). after chatting with sdwilsh a few week ago (about transaction and "PRAGMA synchronous = OFF", I think our big perf issue is something else.)

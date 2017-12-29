@@ -1,0 +1,17 @@
+Firefox beta 45.0b10 often crash on exit (Linux 64) with abort SessionStore.jsm, line 1456
+Firefox 45.0b10 is almost always crashing on exit with the following message:
+
+WARNING: At least one completion condition is taking too long to complete. Conditions: [{"name":"SessionStore: flushing all windows","state":{"total":1,"current":0},"filename":"resource:///modules/sessionstore/SessionStore.jsm","lineNumber":1456,"stack":["resource:///modules/sessionstore/SessionStore.jsm:ssi_onQuitApplicationGranted:1456","resource:///modules/sessionstore/SessionStore.jsm:ssi_observe:652","chrome://global/content/globalOverlay.js:goQuitApplication:69","chrome://browser/content/browser.xul:oncommand:1"]}] Barrier: quit-application-granted
+FATAL ERROR: AsyncShutdown timeout in quit-application-granted Conditions: [{"name":"SessionStore: flushing all windows","state":{"total":1,"current":0},"filename":"resource:///modules/sessionstore/SessionStore.jsm","lineNumber":1456,"stack":["resource:///modules/sessionstore/SessionStore.jsm:ssi_onQuitApplicationGranted:1456","resource:///modules/sessionstore/SessionStore.jsm:ssi_observe:652","chrome://global/content/globalOverlay.js:goQuitApplication:69","chrome://browser/content/browser.xul:oncommand:1"]}] At least one completion condition failed to complete within a reasonable amount of time. Causing a crash to ensure that we do not leave the user with an unresponsive process draining resources.
+[27799] ###!!! ABORT: file resource:///modules/sessionstore/SessionStore.jsm, line 1456
+[27799] ###!!! ABORT: file resource:///modules/sessionstore/SessionStore.jsm, line 1456
+
+
+I reckon this issue should have been fixed in this build, but it's still happening:
+one thing I've noticed is that I'm using the SessionManager addon, and sometimes opening a new session instead of restoring the previous one (with multiple tabs) doesn't trigger the crash, but it's not consistent.
+
+It's worth noticing that also restarting the browser (I have a restart addon too) trigger the same issue, a long wait and then the crash with the same message.
+
+I've been trying with disabling/enabling addons, but it's unpredictable: it may work once or a couple of times, then the issue surface again.
+
+This never happened (all other thing being equal) in Firefox 44 , it came right after the update to 45.

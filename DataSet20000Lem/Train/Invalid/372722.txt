@@ -1,0 +1,59 @@
+result nodes' uri property need clarification
+nsNavHistoryResultNode ha a |uri| property, which is sometimes a place URI, and sometimes a history URI, depending on the type of the result node. With the advent of place URIs for bookmark and separators, this ha become quite problematic. Some discussion of a possible solution is below.
+
+[09:27am] ManoLaptop: dietrich: the uri attribute is very confusing.
+[09:28am] ManoLaptop: for bookmark nodes, which do have place uris, it's the bookmarked uri
+[09:28am] ManoLaptop: for folders, it's the place uri
+[09:28am] ManoLaptop: for separators, it's ""
+[09:28am] dietrich: ManoLaptop: yeah, not clear at all
+[09:28am] ManoLaptop: the last do have place uris, right?
+[09:29am] ManoLaptop: dietrich: for history items, there's no place uri, right?
+[09:29am] ManoLaptop: a in real uris are annotated
+[09:29am] dietrich: ManoLaptop: any record in the moz_bookmarks table can use getItemURI to get a place URI
+[09:30am] dietrich: ManoLaptop: right, no place URI for history item
+[09:30am] ManoLaptop: dietrich: well, i'm refering to the node* interface
+[09:30am] dietrich: so, i'd thought to resolve this by adding a placeURI property to result node
+[09:30am] ManoLaptop: which expose uris too
+[09:30am] dietrich: right, i know
+[09:31am] ManoLaptop: dietrich: and move uri to some other interface?
+[09:31am] ManoLaptop: "uri" seems to be what you would annonate with
+[09:32am] ManoLaptop: except that it doesn't work right for bookmark now
+[09:32am] ManoLaptop: which are no longer annonated with the bookmarked uri...
+[09:32am] dietrich: ManoLaptop: what doesn't work right?
+[09:33am] ManoLaptop: dietrich: other than bookmark items, "uri" is always the uri you should for annos
+[09:33am] dietrich: re: what should be used for annotations... it differs on context
+[09:34am] dietrich: ManoLaptop: right, i see what you mean
+[09:34am] dietrich: maybe keep uri, and for bookmark node add a bookmarkedURI property
+[09:34am] ManoLaptop: dietrich: so I would think we should 1) rename uri to placeURI 2) actually add a new interface for bookmark 3) add uri attribute to visit/url/bookmark interface
+[09:35am] ManoLaptop: placeURI would be the "real" uri for history item
+[09:35am] ManoLaptop: 3) make placeURI work for separator
+[09:35am] ManoLaptop: er, 4
+[09:36am] ManoLaptop: dietrich: another issue is whether the frontend code should ceck for annotation for the bookmarked uri.
+[09:37am] ManoLaptop: and not just for the place uri
+[09:37am] ManoLaptop: right now, it only doe the former
+[09:37am] ManoLaptop: which is simply wrong
+[09:37am] dietrich: ManoLaptop: why is that wrong
+[09:37am] dietrich: annotation of bookmarked URIs are not specific to bookmark
+[09:38am] dietrich: extensions, etc, anything can annotate a content uri
+[09:38am] stevee left the chat room. (Connection reset by peer)
+[09:38am] ManoLaptop: dietrich: wrong alone, that is. we're only checking for annotation for the bookmarked uri
+[09:38am] ManoLaptop: and not for the placeURI
+[09:38am] stevee joined the chat room.
+[09:38am] dietrich: ? can you be more specific? the transaction code check for the place URI
+[09:38am] ManoLaptop: dietrich: in context menu code
+[09:38am] ManoLaptop: at the very least
+[09:39am] ManoLaptop: see buildSelectionMetaData
+[09:39am] dietrich: ok, i see the problem
+[09:41am] ManoLaptop: a in, should bookmark "inherit" annos from their history items?
+[09:42am] • ManoLaptop ponders use-cases
+[09:43am] dietrich: hm, in buildSelectionMetaData, we're only getting anno name for folder
+[09:43am] ManoLaptop: dietrich: recent regression
+[09:44am] ManoLaptop: i removed the uri = set from the URI/Vist case
+[09:44am] ManoLaptop: i'm adding that back, but not for bookmark
+[09:44am] ManoLaptop: for which we should fist get their own annotation
+[09:44am] ManoLaptop: first*
+[09:46am] dietrich: so yeah, in the buildSelectionMetaData case, it seems like we should get both bookmark and bookmarked-uri anno name
+[09:47am] dietrich: sometimes bookmark should inherit their bookmarked-uri's annos
+[09:47am] dietrich: and likely sometimes not
+[09:47am] ManoLaptop: will do so
+[09:47am] ManoLaptop: and back out later when we start using annos for real

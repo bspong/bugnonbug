@@ -1,0 +1,19 @@
+Disable frame pointer omission (FPO) on win32
+Without frame pointers on Win32 we can't retrieve useful stacks without minidumps. In order to support sending simple crash stacks that are usable via telemetry it is necessary to disable FPO on beta and release. It is currently disabled on nightly/aurora due to having profiling enabled.
+
+Background:
+- Windows itself has disabled FPO in the operating system
+- In the past (2008?) measurements showed perf improvements by enabling FPO, this needs to be reevaluated. Microsoft released a research paper indicating there aren't significant gains [1]
+- There are possible binary size concerns
+
+In order to evaluate these concerns we can:
+- Perform talos comparisons on try
+- Measure xul.dll sizes on FPO and non-FPO builds
+- Run benchmarks (dromaeo, etc) on low-end to high-end machines
+
+Other factors:
+- We will be transitioning more (most?) users on 64-bit platforms to 64-bit builds in the near future (bug 1274659) which will reduce the size of population impacted by any regressions
+
+As a final point I suggest we get this integrated in sync with support for crash stacks in telemetry (bug 1280477, bug 1317968), so either 53 or 52.
+
+One part we still need to define is criteria for acceptable regressions.

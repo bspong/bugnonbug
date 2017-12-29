@@ -1,0 +1,48 @@
+Javascript function namespace collision with document object (i.e. evaluate)
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.5) Gecko/20041107 Firefox/1.0
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.5) Gecko/20041107 Firefox/1.0
+
+  I created a JavaScript function named evaluate() in a script tag and added the
+attribute 'onclick="evaluate();"' to a input button in the page.  My evaluate()
+function never gets called and it appears that the callout is actually going to
+a built-in DOM function.  In order to get my function to fire, I need to either
+change the attribute to read onclick="window.evaluate();" or rename my function.
+ This apparent namespace collision defies all books to-date on how to write
+proper Javascript, since there's never a mention of keywords like this that you
+cannot use for your function name.  I consider this a bug since I do not have to
+prefix my callouts when there is not a name collision, like
+"window.myHomeMadeFxn()", which can be called just fine without referencing the
+window object.
+  If I want to call a function on the document object, I should have to
+specifally call "document.evaluate();".  But at the very least, functions
+authored in the current HTML should have precedence over built-in functions of
+the same name.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Write a JavaScript function named "evaluate" which alerts some text and add
+it to the head of the HTML document:
+<head>
+  <script type="text/javascript">
+function evaluate() { alert("Boo!"); }
+  </script>
+</head>
+
+2. Add <input type="button" value="Click" onclick="evaluate();" /> to the body
+of the HTML document.
+
+3. Click the button and notice that no alert occurs.
+
+Actual Results:  
+Nothing.  Nothing visible anyway.  It probably ran the DOM method of the same
+name, which produced no visible differences to detect.
+
+Expected Results:  
+My function should have ran, which would have popped up an alert box with the
+message "Boo!"
+
+I'm classifying this Bug as "Normal", though I can understand an argument can be
+made for "Minimal".  The mitigating factor here is the sheer quantity of pages
+that are already written on the web that may use some "reserved" name and
+therefore do not function as expected.

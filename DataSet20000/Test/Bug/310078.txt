@@ -1,0 +1,63 @@
+Java Plugin Discovery problems (OJI Plugin textual description lacks JVM version)
+User-Agent:       Mozilla/5.0 (Macintosh; U; PPC Mac OS X Mach-O; en-US; rv:1.8b4) Gecko/20050908 Firefox/1.4
+Build Identifier: Mozilla/5.0 (Macintosh; U; PPC Mac OS X Mach-O; en-US; rv:1.8b4) Gecko/20050908 Firefox/1.4
+
+I notice that the OJI Java Plugin has no indication of which JVM version(s) it
+supports within the textual description.  Currently the description is
+
+"Runs Java applets using the <APPLET>, <OBJECT> and <EMBED> HTML elements. For
+more information see MRJ Plugin and MRJ Plugin JEP."
+
+whereas all other Mac Java Plugins include something like "Java 1.3.1 Plugin" or
+some such thing.
+
+I understand that there's probably no requirements for what's put in this
+description, but it does appear that some sites expect there to be both the
+string 'Java' and some form of version number(s) in there.  One example of this
+is the HP Insight Manager's login page which requires there to be at least a
+1.4.1 JVM on the client machine.  Unfortunately the Insight Manager is
+incompatible with Safari (for HTML/JavaScript reasons) but should work fine with
+Firefox if only it could be convinced that there was a valid JVM on board.
+
+Is this something that can be handled by Firefox or is this an OJI plugin bug
+(or a problem somewhere else?)
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.  write or try to use a page that tries to figure out JVM version via 
+<code>
+// example code which tries to determine what version of the java
+// plugin exists.
+for (var i = 0; i < navigator.plugins.length; i++)
+{
+	var description = navigator.plugins.item(i).description;
+
+	if (description.indexOf("Java") == -1)
+		continue;
+
+	// look for 1.4
+	var version = "1.3";
+	var vIdx   = description.indexOf("1.4");
+	// not found?, look for 1.5
+	if (vIdx == -1)
+		vIdx = description.indexOf("1.5");
+
+
+	if (vIdx >= 0)
+	{
+		version = description.substr(vIdx, 3);
+
+		if (version < "1.4")
+			continue;
+	}
+	
+	// do something with the knowledge ...
+}
+</code>
+
+Actual Results:  
+OJI plugin is not found to be a valid Java Plugin
+
+Expected Results:  
+Include the Java VM versions it provides in the text description.

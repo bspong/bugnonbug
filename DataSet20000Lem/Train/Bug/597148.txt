@@ -1,0 +1,32 @@
+Web Console can cause script in the page to throw
+STR:
+
+0. Make sure you have the Error console enabled. (about:config#devtools.errorconsole.enabled)
+
+1. Open the Error console.
+2. Open www.robodesign.ro.
+Notice no error are shown, nothing is broken.
+
+3. Open the Web Console.
+4. Refresh the page (F5 or whatever).
+Notice all network request are nicely logged by the Web Console. Also, no exception are shown in the Error console, nothing bad.
+
+5. Press F5 and quickly press Ctrl-Shift-K (the shortcut to toggle the Web Console), hold the key down or press them a fast a you can while the page loads. Rinse and repeat this step a few time (the refresh and quick toggling of the Web Console).
+
+Expected result: the web page load nicely while the Web Console open and close like a beserk.
+
+Actual result: the Error console shows:
+
+Error: Cannot get outputNode by id
+Source File: resource://gre/modules/HUDService.jsm
+Line: 4621
+
+Error: myAddEvent is not a function
+Source File: http://www.robodesign.ro/js/index.js
+Line: 1446
+
+The first error is clear: it come from the window.onerror handler of the HUDService which is not removed and which try to show exception in the Web Console which is not open. This is bug 597136.
+
+The second error is the point of this report: myAddEvent is not a function?? If you look in the JavaScript file, it's always defined. Why doe it break now? Why doe the code throw?
+
+I once got google-analytics.com/ga.js to throw: Math.random is not a function (or undefined, I can't remember exactly, seen this only once). Weird.

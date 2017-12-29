@@ -1,0 +1,39 @@
+getElementById always returns null for XUL iframe.contentDocument
+User-Agent:       Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.5; en-US; rv:1.9) Gecko/2008061004 Firefox/3.0
+Build Identifier: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.5; en-US; rv:1.9) Gecko/2008061004 Firefox/3.0
+
+When using an iframe to embed another XUL page in a dialog box, it is not possible to use getElementById on the iframe's contentDocument object to retrieve child objects from the loaded iframe.
+
+For example, I have an extension that uses an iframe to hold a configuration area whose content varies based on the user input. I get the iframe object, the source location, and the contentDocument successfully using:
+
+...
+
+var optionsInnerFrame = document.getElementById("click2call-options-iframe");
+var optionsInnerFrameSrc = optionsInnerFrame.getAttribute("src");
+var optionsInnerFrameDocument = optionsInnerFrame.contentDocument;
+
+
+However, when I try to retrieve a specific input element that is within the document loaded by the iframe, contentDocument.getElementById always returns null.
+
+...
+
+var phoneNumberField = optionsInnerFrameDocument.getElementById("click2call-phone-number");
+
+Similar code in pure HTML/Javascript (i.e. not an extension/XUL) has a similar problem, but can be worked around by using the root HTML document's Document object.
+
+This problem reproduces under Windows XP as well with Firefox 3.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Create a firefox extension whose optionUrl is set to XUL file containing a dialog that loads an iframe (id = "test-frame") with a XUL <page> containing a text field (id = "test-field"). Add a button to the dialog to trigger a javascript function that uses document.getElementById('test-frame') to find the iframe, gets the iframe's contentDocument, and uses getElementById('test-field') to get the text field object in the document loaded by the iframe, and alert the text field's value to the user.
+2. Install the extension
+3. Go to the options for the extension
+4. Click the button
+Actual Results:  
+The alert displays 'null'
+
+Expected Results:  
+The alert displays whatever is in the text field.
+
+I can provide a built extension to demonstrate the bug if necessary.

@@ -1,0 +1,75 @@
+build failure in mozilla/security/nss/lib/ssl (_FC_GetFunctionList referenced from libnss3 expected to be defined in libsoftokn3.dylib) [Mac X11]
+User-Agent: Mozilla/5.0 (Macintosh; U; PPC Mac OS X Mach-O; en-US; rv:1.7.8) Gecko/20050511 Firefox/1.0.4
+Build Identifier: Mozilla/5.0 (Macintosh; U; PPC Mac OS X Mach-O; en-US; rv:1.7.8) Gecko/20050511 Firefox/1.0.4
+
+Building from the trunk stopped working about 2 (3?) week ago in
+mozilla/security/nss/lib/ssl. Using a trunk tree from before then, everything
+compiled fine. I have pasted the error message below.
+
+Things to note: I'm doing this for OS X under X11/gtk2. I have built 0.10
+through 1.0.4 for the Fink project successfully using the same method, and I had
+a trunk build working until about 2 or 3 week ago.
+
+During ./configure, I have /Users/nieder set a my prefix. When thing were
+working, the library ended up under /Users/nieder/lib/firefox, but the error
+now seems to happen in part because it is expecting to find the library directly
+in /Users/nieder.
+
+I'm using Tiger.1 w/ Xcode 2.1. gcc is set to 4.0, but I get the same error
+when using 3.3.
+
+Reproducible: Always
+
+Steps to Reproduce:
+
+Actual Results:
+The error message:
+******************
+rm -f Darwin8.1.0_OPT.OBJ/libssl.a
+ar cr Darwin8.1.0_OPT.OBJ/libssl.a Darwin8.1.0_OPT.OBJ/emulate.o
+Darwin8.1.0_OPT.OBJ/prelib.o Darwin8.1.0_OPT.OBJ/ssl3con.o
+Darwin8.1.0_OPT.OBJ/ssl3gthr.o Darwin8.1.0_OPT.OBJ/sslauth.o
+Darwin8.1.0_OPT.OBJ/sslcon.o Darwin8.1.0_OPT.OBJ/ssldef.o
+Darwin8.1.0_OPT.OBJ/sslenum.o Darwin8.1.0_OPT.OBJ/sslerr.o
+Darwin8.1.0_OPT.OBJ/sslgathr.o Darwin8.1.0_OPT.OBJ/sslmutex.o
+Darwin8.1.0_OPT.OBJ/sslnonce.o Darwin8.1.0_OPT.OBJ/sslreveal.o
+Darwin8.1.0_OPT.OBJ/sslsecur.o Darwin8.1.0_OPT.OBJ/sslsnce.o
+Darwin8.1.0_OPT.OBJ/sslsock.o Darwin8.1.0_OPT.OBJ/ssltrace.o
+Darwin8.1.0_OPT.OBJ/sslver.o Darwin8.1.0_OPT.OBJ/authcert.o
+Darwin8.1.0_OPT.OBJ/cmpcert.o Darwin8.1.0_OPT.OBJ/nsskea.o
+Darwin8.1.0_OPT.OBJ/sslinfo.o Darwin8.1.0_OPT.OBJ/unix_err.o
+ranlib: file: Darwin8.1.0_OPT.OBJ/libssl.a(ssltrace.o) ha no symbol
+ranlib Darwin8.1.0_OPT.OBJ/libssl.a
+ranlib: file: Darwin8.1.0_OPT.OBJ/libssl.a(ssltrace.o) ha no symbol
+grep -v ';+' ssl.def | grep -v ';-' | sed -e 's; DATA ;;' -e 's,;;,,' -e
+'s,;.*,,' -e 's,^,_,' > Darwin8.1.0_OPT.OBJ/ssl.def
+rm -f Darwin8.1.0_OPT.OBJ/libssl3.dylib
+gcc -arch ppc -dynamiclib -compatibility_version 1 -current_version 1
+-install_name /Users/nieder/libssl3.dylib -headerpad_max_install_names -o
+Darwin8.1.0_OPT.OBJ/libssl3.dylib Darwin8.1.0_OPT.OBJ/emulate.o
+Darwin8.1.0_OPT.OBJ/prelib.o Darwin8.1.0_OPT.OBJ/ssl3con.o
+Darwin8.1.0_OPT.OBJ/ssl3gthr.o Darwin8.1.0_OPT.OBJ/sslauth.o
+Darwin8.1.0_OPT.OBJ/sslcon.o Darwin8.1.0_OPT.OBJ/ssldef.o
+Darwin8.1.0_OPT.OBJ/sslenum.o Darwin8.1.0_OPT.OBJ/sslerr.o
+Darwin8.1.0_OPT.OBJ/sslgathr.o Darwin8.1.0_OPT.OBJ/sslmutex.o
+Darwin8.1.0_OPT.OBJ/sslnonce.o Darwin8.1.0_OPT.OBJ/sslreveal.o
+Darwin8.1.0_OPT.OBJ/sslsecur.o Darwin8.1.0_OPT.OBJ/sslsnce.o
+Darwin8.1.0_OPT.OBJ/sslsock.o Darwin8.1.0_OPT.OBJ/ssltrace.o
+Darwin8.1.0_OPT.OBJ/sslver.o Darwin8.1.0_OPT.OBJ/authcert.o
+Darwin8.1.0_OPT.OBJ/cmpcert.o Darwin8.1.0_OPT.OBJ/nsskea.o
+Darwin8.1.0_OPT.OBJ/sslinfo.o Darwin8.1.0_OPT.OBJ/unix_err.o
+-L/Users/nieder/src/mozilla/dist/lib/ -lnss3 -lplc4 -lplds4 -lnspr4 -dylib_file
+/Users/nieder/lib/firefox/libsoftokn3.dylib:/Users/nieder/src/mozilla/dist/lib/libsoftokn3.dylib
+ld: warning can't open dynamic library: /Users/nieder/libsoftokn3.dylib
+(checking for undefined symbol may be affected) (No such file or directory,
+errno = 2)
+ld: Undefined symbols:
+_FC_GetFunctionList referenced from libnss3 expected to be defined in
+/Users/nieder/libsoftokn3.dylib
+_NSC_GetFunctionList referenced from libnss3 expected to be defined in
+/Users/nieder/libsoftokn3.dylib
+_NSC_ModuleDBFunc referenced from libnss3 expected to be defined in
+/Users/nieder/libsoftokn3.dylib
+/usr/bin/libtool: internal link edit command failed
+make[4]: *** [Darwin8.1.0_OPT.OBJ/libssl3.dylib] Error 1
+make[4]: Leaving directory `/Users/nieder/src/mozilla/security/nss/lib/ssl'

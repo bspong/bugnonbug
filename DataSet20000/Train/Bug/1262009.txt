@@ -1,0 +1,20 @@
+Firefox attempts to update ssl information for chrome URLs that contain inner frames with secure content
+In a document like this:
+
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <browser id="frame" disablehistory="true" flex="1" type="content"
+           src="https://www.example.com"/>
+</window>
+
+When loaded in a tabbrowser tab from a chrome: url it looks like the onSecurityChange handler is seeing the state from the inner frame and thinking that this is a secure document and then trying to get the identity information giving an error like:
+
+TypeError: this._sslStatus is null at gIdentityHandler.getIdentityData@chrome://browser/content/browser.js:6560:9
+refreshIdentityBlock@chrome://browser/content/browser.js:6736:56
+refreshForInsecureLoginForms@chrome://browser/content/browser.js:6649:5
+gBrowserInit._delayedStartup/<@chrome://browser/content/browser.js:1078:7
+updateLoginFormPresence@resource://gre/modules/LoginManagerParent.jsm:470:5
+LoginManagerParent.receiveMessage@resource://gre/modules/LoginManagerParent.jsm:93:9
+
+I'm slightly concerned that the onSecurityChange handler isn't verifying that it is looking at a top-level webprogress but I don't know the consequences of changing that. There is however a quick fix here...

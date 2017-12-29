@@ -1,0 +1,72 @@
+The left pane of Options window steals focus on mouseover
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.7) Gecko/20040727 Firefox/0.9.1+
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.7) Gecko/20040727 Firefox/0.9.1+
+
+In Prefs UI, left pane (with General, Privacy etc. buttons) steals focus from
+anything else if mouse hovers over it. There is completely no reason for this.
+
+Reproducible: Always
+Steps to Reproduce:
+1. Tools -> options
+2. Use keyboard or mouse to change focus to any widget in preferences window, or
+even any widget in other firefox window
+3. Move mouse over left preferences pane
+
+It's even more visible in Pinball theme, where new Options window has focus on a
+button, and this focus unexpectely dissapears when you move a mouse (which means
+you don't have to do step 2 above to see weird behaviour).
+
+Actual Results:  
+focus changed
+
+Expected Results:  
+mouseover should not steal focus - at least it doesn't do that anywhere else, FF
+or windows or in other window managers
+
+The fix is easy: in browser.jar/content/browser/pref/pref.xul, line 88, the
+right pane is defined with 
+
+  onmouseover="focus();"
+
+Simply removing this restores the "expected" behaviour without any ill effects I
+could detect. 
+Except one:
+
+The default theme "takes advantage of this" by ignoring the difference between
+focused buttons and mouseover-ed buttons, since any mouseover removes focus from
+them. This looks a bit weird, and can be fixed by the following change in
+classic.jar/skin/classic/browser/pref/pref.css:
+
+- .buttonBoxButton:hover, .buttonBoxButton:focus {
+-   border: 1px solid;
+-   -moz-border-left-colors: #98B4E2;
+-   -moz-border-top-colors: #98B4E2;
+-   -moz-border-right-colors: #98B4E2;
+-   -moz-border-bottom-colors: #98B4E2;
+-   background-color: #E0E8F6;
+- }
+
++ .buttonBoxButton:hover {
++   border: 1px solid;
++   -moz-border-left-colors: #98B4E2;
++   -moz-border-top-colors: #98B4E2;
++   -moz-border-right-colors: #98B4E2;
++   -moz-border-bottom-colors: #98B4E2;
++   background-color: #E0E8F6;
++ }
+
++ .buttonBoxButton:focus {
++   border: 1px solid;
++   -moz-border-left-colors: #98B4E2;
++   -moz-border-top-colors: #98B4E2;
++   -moz-border-right-colors: #98B4E2;
++   -moz-border-bottom-colors: #98B4E2;
++ }
+
+which doesn't change behaviour for "mouseover" buttons, but makes focused
+buttons have a border only, without background change (which is perfectly
+consistent with all other "focused" indications. And looks very good too, IMHO
+of course).
+
+I do not have the CVS source so I can't make a diff. However, if you agree with
+the change and need a diff, I probably am able to create one. Please advise.

@@ -1,0 +1,14 @@
+Disable startup cache generation
+Jeff and I were looking at why the 52.0 -> 52.0.1 partial updates where 11MB large (for win64 en-US) where very little code had changed between the builds.
+
+One of the largest contributors to the partial updates here was the omni.ja diff. We know that diffing omni.ja can be inefficient (bug 772868) because you're diffing compressed contents.
+
+The startup cache files in jsloader/ are particularly bad though. If you unpack omni.ja for 52.0 and 52.0.1, and run bsdiff on each pair of the raw files and compare that to bsdiff of deflated files, you can calculate a ratio of patch size of deflated content vs patch size of raw content.
+
+The jsloader files have patch sizes of up to 200x larger than patches of the raw files.
+
+Looking closely at differences in these files, we can see that in the case of 52.0 -> 52.0.1, the bulk of these files are unchanged. However, the buildid of the build is encoded in the first 18 bytes of the file. Because some initial bytes are different, all of the following compressed output will also be different.
+
+By resetting the compression stream after processing the initial 18 bytes containing the buildid, we can ensure that the bulk of the compressed contents are the same.
+
+Doing this reduces the size of the win64 partial update from 52.0 to 52.0.1 from 11MB to 8MB.

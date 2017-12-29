@@ -1,0 +1,34 @@
+contextmenu event gets re-dispatched in case its flow was stopped
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.3pre) Gecko/2008090405 GranParadiso/3.0.3pre
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.3pre) Gecko/2008090405 GranParadiso/3.0.3pre
+
+If you call stopPropagation() member during the 'contextmenu' event flow, an additional event with name 'contextmenu' gets dispatched.
+
+This is a change (presumably wrong) happened since FF3
+
+Reproducible: Always
+
+Steps to Reproduce:
+<script type="text/javascript">
+(function() {
+	var oOutput = document.body.appendChild(document.createElement("div")),
+		oEvent;
+	document.addEventListener('contextmenu', function(event){
+		// Stop Propagation
+		event.stopPropagation();
+		// Register event occurance
+		oOutput.appendChild(document.createElement("div"));
+		oOutput.lastChild.textContent = event.type + ': ' + (oEvent && (event == oEvent) ? "same event" : "new event");
+		// Cache event for later comparision
+		oEvent	= event;
+	}, false);
+})();
+</script>
+Actual Results:  
+contextmenu: new event
+contextmenu: new event
+
+Expected Results:  
+contextmenu: new event
+
+The test case provided also demonstrates the fact that the second call to the handler is done with a different event object (so it is not duplicate call to the handler but an additional event dispatch)

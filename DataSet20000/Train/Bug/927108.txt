@@ -1,0 +1,25 @@
+Pushing certified apps does not work
+Using Gecko from a nightly build for "latest-hamachi-eng-mozilla-central" on Oct 15, and Gaia master from Oct 15.
+
+I tried the steps here to enable debugging and pushing of certified apps via the app manager:
+https://developer.mozilla.org/en-US/docs/Mozilla/Firefox_OS/Using_the_App_Manager#Debugging_Certified_Apps
+
+But I still get a "installationFailed: Installing certified apps is not allowed." message when trying to push the app.
+
+Something that could indicate the core problem: webapps.js checks for a DOMApplicationRegistry.allowSideloadingCertified to allow installation:
+
+http://mxr.mozilla.org/mozilla-central/source/toolkit/devtools/server/actors/webapps.js#391
+
+but there are no other "allowSideloadingCertified" references found in the code.
+
+jryans on IRC pointed to this code change as when that section last changed:
+
+https://bugzilla.mozilla.org/attachment.cgi?id=805062&action=diff
+
+Perhaps that allowSideloadingCertified use needs to check something that checks the devtools.debugger.forbid-certified-apps pref.
+
+Getting this to work is very useful for UX reviews for Gaia. Previously I worked out this process for them to do easier reviews of dev app snapshots:
+
+https://github.com/jrburke/gaia-dev-zip#for-the-ux-person
+
+but that simulator pathway no longer works with Gaia 1.2 and greater, and I was hoping to switch that process over to the app manager.

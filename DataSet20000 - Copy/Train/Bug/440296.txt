@@ -1,0 +1,70 @@
+gif animation doesn't reset correctly when played a secound time later on the page
+User-Agent:       Mozilla/5.0 (X11; U; Linux x86_64; de; rv:1.9) Gecko/2008061017 Firefox/3.0
+Build Identifier: Mozilla/5.0 (X11; U; Linux x86_64; de; rv:1.9) Gecko/2008061017 Firefox/3.0
+
+With onclick and ajax i exchanced a gif with anoter one - this works.
+But when i change the gif to one that allready played before it doesn't reset corretly - it doesn't play from frame 1, it only shows the last frame.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.Change gifs in a loop, for example with ajax
+2.do the loop a secound time
+3.see that in the secound round the animation doesn't work
+Actual Results:  
+The gif animation doesn't play, it shows only the last frame.
+
+Expected Results:  
+The gif animation should play (once, it es a non-looping gif-animation).
+
+here is some code to reproduce:
+
+--------------index.php------------------
+<?php 
+require_once('funktionen.php');
+require_once('xajax_core/xajax.inc.php'); 
+
+$xajax = new xajax();
+$xajax->registerFunction("schrankBilderLaden");
+$xajax->processRequest();
+?>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+<head>
+<?php $xajax->printJavascript(); ?>
+<meta/><title></title></head>
+<body>
+<div id="schrankBild"><img src="schrank.gif" width="800" height="600" onclick="xajax_schrankBilderLaden('1');" /></div>
+</body>
+</html>
+----------------index.php-------------------
+----------------funktionen.php--------------
+<?php
+function schrankBilderLaden($arg)
+{
+
+    switch ($arg) { 
+      case 1:
+        $newContent = "<IMG src=\"schrank1.gif\" width=\"800\" height=\"600\" align=\"left\" border=\"0\" onclick=\"xajax_schrankBilderLaden('2');\">";
+	break;
+      case 2:
+        $newContent = "<IMG src=\"schrank2.gif\" width=\"800\" height=\"600\" align=\"left\" border=\"0\" onclick=\"xajax_schrankBilderLaden('3');\">";
+	break;
+      case 3:
+	$newContent = "<IMG src=\"schrank3.gif\" width=\"800\" height=\"600\" align=\"left\" border=\"0\" onclick=\"xajax_schrankBilderLaden('1');\">";
+	break;
+    }
+
+    $objResponse = new xajaxResponse();
+ 
+    $objResponse->assign("schrankBild","innerHTML", $newContent);
+ 
+    return $objResponse;
+}
+?>
+-----------------funktionen.php---------------
+
+
+the code uses xajax from http://xajaxproject.org/

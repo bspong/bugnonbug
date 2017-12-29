@@ -1,0 +1,23 @@
+isDirectory() throw an exception for file with size >= 0x80000000
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; de; rv:1.9) Gecko/2008071216 (Gentoo) Firefox/3.0
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; de; rv:1.9) Gecko/2008071216 (Gentoo) Firefox/3.0
+
+Querying the file size using Javascript and the "@mozilla.org/file/local;1" component, the method isDirectory() throw an exception for file with a size >= 0x80000000. This hint at an internal 32-bit signed integer issue which creep into the isDirectory() function, although this function only return a boolean value.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Create two files, one with a size < 0x80000000, the second one with 0x80000000
+
+2. In the error console type:
+var obj = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile) ; obj.initWithPath("/home/thomas/fire-test1"); obj.isDirectory();
+
+3. For the smaller file you will get a valid result (false), for the second file an exception is thrown.
+Note: obj.fileSize also throw that exception.
+Actual Results:
+Fehler: uncaught exception: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsILocalFile.isDirectory]" nsresult: "0x80004005 (NS_ERROR_FAILURE)" location: "JS frame :: javascript:%20var%20obj%20=%20Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile)%20;%20obj.initWithPath("/home/thomas/fire-test2");%20obj.isDirectory(); :: <TOP_LEVEL> :: line 1" data: no]
+
+Expected Results:
+Return value "false"
+
+My system is a 32-bit Gentoo Linux installation.

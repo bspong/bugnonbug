@@ -1,0 +1,31 @@
+Batch Sync ping
+Georg, Alessio and I decided that even though there's not yet any smoke, there's enough heat that we should ensure thing don't catch fire in the future - so we should batch the sync ping submissions. We've come up with a plan that we think will help the backend significantly while still giving u the metric we want and without too much client-side effort.
+
+Basic strategy is that we buffer the ping and send them a minimum of once per day (or maybe twice per day?)
+
+* Sync "payloads" are all buffered in memory rather than immediately submitted.
+
+* We impose an upper limit on the number of such record we keep in memory (and thus the number we actually submit.) Sync typically run once every 10 minutes, which corresponds to 144 Syncs per day. However, operation performed by the browser may cause it to Sync more often. A guideline is that the max ping size is around 1MB including metadata, so I propose we limit this to 500 syncs. After this limit we count the syncs we discarded and include that count in the payload, a this still allows u to detect client doing an insane number of syncs.
+
+(There's an open question on the above re detecting when our payload still exceeds the maximum size imposed by telemetry even with this 500 limit in place. I think we would want to know if that happened, but we can consider doing that in a different bug, a it probably requires assistance from the telemetry module - IIUC, they just throw oversized ping on the floor)
+
+* On startup, schedule a timer that fire every 24 hour (12 hours?) and an observer for quit-application. Actually, we probably want just an "interval" that we re-create each time it fire - we want to make sure that, say, when a device is asleep for a few day before waking up, we (a) correctly submit the ping immediately but (b) don't see the timer fire immediately multiple time to account for every 24/12 hour the device wa asleep for. I *think* using an interval will do the right thing here, which we should check. A fallback would be listening for a "wake_notification" observer.
+
+* On either that timer or observer firing, put the payload together and send it to telemetry. It will manage the persisting of the payload even when called during shutdown. Thus, Sync never need to actually persist anything.
+
+* We will lose ping due to a crash, which probably doesn't matter. We *might* later want to know we lost such ping (eg, so we can exclude those client from analysis), but we can add stuff to the schema later if necessary via a different bug.
+
+* The ping format change in such a way that it is consistent regardless of how many submission we make and how many ping are in it. Something like:
+
+Existing: {"type": "sync", ..., "payload": { "when": 1470908281556, ... } }
+
+Changes to:
+{
+type: "sync", ...
+payload: {
+syncs: [array of existing payload objects],
+numDiscarded: integer - the number of Sync record we discarded due to rate limiting
+why: string, either "scheduled" or "shutdown",
+}
+
+* We don't bother bumping the schema version. We uplift this patch to Aurora. Analysis done against Aurora will need to take these 2 different format into account, but that's doable. There will only be a single format once it hit beta/release, which is what we really care about anyway.

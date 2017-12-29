@@ -1,0 +1,13 @@
+The web console can facilitate a system compromise as the user running firefox
+Created attachment 8625247
+dangerousWebConsole-testcase-new.html
+
+There's multiple issues that come into play here, I'll start with those pertaining to the web console.  The web console performs unsafe access of the content window and uses its Array constructor I assume to provide an array that is accessible from content, see here:
+
+https://mxr.mozilla.org/mozilla-central/source/toolkit/devtools/webconsole/utils.js#1743
+
+At current I don't have a way to show this issue off besides having people copy and paste something into console but I believe the unsafe access above could provide someone with the ability to achieve privilege escalation, as well as gain access to the special functions provided by the console.  I found this issue a little over a week ago, and honestly I just don't have any more time right now to spend on this so copy and paste it is.
+
+The second main issue that plays a part here is that when dealing with a chrome privileged windows that the functions can't actually be called elsewhere.  This allows one to use Function.prototype.call.call and null to call functions of a chrome level window and have them execute on the chrome window.  Enter setTimeout :D
+
+I'm using some previous work of mine here to load a hidden chrome level window using the pdfjs plugin preview setup and the view-source protocol.  Load the attached testcase, open the web console(as the content page) and paste the script in the next comment into it and hit enter.  I've only tested this on Linux, so windows might be hit or miss.  My concern here is that if someone could gain access to these functions from script, or even use social engineering and some obfuscation to gain remote access quite easily.  I know this relies on some user interaction at current, but I would think even then this should at least be a sec-high.

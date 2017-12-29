@@ -1,0 +1,31 @@
+remove workaround for principal hashtable inconsistency
+User-Agent: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.5; en-US; rv:1.9.0.1) Gecko/2008070206 Firefox/3.0.1
+Build Identifier: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.5; en-US; rv:1.9.0.1) Gecko/2008070206 Firefox/3.0.1
+
+With bug #454850 fixed and pushed, this workaround (in nsScriptSecurityManager.cpp) becomes unnecessary:
+
+mPrincipals.Get(principal, getter_AddRefs(fromTable));
+if (!fromTable)
+{
+//-- Check to see if we have a more general principal
+
+// XXXbz if only GetOrigin returned a URI! Or better yet if the
+// HashKey function on principal were smarter. As it is, we can
+// have case where two principal will have different hashkeys but
+// test equal via KeyEquals, which is absolutely silly. That's
+// what we're working around here.
+nsXPIDLCString originUrl;
+rv = principal->GetOrigin(getter_Copies(originUrl));
+if (NS_FAILED(rv)) return rv;
+nsCOMPtr<nsIURI> newURI;
+rv = NS_NewURI(getter_AddRefs(newURI), originUrl, nsnull, sIOService);
+if (NS_FAILED(rv)) return rv;
+nsCOMPtr<nsIPrincipal> principal2;
+rv = CreateCodebasePrincipal(newURI, getter_AddRefs(principal2));
+if (NS_FAILED(rv)) return rv;
+mPrincipals.Get(principal2, getter_AddRefs(fromTable));
+}
+
+That is, the first result from mPrincipals.Get can now be trusted.
+
+Reproducible: Didn't try

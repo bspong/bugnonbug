@@ -1,0 +1,19 @@
+e10s change header order in copy a curl
+User Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:48.0) Gecko/20100101 Firefox/48.0
+Build ID: 20160429004052
+
+Steps to reproduce:
+
+The order of HTTP header change when e10s is enabled.
+This test fails on e10s: https://github.com/mozilla/gecko-dev/blob/master/devtools/client/netmonitor/test/browser_net_copy_as_curl.js
+
+When I run the test with ./mach mochitest --disable-e10s it works.
+
+It seems the issue is that the header aren't returned in the same order.
+With e10s disabled, this is the curl string returned:
+curl 'http://example.com/browser/devtools/client/netmonitor/test/sjs_simple-test-server.sjs' -H 'Host: example.com' -H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:49.0) Gecko/20100101 Firefox/49.0' -H 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8' -H 'Accept-Language: en-US' --compressed -H 'X-Custom-Header-1: Custom value' -H 'X-Custom-Header-2: 8.8.8.8' -H 'X-Custom-Header-3: Mon, 3 Mar 2014 11:11:11 GMT' -H 'Referer: http://example.com/browser/devtools/client/netmonitor/test/html_copy-as-curl.html' -H 'Connection: keep-alive' -H 'Pragma: no-cache' -H 'Cache-Control: no-cache'
+
+With e10s enabled, this is the curl string returned:
+curl 'http://example.com/browser/devtools/client/netmonitor/test/sjs_simple-test-server.sjs' -H 'Host: example.com' -H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:49.0) Gecko/20100101 Firefox/49.0' -H 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8' -H 'Accept-Language: en-US' --compressed -H 'Referer: http://example.com/browser/devtools/client/netmonitor/test/html_copy-as-curl.html' -H 'X-Custom-Header-1: Custom value' -H 'X-Custom-Header-2: 8.8.8.8' -H 'X-Custom-Header-3: Mon, 3 Mar 2014 11:11:11 GMT' -H 'Connection: keep-alive' -H 'Pragma: no-cache' -H 'Cache-Control: no-cache'
+
+The Referer header is added before the custom header with e10s, and after them with e10s disabled.

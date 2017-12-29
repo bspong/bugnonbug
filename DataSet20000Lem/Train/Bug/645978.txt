@@ -1,0 +1,14 @@
+nsIURIContentListener v nsIContentHandler in Firefox4
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_6_7) AppleWebKit/534.27 (KHTML, like Gecko) Chrome/12.0.712.0 Safari/534.27
+Build Identifier: 2.0
+
+Firefox3 us nsIContentHandler to handle the document loading process. In Firefox4 this mechanism is replaced with nsIURIContentListener. This creates several problems, imho.
+
+First, the nsIURIContentListeners are called way after nsIContentHandlers. This perhaps is not a huge performance hit, however, what bother me is that by using nsIURIContentListeners instead of nsIContentHandlers the resource (in case of http) is requested twice. The reason for this is because when we start loading the resource necko need figure out the mimetype, so a request is send to get the headers. Later on nsDocumentOpenInfo::DispatchContent start searching for right candidate to handle the content. If nsIContentHandlers are used, the channel stream is given which subsequently need to be passed into something like a docShell. If nsIURIContentListeners are used, the first request is essentially dropped. In Firefox4, for example, URI from the channel will be extracted and passed to the browser.
+
+Perhaps there is a good reason why this is setup this way.
+
+More information can be found here: https://developer.mozilla.org/en/Document_Loading_-_From_Load_Start_to_Finding_a_Handler
+There is a discussion here: http://groups.google.com/group/mozilla.dev.platform/browse_thread/thread/9fd0321ac06ef790
+
+Reproducible: Always

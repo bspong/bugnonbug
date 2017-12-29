@@ -1,0 +1,31 @@
+"WARNING: content window passed to PrivateBrowsingUtils.isWindowPrivate. Use isContentWindowPrivate instead" from aboutPrivateBrowsing.js
+Not sure why you do not see this logging output when opening the page manually, but I do. The stack is way smaller so maybe we can find out the problem and get this fixed.
+
+Steps:
+1. Start Firefox from the command line (maybe dumps have to be enabled)
+2. Load "about:privatebrowsing" via the locationbar
+3. Observe the warnings in the terminal
+
+Here two warnings which are spit out right after each other:
+
+WARNING: content window passed to PrivateBrowsingUtils.isWindowPrivate. Use isContentWindowPrivate instead (but only for frame scripts).
+pbu_isWindowPrivate@resource://gre/modules/PrivateBrowsingUtils.jsm:25:14
+@chrome://browser/content/aboutPrivateBrowsing.js:12:6
+
+WARNING: content window passed to PrivateBrowsingUtils.isWindowPrivate. Use isContentWindowPrivate instead (but only for frame scripts).
+pbu_isWindowPrivate@resource://gre/modules/PrivateBrowsingUtils.jsm:25:14
+@chrome://browser/content/aboutPrivateBrowsing.js:37:8
+
+Here the appropriate code:
+
+12 if (!PrivateBrowsingUtils.isWindowPrivate(window)) {
+13   document.title = stringBundle.GetStringFromName("title.normal");
+14   setFavIcon("chrome://global/skin/icons/question-16.png");
+15 } else {
+[..]
+36 document.addEventListener("DOMContentLoaded", function () {
+37   if (!PrivateBrowsingUtils.isWindowPrivate(window)) {
+38     document.body.setAttribute("class", "normal");
+39   }
+
+Regressor seems to be bug 1069059 which landed in the timeframe of Firefox 35.

@@ -1,0 +1,58 @@
+dbg-server.jsm compartment is leaking 500,000-char JavaScript warning string like a sieve
+Created attachment 765933
+Contents of about:memory
+
+My Firefox instance is currently using about 2.5GB of RAM.
+
+1GB of that I consider quite reasonable. (I'm running a load which experience suggests Chrome would be using well over 2GB for, plus almost 200 lazily-not-loaded-at-present tab which I believe Chrome doesn't support, let alone the Panorama feature which I use to manage most of it to good effect. Even with some problems, I love Firefox; switching to Chrome is unthinkable.)
+
+1.5GB of that appears to be leaked memory from the JavaScript warning logging strings.
+
+Steps used to find the problem:
+
+1. Start a new project using Foundation (the SASS version).
+2. Start working on the page, refreshing the page rather regularly a change are made and most of the time having one or both of Firebug and the Inspector of the Dev Tools open (I opened all the other tab somewhere along the way, which could potentially matter), but opening and closing both of them fairly frequently (not for particularly good reasons).
+3. Wonder why your 4GB of RAM is almost all consumed †.
+
+about:memory show explicit/js-non-window/compartments/non-window-global/compartment([System Principal], [anonymous sandbox] (from: resource://gre/modules/devtools/dbg-server.jsm:41))/string-chars using 1,529,840,416 B.
+
+All of the string being displayed in "huge" are between 489977 and 490234 character long. This is suspiciously close to 500000 and the size spread is 258 characters, suspiciously close to 256.
+
+All the string of size start with "[JavaScript Warning: ". I don't know what come after the first 32 bytes, though, because about:memory doesn't say that. :-(
+
+None of the string are presently available in the Error Console or the Web Console, and I have closed the Developer Tools and Firebug on all tab (I believe).
+
+In case it helps, the page that I'm working on ha contained experimentation with clip-path, hyperlinks, CSS, a few small images, block of colour and a good deal of sadness about feature that Chrome and Internet Explorer (especially the latter) are lacking or implement badly. (Chrome, why is your clip-path not not clipping the hit target? That make it useless for me...) Oh, it's also got some inline SVG now, because clip-path couldn't do what I needed in WebKit. No JavaScript beyond the default of Foundation. (Modernizr, Zepto and a handful of library of their own.)
+
+The page that I'm working on is a local page and I am not at present willing to share it. Sorry about that.
+
+I have not yet tested it on Nightly, nor wa I immediately able to reproduce the issue with a believed-similar load on a blank Firefox profile with only Firebug added.
+
+At the time of writing, I still have the same instance of Firefox running, but it's likely to be killed if there's no other way to free that 1.5GB of RAM within a day or so.
+
+Other potentially useful information
+====================================
+
+:User Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:21.0) Gecko/20100101 Firefox/21.0
+
+:Enabled add-ons:
+
+- Adblock Plus
+- Atlassian Bonfire
+- Context Font
+- DownThemAll!
+- DuckDuckGo Plus
+- Firebug (1.11.2 )
+- FireFontFamily
+- Greasemonkey
+- PDF Viewer
+- Stylish
+- View Dependencies
+- Plus the standard one provided for Ubuntu:
+- Global Menu Bar integration
+- Ubuntu Firefox Modifications
+- Ubuntu Online Accounts
+- Unity Desktop Integration
+- Unity Websites integration
+
+† This step is optional. Especially, don't worry about removing 28GB of your RAM if you're lucky enough to have that much surplus.

@@ -1,0 +1,104 @@
+Javascript: Bug in Parsing - new function
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; de; rv:1.8.1.8) Gecko/20071004 Iceweasel/2.0.0.8 (Debian-2.0.0.8-1)
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; de; rv:1.8.1.8) Gecko/20071004 Iceweasel/2.0.0.8 (Debian-2.0.0.8-1)
+
+This small sample shows the Bug in Firfox
+
+<html>
+  <head>
+    <title></title>
+    <meta content="">
+    <style></style>
+
+  <script type="text/javascript">
+
+function function_exists(sCheck) {
+
+	if(typeof(sCheck)!="string") {
+		return false;
+	}
+
+	if(sCheck=="") {
+		return false;
+	}
+
+	var tmp = sCheck.split(".");
+
+	for(var i = 0; i < tmp.length; i++) {
+
+		var check_this = tmp[0];
+//alert("try {\nif(typeof(" + check_this + ")==\"function\") {\nreturn true;\n} else {\nreturn false;\n}\n} catch (error) {\nreturn false;\n}");
+				var check_function = new Function("", "try {\nif(typeof(" + check_this + ")==\"function\") {\nreturn true;\n} else {\nreturn false;\n}\n} catch (error) {\nreturn false;\n}");
+//alert(check_function);
+		var Puffer = check_function();
+	
+		if(Puffer==false) {
+			return false;
+		}
+
+		for(var j = 1; j <= i; j++) {
+
+			check_this = check_this + '.' + tmp[j];
+
+			if(check_this!="") {
+				var check_function = new Function("", "try {\nif(typeof(" + check_this + ")==\"function\") {\nreturn true;\n} else {\nreturn false;\n}\n} catch (error) {\nreturn false;\n}");
+
+				var Puffer = check_function();
+	
+				if(Puffer==false) {
+					return false;
+				}
+			}
+		}
+
+	}
+
+	if(check_this!="") {
+		return true;
+	} else {
+		return false;
+	}
+
+}
+
+
+</script>
+
+  </head>
+  <body>
+
+ <script type="text/javascript">
+function test1() { 
+	this.test2 = test2;
+
+	function test2() {
+
+	}
+}
+
+alert(function_exists("test1.test2"));
+alert(function_exists("test1.test3"));
+
+
+</script>
+
+</body>
+</html>
+
+Firefox returns: false, false
+Konqueror return: true, false
+
+http://www.pn-solution.de/webDesktop/screenshots/error/js_error_new_function1.png
+http://www.pn-solution.de/webDesktop/screenshots/error/js_error_new_function2.png
+
+You will see the Brackets are missing by typeof in the "new function".
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. visit the page and run the script
+Actual Results:  
+The Brackets are missing
+
+Expected Results:  
+Should run the dynamic created function

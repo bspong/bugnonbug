@@ -1,0 +1,111 @@
+useless crash report
+User-Agent:       Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1)
+Build Identifier: Mozilla/5.0 (Windows ; U; Windows NT 5.; en-US; rv:1.8.1b2) gecko/20060821 Firefox/2.0b2
+
+Firefox has dozens of tabs open.  Each tab is on the same page.
+The page uses a HTTP refresh one second after it loads.
+The page contains a little text and a single fuzzed, randomly scrambled, gif or jpg image.
+
+I am doing this to test another product and get some interop/stress testing with firefox.
+
+After an few hours, I get an access violation here:
+
+0:000> !analyze -v -f
+*******************************************************************************
+*                                                                             *
+*                        Exception Analysis                                   *
+*                                                                             *
+*******************************************************************************
+
+*** ERROR: Symbol file could not be found.  Defaulted to export symbols for E:\Program Files\Mozilla Firefox 2 Beta 2\nspr4.dll - 
+*** ERROR: Symbol file could not be found.  Defaulted to export symbols for E:\Program Files\Mozilla Firefox 2 Beta 2\xpcom_core.dll - 
+
+FAULTING_IP: 
+firefox!nsPrintSettings::GetHowToEnableFrameUI+7168
+0053b894 8a8433a6230000   mov     al,[ebx+esi+0x23a6]
+
+EXCEPTION_RECORD:  ffffffff -- (.exr ffffffffffffffff)
+ExceptionAddress: 0053b894 (firefox!nsPrintSettings::GetHowToEnableFrameUI+0x00007168)
+   ExceptionCode: c0000005 (Access violation)
+  ExceptionFlags: 00000000
+NumberParameters: 2
+   Parameter[0]: 00000000
+   Parameter[1]: 03dd69cd
+Attempt to read from address 03dd69cd
+
+FAULTING_THREAD:  00000de8
+
+DEFAULT_BUCKET_ID:  APPLICATION_FAULT
+
+PROCESS_NAME:  firefox.exe
+
+ERROR_CODE: (NTSTATUS) 0xc0000005 - The instruction at "0x%08lx" referenced memory at "0x%08lx". The memory could not be "%s".
+
+READ_ADDRESS:  03dd69cd 
+
+BUGCHECK_STR:  ACCESS_VIOLATION
+
+LAST_CONTROL_TRANSFER:  from 0053af91 to 0053b894
+
+STACK_TEXT:  
+WARNING: Stack unwind information not available. Following frames may be wrong.
+0012f8f0 0053af91 03ddfce6 0510907c 000002ff firefox!nsPrintSettings::GetHowToEnableFrameUI+0x7168
+0012f90c 0053587d 051090b4 0510901c 0510931b firefox!nsPrintSettings::GetHowToEnableFrameUI+0x6865
+00000000 00000000 00000000 00000000 00000000 firefox!nsPrintSettings::GetHowToEnableFrameUI+0x1151
+
+
+FOLLOWUP_IP: 
+firefox!nsPrintSettings::GetHowToEnableFrameUI+7168
+0053b894 8a8433a6230000   mov     al,[ebx+esi+0x23a6]
+
+FAULTING_SOURCE_CODE:  
+
+
+SYMBOL_STACK_INDEX:  0
+
+FOLLOWUP_NAME:  MachineOwner
+
+SYMBOL_NAME:  firefox!nsPrintSettings::GetHowToEnableFrameUI+7168
+
+MODULE_NAME:  firefox
+
+IMAGE_NAME:  firefox.exe
+
+DEBUG_FLR_IMAGE_TIMESTAMP:  44e98a38
+
+STACK_COMMAND:  ~0s ; kb
+
+FAILURE_BUCKET_ID:  ACCESS_VIOLATION_firefox!nsPrintSettings::GetHowToEnableFrameUI+7168
+
+BUCKET_ID:  ACCESS_VIOLATION_firefox!nsPrintSettings::GetHowToEnableFrameUI+7168
+
+Followup: MachineOwner
+---------
+
+0:000>  ~0s ; kb
+eax=00007a69 ebx=0000b61b ecx=00001002 edx=03dcc3b7 esi=03dc900c edi=0000000d
+eip=0053b894 esp=0012f8b8 ebp=0012f8f0 iopl=0         nv up ei pl nz na po nc
+cs=001b  ss=0023  ds=0023  es=0023  fs=003b  gs=0000             efl=00200206
+firefox!nsPrintSettings::GetHowToEnableFrameUI+0x7168:
+0053b894 8a8433a6230000   mov     al,[ebx+esi+0x23a6]     ds:0023:03dd69cd=??
+ChildEBP RetAddr  Args to Child              
+WARNING: Stack unwind information not available. Following frames may be wrong.
+0012f8f0 0053af91 03ddfce6 0510907c 000002ff firefox!nsPrintSettings::GetHowToEnableFrameUI+0x7168
+0012f90c 0053587d 051090b4 0510901c 0510931b firefox!nsPrintSettings::GetHowToEnableFrameUI+0x6865
+00000000 00000000 00000000 00000000 00000000 firefox!nsPrintSettings::GetHowToEnableFrameUI+0x1151
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Launch one copy of Firefox 2 Beta 2(I have tried a previously release version too)
+2. Open 20-40 tabs
+3. Point each tab to a page that refreshes every second with a new fuzzed, randomly scrambled, image.
+4. Wait 1-3 hours.
+
+
+
+
+If I could get my hands on symbols for this build without building it myself, I would be happy to dig into it more and try to give more detailed debugging information.  With the level of stress that I am running at, I would not be surprised if I hit more problems in the future.
+
+I can also provide the perl cgi scripts that I am using for stress, but my image set that I am fuzzing is 130+ meg and 4000+ files and I run for about 20000 cgi page hits before firefox crashes.

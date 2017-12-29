@@ -1,0 +1,63 @@
+URIs that we exclude from history (like about:blank, data:, etc) will appear visited if we check immediately after visiting them
+nsNavHistory::IsURIStringVisited(), because of lazy adds, doe not always return the same value for non http / http link
+
+I noticed this while testing marco's fix for bug #401980
+
+take a look at nsNavHistory::IsURIStringVisited().
+
+because a link could still be unprocessed (meaning it is in mLazyMessages), we first check mLazyMessages to see if it is visited, and then we query the db.
+
+but note, when processing lazy message, we call CanAddURI()
+
+places.dll!nsNavHistory::CanAddURI(nsIURI * aURI=0x04dee350, int * canAdd=0x0012f688) Line 1897 C++
+places.dll!nsNavHistory::AddVisit(nsIURI * aURI=0x04dee350, __int64 aTime=1197965740296875, __int64 aReferringVisit=0, int aTransitionType=1, int aIsRedirect=0, __int64 aSessionID=52, __int64 * aVisitID=0x0012f840) Line 1995 + 0x16 byte C++
+places.dll!nsNavHistory::AddVisitChain(nsIURI * aURI=0x04dee350, __int64 aTime=1197965737312500, int aToplevel=1, int aIsRedirect=0, nsIURI * aReferrer=0x00000000, __int64 * aVisitID=0x0012f840, __int64 * aSessionID=0x0012f868, __int64 * aRedirectBookmark=0x0012f860) Line 3371 + 0x48 byte C++
+> places.dll!nsNavHistory::AddURIInternal(nsIURI * aURI=0x04dee350, __int64 aTime=1197965737312500, int aRedirect=0, int aToplevel=1, nsIURI * aReferrer=0x00000000) Line 3227 + 0x2c byte C++
+places.dll!nsNavHistory::CommitLazyMessages() Line 3763 C++
+places.dll!nsNavHistory::LazyTimerCallback(nsITimer * aTimer=0x050c8198, void * aClosure=0x01cb4830) Line 3749 C++
+xpcom_core.dll!nsTimerImpl::Fire() Line 400 + 0xe byte C++
+xpcom_core.dll!nsTimerEvent::Run() Line 489 C++
+xpcom_core.dll!nsThread::ProcessNextEvent(int mayWait=1, int * result=0x0012f990) Line 511 C++
+xpcom_core.dll!NS_ProcessNextEvent_P(nsIThread * thread=0x00c03f48, int mayWait=1) Line 227 + 0x16 byte C++
+gkwidget.dll!nsBaseAppShell::Run() Line 154 + 0xc byte C++
+tkitcmps.dll!nsAppStartup::Run() Line 181 + 0x1c byte C++
+xul.dll!XRE_main(int argc=3, char * * argv=0x00bdd600, const nsXREAppData * aAppData=0x00bdd9f0) Line 3149 + 0x25 byte C++
+firefox.exe!main(int argc=3, char * * argv=0x00bdd600) Line 153 + 0x12 byte C++
+firefox.exe!__tmainCRTStartup() Line 586 + 0x19 byte C
+firefox.exe!mainCRTStartup() Line 403 C
+kernel32.dll!7c816fd7()
+[Frames below may be incorrect and/or missing, no symbol loaded for kernel32.dll]
+
+we need a similar check in nsNavHistory::IsURIStringVisited() so that about:blank, and other thing we don't add to place don't appear a visited, if we check while the visit is still in the lazy message queue.
+
+or, maybe we should call CanAddUri() before creating the lazy visit message? Not sure yet.
+
+additionally, I'm not sure why we are attempting to add about:blank to the global history when opening a new tab.
+
+do we want about:blank (and other about:*) in the global history, ever?
+
+places.dll!nsNavHistory::IsVisited(nsIURI * aURI=0x064a6b40, int * _retval=0x0012f270) Line 3396 C++
+> docshell.dll!nsDocShell::AddToGlobalHistory(nsIURI * aURI=0x064a6b40, int aRedirect=0, nsIChannel * aChannel=0x064c0d18) Line 8579 + 0x27 byte C++
+docshell.dll!nsDocShell::OnNewURI(nsIURI * aURI=0x064a6b40, nsIChannel * aChannel=0x064c0d18, unsigned int aLoadType=1, int aFireOnLocationChange=0, int aAddToGlobalHistory=1) Line 7842 C++
+docshell.dll!nsDocShell::OnLoadingSite(nsIChannel * aChannel=0x064c0d18, int aFireOnLocationChange=0, int aAddToGlobalHistory=1) Line 7874 + 0x27 byte C++
+docshell.dll!nsDocShell::CreateContentViewer(const char * aContentType=0x063dd378, nsIRequest * request=0x064c0d18, nsIStreamListener * * aContentHandler=0x051c88e8) Line 5959 + 0x15 byte C++
+docshell.dll!nsDSURIContentListener::DoContent(const char * aContentType=0x063dd378, int aIsContentPreferred=0, nsIRequest * request=0x064c0d18, nsIStreamListener * * aContentHandler=0x051c88e8, int * aAbortProcess=0x0012f544) Line 138 + 0x20 byte C++
+docshell.dll!nsDocumentOpenInfo::TryContentListener(nsIURIContentListener * aListener=0x06497dc8, nsIChannel * aChannel=0x064c0d18) Line 735 + 0x41 byte C++
+docshell.dll!nsDocumentOpenInfo::DispatchContent(nsIRequest * request=0x064c0d18, nsISupports * aCtxt=0x00000000) Line 434 + 0x39 byte C++
+docshell.dll!nsDocumentOpenInfo::OnStartRequest(nsIRequest * request=0x064c0d18, nsISupports * aCtxt=0x00000000) Line 280 + 0x10 byte C++
+necko.dll!nsBaseChannel::OnStartRequest(nsIRequest * request=0x051c89f8, nsISupports * ctxt=0x00000000) Line 604 + 0x46 byte C++
+necko.dll!nsInputStreamPump::OnStateStart() Line 439 + 0x2c byte C++
+necko.dll!nsInputStreamPump::OnInputStreamReady(nsIAsyncInputStream * stream=0x051c8af8) Line 395 + 0xb byte C++
+xpcom_core.dll!nsInputStreamReadyEvent::Run() Line 112 C++
+xpcom_core.dll!nsThread::ProcessNextEvent(int mayWait=1, int * result=0x0012f990) Line 511 C++
+xpcom_core.dll!NS_ProcessNextEvent_P(nsIThread * thread=0x00c03f48, int mayWait=1) Line 227 + 0x16 byte C++
+gkwidget.dll!nsBaseAppShell::Run() Line 154 + 0xc byte C++
+tkitcmps.dll!nsAppStartup::Run() Line 181 + 0x1c byte C++
+xul.dll!XRE_main(int argc=3, char * * argv=0x00bdd600, const nsXREAppData * aAppData=0x00bdd9f0) Line 3149 + 0x25 byte C++
+firefox.exe!main(int argc=3, char * * argv=0x00bdd600) Line 153 + 0x12 byte C++
+firefox.exe!__tmainCRTStartup() Line 586 + 0x19 byte C
+firefox.exe!mainCRTStartup() Line 403 C
+kernel32.dll!7c816fd7()
+[Frames below may be incorrect and/or missing, no symbol loaded for kernel32.dll]
+
+I'm not sure if this blocks.

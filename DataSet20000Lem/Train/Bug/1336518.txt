@@ -1,0 +1,16 @@
+Move Sync history query into PlacesSyncUtils
+The Sync history engine currently executes query directly against the database: http://searchfox.org/mozilla-central/rev/d20e4431d0cf40311afa797868bc5c58c54790a2/services/sync/modules/engines/history.js#73-106,148-153,170-176,192-200,202-208,210-224
+
+Let's move these query into new `PlacesSyncUtils.history` methods, add test (http://searchfox.org/mozilla-central/rev/b1aadb3572eaf7d2c70e19a2ba5413809d9ac698/toolkit/components/places/tests/unit/test_sync_utils.js), and convert the engine to use them. We can then remove the `_getStmt` machinery.
+
+The `PlacesSyncUtils` module life here: http://searchfox.org/mozilla-central/rev/d20e4431d0cf40311afa797868bc5c58c54790a2/toolkit/components/places/PlacesSyncUtils.jsm Here's what I'm thinking for the conversion:
+
+* `PlacesSyncUtils.history.filterSyncablePlaces(guids)` can replace the query in `pullNewChanges`.
+* We can move `setGUID` into `PlacesSyncUtils.history.changeGuid(oldGuid, newGuid)`.
+* `_guidStm` can move to `PlacesSyncUtils.history.fetchGuidForURL(url)`.
+* `_urlStm` can move to `PlacesSyncUtils.history.fetchURLForGuid(guid)`. Or we can have a more generic lookup method like `PlacesSyncUtils.history.fetch({ guid, url })`, that can search by either. Check out `Bookmarks.fetch` (http://searchfox.org/mozilla-central/rev/b1aadb3572eaf7d2c70e19a2ba5413809d9ac698/toolkit/components/places/Bookmarks.jsm#535-544,571-576) for inspiration.
+* `_visitStm` can move to `PlacesSyncUtils.history.fetchVisitsForURL(url)`.
+
+The new history method should be tasks, and use `PlacesUtils.promiseDBConnection` or `PlacesUtils.withConnectionWrapper`, like `PlacesSyncUtils.bookmarks.*`.
+
+This is a great bug if you've already landed a couple of Firefox patches. Marking it a a bad first bug because it's a bit intimidating if you're just getting started, but I'm very happy to mentor you if you'd like to take it. :-)

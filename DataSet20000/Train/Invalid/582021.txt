@@ -1,0 +1,22 @@
+Download manager shouldn't close if there are popup windows left open
+Currently, the download manager closes itself automatically (if there are no downloads in progress) following the "browser-lastwindow-close-granted" notification, which fires when the last non-popup navigator:browser is closed. This means that popup windows may still be open but they aren't taken into consideration.
+
+
+Comment from Gavin on bug 544356, about "browser-lastwindow-close-granted" notification:
+
+> The trunk code that fires this notification doesn't do it if the current window
+> is a popup. I think that's required to avoid notifying twice in the case where
+> you have both a popup and a normal window, and then close the normal window
+> followed by the popup. You can address that easily enough by adding (&&
+> window.toolbar.visible) to the if (reallyClose) check...
+> 
+> ... but that brings up the fact that is's kind of strange that we ignore popup
+> windows when determining whether to fire this notification. AFAICT
+> "browser-lastwindow-close-granted" does not actually mean "we're quitting" on
+> non-Mac, since a popup window can keep us running. I think the sessionstore and
+> browserglue users may be OK with that (though I'm not sure), but for this
+> specific case (closing the download manager), don't we actually care about the
+> last browser window, regardless of whether it's a popup? This problem applies
+> equally to trunk/1.9.2, so I suppose it shouldn't necessarily block landing
+> this on 1.9.1, but we should probably get a followup filed on it.
+>

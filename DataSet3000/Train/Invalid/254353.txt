@@ -1,0 +1,50 @@
+HTTP Headers (no-cache etc) not honoured -> browser sends IMS header on GET
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.6) Gecko/20040206 Firefox/0.8
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.6) Gecko/20040206 Firefox/0.8
+
+If an object's response headers have set "expires" in the past, and/or the
+object is not cachable, the browser should not be sending the IMS header on a
+subsequent GET.
+Yet, Firefox0.8 does this consistently.
+This has quite an effect on tracking pixel usage/reporting
+
+Reproducible: Always
+Steps to Reproduce:
+1. load a page with an image
+2. go to that page again
+3. look at HTTP headers....
+
+Actual Results:  
+webserv = apache 1.3.29, Solaris8
+
+GET /someimage.gif   HTTP/1.1
+
+HTTP/1.x 200 OK
+Date: Wed, 04 Aug 2004 23:14:58 GMT
+Cache-Control: no-cache
+Pragma: no-cache, max-age=0
+Last-Modified: Fri, 04 Jan 2002 21:57:02 GMT
+Expires: Fri, 01 Jan 1999 00:00:00 GMT
+Etag: "a2d947-36-3c36252e"
+Content-Type: image/gif
+
+Second GET (navigating to same page)
+
+
+GET /_i/adcode=111:222:adcode:URL HTTP/1.1
+If-Modified-Since: Fri, 04 Jan 2002 21:57:02 GMT             # what??
+If-None-Match: "a2d947-36-3c36252e"                          # why??
+
+HTTP/1.x 304 Not Modified
+Date: Wed, 04 Aug 2004 23:17:09 GMT
+Server: Apache/1.3.29 (Unix)
+Etag: "a2d947-36-3c36252e"
+Expires: Fri, 01 Jan 1999 00:00:00 GMT
+Cache-Control: no-cache
+
+Expected Results:  
+in the above case, the browser should do another GET without IMS AND without INM
+headers to get a 200 response.
+
+I consider that a major flaw because the browser is not responsing to server
+headers appropriately -- users are seeing stale images....

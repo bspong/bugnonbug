@@ -1,0 +1,31 @@
+Race condition browser/devtools/markupview/test/browser_markupview_search_01.js
+Working through the test ' browser/devtools/markupview/test/browser_markupview_search_01.js', it seems pretty clear that the test ha some inbuilt race conditions.
+
+The test itself doe a bunch of 'searchUsingSelectorSearch' invocations, wait for an 'inspector-updated' event, and then ensures that the correct element wa selected. This fails due to race where some unrelated 'inspector-updated' fire (sometimes a 'delayed' one from an earlier set of actions), causing the wait to terminate early, and the check to fail.
+
+The test can be made to succeed reliably by inserting delay in the appropriate place (in between invoking change and checking for them).
+
+The test fail reliably on a linux 64-bit debug build of tip (tried on several different revision over the course of 2 weeks):
+
+45 INFO TEST-UNEXPECTED-FAIL | browser/devtools/markupview/test/browser_markupview_search_01.js | The <em> tag is now imported in the markup-view -
+Stack trace:
+chrome://mochitests/content/browser/browser/devtools/markupview/test/browser_markupview_search_01.js:null:33
+self-hosted:InterpretGeneratorResume:716
+self-hosted:next:624
+Tester_execTest@chrome://mochikit/content/browser-test.js:741:9
+Tester.prototype.nextTest</<@chrome://mochikit/content/browser-test.js:664:7
+SimpleTest.waitForFocus/waitForFocusInner/focusedOrLoaded/<@chrome://mochikit/content/tests/SimpleTest/SimpleTest.js:746:59
+46 INFO TEST-UNEXPECTED-FAIL | browser/devtools/markupview/test/browser_markupview_search_01.js | The <li> tag is the currently selected node - Got [Front for domnode/server1.conn0.domnode35], expected [Front for domnode/server1.conn0.domnode36]
+Stack trace:
+chrome://mochikit/content/browser-test.js:test_is:925
+chrome://mochitests/content/browser/browser/devtools/markupview/test/browser_markupview_search_01.js:null:46
+self-hosted:InterpretGeneratorResume:716
+self-hosted:next:624
+Tester_execTest@chrome://mochikit/content/browser-test.js:741:9
+Tester.prototype.nextTest</<@chrome://mochikit/content/browser-test.js:664:7
+SimpleTest.waitForFocus/waitForFocusInner/focusedOrLoaded/<@chrome://mochikit/content/tests/SimpleTest/SimpleTest.js:746:59
+SUITE-END | took 19
+
+This is blocking landing of patch in bug 1167409, because those patch cause these test to orange on try, but that's incidental (they're just triggering pre-existing races).
+
+Could you look into fixing them?

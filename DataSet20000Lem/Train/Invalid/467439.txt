@@ -1,0 +1,22 @@
+JavaScript: error detail missing in argument to window.onerror when script is loaded from different host name than web page.
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.4) Gecko/2008102920 Firefox/3.0.4
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.4) Gecko/2008102920 Firefox/3.0.4
+
+Firefox support window.onerror for handling JavaScript errors. When the function is called, the argument include the error message, file name, and line number for the script that resulted in the error. However, if our <script> tag point to .js file from a different host name than the web page wa served from, the error message is always reported a simply "Script error", and the line number a 0. In addition, the .caller property of the function specified for window.onerror is null, making it impossible to determine the call stack for the error.
+
+Is this a security feature? It's not clear to me why the onerror function would still be executed, but be missing the key detail to aid in debugging it. If it is intended behavior and close a security hole of some sort, it seems to me that it should only behave this way if the top-level domain differs. For example, if static.foo.com serf up the .js file that are referenced from a page served by dynamic.foo.com, it should not be subjected to this additional security. In our case, we are trying to deliver our static content via a content distribution network while our central server process dynamic requests, and this is facilitated through the use of different host names.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Access a web page at a.foo.com that includes <script> tag that download a .js file from b.foo.com. The web page should include JavaScript that set window.onerror = handleError; The handleError function is defined in the .js file. The function output the argument passed in.
+2. Simulate a javascript error of some kind, for example reference a property that doe not exist.
+
+
+Actual Results:
+The output of the error specifies the error a "Script error" and the line number a 0.
+
+Expected Results:
+The output of the error should include a descriptive error message and the actual line number that the error occurred on.
+
+This bug make it hard for u to debug javascript issues, a we have no way of knowing what went wrong and where in our code the error occurred. Our application will send client error message up to our server so we can resolve bug quickly, but since we implemented our change to use different host names, we've lost this visibility for Firefox users. We don't have a problem with IE, a it doesn't behave in this fashion.

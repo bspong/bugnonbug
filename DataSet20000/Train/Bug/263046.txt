@@ -1,0 +1,55 @@
+Javascript onmousedown only being called for too-specific radio button target area
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.0; rv:1.7.3) Gecko/20040913 Firefox/0.10
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.0; rv:1.7.3) Gecko/20040913 Firefox/0.10
+
+The onmousedown handler for a radiobutton is only being called when the circle
+of the radiobutton is clicked, not when the rest of the normal selection target
+area is clicked.  The normal selection target area for a radio button is the
+circle, plus the bounding square areound the circle, plus any area occupied by a
+LABEL for the radiobutton.
+
+This is very bad, because the selected state of the radio button will change,
+but the associated javascript handler will not be called.  You have to get the
+mouse cursor hotspot inside the circle of radio button and mousedown there for
+the Javascrip handler to be called.  The onclick handler is called properly for
+the entire target area.
+
+Sample illustrating the problem:
+----------------------------------------
+<!DOCTYPE html 
+     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+</head>
+<body>
+<form name="myform" action="#" method="post"> 
+ <input type="radio" name="radios" id="radio1"
+onmousedown="document.myform.textfield.value='radio1 was clicked'">
+ <label for="radio1">Radio 1</label><br />
+ <input type="radio" name="radios" id="radio2"
+onmousedown="document.myform.textfield.value='radio2 was clicked'">
+ <label for="radio2">Radio 2</label><br />
+ <input name="textfield" type="text">
+</form>
+</body>
+</html>
+------------------------------------------
+
+Reproducible: Always
+Steps to Reproduce:
+1. Load the given page.
+2. Click inside the circle of the radio button.  Note the text and selection
+changes.
+3. Click just outside the other radiobutton circle inside its bounding square,
+or on the label of the other radiobutton.  Note the selection changes, but the
+text does _not_ change.
+
+Actual Results:  
+The selection changes but the javascript handler does not run.
+
+Expected Results:  
+The javascript handler should run.
+
+This is causing major problems for our app in the field, since people see the
+selection change, but our UI does not update because the handler is not run.

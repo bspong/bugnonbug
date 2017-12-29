@@ -1,0 +1,48 @@
+getBrowserIndexForDocument caller optimization
+Created attachment 289203
+patch v1: reduces number of calls to getBrowserIndexForDocument
+
+tabbrowser.xml::getBrowserIndexForDocument shows up as one of the more costly methods in a Tp run profiled with calltime.d.
+
+A look through its callers reveals that pageShowEventHandlers calls it on pageshow and then throws away the result, so that call can be removed.  Its second caller is DOMLinkHandler::onLinkAdded, which calls it when an icon link is added to update the icon on the tab.  That call isn't as simple to optimize, but it might not happen that frequently, either.
+
+And its third caller is tabbrowser.xml::getBrowserForDocument, which is itself called in a variety of places, including ContentPrefSink::_handleDOMContentLoaded (which is being removed in bug 385224), in FeedHandler::onPageHide, whose functionality could be moved to the browser-specific pagehide handler in browser.xml <http://lxr.mozilla.org/mozilla/source/toolkit/content/widgets/browser.xml#450>, and in other methods that at first glance don't look like they get called very often.
+
+After applying the patch in bug 385224, removing the unused code from pageShowEventHandlers, and moving the logic in FeedHandler::onPageHide into the browser-specific pagehide handler, getBrowserIndexForDocument costs much less.
+
+Inclusive function elapsed times (us),
+   FILE                 TYPE       NAME                                TOTAL
+Before:
+   tabbrowser.xml       func       getBrowserIndexForDocument        3308607
+After:
+   tabbrowser.xml       func       getBrowserIndexForDocument         219806
+
+Timing the test runs with "time" also shows improvement, although these numbers are probably not reliable:
+
+Completed test: tp
+
+real	10m22.205s
+user	5m37.308s
+sys	2m2.331s
+
+Completed test: tp
+
+real	9m36.466s
+user	5m31.259s
+sys	1m56.808s
+
+Note: a look at getBrowserAtIndex and getBrowserIndexForDocument (and by extension getBrowserForDocument) suggests they might be faster if they used the cache of browser objects in the tabbrowser's "browsers" property.  getBrowser could then be simply:
+
+            return this.browsers[i];
+
+While getBrowserIndexForDocument could be:
+
+	    let browsers = this.browsers;
+            for (var i = 0; i < browsers.length; i++)
+              if (browsers[i].contentDocument == aDocument)
+                return i;
+            return -1;
+
+But the cache gets invalidated when tabs are added or removed and possibly in some other situations as well, and it's not entirely clear when these functions get called relative to when the cache is invalidated, so I'm not sure using the cache is actually an optimization.  Further testing is needed.
+
+Here's a patch that makes the changes measured above (excepting the changes made by the patch in bug 385224).  Requesting wanted-firefox3 for this performance improvement.

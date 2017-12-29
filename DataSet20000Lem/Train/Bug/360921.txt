@@ -1,0 +1,88 @@
+Canvas doesn't render correctly (ignores z-ordering) when partially occluled in a XUL arrowscrollbox on linux
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1) Gecko/20061010 Firefox/2.0
+Build Identifier: http://www.mozilla.com/en-US/products/download.html?product=firefox-2.0&os=linux&lang=en-US
+
+
+Error occurs in linux (Fedora Core 5) when canvas element are put inside an arrowscrollbox (may also happen with other containers, but doe not occur if when canvas element are occluded by window scrolling).
+
+If the content are scrolled such that a canvas element is only partially visible, the canvas draw itself over the button of the scroll box.
+
+The problem doe not occur on Windows XP (Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1) Gecko/20061010 Firefox/2.0). I haven't tried any other operating system
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.Save the code below into two files: canvas-example.xul and canvas-example.js
+2.Open canvas-example.xul in Firefox
+3.Scroll the content so that one of the canvas element is partially occluded
+
+***canvas-example.xul***
+
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<window id="example-window" title="Example 5.5.1"
+xmlns:html="http://www.w3.org/1999/xhtml"
+xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<script type="application/x-javascript" src="canvas-example.js"/>
+
+<arrowscrollbox orient="horizontal" flex="1">
+<html:canvas width="150" height="150"/>
+<html:canvas width="150" height="150"/>
+<html:canvas width="150" height="150"/>
+<html:canvas width="150" height="150"/>
+<html:canvas width="150" height="150"/>
+<html:canvas width="150" height="150"/>
+<html:canvas width="150" height="150"/>
+<html:canvas width="150" height="150"/>
+<html:canvas width="150" height="150"/>
+<html:canvas width="150" height="150"/>
+<html:canvas width="150" height="150"/>
+<html:canvas width="150" height="150"/>
+<html:canvas width="150" height="150"/>
+<html:canvas width="150" height="150"/>
+<html:canvas width="150" height="150"/>
+<html:canvas width="150" height="150"/>
+<html:canvas width="150" height="150"/>
+<html:canvas width="150" height="150"/>
+<html:canvas width="150" height="150"/>
+<html:canvas width="150" height="150"/>
+<html:canvas width="150" height="150"/>
+<html:canvas width="150" height="150"/>
+<html:canvas width="150" height="150"/>
+<html:canvas width="150" height="150"/>
+</arrowscrollbox>
+</window>
+
+
+***canvas-example.js***
+function drawShape(){
+// get the canvas element using the DOM
+var canvas = document.getElementsByTagName("canvas");
+var canvas;
+var len = canvases.length;
+//for each canvas element on the page
+for (i=0; i<len; i++){
+var canvas = canvases[i];
+// Make sure we don't execute when canvas isn't supported
+if (canvas.getContext){
+// use getContext to use the canvas for drawing
+var ctx = canvas.getContext('2d');
+// Draw shape
+ctx.fillRect(25,25,100,100);
+ctx.clearRect(45,45,60,60);
+ctx.strokeRect(50,50,50,50);
+}
+
+}
+}
+
+window.addEventListener('load', drawShape, true);
+Actual Results:
+The canvas draw itself over the arrow of the scroll box.
+
+Expected Results:
+The arrow of the scroll box should be drawn on top.

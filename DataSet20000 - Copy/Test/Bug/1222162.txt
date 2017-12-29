@@ -1,0 +1,51 @@
+browser/components/search/test has a few tests which are failing when run on task cluster
+as we work towards getting our tests running on task cluster (ubuntu 12.04 on amazon ec2, with docker as a container) there are many tests which are failing.
+
+We need to figure out why these tests are failing.
+
+[browser_private_search_perwindowpb.js] - this causes browser_searchbar_smallpanel_keyboard_navigation.js to fail with these errors:
+618 INFO TEST-UNEXPECTED-FAIL | browser/components/search/test/browser_searchbar_smallpanel_keyboard_navigation.js | There should be 3 suggestions - Got 0, expected 3
+624 INFO TEST-UNEXPECTED-FAIL | browser/components/search/test/browser_searchbar_smallpanel_keyboard_navigation.js | the one-off button #1 should be selected - Got null, expected [object XULElement]
+625 INFO TEST-UNEXPECTED-FAIL | browser/components/search/test/browser_searchbar_smallpanel_keyboard_navigation.js | the one-off button #2 should be selected - Got null, expected [object XULElement]
+626 INFO TEST-UNEXPECTED-FAIL | browser/components/search/test/browser_searchbar_smallpanel_keyboard_navigation.js | the one-off button #3 should be selected - Got null, expected [object XULElement]
+627 INFO TEST-UNEXPECTED-FAIL | browser/components/search/test/browser_searchbar_smallpanel_keyboard_navigation.js | the one-off button #4 should be selected - Got null, expected [object XULElement]
+628 INFO TEST-UNEXPECTED-FAIL | browser/components/search/test/browser_searchbar_smallpanel_keyboard_navigation.js | the one-off button #5 should be selected - Got null, expected [object XULElement]
+629 INFO TEST-UNEXPECTED-FAIL | browser/components/search/test/browser_searchbar_smallpanel_keyboard_navigation.js | the one-off button #6 should be selected - Got null, expected [object XULElement]
+630 INFO TEST-UNEXPECTED-FAIL | browser/components/search/test/browser_searchbar_smallpanel_keyboard_navigation.js | the one-off button #7 should be selected - Got null, expected [object XULElement]
+631 INFO TEST-UNEXPECTED-FAIL | browser/components/search/test/browser_searchbar_smallpanel_keyboard_navigation.js | the one-off button #8 should be selected - Got null, expected [object XULElement]
+632 INFO TEST-UNEXPECTED-FAIL | browser/components/search/test/browser_searchbar_smallpanel_keyboard_navigation.js | Uncaught exception - at chrome://mochitests/content/browser/browser/components/search/test/browser_searchbar_smallpanel_keyboard_navigation.js:108 - TypeError: textbox.selectedButton is null
+...
+(and many more identical looking errors)
+
+
+[browser_searchbar_keyboard_navigation.js] - this fails with 22 errors:
+597 INFO TEST-UNEXPECTED-FAIL | browser/components/search/test/browser_searchbar_keyboard_navigation.js | There should be 3 suggestions - Got 1, expected 3
+602 INFO TEST-UNEXPECTED-FAIL | browser/components/search/test/browser_searchbar_keyboard_navigation.js | the textfield value should be foo1 - Got foo, expected foo1
+603 INFO TEST-UNEXPECTED-FAIL | browser/components/search/test/browser_searchbar_keyboard_navigation.js | the suggestion at index 1 should be selected - Got -1, expected 1
+604 INFO TEST-UNEXPECTED-FAIL | browser/components/search/test/browser_searchbar_keyboard_navigation.js | the textfield value should be foo2 - Got foo, expected foo2
+605 INFO TEST-UNEXPECTED-FAIL | browser/components/search/test/browser_searchbar_keyboard_navigation.js | the suggestion at index 2 should be selected - Got -1, expected 2
+606 INFO TEST-UNEXPECTED-FAIL | browser/components/search/test/browser_searchbar_keyboard_navigation.js | the textfield value should be foo3 - Got foo, expected foo3
+609 INFO TEST-UNEXPECTED-FAIL | browser/components/search/test/browser_searchbar_keyboard_navigation.js | the one-off button #1 should be selected - Got [object XULElement], expected [object XULElement]
+610 INFO TEST-UNEXPECTED-FAIL | browser/components/search/test/browser_searchbar_keyboard_navigation.js | the one-off button #2 should be selected - Got [object XULElement], expected [object XULElement]
+611 INFO TEST-UNEXPECTED-FAIL | browser/components/search/test/browser_searchbar_keyboard_navigation.js | the one-off button #3 should be selected - Got [object XULElement], expected [object XULElement]
+612 INFO TEST-UNEXPECTED-FAIL | browser/components/search/test/browser_searchbar_keyboard_navigation.js | the one-off button #4 should be selected - Got [object XULElement], expected [object XULElement]
+613 INFO TEST-UNEXPECTED-FAIL | browser/components/search/test/browser_searchbar_keyboard_navigation.js | the one-off button #5 should be selected - Got [object XULElement], expected [object XULElement]
+614 INFO TEST-UNEXPECTED-FAIL | browser/components/search/test/browser_searchbar_keyboard_navigation.js | the one-off button #6 should be selected - Got [object XULElement], expected [object XULElement]
+615 INFO TEST-UNEXPECTED-FAIL | browser/components/search/test/browser_searchbar_keyboard_navigation.js | the one-off button #7 should be selected - Got [object XULElement], expected [object XULElement]
+616 INFO TEST-UNEXPECTED-FAIL | browser/components/search/test/browser_searchbar_keyboard_navigation.js | the one-off button #8 should be selected - Got null, expected [object XULElement]
+617 INFO TEST-UNEXPECTED-FAIL | browser/components/search/test/browser_searchbar_keyboard_navigation.js | Uncaught exception - at chrome://mochitests/content/browser/browser/components/search/test/browser_searchbar_keyboard_navigation.js:117 - TypeError: textbox.selectedButton is null
+622 INFO TEST-UNEXPECTED-FAIL | browser/components/search/test/browser_searchbar_keyboard_navigation.js | Uncaught exception - at chrome://mochitests/content/browser/browser/components/search/test/browser_searchbar_keyboard_navigation.js:161 - TypeError: textbox.selectedButton is null
+710 INFO TEST-UNEXPECTED-FAIL | browser/components/search/test/browser_searchbar_keyboard_navigation.js | the textfield value should have changed - Got foo, expected foo1
+715 INFO TEST-UNEXPECTED-FAIL | browser/components/search/test/browser_searchbar_keyboard_navigation.js | second suggestion should be selected - Got -1, expected 1
+716 INFO TEST-UNEXPECTED-FAIL | browser/components/search/test/browser_searchbar_keyboard_navigation.js | the first one-off button should still be selected - Got null, expected [object XULElement]
+720 INFO TEST-UNEXPECTED-FAIL | browser/components/search/test/browser_searchbar_keyboard_navigation.js | the first one-off button should still be selected - Got null, expected [object XULElement]
+721 INFO TEST-UNEXPECTED-FAIL | browser/components/search/test/browser_searchbar_keyboard_navigation.js | the second one-off button should be selected - Got null, expected [object XULElement]
+722 INFO TEST-UNEXPECTED-FAIL | browser/components/search/test/browser_searchbar_keyboard_navigation.js | there should still be no selected suggestion - Got 0, expected -1
+
+
+lastly [browser_webapi.js] hangs and times out.
+
+this is for both opt and debug on linux64.  Here is a link to an inspect task from automation:
+https://tools.taskcluster.net/task-inspector/#Snq6nhcKRyGXhRIeXdx48g/0
+
+Ideally we can figure out the root cause and fix this.

@@ -1,0 +1,61 @@
+mailto entered in location bar is handled incorrectly
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.7.6) Gecko/20050317 Firefox/1.0.2
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.7.6) Gecko/20050317 Firefox/1.0.2
+
+To clarify: 
+Open new window or tab (ctrl-n). Enter location bar (ctrl-l). Type this: 
+
+mailto:some.user@gmail.com
+
+(press enter)
+
+A yes/no dialog will appear: 
+-----
+Confirm
+[i] You are about to log into the site "gmail.com" with the username "mailto,"
+but the web site does not require authentication. This may be an attempt to
+trick you. 
+
+Is "gmail.com" the site you want to visit?
+[Yes] [No]
+-----
+
+This behavior is wrong of course. What I would expect is this protocol to be
+handled by launching whatever is assigned for mailto:. 
+
+Another fun variation of this behavior is entering something that Firefox
+doesn't parse as a login/password like:
+
+mailto:another-user-at-the-localhost
+
+This won't present a dialog at all, it will instead translate this into
+"keyword:mailto:another-user-at-the-localhost" and handle it as a keyword:. 
+
+I don't know if this will make a difference: I have the gmail notifier set as my
+mailto: handler. MSIE will handle the same process by launching Firefox (via
+gmail notifier) and then loading the following url in a new Firefox tab:
+
+http://gmail.google.com/gmail?view=cm&fs=1&tearoff=1&to=someaddress@somehost.com&fs=1
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Press control-N
+2. Press control-L
+3. type, "mailto:someone@somehost.com". Press enter.
+
+Actual Results:  
+Dialog described above appears. 
+
+Expected Results:  
+mailto: handler should be launched with the remainder of the URI parsed or
+passed to that handler. In the case of gmail notifier, a new tab should open
+with the url
+http://gmail.google.com/gmail?view=cm&fs=1&tearoff=1&to=someone@somehost.com&fs=1
+loaded.
+
+I marked this 'major' because the behavior is completely wrong for something
+that is the core purpose of a browser, i.e., to properly handle URIs, regardless
+of whether they are typed in the location bar, or activated from a web page.

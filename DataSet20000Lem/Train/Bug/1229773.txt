@@ -1,0 +1,21 @@
+The cs selector search part of the inspector search tool is really buggy
+The inspector search tool can be used to do 2 things: search for text in the page, and search for element that match a given selector.
+The latter is quite buggy. For simple case it work well, but when selector become complex, it doesn't always work well.
+A few problem I see with the code:
+
+- _showPopup in inspector-search.js us regexp all over the places, this isn't a bug in itself but is error-prone and make the code harder to read
+- this code doesn't handle attribute selector at all div[a], div[a*=b], ... (this is partly fixed with bug 1225514)
+- part of this code assumes id/class attribute have only letters, while they can contain numbers, underscore and hyphens, and can even start with underscore or hyphen
+- getSuggestionsForQuery in inspector.js (on the server) doe not seem to handle attribute selector at all either
+
+Here are use case that fail currently:
+
+- go to data:text/html,<a class="test" id="id1">
+and enter #id1.tes
+suggestion popup is broken and pressing enter replaces the value with just .test
+
+- go to data:text/html,<a class="class1" id="id1">
+and enter .class1#id
+same
+
+There might be other

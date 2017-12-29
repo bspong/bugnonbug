@@ -1,0 +1,17 @@
+fix aero styling in service window
+It seems suboptimal to allow the providers to specify the "features" for the service window.  For example, one provider specifies:
+
+"resizable=yes,scrollbars=yes,width=400,height=300"
+
+However, serviceWindow.xul also specifies:
+        width="300"
+        height="300"
+        screenX="20"
+        screenY="20"
+        persist="screenX screenY width height"
+
+The end result is that on Windows, there seems an inconsistency with the size when the window is created - there may be a transparent area at the bottom below the status bar area.  As soon as you resize the window, this area vanishes.  I think this is due to the discrepancy between the sizes.
+
+If the provider changes to not provide width and height, things work correctly.  However, this then leaves just "resizable=yes,scrollbars=yes".  If you remove these, then the layout again gets screwed up.  There are almost certainly other "features" that could screw us.
+
+So we should consider not allowing the provider to specify any features directly and have the service window add whatever features are necessary for correct operation.  If we do decide that some things should be customizable, we should allow them to be specified generically in "options" - eg, width and height, for example, which may or may not translate into feature strings.

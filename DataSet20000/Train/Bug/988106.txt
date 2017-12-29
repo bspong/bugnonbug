@@ -1,0 +1,32 @@
+Debugger unwraps window Xrays, then tries to call DOM methods on the result
+ccing people who seem to have review/code blame for the relevant bits over time...
+
+In toolkit/devtools/server/actors/script.js we have this bit:
+
+451   this.global = this.globalSafe = aGlobal;
+452   if (aGlobal && aGlobal.wrappedJSObject) {
+453     this.global = aGlobal.wrappedJSObject;
+454   }
+
+and then various now-unsafe uses of this.global (ones where the page can just control what the methods return; I've included the ones where it's obvious that this.global flows into the expression):
+
+1746     let nodes = this.global.document.getElementsByTagName("*");
+...
+1764         let selector = node.tagName ? findCssSelector(node) : "window";
+...
+1774         listenerForm.isEventHandler = !!node["on" + listenerForm.type];
+...
+and most importantly for purposes of bug 789261:
+
+5385 function getInnerId(window) {
+5386   return window.QueryInterface(Ci.nsIInterfaceRequestor).
+5387                 getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
+5388 };
+
+Why exactly are we working with the unwrapped object here?  The blame for the .wrappedJSObject bit goes back a ways; I tracked it to at least http://hg.mozilla.org/mozilla-central/rev/81e2e423fc63
+
+Bug 901930 added the globalSafe bit, but only used it for toString, not all the other places this code is poking at.
+
+For the other uses above, they all seem to date back to <http://hg.mozilla.org/mozilla-central/rev/5d860e628af6>, so at least ESR24 is not affected, but every other branch we have is, in case people feel this needs backporting.  How much of a security problem this is in practice is hard to tell, of course.
+
+My gut instinct here is to just nix globalSafe and drop the .wrappedJSObject thing completely, but is there a _reason_ we want the non-Xray window here, exactly?

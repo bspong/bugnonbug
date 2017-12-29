@@ -1,0 +1,75 @@
+integer undefined behaviors in Firefox
+User-Agent:       Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.2.13) Gecko/20101206 Ubuntu/9.10 (karmic) Firefox/3.6.13
+Build Identifier: Firefox 4.0b12pre
+
+Below is a list of undefined integer behaviors executed by Firefox.
+
+These are not static analysis results!  They are executed by Firefox while running its automated test suites.
+
+The behaviors listed are undefined by all modern flavors of C and C++.  The compiler is permitted to emit arbitrary code for a program that does these.
+
+These behaviors are detected using our hacked C++ compiler, which inserts checking code in front of each math operation.
+
+Hopefully the list below is pretty much self-explanatory.  Notice that each problem report includes an example of bad values passed to the operator during testing.
+
+Instructions for reproducing these problems without using our compiler are below.
+
+UNDEFINED at <mpi/mpi.c, (2994:26)> : Op: <<, Reason : Unsigned Left Shift: Right operand is negative or is greater than or equal to the width of the promoted left operand, BINARY OPERATION: left (uint64): 18446744073709551615 right (uint64): 64 
+
+UNDEFINED at <FIREFOX/clang-fd3ff2dbf6b7/js/src/ctypes/CTypes.cpp, (1334:12)> : Op: *, Reason : Signed Multiplication Overflow, BINARY OPERATION: left (int64): 576460752303423488 right (int64): 16
+
+UNDEFINED at <FIREFOX/clang-fd3ff2dbf6b7/js/src/ctypes/CTypes.cpp, (1334:19)> : Op: +, Reason : Signed Addition Overflow, BINARY OPERATION: left (int64): -9223372036854775808 right (int64): -1
+
+UNDEFINED at <FIREFOX/clang-fd3ff2dbf6b7/js/src/jsinterp.cpp, (3634:25)> : Op: +, Reason : Signed Addition Overflow, BINARY OPERATION: left (int32): 2147483640 right (int32): 30
+
+UNDEFINED at <FIREFOX/clang-fd3ff2dbf6b7/js/src/jsinterp.cpp, (5023:7)> : Op: -=, Reason : Signed Subtraction Overflow, BINARY OPERATION: left (int32): 2147483647 right (int32): -5
+
+UNDEFINED at <FIREFOX/clang-fd3ff2dbf6b7/js/src/jsmath.cpp, (453:39)> : Op: /, Reason : Floating Division: Divisor is 0, BINARY OPERATION: left (double): 1.000000 right (double): 0.000000
+
+UNDEFINED at <FIREFOX/clang-fd3ff2dbf6b7/js/src/jsmath.cpp, (547:35)> : Op: *, Reason : Signed Multiplication Overflow, BINARY OPERATION: left (int64): 1287846510508 right (int64): 25214903917
+
+UNDEFINED at <FIREFOX/clang-fd3ff2dbf6b7/js/src/jsnum.cpp, (612:21)> : Op: -, Reason : Signed Subtraction Overflow, UNARY OPERATION: left (int32): 0 right (int32): -2147483648
+
+UNDEFINED at <FIREFOX/clang-fd3ff2dbf6b7/js/src/jsnum.cpp, (654:19)> : Op: -, Reason : Signed Subtraction Overflow, UNARY OPERATION: left (int32): 0 right (int32): -2147483648
+
+UNDEFINED at <FIREFOX/clang-fd3ff2dbf6b7/js/src/nanojit/avmplus.h, (301:32)> : Op: <<, Reason : Signed Left Shift: Right operand is negative or is greater than or equal to the width of the promoted left operand, BINARY OPERATION: left (int32): 1 right (int32): 63
+
+UNDEFINED at <FIREFOX/clang-fd3ff2dbf6b7/js/src/nanojit/avmplus.h, (318:45)> : Op: <<, Reason : Signed Left Shift: Right operand is negative or is greater than or equal to the width of the promoted left operand, BINARY OPERATION: left (int32): 1 right (int32): 57 
+
+UNDEFINED at <FIREFOX/clang-fd3ff2dbf6b7/toolkit/components/ctypes/tests/jsctypes-test.cpp, (49:37)> : Op: +, Reason : Signed Addition Overflow, BINARY OPERATION: left (int32): 2147483647 right (int32): 1
+
+UNDEFINED at <FIREFOX/clang-fd3ff2dbf6b7/xpcom/tests/../ds/CheckedInt.h, (500:1)> : Op: +, Reason : Signed Addition Overflow, BINARY OPERATION: left (int32): 2147483647 right (int32): 1
+
+UNDEFINED at <FIREFOX/clang-fd3ff2dbf6b7/xpcom/tests/../ds/CheckedInt.h, (501:1)> : Op: -, Reason : Signed Subtraction Overflow, BINARY OPERATION: left (int32): -2147483648 right (int32): 1
+
+UNDEFINED at <FIREFOX/clang-fd3ff2dbf6b7/xpcom/tests/../ds/CheckedInt.h, (502:1)> : Op: *, Reason : Signed Multiplication Overflow, BINARY OPERATION: left (int32): 65535 right (int32): 65535 
+
+UNDEFINED at <mozbin_latest/dist/private/nss/pk11pars.h, (667:15)> : Op: <<, Reason : Signed Left Shift: Right operand is negative or is greater than or equal to the width of the promoted left operand, BINARY OPERATION: left (int32): 1 right (int32): 32
+
+UNDEFINED at <mozbin_latest/dist/private/nss/pk11pars.h, (686:15)> : Op: <<, Reason : Signed Left Shift: Right operand is negative or is greater than or equal to the width of the promoted left operand, BINARY OPERATION: left (int32): 1 right (int32): 32 
+
+UNDEFINED at <mozbin_latest/dist/private/nss/pk11pars.h, (708:23)> : Op: <<, Reason : Signed Left Shift: Right operand is negative or is greater than or equal to the width of the promoted left operand, BINARY OPERATION: left (int32): 1 right (int32): 32
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+Consider this example of undefined behavior from the list above:
+
+UNDEFINED at <FIREFOX/clang-fd3ff2dbf6b7/js/src/nanojit/avmplus.h, (301:32)> : Op: <<, Reason : Signed Left Shift: Right operand is negative or is greater than or equal to the width of the promoted left operand, BINARY OPERATION: left (int32): 1 right (int32): 63
+
+To reproduce this, please go to line 301 of js/src/nanojit/avmplus.h and add an assertion like this:
+
+   if (bit<0 || bit>=32) abort();
+
+Then rebuild Firefox and run "make check".  On x86-64, it will fail.
+
+This particular problem happens because kUnit is 8*sizeof(long), which is 64 on an x86-64 machine.  Thus, bit is in the range 0..63.  On the other hand, the constant 1 is an int, which is 32 bits, and should be shifted by numbers in the range 0..31.  The fix is obvious.
+
+The other problems we have found can be reproduced in a similar way.
+
+
+
+This is rev 632224.
+
+It would be a good idea to use code inspection or a tainting analysis to see if the results of any of these operations flow into any memory allocation call, array index, memcpy(), or similar sensitive code.  We have not does this yet.

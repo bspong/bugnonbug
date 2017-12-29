@@ -1,0 +1,26 @@
+pdf.js iframe injection allows site to load local file or even chrome privileged page into an iframe
+Created attachment 809860
+mapLocalFiles.html
+
+User Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:23.0) Gecko/20100101 Firefox/23.0 (Beta/Release)
+Build ID: 20130814063812
+
+Steps to reproduce:
+
+I created and added an embed element to the document of a page initially setting the src attribute for the embed to 'data:application/pdf,'. This trigger the pdfjs implementation and begin to load it to preview the plugin. Immediately after I created an iframe element and appended it a a child of the embed element. Normally when previewing a pdf a a plugin, an anonymous iframe is created a a child of the embed element, but apparently any iframe that is a child of the embed element will behave a if bound to it for previewing. At this point all that is required is to change the src attribute of the embed element to whatever file(local or chrome privileged) that you want to load and then change the location of iframe.contentWindow like so:
+
+iframe.contentWindow.location = 'data:application/x-moz-playpreview-pdfjs;,';
+
+This trigger code in PdfRedirector.js that is part of the pdfjs implementation, which check the src attribute of the embed element and load it into the frame a if it were a pdf document.
+
+
+Actual results:
+
+A local file wa loaded into the iframe. Using this technique with canvas to get an image of the page or just trying to access iframe.contentWindow.location.href and catching the error from that, a person could either read the content of local files, or at least confirm their existence.
+
+A few extra note on this, I think this ha been possible since it been possible to load the new pdfjs implementation a a plugin, it confirmed to work all the way up to the newest nightly and a few other dated installs a well. I just discovered this yesterday, and I spent all the time I could spare trying to find way to load up a chrome xul document and somehow achieve script injection into it. I'm sure that it's possible, but I don't have a much time a I've had before to sink into this, and since this is serious enough to have me worried, I went this route this morning. I really wanted that proper calc poc, and although this is nice it just not the same =/
+
+
+Expected results:
+
+Since PdfRedirector.js is running with full chrome privileges, it should have a check before loading any data to make sure that the data is expected, and of the right type. If this is not the case it should cease loading and throw an exception.

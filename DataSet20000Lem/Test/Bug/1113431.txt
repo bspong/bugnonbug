@@ -1,0 +1,29 @@
+<meta name="referrer"> is ignored for navigation from the context menu and via a middle-click
+User Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0.2214.38 Safari/537.36
+
+Steps to reproduce:
+
+1. Open https://scholar.google.com/scholar?q=news&mref=origin .
+Middle-click on "Creating reality: How TV news distorts events" from ERIC to open the link in a new tab.
+On the ERIC page, open the console and type document.referrer to see HTTP Referer.
+
+2. Repeat 1, but left-click on the ERIC page to open it in the same tab, not a new tab.
+
+3. Repeat 1, but from plain HTTP - http://scholar.google.com/scholar?q=news&mref=origin .
+
+
+Actual results:
+
+1. document.referrer is empty - incorrect, HTTPS -> HTTP in a new tab ignores meta referrer.
+2. document.referrer = "https://scholar.google.com" - correct, HTTPS -> HTTP in the same tab respect meta referrer.
+3. document.referrer = "http://scholar.google.com" - correct, HTTP -> HTTP in a new tab respect meta referrer.
+
+
+Expected results:
+
+1-2. document.referrer = "https://scholar.google.com".
+3. document.referrer = "http://scholar.google.com".
+
+Basically, it appears that the meta referrer implementation in Bug 704320 is incomplete. When the source page is HTTPS, following a link to an HTTP page in the same tab respect meta referrer, but opening a link in a new tab doe not. Both case respect meta-referrer when the source page is plain HTTP.
+
+(Ditto for mref=unsafe-url - this is respected from HTTPS in the same tab, but not in a new tab.)

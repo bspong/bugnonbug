@@ -1,0 +1,123 @@
+crash in nsTableFrame::GetTableFrame
+I wa using the Search window, and I tried one or two search using different
+search engines, then it crashed. I THINK this wa while clicking on one of the
+resulting search icons... Open up the search window (off the toolbar in
+apprunner) and do a search on a few sites, it wa one of the icon on the bottom
+row.
+
+Stack trace:
+(gdb) where
+#0 0x2 in ?? ()
+#1 0x40c23df2 in nsTableRowFrame::Paint (this=0x9023a78,
+aPresContext=@0x8cab8e0, aRenderingContext=@0x90aaee0,
+aDirtyRect=@0xbfffe09c, aWhichLayer=eFramePaintLayer_Underlay)
+at nsTableRowFrame.cpp:428
+#2 0x40b116d5 in PresShell::Paint (this=0x8cd4c88, aView=0x9023af8,
+aRenderingContext=@0x90aaee0, aDirtyRect=@0xbfffe09c)
+at nsPresShell.cpp:1954
+#3 0x41014043 in nsView::Paint (this=0x9023af8, rc=@0x90aaee0,
+rect=@0xbfffe09c, aPaintFlags=128, aResult=@0xbfffe270) at nsView.cpp:280
+#4 0x4101c887 in nsViewManager::RenderView (this=0x8cf42b8, aView=0x9023af8,
+aRC=@0x90aaee0, aDamageRect=@0xbfffe2f0, aGlobalRect=@0x8d7d4ec,
+aResult=@0xbfffe270) at nsViewManager.cpp:1255
+#5 0x4101b8f3 in nsViewManager::RenderViews (this=0x8cf42b8,
+aRootView=0x8def200, aRC=@0x90aaee0, aRect=@0xbfffe344,
+aResult=@0xbfffe33c) at nsViewManager.cpp:900
+#6 0x4101a78c in nsViewManager::Refresh (this=0x8cf42b8, aView=0x8def200,
+aContext=0x90aaee0, rect=0xbfffe3d8, aUpdateFlags=1)
+at nsViewManager.cpp:521
+#7 0x4101d075 in nsViewManager::DispatchEvent (this=0x8cf42b8,
+aEvent=0xbfffe56c, aStatus=@0xbfffe418) at nsViewManager.cpp:1577
+#8 0x41013a8d in HandleEvent (aEvent=0xbfffe56c) at nsView.cpp:62
+#9 0x4048f089 in nsWidget::DispatchEvent (this=0x8def268, aEvent=0xbfffe56c,
+aStatus=@0xbfffe4b0) at nsWidget.cpp:1095
+#10 0x4048eed9 in nsWidget::DispatchWindowEvent (this=0x8def268,
+event=0xbfffe56c) at nsWidget.cpp:1009
+#11 0x404921b9 in nsWindow::OnPaint (this=0x8def268, event=@0xbfffe56c)
+at nsWindow.cpp:427
+#12 0x404928a7 in nsWindow::OnDrawSignal (this=0x8def268, aArea=0xbfffe940)
+at nsWindow.cpp:813
+#13 0x40492860 in nsWindow::DrawSignal (aArea=0xbfffe940, aData=0x8def268)
+at nsWindow.cpp:797
+#14 0x40600485 in ?? () from /usr/lib/libgtk-1.2.so.0
+#15 0x405c565d in ?? () from /usr/lib/libgtk-1.2.so.0
+#16 0x405c4ab2 in ?? () from /usr/lib/libgtk-1.2.so.0
+#17 0x405c2c05 in ?? () from /usr/lib/libgtk-1.2.so.0
+#18 0x405f6688 in ?? () from /usr/lib/libgtk-1.2.so.0
+#19 0x4058fae8 in ?? () from /usr/lib/libgtk-1.2.so.0
+#20 0x40600485 in ?? () from /usr/lib/libgtk-1.2.so.0
+#21 0x405c496b in ?? () from /usr/lib/libgtk-1.2.so.0
+#22 0x405c2c05 in ?? () from /usr/lib/libgtk-1.2.so.0
+#23 0x405f6688 in ?? () from /usr/lib/libgtk-1.2.so.0
+#24 0x4048e962 in nsWidget::Invalidate (this=0x8cd4858, aRect=@0x8cd48dc,
+aIsSynchronous=1) at nsWidget.cpp:692
+#25 0x4048e9e4 in nsWidget::Update (this=0x8cd4858) at nsWidget.cpp:712
+#26 0x4101cb3a in nsViewManager::Composite (this=0x8cf42b8)
+at nsViewManager.cpp:1336
+#27 0x40bdf944 in ApplyRenderingChangeToTree (aPresContext=0x8cab8e0,
+aFrame=0x0) at nsCSSFrameConstructor.cpp:6491
+#28 0x40bdfbb9 in nsCSSFrameConstructor::ProcessRestyledFrames (
+this=0x8cd4c40, aChangeList=@0xbfffee44, aPresContext=0x8cab8e0)
+at nsCSSFrameConstructor.cpp:6570
+#29 0x40be012a in nsCSSFrameConstructor::ContentStatesChanged (this=0x8cd4c40,
+aPresContext=0x8cab8e0, aContent1=0x8f1ad60, aContent2=0x0)
+at nsCSSFrameConstructor.cpp:6686
+#30 0x40c8e19b in StyleSetImpl::ContentStatesChanged (this=0x8cd4bf8,
+aPresContext=0x8cab8e0, aContent1=0x8f1ad60, aContent2=0x0)
+at nsStyleSet.cpp:906
+#31 0x40b10d39 in PresShell::ContentStatesChanged (this=0x8cd4c88,
+aDocument=0x8cedbc0, aContent1=0x8f1ad60, aContent2=0x0)
+at nsPresShell.cpp:1691
+#32 0x407e8558 in ?? ()
+from /home1/alecf/xpc/mozilla/dist/bin/components/librdf.so
+#33 0x40add4cc in nsEventStateManager::SetContentState (this=0x8de4ae8,
+aContent=0x0, aState=1) at nsEventStateManager.cpp:1402
+#34 0x40adb67c in nsEventStateManager::PostHandleEvent (this=0x8de4ae8,
+aPresContext=@0x8cab8e0, aEvent=0xbffff200, aTargetFrame=0x8f9e748,
+aStatus=@0xbffff12c, aView=0x8cd47f0) at nsEventStateManager.cpp:420
+#35 0x40b11de2 in PresShell::HandleEvent (this=0x8cd4c88, aView=0x8cd47f0,
+aEvent=0xbffff200, aEventStatus=@0xbffff12c) at nsPresShell.cpp:2091
+#36 0x4101505e in nsView::HandleEvent (this=0x8cd47f0, event=0xbffff200,
+aEventFlags=28, aStatus=@0xbffff12c, aHandled=@0xbffff0c0)
+at nsView.cpp:827
+#37 0x4101d33a in nsViewManager::DispatchEvent (this=0x8cf42b8,
+aEvent=0xbffff200, aStatus=@0xbffff12c) at nsViewManager.cpp:1665
+#38 0x41013a8d in HandleEvent (aEvent=0xbffff200) at nsView.cpp:62
+#39 0x4048f089 in nsWidget::DispatchEvent (this=0x8cd4858, aEvent=0xbffff200,
+aStatus=@0xbffff1c4) at nsWidget.cpp:1095
+#40 0x4048eed9 in nsWidget::DispatchWindowEvent (this=0x8cd4858,
+event=0xbffff200) at nsWidget.cpp:1009
+#41 0x4048f116 in nsWidget::DispatchMouseEvent (this=0x8cd4858,
+aEvent=@0xbffff200) at nsWidget.cpp:1122
+#42 0x4048fce0 in nsWidget::OnButtonReleaseSignal (this=0x8cd4858,
+aGdkButtonEvent=0x87b5d14) at nsWidget.cpp:1724
+#43 0x404905c8 in nsWidget::ButtonReleaseSignal (aWidget=0x8cd4a40,
+aGdkButtonEvent=0x87b5d14, aData=0x8cd4858) at nsWidget.cpp:2163
+#44 0x40600229 in ?? () from /usr/lib/libgtk-1.2.so.0
+#45 0x405c565d in ?? () from /usr/lib/libgtk-1.2.so.0
+#46 0x405c4ab2 in ?? () from /usr/lib/libgtk-1.2.so.0
+#47 0x405c2c05 in ?? () from /usr/lib/libgtk-1.2.so.0
+#48 0x405f79d8 in ?? () from /usr/lib/libgtk-1.2.so.0
+#49 0x40598b22 in ?? () from /usr/lib/libgtk-1.2.so.0
+#50 0x40597d7a in ?? () from /usr/lib/libgtk-1.2.so.0
+#51 0x406400fb in ?? () from /usr/lib/libgdk-1.2.so.0
+#52 0x4066da86 in ?? () from /usr/lib/libglib-1.2.so.0
+#53 0x4066e041 in ?? () from /usr/lib/libglib-1.2.so.0
+#54 0x4066e1e1 in ?? () from /usr/lib/libglib-1.2.so.0
+#55 0x405977a9 in ?? () from /usr/lib/libgtk-1.2.so.0
+#56 0x4047f4a1 in nsAppShell::Run (this=0x810c6c8) at nsAppShell.cpp:379
+#57 0x4035a99e in ?? () from /home1/alecf/xpc/mozilla/dist/bin/libnsappshell.so
+#58 0x804a75e in main1 (argc=2, argv=0xbffff844) at nsAppRunner.cpp:591
+#59 0x804a960 in main (argc=2, argv=0xbffff844) at nsAppRunner.cpp:702
+#60 0x40226cb3 in ?? () from /lib/libc.so.6
+
+(gdb) frame 1
+#1 0x40c23df2 in nsTableRowFrame::Paint (this=0x9023a78,
+aPresContext=@0x8cab8e0, aRenderingContext=@0x90aaee0,
+aDirtyRect=@0xbfffe09c, aWhichLayer=eFramePaintLayer_Underlay)
+at nsTableRowFrame.cpp:428
+428 rv = nsTableFrame::GetTableFrame(this, tableFrame);
+(gdb) print this
+$4 = (nsTableRowFrame *) 0xbfffdea0
+
+Looks ok, not sure why it's crashing. strange that frame #0 is at address 0x2.

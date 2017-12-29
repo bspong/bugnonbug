@@ -1,0 +1,18 @@
+potential problem with favicons and useDefaultIcon
+no exploit for this yet, filing seperate bug per bz's suggestion.
+
+http://bonsai.mozilla.org/cvsblame.cgi?file=mozilla/toolkit/content/widgets/tabbrowser.xml&rev=1.216&mark=496-517#496
+
+
+in tabbrowser.xml |shouldLoadFavIcon| tries to prevent active content in
+favicons. this does not work for |data:image/png;,VALIDPNG| (in this case the
+uri is loaded as favicon because of the special ImageDocument check) - so at
+least
+data: uris are loaded as favicons. in case |javascript:| uris may return 
+|instanceof ImageDocument| this may lead to problems with favicons (according to bz this is possible).
+
+probably other abuse may be possible in this case.
+
+having in mind the problems with active favicons in the past, regardless
+whether comment #86 is exploitable or not, the check for sane favicon better be
+applied for the |image| case.

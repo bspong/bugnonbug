@@ -1,0 +1,86 @@
+absolute CSS position doesnt take image height into account
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.2; en-US; rv:1.7.5) Gecko/20041107 Firefox/1.0
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.2; en-US; rv:1.7.5) Gecko/20041107 Firefox/1.0
+
+If we have an IMG tag on a line
+
+<IMG etc../><BR/>
+
+and a SPAN after that, with an absolute CSS position style
+
+<SPAN style="position:absolute.." etc.>Foobar</span>
+
+The span is placed incorrectly with respect to the rest of the page. If the IMG
+line contains some kind of text, like a non blocking space before the line
+break, it is rendered perfectly. It seems to be restricted to case where a <BR
+/> appears after the IMG tag with no text on the line.
+
+This might be poor HTML code, but the renderer should have super cow power a
+IE seems to render this fine (of course it screw the rest of it up, but what do
+we expect)
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Aquire cup of coffee
+
+2. Write this into a file
+
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Untitled Document</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<style type="text/css">
+<!--
+.test {
+font-size: 12px;
+font-style: bold;
+font-weight: normal;
+position: absolute;
+text-align: right;
+right: 70px;
+}
+dt {
+background-color: #CCCCCC;
+}
+
+-->
+</style>
+</head>
+
+<body>
+
+<dl>
+<dt>FOO&nbsp;<SPAN class="test">BAR</SPAN></dt>
+<dd>foobar</dd>
+</dl>
+<br/><br/>
+
+<dl><dt>FOO&nbsp;<SPAN class="test">BAR</SPAN></dt>
+<dd><img src="http://www.karnaugh.za.net/data/teleport.png" alt="this is an
+image" /><br/></dd>
+</dl>
+<br/><br/>
+
+<dl><dt>FOO&nbsp;<SPAN class="test">BAR</SPAN></dt>
+<dd>foobar</dd>
+</dl>
+<br/><br/>
+
+</body>
+</html>
+
+3. Insert a nonblocking space between the <IMG/> and <BR/> tag a so
+<img src="http://www.karnaugh.za.net/data/teleport.png" alt="this is an image"
+/>&nbsp;<br/>
+The page now render a expected
+
+4. Drink coffee and fix bug please.
+Actual Results:
+The SPAN is not moved down with the line break that do not contain text.
+
+Expected Results:
+It *should* move the span down with the line breaks, so that it is within the <DT>

@@ -1,0 +1,30 @@
+mozSocial injection incorrectly guarded for private browsing
+Bug 808215 introduced the following block to MozSocialAPI.jsm:
+
++#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
++XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils", "resource://gre/modules/PrivateBrowsingUtils.jsm");
++#endif
+
+...
+- if (!window)
++ if (!window
++#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
++ || !PrivateBrowsingUtils.isWindowPrivate(window)
++#endif
++ )
+
+These were wrong - the last change should have read:
+
++#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
++ || PrivateBrowsingUtils.isWindowPrivate(window)
++#endif
+
+(Note the negation of *both* the #if and the result of isWindowPrivate) a the intention wa to continue injecting in non-per-window builds, but prevent injecting in per-window builds. There is also one further similar problem later in the file relating to chat windows.
+
+The end result of this is that:
+
+* trunk ha had the check removed when all the MOZ_PER_WINDOW_PRIVATE_BROWSING wa ripped out. While this is benign (as none of the social UI element are created anyway), the check should be re-added to trunk for the sake of being extra-careful.
+
+* Builds on the birch tree (basically Aurora but without per-window PB) are currently broken due to most test failing - we do not inject when we should.
+
+Attaching 2 different patch to address this.

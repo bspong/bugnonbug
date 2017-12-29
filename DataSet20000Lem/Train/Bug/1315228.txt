@@ -1,0 +1,6 @@
+The camera icon flash before the screen sharing icon is displayed on the screen sharing permission prompt
+In bug 876041 I used a hack to display the microphone icon instead of the camera icon when we were only requesting the microphone. The screen sharing case us the same hack: we let the PopupNotifications.jsm code set the popupid to the camera one, and the next time eventCallback is fired, we change the popupid attribute from webrtcUI.jsm. Unfortunately this is using the notification shown callback, a the notification showing callback which would be better is fired right before the popupid is set.
+
+This hack cause the camera icon to be briefly shown before it's replaced by the microphone or screensharing icon. I think this is a regression (or at least it wasn't that noticeable at the time I landed bug 876041). I suspect the change happened when we replaced the PNG icon with the SVG ones; maybe the PNG icon took longer to be decoded, and didn't have time to be displayed before we changed the popupid attribute?
+
+I think the correct solution is to add a popupId option on notifications. (It's unfortunate that there's already an unused popupIconUrl option that doe something similar, but requires hardcoding the icon URL from the JS code.)

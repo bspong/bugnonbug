@@ -1,0 +1,22 @@
+RSS sniffer is a little too aggressive
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.10) Gecko/20060927 Firefox/1.0.4 (Debian package 1.0.4-2sarge12)
+Build Identifier: http://www.mozilla.com/products/download.html?product=firefox-2.0&os=linux&lang=en-US
+
+Is it really necessary for the RSS sniffer to run on pages served as image/png? Can't it be run only on text/plain, application/octet-stream and other generic types? My application has security issues because of this: Freenet stores web sites on a distributed network in order to provide anonymous browsing, each user runs a "node", which provides a web interface on localhost. HTML is filtered to ensure that it doesn't include web-bugs (inline images that could give away the user's IP address), but this relies on a reliable MIME type. We have to emulate your RSS sniffer's behaviour in order to be safe, and since that may change in future this is suspect. I was going to wrap text as HTML and parse images to ensure they are safe, but it looks like it may be possible to create an RSS sheet which is detected as RSS, but is also a valid image.
+
+It would help a lot if firefox would only run the RSS detection on the "standard" MIME types that unconfigured or old web servers will use for .rss files (Opera uses this approach with HTML detection), or if it didn't run RSS detection on the common image types (png, gif, mng, jpeg; running it on SVG isn't a problem as it's XML anyway). I don't know whether this could affect other applications.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Save an RSS feed as .png.
+2. Upload it to a web server.
+3. Open it in Firefox.
+
+Actual Results:  
+It will open as an RSS file despite it having a MIME type of image/png
+
+For our application, this is bad.
+
+Expected Results:  
+Opened it as a png. It should only consider opening it as an RSS feed if the PNG is invalid (and even then that's questionable).

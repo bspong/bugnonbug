@@ -1,0 +1,30 @@
+Active gUM permission menu at shutdown leaks the world
+To reproduce:
+* Go to: https://mozilla.github.io/webrtc-landing/gum_test.html
+* Select Audio & Video
+* Accept the gUM permissions prompt
+* Wait until you see video
+* Quit Firefox
+
+Expected: Clean Shutdown
+Actual: Leaking the world
+
+I see at least an 80% repro rate. I saw some cases of shutdown in a bad order (images alive on gfx shutdown) but I'm not sure if that is masking this issue or if it's the other way around.
+
+
+I saved CC logs for one of these leaks on shutdown, and then got:
+> pehrsons:~/Comoyo/heapgraph $ ./find_roots.py ~/cc_logs/cc-edges.32732-2.log nsGlobalWindow
+> Parsing /Users/pehrsons/cc_logs/cc-edges.32732-2.log. Done loading graph.
+> 
+> 0x130af6230 [FragmentOrElement (XUL) menu id='webRTC-sharingCamera-menu' chrome://browser/content/hiddenWindow.xul]
+>     --[Preserved wrapper]--> 0x12005f400 [JS Object (XULElement)]
+>     --[global]--> 0x135c8a1a0 [JS Object (Window)]
+>     --[UnwrapDOMObject(obj)]--> 0x1202b3000 [nsGlobalWindow # 2 inner chrome://browser/content/hiddenWindow.xul]
+> 
+>     Root 0x130af6230 is a ref counted object with 4 unknown edge(s).
+>     known edges:
+>        0x12b509980 [FragmentOrElement (XUL) menupopup chrome://browser/content/hiddenWindow.xul] --[GetParent()]--> 0x130af6230
+>        0x12005f400 [JS Object (XULElement)] --[UnwrapDOMObject(obj)]--> 0x130af6230
+>        0x1224922c0 [FragmentOrElement (XUL) window id='main-window' chrome://browser/content/hiddenWindow.xul] --[mAttrsAndChildren[i]]--> 0x130af6230
+
+Which, if I'm interpreting this correctly, means that the gUM permission menu is keeping nsGlobalObject alive.

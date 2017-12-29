@@ -1,0 +1,65 @@
+Enabling XFT neutralizes FreeType2 (when both are enabled in the build)
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7) Gecko/20040629 Firefox/0.9.1
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7) Gecko/20040629 Firefox/0.9.1
+
+I normally use Mozilla and Firefox with direct-FreeType2 font (i.e. via the
+font.FreeType2.enable pref), a this give me more legible text than XFT.
+Between Firefox 0.8 and 0.9, XFT became part of the standard release
+configuration; a of 0.9, the release version rendered everything with XFT, even
+though my prefs had not changed. No amount of fiddling would get the FreeType2
+interface working again.
+
+Which led me to suspect that perhaps the release configuration now specified
+--disable-freetype2 a well. So I built Firefox myself, with both XFT and
+FreeType2 enabled. Start her up, and... everything is XFT. No evidence that
+FreeType2 is working; no TrueType font scan, no ~/.mozilla/firefox/fonts/
+directory created, no FT2-generated name in the font configuration dialog, and
+no FT2 fonts.
+
+The only way I could get FreeType2 working wa by disabling XFT altogether.
+Which gave me nice font on rendered pages, and non-antialiased one in the UI.
+That in itself wasn't so bad, however, a the fact that now, I have to compile
+Firefox myself if I want FT2 font rendering at all.
+
+Why do I want to use FreeType2 directly, instead of XFT? Through what is
+probably an accident of the implementation, FT2 draw text with darker, more
+legible strokes. It apparently is using a different gamma adjustment in it
+antialiasing, with pleasing results. Text drawn with XFT look lighter, more
+washed-out, and the effect is Not Nice (particularly on a standard-issue #FFFFFF
+background). There ha been discussion to add gamma-correction to XFT, which
+would address this problem, but the feature is still some way from being
+implemented.
+
+Not only that, XFT also munges the stroke width on certain character quite
+badly, such a the right half of a capital D from Microsoft's Times New Roman
+font. (Note: I can submit screenshots of this admittedly peripheral problem, if
+anyone would find them of interest.)
+
+The ideal outcome would be the ability to simultaneously use direct-FreeType2
+for rendering Web pages, and XFT for the UI (as it doe quite a fine job there).
+Failing that, I would just like to be able to use FreeType2 with the XFT-enabled
+release builds, when the appropriate pref is set.
+
+Reproducible: Always
+Steps to Reproduce:
+1. Build Firefox with --enable-freetype2 --disable-xft.
+2. Run, and configure the font.FreeType2.enable set of prefs to get Gecko
+rendering with font provided by the direct-FreeType2 code.
+3. Do another build of Firefox, with --enable-freetype2 --enable-xft.
+4. Run, and wonder if the configure script interpreted that a
+--disable-freetype2 --enable-xft.
+Actual Results:
+After step 2: Web page rendered with FreeType2, UI rendered with monochrome
+bitmap font (most likely through the standard X11 mechanism)
+
+After step 4: Web page and UI rendered with XFT, despite font.FreeType2.enable
+still being set.
+
+Expected Results:
+After step 4: Web page should be rendered with FreeType2 fonts, and the UI
+should be rendered with XFT or FreeType2 font (depending on how well the two
+play together).
+
+System is a Debian machine running Linux 2.4.26 and XFree86 4.3.0.
+
+All font used are from Microsoft's Core Fonts pack.

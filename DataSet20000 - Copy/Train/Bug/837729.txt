@@ -1,0 +1,47 @@
+when Facebook Messenger is enabled, we create textruns for huge chunks of JS source code
+Created attachment 709751
+investigative patch, report creation of unusually-long textruns
+
+When Facebook Messenger is enabled, we seem to be creating gfxTextRuns (as if we're trying to do text measurement or rendering) for large pieces of JavaScript source code. This seems quite pointless; it's burning up CPU cycles and considerable amounts of memory to "shape" text runs that AFAICT will never be needed. We don't display this source code as visible text anywhere, so why do we build gfxTextRuns for it?
+
+The attached investigative patch reports any time we call gfxFontGroup::InitTextRun to initialize a run with over 15000 characters - which is pretty rare in normal web browsing.
+
+With Messenger enabled, I consistently hit this during the initial launch of the browser, before even logging in to Facebook or restoring the previous session's tabs. The text run being created is clearly some JS source (perhaps from Facebook's social-provider code?):
+
+### gfxFontGroup::InitTextRun handling a very long text run (19171 chars)!
+----------
+[] = [];if (typeof window === "undefined") { self = {};
+__DEV__ = 0; self["__DEV__"] = 0;window = {};window.setTimeout = function (cb, time) { return setTimeout(cb, time); };window.setInterval = function (cb, time) { return setInterval(cb, time); };window.clearTimeout = function (id) { return clearTimeout(id); };window.clearInterval = function (id) { return clearInterval(id); };window.location = {};window.location.hash = "";window.location.host = "www.facebook.com";window.location.hostname = "ww (...etc...)
+----------
+
+Opening the sidebar and logging in to Facebook triggers several more instances of similar behavior:
+
+### gfxFontGroup::InitTextRun handling a very long text run (57381 chars)!
+----------
+[] = [];if (typeof window === "undefined") { self = {};
+__DEV__ = 0; self["__DEV__"] = 0;window = {};window.setTimeout = function (cb, time) { return setTimeout(cb, time); };window.setInterval = function (cb, time) { return setInterval(cb, time); };window.clearTimeout = function (id) { return clearTimeout(id); };window.clearInterval = function (id) { return clearInterval(id); };window.location = {};window.location.hash = "";window.location.host = "www.facebook.com";window.location.hostname = "ww (...etc...)
+----------
+
+### gfxFontGroup::InitTextRun handling a very long text run (153210 chars)!
+----------
+__d("AsyncRequest",["Event","Arbiter","AsyncResponse","Bootloader","CSS","Env","HTTPErrors","JSCC","Parent","Run","ServerJS","URI","UserAgent","XHR","bind","copyProperties","emptyFunction","evalGlobal","ge","goURI","isEmpty","tx"],function(a,b,c,d,e,f){var g=b('Event'),h=b('Arbiter'),i=b('AsyncResponse'),j=b('Bootloader'),k=b('CSS'),l=b('Env'),m=b('HTTPErrors'),n=b('JSCC'),o=b('Parent'),p=b('Run'),q=b('ServerJS'),r=b('URI'),s=b('UserAgent'),t=b('XHR'),u=b('bind'),v=b('copyProperties'),w=b('empty (...etc...)
+----------
+
+### gfxFontGroup::InitTextRun handling a very long text run (366844 chars)!
+----------
+__d("DataSource",["array-extensions","ArbiterMixin","AsyncRequest","TypeaheadUtil","copyProperties","createArrayFrom","createObjectFrom","emptyFunction"],function(a,b,c,d,e,f){b('array-extensions');var g=b('ArbiterMixin'),h=b('AsyncRequest'),i=b('TypeaheadUtil'),j=b('copyProperties'),k=b('createArrayFrom'),l=b('createObjectFrom'),m=b('emptyFunction');function n(o){this._maxResults=o.maxResults||10;this.token=o.token;this.queryData=o.queryData||{};this.queryEndpoint=o.queryEndpoint||'';this.boots (...etc...)
+----------
+
+### gfxFontGroup::InitTextRun handling a very long text run (19828 chars)!
+----------
+__d("AsyncRequest",["Event","Arbiter","AsyncResponse","Bootloader","CSS","Env","HTTPErrors","JSCC","Parent","Run","ServerJS","URI","UserAgent","XHR","bind","copyProperties","emptyFunction","evalGlobal","ge","goURI","isEmpty","tx"],function(a,b,c,d,e,f){var g=b('Event'),h=b('Arbiter'),i=b('AsyncResponse'),j=b('Bootloader'),k=b('CSS'),l=b('Env'),m=b('HTTPErrors'),n=b('JSCC'),o=b('Parent'),p=b('Run'),q=b('ServerJS'),r=b('URI'),s=b('UserAgent'),t=b('XHR'),u=b('bind'),v=b('copyProperties'),w=b('empty (...etc...)
+----------
+
+### gfxFontGroup::InitTextRun handling a very long text run (19087 chars)!
+----------
+__d("Dialog",["array-extensions","Event","Animation","Arbiter","AsyncRequest","Bootloader","Button","ContextualThing","CSS","DOM","Focus","Form","HTML","Keys","Locale","Parent","Run","Style","URI","UserAgent","Vector","bind","copyProperties","createArrayFrom","emptyFunction","getObjectValues","getOverlayZIndex","tx"],function(a,b,c,d,e,f){b('array-extensions');var g=b('Event'),h=b('Animation'),i=b('Arbiter'),j=b('AsyncRequest'),k=b('Bootloader'),l=b('Button'),m=b('ContextualThing'),n=b('CSS'),o= (...etc...)
+----------
+
+One of those runs apparently contains 360K of minified JS source... creating a textRun for this will take around 1.5MB of RAM just for the run itself, in addition to various other overhead.
+
+We need to figure out why we're building these textRuns, and stop doing it; we're wasting millions of CPU cycles and megabytes of space here.

@@ -1,0 +1,21 @@
+CustomizableUI: Make our wrapper fast
+From IRC:
+
+[2013-07-30 18:03:40] <Gijs> mconley: http://hg.mozilla.org/projects/ux/file/1db33326529f/browser/components/customizableui/src/CustomizableUI.jsm#l2103
+[2013-07-30 18:04:16] <Gijs> mconley: so, node should be made a getter, or possibly just removed
+[2013-07-30 18:04:27] <mconley> yeah - is that ever used?
+[2013-07-30 18:04:33] <mconley> at the very least, it should be lazy
+[2013-07-30 18:04:37] <Gijs> mconley: forWindow should, umm, check the wrapper cache before going a-wandering around the DOM
+[2013-07-30 18:04:45] <Gijs> (not after, which is kinda silly)
+[2013-07-30 18:05:00] <mconley> I believe
+[2013-07-30 18:05:34] <Gijs> and really, we could easily have a placement info getter on the group wrapper
+[2013-07-30 18:05:49] <Gijs> which will eliminate DOM lookup entirely in the case where the widget is in the panel
+[2013-07-30 18:06:04] <Gijs> (right now, you have to call forWindow)
+[2013-07-30 18:06:24] <mconley> that'd be awesome
+[2013-07-30 18:06:43] <Gijs> (we could do this by getting the area's type from the placement's area id info)
+[2013-07-30 18:06:51] <mconley> yep
+
+
+Generally, IMO the wrapper should avoid doing actual DOM poking until you ask them for a DOM node (and cache the results, of course).
+
+(some of this slowness seems to be causing the bookmark UI's update on startup to take about 0.5ms on each tpaint window open)

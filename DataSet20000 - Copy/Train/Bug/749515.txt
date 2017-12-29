@@ -1,0 +1,36 @@
+a setTimeout or setInterval using console.log fails unexpectedly and cryptically
+User Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:12.0) Gecko/20100101 Firefox/12.0
+Build ID: 20120420145725
+
+Steps to reproduce:
+
+setTimeout(console.log,0)
+setInterval(console.log,0)
+setTimeout(console.log,...) // seems to happen regardless of arguments
+setInterval(console.log,...) // seems to happen regardless of arguments
+
+The latter two cases can include additional arguments beyond the delay; this seems not to make any difference to the outcome.
+
+
+Actual results:
+
+For each example, the console displayed:
+uncaught exception: TypeError: frame is undefined
+
+This message was marked as displayed multiple times in the console for setInterval, as one would expect.
+
+
+Expected results:
+
+Ideally:
+The first case should have printed a blank line to the console.
+The second case should have printed the same as the third, but repeatedly.
+The third case should have printed all arguments including and after the 3rd, joined by spaces, at the interval declared in the second argument.
+The fourth case should have printed the same as the third, but repeatedly.
+
+However, due to https://bugzilla.mozilla.org/show_bug.cgi?id=749489, more consistent behaviour would be for the examples respectively to perform as do:
+
+setTimeout(function(){console.log.apply(this,arguments)},0)
+setInterval(function(){console.log.apply(this,arguments)},0)
+setTimeout(function(){console.log.apply(this,arguments)},...)
+setInterval(function(){console.log.apply(this,arguments)},...)

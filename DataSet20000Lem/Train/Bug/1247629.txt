@@ -1,0 +1,46 @@
+The mdn command prevents the server from starting on device a it import a module that's only available on the client
+In bug 768469 a new gcli command wa added: mdn
+This command exists in devtools/shared along with other commands.
+This directory end up on devices, along with the rest of the debugger server code.
+
+However, this command relies on a devtools module that only exists on the client:
+
+See \devtools\shared\gcli\commands\mdn.js :
+const {
+getCssDocs,
+PAGE_LINK_URL
+} = require("devtools/client/shared/widgets/MdnDocsWidget");
+
+So when the server starts, gcli load all it command to know what's available, and that causes:
+
+"Failed to load module devtools/shared/gcli/commands/mdn: Module `devtools/client/shared/widgets/MdnDocsWidget` is not found at resource://devtools/client/shared/widgets/MdnDocsWidget.js" system.js:132
+Failed to load module devtools/shared/gcli/commands/mdn: Module `devtools/client/shared/widgets/MdnDocsWidget` is not found at resource://devtools/client/shared/widgets/MdnDocsWidget.js <unknown>
+@resource://devtools/shared/gcli/commands/mdn.js:11:5
+exports.createSystem/system.addItemsByModule/</options.loader@resource://devtools/shared/gcli/source/lib/gcli/system.js:165:20
+exports.createSystem/loadModule@resource://devtools/shared/gcli/source/lib/gcli/system.js:112:30
+exports.createSystem/system.load/promises<@resource://devtools/shared/gcli/source/lib/gcli/system.js:210:16
+exports.createSystem/system.load@resource://devtools/shared/gcli/source/lib/gcli/system.js:208:22
+GcliActor<._getRequisition@resource://devtools/server/actors/gcli.js:253:32
+GcliActor<.specs<@resource://devtools/server/actors/gcli.js:96:12
+actorProto/</handler@resource://devtools/server/protocol.js:1013:19
+DSC_onPacket@resource://devtools/server/main.js:1643:15
+DebuggerTransport.prototype._onJSONObjectReady/<@resource://devtools/shared/transport/transport.js:479:9
+exports.makeInfallible/<@resource://devtools/shared/ThreadSafeDevToolsUtils.js:101:14
+exports.makeInfallible/<@resource://devtools/shared/ThreadSafeDevToolsUtils.js:101:14
+system.js:133
+@resource://devtools/shared/gcli/commands/mdn.js:11:5
+exports.createSystem/system.addItemsByModule/</options.loader@resource://devtools/shared/gcli/source/lib/gcli/system.js:165:20
+exports.createSystem/loadModule@resource://devtools/shared/gcli/source/lib/gcli/system.js:112:30
+exports.createSystem/system.load/promises<@resource://devtools/shared/gcli/source/lib/gcli/system.js:210:16
+exports.createSystem/system.load@resource://devtools/shared/gcli/source/lib/gcli/system.js:208:22
+GcliActor<._getRequisition@resource://devtools/server/actors/gcli.js:253:32
+GcliActor<.specs<@resource://devtools/server/actors/gcli.js:96:12
+actorProto/</handler@resource://devtools/server/protocol.js:1013:19
+DSC_onPacket@resource://devtools/server/main.js:1643:15
+DebuggerTransport.prototype._onJSONObjectReady/<@resource://devtools/shared/transport/transport.js:479:9
+exports.makeInfallible/<@resource://devtools/shared/ThreadSafeDevToolsUtils.js:101:14
+exports.makeInfallible/<@resource://devtools/shared/ThreadSafeDevToolsUtils.js:101:14
+
+We should:
+- either try/catch the import and fail gracefully when the module can't be imported
+- or use a lazyImporter

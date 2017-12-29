@@ -1,0 +1,25 @@
+Save Page As..  for some secure pages results in file that won't open
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.1) Gecko/2008070208 Firefox/3.0.1
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.1) Gecko/2008070208 Firefox/3.0.1
+
+Some secure pages have code in them that changes the URL in a manner that causes a saved page to be unopenable.  Somewhat recently, NewEgg added the following JavaScript code to the headers of their secure pages (including receipts, which I prefer to save, instead of print):
+
+if(window.location.protocol!="https:"){if(window.location.replace){window.location.replace("https"+window.location.href.substr(4));}else{window.location.href="https"+window.location.href.substr(4)}}
+
+This causes saved purchase receipts to redirect from "file:///C:/..." to "https://c/...", giving an error that no server exists at "c".
+
+Some other sites use various different methods that break Firefox's Sage Page As... feature
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Buy something at NewEgg
+2. Save the receipt
+3. Try opening the receipt
+Actual Results:  
+File fails to open because Firefox looks for an HTTPS server in the location of the file
+
+Expected Results:  
+Firefox already edits an HTML file upon save to replace image locations with the files saved on the hard drive.  The Save As parser should be modified to look for redirects that will "break" the saved file.  One example is given above, using a JavaScript URL rewrite command.
+
+I've seen other secure sites exhibit similar behavior, but I've also successfully saved many secure pages.  There is no easy workaround to this problem - the user must know enough HTML, JavaScript, etc, to be able to edit the saved HTML file, troubleshoot the cause of the problem, and manually edit the saved file appropriately.

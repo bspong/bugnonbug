@@ -1,0 +1,39 @@
+Proxy exception rule for ssl interception not recognized
+User-Agent: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; de; rv:1.9.2) Gecko/20100115 Firefox/3.6
+Build Identifier: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; de; rv:1.9.2) Gecko/20100115 Firefox/3.6
+
+Tried to get direct access to an applet at url https://10.112.116.220:8080/java-applet by suppressing ssl interception using rule "isInNet(host, "10.0.0.0", "255.0.0.0")" in our proxy setup but firefox still redirects communication to proxy.
+Proxy configuration in apple's java-settings utility is using proxy file at URL "http://wpad.intern.hornbach.de/wpad.dat".
+There's no problem when I try to launch applet using url "https://opasweb.inter.hornbach.de/java-applet" instead.
+This call is not redirected to the proxy because rule "isPlainHostName(host)")" is detected.
+See complete wpad.dat:
+if ( isPlainHostName(host) ||
+shExpMatch(host, "*.intern.hornbach.de") ||
+shExpMatch(host, "*.extern.hornbach.de") ||
+shExpMatch(host, "*.hornbach.int") ||
+isInNet(host, "10.0.0.0", "255.0.0.0") ||
+isInNet(host, "127.0.0.1", "255.255.255.255") ||
+isInNet(host, "165.50.0.0", "255.255.0.0") ||
+isInNet(host, "172.21.0.0", "255.255.0.0") ||
+isInNet(host, "172.30.0.0", "255.255.0.0") ||
+isInNet(host, "172.31.0.0", "255.255.0.0") ||
+isInNet(host, "192.168.0.0", "255.255.0.0") ||
+isInNet(host, "217.6.95.0", "255.255.255.192") ||
+isInNet(host, "85.158.160.34", "255.255.255.255") ||
+isInNet(host, "62.245.155.229", "255.255.255.255") ||
+dnsDomainIs(host, "web.connexie.net") ||
+dnsDomainIs(host, "nsc.netsecure.de")
+) return("DIRECT");
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. configure proxy ssl interception
+2. add an exception rule to your proxy pac for an internal dmz like "if isInNet(host, "10.0.0.0", "255.0.0.0") return "DIRECT");"
+2. access http applet through proxy with exeption rule for ip address used in your url (e.g.: https://10.112.116.220/any-applet)
+Actual Results:
+Browser still want to load applet throug proxy
+
+Expected Results:
+Browser should load applet from webserver directly without proxy redirection

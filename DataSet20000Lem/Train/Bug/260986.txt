@@ -1,0 +1,67 @@
+Error on build "multiple definition of nsTypeAheadFind::"
+User-Agent: Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.7) Gecko/20040803 Firefox/0.9.3
+Build Identifier: Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.7) Gecko/20040803 Firefox/0.9.3
+
+Arch - AMD Athlon 64 Processor 3000+
+OS - Fedora Core 2, 2.6.8-1.521 kernel
+GCC - gcc (GCC) 3.3.3 20040412 (Red Hat Linux 3.3.3-7)
+
+My mozconfig ha the extra lines:
+ac_add_options --disable-shared
+ac_add_options --enable-static
+ac_add_options --enable-optimize="-O3 -march=athlon64 -msse2 -mfpmath=sse
+-mmmx"ac_add_options --disable-debug
+
+The build work fine and I get a working firefox binary if I do not enable
+static. But if I "enable-static" and "disable-shared", I get the following
+error in build:
+
+: multiple definition of `nsTypeAheadFind::GetSearchContainers(nsISupports*,
+int, int, int, nsIPresShell**, nsIPresContext**)'
+../../dist/lib/components/libtoolkitcomps.a(nsTypeAheadFind.o)(.text+0x1c20):
+first defined here
+/usr/bin/ld: Warning: size of symbol
+`nsTypeAheadFind::GetSearchContainers(nsISupports*, int, int, int,
+nsIPresShell**, nsIPresContext**)' changed from 1449 in
+../../dist/lib/components/libtoolkitcomps.a(nsTypeAheadFind.o) to 1319 in
+../../dist/lib/components/libtoolkitcomps.a(nsTypeAheadFind.o)
+../../dist/lib/components/libtypeaheadfind.a(nsTypeAheadFind.o)(.text+0x7490):
+In function `nsTypeAheadFind::IsRangeVisible(nsIPresShell*, nsIPresContext*,
+nsIDOMRange*, int, int, nsIDOMRange**)':
+: multiple definition of `nsTypeAheadFind::IsRangeVisible(nsIPresShell*,
+nsIPresContext*, nsIDOMRange*, int, int, nsIDOMRange**)'
+../../dist/lib/components/libtoolkitcomps.a(nsTypeAheadFind.o)(.text+0x2f90):
+first defined here
+/usr/bin/ld: Warning: size of symbol
+`nsTypeAheadFind::IsRangeVisible(nsIPresShell*, nsIPresContext*, nsIDOMRange*,
+int, int, nsIDOMRange**)' changed from 1226 in
+../../dist/lib/components/libtoolkitcomps.a(nsTypeAheadFind.o) to 1207 in
+../../dist/lib/components/libtoolkitcomps.a(nsTypeAheadFind.o)
+../../dist/lib/components/libtypeaheadfind.a(nsTypeAheadFind.o)(.text+0x4980):
+In function `nsTypeAheadFind::RangeStartsInsideLink(nsIDOMRange*, nsIPresShell*,
+int*, int*)':
+: multiple definition of `nsTypeAheadFind::RangeStartsInsideLink(nsIDOMRange*,
+nsIPresShell*, int*, int*)'
+../../dist/lib/components/libtoolkitcomps.a(nsTypeAheadFind.o)(.text+0x21d0):
+first defined here
+collect2: ld returned 1 exit status
+gmake[4]: *** [firefox-bin] Error 1
+gmake[4]: Leaving directory `/home/xxx/lab/builds/mozilla/browser/app'
+gmake[3]: *** [libs] Error 2
+gmake[3]: Leaving directory `/home/xxxx/lab/builds/mozilla/browser'
+gmake[2]: *** [tier_99] Error 2
+gmake[2]: Leaving directory `/home/xxx/lab/builds/mozilla'
+gmake[1]: *** [default] Error 2
+gmake[1]: Leaving directory `/home/xxx/lab/builds/mozilla'
+gmake: *** [build] Error 2
+
+Reproducible: Always
+Steps to Reproduce:
+1. enable-static and disable-shared in mozconfig
+2. gmake -f client.mk build
+3. cry at the error
+
+
+
+Expected Results:
+Compiled without error

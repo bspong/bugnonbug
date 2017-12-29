@@ -1,0 +1,40 @@
+Firefox 3 show proxy authentication window when (other) http page loaded in http website
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.1a1pre) Gecko/2008071603 Minefield/3.1a1pre
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.1a1pre) Gecko/2008071603 Minefield/3.1a1pre
+
+I am experiencing this problem since the begin of Firefox 3 and older release too. I have tested the newest Minefield version to see if the bug still existed.
+
+We run a (Bluecoat) Proxy. The authentication is handled with NTLM. This work fine so far but it seems that on http site there is a problem with authentication. I found out, that the http site get loaded fine until a second (or multiple other) http site are loaded in the background. Then a authentication prompt popup appears.
+
+In the proxy log it show the following information:
+TCP_ACCELERATED/200 39 CONNECT tcp://mail.google.com:443/ - NONE/- -
+TCP_ACCELERATED/200 39 CONNECT tcp://mail.google.com:443/ - NONE/- -
+
+***At this point the authentication popup appears. And then:***
+
+TCP_DENIED/407 322 CONNECT tcp://ssl.google-analytics.com:443/ - NONE/- -
+TCP_DENIED/407 579 CONNECT tcp://ssl.google-analytics.com:443/ - NONE/- -
+TCP_ACCELERATED/200 39 CONNECT tcp://ssl.google-analytics.com:443/ SG01\a.username NONE/- -
+TCP_DENIED/407 268 CONNECT tcp://ssl.google-analytics.com:443/ - NONE/- -
+TCP_DENIED/407 322 CONNECT tcp://www.blogger.com:443/ - NONE/- -
+TCP_DENIED/407 579 CONNECT tcp://www.blogger.com:443/ - NONE/- -
+TCP_ACCELERATED/200 39 CONNECT tcp://www.blogger.com:443/ SG01\a.username NONE/- -
+
+My guess is that there Firefox doe not forward the already known NTLM data when a http site is loaded within a http site. Check the source code on gmail.com, you will see the google-analytics and blogger inputs.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Use a (Bluecoat) Proxy server with NTLM authentication
+2. Surf to a http website which includes other http page
+Actual Results:
+A popup window for proxy authentication appears with the following content and two input field for username and password:
+
+"The proxy xxx.xxx.xxx.xxx:8080 is requesting a user name and password. The site says: ""
+
+Expected Results:
+Firefox should already know the NTLM user data and access the other http site without asking for username and password again.
+
+- The user/password information you type into this authentication popup are not saved. The next time you reproduce this bug, the popup still appears (although with your already given informations).
+- I have openened a support case in the Mozilla Forums before:
+http://support.mozilla.com/tiki-view_forum_thread.php?locale=en-US&forumId=1&comments_parentId=105582

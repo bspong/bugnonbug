@@ -1,0 +1,60 @@
+[trunk]Build process is killed while processing nsJARProtocolHandler.cpp/.h with gcc 4.1 - related to gcc bug 26905
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9a1) Gecko/20060918 Minefield/3.0a1
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9a1) Gecko/20060918 Minefield/3.0a1
+
+Simple to see. I am testing Ubuntu Edgy Eft in a virtual machine, and one of my tests is to get build process of firefox (or any other software of the Mozilla Foundation) to its normal end.
+
+But, when I tried to build the trunk with gcc 4.1.1 (the ubuntu version), build process kills itself, saying :
+
+c++  -fno-rtti -fno-exceptions -Wall -Wconversion -Wpointer-arith -Wcast-align -Woverloaded-virtual -Wsynth -Wno-ctor-dtor-privacy -Wno-non-virtual-dtor -Wno-long-long -fshort-wchar -pthread -pipe  -DNDEBUG -DTRIMMED -O2 -pipe -w -fPIC -shared -Wl,-z,defs -Wl,-h,libjar50.so -o libjar50.so  nsZipArchive.o nsWildCard.o nsJARInputStream.o nsJARDirectoryInputStream.o nsJAR.o nsJARFactory.o nsXPTZipLoader.o nsJARProtocolHandler.o nsJARChannel.o nsJARURI.o    -lpthread    -Wl,--version-script -Wl,../../build/unix/gnu-ld-scripts/components-version-script -Wl,-Bsymbolic -L../../dist/bin -L../../dist/lib -L../../dist/lib -lmozz -L../../dist/bin -lxpcom -lxpcom_core  -L../../dist/bin -L../../dist/lib -lplds4 -lplc4 -lnspr4 -lpthread -ldl  -ldl -lm    
+nsJAR.o:(.data.rel.ro._ZTV16nsZipReaderCache[vtable for nsZipReaderCache]+0x54): référence indéfinie vers « nsSupportsWeakReference::GetWeakReference(nsIWeakReference**)       »
+nsJARProtocolHandler.o:(.data.rel.ro._ZTV20nsJARProtocolHandler[vtable for nsJARProtocolHandler]+0x4c): référence indéfinie vers « nsSupportsWeakReference::GetWeakReference(nsIWeakReference**)       »
+collect2: ld returned 1 exit status
+
+It looks like it could not find a reference, nsSupportsWeakReference::GetWeakReference(nsIWeakReference** one ?!
+
+Could it be related to bug 210305 in some ways ? Last modification for nsJARProtocolHandler.cpp is very young, so ?!
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.Install ubuntu edgy knot 3 and all building tools
+2.launch building
+3.
+
+Actual Results:  
+crash while making libjar50.so :(
+
+Expected Results:  
+Going on.
+
+here is the gcc information :
+
+s$ gcc -v
+Using built-in specs.
+Target: i486-linux-gnu
+Configured with: ../src/configure -v --enable-languages=c,c++,fortran,objc,obj-c++,treelang --prefix=/usr --enable-shared --with-system-zlib --libexecdir=/usr/lib --without-included-gettext --enable-threads=posix --enable-nls --program-suffix=-4.1 --enable-__cxa_atexit --enable-clocale=gnu --enable-libstdcxx-debug --enable-mpfr --enable-checking=release i486-linux-gnu
+Thread model: posix
+gcc version 4.1.2 20060906 (prerelease) (Ubuntu 4.1.1-13ubuntu2)
+
+And the .mozconfig I am using for this building :
+
+#
+# See http://www.mozilla.org/build/ for build instructions.
+#
+
+. $topsrcdir/browser/config/mozconfig
+
+# Options for 'configure' (same as command-line options).
+ac_add_options --enable-default-toolkit=cairo-gtk2
+ac_add_options --disable-freetype2
+ac_add_options --enable-pango
+ac_add_options --enable-canvas
+ac_add_options --enable-svg
+ac_add_options --disable-debug
+ac_add_options --disable-tests
+ac_add_options --enable-optimize="-O2 -pipe -w"
+ac_add_options --enable-strip
+ac_add_options --disable-pedantic
+ac_add_options --enable-static
+ac_add_options --disable-shared

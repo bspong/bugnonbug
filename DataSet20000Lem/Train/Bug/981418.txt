@@ -1,0 +1,18 @@
+CustomizableUI type:view and type:button widget need an onBeforeCreated handler
+This bug affect type:view widgets.
+
+There appears to be an inherent race condition with view panel creation in the window listener of bootstrapped add-ons.
+
+When new window are opened add-on code in the window listener(s) and CustomizableUI code run independently.
+
+However, CustomizableUI need a given view to exist before buildWidget is executed: http://lxr.mozilla.org/mozilla-aurora/source/browser/components/customizableui/src/CustomizableUI.jsm#1125
+
+This mean that if add-on code that creates the relevant view is sufficiently delayed for any reason, CustomizableUI fails to create the widget with the following error:
+console.error:
+[CustomizableUI]
+Could not find the view node with id: myapp-view, for widget: myapp-toolbar-button.
+
+There is an onBuild handler intended for custom widget only.
+Specifying type:custom and rewriting type:view code in onBuild() is not an ideal solution for what I hope are obvious reasons.
+
+It seems to me that this should be fixed at the platform level. Namely, there should be an onBeforeBuild handler (at http://lxr.mozilla.org/mozilla-aurora/source/browser/components/customizableui/src/CustomizableUI.jsm#1075) to allow creating panelviews in time regardless of any circumstances.

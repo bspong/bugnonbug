@@ -1,0 +1,22 @@
+Redraw bug in icon of first tab when it finish loading while scrollbar in another tab is used
+On the Mac OS X 1.8 branch...
+If a tab is (re)loading, it icon first change to the "spinning wheel", and then to the correct favicon after loading is completed. If this change happens in the first tab, while the user is scrolling (vertically) in a later tab, then the first tab icon fails to redraw correctly... the left side of the icon is left a the spinning wheel. This only occurs in the first tab.
+
+Steps to reproduce:
+- open two tab with content. The second tab should be long enough to have the vertical scrollbar enabled. If you open attachment 190015 in the first tab, it'll reload periodically for you, which will be useful.
+- Wait for the first tab to start reloading, or go to it, hit reload, and immediately switch back to the second tab.
+- Before the first tab ha stopped reloading, start to scroll the scrollbar up and down in the second tab. The reload icon (wheel) in the first tab will freeze when this happens, but continue scrolling until you estimate that the first page should have finished reloading.
+- Stop scrolling. The icon of the first tab should immediately switch to it proper favicon. However, if you time it right, the icon will be truncated on the left, where part of the reload wheel will still appear.
+- Hover over the first tab, and the icon will redraw correctly.
+
+This bug is only obvious in 1.8 branch build after the new theme wa introduced. However, this is only because the icon of the first tab wa pushed more to the left in the new theme (because the close icon wa moved). If you add the following to userChrome.css to push the icon more to the left...
+
+.tabbrowser-tab[first-tab="true"] > .tab-image-left {
+margin-left: -10px !important;
+}
+
+and open an older (Pinstripe) 1.8 branch builds, then the problem can be reproduced in those builds. I've managed to reproduce this a early a the 20060503 build.
+
+If you set the margin-left to 7 px or so, the problem disappears entirely, a the icon is pushed too far right to suffer from it.
+
+I can't reproduce this on the trunk.

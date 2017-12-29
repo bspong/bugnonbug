@@ -1,0 +1,42 @@
+network.http.response.timeout breaks applications with long lived http connetions
+User Agent: Mozilla/5.0 (X11; Linux x86_64; rv:24.0) Gecko/20140429 Firefox/24.0 Iceweasel/24.5.0 (Nightly/Aurora)
+Build ID: 20140429161455
+
+Steps to reproduce:
+
+Write web application that takes more than 5 minutes to return a response.
+
+Try to use application using Firefox 29 or greater.
+
+Get connection timeout response.  Connection to server is broken and server cannot deliver results to client.
+
+
+Actual results:
+
+In Firefox 29 an enhanement was introduced to drop connections if they take "too long".  See:
+https://developer.mozilla.org/en-US/Firefox/Releases/29/Site_Compatibility#Networking
+and
+bug #947391.
+
+This breaks our application.  (And other folks applications as well per comments in bug #947391.)
+
+FWIW, it took me quite a while to trace this back to firefox.  I suspect other's have had the problem and simply abandoned firefox rather than bothering to report the problem.
+
+Here's some search engine keywords: long-lived long lived http response broken connection
+
+
+Expected results:
+
+Applications should be able to take as long as is necessary to respond to the client.
+
+If you want to pop up a dialog box to warn the user that the remote site is taking a long time to respond, that sounds reasonable.  Anything that allows the user to eventually receive results from the server would be fine.  Aborting the connection is not reasonable.
+
+Since HTTP 1.1 POST requests are not idempotent premature connection reset for these reqeusts are especially henious.
+
+It is also not reasonable to ask all the firefox users to change their network.http.response.timeout setting in order to use the application.  Nor is it reasonable to require the user to install some sort of plugin that changes the setting so that the application can be used.
+
+Helpful hints are a nice bit of frosting to hand to the end-user, but not at the expense of breaking backwards compatibility and removing real functionatlity.  (It's not as if the user does not know she's not yet gotten a result -- they see the little spinning ball and know it means something's waiting.)
+
+If you're going to warn the user about how long the remote site is taking then it might be nice to give the remote site some way to tell firefox how long it expects to take to supply a the next response.  Sounds like a strange road to go down but I suppose you could introduce some non-standard http header.
+
+Meanwhile, until there's a fix that does not introduce regressions -- as bug #947391 did, a quick fix would be a new firefox release with network.http.response.timeout set to 0.  (If the user wants a timeout message they can frob the setting themselves.)  One would think that changing the setting to 0 would fall into the category of something that could quickly be released to immediately fix the problem.

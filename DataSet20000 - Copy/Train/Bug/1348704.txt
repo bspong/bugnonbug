@@ -1,0 +1,21 @@
+tab-selected-start.svg/tab-selected-end.svg are unnecessarily complex and may affect performance
+Created attachment 8848945
+Current contents of tab-selected-start.svg
+
+While triaging and bumping into bug 921673 I just happened to look in:
+
+https://dxr.mozilla.org/mozilla-central/source/obj-x86_64-pc-linux-gnu/browser/themes/linux/tab-selected-start.svg
+
+If I understand the CSS gradient syntax correctly then this:
+
+linear-gradient(transparent 2px, hsla(0,0%,100%,.15) 2px, hsla(0,0%,100%,.15));
+
+basically specifies a gradient that is transparent from the top to 2px down, then is hsla(0,0%,100%,.15) from 2px down to the bottom.
+
+If that is correct, then there is no point in using a gradient. Simply create a box that starts two pixels from the top and fill it with the color hsla(0,0%,100%,.15).
+
+But then if we can do that, then we don't need the 'foreignObject' in order to be able to use 'background-image'. We can simply use an SVG <rect>.
+
+And if we can just use an SVG shape, then we don't need the 'clipPath' (expensive) and can just make the shape a path that has the outline of the clipPath.
+
+So unless I'm wrong about the gradient, then the only thing we need in this SVG is a single <path> element with a fill.

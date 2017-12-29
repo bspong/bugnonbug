@@ -1,0 +1,64 @@
+Find out why customize mode transition is smoother without d2d and HWA.
+I've got two copy of Win 7 - one on a desktop machine, and one in a VM on my Macbook. I've been doing customize mode perf work on both, and I've been pretty confused by the behaviour on them - specifically, something that help on one doesn't seem to help on the other.
+
+For example, in [1], I commented that adding a 2 second delay to the transition smoothed thing out considerably for my Windows 7 VM, and that it supported the idea that the transition itself is not intrinsically difficult to layout or paint.
+
+That same delay didn't have nearly the same effect on my desktop machine.
+
+One thing that wa immediately obvious wa that my VM doe not have D2D or HWA capabilities, whereas my desktop PC does.
+
+Using a local run of CART, I notice a pretty substantial difference in performance between both configurations.
+
+Here's a matrix of CART results:
+
+
+No d2d, no HWA:
+
+1-customize-enter.half.TART Average (10): 21.75 stddev: 5.45
+1-customize-enter.all.TART Average (10): 39.71 stddev: 4.81
+1-customize-enter.error.TART Average (10): 250.56 stddev: 19.92
+
+2-customize-exit.half.TART Average (10): 24.01 stddev: 5.79
+2-customize-exit.all.TART Average (10): 32.71 stddev: 2.94
+2-customize-exit.error.TART Average (10): 206.64 stddev: 16.49
+
+
+Yes d2d, Yes HWA:
+
+1-customize-enter.half.TART Average (10): 35.93 stddev: 19.39
+1-customize-enter.all.TART Average (10): 66.15 stddev: 11.13
+1-customize-enter.error.TART Average (10): 472.08 stddev: 126.61
+
+2-customize-exit.half.TART Average (10): 30.24 stddev: 5.02
+2-customize-exit.all.TART Average (10): 50.98 stddev: 3.81
+2-customize-exit.error.TART Average (10): 346.29 stddev: 28.54
+
+
+No d2d, Yes HWA:
+
+1-customize-enter.half.TART Average (10): 29.79 stddev: 4.11
+1-customize-enter.all.TART Average (10): 42.91 stddev: 4.15
+1-customize-enter.error.TART Average (10): 280.05 stddev: 27.18
+
+2-customize-exit.half.TART Average (10): 29.89 stddev: 7.68
+2-customize-exit.all.TART Average (10): 36.29 stddev: 1.71
+2-customize-exit.error.TART Average (10): 230.01 stddev: 21.16
+
+
+Yes d2d, no HWA:
+
+1-customize-enter.half.TART Average (10): 48.97 stddev: 15.39
+1-customize-enter.all.TART Average (10): 110.16 stddev: 14.35
+1-customize-enter.error.TART Average (10): 720.96 stddev: 91.84
+
+2-customize-exit.half.TART Average (10): 47.16 stddev: 18.87
+2-customize-exit.all.TART Average (10): 64.21 stddev: 11.04
+2-customize-exit.error.TART Average (10): 481.17 stddev: 88.58
+
+
+Looking at this matrix, it look like both HWA and d2d negatively impact performance of the transition. I would have expected the opposite.
+
+I'll gather some profiles.
+
+
+[1]: https://bugzilla.mozilla.org/show_bug.cgi?id=972921#c1

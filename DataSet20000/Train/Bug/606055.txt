@@ -1,0 +1,27 @@
+Memory leaks on google.com with the Web Console open
+STR:
+(1) Open the Web Console. Make sure all filters are on.
+(2) Load google.com.
+(3) Press Cmd+Q to quit Firefox while a network request is going on.
+
+Leaks result:
+
+     |<----------------Class--------------->|<-----Bytes------>|<----------------Objects---------------->|<--------------References-------------->|
+                                              Per-Inst   Leaked    Total      Rem      Mean       StdDev     Total      Rem      Mean       StdDev
+   0 TOTAL                                          30      328  1110233        7 ( 2018.67 +/-  2543.38)  1162253        7 ( 1994.72 +/-  3597.43)
+ 345 nsDOMStorage                                  208      208        2        1 (    1.33 +/-     0.58)       14        1 (    3.33 +/-     1.27)
+ 348 nsDOMStorageItem                               80       80        2        1 (    0.67 +/-     0.58)       13        1 (    1.56 +/-     0.71)
+ 688 nsStringBuffer                                  8       40    34132        5 ( 7775.68 +/-  3343.51)    63776        5 (12355.03 +/-  4889.72)
+
+nsTraceRefcntImpl::DumpStatistics: 866 entries
+nsStringStats
+ => mAllocCount:          30660
+ => mReallocCount:         3472
+ => mFreeCount:           30655  --  LEAKED 5 !!!
+ => mShareCount:          29644
+ => mAdoptCount:           2085
+ => mAdoptFreeCount:       2085
+
+---
+
+Will need to diagnose more to figure out what's going on.

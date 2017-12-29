@@ -1,0 +1,50 @@
+Installer capable of creating a serious mess if run by unprivileged and inexperienced user
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.1) Gecko/2008070208 Firefox/3.0.1
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.1) Gecko/2008070208 Firefox/3.0.1
+
+I write this to demonstrate what a mess can the installer do and to suggest how to improve it.
+
+Imagine the following scenario: An employee in a company with an IT department that has forced users to run their PC with standard (unprivileged) accounts. The guy has just discovered FF and is very excited. Wants to have it and use it. Downloads 3.0.1 and runs the installer. Chooses 'Custom' setup (he thinks he is experienced), selects only the StartMenu icon (doesn't want FF to show), points MyDocuments as install folder (knows he can put things there) and finishes the wizard.
+
+I personally did not suffer much from this since I am really experienced. But I have seen other people do un-imaginable things. While nothing can be done 100% fool-proof, I still think these improvements are necessary, not-very-hard to implement and will add a nice shine to FF.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.
+2.
+3.
+Actual Results:  
+We have the mess:
+1. No icons in the StartMenu - bug 446599.
+2. MyDocuments is 'populated' with 'strange' files and folders - bug 281259
+3. There is no un-install tool at hand and the guy will have to delete everything manually - dangerous and related to bugs 264744 and 446599.
+
+Expected Results:  
+1. Icons should appear where selected.
+2. 'Mozilla Firefox' should be appended to whatever directory the installing users chooses - may be some message box can informing the user what is going to happen.
+3. There should be some way for automatic un-install - either in the ControlPanel or in the StartMenu.
+
+I suggest that installer goes like this:
+
+if(user=admin){
+   ProceedNormally();
+}
+else{
+   CreateRequestedIcons();
+   if(InstallPathEndsInMozillaFirefox){
+      Proceed();
+   }
+   else{
+      WarnUserAboutDanger(NonEmptyFolder);
+      if(User=Agree){
+         AppendToInstallPath(MozillaFirefox);
+      }
+   }
+   if(CreateAddRemovePrgsEntry=Success){
+      Proceed();
+   }
+   else{
+      CreateUninstallIconElswhere(WhyNotInStartMenu);
+   }
+}

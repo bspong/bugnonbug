@@ -1,0 +1,15 @@
+Move selected tab curve clip-paths into SVG-as-an-image so it is cached
+On all three platforms, the selected tab is drawn as follows:
+
+1) Fill the tab-background-start::before, tab-background-middle, tab-background-end::before elements with -moz-dialog as a background-color
+2) Apply a linear-gradient on top of those elements. That linear-gradient does not use any system colours.
+3) Clip the tab-background-start::before and tab-background-end::before elements to the curve shape using an SVG clip-path
+4) Put a tab stroke image on top of the tab-background-start::before, tab-background-middle, tab-background-end::before elements.
+
+There are potential cost-savings if we move that linear-gradient from step 2 into the tab stroke images from step 4. Apparently, animating linear-gradients (especially ones with stop positions) is expensive. Moving the gradients into the stroke image essentially lets us pre-compute the gradient, and this *should* take some heat off of graphics.
+
+This will also mean that the linear-gradients clip will be pre-computed, and that's more cost savings right there.
+
+And finally, it'll make any effort to switch to SVG curves (+ caching from bug 764299) easier to accomplish, since the SVG curves will only need to be filled with -moz-dialog.
+
+So, all in all, I think this is a valuable area of exploration for eliminating our TART regression.

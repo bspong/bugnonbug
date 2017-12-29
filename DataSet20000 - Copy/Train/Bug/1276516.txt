@@ -1,0 +1,28 @@
+session restore incorrectly determines window to be off-screen in Win 10, leading to unwanted re-positioning
+The way window borders work has changed in Windows 10, thus the assumptions and calculations in bug 864107 are not valid on this OS, leading to undesired 'corrections' of the window position.
+Specifically, it unnecessarily moves windows away from the edges of the screen.
+
+STR:
+1. 'Snap' Firefox to the left side of the screen (WIN+left arrow).
+2. Resize horizontally, to make it remember position. Window is perfectly aligned to the edges.
+4. Restart Firefox, now you got silly gaps at the edges.
+
+It stems from the fact, I think, that the window border was reduced to 1px with an invisible padding, so you could still easily grab it. Which would be fine for the most part, except the padding seems to be included in window coordinate calculations. So a window at the edge of the screen actually starts at minus the value of whatever the padding is and extends accordingly on the other side. Simply checking whether the coordinates fall outside the resolution produces wrong results in this case. And is now something that goes against the assumption in bug 864107, comment 13, that having windows partly off-screen would not be a widely desired feature. Because, obviously, if you go through the trouble of putting your window at the edge of the screen, you want it to bloody stay there.
+
+Note: The padding is adjustable in HKEY_CURRENT_USER\Control Panel\Desktop\WindowMetrics (Padded)BorderWidth but even setting it to 0 produces gaps:
+
+From sessionstore:
+snapped, correct state before:
+"height":1051,"screenX":-1 http://i.imgur.com/zLqppCM.png
+and bad state after restart:
+"height":1050,"screenX":0 http://i.imgur.com/DQyiTla.png
+
+At the default values, the size of the gaps produced are completely bonkers: http://i.imgur.com/u4MBAR0.jpg
+"height":1045,"screenX":-5,"screenY":0
+
+"height":1040,"screenX":0,"screenY":0
+Not sure why it doesn't bum out on the negative side of the Y-axis.
+
+
+Vivaldi gets this right and stays where you put it. Chrome also had the problem with small gaps for a while, lately they do bigger gaps regardless of what's set for padding. Not surprisingly MS is the most confused about changes in their own OS, Edge just starts maximized.
+Please do the sane thing here.

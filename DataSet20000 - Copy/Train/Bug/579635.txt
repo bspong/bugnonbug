@@ -1,0 +1,28 @@
+Firefox FTP engine is ignoring the server IP received in PASV command response
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 6.1; fr; rv:1.9.2.3) Gecko/20100401 Firefox/3.6.3
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 6.1; fr; rv:1.9.2.3) Gecko/20100401 Firefox/3.6.3
+
+When Firefox connects to a FTP server, and switches to passive mode with the PASV command, it only reads the port number in the response of the PASV response.
+Then it uses the current known IP of the server to open the data connection.
+It completely ignores the first part of the PASV response which gives an IP adress to connect to.
+If the server is using multiple IPs, the connection fails.
+And maybe that somebody having the capability to read/write data on one of the server's IPs could steal the data connection opened by the client, because the client is opening its socket to the bad IP where the server doesn't wait for him.
+
+Example :
+... command connection opened on 203.186.42.99 ...
+> PASV
+< 227 Entering Passive Mode (203,186,42,103,157,78)
+> LIST
+- server is waiting for a connection on 203.186.42.103:40270
+- client tries to connect to 203.186.42.99:40270
+
+Konqueror on Linux has the same problem.
+FileZilla on Windows has not.
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+Using netcat, we can simulate a FTP server waiting for connection on an IP, then when a client tries to connect, give him another IP in the PASV response and look where it does try to connect.
+Actual Results:  
+FireFox is connecting to the bad IP, it ignores the IP given by the server.

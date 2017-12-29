@@ -1,0 +1,34 @@
+FF2 should pick up NSS fixes, but keep the FIPS approved softoken module
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-GB; rv:1.8.1.12) Gecko/20080201 Firefox/2.0.0.12
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-GB; rv:1.8.1.12) Gecko/20080201 Firefox/2.0.0.12
+
+The OCSP Response for the ocsptest.comodoca.com SSL Server Certificate is signed by the same Trusted Root CA Certificate that issued the SSL Server Certificate. There are no Intermediates CA Certificates involved anywhere. There is no delegation to a separate OCSP Signing Certificate. So this is really the simplest possible PKI configuration for OCSP.
+This same -8048 error occurs regardless of whether:
+- the OCSP Response us "ResponderID.byName" or "ResponderID.byKey".
+- the OCSP Response includes no certificate or includes the Trusted Root CA Certificate.
+
+This problem occurs in Firefox 2.0.0.12 (tested on XP, Vista and Linux) and a 2.0.0.13pre nightly build from a couple of day ago (tested on XP).
+This problem also occurs in Firefox 1.5.0.12 (so it must have been around for a while).
+There is no problem in Firefox 3 Beta 3 (presumably because the underlying NSS OCSP support ha been heavily modified to cope with EV SSL Certificates).
+
+Has the Firefox 1/2 OCSP code ever been shown to work when the OCSP Response signer is a built-in Trusted Root Certificate? Or doe it only work properly when delegating to a separate OCSP Signing Certificate (using the ocspSigning EKU OID)?
+Or can anybody see anything else problematic with the OCSP Response?
+
+(Interestingly, when I compile the current Gentoo Linux Firefox 2.0.0.12 source package, the problem doesn't occur. My guess is that it's linking to a newer version of NSS than the official Firefox 2.0.0.12 binary builds).
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. In Firefox 2.x (or 1.5.x), enable OCSP checking for "certificates that specify an OCSP Service URL".
+2. Browse to https://ocsptest.comodoca.com
+
+Actual Results:
+A popup window display "Error establishing an encrypted connection to ocsptest.comodoca.com. Error Code: -8048.", and the browser refuse to navigate to the webpage.
+
+Expected Results:
+No popup window, and successful navigation to the webpage.
+
+The following software accepts the OCSP Response without any problem:
+- IE7 (Vista).
+- Opera 9.23 (Linux).
+- OpenSSL's command line tool.

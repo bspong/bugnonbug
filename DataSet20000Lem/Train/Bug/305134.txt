@@ -1,0 +1,112 @@
+Remove FeedView from Firefox 1.5
+Per discussion, due to remaining bug with FeedView that require either a) nasty
+hack or b) architectural change to Gecko at a late point in the development
+cycle, we should remove FeedView from the 1.5 release and focus on better
+integrating it in the 2.0 cycle.
+
+Summary of issue leading to this decision (supported so far by cbeard, schrep,
+beltzner, jst and probably axel):
+
+The issue I have been looking at have included:
+
+- Some feeds, like the BBC, are not pretty printed, because they are
+styled with their own XSLT stylesheet. There are a couple of issue
+here:
+
+1) that the BBC feed is not being pretty printed
+2) that functionality such a Add Live Bookmark etc are not being
+exposed effectively for these feeds.
+
+1 - BBC supply it own stylesheet because they did not want user
+clicking on RSS link on their site and getting raw XML display -
+that's a bad user experience, and up until very very recently no
+browser ha handled RSS internally. The argument for pretty printing
+the BBC document anyway is that they supply their stylesheet only to
+work around limitation of certain UAs, so since we are not limited we
+should treat theirs a a fallback. The counter argument is that they
+specified it, so it should win. This is a debate that need to be
+explored by web platform, RSS and UE people.
+
+2 - if we decide to force pretty print the BBC feed (as Safari does),
+or if we don't but we need to adjust the browser UI elsewhere to show
+"Add Live Bookmark" instead of "Add Bookmark", for example - we need
+the original, untransformed document so we can detect that the
+document is a feed, not just some random HTML document (which is what
+the BBC feed end up looking like to the browser code once it come
+out).
+
+I've talked to Axel about this one and he suggests maybe exposing some
+property on DOMDocument that Microsoft offer - document.XMLDocument
+and document.XSLDocument - the document is the transformed dom, the
+XMLDocument is the original DOM, and the XSLDocument is the stylesheet
+document. Axel also belief though that the notion of registering a
+pretty print stylesheet for a particular doc type should be part of
+Gecko... I don't believe that the XSL we use should be part of Gecko
+since it make reference to Firefox specific thing like live
+bookmarks, but the detection logic that selects feedview.xsl (or
+camino-rss.xsl, etc) should be.
+
+- HTML tag show up in the feed entries. The old code dealt with this
+I am going to imagine by stripping the content of < > in all the
+article text. This might be enough, but some people were complaining
+that richer markup (tables, list etc) weren't being properly handled.
+Images were special cased. The HTML that show up in entry is often
+edited by hand by blogger and a such cannot be relied upon to be
+well formed XML - thus these block are often contained in <![CDATA[
+]]> sections. The fix here is (may be?) to assume that the content of
+the entry/excerpt field are quirk HTML (is there a way to detect
+otherwise?), and parse a fragments, constructing a DOM for the text
+content of an article and replacing the text content with it, then
+using <xsl:copy-of /> to copy the DOM node over to the target
+document. The problem is there's no easy way to parse a HTML fragment
+from a string, there are roundabout, hacky ways, but none I would feel
+comfortable submitting for code review.
+
+For example, typically one construct a DOM for a fragment string like so:
+
+var range = document.createRange();
+var fragment = range.createContextualFragment("some arbitrary tag soup");
+rssEntryElement.replaceChild(rssEntryElement.firstChild, fragment);
+
+The problem is, for the tag soup to be parsed a quirk HTML, we need
+the range to be created in the context of a HTML document, and since
+quirk HTML ha no namespace, we can't create one with
+document.implementation.createDocument().
+
+Instead, we have to do something far hackier, e.g.
+
+var htmlDocument =
+Components.classesByID["{5d0fcdd0-4daa-11d2-b328-00805f8a3859}"].
+createInstance(Components.interfaces.nsIDOMHTMLDocument);
+
+... but before we can call createContextualFragment using a range
+established in this document, we need to set the document's content
+type to text/html. This is a problem - nsIDOMNSHTMLDocument provides
+only readonly access to the contentType field. The only way to set the
+contentType property of the newly created document is to call |open|
+on it and set the type. The problem then is that |open| fails
+miserably if the HTML document doe not have a docshell associated
+with it (and it doesn't - it's just a hidden document that we're using
+to create a context within which to parse HTML). So we have to do
+something like this:
+
+try {
+htmlDocument.open("text/html", false);
+}
+catch (e) { }
+
+...and basically rely on the fact that the |open| implementation set
+it content type up before getting to the point where it fails and
+throw an exception. Brittle, hacky.
+
+Alternatively, one could create a hidden <iframe> and load a HTML
+document in it and use that a a context, but creating hidden
+<iframe>s when this is just something we should be able to expect to
+get from Gecko ("parse this string into a DOM from quirk HTML!") is a
+huge hack too.
+
+...
+
+This bug cover backing out the FeedView feature, but retaining the RSS link in
+the location bar, functioning similarly to a it did with Firefox 1.0 but with
+better autodetection logic, so that it can be more discoverable.

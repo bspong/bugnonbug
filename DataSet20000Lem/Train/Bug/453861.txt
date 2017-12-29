@@ -1,0 +1,40 @@
+Alert lock up/ freeze FF3 Mac when called from JSObject
+User-Agent: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.5; en-US; rv:1.9.0.1) Gecko/2008070206 Firefox/3.0.1
+Build Identifier: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.5; en-US; rv:1.9.0.1) Gecko/2008070206 Firefox/3.0.1
+
+I don't have a fantastic test case here and I am working on closed source java applet, so I am sorry for the lack of detail, but I will do my best.
+
+I am embedding a java applet via an innerHTML call, that us cascading <object> tag for different browser with conditional comment tag for IE.
+
+On the first applet load, I wanted to notify JS that the applet had loaded so in the applet's start() function I call a function that call JSObject. The javascript object i am calling Jula (java uploader lite applet) is supposed to act like a j abstract class that handle the communication from the applet.
+
+so in the applet i have the following code:
+
+JSObject Jula = (JSObject) JSObject.getWindow(applet).getMember("Jula");
+System.out.println("Jula ==> " + Jula);
+Jula.call("appletLoaded", new Object[] {"a note from the applet"});
+
+and in the j i have:
+
+var Jula = function(){};
+Jula.appletLoaded = function(Applet) {
+/*called once the applet is loaded and j can act on it.
+
+*/
+alert("a note from javascript because of java");
+};
+
+On the first load of the applet, the applet check to see if it ha permission to use the file browser so a trust dialog pop up, this trust response is different on the mac than on the PC( because apple implement their own JRE, and it is currently pinned at java 1.5 where a my window machine is at 1.6u7/10). After the trust dialog is accepted the JS function Jula.appletLoaded() is called, and the alert fire the event fire the first time just fine. However if i replace the innerHTML and reload the applet, the applet is already trusted, and the Jula.appletLoaded() is fired with just slightly different timing or state. So when Jula.appletLoaded() call the JS alert() function, the browser now freezes.
+
+If i replace the alert() call inside of Jula.appletLoaded() with if(console){console.log("some text");} the browser doe not freeze under the same circumstances.
+
+This happens very constantly, but since it only effect alert I can continue working around it for now.
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.
+2.
+3.

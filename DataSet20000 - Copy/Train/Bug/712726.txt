@@ -1,0 +1,65 @@
+crash mozjs (Correlation to Yandex Bar)
+This bug was filed from the Socorro interface and is 
+report bp-d3da657c-8dfe-47c9-a9d8-7b8472111221 .
+============================================================= 
+
+Looking at early 9.0 data, this crash ranks as #24 top crash and is Windows only. https://crash-stats.mozilla.com/report/list?signature=mozjs.dll@0x1f7768- It has been present in earlier betas and we have other bugs associated with Yandex bar but filing a bug to get this on the radar so it shows up in crash stats.
+
+Correlation Data;
+
+mozjs.dll@0x1f7788|EXCEPTION_ACCESS_VIOLATION_READ (18 crashes)
+    100% (18/18) vs.   4% (1498/33460) yasearch@yandex.ru (Yandex.Bar, https://addons.mozilla.org/addon/3495)
+     17% (3/18) vs.   2% (681/33460) {DDC359D1-844A-42a7-9AA1-88A850A938A8} (DownThemAll!, https://addons.mozilla.org/addon/201)
+     11% (2/18) vs.   0% (39/33460) {c0c588b6-b11d-4898-af00-079fed05aa32}
+     11% (2/18) vs.   2% (660/33460) {1018e4d6-728f-4b20-ad56-37578a4de76b} (Flagfox, https://addons.mozilla.org/addon/5791)
+      6% (1/18) vs.   0% (25/33460) {7b90e860-5d61-11e0-80e3-0800200c9a66}
+      6% (1/18) vs.   0% (25/33460) clickclean@hotcleaner.com (Click&Clean, https://addons.mozilla.org/addon/3100)
+      6% (1/18) vs.   0% (44/33460) multipletab@piro.sakura.ne.jp (Multiple Tab Handler, https://addons.mozilla.org/addon/4838)
+      6% (1/18) vs.   0% (85/33460) togglepersona@davidvincent.tld
+      6% (1/18) vs.   0% (87/33460) NoiaFoxoption@davidvincent.tld
+      6% (1/18) vs.   0% (113/33460) Noia4Options@ArisT2
+
+mozjs.dll@0x1f7768|EXCEPTION_ACCESS_VIOLATION_EXEC (28 crashes)
+     96% (27/28) vs.   4% (1498/33460) yasearch@yandex.ru (Yandex.Bar, https://addons.mozilla.org/addon/3495)
+     21% (6/28) vs.   4% (1187/33460) {37964A3C-4EE8-47b1-8321-34DE2C39BA4D}
+     14% (4/28) vs.   1% (235/33460) dmpluginff@westbyte.com
+     14% (4/28) vs.   2% (660/33460) {1018e4d6-728f-4b20-ad56-37578a4de76b} (Flagfox, https://addons.mozilla.org/addon/5791)
+     11% (3/28) vs.   1% (226/33460) dmremote@westbyte.com
+     18% (5/28) vs.  11% (3740/33460) {d10d0bf8-f5b5-c8b4-a8b2-2b9879e08c5d} (Adblock Plus, https://addons.mozilla.org/addon/1865)
+      7% (2/28) vs.   0% (161/33460) vk@sergeykolosov.mp
+      7% (2/28) vs.   1% (186/33460) dmbarff@westbyte.com
+     11% (3/28) vs.   5% (1577/33460) toolbar@ask.com
+      7% (2/28) vs.   1% (470/33460) {9AA46F4F-4DC7-4c06-97AF-5035170634FE} (ImTranslator, https://addons.mozilla.org/addon/2257)
+
+
+https://crash-stats.mozilla.com/report/index/d3da657c-8dfe-47c9-a9d8-7b8472111221
+
+Frame 	Module 	Signature [Expand] 	Source
+0 	mozjs.dll 	mozjs.dll@0x1f7768 	
+1 	mozjs.dll 	js::gc::Arena::finalize<JSObject> 	js/src/jsgc.cpp:301
+2 	mozjs.dll 	js::gc::FinalizeTypedArenas<JSObject> 	js/src/jsgc.cpp:348
+3 	mozjs.dll 	js::gc::ArenaLists::finalizeObjects 	js/src/jsgc.cpp:1391
+4 	mozjs.dll 	SweepPhase 	js/src/jsgc.cpp:2320
+5 	mozjs.dll 	MarkAndSweep 	js/src/jsgc.cpp:2406
+6 	mozjs.dll 	GCCycle 	js/src/jsgc.cpp:2649
+7 	mozjs.dll 	js_GC 	js/src/jsgc.cpp:2735
+8 	mozjs.dll 	JS_CompartmentGC 	js/src/jsapi.cpp:2616
+9 	mozjs.dll 	JS_GC 	js/src/jsapi.cpp:2623
+10 	xul.dll 	nsXPConnect::Collect 	js/src/xpconnect/src/nsXPConnect.cpp:415
+11 	xul.dll 	nsCycleCollector::GCIfNeeded 	xpcom/base/nsCycleCollector.cpp:2615
+12 	xul.dll 	nsCycleCollector::Collect 	xpcom/base/nsCycleCollector.cpp:2696
+13 	xul.dll 	nsCycleCollector::Shutdown 	xpcom/base/nsCycleCollector.cpp:2915
+14 	xul.dll 	nsCycleCollector_shutdown 	xpcom/base/nsCycleCollector.cpp:3630
+15 	xul.dll 	mozilla::ShutdownXPCOM 	xpcom/build/nsXPComInit.cpp:659
+16 	xul.dll 	ScopedXPCOMStartup::~ScopedXPCOMStartup 	toolkit/xre/nsAppRunner.cpp:1084
+17 	xul.dll 	XRE_main 	toolkit/xre/nsAppRunner.cpp:3587
+18 	firefox.exe 	wmain 	toolkit/xre/nsWindowsWMain.cpp:107
+19 	firefox.exe 	firefox.exe@0x4033 	
+20 	firefox.exe 	__tmainCRTStartup 	crtexe.c:594
+21 	ntdll.dll 	ZwQueryTimerResolution 	
+22 	firefox.exe 	_SEH_epilog4 	
+23 	kernel32.dll 	BaseProcessStart 	
+24 	ntdll.dll 	ZwQueryTimerResolution 	
+25 	kernel32.dll 	GetCodePageFileInfo 	
+26 	kernel32.dll 	BaseProcessStart 	
+27 	firefox.exe 	pre_c_init 	crtexe.c:304

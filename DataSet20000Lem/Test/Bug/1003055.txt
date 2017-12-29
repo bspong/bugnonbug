@@ -1,0 +1,36 @@
+"Connection closed" error when tab or toolbox is closed
+STR:
+- Open the inspector on about:home
+- Close the tab (not just the toolbox)
+--> The following error is displayed in the logs:
+
+console.error:
+Message: Error: Connection closed
+Stack:
+Front<.destroy@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/protocol.js:1041:7
+exports.WalkerFront<.destroy@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/actors/inspector.js:2103:5
+frontProto/</proto[name]/<@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/protocol.js:1223:11
+resolve@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/deprecated-sync-thenables.js:40:11
+then@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/deprecated-sync-thenables.js:20:43
+resolve@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/deprecated-sync-thenables.js:72:11
+resolve@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/deprecated-sync-thenables.js:40:11
+then@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/deprecated-sync-thenables.js:20:43
+resolve@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/deprecated-sync-thenables.js:72:11
+resolve@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/deprecated-sync-thenables.js:40:11
+then@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/deprecated-sync-thenables.js:20:43
+resolve@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/deprecated-sync-thenables.js:72:11
+Front<.onPacket@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/protocol.js:1112:7
+DebuggerClient.prototype.onPacket/<@resource://gre/modules/devtools/dbg-client.jsm:693:9
+resolve@resource://gre/modules/devtools/deprecated-sync-thenables.js:40:11
+then@resource://gre/modules/devtools/deprecated-sync-thenables.js:20:43
+then@resource://gre/modules/devtools/deprecated-sync-thenables.js:58:9
+DebuggerClient.prototype.onPacket@resource://gre/modules/devtools/dbg-client.jsm:735:1
+LDT_send/<@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/transport.js:279:11
+makeInfallible/<@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/DevToolsUtils.js:84:7
+
+As far a I wa able to investigate, here is what's going on:
+
+- some page mutate markup when the tab is closed, in the case of about:home, there's an attribute that's removed or added on <html>
+- this make the WalkerActor fire a "new-mutations" event right when the toolbox is being closed and the server being shutdown and actor disconnected
+- the WalkerFront defines a preEvent custom method which is executed when the event is received on the front. It us this to, in turn, send a request to the actor: getMutations
+- protocol.js reject this request because it is destroying the front.

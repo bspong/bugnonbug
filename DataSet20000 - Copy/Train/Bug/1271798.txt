@@ -1,0 +1,26 @@
+Decide on what to do about edgecases when "undo-ing" the automatic startup import based on timestamps / "clear recent history"
+Depends on bug 1271774 because that determines what datatypes we import. My initial suggestion from that bug was:
+
+> I would suggest that we should import only form data, passwords, history and bookmarks. 
+
+Depending on those datatypes, there are a few issues:
+
+1) data we import might be timestamped in the future because either the importer doesn't get the import right or the data is genuinely busted. At the moment, none of our importers make any guarantees about this.
+Proposed "solutions":
+a) add sanity-checks everywhere. Not a fan of this.
+b) garbage in, garbage out. Too bad, some of the imported stuff might hang about.
+
+2) not all the data can be erased on a timestamp basis. Data where we *can* do this:
+- bookmarks
+- history
+- form data
+- cookies
+
+We can't do this for settings and "other data".
+
+We don't currently have an implementation to do this for passwords on a date range basis, AFAICT, but the data is there so this is in principle possible, I think, assuming we correctly persist some kind of creation time for passwords (we'd need to doublecheck the individual migrators for this - see also the 'sanity checks' point under (1)).
+
+3) because of clock resets or us just not keeping timestamps for the data at all (see (2)), the data could become "contaminated" with "new" user data from the time that the user has used Firefox. This is the inverse of (1). Options for solving this:
+a) add some kind of flag to all this data. This would also address (1). It'd be a lot of effort for minimal gain, though.
+b) expire the option to "undo" after some time (1 week? 1 month? 24 hours of the browser actually running? (how would we measure that and not count time the computer has spent asleep... don't think we have a way of doing that right now, but I could be wrong)).
+c) future/wontfix. Unfortunate, but we could just "do nothing" and it would work out in most cases.

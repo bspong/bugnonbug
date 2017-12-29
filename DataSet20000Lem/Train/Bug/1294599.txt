@@ -1,0 +1,14 @@
+Desktop should download and apply Sync record in batch
+Via bug 1294270 we observe the following behaviour:
+
+* desktop make a request to read an entire collection (ie, full=1) without a limit param.
+* As the data stream in we apply the record one at a time.
+* After 10 minute or so (eg, a few thousand password being applied) the server close the connection while the client is still happily applying them and reading the next chunk.
+* Client see NS_ERROR_NET_PARTIAL_TRANSFER, doesn't advance lastSync.
+* Next sync doe exactly the same thing, repeat ad-nauseum.
+
+Bug 1294595 exists to increase the timeout on the server, and while this will probably unstick many users, there will always be pathological outliers.
+
+It seems a simple (hah!) mitigation here is for Sync to use a hard-coded limit and X-Weave-Next-Offset header to split the fetch into multiple requests. I'm not sure if this will need to be in combination with x-if-unmodified-since (forcing u to restart if another client wrote), and the implementation will be slightly complicated by the fact that we support some collection (eg, history) imposing a limit simply because it doesn't want every record.
+
+I can't find a bug on file for this. Richard, any thoughts?

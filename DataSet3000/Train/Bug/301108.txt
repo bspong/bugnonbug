@@ -1,0 +1,86 @@
+Release an "objdir SDK".
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; fr; rv:1.7.8) Gecko/20050517 Firefox/1.0.4 (Debian package 1.0.4-2)
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; fr; rv:1.7.8) Gecko/20050517 Firefox/1.0.4 (Debian package 1.0.4-2)
+
+At the moment, the official method for compiling extensions which provide native
+components is the following :
+1a. write one or more Makefile.in for compilation, with little documentation
+2a. write one or more jar.mn for creation of jar archives
+3a. write one or more Makefile.in for creation of an xpi, with little
+documentation, using relatively obscure perl scripts which do not seem to work
+with relative directories
+4a. compile your whole Mozilla/Firefox tree (a few hours if you have the correct
+setup, a few additional hours if you have something close, absolutely impossible
+if you don't -- see mozillazine's forums)
+5a. fix bugs of steps 1a.
+6a. return to step 4a. (repeat until step 1a seems to work)
+7a. make distclean to be certain that the corrections are sufficient and do not
+rely on unexpected dependencies (ten minutes ?)
+8a. return to step 4a. (repeat until you are certain that it works)
+9a. run your installer
+10a. fix bugs of step 2a.
+11a. run the build system again to make sure that your corrections to
+Makefile.in are propagated to the Makefile (a few minutes)
+12a. return to step 9a. (repeat until you are certain that it works)
+13a. make distclean
+14a. return to step 4a. (repeat until you are satisfied that it works with all
+combinations of --enable-static, --disable-static, --enable-shared,
+--disable-shared, objdir, ...)
+15a. move to a different platform
+16a. return to step 4a.
+
+This process is quite tedious, in particular the compilation of Firefox itself
+and the fact that debugging Makefiles requires long waits.
+
+A non-standard-but-easier method for compiling an extension is the following :
+1b. write a custom Makefile (possibly including autotools), which takes
+advantage of the compiled $(MOZ_OBJDIR) and mozilla-config/firefox-config to
+find the necessary headers/interfaces/libraries, compiles the extension and
+delivers a finished .xpi
+2b. compile Mozilla/Firefox as in the previous step 4.
+3b. execute makefile (a few seconds, perhaps a few minutes).
+4b. fix bugs of step 1b.
+5b. return to 3b. (repeat until it works)
+6b. move to a different platform
+7b. return to 2b.
+
+Note that mozilla-config and/or firefox-config may not work if the
+Firefox/Mozilla has not been fully installed. However, even when emulating the
+work of *-config, this process is easier than the default method.
+
+A third method is possible under most Linux distributions, as well as Mac OS X +
+Fink.
+
+1c. install the mozilla-dev or mozilla-devel or firefox-dev or firefox-devel package
+2c-7c. as 2b-7b
+
+These packages guarantee that mozilla-config or firefox-config will work and
+save the hassle of compiling a whole mozilla distribution on each platform for
+every single possible configuration.
+
+I believe that these packages actually contain the $(MOZ_OBJDIR)/dist/include
+and $(MOZ_OBJDIR)/dist/bin directories of a distribution of mozilla/firefox
+built with standard options.
+
+From personal experience :
+* all extension developers who tried method a. gave up (that's a dozen)
+* all extension developers who tried method c. found it a breeze and continued
+working without even realizing that there was anything complex involved (that's
+half a dozen).
+
+
+My suggestion : make this mozilla-dev package "standard", i.e. whenever a new
+distribution of Mozilla/Firefox is uploaded to the official ftps, also upload a
+tarball containing the objdir, plus a small installer to set up mozilla-config.
+
+
+Note : the actual list of files of a developer SDK is available at
+http://packages.debian.org/cgi-bin/search_contents.pl?searchmode=filelist&word=mozilla-dev&version=unstable&arch=i386
+
+Other note: this bug is a follow-up of a previous RFE (
+https://bugzilla.mozilla.org/show_bug.cgi?id=281386 ). I submit this new report
+with the benefit of several additional months working with Mozilla, building a
+cross-platform native extension, and trying to get up to speed a number of C++
+developers interested by XPCom extension development.
+
+Reproducible: Always

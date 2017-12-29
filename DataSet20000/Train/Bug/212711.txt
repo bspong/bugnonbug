@@ -1,0 +1,44 @@
+Quotes ("", '') in separator name causes Firefox to freeze on restart
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.5a) Gecko/20030630 Mozilla Firebird/0.6
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.5a) Gecko/20030630 Mozilla Firebird/0.6
+
+Firebird allows you to name seperators (e.g., &lt;HR NAME="Open
+Documentation"&gt; )  You're allowed to use quotation marks in the name, which
+malforms the markup.  Any new Firebird instances will freeze when trying to load
+the bookmark file.  The quotations must be removed with a text editor.  Also,
+use of &lt;HR NAME='"Open Documentation"'&gt; or the inverse does not get around
+the problem as it should.
+
+This problem doesn't exist with directories or bookmarks because the "title" is
+not an HTML attribute in those cases--it's content.  Entities aren't allowed in
+the NAME or ID attribute in HTML, and aren't processed in the bookmark file
+despite it being invalid HTML.  Striping the quotes will produce an
+unexepcted/inconsistent behavior for the user.
+
+Instead of &lt;HR&gt;, using &lt;legend&gt; and/or &lt;fieldset&gt; might be an
+alternative.
+
+I think the HTML dictionary-list-bookmark-file cludge is wearing just a wee bit
+thin.  It might be about time to either define a solid XML bookmark format,
+and/or seperate files for bookmarks (the later of which is unrelated to this bug).
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Open the Firebird bookmark manager.
+2. Create a seperator
+3. Right-click -> Properties, name it something with quotes like "The War" (with
+quotes).
+4. Close Firebird and relaunch.  Firebird should freeze.
+Strangely, Firebird will freeze after the "Make Firebird your default browser"
+dialog has been clicked through, not before.
+
+(5.) Recovery: Open your bookmarks.html and find the seperator, delete and/or
+remove extra quotation marks from name.
+
+Actual Results:  
+Freeze with near 100% CPU usage.
+
+Expected Results:  
+not freeze :P  I think it should detect a parse error and attempt to correct the
+mark-up.

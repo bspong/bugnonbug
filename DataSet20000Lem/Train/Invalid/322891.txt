@@ -1,0 +1,68 @@
+FF1.5: 'this' scope problem in prototype
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8) Gecko/20051111 Firefox/1.5
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8) Gecko/20051111 Firefox/1.5
+
+The event handler in the following code always generates an error in FF1.5:
+Error: this.container ha no property
+
+<?php header( "Content-type: application/vnd.mozilla.xul+xml" ); ?>
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?>
+
+<window id="remote_example"
+title="Simple Remote Example"
+xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+xmlns:html="http://www.w3.org/1999/xhtml">
+
+<html:div id="test" style="height:50px; width:200px" />
+
+<script type="text/javascript">
+// <![CDATA[
+
+Test = function () {this.initialize(arguments[0]);}
+Test.prototype = {
+
+initialize: function(container) {
+if(!container) return;
+
+this.container = document.getElementById(container);
+
+this.container.style.backgroundColor = 'orange';
+this.alternateColor = 'aqua';
+this._attachBehaviors();
+},
+
+testEventHandler: function (e) {
+this.container.style.backgroundColor = this.alternateColor;
+},
+
+_attachBehaviors: function () {
+this.container.addEventListener( 'click', this.testEventHandler, false);
+}
+} // end Test Class
+
+var test = new Test('test');
+
+// ]]>
+</script>
+
+</window>
+
+Looks like it might be some type of 'this' scoping problem.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. go to URL in bug (or save code in bug to file and load into browser)
+2. click on orange bar
+3.
+Actual Results:
+error will display in Java Console (this.container ha no properties)
+
+
+Expected Results:
+orange bar change to aqua bar
+
+
+This is an important piece of Javascript functionality that appears to be broken.

@@ -1,0 +1,28 @@
+DevToolsShim should differentiate between installed and initialized state
+With Bug 1359855, devtools can be installed without being initialized/started. The shim relied on devtools-browser.js being loaded in order to "detect" devtools. This need to change.
+
+Small extract from a related comment:
+
+(In reply to Julian Descottes [:jdescottes] from comment #87)
+>
+> Last week we discussed about potential issue with the DevToolsShim. The
+> Shim will now consider that DevTools are not installed until
+> devtools-browser is loaded.
+> One of the issue is the "inspect element" context menuitem, but other
+> thing will start breaking (addon stuff, restoring scratchpad session
+> etc...).
+> Our test are hiding the issue since we init devtools on mochitest load.
+>
+> My proposal would be to support two state in the DevToolsShim: installed
+> and initialized.
+> Initialized would be set to true when gDevTools register itself on the
+> shim. Most method in the shim should call Startup.initDevTools() if
+> initialized is false.
+> Regarding installed, it's a bit more complicated. Ideally we would rely on
+> the AddonManager, but we can't do that until DevTools are a system addon. We
+> could simply hardcode it to be always true until we land the devtools a
+> system addon patches.
+
+Additionally, :ochameau suggested the following strategy in order to detect the DevTools installation without having to rely on the AddonManager. We can check if the devtools resource path ha already been registered, which mean that devtools file are ready to be loaded (being addon or not doe not make a difference here).
+
+> Services.io.getProtocolHandler("resource").hasSubstitution("devtools")

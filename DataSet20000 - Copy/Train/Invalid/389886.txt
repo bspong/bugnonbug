@@ -1,0 +1,35 @@
+Changing div.style.display within onblur breaks onclick event
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.5) Gecko/20070713 (CK-IBM) Firefox/2.0.0.5
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.5) Gecko/20070713 (CK-IBM) Firefox/2.0.0.5
+
+I have three HTML elements: an <input type="text"> with an onblur handler, a <div> with an onclick handler, and an element whose display type I want to toggle using CSS.
+
+With the input box selected I click the div.  I should see the input's onblur followed by the div's onclick.  Firefox lose the onclick event if the onblur handler modifies elementToggleDisplay.style.display.
+
+Reproduced on FF 2 and latest FF 3 nightly with a clean profile.
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Visit http://javascript.pastebin.com/f226c9383 and download the content.  Save it to a local HTML file.
+2. Open the file.
+3. Blur the text box a few times and convince yourself that the onblur handler both toggles a <div>'s visibility and writes a debug message.
+4. Click the "Click me" section a few times to convince yourself that the onclick handler writes a message when it fires.
+5. Reload the page to clear the debug messages.
+6. Focus on the input box.
+7. Click on "Click me" to cause an onblur followed by an onclick.
+Actual Results:  
+Actual results are that the onblur fires (the content appears/disappears) but no onclick event fires afterwards.
+
+Expected Results:  
+Expect that both the blurred and clicked debug messages appear.
+
+Removing the .style.display toggling code (highlighted in pastebin) and repeating the recreate gives the desired results.
+
+Having the toggled element below the "Click me" link makes this work.
+
+It seems that reflowing the HTML content above "Click me" makes Firefox forget the onclick event.
+
+Originally filed with dojo as http://trac.dojotoolkit.org/ticket/3871

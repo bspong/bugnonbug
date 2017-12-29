@@ -1,0 +1,52 @@
+Out of memory crash
+User Agent: Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/29.0.1547.76 Safari/537.36
+
+Steps to reproduce:
+
+Sorry, can't say exactly, I've run Firefox with two windows, normal and privacy.
+But in normal mode it made already some graphic-errors when painting.
+Some region were black.
+But crash, it seems, wa in privacy window.
+
+
+
+
+Actual results:
+
+Crash. I have a no idea how to reproduce. But it seems it is a memory problem.
+
+
+Memory at top-level-stack:
++ msg 0x19d3f984 "out of memory: 0x0000000000394F98 byte requested" const char * const
+
+Here is memory dump "firefox-memory-error.dmp.xz" (290.3 MB) compressed via 7zip:
+https://mega.co.nz/#!3Rk01IjI!C70yoDKvWX93B8OO8Dc6zzQXz1VnzySDO5rkHvxH14k
+
+And here the stack-trace:
+
+mozalloc.dll!mozalloc_abort(const char * const msg=0x19d3f984) Line 30 C++
+> mozalloc.dll!mozalloc_handle_oom(unsigned int size=3755928) Line 50 + 0x9 byte C++
+mozalloc.dll!moz_xmalloc(unsigned int size=3755928) Line 56 + 0x6 byte C++
+xul.dll!nsTArray_base<nsTArrayInfallibleAllocator,nsTArray_CopyElements<nsWeakFrame> >::EnsureCapacity(unsigned int capacity=0, unsigned int elemSize=433322484) Line 119 + 0x15 byte C++
+xul.dll!nsTArray_Impl<mozilla::safebrowsing::AddPrefix,nsTArrayInfallibleAllocator>::SetCapacity(unsigned int capacity=469490) Line 1331 C++
+xul.dll!mozilla::safebrowsing::HashStore::ReadAddPrefixes() Line 712 C++
+xul.dll!mozilla::safebrowsing::HashStore::ReadHashes() Line 394 C++
+xul.dll!mozilla::safebrowsing::HashStore::BeginUpdate() Line 413 C++
+mozglue.dll!arena_dalloc(void * ptr=0x28af0c40, unsigned int offset=0) Line 4680 C
+mozglue.dll!je_free(void * ptr=0x00000000) Line 6601 C
+mozglue.dll!arena_dalloc(void * ptr=0x056ee740, unsigned int offset=0) Line 4680 C
+xul.dll!nsRunnableMethodImpl<enum tag_nsresult (__stdcall nsIUrlClassifierDBService::*)(void),1>::Run() Line 351 C++
+xul.dll!nsThread::ProcessNextEvent(bool mayWait=true, bool * result=0x19d3fb74) Line 632 C++
+xul.dll!nsThread::ThreadFunc(void * arg=0x1c1d0c10) Line 264 + 0x1d byte C++
+nss3.dll!pr_root(void * arg=0x1c1d0c10) Line 90 + 0xd byte C
+msvcr100.dll!_callthreadstartex() Line 314 + 0x6 byte C
+msvcr100.dll!_threadstartex(void * ptd=0x00684c28) Line 292 + 0x5 byte C
+kernel32.dll!@BaseThreadInitThunk@12() + 0x12 byte
+ntdll.dll!___RtlUserThreadStart@8() + 0x27 byte
+ntdll.dll!__RtlUserThreadStart@8() + 0x1b byte
+
+
+
+Expected results:
+
+no memory error, no crash

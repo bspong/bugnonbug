@@ -1,0 +1,27 @@
+XmlHttpRequest within setTimeout can sometimes cause freezes
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.1) Gecko/20090624 Firefox/3.5 (.NET CLR 3.5.30729)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.1) Gecko/20090624 Firefox/3.5 (.NET CLR 3.5.30729)
+
+We have an AJAX-type application that contains many synchronous XmlHttpRequest calls.  Many of these calls are utilized within a wrapper function that first shows a progress bar, then uses a setTimeout to invoke the worker function itself which makes the XmlHttpRequest call.
+
+Occasionally this code will cause firefox to stop execution of all javascript on the page and not go any further.  I'm pretty sure its the setTimeout pattern because when this is removed the problem doesn't repro.
+
+There are no errors being reported in the javascript console, and usually a refresh or two and the problem will go away.
+
+In 8 hours of use per day with our application this occurs appx 10 times (just to give you an idea as to how frequent it is.
+
+My guess to repro would be to write a frames-based application that has a setTimeout pattern where the function invoked by setTimeout calls XmlHttpRequest and do this in more than one frame of the frameset and you may be able to see this after awhile.
+
+It happens more often on my quad-core then it does for the rest of my team members with dual core, so it may be some kind of threading issue?
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+My guess to repro would be to write a frames-based application that has a setTimeout pattern where the function invoked by setTimeout calls XmlHttpRequest and do this in more than one frame of the frameset and you may be able to see this after awhile.
+
+It happens more often on my quad-core then it does for the rest of my team members with dual core, so it may be some kind of threading issue?
+Actual Results:  
+javascript stops execution
+
+Expected Results:  
+javascript should continue executing, but it looks like its waiting for something...  Deadlock?  Race condition?  Feels multithreaded to me anyway, but what do I know?

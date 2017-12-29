@@ -1,0 +1,33 @@
+[app manager] Closing remote browser tab crashes remote browser tabs list render in App Manager
+User Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/33.0.1750.146 Safari/537.36
+
+Steps to reproduce:
+
+In https://bugzilla.mozilla.org/show_bug.cgi?id=912900, we implemented showing remote browser tabs in App Manager to allow remote debugging. However, when we close a tab in the remote browser, App Manager fails to re render the updated list of remote tabs.
+
+Steps to reproduce:
+1. Connect your android phone with Firefox to your computer.
+2. Connect App Manager to your android phone's Firefox browser.
+3. Switch to "Browser tabs" tab to see the list of open tabs in your remote browser.
+4. Close a tab in your Android phone's Firefox. App Manager will fail to re render the updated list of remote tabs and will get disconnected.
+
+
+Actual results:
+
+Following logs were captured in the console during the above event:
+
+[89146] WARNING: NS_ENSURE_SUCCESS(rv, rv) failed with result 0x80040111: file /Users/rtnpro/Mozilla/devtools/fx-team/dom/events/nsContentEventHandler.cpp, line 96
+DBG-CLIENT: Got: {
+  "from": "root",
+  "type": "tabListChanged"
+}
+DBG-CLIENT: Got: {
+  "error": "unknownError",
+  "message": "error occurred while processing 'listTabs: TypeError: this.window is undefined\nStack: BTA_form@resource://gre/modules/devtools/dbg-server.jsm -> resource://gre/modules/devtools/server/main.js -> resource://gre/modules/devtools/server/actors/webbrowser.js:590\n@resource://gre/modules/devtools/dbg-server.jsm -> resource://gre/modules/devtools/server/main.js -> resource://gre/modules/devtools/server/actors/root.js:271\nresolve@resource://gre/modules/commonjs/sdk/core/promise.js:118\nthen@resource://gre/modules/commonjs/sdk/core/promise.js:43\nthen@resource://gre/modules/commonjs/sdk/core/promise.js:153\n@resource://gre/modules/devtools/dbg-server.jsm -> resource://gre/modules/devtools/server/main.js -> resource://gre/modules/devtools/server/actors/root.js:245\nDSC_onPacket@resource://gre/modules/devtools/dbg-server.jsm -> resource://gre/modules/devtools/server/main.js:1019\n@resource://gre/modules/devtools/dbg-server.jsm -> resource://gre/modules/devtools/server/main.js -> resource://gre/modules/devtools/server/transport.js:201\n@resource://gre/modules/devtools/dbg-server.jsm -> resource://gre/modules/devtools/server/main.js -> resource://gre/modules/devtools/DevToolsUtils.js:75\n",
+  "from": "root"
+}
+
+
+Expected results:
+
+The list of remote tabs should have been updated and should have kept working.

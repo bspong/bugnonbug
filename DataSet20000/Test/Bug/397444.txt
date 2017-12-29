@@ -1,0 +1,232 @@
+Firefox demonstrates incorrect render on table cells and mouse-moved element
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.8.1.7) Gecko/20070914 Firefox/2.0.0.7
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.8.1.7) Gecko/20070914 Firefox/2.0.0.7
+
+I hope you guys don't mind me filing two bugs in the same report. I did it because the code is pratically the same.
+
+The first part is a bug when rendering a moving div under certain conditions (ie. if you remove the CSS the bug won't manifest). When moving the div (as described in the steps reproduction section) you will notice that the text leaves a trail.
+
+The second part reports a bug when you set cell style.position attribute to 'absolute' from a table header. At first it's ok (one cell), but if you change this attribute in more than one cell you'll notice that the column headers to its right will start shifting to the left; meaning that the column headers lose their columns (in this sample 'Column 10' is actually in 'Column 7''s place after you press the button.
+//////////////////////////////////////////////////////////////////////////////////
+// Here's the code
+//////////////////////////////////////////////////////////////////////////////////
+<html>
+<head>
+<title></title>
+<style type="text/css" media="all">
+<!--
+.jeX-Box	{cursor: default}
+.jeX-Table-Blue thead td
+{
+background-color: #E6EBF3;
+border					: 1px solid #9EB6CE;
+}
+#site
+{
+position: absolute;
+top			: 100px;
+left		: 100px;
+}
+-->
+</style>
+<script type="text/javascript">
+jeX = function()
+{
+this.create = function(element){return document.createElement(element);}
+this.all = function(id){return document.getElementById(id);}
+this.tags = function(tag){return document.getElementsByTagName(tag);}
+this.isset = function(name, obj){var expression;if (typeof(name) == 'undefined') return false;else if (typeof(obj) != 'undefined') return eval('typeof(obj["' + name + '"])') != 'undefined';else return true;}
+this.addEvent = function(instance, event, callback, capturing){if (instance.addEventListener){if (!jeX.isset(capturing)) capturing = false;instance.addEventListener(event, callback, capturing);}else if (instance.attachEvent) instance.attachEvent('on' + event, callback);else return false;return true;}
+this.removeEvent = function(instance, event, callback, capturing){if (instance.removeEventListener){if (!jeX.isset(capturing)) capturing = false;instance.removeEventListener(event, callback, capturing);}else if (instance.detachEvent) instance.detachEvent('on' + event, callback);else return false;return true;}
+}
+jeX = new jeX;
+jeX.Box = function(attributes)
+{
+this.left = function(){var offset = 0;var ref = this.instance;while (ref.parentNode){offset+= ref.offsetLeft;ref= ref.parentNode;}return offset;}
+this.top = function(){var offset	= 0;var ref			= this.instance;while (ref.parentNode){offset+= ref.offsetTop;ref= ref.parentNode;}return offset;}
+var mousedown;var gc;var ref = this;if (jeX.isset(attributes) && jeX.isset('instance', attributes)){this.instance = attributes.instance;if (jeX.isset('reposition', attributes) && jeX.isset('container', attributes.reposition)){if (!jeX.isset('vertical', attributes.reposition)) attributes.reposition.vertical = true;if (!jeX.isset('horizontal', attributes.reposition)) attributes.reposition.horizontal = true;this.container = new jeX.Box({instance: attributes.reposition.container});mousedown = function(event){var doit;var dropit;var x, y;var offsetX, offsetY;offsetY = ref.container.top();offsetX = ref.container.left();if (event.layerX){offsetX+=event.layerX;offsetY+=event.layerY;}else{offsetX+=event.offsetX;offsetY+=event.offsetY;}doit = function(event){if (event.pageX){x=event.pageX;y=event.pageY}else {x=event.x;y=event.y;}if (!jeX.isset(x)) x = 0;if (!jeX.isset(y)) y = 0;if (attributes.reposition.horizontal&& x > 0) ref.instance.style.left = x - offsetX;if (attributes.reposition.vertical&& y > 0) ref.instance.style.top  = y - offsetY;};dropit = function(){jeX.removeEvent(gc, 'mousemove', doit);jeX.removeEvent(gc, 'mouseup', dropit);};jeX.addEvent(gc, 'mousemove', doit);jeX.addEvent(gc, 'mouseup', dropit);};if (this.instance.addEventListener) gc = window;else gc = jeX.tags('body')[0];jeX.addEvent(this.instance, 'mousedown', mousedown);}}
+}
+</script>
+</head>
+<body id="b">
+<div id="site">
+<table class="jeX-Table-Blue">
+<thead>
+<tr>
+<td id="resizable1">Column 1</td>
+<td id="resizable2">Column 2</td>
+<td id="resizable3">Column 3</td>
+<td id="resizable4">Column 4</td>
+<td id="resizable5">Column 5</td>
+<td id="resizable6">Column 6</td>
+<td id="resizable7">Column 7</td>
+<td id="resizable8">Column 8</td>
+<td>Column 9</td>
+<td>Column 10</td>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>[1][1]</td>
+<td>[1][2]</td>
+<td>[1][3]</td>
+<td>[1][4]</td>
+<td>[1][5]</td>
+<td>[1][6]</td>
+<td>[1][7]</td>
+<td>[1][8]</td>
+<td>[1][9]</td>
+<td>[1][10]</td>
+</tr>
+<tr>
+<td>[2][1]</td>
+<td>[2][2]</td>
+<td>[2][3]</td>
+<td>[2][4]</td>
+<td>[2][5]</td>
+<td>[2][6]</td>
+<td>[2][7]</td>
+<td>[2][8]</td>
+<td>[2][9]</td>
+<td>[2][10]</td>
+</tr>
+<tr>
+<td>[3][1]</td>
+<td>[3][2]</td>
+<td>[3][3]</td>
+<td>[3][4]</td>
+<td>[3][5]</td>
+<td>[3][6]</td>
+<td>[3][7]</td>
+<td>[3][8]</td>
+<td>[3][9]</td>
+<td>[3][10]</td>
+</tr>
+<tr>
+<td>[4][1]</td>
+<td>[4][2]</td>
+<td>[4][3]</td>
+<td>[4][4]</td>
+<td>[4][5]</td>
+<td>[4][6]</td>
+<td>[4][7]</td>
+<td>[4][8]</td>
+<td>[4][9]</td>
+<td>[4][10]</td>
+</tr>
+<tr>
+<td>[5][1]</td>
+<td>[5][2]</td>
+<td>[5][3]</td>
+<td>[5][4]</td>
+<td>[5][5]</td>
+<td>[5][6]</td>
+<td>[5][7]</td>
+<td>[5][8]</td>
+<td>[5][9]</td>
+<td>[5][10]</td>
+</tr>
+<tr>
+<td>[6][1]</td>
+<td>[6][2]</td>
+<td>[6][3]</td>
+<td>[6][4]</td>
+<td>[6][5]</td>
+<td>[6][6]</td>
+<td>[6][7]</td>
+<td>[6][8]</td>
+<td>[6][9]</td>
+<td>[6][10]</td>
+</tr>
+<tr>
+<td>[7][1]</td>
+<td>[7][2]</td>
+<td>[7][3]</td>
+<td>[7][4]</td>
+<td>[7][5]</td>
+<td>[7][6]</td>
+<td>[7][7]</td>
+<td>[7][8]</td>
+<td>[7][9]</td>
+<td><div id="box">Stuff here</div>[7][10]</td>
+</tr>
+<tr>
+<td>[8][1]</td>
+<td>[8][2]</td>
+<td>[8][3]</td>
+<td>[8][4]</td>
+<td>[8][5]</td>
+<td>[8][6]</td>
+<td>[8][7]</td>
+<td>[8][8]</td>
+<td>[8][9]</td>
+<td>[8][10]</td>
+</tr>
+<tr>
+<td>[9][1]</td>
+<td>[9][2]</td>
+<td>[9][3]</td>
+<td>[9][4]</td>
+<td>[9][5]</td>
+<td>[9][6]</td>
+<td>[9][7]</td>
+<td>[9][8]</td>
+<td>[9][9]</td>
+<td>[9][10]</td>
+</tr>
+<tr>
+<td>[10][1]</td>
+<td>[10][2]</td>
+<td>[10][3]</td>
+<td>[10][4]</td>
+<td>[10][5]</td>
+<td>[10][6]</td>
+<td>[10][7]</td>
+<td>[10][8]</td>
+<td>[10][9]</td>
+<td>[10][10]</td>
+</tr>
+</tbody>
+</table>
+<input type="button" value="Change header" onclick="dobug()" />
+<span id="notify"></span>
+<span id="x"></span>
+</div>
+<script type="text/javascript">
+dobug=function()
+{
+	jeX.all('resizable1').style.position = 'absolute';
+	jeX.all('resizable2').style.position = 'absolute';
+	jeX.all('resizable3').style.position = 'absolute';
+	jeX.all('resizable4').style.position = 'absolute';
+	jeX.all('resizable5').style.position = 'absolute';
+}
+jeX.all('box').className = 'jeX-Box';
+jeX.all('box').style.position = 'absolute';
+new jeX.Box({
+instance	: jeX.all('box'),
+reposition:
+{
+className	: 'jeX-Box',
+container	: jeX.all('site'),
+vertical	: true,
+horizontal: true
+}
+});
+</script>
+</body>
+</html>
+//////////////////////////////////////////////////////////////////////////////////
+// End code
+//////////////////////////////////////////////////////////////////////////////////
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Click and hold the text 'Stuff here' in the cell [7][10]
+2. Move the text to the right side of the screen (empty space to the table's right)
+3. Now move it left, the slowest you do it, the most noticable it becomes
+4. Try a few times, it happens most of the times, but not always
+
+5. After that (or before, doesn't really matter) press the button "Change header" and notice how the table header changes.

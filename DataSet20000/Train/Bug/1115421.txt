@@ -1,0 +1,18 @@
+Simplify download annotations handling in the Library
+The Downloads View in the Library does not need to listen to download annotation changes. This consideration greatly simplifies the current code.
+
+Currently, all the annotations are read when the view is created, and they are used when the element shells (even inactive) are created. At that point, any changes to the annotations may only happen because something happened to a Download object, and we already monitor all these changes through the Downloads API.
+
+The fact that everything can work correctly is confirmed by the fact that, despite we apparently listen to nodeAnnotationChanged notifications, they are never fired by Places, even when the call to setPageAnnotation in DownloadsCommon is made. Adding logging to this function shows nothing:
+
+http://mxr.mozilla.org/mozilla-central/source/browser/components/downloads/content/allDownloadsViewOverlay.js#1251
+
+I confirmed that nodeInserted notifications worked correctly instead.
+
+Maybe, the reason is that these notifications are only for bookmarks? It seems they're generated here:
+
+http://mxr.mozilla.org/mozilla-central/source/toolkit/components/places/nsNavHistoryResult.cpp#3659
+
+Regardless, this isn't an issue for us since we don't need to listen to begin with.
+
+I don't believe any add-on writes download annotations directly, but we shouldn't explicitly handle the case where one does, and does not use a Download object at the same time.

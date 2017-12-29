@@ -1,0 +1,54 @@
+New tabs are initially blocked with Electrolysis enabled (TypeError: Cc[aContract] is undefined)
+This is probably not the best category/component for which to file this bug.
+Please change as appropriate.
+
+On FreeBSD (10-stable, maybe other BSDs too) there's a problem with Electrolysis enabled.
+Opening a new tab will always open the tab in the background. Clicking on it won't activate it. The only way to break that lock is by clicking on the currently active tab first. Once that's done, it'll work fine for the rest of the session.
+
+A bigger problem occurs when this is not done. As soon as the user clicks on a link which would normally open in a new tab, Firefox crashes.
+
+Here's a stacktrace for the non-crashing case:
+
+CustomizableUI:TypeError: Cc[aContract] is undefined
+Stack trace:
+XPCU_serviceLambda@resource://gre/modules/XPCOMUtils.jsm:230:7
+XPCU_defineLazyGetter/<.get@resource://gre/modules/XPCOMUtils.jsm:198:21
+_getSwitcher/switcher.addMarker@chrome://browser/content/tabbrowser.xml:3771:1
+_getSwitcher/switcher.startTabSwitch@chrome://browser/content/tabbrowser.xml:3724:15
+_getSwitcher/switcher.requestTab@chrome://browser/content/tabbrowser.xml:3668:15
+set_selectedIndex@chrome://browser/content/tabbrowser.xml:6771:11
+set_selectedPanel@chrome://global/content/bindings/tabbox.xml:687:13
+set_selectedIndex@chrome://global/content/bindings/tabbox.xml:403:15
+set_selectedItem@chrome://global/content/bindings/tabbox.xml:435:34
+set_selectedTab@chrome://global/content/bindings/tabbox.xml:114:15
+set_selectedTab@chrome://browser/content/tabbrowser.xml:2913:11
+loadOneTab@chrome://browser/content/tabbrowser.xml:1504:15
+openLinkIn@chrome://browser/content/utilityOverlay.js:358:5
+openUILinkIn@chrome://browser/content/utilityOverlay.js:196:3
+switchToTabHavingURI@chrome://browser/content/browser.js:7370:7
+openPreferences@chrome://browser/content/utilityOverlay.js:567:16
+preferencesButton.onCommand@resource:///modules/CustomizableWidgets.jsm:1108:7
+CustomizableUIInternal.handleWidgetCommand@resource:///modules/CustomizableUI.jsm:1488:11
+EventListener.handleEvent*CustomizableUIInternal.buildWidget@resource:///modules/CustomizableUI.jsm:1380:7
+CustomizableUIInternal.getWidgetNode@resource:///modules/CustomizableUI.jsm:895:16
+CustomizableUIInternal.buildArea@resource:///modules/CustomizableUI.jsm:721:32
+CustomizableUIInternal.registerMenuPanel@resource:///modules/CustomizableUI.jsm:922:5
+this.CustomizableUI.registerMenuPanel@resource:///modules/CustomizableUI.jsm:3058:5
+PanelUI.ensureReady/this._readyPromise<@chrome://browser/content/customizableui/panelUI.js:268:11
+TaskImpl_run@resource://gre/modules/Task.jsm:319:40
+promise callback*TaskImpl_handleResultValue@resource://gre/modules/Task.jsm:395:7
+TaskImpl_run@resource://gre/modules/Task.jsm:327:13
+TaskImpl@resource://gre/modules/Task.jsm:280:3
+createAsyncFunction/asyncFunction@resource://gre/modules/Task.jsm:254:14
+Task_spawn@resource://gre/modules/Task.jsm:168:12
+PanelUI.ensureReady@chrome://browser/content/customizableui/panelUI.js:228:26
+PanelUI.show/<@chrome://browser/content/customizableui/panelUI.js:129:7
+Promise@resource://gre/modules/Promise.jsm -> resource://gre/modules/Promise-backend.js:388:5
+PanelUI.show@chrome://browser/content/customizableui/panelUI.js:128:12
+PanelUI.toggle@chrome://browser/content/customizableui/panelUI.js:116:7
+PanelUI.handleEvent@chrome://browser/content/customizableui/panelUI.js:200:11
+EventListener.handleEvent*PanelUI.init@chrome://browser/content/customizableui/panelUI.js:51:5
+gBrowserInit._delayedStartup@chrome://browser/content/browser.js:1175:5
+EventListener.handleEvent*gBrowserInit.onLoad@chrome://browser/content/browser.js:1028:5
+onload@chrome://browser/content/browser.xul:1:1
+1CustomizableUI.jsm:1490

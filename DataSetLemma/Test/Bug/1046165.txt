@@ -1,0 +1,141 @@
+Perma-orange LeakSanitizer | leak at mozilla::gmp::GMPParent::LoadProcess, EnsureProcessLoaded, mozilla::gmp::GMPParent::GetGMPVideoEncoder, mozilla::gmp::GeckoMediaPluginService::GetGMPVideoEncoder
+Bug 886570 regressed out ability to detect LSan failures. Bug 1044206 fixed this, however in the meantime we've introduced a regression.
+
+https://tbpl.mozilla.org/php/getParsedLog.php?id=44895855&tree=Mozilla-Inbound
+https://tbpl.mozilla.org/php/getParsedLog.php?id=44897044&tree=Mozilla-Inbound
+
+{
+08:11:47 INFO - 21205 INFO ==1809==ERROR: LeakSanitizer: detected memory leak
+08:11:47 INFO - 21206 INFO Direct leak of 704 byte(s) in 2 object(s) allocated from:
+08:11:47 INFO - 21207 INFO #0 0x471d71 in malloc /builds/slave/moz-toolchain/src/llvm/projects/compiler-rt/lib/asan/asan_malloc_linux.cc:74
+08:11:47 INFO - 21208 INFO #1 0x7ff44edfebed in moz_xmalloc /builds/slave/m-in-l64-asan-0000000000000000/build/memory/mozalloc/mozalloc.cpp:52
+08:11:47 INFO - 21209 INFO #2 0x7ff43d997563 in operator new /builds/slave/m-in-l64-asan-0000000000000000/build/obj-firefox/content/media/gmp/../../../dist/include/mozilla/mozalloc.h:201
+08:11:47 INFO - 21210 INFO #3 0x7ff43d997563 in mozilla::gmp::GMPParent::LoadProcess() /builds/slave/m-in-l64-asan-0000000000000000/build/content/media/gmp/GMPParent.cpp:118
+08:11:47 INFO - 21211 INFO #4 0x7ff43d99a5f0 in EnsureProcessLoaded /builds/slave/m-in-l64-asan-0000000000000000/build/content/media/gmp/GMPParent.cpp:356
+08:11:47 INFO - 21212 INFO #5 0x7ff43d99a5f0 in mozilla::gmp::GMPParent::GetGMPVideoEncoder(mozilla::gmp::GMPVideoEncoderParent**) /builds/slave/m-in-l64-asan-0000000000000000/build/content/media/gmp/GMPParent.cpp:390
+08:11:47 INFO - 21213 INFO #6 0x7ff43d9a1b6f in mozilla::gmp::GeckoMediaPluginService::GetGMPVideoEncoder(nsTArray<nsCString>*, nsAString_internal const&, GMPVideoHost**, GMPVideoEncoderProxy**) /builds/slave/m-in-l64-asan-0000000000000000/build/content/media/gmp/GMPService.cpp:284
+08:11:47 INFO - 21214 INFO Indirect leak of 16976 byte(s) in 2 object(s) allocated from:
+08:11:47 INFO - 21215 INFO #0 0x471d71 in malloc /builds/slave/moz-toolchain/src/llvm/projects/compiler-rt/lib/asan/asan_malloc_linux.cc:74
+08:11:47 INFO - 21216 INFO #1 0x7ff44edfebed in moz_xmalloc /builds/slave/m-in-l64-asan-0000000000000000/build/memory/mozalloc/mozalloc.cpp:52
+08:11:47 INFO - 21217 INFO #2 0x7ff4399b8891 in operator new /builds/slave/m-in-l64-asan-0000000000000000/build/obj-firefox/ipc/chromium/../../dist/include/mozilla/mozalloc.h:201
+08:11:47 INFO - 21218 INFO #3 0x7ff4399b8891 in IPC::Channel::Channel(std::basic_string<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t> > const&, IPC::Channel::Mode, IPC::Channel::Listener*) /builds/slave/m-in-l64-asan-0000000000000000/build/ipc/chromium/src/chrome/common/ipc_channel_posix.cc:971
+08:11:47 INFO - 21219 INFO #4 0x7ff439a27ae3 in ChildProcessHost::CreateChannel() /builds/slave/m-in-l64-asan-0000000000000000/build/ipc/chromium/src/chrome/common/child_process_host.cc:79
+08:11:47 INFO - 21220 INFO #5 0x7ff439a5a5e1 in mozilla::ipc::GeckoChildProcessHost::InitializeChannel() /builds/slave/m-in-l64-asan-0000000000000000/build/ipc/glue/GeckoChildProcessHost.cpp:366
+08:11:47 INFO - 21221 INFO Indirect leak of 1024 byte(s) in 2 object(s) allocated from:
+08:11:47 INFO - 21222 INFO #0 0x471d71 in malloc /builds/slave/moz-toolchain/src/llvm/projects/compiler-rt/lib/asan/asan_malloc_linux.cc:74
+08:11:47 INFO - 21223 INFO #1 0x7ff44edfebed in moz_xmalloc /builds/slave/m-in-l64-asan-0000000000000000/build/memory/mozalloc/mozalloc.cpp:52
+08:11:47 INFO - 21224 INFO #2 0x7ff4399b9d79 in operator new /builds/slave/m-in-l64-asan-0000000000000000/build/obj-firefox/ipc/chromium/../../dist/include/mozilla/mozalloc.h:201
+08:11:47 INFO - 21225 INFO #3 0x7ff4399b9d79 in allocate /tools/gcc-4.7.3-0moz1/lib/gcc/x86_64-unknown-linux-gnu/4.7.3/../../../../include/c++/4.7.3/ext/new_allocator.h:94
+08:11:47 INFO - 21226 INFO #4 0x7ff4399b9d79 in _M_allocate_node /tools/gcc-4.7.3-0moz1/lib/gcc/x86_64-unknown-linux-gnu/4.7.3/../../../../include/c++/4.7.3/bits/stl_deque.h:534
+08:11:47 INFO - 21227 INFO #5 0x7ff4399b9d79 in _M_create_nodes /tools/gcc-4.7.3-0moz1/lib/gcc/x86_64-unknown-linux-gnu/4.7.3/../../../../include/c++/4.7.3/bits/stl_deque.h:628
+08:11:47 INFO - 21228 INFO #6 0x7ff4399b9d79 in std::_Deque_base<IPC::Message*, std::allocator<IPC::Message*> >::_M_initialize_map(unsigned long) /tools/gcc-4.7.3-0moz1/lib/gcc/x86_64-unknown-linux-gnu/4.7.3/../../../../include/c++/4.7.3/bits/stl_deque.h:602
+08:11:47 INFO - 21229 INFO #7 0x7ff4399b1319 in _Deque_base /tools/gcc-4.7.3-0moz1/lib/gcc/x86_64-unknown-linux-gnu/4.7.3/../../../../include/c++/4.7.3/bits/stl_deque.h:454
+08:11:47 INFO - 21230 INFO #8 0x7ff4399b1319 in basic_string /tools/gcc-4.7.3-0moz1/lib/gcc/x86_64-unknown-linux-gnu/4.7.3/../../../../include/c++/4.7.3/bits/stl_deque.h:781
+08:11:47 INFO - 21231 INFO #9 0x7ff4399b1319 in IPC::Channel::ChannelImpl::ChannelImpl(std::basic_string<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t> > const&, IPC::Channel::Mode, IPC::Channel::Listener*) /builds/slave/m-in-l64-asan-0000000000000000/build/ipc/chromium/src/chrome/common/ipc_channel_posix.cc:264
+08:11:47 INFO - 21232 INFO #10 0x7ff4399b88a5 in IPC::Channel::Channel(std::basic_string<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t> > const&, IPC::Channel::Mode, IPC::Channel::Listener*) /builds/slave/m-in-l64-asan-0000000000000000/build/ipc/chromium/src/chrome/common/ipc_channel_posix.cc:971
+08:11:47 INFO - 21233 INFO Indirect leak of 960 byte(s) in 2 object(s) allocated from:
+08:11:47 INFO - 21234 INFO #0 0x471d71 in malloc /builds/slave/moz-toolchain/src/llvm/projects/compiler-rt/lib/asan/asan_malloc_linux.cc:74
+08:11:47 INFO - 21235 INFO #1 0x7ff44edfebed in moz_xmalloc /builds/slave/m-in-l64-asan-0000000000000000/build/memory/mozalloc/mozalloc.cpp:52
+08:11:47 INFO - 21236 INFO #2 0x7ff439a61089 in operator new /builds/slave/m-in-l64-asan-0000000000000000/build/obj-firefox/ipc/glue/../../dist/include/mozilla/mozalloc.h:201
+08:11:47 INFO - 21237 INFO #3 0x7ff439a61089 in allocate /tools/gcc-4.7.3-0moz1/lib/gcc/x86_64-unknown-linux-gnu/4.7.3/../../../../include/c++/4.7.3/ext/new_allocator.h:94
+08:11:47 INFO - 21238 INFO #4 0x7ff439a61089 in _M_allocate_node /tools/gcc-4.7.3-0moz1/lib/gcc/x86_64-unknown-linux-gnu/4.7.3/../../../../include/c++/4.7.3/bits/stl_deque.h:534
+08:11:47 INFO - 21239 INFO #5 0x7ff439a61089 in _M_create_nodes /tools/gcc-4.7.3-0moz1/lib/gcc/x86_64-unknown-linux-gnu/4.7.3/../../../../include/c++/4.7.3/bits/stl_deque.h:628
+08:11:47 INFO - 21240 INFO #6 0x7ff439a61089 in std::_Deque_base<IPC::Message, std::allocator<IPC::Message> >::_M_initialize_map(unsigned long) /tools/gcc-4.7.3-0moz1/lib/gcc/x86_64-unknown-linux-gnu/4.7.3/../../../../include/c++/4.7.3/bits/stl_deque.h:602
+08:11:47 INFO - 21241 INFO #7 0x7ff439a7b962 in _Deque_base /tools/gcc-4.7.3-0moz1/lib/gcc/x86_64-unknown-linux-gnu/4.7.3/../../../../include/c++/4.7.3/bits/stl_deque.h:454
+08:11:47 INFO - 21242 INFO #8 0x7ff439a7b962 in deque /tools/gcc-4.7.3-0moz1/lib/gcc/x86_64-unknown-linux-gnu/4.7.3/../../../../include/c++/4.7.3/bits/stl_deque.h:781
+08:11:47 INFO - 21243 INFO #9 0x7ff439a7b962 in mozilla::ipc::ProcessLink::OnTakeConnectedChannel() /builds/slave/m-in-l64-asan-0000000000000000/build/ipc/glue/MessageLink.cpp:318
+08:11:47 INFO - 21244 INFO #10 0x7ff4399e7ab4 in RunTask /builds/slave/m-in-l64-asan-0000000000000000/build/ipc/chromium/src/base/message_loop.cc:357
+08:11:47 INFO - 21245 INFO #11 0x7ff4399e7ab4 in MessageLoop::DeferOrRunPendingTask(MessageLoop::PendingTask const&) /builds/slave/m-in-l64-asan-0000000000000000/build/ipc/chromium/src/base/message_loop.cc:365
+08:11:47 INFO - 21246 INFO Indirect leak of 336 byte(s) in 2 object(s) allocated from:
+08:11:47 INFO - 21247 INFO #0 0x471e81 in calloc /builds/slave/moz-toolchain/src/llvm/projects/compiler-rt/lib/asan/asan_malloc_linux.cc:90
+08:11:47 INFO - 21248 INFO #1 0x7ff44ebc0a39 in PR_NewLock /builds/slave/m-in-l64-asan-0000000000000000/build/nsprpub/pr/src/pthreads/ptsynch.c:142
+08:11:47 INFO - 21249 INFO #2 0x7ff439a57790 in OffTheBooksMutex /builds/slave/m-in-l64-asan-0000000000000000/build/obj-firefox/ipc/glue/../../dist/include/mozilla/Mutex.h:49
+08:11:47 INFO - 21250 INFO #3 0x7ff439a57790 in Mutex /builds/slave/m-in-l64-asan-0000000000000000/build/obj-firefox/ipc/glue/../../dist/include/mozilla/Mutex.h:125
+08:11:47 INFO - 21251 INFO #4 0x7ff439a57790 in Monitor /builds/slave/m-in-l64-asan-0000000000000000/build/obj-firefox/ipc/glue/../../dist/include/mozilla/Monitor.h:30
+08:11:47 INFO - 21252 INFO #5 0x7ff439a57790 in mozilla::ipc::GeckoChildProcessHost::GeckoChildProcessHost(GeckoProcessType, base::ChildPrivileges) /builds/slave/m-in-l64-asan-0000000000000000/build/ipc/glue/GeckoChildProcessHost.cpp:98
+08:11:47 INFO - 21253 INFO #6 0x7ff43d99759c in operator new /builds/slave/m-in-l64-asan-0000000000000000/build/content/media/gmp/GMPProcessParent.cpp:32
+08:11:47 INFO - 21254 INFO #7 0x7ff43d99759c in mozilla::gmp::GMPParent::LoadProcess() /builds/slave/m-in-l64-asan-0000000000000000/build/content/media/gmp/GMPParent.cpp:118
+08:11:47 INFO - 21255 INFO #8 0x7ff43d99a5f0 in EnsureProcessLoaded /builds/slave/m-in-l64-asan-0000000000000000/build/content/media/gmp/GMPParent.cpp:356
+08:11:47 INFO - 21256 INFO #9 0x7ff43d99a5f0 in mozilla::gmp::GMPParent::GetGMPVideoEncoder(mozilla::gmp::GMPVideoEncoderParent**) /builds/slave/m-in-l64-asan-0000000000000000/build/content/media/gmp/GMPParent.cpp:390
+08:11:47 INFO - 21257 INFO Indirect leak of 128 byte(s) in 2 object(s) allocated from:
+08:11:47 INFO - 21258 INFO #0 0x471d71 in malloc /builds/slave/moz-toolchain/src/llvm/projects/compiler-rt/lib/asan/asan_malloc_linux.cc:74
+08:11:47 INFO - 21259 INFO #1 0x7ff44edfebed in moz_xmalloc /builds/slave/m-in-l64-asan-0000000000000000/build/memory/mozalloc/mozalloc.cpp:52
+08:11:47 INFO - 21260 INFO #2 0x7ff4399b9d10 in operator new /builds/slave/m-in-l64-asan-0000000000000000/build/obj-firefox/ipc/chromium/../../dist/include/mozilla/mozalloc.h:201
+08:11:47 INFO - 21261 INFO #3 0x7ff4399b9d10 in allocate /tools/gcc-4.7.3-0moz1/lib/gcc/x86_64-unknown-linux-gnu/4.7.3/../../../../include/c++/4.7.3/ext/new_allocator.h:94
+08:11:47 INFO - 21262 INFO #4 0x7ff4399b9d10 in _M_allocate_map /tools/gcc-4.7.3-0moz1/lib/gcc/x86_64-unknown-linux-gnu/4.7.3/../../../../include/c++/4.7.3/bits/stl_deque.h:545
+08:11:47 INFO - 21263 INFO #5 0x7ff4399b9d10 in std::_Deque_base<IPC::Message*, std::allocator<IPC::Message*> >::_M_initialize_map(unsigned long) /tools/gcc-4.7.3-0moz1/lib/gcc/x86_64-unknown-linux-gnu/4.7.3/../../../../include/c++/4.7.3/bits/stl_deque.h:590
+08:11:47 INFO - 21264 INFO #6 0x7ff4399b1319 in _Deque_base /tools/gcc-4.7.3-0moz1/lib/gcc/x86_64-unknown-linux-gnu/4.7.3/../../../../include/c++/4.7.3/bits/stl_deque.h:454
+08:11:47 INFO - 21265 INFO #7 0x7ff4399b1319 in basic_string /tools/gcc-4.7.3-0moz1/lib/gcc/x86_64-unknown-linux-gnu/4.7.3/../../../../include/c++/4.7.3/bits/stl_deque.h:781
+08:11:47 INFO - 21266 INFO #8 0x7ff4399b1319 in IPC::Channel::ChannelImpl::ChannelImpl(std::basic_string<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t> > const&, IPC::Channel::Mode, IPC::Channel::Listener*) /builds/slave/m-in-l64-asan-0000000000000000/build/ipc/chromium/src/chrome/common/ipc_channel_posix.cc:264
+08:11:47 INFO - 21267 INFO #9 0x7ff4399b88a5 in IPC::Channel::Channel(std::basic_string<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t> > const&, IPC::Channel::Mode, IPC::Channel::Listener*) /builds/slave/m-in-l64-asan-0000000000000000/build/ipc/chromium/src/chrome/common/ipc_channel_posix.cc:971
+08:11:47 INFO - 21268 INFO Indirect leak of 128 byte(s) in 2 object(s) allocated from:
+08:11:47 INFO - 21269 INFO #0 0x471d71 in malloc /builds/slave/moz-toolchain/src/llvm/projects/compiler-rt/lib/asan/asan_malloc_linux.cc:74
+08:11:47 INFO - 21270 INFO #1 0x7ff44edfebed in moz_xmalloc /builds/slave/m-in-l64-asan-0000000000000000/build/memory/mozalloc/mozalloc.cpp:52
+08:11:47 INFO - 21271 INFO #2 0x7ff439a61020 in operator new /builds/slave/m-in-l64-asan-0000000000000000/build/obj-firefox/ipc/glue/../../dist/include/mozilla/mozalloc.h:201
+08:11:47 INFO - 21272 INFO #3 0x7ff439a61020 in allocate /tools/gcc-4.7.3-0moz1/lib/gcc/x86_64-unknown-linux-gnu/4.7.3/../../../../include/c++/4.7.3/ext/new_allocator.h:94
+08:11:47 INFO - 21273 INFO #4 0x7ff439a61020 in _M_allocate_map /tools/gcc-4.7.3-0moz1/lib/gcc/x86_64-unknown-linux-gnu/4.7.3/../../../../include/c++/4.7.3/bits/stl_deque.h:545
+08:11:47 INFO - 21274 INFO #5 0x7ff439a61020 in std::_Deque_base<IPC::Message, std::allocator<IPC::Message> >::_M_initialize_map(unsigned long) /tools/gcc-4.7.3-0moz1/lib/gcc/x86_64-unknown-linux-gnu/4.7.3/../../../../include/c++/4.7.3/bits/stl_deque.h:590
+08:11:47 INFO - 21275 INFO #6 0x7ff439a7b962 in _Deque_base /tools/gcc-4.7.3-0moz1/lib/gcc/x86_64-unknown-linux-gnu/4.7.3/../../../../include/c++/4.7.3/bits/stl_deque.h:454
+08:11:47 INFO - 21276 INFO #7 0x7ff439a7b962 in deque /tools/gcc-4.7.3-0moz1/lib/gcc/x86_64-unknown-linux-gnu/4.7.3/../../../../include/c++/4.7.3/bits/stl_deque.h:781
+08:11:47 INFO - 21277 INFO #8 0x7ff439a7b962 in mozilla::ipc::ProcessLink::OnTakeConnectedChannel() /builds/slave/m-in-l64-asan-0000000000000000/build/ipc/glue/MessageLink.cpp:318
+08:11:47 INFO - 21278 INFO #9 0x7ff4399e7ab4 in RunTask /builds/slave/m-in-l64-asan-0000000000000000/build/ipc/chromium/src/base/message_loop.cc:357
+08:11:47 INFO - 21279 INFO #10 0x7ff4399e7ab4 in MessageLoop::DeferOrRunPendingTask(MessageLoop::PendingTask const&) /builds/slave/m-in-l64-asan-0000000000000000/build/ipc/chromium/src/base/message_loop.cc:365
+08:11:47 INFO - 21280 INFO Indirect leak of 128 byte(s) in 2 object(s) allocated from:
+08:11:47 INFO - 21281 INFO #0 0x471d71 in malloc /builds/slave/moz-toolchain/src/llvm/projects/compiler-rt/lib/asan/asan_malloc_linux.cc:74
+08:11:47 INFO - 21282 INFO #1 0x7ff44ebc10b3 in PR_NewCondVar /builds/slave/m-in-l64-asan-0000000000000000/build/nsprpub/pr/src/pthreads/ptsynch.c:321
+08:11:47 INFO - 21283 INFO #2 0x7ff439a57806 in Mutex /builds/slave/m-in-l64-asan-0000000000000000/build/obj-firefox/ipc/glue/../../dist/include/mozilla/CondVar.h:47
+08:11:47 INFO - 21284 INFO #3 0x7ff439a57806 in Monitor /builds/slave/m-in-l64-asan-0000000000000000/build/obj-firefox/ipc/glue/../../dist/include/mozilla/Monitor.h:30
+08:11:47 INFO - 21285 INFO #4 0x7ff439a57806 in mozilla::ipc::GeckoChildProcessHost::GeckoChildProcessHost(GeckoProcessType, base::ChildPrivileges) /builds/slave/m-in-l64-asan-0000000000000000/build/ipc/glue/GeckoChildProcessHost.cpp:98
+08:11:47 INFO - 21286 INFO #5 0x7ff43d99759c in operator new /builds/slave/m-in-l64-asan-0000000000000000/build/content/media/gmp/GMPProcessParent.cpp:32
+08:11:47 INFO - 21287 INFO #6 0x7ff43d99759c in mozilla::gmp::GMPParent::LoadProcess() /builds/slave/m-in-l64-asan-0000000000000000/build/content/media/gmp/GMPParent.cpp:118
+08:11:47 INFO - 21288 INFO #7 0x7ff43d99a5f0 in EnsureProcessLoaded /builds/slave/m-in-l64-asan-0000000000000000/build/content/media/gmp/GMPParent.cpp:356
+08:11:47 INFO - 21289 INFO #8 0x7ff43d99a5f0 in mozilla::gmp::GMPParent::GetGMPVideoEncoder(mozilla::gmp::GMPVideoEncoderParent**) /builds/slave/m-in-l64-asan-0000000000000000/build/content/media/gmp/GMPParent.cpp:390
+08:11:47 INFO - 21290 INFO Indirect leak of 32 byte(s) in 2 object(s) allocated from:
+08:11:47 INFO - 21291 INFO #0 0x471d71 in malloc /builds/slave/moz-toolchain/src/llvm/projects/compiler-rt/lib/asan/asan_malloc_linux.cc:74
+08:11:47 INFO - 21292 INFO #1 0x7ff44edfebed in moz_xmalloc /builds/slave/m-in-l64-asan-0000000000000000/build/memory/mozalloc/mozalloc.cpp:52
+08:11:47 INFO - 21293 INFO #2 0x7ff439a27acf in operator new /builds/slave/m-in-l64-asan-0000000000000000/build/obj-firefox/ipc/chromium/../../dist/include/mozilla/mozalloc.h:201
+08:11:47 INFO - 21294 INFO #3 0x7ff439a27acf in ChildProcessHost::CreateChannel() /builds/slave/m-in-l64-asan-0000000000000000/build/ipc/chromium/src/chrome/common/child_process_host.cc:79
+08:11:47 INFO - 21295 INFO #4 0x7ff439a5a5e1 in mozilla::ipc::GeckoChildProcessHost::InitializeChannel() /builds/slave/m-in-l64-asan-0000000000000000/build/ipc/glue/GeckoChildProcessHost.cpp:366
+08:11:47 INFO - 21296 INFO #5 0x7ff439a59d7b in mozilla::ipc::GeckoChildProcessHost::RunPerformAsyncLaunch(std::vector<std::string, std::allocator<std::string> >, base::ProcessArchitecture) /builds/slave/m-in-l64-asan-0000000000000000/build/ipc/glue/GeckoChildProcessHost.cpp:441
+08:11:47 INFO - 21297 INFO Indirect leak of 32 byte(s) in 2 object(s) allocated from:
+08:11:47 INFO - 21298 INFO #0 0x471d71 in malloc /builds/slave/moz-toolchain/src/llvm/projects/compiler-rt/lib/asan/asan_malloc_linux.cc:74
+08:11:47 INFO - 21299 INFO #1 0x7ff44edfebed in moz_xmalloc /builds/slave/m-in-l64-asan-0000000000000000/build/memory/mozalloc/mozalloc.cpp:52
+08:11:47 INFO - 21300 INFO #2 0x7ff4399fd6b0 in operator new /builds/slave/m-in-l64-asan-0000000000000000/build/obj-firefox/ipc/chromium/../../dist/include/mozilla/mozalloc.h:201
+08:11:47 INFO - 21301 INFO #3 0x7ff4399fd6b0 in RevocableStore::RevocableStore() /builds/slave/m-in-l64-asan-0000000000000000/build/ipc/chromium/src/base/revocable_store.cc:25
+08:11:47 INFO - 21302 INFO #4 0x7ff4399b178e in basic_string /builds/slave/m-in-l64-asan-0000000000000000/build/ipc/chromium/src/base/task.h:111
+08:11:47 INFO - 21303 INFO #5 0x7ff4399b178e in IPC::Channel::ChannelImpl::ChannelImpl(std::basic_string<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t> > const&, IPC::Channel::Mode, IPC::Channel::Listener*) /builds/slave/m-in-l64-asan-0000000000000000/build/ipc/chromium/src/chrome/common/ipc_channel_posix.cc:264
+08:11:47 INFO - 21304 INFO #6 0x7ff4399b88a5 in IPC::Channel::Channel(std::basic_string<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t> > const&, IPC::Channel::Mode, IPC::Channel::Listener*) /builds/slave/m-in-l64-asan-0000000000000000/build/ipc/chromium/src/chrome/common/ipc_channel_posix.cc:971
+08:11:47 INFO - 21305 INFO Indirect leak of 16 byte(s) in 2 object(s) allocated from:
+08:11:47 INFO - 21306 INFO #0 0x471d71 in malloc /builds/slave/moz-toolchain/src/llvm/projects/compiler-rt/lib/asan/asan_malloc_linux.cc:74
+08:11:47 INFO - 21307 INFO #1 0x7ff44edfebed in moz_xmalloc /builds/slave/m-in-l64-asan-0000000000000000/build/memory/mozalloc/mozalloc.cpp:52
+08:11:47 INFO - 21308 INFO #2 0x7ff439a5fa9f in operator new /builds/slave/m-in-l64-asan-0000000000000000/build/obj-firefox/ipc/glue/../../dist/include/mozilla/mozalloc.h:201
+08:11:47 INFO - 21309 INFO #3 0x7ff439a5fa9f in allocate /tools/gcc-4.7.3-0moz1/lib/gcc/x86_64-unknown-linux-gnu/4.7.3/../../../../include/c++/4.7.3/ext/new_allocator.h:94
+08:11:47 INFO - 21310 INFO #4 0x7ff439a5fa9f in _M_allocate /tools/gcc-4.7.3-0moz1/lib/gcc/x86_64-unknown-linux-gnu/4.7.3/../../../../include/c++/4.7.3/bits/stl_vector.h:169
+08:11:47 INFO - 21311 INFO #5 0x7ff439a5fa9f in void std::vector<std::pair<int, int>, std::allocator<std::pair<int, int> > >::_M_emplace_back_aux<std::pair<int, int> >(std::pair<int, int>&&) /tools/gcc-4.7.3-0moz1/lib/gcc/x86_64-unknown-linux-gnu/4.7.3/../../../../include/c++/4.7.3/bits/stl_vector.h:405
+08:11:47 INFO - 21312 INFO #6 0x7ff439a5b70b in emplace_back<std::pair<int, int> > /tools/gcc-4.7.3-0moz1/lib/gcc/x86_64-unknown-linux-gnu/4.7.3/../../../../include/c++/4.7.3/bits/vector.tcc:102
+08:11:47 INFO - 21313 INFO #7 0x7ff439a5b70b in pair<int &, int &, void> /tools/gcc-4.7.3-0moz1/lib/gcc/x86_64-unknown-linux-gnu/4.7.3/../../../../include/c++/4.7.3/bits/stl_vector.h:900
+08:11:47 INFO - 21314 INFO #8 0x7ff439a5b70b in mozilla::ipc::GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string, std::allocator<std::string> >&, base::ProcessArchitecture) /builds/slave/m-in-l64-asan-0000000000000000/build/ipc/glue/GeckoChildProcessHost.cpp:613
+08:11:47 INFO - 21315 INFO #9 0x7ff439a5aa2d in mozilla::ipc::GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string, std::allocator<std::string> >, base::ProcessArchitecture) /builds/slave/m-in-l64-asan-0000000000000000/build/ipc/glue/GeckoChildProcessHost.cpp:404
+08:11:47 INFO - 21316 INFO -----------------------------------------------------
+08:11:47 INFO - 21317 INFO Suppressions used:
+08:11:47 INFO - 21318 INFO count byte template
+08:11:47 INFO - 21319 INFO 40 986 libc.so
+08:11:47 INFO - 21320 INFO 863 27536 nsComponentManagerImpl
+08:11:47 INFO - 21321 INFO 58 7888 mozJSComponentLoader::LoadModule
+08:11:47 INFO - 21322 INFO 1 24672 profiler_init
+08:11:47 INFO - 21323 INFO 1 384 pixman_implementation_lookup_composite
+08:11:47 INFO - 21324 INFO 360 15936 libfontconfig.so
+08:11:47 INFO - 21325 INFO 408 96035 /media/mtransport/
+08:11:47 INFO - 21326 INFO 3332 391458 /media/webrtc/signaling/
+08:11:47 INFO - 21327 INFO 2 304 mozilla::plugins::PPluginInstanceParent::CallNPP_HandleEvent
+08:11:47 INFO - 21328 INFO 2 112 mozilla::plugins::PPluginModuleParent::OnCallReceived
+08:11:47 INFO - 21329 INFO 686 28158 libglib-2.0.so
+08:11:47 INFO - 21330 INFO 2 144 libpulse.so
+08:11:47 INFO - 21331 INFO 1 40 libpulsecommon-1.1.so
+08:11:47 INFO - 21332 INFO 4 112 libresolv.so
+08:11:47 INFO - 21333 INFO 138 22171 libstdc++.so
+08:11:47 INFO - 21334 INFO -----------------------------------------------------
+08:11:47 INFO - 21335 INFO SUMMARY: AddressSanitizer: 20464 byte(s) leaked in 22 allocation(s).
+08:11:47 INFO - TEST-INFO | Main app process: exit 0
+08:11:47 WARNING - TEST-UNEXPECTED-FAIL | LeakSanitizer | leak at mozilla::gmp::GMPParent::LoadProcess, EnsureProcessLoaded, mozilla::gmp::GMPParent::GetGMPVideoEncoder, mozilla::gmp::GeckoMediaPluginService::GetGMPVideoEncoder
+}

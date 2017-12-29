@@ -1,0 +1,37 @@
+Flash hang and or crash when retrieving a large SWF from Jetty via HTTPS
+Created attachment 8455563
+firefox-min-npapi-stream-buff.patch
+
+User Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.153 Safari/537.36
+
+Steps to reproduce:
+
+1) Make sure that the Flash plugin is installed. On Fedora 17 64 bit this mean having a file or simlink named libflashplayer.so in /usr/lib64/mozilla/plugins.
+2) Set environment variable in order to trace the NPAPI interface:
+export NSPR_LOG_MODULES="nsPipe:9,Plugin:9,PluginNPP:9,PluginNPN:9"
+export NSPR_LOG_FILE=/tmp/nspr.log
+3) Use Firefox with the Flash plugin to retrieve and run a SWF file from a site that is hosted by Jetty (a java based web server). Make sure that HTTPS is used:
+firefox http://my-flash-site.com
+
+
+Actual results:
+
+Firefox hang (the GUI is unresponsive) for a while followed by the standard "The Adobe Flash plugin ha crashed." icon.
+
+
+Expected results:
+
+The SWF file should be displayed correctly by the Flash plugin.
+
+Sniffing the network between the browser and the Jetty revealed interesting behavior when the SWF file wa downloaded - the the plain text data that went into the SSL packet alternated between being one byte, and many bytes. It wa also observed that Firefox sends the SWF to the Flash plugin one byte at a time by calling NPP_Write() many times. It turn out that these observation are related - the write to Flash is driven by data being received over the SSL connection. The first call to NPP_Write() is special in that a buffer (mStreamBuffer in nsNPAPIPluginStreamListener.cpp) is allocated at that time. The size of the buffer is equal to the amount of data received via SSL. In the case where the first SSL packet received is one byte the buffer is one byte, and then all future call to NPP_Write() are limited to being one byte in size.
+
+To pursue the theory the crash wa caused by the buffer being to small and by NPP_Write() being called too frequently I modified Firefox so that it's possible to set an environment variable:
+export NPAPI_MIN_BUFF=16384
+that set a lower bound to the buffer size. See the attached patch (firefox-min-npapi-stream-buff.patch), which is for illustration purpose only. I found that setting the buffer to at least 16KiB fixed the problem.
+
+Possibly the assumption behind the existing logic is that the first segment of data received over the network is typical of all following segment so it's a reasonable guess for the buffer size. This may be true for webservers other than Jetty + SSL. Since the patch I attached is for illustration purpose only perhaps this logic could be revisited.
+
+Although the ticket wa opened for Firefox 22 this problem ha been seen in Firefox a recent a Firefox 30.
+
+Ticket #439558 ha been opened with Jetty regarding the behavior seen:
+https://bugs.eclipse.org/bugs/show_bug.cgi?id=439558

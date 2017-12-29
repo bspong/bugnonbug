@@ -1,0 +1,80 @@
+Firefox 3.0 in a background window claims too much resources for a  time interval, leaving no adequate resources to serve the user
+User-Agent:       Mozilla/5.0 (OS/2; U; Warp 4.5; de; rv:1.8.1.14) Gecko/20080418 Firefox/2.0.0.14
+Build Identifier: Mozilla/5.0 (OS/2; U; Warp 4.5; de; rv:1.8.1.14) Gecko/20080418 Firefox/2.0.0.14
+
+
+
+Firefox 3.0 in a background window claims too much resources for a time interval,leaving no adequate resources to serve the user activity  
+
+
+This is a follow up of the solve Bug "Background cleanup actions block desktop on OS/2"
+
+   https://bugzilla.mozilla.org/show_bug.cgi?id=439340
+
+   The  created solution for the bug has been implemented at the test system
+
+   Solution: pref("urlclassifier.updatecachemax", 104857600) 
+
+
+Working  with the new preferences with a T23 1.13 GHz 640 MB
+
+I observer:
+
+Open FF 3.0 window and working in foreground with the system editor "ae"
+entering text.
+
+Suddenly the system does not process my entry keys, 100 CPU and some I/O -
+duration about 4 to 6 sec.
+
+System design?
+
+The normal SQLite processes as service for the application and so need higher
+priority above the normal application processes.
+
+The google update of the SQLite data base is a real background low priority
+process with high I/O and CPU requirements.
+
+Are these SQL ( I/O and CPU ) operations executed with the  priority as service
+process to the application? 
+
+If yes, there are no sufficient resources left to service the user.
+
+The increase of the SQL Buffer reduces the I/O load, but does not solve the
+workload balancing problem - 
+
+Speciality on low power machines at the border of the minimum requirements. 
+
+
+New Aspect/view:
+
+The idle state of browser does not say, the system is idle!
+To start automatic maintenance by FF the system has to be idle for some time
+and not only the browser.
+
+The SQLite DB has been "VACUUM" regularly.
+
+Current is of the Files is 
+
+    3.07.08   8.50    4112384           0  places.sqlite
+    3.07.08   8.49   30056448           0  urlclassifier3.sqlite
+
+just after a "VACUUM"
+
+ 
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. You have to work online and doing foreground work,  when the Update / Reproduction with the google DB is initiated. 
+2.
+3.
+Actual Results:  
+The system is frozen for the user - no response or very, very slow. 
+
+Expected Results:  
+1. Working with a Notebook, the user does recognise heavy system activity -
+need status indicator to inform the user - the activity is initated bay Firefox and not from a illegal processes on this system 
+
+2. Proper load balancing

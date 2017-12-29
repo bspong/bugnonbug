@@ -1,0 +1,57 @@
+browser_dbg_cmd.js doesn't always wait for helpers.audit to complete
+I think this is the cause of
+https://tbpl.mozilla.org/php/getParsedLog.php?id=26444486&tree=Try&full=1 (search for "Message: TypeError: options.display is undefined")
+
+I think what's happening is that stuff is getting cleaned up before the test has properly finished.
+
+
+
+11:56:25     INFO -  TEST-INFO | chrome://mochitests/content/browser/browser/devtools/debugger/test/browser_dbg_cmd.js | setInput("dbg close")
+11:56:25     INFO -  TEST-PASS | chrome://mochitests/content/browser/browser/devtools/debugger/test/browser_dbg_cmd.js | html output for dbg close
+11:56:25     INFO -  TEST-PASS | chrome://mochitests/content/browser/browser/devtools/debugger/test/browser_dbg_cmd.js | Debugger was closed.
+11:56:25     INFO -  console.error:
+11:56:25     INFO -    Message: TypeError: options.display is undefined
+11:56:25     INFO -    Stack:
+11:56:25     INFO -      @chrome://mochitests/content/browser/browser/devtools/commandline/test/helpers.js:776
+11:56:25     INFO -  resolve@resource://gre/modules/commonjs/sdk/core/promise.js:122
+11:56:25     INFO -  then@resource://gre/modules/commonjs/sdk/core/promise.js:47
+11:56:25     INFO -  resolve@resource://gre/modules/commonjs/sdk/core/promise.js:189
+11:56:25     INFO -  @resource://gre/modules/devtools/gcli.jsm:9141
+11:56:25     INFO -  @resource://gre/modules/devtools/gcli.jsm:8500
+11:56:25     INFO -  resolve@resource://gre/modules/commonjs/sdk/core/promise.js:122
+11:56:25     INFO -  resolve@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/commonjs/sdk/core/promise.js:122
+11:56:25     INFO -  then@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/commonjs/sdk/core/promise.js:47
+11:56:25     INFO -  resolve@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/commonjs/sdk/core/promise.js:189
+11:56:25     INFO -  resolve@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/commonjs/sdk/core/promise.js:122
+11:56:25     INFO -  then@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/commonjs/sdk/core/promise.js:47
+11:56:25     INFO -  resolve@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/commonjs/sdk/core/promise.js:189
+11:56:25     INFO -  TBOX_destroy/<@resource://gre/modules/commonjs/toolkit/loader.js -> resource:///modules/devtools/framework/toolbox.js:833
+11:56:25     INFO -  resolve@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/commonjs/sdk/core/promise.js:122
+11:56:25     INFO -  then@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/commonjs/sdk/core/promise.js:47
+11:56:25     INFO -  resolve@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/commonjs/sdk/core/promise.js:189
+11:56:25     INFO -  resolve@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/commonjs/sdk/core/promise.js:122
+11:56:25     INFO -  resolve@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/commonjs/sdk/core/promise.js:122
+11:56:25     INFO -  then@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/commonjs/sdk/core/promise.js:47
+11:56:25     INFO -  resolve@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/commonjs/sdk/core/promise.js:189
+11:56:25     INFO -  resolve@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/commonjs/sdk/core/promise.js:122
+11:56:25     INFO -  resolve@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/commonjs/sdk/core/promise.js:122
+11:56:25     INFO -  then@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/commonjs/sdk/core/promise.js:47
+11:56:25     INFO -  resolve@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/commonjs/sdk/core/promise.js:189
+11:56:25     INFO -  onClosed@resource://gre/modules/commonjs/toolkit/loader.js -> resource:///modules/devtools/framework/target.js:451
+11:56:25     INFO -  @resource://gre/modules/devtools/dbg-client.jsm:380
+11:56:25     INFO -  @resource://gre/modules/devtools/dbg-client.jsm:102
+11:56:25     INFO -  EV_notify@resource://gre/modules/devtools/dbg-client.jsm:159
+11:56:25     INFO -  DC_onClosed@resource://gre/modules/devtools/dbg-client.jsm:705
+11:56:25     INFO -  LDT_close@resource://gre/modules/devtools/dbg-server.jsm -> resource://gre/modules/devtools/server/transport.js:258
+11:56:25     INFO -  LDT_close@resource://gre/modules/devtools/dbg-server.jsm -> resource://gre/modules/devtools/server/transport.js:254
+11:56:25     INFO -  LDT_close@resource://gre/modules/devtools/dbg-server.jsm -> resource://gre/modules/devtools/server/transport.js:254
+11:56:25     INFO -  closeTransport@resource://gre/modules/devtools/dbg-client.jsm:418
+11:56:25     INFO -  @resource://gre/modules/devtools/dbg-client.jsm:316
+11:56:25     INFO -  @resource://gre/modules/devtools/dbg-client.jsm:687
+11:56:25     INFO -  resolve@resource://gre/modules/commonjs/sdk/core/promise.js:122
+11:56:25     INFO -  then@resource://gre/modules/commonjs/sdk/core/promise.js:47
+11:56:25     INFO -  then@resource://gre/modules/commonjs/sdk/core/promise.js:157
+11:56:25     INFO -  DC_onPacket@resource://gre/modules/devtools/dbg-client.jsm:691
+11:56:25     INFO -  @resource://gre/modules/devtools/dbg-server.jsm -> resource://gre/modules/devtools/server/transport.js:239
+11:56:25     INFO -  @resource://gre/modules/devtools/dbg-server.jsm -> resource://gre/modules/devtools/DevToolsUtils.js:61
+11:56:25     INFO -  INFO TEST-END | chrome://mochitests/content/browser/browser/devtools/debugger/test/browser_dbg_cmd.js | finished in 2027ms

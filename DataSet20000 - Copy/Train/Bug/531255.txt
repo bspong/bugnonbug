@@ -1,0 +1,60 @@
+This website uses, gzip encoding, FF 3.0.15 can't decode it
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686 (x86_64); en-GB; rv:1.8.1.23) Gecko/20090823 SeaMonkey/1.1.18
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.15) Gecko/2009101601 Firefox/3.0.15 (.NET CLR 3.5.30729)
+
+GET / HTTP/1.0
+Host: forums.oreilly.com
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.15) Gecko/2009101601 Firefox/3.0.15 (.NET CLR 3.5.30729)
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Accept-Language: en-gb
+Accept-Encoding: gzip,deflate
+Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7
+Keep-Alive: 300
+Cookie: member_id=0; pass_hash=0; session_id=990243f1b179dab7636b5dcdf1dd3fbc; topicsread=a%3A1%3A%7Bi%3A138%3Bi%3A1259234645%3B%7D
+Via: 1.1 xxx.xxxxxxxxx.xxxxxxxxx.xxxx:3128 (squid/2.5.STABLE9)
+X-Forwarded-For: unknown
+Cache-Control: max-age=259200
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Date: Thu, 26 Nov 2009 11:27:01 GMT
+Server: Apache/2.2.11 (Unix) mod_ssl/2.2.11 OpenSSL/0.9.8e-fips-rhel5 mod_auth_passthrough/2.1 mod_bwlimited/1.4 FrontPage/5.0.2.2635 PHP/5.2.8
+X-Powered-By: PHP/5.2.8
+Set-Cookie: member_id=0; path=/; domain=forums.oreilly.com; httponly
+Set-Cookie: pass_hash=0; path=/; domain=forums.oreilly.com; httponly
+Set-Cookie: member_id=0; path=/; domain=forums.oreilly.com; httponly
+Set-Cookie: pass_hash=0; path=/; domain=forums.oreilly.com; httponly
+Set-Cookie: session_id=xxxxxxxxxxxxxxxxxxxx6b5dcdf1dd3fbc; path=/; domain=forums.oreilly.com; httponly
+Cache-Control: no-cache, must-revalidate, max-age=0
+Expires: 0
+Pragma: no-cache
+Content-Encoding: gzip
+Vary: Accept-Encoding
+Keep-Alive: timeout=5, max=100
+Connection: Keep-Alive
+Transfer-Encoding: chunked
+Content-Type: text/html;charset=utf-8
+
+
+I can "wget" the data manually by using:
+
+wget --header "Accept-Encoding: deflate" -U "Mozila/5.0" http://forums.oreilly.com/
+
+wget appears to have a minor bug in how it stores the data, it still has the chunking in the "index.html" file, so if you remove the top line(s) you can get:
+
+# gunzip -tv index.html
+gunzip: index.html: decompression OK, trailing garbage ignored
+
+You can remove the "trailing garbage ignored" message by removing the end "0" chunking element and the <CR><NL> before it, to get:
+
+# gunzip -tv index.html
+index.html:      OK
+
+
+
+Shouldn't FF be cleverer ?  If a "Content Encoding Error" occurs, should not it retry the request without offering the header "Accept-Encoding: gzip,deflate".  
+
+
+Then ideally if that succeeds it clocks up that 1 "Content Encoding Error" occurred on this website, if more than XXX errors occur within NNN time/requests then it should offer to the user to auto-blacklist that website for a the next 24 hours or something.
+
+Reproducible: Always

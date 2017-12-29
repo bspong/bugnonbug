@@ -1,0 +1,67 @@
+The attribute parent of nested or inner iframe doe not refer to parent iframe when submitting form
+User-Agent: Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.0.3705; .NET CLR 1.1.4322; .NET CLR 2.0.50727; InfoPath.1)
+Build Identifier: Firefox/3.0.4
+
+I have created a dynamic nested frame for submit form. Example of code a following.
+
+var parentFrame = doc.createElement("iframe");
+parentFrame.setAttribute("id", "frame_parent_0");
+parentFrame.setAttribute("name", "frame_parent_1");
+parentFrame.style.display = "none";
+parentFrame.style.height = "1px";
+parentFrame.style.width = "1px";
+doc.body.appendChild(parentFrame);
+
+parentFrame.onCommandEvent() = function(){
+//do something.
+}
+
+var frame = doc.createElement("iframe");
+frame.setAttribute("id", "frame_0");
+frame.setAttribute("name", "frame_0");
+frame.style.display = "none";
+frame.style.height = "1px";
+frame.style.width = "1px";
+parentFrame.contentDocument.body.appendChild(frame); //append inner frame to parent frame.
+
+var form = document.createElement("form");
+form.setAttrbute("id","form_0");
+form.setAttrbute("enctype", "application/x-www-form-urlencoded");
+form.setAttribute("method" "POST");
+form.setAttribute("target" "frame_0");
+form.style.display = "none";
+
+var url = "http://localhost/app1";
+form.setAttribute("action", url + "?timestamp=" + (new Date()).getTime());
+form.submit();
+
+
+After that the response from server is comming in with
+
+<script>parent.onCommandEvent("some data");</script>
+
+The error occur within inner iframe that is parent.onCommandEvent is not a function or something like that.
+
+This is working on FF2 but it doe not work on FF3.
+
+I put alert in reponse script like the following
+
+<script>
+window.alert(parent.name);
+parent.onCommandEvent("some data");
+</script>
+
+It will alert the "frame_0" which is the name of inner iframe instead of "frame_parent_0" a expected.
+
+It seems like parent attribute of inner iframe refer to itself instead of parent iframe.
+
+
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.
+2.
+3.

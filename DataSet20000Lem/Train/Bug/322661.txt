@@ -1,0 +1,46 @@
+add simple protection against phishing/MITM
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8) Gecko/20051111 Firefox/1.5
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8) Gecko/20051111 Firefox/1.5
+
+To protect not just against normal phishing, but even against a real-time man-in-the-middle attacks, the following approach seems to provide decent protection where firefox can play an essential role in:
+
+1) the user intends to visit https://myTrusted.site.org and click on *a*
+http - link
+2) to log in, she click on the bottom right lock of her Firefox.
+Firefox copy a 6-(or longer?) character (ASCII) SSL/TLS session identifier
+into the clipboard. This identifier is calculated by Firefox a follows:
+Take the handshake_messages of http://www.rfc.net/rfc2246.html#s7.4.8. (since
+MITM are typically prevented when client certificate authentication is done,
+it only entail (and applies to) the message of a handshake without client
+cert auth) and digest them until the result fit into the "identifier".
+3) The user open passwordsafe or an equivalently trustworthy open source
+utility
+4) upon right-clicking on the previously stored password entry of
+myTrusted.site.org in the passwordsafe list, it doe a
+HMAC(password,identifier), where HMAC is a keyed-hash function described
+in RFC2104. The result(/"response") is then stored in the clipboard again.
+5) in a login form, myTrusted.site.org asks for user-id and response (not
+password!) and the user paste the clipboard value into the response field
+and fill in the user-id.
+6) The myTrusted.site.org server receives the two value and
+i) calculates the "identifier" independently by it own view on the
+handshake it wa involved in
+ii) retrieves the password from the secure user credential store and
+calculates the HMAC response
+if it matches, there wa no MITM, if it doesn't match the user most likely
+entered the response into a MITM (SSL proxy) and the server better abort
+the session.
+
+passwordsafe development (as per the above URL) ha indicated to be interested in providing a prototype for this. We would take care of providing the server-side part for it.
+
+Would Firefox participate a well?
+
+-------
+P.S.: As soon a the refereeing process is over, we'll be able to provide two detailed paper on this approach including a way to authenticate the server back to the user and many more variant of the overall MITM protection issue, some of which might not be contributed to the open source.
+
+Reproducible: Always
+
+
+
+
+see also Bug 285361 - also, I guess this is a lot simpler than what is discussed in Bug 268835

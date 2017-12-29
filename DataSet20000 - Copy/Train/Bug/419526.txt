@@ -1,0 +1,21 @@
+during session restore download manager can grab both connections to a web server and prevent html, css, images etc from loading correctly
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.9b4pre) Gecko/2008021904 Minefield/3.0b4pre
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.9b4pre) Gecko/2008021904 Minefield/3.0b4pre
+
+1. open a webpage with lots of links to really big files on the same webserver as the html file
+2. start downloading a few of the really big files (I used the ogg videos here: http://radeonhd.org/?page=fosdem_videos )
+3. once you got several files queued up for download and 2 connections to the web server open downloading, kill the firefox process (for me it was actually a crash but it doesn't matter)
+4. launch ff again and select session restore
+
+The download manager will now (possibly pending a race condition) grab two connections to the web server and while loading to the normal html/css/image downloads will be blocked.
+
+Theoretically one could run into this problem by just surfing to the above webpage, starting two downloads and then pressing reload on the HTML page. However, very often ff will establish a keep-alive http session and thus avoiding this problem. During the session restore there is no keep-alive connection established because the download manager is faster to connect than the html page (I had like 50 ff windows with like 10 tabs each when ff crashed in the first place and a session restores takes 2-3 minutes to finish on my machine with that much stuff open).
+
+Conceptually one can ask if it's reasonable for stuff in the download manager to starve normal html/css/image downloads like this? A download started by "save file as" is kind of different from an image download that starts because an html page is loading.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.
+2.
+3.

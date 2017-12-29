@@ -1,0 +1,13 @@
+Harden customize enter/exit code so it doesn't break so easily
+After the merge to nightly, a *lot* of bug were filed that boiled down to not being able to enter/exit customize mode. All of them that I've seen were caused by custom theme or add-on breaking things, or by our code removing button that shouldn't be removed (bug 940946 and it dupes).
+
+While we can fix the theme bit by fixing bug 918782, and we can fix bug 940946 once we investigate it more (I should hope), I think we should investigate doing more. Ideas:
+
+- for enter/exit, make the catch clause try to restore to non-customize mode instead of just giving up and going "well, that's terrible" without a user-visible message, or, at a minimum, display the error that broke stuff prominently in both the in-tab document and the pane in which we'd normally show the customize stuff.
+
+- make the toolbarbutton wrap/unwrap more fault-tolerant. It currently doe a bunch of unwrapping without checking there's something in the thing it's unwrapping. While it's clearly a problem if stuff inside a wrapper ha disappeared, the current 'solution' is to throw JS error and go sadfaces. We should do better.
+
+- make the transition listener and/or other yield clause have some kind of timeout so that we don't ever just sit there without completing other steps. No idea how to architecture that, exactly, but it sound like it might help.
+
+
+These idea aren't particularly great (well, apart from #2 which I think we should just do ASAP), so I'd love to hear more idea about how to make this le fragile.

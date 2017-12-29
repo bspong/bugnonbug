@@ -1,0 +1,37 @@
+Use always-alive Promise from panel scripts.
+Work on bug 1387128 highlighted possible races in toolbox shutdown.
+
+During toolbox close, panel documents are destroyed (their iframe is removed from browser.xul). And all the references to DOM Promises from documents are "suspended". (i.e. they never resolve) It happens at some point during document unload.
+We can still have references to then, but they won't resolve anymore.
+
+Here is an example on canvas panel.
+
+http://searchfox.org/mozilla-central/source/devtools/client/canvasdebugger/panel.js#70
+    return this._destroyer = this.panelWin.shutdownCanvasDebugger().then(() => {
+      // Destroy front to ensure packet handler is removed from client
+      this.panelWin.gFront.destroy();
+      this.emit("destroyed");
+    });
+`this.panelWin.shutdownCanvasDebugger()` never resolves
+
+http://searchfox.org/mozilla-central/source/devtools/client/canvasdebugger/canvasdebugger.js#114-120
+  return Promise.all([
+    EventsHandler.destroy(),
+    SnapshotsListView.destroy(),
+    CallsListView.destroy()
+  ]);
+canvasdebugger.js is a javascript file loaded in canvas panel document, whereas panel.js is a module.
+(Note that all these 'destroy' methods don't return any promise but undefined.
+That isn't the issue.)
+
+`return Promise.all([]);` and  `return Promise.resolve();` will both work
+`return Promise.all([undefined]);` won't as well as return `new Promise(d => setTimeout(d, 0));`
+We just have a timing issue where we end up being called before/after document unload.
+
+You can reproduce this issue by running this:
+./mach mochitest devtools/client/canvasdebugger/test/browser_canvas-frontend-record-04.js devtools/client/canvasdebugger/test/browser_profiling-canvas.js
+(with the promise refactoring patches applied, where we end up using DOM Promises instead of Promise.jsm)
+
+
+Now, I haven't audited all the code, but we should ensure either using Promise.jsm or privileged DOM Promises that are never frozen.
+Otherwise we are most likely keeping around toolbox shutdown breakages that lead to broken toolbox that are not correctly removed from UI.

@@ -1,0 +1,72 @@
+An alert box display disables a SELECT tag
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.9.1.2) Gecko/20090729 Firefox/3.5.2 (.NET CLR 3.5.30729)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.9.1.2) Gecko/20090729 Firefox/3.5.2 (.NET CLR 3.5.30729)
+
+I have a simple HTML script that creates a small SELECT tag.  This is followed by an empty DIV that is identified to be filled by an AJAX script.  There is a javascript function that calls the AJAX to LOAD the DIV each time the SELECT changes.  If the AJAX script displays an ALERT box message, the SELECT tag no longer functions.  I have included the code snippets below.
+
+Here is the HTML code to create the SELECT tag, followed by the JAVASCRIPT that is invoked each time the SELECT tag "changes".
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <script type='text/javascript' src='javascript/jquery-1.3.2.min.js'></script>
+</head>
+<body>
+	Select an option:
+  <select id='selection'>
+	<option value=1>Hello 1</option>
+	<option value=2>Hello 2</option>
+	<option value=3>Hello 3</option>
+	<option value=4>Hello 4</option>
+	<option value=5>Hello 5</option>
+	</select>
+  <div id='ajaxWillFillThis'></div>
+
+<script type="text/javascript">
+$("#selection").change
+(
+function()
+{
+var selected = $(this).val();
+$("#ajaxWillFillThis").load('ajax_FillThis.php?selected=' + selected);
+}
+);
+
+</script>
+</body>
+</html>
+
+Here is the AJAX (well, actually, it's PHP code) script that is called each time the SELECT changes.  It should be saved in a file named the same as the name in the JAVASCRIPT above (ajax_FillThis.php).
+
+<?php
+$id = $_GET['selected'];
+if ($id < 5)
+{
+echo "You selected option number: $id";
+}
+else
+{
+$msg = "Sorry - you selected option number $id";
+echo "<script type='text/javascript'>alert('$msg');</script>";
+}
+?>
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.Run the HTML script in FireFox
+2.Choose something from the SELECT box
+3.If you choose the 5th option, you will see an ALERT box
+4.At that point, the SELECT box no longer functions until you reload the page.
+Actual Results:  
+This is running on my system with PHP installed, using localhost as the URL server.  My development system is Dreamweaver CS4, although that doesn't seem to be related to the problem.  
+
+I have 3 files in a directory.  The HTML, the AJAX and the javascript referenced in the HTML.
+
+Expected Results:  
+Obviously, the expected result would be for the SELECT tag to continue functioning.
+
+
+
+I have tested this in 7 different browsers.  FireFox is the only one with a problem.

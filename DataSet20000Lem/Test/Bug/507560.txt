@@ -1,0 +1,157 @@
+Incorrect pulldown menu option selected on page after refresh that ha anchor in URL
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.12) Gecko/2009070611 Firefox/3.0.12
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.12) Gecko/2009070611 Firefox/3.0.12
+
+Sorry in advance if this ha already been submitted, but I couldn't find one. Perhaps the keywords I used weren't so great.
+
+I use an application that us a pop-up window to enter a sale. From the main page, called main.php, code to call required pop-up is:
+
+<a href="#" onClick="window.open('/saleadd.php' ,'mywindow','scrollbars=yes,location=no,status=no,resizable=yes,width=700,height=600');">Add Sale</a>
+
+As a result, the former tab result in '#' appended to the URL.
+
+Once saleadd.php is submitted, it add data to a table that main.php reads. It's currently not set to refresh automatically, so when user perform a refresh by pressing the Reload button or F5 on the keyboard, the screen refreshes - containing
+
+When I view the source code, it is correct in the fact the 'SELECTED' option is not selected when it should be. So, to me, it appears to be a rendering issue.
+
+To get Firefox to correctly render the page, the user need to remove the # from the URL and press Enter.
+
+In addition, I've been able to create a local HTML file that appears to reproduce the problem. It will be used a my reproducibility sample.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Create a test web page, save a test.htm:
+
+
+<html>
+<head></head>
+<body>
+
+<p>Form #1
+<p><form>
+<select name="pulldown1">
+<option value="1" SELECTED>1</option>
+<option value="2">2</option>
+<option value="3">3</option>
+<option value="4">4</option>
+<option value="5">5</option>
+<option value="6">6</option>
+</select>
+<select name="pulldown2">
+<option value="1">1</option>
+<option value="2">2</option>
+<option value="3" SELECTED>3</option>
+<option value="4">4</option>
+<option value="5">5</option>
+<option value="6">6</option>
+</select>
+<select name="pulldown3">
+<option value="1">1</option>
+<option value="2">2</option>
+<option value="3">3</option>
+<option value="4">4</option>
+<option value="5" SELECTED>5</option>
+<option value="6">6</option>
+</select>
+</form>
+
+<p>Form #2
+<p><form>
+<select name="pulldown1">
+<option value="1">1</option>
+<option value="2" SELECTED>2</option>
+<option value="3">3</option>
+<option value="4">4</option>
+<option value="5">5</option>
+<option value="6">6</option>
+</select>
+<select name="pulldown2">
+<option value="1">1</option>
+<option value="2" SELECTED>2</option>
+<option value="3">3</option>
+<option value="4">4</option>
+<option value="5">5</option>
+<option value="6">6</option>
+</select>
+<select name="pulldown3">
+<option value="1">1</option>
+<option value="2">2</option>
+<option value="3">3</option>
+<option value="4">4</option>
+<option value="5">5</option>
+<option value="6" SELECTED>6</option>
+</select>
+</form>
+
+</body>
+</html>
+
+
+2. Open test.htm in Firefox.
+3. Edit test.htm, deleting everything relating to Form #1, resulting in:
+
+
+<html>
+<head></head>
+<body>
+
+<p>Form #2
+<p><form>
+<select name="pulldown1">
+<option value="1">1</option>
+<option value="2" SELECTED>2</option>
+<option value="3">3</option>
+<option value="4">4</option>
+<option value="5">5</option>
+<option value="6">6</option>
+</select>
+<select name="pulldown2">
+<option value="1">1</option>
+<option value="2" SELECTED>2</option>
+<option value="3">3</option>
+<option value="4">4</option>
+<option value="5">5</option>
+<option value="6">6</option>
+</select>
+<select name="pulldown3">
+<option value="1">1</option>
+<option value="2">2</option>
+<option value="3">3</option>
+<option value="4">4</option>
+<option value="5">5</option>
+<option value="6" SELECTED>6</option>
+</select>
+</form>
+
+</body>
+</html>
+
+
+then save.
+4. Refresh page in Firefox.
+Actual Results:
+After step 2, values:
+
+Form #1: 1 3 5
+Form #2: 2 2 6
+
+After step 4, values:
+Form #2: 1 3 5
+
+Expected Results:
+After step 2, values:
+
+Form #1: 1 3 5
+Form #2: 2 2 6
+
+After step 4, values:
+Form #2: 2 2 6
+
+The application ha been tested in IE 8, and test.htm tested in IE 6 and IE 8. There were no pulldown rendering issue in either browser.
+
+The application and test.htm were also tested in Portable FireFox 3.5.1 (in addition to my Firefox 3.0.12 install - separate PCs), and both exhibited the same symptoms.
+
+In my application, each form which had the pull-down option had the same name. A fix I've applied in the meantime is to give each form a unique name.
+
+Giving unique name to the form in test.htm also fix the problem.

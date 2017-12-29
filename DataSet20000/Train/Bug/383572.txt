@@ -1,0 +1,22 @@
+changes made to bookmarks don't show in bookmark searches / Crash [@ nsCOMArray_base::InsertObjectAt nsNavHistoryFolderResultNode::OnItemChanged] deleting "ghost" bookmark
+Build ID: Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.9a6pre) Gecko/20070606 Minefield/3.0a6pre
+
+Summary: Crash [@ nsCOMArray_base::InsertObjectAt nsNavHistoryFolderResultNode::OnItemChanged] deleting "ghost" bookmark
+
+Steps to Reproduce (sorry, hard to repro; maybe someone can sprinkle null checks?)
+
+1. In the Bookmarks Manager, I had a bookmark for http://ambientpersona.deviantart.com/, among 5 or so others of varied sites
+2. I was testing quicksearch/typedown, and typed "a"
+3. I right-clicked on its entry (once a few others were successfully filtered), and chose "Delete"
+4. I then clicked the red close (X) widget in the quicksearch/typedown textfield, which restored the view
+5. Oddly enough, the already-deleted "ambientpersona.deviantart.com" bookmark re-appeared, so I tried deleting it again
+6. I immediately crashed, here:
+
+0x84caf000
+nsCOMArray_base::InsertObjectAt  [mozilla/xpcom/build/nscomarray.cpp, line 89]
+nsNavHistoryFolderResultNode::OnItemChanged  [mozilla/toolkit/components/places/src/nsnavhistoryresult.cpp, line 3210]
+nsNavHistoryResult::OnItemChanged  [mozilla/toolkit/components/places/src/nsnavhistoryresult.cpp, line 3741]
+nsNavBookmarks::OnDeleteURI  [mozilla/toolkit/components/places/src/nsnavbookmarks.cpp, line 2481]
+nsNavHistory::RemovePage  [mozilla/toolkit/components/places/src/nsnavhistory.cpp, line 2465]
+NS_InvokeByIndex_P  [mozilla/xpcom/reflect/xptcall/src/md/win32/xptcinvoke.cpp, line 102]
+XPCWrappedNative::CallMethod  [mozilla/js/src/xpconnect/src/xpcwrappednative.cpp, line 2229]

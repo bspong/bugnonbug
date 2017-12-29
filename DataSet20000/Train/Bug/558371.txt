@@ -1,0 +1,20 @@
+SSL proxy server is not changed without restarting
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.2; en-US; rv:1.9.2.3) Gecko/20100401 Firefox/3.6.3 (.NET CLR 3.5.30729)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.2; en-US; rv:1.9.2.3) Gecko/20100401 Firefox/3.6.3 (.NET CLR 3.5.30729)
+
+When the SSL proxy server configuration is changed to a different server, the actual proxy in use does not change until the connection with the original server is broken.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Set a working SSL proxy server.
+2. Load an SSL page and observe through packet capture or proxy server logs which proxy server is being communicated with.
+3. Change the proxy server to a different working SSL proxy server.
+4. Load an SSL page and observe through packet capture or proxy server logs which proxy server is being communicated with.
+Actual Results:  
+The SSL proxy server Firefox communicates with is the same in steps 2 and 4 above as the server configured in step 1.
+
+Expected Results:  
+The proxy server being used in step 4 above should be the one configured in step 3, not the one configured in step 1.
+
+My guess is that as long as a TCP connection to the proxy server is active, that it will be used. Changing the server configuration does not seem to break that TCP session, so new connections will reuse it. Restarting Firefox will cause the new server to be used.

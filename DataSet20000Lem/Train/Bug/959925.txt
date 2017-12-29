@@ -1,0 +1,45 @@
+pdf.js: too many copy of image
+Decoding and painting an image in pdf.js involves lot of copy of the data.
+
+(a) pdf.worker.js is a JS worker. It first decodes the colour data from the PDF
+into an RGB array (24 bit per pixel), and the opacity data into an A array
+(8 bit per pixel). These two combined are effectively copy 1.
+
+(b) pdf.worker.js combine the RGB and A array into a new RGBA typed array,
+which ha 32 bit per pixel. This is copy 2. Copy 1 is now dead, and will
+be reclaimed by the next GC.
+
+(c) pdf.worker.js transfer copy 2 to the main pdf.js thread. (This is a
+transfer, not a copy, possible because it's a typed array.)
+
+(d) pdf.js doe |d = createImageData()|, which end up in
+mozilla::dom::CreateImageData(), which allocates a Uint8ClampedArray. This
+is copy 3. pdf.js copy the typed array (copy 2) into the ImageData (copy
+3). Copy 2 is now dead, and will be reclaimed by the next GC.
+
+(e) pdf.js doe |putImageData(d, 0, 0)|, which end up in
+mozilla::dom::CanvasRenderingContext2D::PutImageData_explicit.
+
+(f) PutImageData_explicit() creates a new gfxImageSurface() and copy in the
+data. This is copy 4, and it is short-lived.
+
+(g) PutImageData_explicit() then call CreateSourceSurfaceFromData(), creating
+a cairo surface. This is copy 5, and it is short-lived. Copy 3 is now dead,
+and will be reclaimed by the next GC(?)
+
+Each copy can easily be multiple MB, and in the worst case (which is probably
+common) we have five copy of the data alive at once.
+
+So, way to improve it.
+
+- In step (d) and (e) we can split the image up into smaller chunks, and then
+create/put those chunk one at a time. This will make copy 3, 4 and 5 much
+smaller.
+
+- In step (a) and (b) it is possible to decode the data directly into the RGBA
+array, which would merge copy 1 and 2. However, it's not easy, due to the
+various kind of colour encoding and the possibility of image being
+resized.
+
+If we did both of those, we end up with one full-size copy, and three copy of
+each chunk, but two of the copy of each chunk would be very short-lived.

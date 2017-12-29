@@ -1,0 +1,75 @@
+javascript can't invoke applet's method
+User-Agent: Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 5.1; Trident/4.0; GTB6; .NET CLR 2.0.50727; .NET CLR 3.0.4506.2152; .NET CLR 3.5.30729)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; zh-TW; rv:1.9.0.12) Gecko/2009070611 Firefox/3.0.12 (.NET CLR 3.5.30729)
+
+i use sun's applet tag spac to run a applet:
+
+<OBJECT name="myapplet" classid="clsid:8AD9C840-044E-11D1-B3E9-00805F499D93"
+width="200" height="200" align="baseline"
+codebase="http://java.sun.com/products/plugin/1.3/jinstall-13-win32.cab#Version=1,3,0,0">
+<PARAM NAME="code" VALUE="XYZApp.class">
+<PARAM NAME="codebase" VALUE="html/">
+<PARAM NAME="type" VALUE="application/x-java-applet;version=1.3">
+<PARAM NAME="model" VALUE="models/HyaluronicAcid.xyz">
+<PARAM NAME="scriptable" VALUE="true">
+<PARAM NAME="mayscript" VALUE="true">
+<COMMENT>
+<EMBED name="myapplet" type="application/x-java-applet;version=1.3" width="200"
+height="200" align="baseline" code="XYZApp.class"
+codebase="html/" model="models/HyaluronicAcid.xyz"
+scriptable=true mayscript=true
+pluginspage="http://java.sun.com/products/plugin/1.3/plugin-install.html">
+<NOEMBED>
+No Java 2 SDK, Standard Edition v 1.3 support for APPLET!!
+</NOEMBED></EMBED>
+</COMMENT>
+</OBJECT>
+
+The applet can be run correctly in firefox and IE.
+but when i invoke applet's method by a javascript, it got error in firefox.
+<script language="JavaScript">
+function onClickButton()
+{
+try{
+alert(document.fixmapapplet.getValue());
+}catch(e){
+alert(e)
+}
+}
+</script>
+it will be show "TypeError: document.myapplet.getValue is not a function".
+but it work fine in IE.
+I try many way to fix it.
+finally, i test it ok in firefox.
+the solution is:
+<COMMENT>
+<EMBED name="myapplet" type="application/x-java-applet;version=1.3" width="200"
+height="200" align="baseline" code="XYZApp.class"
+codebase="html/" model="models/HyaluronicAcid.xyz"
+scriptable=true mayscript=true
+pluginspage="http://java.sun.com/products/plugin/1.3/plugin-install.html">
+<NOEMBED>
+
+No Java 2 SDK, Standard Edition v 1.3 support for APPLET!!
+</NOEMBED></EMBED>
+</COMMENT>
+it can't be add OBJECT tag in firefox.
+but according to Sun's spac,
+IE understands the <OBJECT> tag, it will try to launch Java Plug-in. Notice that the <COMMENT> tag is a special HTML tag understood only by IE. IE ignores text between the <COMMENT> and </COMMENT> tags.
+
+Navigator doe not understand the OBJECT and COMMENT tags, it will only use EMBED tag and ignores <COMMENT> and </COMMENT> tags.
+The applet had run successfully in firefox. so it prove the Navigator is only use EMBED tag to run the applet and ignores <COMMENT> and </COMMENT> tags.
+but why Java to Javascript Communication will be broken when the EMBED tag is in OBJECT tag?
+And when i only use EMBED tag without OBJECT tag, the Java to Javascript Communication work fine.
+Is it a bug?
+please answer me.
+if it is a bug, please fix it. Thanks a lot.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.run a applet with java plugin new tag.
+2.use javascript to invoke a applet's method.
+3.got error.
+Actual Results:
+TypeError: document.myapplet.getValue is not a function

@@ -1,0 +1,10 @@
+Download Actions dialog inaccurately duplicate logic in helper app service
+The Download Actions dialog extract information about helper apps from the mimeTypes.rdf file. This process duplicate logic in the helper app service (in FillContentHandlerProperties) that extract such info into an nsIMIMEInfo object (soon to be an nsIHandlerInfo object).
+
+Not only is the code redundant, it isn't equivalent. For example, in the service the "useSystemDefault" property override the "saveToDisk" property, but in the dialog it's the other way around, so if both property are set to true, the dialog claim Firefox will save such a file to disk when it will actually open it in the system default application.
+
+This may not be a problem because only one of those property is ever true at a time (which make me wonder why they're separate RDF properties; nsIMIMEInfo us a single attribute, preferredAction, to distinguish between them), but it's suboptimal that the duplication creates the potential for such bugs, and there may be other such issue lurking in the code.
+
+And there's no need for it, since the dialog is capable of retrieving an nsIMIMEInfo object from the nsIMIMEService (and in fact doe retrieve such an object in addition to extracting the same info by hand).
+
+The dialog should just use the information it get from the nsIMIMEInfo object rather than querying the RDF datasource directly for it. I'll fix this in the process of fixing bug 377784, but I'm filing this bug to track the issue.

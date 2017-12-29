@@ -1,0 +1,39 @@
+Using the inspector triggers CSP violation reports
+User Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:40.0) Gecko/20100101 Firefox/40.0
+Build ID: 20150812163655
+
+Steps to reproduce:
+
+If you set up CSP on a website without style-src 'unsafe-inline', the Firefox inspector send a LOT of CSP notifications, kind of :
+
+{
+    "csp-report": {
+        ...
+        "script-sample": "top:62px;left:720px;",
+        ...
+    }
+}
+
+I’ve set up a testpage here, all CSP notifications on it are sent to report-uri /csp-parser.php and put into a database.
+
+Here are the steps to understand the issue:
+
+1) Open http://csp.nicolas-hoffmann.net/ 
+2) The page is going to generate a unique id, ex http://csp.nicolas-hoffmann.net/?id=foo
+3) Wait some seconds. The page doesn't find any notification in the database.
+4) Now inspect the page with Firefox inspector, please highlight some elements.
+5) Close the inspector
+6) Refresh the page with the id you have : http://csp.nicolas-hoffmann.net/?id=foo
+7) It is going to find a lot of CSP errors.
+
+
+Actual results:
+
+A lot of CSP notifications are sent to report-uri.
+
+
+Expected results:
+
+I suppose that it shouldn't send CSP notifications (they are not shown in the console). I've tested the same steps on Chrome, Opera, Edge, it didn't send any CSP notification.
+
+If you set up email notifications instead of database, if somebody opens the firefox inspector on a page, you can receive 100 emails by minute, especially annoying when you use it to remove inline-styles :-\

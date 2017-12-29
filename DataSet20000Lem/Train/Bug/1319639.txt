@@ -1,0 +1,29 @@
+Firefox doesn't enter "needs reauthentication" state after 401 getting a certificate during a sync
+If we get a 401 fetching an initial token before we sync everything act correctly. However, subsequent 401s hitting /certificate/sign will *not* enter needs-reauthenication state until the browser is restarted. This mean that in this case the browser is silently failing to sync without the user being aware.
+
+I simulated this with a simple patch which is below. It appears that sync isn't sending the notification browser-fxaccounts expects to see to update the state. Adding "weave:service:sync:error" to the list of observer that cause u to update the UI appears would fix it.
+
+patch against 50, which also requires the pref services.sync.debug.ignoreCachedAuthCredentials to be set to true (the hard-coded 7 is roughly how many token fetch will be done such that sync is actually running when the failure is simulated)
+
+--- a/services/fxaccounts/FxAccounts.jsm
++++ b/services/fxaccounts/FxAccounts.jsm
+@@ -33,6 +33,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "FxAccountsProfile",
+XPCOMUtils.defineLazyModuleGetter(this, "Utils",
+"resource://services-sync/util.js");
+
++let numCertificateRequests = 0;
+// All property exposed by the public FxAccounts API.
+var publicProperties = [
+"accountStatus",
+@@ -1005,6 +1006,11 @@ FxAccountsInternal.prototype = {
+
+// and generate the cert.
+let certWillBeValidUntil = this.now() + CERT_LIFETIME;
++ ++numCertificateRequests;
++ if (numCertificateRequests == 7) {
++ log.debug("simulating certificate failure");
++ throw { code: 401, errno: ERRNO_INVALID_AUTH_TOKEN };
++ }
+let certificate = yield this.getCertificateSigned(accountData.sessionToken,
+keyPair.rawKeyPair.serializedPublicKey,
+CERT_LIFETIME);

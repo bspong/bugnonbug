@@ -1,0 +1,18 @@
+POST, Refresh (and resubmit data), Redirect using GET will continue to POST DATA on refresh
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3
+
+If you have a page which will conduct a form POST (to itself) and you want to detect that the form will be re-posted when the user presses the refresh button on their browser you may do so (using session variables for example).  When you have detected the fact that this is a re-post you may safely redirect (Header response 303 or 302) the user back to the same page as a GET (to avoid the POSTDATA from being sent to the page again).  This works fine until the user attempts to refresh the page a second time, at which point the original POSTDATA from your first POST is saved and the browser will attempt to REPOST this data to the GET (redirected) page.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. POST to a page
+2. Refresh the page (and re-submit post data)
+3. (Detect that the page has been re-posted) redirect back to the same page using header 303 or 302 to produce a GET request
+4. Refresh the page (it will once again request to re-submit post data), clicking yes will re-post the original form data
+Actual Results:  
+The form data is re-posted to the last step #4 and available to the page
+
+Expected Results:  
+The data should not be posted to the page in step #4 (nor should the dialog appear which asks for permission to re-post the data)

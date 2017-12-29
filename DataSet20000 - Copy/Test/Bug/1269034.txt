@@ -1,0 +1,17 @@
+Markup view "body #" search show suggestion "body #"
+STR:
+1. Open `data:text/html;charset=utf-8,%0A<body>%0A<div id%3D"test">test<%2Fdiv>%0A<div>test<%2Fdiv>%0A<%2Fbody>%0A`
+2. Open inspector
+3. In the search field, type `body #`
+
+Expected Result:
+One suggestion ("body #test" is shown in the popup)
+
+Actual Result:
+There are two suggestion in the popup, "body #test", which is right, "body #", which seems wrong (pressing enter outputs "no results")
+
+
+The problem comes from actor's `getSuggestionsForQuery` function (https://dxr.mozilla.org/mozilla-central/source/devtools/server/actors/inspector.js#2245). The sent `query` parameter is "body *", and thus `_multiFrameQuerySelectorAll`returns the 2 div child nodes, and then put their id in a set. But because only one of the two divs got an id, we end up having the "body #" suggestion.
+A simple solution would be to test if the id of the node is not undefined before adding it to the result ( https://dxr.mozilla.org/mozilla-central/source/devtools/server/actors/inspector.js#2251 ).
+
+However there is one test that rely on such suggestion ( https://dxr.mozilla.org/mozilla-central/source/devtools/client/inspector/test/browser_inspector_search-reserved.js#93 ), so I'm wondering if this is an expected behavior.

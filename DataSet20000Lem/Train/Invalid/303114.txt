@@ -1,0 +1,134 @@
+Thunderbird mangle IMAP server directory path string
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.7) Gecko/20050416 Fedora/1.0.3-1.3.1 Firefox/1.0.3
+Build Identifier: Thunderbird 1.0.2 (20050317)
+
+We are running uw-imap server. By convention, users' mail folder are stored on
+the server in "~/Mail/". This is set in the Thunderbird mail account property
+named "Imap server directory" (via the dialog box at Account
+Settings->Server->Settings->Advanced Account Settings->IMAP(tab)), either using
+the absolute path "~/Mail/" or the relative path "Mail" (Either way should
+work). Thunderbird sometimes mangle the path string, converting slash
+character (/) into pipe character (|). For example, ~/Mail/Sent becomes
+~|Mail|Sent, or Mail/Trash becomes Mail|Trash.
+
+I have closely examined the problem using Thuderbird 1.0.2 on Windows XP in a
+simple and reproducible test scenario. However, we have encountered many
+variation of this problem in a variety of real-life scenarios, involving
+various version of Thuderbird client and Mozilla mail clients, in combination
+with various version of uw-imapd, in various configurations.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Create a new user acount on a mail server running uw-imapd. The new account
+skeleton ha an empty "~/Mail/" directory. Initially, .mailboxlist doe not exist.
+
+2. Create a new imap user account in Thuderbird, with the following properties:
+
+Imap server directory: ~/Mail/ (or, alternatively, just "Mail")
+Show only subscribed folder: CHECKED
+Server support folder that contain subfolders and messages: UNCHECKED
+Use idle commnad if server support it: CHECKED
+Allow server to override the name spaces: UNCHECKED
+
+3. Connect to server and attempt to create or access folder on the server.
+
+Actual Results:
+Upon initial connection, TB attempt to create a Trash folder on server. Upon
+sending a message, TB attempt to create a Sent folder on server. But the path
+sent in the IMAP CREATE command is mangled. Therefore, the server either fails
+to create folder or else creates folder with incorrect path/name.
+
+More specifically, TB translates slash (/) into pipe (|), and so attempt to
+create folder name like "~|Mail|Sent" (if using tilde path) or "Mail|Sent" (if
+using relative path).
+
+
+Expected Results:
+TB should have created the directory in their proper paths, ie. ~/Mail/Trash, etc.
+
+Here is the exchange which follows the initial authentication (from tcpdump):
+
+UW-IMAPD -> Thunderbird IMAP Response: 2 OK [CAPABILITY IMAP4REV1 IDLE
+NAMESPACE MAILBOX-REFERRALS BINARY UNSELECT SCAN SORT THREAD=REFERENCES
+THREAD=ORDEREDSUBJECT MULTIAPPEND] User testuser authenticated
+Thunderbird -> UW-IMAPD IMAP Request: 3 lsub "" "~/Mail/*"
+UW-IMAPD -> Thunderbird IMAP Response: 3 OK LSUB completed
+Thunderbird -> UW-IMAPD IMAP Request: 4 list "" "INBOX"
+UW-IMAPD -> Thunderbird IMAP Response: * LIST (\NoInferiors) NIL INBOX
+Thunderbird -> UW-IMAPD IMAP Request: 5 list "" "~|Mail|Trash"
+UW-IMAPD -> Thunderbird IMAP Response: 5 OK LIST completed
+Thunderbird -> UW-IMAPD IMAP Request: 6 create "~|Mail|Trash"
+UW-IMAPD -> Thunderbird IMAP Response: 6 NO CREATE failed: Can't create
+~|Mail|Trash: invalid name
+
+My explanation of the above: Thunderbird initially query subscription list
+(lsub) using the correct server path "~/Mail/*". This being a newly created
+account, the server correctly return nothing (i.e., ~/Mail/* is empty).
+Thunderbird apparently doesn't like this response, and so Thunderbird mangle
+the the server path string to ~|Mail|, and continues to use this mangled path
+string for all subsequent communication with server, causing subsequent
+command to fail.
+
+For comparison, I created another test case, the only differnce being that I
+manually edited the uw-imap subscription list file, .mailboxlist, adding the
+fake entry "~/Mail/nonexistentfolder". The ~/Mail/ directory still empty, a
+before. Compare:
+
+UW-IMAPD -> Thunderbird IMAP Response: 1 OK [CAPABILITY IMAP4REV1 IDLE
+NAMESPACE MAILBOX-REFERRALS BINARY UNSELECT SCAN SORT THREAD=REFERENCES
+THREAD=ORDEREDSUBJECT MULTIAPPEND] User testuser authenticated
+Thunderbird -> UW-IMAPD IMAP Request: 2 lsub "" "~/Mail/*"
+UW-IMAPD -> Thunderbird IMAP Response: * LSUB () "/" ~/Mail/nonexistentfolder
+Thunderbird -> UW-IMAPD IMAP Request: 3 list "" "INBOX"
+UW-IMAPD -> Thunderbird IMAP Response: * LIST (\NoInferiors) NIL INBOX
+Thunderbird -> UW-IMAPD IMAP Request: 4 list "" "~/Mail/Trash"
+UW-IMAPD -> Thunderbird IMAP Response: 4 OK LIST completed
+Thunderbird -> UW-IMAPD IMAP Request: 5 create "~/Mail/Trash"
+UW-IMAPD -> Thunderbird IMAP Response: 5 OK CREATE completed
+Thunderbird -> UW-IMAPD IMAP Request: 6 subscribe "~/Mail/Trash"
+UW-IMAPD -> Thunderbird IMAP Response: 6 OK SUBSCRIBE completed
+Thunderbird -> UW-IMAPD IMAP Request: 7 list "" "~/Mail/Trash"
+UW-IMAPD -> Thunderbird IMAP Response: * LIST (\NoInferiors \UnMarked) "/"
+~/Mail/Trash
+
+This time the server responds to the initial lsub query, returning the fake
+folder name. Thunderbird is happy and go on to create the Trash folder in the
+proper (~/Mail/) directory.
+
+So these test case show clearly the nature of the problem in a simple,
+reproducible scenario involving a newly created user account, but the problem,
+unfortunately, is more pervasive. (If the problem were only in creating new
+user accounts, the above finding suggest a simple work-around.) We also
+encounter the same path-mangling in other common situations: (1) When migrating
+a user to a new desktop PC and reconnecting to his existing imap server account
+(2) in deployment testing of a new, upgraded mail server, when we migrate user
+mail account to the new mail server and connect from existing clients. In
+these cases, when the user attempt to access an existing mailbox, he get a
+message like:
+
+"The current command did not succeed. The mail server responded: SELECT failed:
+Can't open mailbox ~|Mail|Sent: no such mailbox."
+
+So the common thread here is that the server path ha been mangled, and so the
+folder (in this case a real, existing folder) cannot be accessed. I have not
+yet had the opportunity to analyze these case in depth, but from what I know
+now, I am guessing it might also have something to do with the content server
+subscription file, or more precisely, Thunderbird's pathological response to
+what is being returned by the lsub command.
+
+It would seem that Thunderbird's refresh function (i.e., the "refresh" button
+from Thunderbird's "Subscribe" dialog box) ought to be able to sort out any
+discrepancy between the subscription list and what actually exists in the
+server directory path, but I have observed that, when refreshing, Thunderbird
+also query the server using the mangled path, so nothing is found, and so the
+"refresh" function is quite useless.
+
+So in summary, I have experienced a variety of problem resulting from TB
+mangling the server directory path string by translating slash (/) character to
+pipe (|) characters, and I have described a detailed test scenario for observing
+this bug in one of it various manifestations.
+
+Richard Ketcham
+Mail Administrator
+U.W. Dept. of Chemistry

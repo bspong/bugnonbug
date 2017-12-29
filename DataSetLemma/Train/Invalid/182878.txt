@@ -1,0 +1,151 @@
+Xft enabled build segfaults on startup (FreeBSD)
+User-Agent: Opera/6.1 (FreeBSD 4.7-STABLE i386; U) [en]
+Build Identifier: Mozilla 1.2b from FreeBSD port (www/mozilla-devel)
+
+I have installed mozilla-devel (= Mozilla 1.2b) from FreeBSD port collection with these options:
+make -D WITHOUT_MAILNEWS -D WITHOUT_CHATZILLA -D WITHOUT_COMPOSER (configure line is below)
+
+It always segfaults on startup, unless I compile it with -D WITHOUT_XFT.
+My Xft work fine in opera, openoffice, gnumeric2 etc, so the problem lie probably in mozilla.
+I have a report from other user with same problem, but there are also user using Xft on FreeBSD with no problem.
+I have already tried deleting ~/.mozilla, upgrading freetype etc. I am using TrueType font with Xft (coming from MS Windows).
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+
+
+
+
+
+configure line:
+./configure --disable-auto-deps --enable-chrome-format=jar --disable-cpp-exceptions --disable-cpp-rtti --enable-crypto --enable-double-buffer --enable-dtd-debug --enable-jsd --enable-mathml --disable-md --disable-optimize --disable-pedantic --disable-plaintext-editor-only --enable-strip --enable-svg --disable-tests --disable-xterm-updates --enable-xinerama --with-system-jpeg=/usr/local --with-system-mng=/usr/local --with-system-png=/usr/local --with-pthreads --disable-ldap --disable-mailnews --enable-extensions=default,xmlterm --disable-composer --enable-default-toolkit=gtk --enable-xft --enable-reorder --x-libraries=/usr/X11R6/lib --x-includes=/usr/X11R6/include --prefix=/usr/X11R6 i386-portbld-freebsd4.7
+
+
+startup report:
+[root@eddie tmp]# mozilla
+Type Manifest File: /usr/X11R6/lib/mozilla-devel/components/xpti.dat
+No running window found.
+Type Manifest File: /usr/X11R6/lib/mozilla-devel/components/xpti.dat
++++ JavaScript debugging hook installed.
+nsNativeComponentLoader: autoregistering begins.
+nsNativeComponentLoader: autoregistering succeeded
+nNCL: registering deferred (0)
+WARNING: dependent window created without a parent, file nsWindowCreator.cpp, line 148
+WARNING: nsXKBModeSwitch::ControlWorkaround:, file nsKeyboardUtils.cpp, line 78
+WARNING: grab_during, file nsKeyboardUtils.cpp, line 79
+WARNING: ungrab_duri, file nsKeyboardUtils.cpp, line 80
+WARNING:
+nsXKBModeSwitch::HandleMappingNotify: no Mode_switch
+, file nsKeyboardUtils.cpp, line 152
+WARNING:
+nsXKBModeSwitch::HandleMappingNotify:, file nsKeyboardUtils.cpp, line 154
+WARNING: gModeSwitch, file nsKeyboardUtils.cpp, line 155
+WARNING: gModeSwitch, file nsKeyboardUtils.cpp, line 156
+GFX: dpi=81 t2p=0.0555556 p2t=18 depth=24
+we don't handle eBorderStyle_close yet... please fix me
+WEBSHELL+ = 1
+IsPluginFile(/usr/local/jdk1.3.1/jre/plugin/i386/ns600/libjavaplugin_oji.so) == TRUE
+IsPluginFile(/usr/X11R6/lib/mozilla-devel/plugins/libnullplugin.so) == TRUE
+For application/x-java-vm found plugin /usr/local/jdk1.3.1/jre/plugin/i386/ns600/libjavaplugin_oji.so
+LoadPlugin() /usr/local/jdk1.3.1/jre/plugin/i386/ns600/libjavaplugin_oji.so returned 81d3360
+Note: verifyreflow is disabled
+Note: styleverifytree is disabled
+Note: frameverifytree is disabled
+Segmentation fault (core dumped)
+
+
+backtrace:
+#0 0x0 in ?? ()
+#1 0x19c1431a in FT_Get_Next_Char () from /usr/local/lib/libfreetype.so.9
+#2 0x19beb7e2 in FcFreeTypeCharSet () from /usr//X11/lib/libfontconfig.so.1
+#3 0x19bed4be in FcFreeTypeQuery () from /usr//X11/lib/libfontconfig.so.1
+#4 0x19bec97d in FcFileScan () from /usr//X11/lib/libfontconfig.so.1
+#5 0x19becbbb in FcDirScan () from /usr//X11/lib/libfontconfig.so.1
+#6 0x19be8047 in FcConfigBuildFonts () from /usr//X11/lib/libfontconfig.so.1
+#7 0x19bed870 in FcInitLoadConfigAndFonts () from /usr//X11/lib/libfontconfig.so.1
+#8 0x19bed8b3 in FcInit () from /usr//X11/lib/libfontconfig.so.1
+#9 0x19be8153 in FcConfigGetCurrent () from /usr//X11/lib/libfontconfig.so.1
+#10 0x19be935c in FcConfigSubstituteWithPat () from /usr//X11/lib/libfontconfig.so.1
+#11 0x19be984f in FcConfigSubstitute () from /usr//X11/lib/libfontconfig.so.1
+#12 0x19b54980 in nsFontMetricsXft::SetupFCPattern () from /usr/X11R6/lib/mozilla-devel/components/libgfx_gtk.so
+#13 0x19b54494 in nsFontMetricsXft::FindFont () from /usr/X11R6/lib/mozilla-devel/components/libgfx_gtk.so
+#14 0x19b53d2e in nsFontMetricsXft::RealizeFont () from /usr/X11R6/lib/mozilla-devel/components/libgfx_gtk.so
+#15 0x19b52ff0 in nsFontMetricsXft::Init () from /usr/X11R6/lib/mozilla-devel/components/libgfx_gtk.so
+#16 0x180e2748 in nsFontCache::GetMetricsFor () from /usr/X11R6/lib/mozilla-devel/./libgkgfx.so
+#17 0x180e160e in DeviceContextImpl::GetMetricsFor () from /usr/X11R6/lib/mozilla-devel/./libgkgfx.so
+#18 0x1a328556 in nsHTMLReflowState::UseComputedHeight () from /usr/X11R6/lib/mozilla-devel/components/libgklayout.so
+#19 0x1a32875a in nsHTMLReflowState::CalcLineHeight () from /usr/X11R6/lib/mozilla-devel/components/libgklayout.so
+#20 0x1a2e0e0a in nsBlockReflowState::nsBlockReflowState () from /usr/X11R6/lib/mozilla-devel/components/libgklayout.so
+#21 0x1a2c9eff in nsBlockFrame::Reflow () from /usr/X11R6/lib/mozilla-devel/components/libgklayout.so
+#22 0x1a4a55d6 in nsBoxToBlockAdaptor::Reflow () from /usr/X11R6/lib/mozilla-devel/components/libgklayout.so
+#23 0x1a4a43e6 in nsBoxToBlockAdaptor::RefreshSizeCache () from /usr/X11R6/lib/mozilla-devel/components/libgklayout.so
+#24 0x1a4a4c15 in nsBoxToBlockAdaptor::GetAscent () from /usr/X11R6/lib/mozilla-devel/components/libgklayout.so
+#25 0x1a4ada63 in nsSprocketLayout::GetAscent () from /usr/X11R6/lib/mozilla-devel/components/libgklayout.so
+#26 0x1a4a8a4d in nsContainerBox::GetAscent () from /usr/X11R6/lib/mozilla-devel/components/libgklayout.so
+#27 0x1a4bf44b in nsBoxFrame::GetAscent () from /usr/X11R6/lib/mozilla-devel/components/libgklayout.so
+#28 0x1a4ada63 in nsSprocketLayout::GetAscent () from /usr/X11R6/lib/mozilla-devel/components/libgklayout.so
+#29 0x1a4a8a4d in nsContainerBox::GetAscent () from /usr/X11R6/lib/mozilla-devel/components/libgklayout.so
+#30 0x1a4bf44b in nsBoxFrame::GetAscent () from /usr/X11R6/lib/mozilla-devel/components/libgklayout.so
+#31 0x1a4ada63 in nsSprocketLayout::GetAscent () from /usr/X11R6/lib/mozilla-devel/components/libgklayout.so
+#32 0x1a4a8a4d in nsContainerBox::GetAscent () from /usr/X11R6/lib/mozilla-devel/components/libgklayout.so
+#33 0x1a4bf44b in nsBoxFrame::GetAscent () from /usr/X11R6/lib/mozilla-devel/components/libgklayout.so
+#34 0x1a4ada63 in nsSprocketLayout::GetAscent () from /usr/X11R6/lib/mozilla-devel/components/libgklayout.so
+#35 0x1a4a8a4d in nsContainerBox::GetAscent () from /usr/X11R6/lib/mozilla-devel/components/libgklayout.so
+#36 0x1a4bf44b in nsBoxFrame::GetAscent () from /usr/X11R6/lib/mozilla-devel/components/libgklayout.so
+#37 0x1a4aaa12 in nsSprocketLayout::Layout () from /usr/X11R6/lib/mozilla-devel/components/libgklayout.so
+#38 0x1a4a8b61 in nsContainerBox::DoLayout () from /usr/X11R6/lib/mozilla-devel/components/libgklayout.so
+#39 0x1a4bf81b in nsBoxFrame::DoLayout () from /usr/X11R6/lib/mozilla-devel/components/libgklayout.so
+#40 0x1a4a02d5 in nsBox::Layout () from /usr/X11R6/lib/mozilla-devel/components/libgklayout.so
+#41 0x1a4af883 in nsStackLayout::Layout () from /usr/X11R6/lib/mozilla-devel/components/libgklayout.so
+#42 0x1a4a8b61 in nsContainerBox::DoLayout () from /usr/X11R6/lib/mozilla-devel/components/libgklayout.so
+#43 0x1a4bf81b in nsBoxFrame::DoLayout () from /usr/X11R6/lib/mozilla-devel/components/libgklayout.so
+#44 0x1a4a02d5 in nsBox::Layout () from /usr/X11R6/lib/mozilla-devel/components/libgklayout.so
+#45 0x1a4bf073 in nsBoxFrame::Reflow () from /usr/X11R6/lib/mozilla-devel/components/libgklayout.so
+#46 0x1a49c920 in nsRootBoxFrame::Reflow () from /usr/X11R6/lib/mozilla-devel/components/libgklayout.so
+#47 0x1a2efcb0 in nsContainerFrame::ReflowChild () from /usr/X11R6/lib/mozilla-devel/components/libgklayout.so
+#48 0x1a3b911c in ViewportFrame::Reflow () from /usr/X11R6/lib/mozilla-devel/components/libgklayout.so
+#49 0x1a36ef21 in IncrementalReflow::Dispatch () from /usr/X11R6/lib/mozilla-devel/components/libgklayout.so
+#50 0x1a3857e4 in PresShell::ProcessReflowCommands () from /usr/X11R6/lib/mozilla-devel/components/libgklayout.so
+#51 0x1a380fef in PresShell::FlushPendingNotifications () from /usr/X11R6/lib/mozilla-devel/components/libgklayout.so
+#52 0x190eeb43 in nsXULDocument::FlushPendingNotifications () from /usr/X11R6/lib/mozilla-devel/components/libgkcontent.so
+#53 0x1918f3b2 in nsXBLStreamListener::Load () from /usr/X11R6/lib/mozilla-devel/components/libgkcontent.so
+#54 0x18e8fc45 in nsEventListenerManager::HandleEvent () from /usr/X11R6/lib/mozilla-devel/components/libgkcontent.so
+#55 0x191d5dd6 in nsDocument::HandleDOMEvent () from /usr/X11R6/lib/mozilla-devel/components/libgkcontent.so
+#56 0x190abde6 in nsXMLDocument::EndLoad () from /usr/X11R6/lib/mozilla-devel/components/libgkcontent.so
+#57 0x19099a35 in nsXMLContentSink::DidBuildModel () from /usr/X11R6/lib/mozilla-devel/components/libgkcontent.so
+#58 0x199cd13b in nsExpatDriver::DidBuildModel () from /usr/X11R6/lib/mozilla-devel/components/libhtmlpars.so
+#59 0x199ef126 in nsParser::DidBuildModel () from /usr/X11R6/lib/mozilla-devel/components/libhtmlpars.so
+#60 0x199f0362 in nsParser::ResumeParse () from /usr/X11R6/lib/mozilla-devel/components/libhtmlpars.so
+#61 0x199f226a in nsParser::OnStopRequest () from /usr/X11R6/lib/mozilla-devel/components/libhtmlpars.so
+#62 0x1918e518 in nsXBLStreamListener::OnStopRequest () from /usr/X11R6/lib/mozilla-devel/components/libgkcontent.so
+#63 0x18bb35a1 in nsJARChannel::OnStopRequest () from /usr/X11R6/lib/mozilla-devel/components/libnecko.so
+#64 0x18b1a2d1 in nsOnStopRequestEvent::HandleEvent () from /usr/X11R6/lib/mozilla-devel/components/libnecko.so
+#65 0x18b18fe0 in nsARequestObserverEvent::HandlePLEvent () from /usr/X11R6/lib/mozilla-devel/components/libnecko.so
+#66 0x182f60d5 in PL_HandleEvent () from /usr/X11R6/lib/mozilla-devel/./libxpcom.so
+#67 0x182f5ebc in PL_ProcessPendingEvents () from /usr/X11R6/lib/mozilla-devel/./libxpcom.so
+#68 0x182f8470 in nsEventQueueImpl::ProcessPendingEvents () from /usr/X11R6/lib/mozilla-devel/./libxpcom.so
+#69 0x196b7a9a in nsAppShell::SetDispatchListener () from /usr/X11R6/lib/mozilla-devel/components/libwidget_gtk.so
+#70 0x196b7585 in keysym2ucs () from /usr/X11R6/lib/mozilla-devel/components/libwidget_gtk.so
+#71 0x1855a64c in g_io_unix_dispatch () from /usr/local/lib/libglib12.so.3
+#72 0x1855bcf3 in g_main_dispatch () from /usr/local/lib/libglib12.so.3
+#73 0x1855c31c in g_main_iterate () from /usr/local/lib/libglib12.so.3
+#74 0x1855c3d1 in g_main_iteration () from /usr/local/lib/libglib12.so.3
+#75 0x196b81e2 in nsAppShell::DispatchNativeEvent () from /usr/X11R6/lib/mozilla-devel/components/libwidget_gtk.so
+#76 0x1963b7cb in nsXULWindow::ShowModal () from /usr/X11R6/lib/mozilla-devel/components/libnsappshell.so
+#77 0x1965ca6c in nsWebShellWindow::ShowModal () from /usr/X11R6/lib/mozilla-devel/components/libnsappshell.so
+#78 0x19636c4d in nsContentTreeOwner::ShowAsModal () from /usr/X11R6/lib/mozilla-devel/components/libnsappshell.so
+#79 0x18982e90 in nsWindowWatcher::OpenWindowJS () from /usr/X11R6/lib/mozilla-devel/components/libembedcomponents.so
+#80 0x18980432 in nsWindowWatcher::OpenWindow () from /usr/X11R6/lib/mozilla-devel/components/libembedcomponents.so
+#81 0x1897ce12 in nsPromptService::DoDialog () from /usr/X11R6/lib/mozilla-devel/components/libembedcomponents.so
+#82 0x1897ad1b in nsPromptService::ConfirmEx () from /usr/X11R6/lib/mozilla-devel/components/libembedcomponents.so
+#83 0x197f650d in nsProfile::ConfirmAutoMigration () from /usr/X11R6/lib/mozilla-devel/components/libprofile.so
+#84 0x197f7b23 in nsProfile::ProcessArgs () from /usr/X11R6/lib/mozilla-devel/components/libprofile.so
+#85 0x197f37bf in nsProfile::StartupWithArgs () from /usr/X11R6/lib/mozilla-devel/components/libprofile.so
+#86 0x1964cb72 in nsAppShellService::DoProfileStartup () from /usr/X11R6/lib/mozilla-devel/components/libnsappshell.so
+#87 0x805cf0a in nsWindowCreator::Release ()
+#88 0x805b91b in nsILocalFile::GetIID ()
+#89 0x805a5d5 in main ()
+#90 0x805a2aa in _start ()

@@ -1,0 +1,30 @@
+restructure browser/locales/Makefile.in
+We're doing a few thing oddly or inconvenient in repackaging locales, and I have a tree that tackle a first chunk of that.
+
+- libs target
+
+Right now, we're running a libs phase for each target we repackage, in particular because the langpacks need a different chrome manifest than the installers/packages.
+
+I'm adding support for writing out both manifest at once to JarMaker.py, and refactor the Makefile to make all repack target depend on the libs phase. That way, we only run through libs once for all two or three target of repackaging.
+
+- wget-en-US target
+
+We're unconditionally getting the en-US binary right now, I'm changing the target to only download newer build
+
+- unpack target
+
+This one is new, and actually depends on the downloaded package. No optimization for the window installer yet. I'm factoring this one out so that I can ask application.ini for the SourceStamp, in the new ident target. This should help fix bug 398954, and the state of the tree is actually such that we could start hacking on that on the buildbot side.
+
+I'm refactoring the removal of the localization dependent file from the package, too, so that we can re-use the staging environment from one repack to the next. Factoring this out should make it le error prone, too.
+
+- LOCALE_MERGEDIR support
+
+I'm adding a bunch of vpath magic and more argument to MAKE_JARS_FLAGS to support a merge output dir in the build. That catch a flock of problem with incomplete localizations, though not all yet.
+
+- merge target
+
+Calling into compare-locales directly. Require compare-locales in a current version to be in the path, I don't think it's worth to add configure magic here.
+
+- test target
+
+I'm moving the test for installer variable into a cross platform test, and into the libs phase. That should leave u with le surprise for folk not working on window natively.

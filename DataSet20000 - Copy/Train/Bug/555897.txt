@@ -1,0 +1,34 @@
+Save Page As... in a popup saves opener document
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.2.2) Gecko/20100316 Firefox/3.6.2 (.NET CLR 3.5.30729)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.2.2) Gecko/20100316 Firefox/3.6.2 (.NET CLR 3.5.30729)
+
+If I open a popup in JavaScript via window.open with a blank url, write some content to the document and choose "Save Page As..." from the popup menubar and pick the option "Web Page, HTML only", the HTML of the opener page is saved, NOT the content of the popup.
+
+I file this bug with severity major, because of a possible data loss, e.g. if the user wants to save a bill, important document, email, ...
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Create a test HTML page with this content:
+<script>
+  function showPopup() {
+    var win = window.open("about:blank", "google", "left=100, top=100,width=400, height=400, scrollbars=yes, menubar=yes, toolbar=no, location=no, directories=no, status=no");
+    
+    var doc = win.document;
+    doc.open();
+    doc.writeln("<html><head><title>test</title></head><body>HELLO WORLD</body></html>");
+    doc.close();
+  }
+</script>
+<a href="#" onclick="showPopup(); return false;">popup</a>
+2. open the page in firefox
+3. click the "popup" link
+4. in the popup, choose "File" > "Save Page As..." from the menu
+5. If not already set, choose the Save as type "Web Page, HTML only"
+6. Click on "Save"
+7. Open the saved HTML Page in a text editor
+Actual Results:  
+The saved content is the same as the content as in the opener page (see above), NOT the generated HTML containing the "HELLO WORLD" string.
+
+Expected Results:  
+the saved page contains the generated popup content "<html><head><title>test</title></head><body>HELLO WORLD</body></html>"

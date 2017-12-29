@@ -1,0 +1,103 @@
+Compiling with gtk2 using separate objdir lead to compile failure
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.2.1) Gecko/20030225
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.2.1) Gecko/20030225
+
+Hi, I have the following mozconfig
+
+export MOZ_PHOENIX=1
+mk_add_options MOZ_PHOENIX=1
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/objdir-fb-opt
+ac_add_options --enable-xft
+ac_add_options --enable-optimize=-O2
+ac_add_options --disable-mailnews
+ac_add_options --disable-ldap
+ac_add_options --enable-crypto
+ac_add_options --disable-composer
+ac_add_options --disable-tests
+ac_add_options --disable-debug
+ac_add_options
+--enable-extensions=default,-inspector,-irc,-venkman,-content-packs,-help
+ac_add_options --enable-plaintext-editor-only
+ac_add_options --enable-default-toolkit=gtk2
+
+
+When I do a gmake -f client.mk in the source directory I get the following error
+
+gmake[4]: Entering directory `/usr/local/src/msrc/mozilla/objdir-fb-opt/widget/src'
+/usr/bin/perl /usr/local/src/msrc/mozilla/build/autoconf/make-makefile -t
+/usr/local/src/msrc/mozilla -d ../.. xremoteclient/Makefile
+creating widget/src/xremoteclient/Makefile
+gmake[5]: Entering directory
+`/usr/local/src/msrc/mozilla/objdir-fb-opt/widget/src/xpwidgets'
+Creating .deps
+gmake[5]: Leaving directory
+`/usr/local/src/msrc/mozilla/objdir-fb-opt/widget/src/xpwidgets'
+gmake[5]: Entering directory
+`/usr/local/src/msrc/mozilla/objdir-fb-opt/widget/src/support'
+Creating .deps
+../../../config/nsinstall -R -m 644
+/usr/local/src/msrc/mozilla/widget/src/support/nsWidgetSupport.h
+../../../dist/include/widget
+/usr/bin/perl -I/usr/local/src/msrc/mozilla/config
+/usr/local/src/msrc/mozilla/config/build-list.pl
+../../../dist/include/widget/.headerlist nsWidgetSupport.h
+gmake[5]: Leaving directory
+`/usr/local/src/msrc/mozilla/objdir-fb-opt/widget/src/support'
+gmake: Entering an unknown directory
+gmake: *** gtk2: No such file or directory. Stop.
+gmake: Leaving an unknown directory
+gmake[4]: *** [export] Error 2
+gmake[4]: Leaving directory `/usr/local/src/msrc/mozilla/objdir-fb-opt/widget/src'
+gmake[3]: *** [export] Error 2
+gmake[3]: Leaving directory `/usr/local/src/msrc/mozilla/objdir-fb-opt/widget'
+gmake[2]: *** [tier_9] Error 2
+gmake[2]: Leaving directory `/usr/local/src/msrc/mozilla/objdir-fb-opt'
+gmake[1]: *** [default] Error 2
+gmake[1]: Leaving directory `/usr/local/src/msrc/mozilla/objdir-fb-opt'
+gmake: *** [build] Error 2
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. use the defined mozconfig
+2. do a gmake -f client.mk in mozilla source dir
+3. Error seen
+
+Actual Results:
+gmake[4]: Entering directory `/usr/local/src/msrc/mozilla/objdir-fb-opt/widget/src'
+/usr/bin/perl /usr/local/src/msrc/mozilla/build/autoconf/make-makefile -t
+/usr/local/src/msrc/mozilla -d ../.. xremoteclient/Makefile
+creating widget/src/xremoteclient/Makefile
+gmake[5]: Entering directory
+`/usr/local/src/msrc/mozilla/objdir-fb-opt/widget/src/xpwidgets'
+Creating .deps
+gmake[5]: Leaving directory
+`/usr/local/src/msrc/mozilla/objdir-fb-opt/widget/src/xpwidgets'
+gmake[5]: Entering directory
+`/usr/local/src/msrc/mozilla/objdir-fb-opt/widget/src/support'
+Creating .deps
+../../../config/nsinstall -R -m 644
+/usr/local/src/msrc/mozilla/widget/src/support/nsWidgetSupport.h
+../../../dist/include/widget
+/usr/bin/perl -I/usr/local/src/msrc/mozilla/config
+/usr/local/src/msrc/mozilla/config/build-list.pl
+../../../dist/include/widget/.headerlist nsWidgetSupport.h
+gmake[5]: Leaving directory
+`/usr/local/src/msrc/mozilla/objdir-fb-opt/widget/src/support'
+gmake: Entering an unknown directory
+gmake: *** gtk2: No such file or directory. Stop.
+gmake: Leaving an unknown directory
+gmake[4]: *** [export] Error 2
+gmake[4]: Leaving directory `/usr/local/src/msrc/mozilla/objdir-fb-opt/widget/src'
+gmake[3]: *** [export] Error 2
+gmake[3]: Leaving directory `/usr/local/src/msrc/mozilla/objdir-fb-opt/widget'
+gmake[2]: *** [tier_9] Error 2
+gmake[2]: Leaving directory `/usr/local/src/msrc/mozilla/objdir-fb-opt'
+gmake[1]: *** [default] Error 2
+gmake[1]: Leaving directory `/usr/local/src/msrc/mozilla/objdir-fb-opt'
+gmake: *** [build] Error 2
+
+
+Expected Results:
+Compile should have finished normally

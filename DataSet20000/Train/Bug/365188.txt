@@ -1,0 +1,10 @@
+Make places backend operations use transactions
+Currently, transactions (used for undo/redo) are implemented in JavaScript by the places controller. The current forecast is "buggy with a chance of dataloss". The basic problem is that certain operations can have nonobvious side effects which are not saved or partially saved in the state.
+
+For example, deleting a bookmark may cause the history item to be expired the next time the expiration runs (it runs at various intervals when you're browsing). This in turn will delete the annotations. As a result, the transaction model must take into account the lifetime of Places objects (deleting is implemented in nsNavHistoryExpire.cpp).
+
+I think the best way to fix this is to implement the transactions in the Places backend and implement them in C++. It should be easier to keep in sync with the expiration model, and also to do the somewhat complex task of merging things on undo. (For example, if you delete a bookmark, visit the site, and undelete the bookmark, the visit count can't just be restored from the transaction, although in this case it might be reasonable to not handle it.)
+
+If changing the controller is hard, the C++ transactions could be wrapped in the existing JS transactions. I think most of the transactions should be done in C++ because certain cases can be slow. For example, it is easy to select a whole bunch of history and press "Delete". I would not want the speed of this to be limited by how fast we can pack all of the data into JS objects so it can be undone.
+
+Copy and paste have similar problems. Probably the various Places services should have functions that can pack and unpack all the necessary data associated with a URL.

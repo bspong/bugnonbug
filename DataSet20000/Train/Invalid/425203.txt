@@ -1,0 +1,6 @@
+206 Partial Request multipart sends extra wrong bytes to NPP_Write
+When a plug-in requests ranges, and the server responds with 206 Partial request, Firefox parses the multipart and calls NPP_Write() with the offset and length of each part.
+
+When it gets to the end of the request, and sees the "--" after the separator string, it calls NPP_Write() with those two bytes and the same offset as the last correct response (the last part).
+
+I believe the problem is in nsxmultimixedconv.cpp, in msNultiMixedConv::OnDataAvailable() (line 514 in Firefox 2.0.0.13 sources), where it's checking for the hyphen.  If it finds it, it calls SendData() on that... but that's a separator and shouldn't be sent to the plugin.

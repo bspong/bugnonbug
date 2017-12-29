@@ -1,0 +1,80 @@
+Error handling multiple same form values array in PHP
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.12) Gecko/20080203 SUSE/2.0.0.12-5.1 Firefox/2.0.0.12
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.12) Gecko/20080203 SUSE/2.0.0.12-5.1 Firefox/2.0.0.12
+
+When handling multiple "same" form values with PHP, Firefox does not properly form the URL. For example, with the simple form script:
+
+<html>
+<head><title>Workflow System</title></head>
+<body>
+<h1>Register for an Account:</h1>
+<form action="registration_action.php" method="GET">
+
+Username: <input type="text" name="name" /><br />
+Email: <input type="text" name="email" /><br />
+Password: <input type="password" name="pword[]" /><br />
+Password (again): <input type="password" name="pword[]" /><br />
+
+<input type="submit" value="GO" />
+</form>
+</body>
+</html>
+
+Firefox forms the following URL:
+
+http://localhost/build/registration_action.php?name=Johhie&email=Joh%40home&pword=passw&pword%5B%5D=passw
+
+Note the handling of "pword" above. It should be formed as follows for proper handling:
+
+http://localhost/build/registration_action.php?name=Johhie&email=Joh%40home&pword%5B%5D=passw&pword%5B%5D=passw
+
+I can't explain it? It works fine in konqueror. The example comes from page 3 of IBM's Developer Works:
+
+https://www6.software.ibm.com/developerworks/education/os-phptut1/section3.html
+
+Even though I don't know much about array handling, I know enough to know that having two of the major browsers not agreeing on how to handle a beginners example is not a good thing.
+
+The action script that receives this data is:
+
+<?php
+
+   define("PAGE_TITLE", "Workflow Registration");
+
+?>
+
+
+<html>
+<title><?= PAGE_TITLE ?></title>
+<body>
+    <p>You entered:</p>
+
+<?php
+    $form_names = array_keys($_GET);
+    $form_values = array_values($_GET);
+
+    foreach ($_GET as $key=>$value) {
+       echo "<p>".$key." = " . $value . "</p>"; 
+    }
+
+    $passwords = $_GET["pword"];
+    echo "First password = ".$passwords[0];
+    echo "<br />";
+    echo "Second password = ".$passwords[1];
+
+?>
+</body>
+</html>
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Use the form script in the details above
+2. Enter data and press go
+3. Compare the URL formed by Firefox to the URL formed by Konqueror 
+
+(one of them is wrong -- the action script doesn't work with the Firefox URL, works fine in Konqueror)
+Actual Results:  
+The first multiple same array value is passed without the [] charachers %5B%5D messing up the URL
+
+Expected Results:  
+Both instances of the multiple same array value should be passed with the [] charachers %5B%5D

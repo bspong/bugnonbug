@@ -1,0 +1,90 @@
+Intermittent 10.8 crash in test_bug494328.html because test_contextmenu.html goes into fullscreen [@ libobjc.A.dylib + 0x62d0]
+We know that fullscreen on 10.7+ kind of, it's not quite, it um, might not be the most cooperative thing in testing. See the bits in http://mxr.mozilla.org/mozilla-central/source/content/html/content/test/test_fullscreen-api.html?force=1#65 and below where we slather on setTimeouts to survive going into fullscreen, and the bits in http://mxr.mozilla.org/mozilla-central/source/dom/tests/mochitest/pointerlock/test_pointerlock-api.html?force=1#85 where we just say the hell with it.
+
+10.8 kicks that up a notch, hitting ObjC exceptions until it finally manages to crash, in the case of test_contextmenu.html conveniently doing so in components/feeds/test/test_bug494328.html to try to shift the blame.
+
+https://tbpl.mozilla.org/php/getParsedLog.php?id=15322145&tree=Mozilla-Inbound
+Rev5 MacOSX Mountain Lion 10.8 mozilla-inbound opt test mochitests-1/5 on 2012-09-18 16:56:01 PDT for push 94de0e883fdd
+slave: talos-mtnlion-r5-014
+
+2861 INFO TEST-END | /tests/browser/base/content/test/test_contextmenu.html | finished in 6871ms
+(another test ensues, shifting the blame)
+2891 INFO TEST-START | /tests/browser/base/content/test/test_offlineNotification.html
+2012-09-18 16:56:54.881 firefox-bin[836:707] void _NSMoveWindowToSpaceUnlessSticky(NSInteger, CGSSpaceID): CGSGetWindowTags(cid, win, tags, kCGSRealMaximumTagSize) returned CGError 1000 on line 1247
+2892 INFO Error: Unable to restore focus, expect failures and timeouts.
+2012-09-18 16:56:57.833 firefox-bin[836:707] *** Assertion failure in -[_NSWindowFullScreenTransition transitionedWindowFrame], /SourceCache/AppKit/AppKit-1187/AppKit.subproj/NSWindowFullScreenTransition.m:1485
+2012-09-18 16:56:57.833 firefox-bin[836:707] Mozilla has caught an Obj-C exception [NSInternalInconsistencyException: transitionedWindow must not be nil]
+(repeats while things churn)
+2938 INFO TEST-PASS | /tests/browser/components/feeds/test/test_bug494328.html | frame not reloaded successfully - 2 should equal 2
+2012-09-18 16:57:01.631 firefox-bin[836:707] *** Assertion failure in -[_NSWindowFullScreenTransition transitionedWindowFrame], /SourceCache/AppKit/AppKit-1187/AppKit.subproj/NSWindowFullScreenTransition.m:1485
+2012-09-18 16:57:01.631 firefox-bin[836:707] Mozilla has caught an Obj-C exception [NSInternalInconsistencyException: transitionedWindow must not be nil]
+2012-09-18 16:57:01.660 firefox-bin[836:707] *** Assertion failure in -[_NSWindowFullScreenTransition transitionedWindowFrame], /SourceCache/AppKit/AppKit-1187/AppKit.subproj/NSWindowFullScreenTransition.m:1485
+2012-09-18 16:57:01.661 firefox-bin[836:707] Mozilla has caught an Obj-C exception [NSInternalInconsistencyException: transitionedWindow must not be nil]
+2012-09-18 16:57:01.685 firefox-bin[836:707] *** Assertion failure in -[_NSWindowFullScreenTransition transitionedWindowFrame], /SourceCache/AppKit/AppKit-1187/AppKit.subproj/NSWindowFullScreenTransition.m:1485
+2012-09-18 16:57:01.685 firefox-bin[836:707] Mozilla has caught an Obj-C exception [NSInternalInconsistencyException: transitionedWindow must not be nil]
+2012-09-18 16:57:01.710 firefox-bin[836:707] *** Assertion failure in -[_NSWindowFullScreenTransition transitionedWindowFrame], /SourceCache/AppKit/AppKit-1187/AppKit.subproj/NSWindowFullScreenTransition.m:1485
+2012-09-18 16:57:01.711 firefox-bin[836:707] Mozilla has caught an Obj-C exception [NSInternalInconsistencyException: transitionedWindow must not be nil]
+2939 INFO Error: Unable to restore focus, expect failures and timeouts.
+2012-09-18 16:57:04.616 firefox-bin[836:707] *** Assertion failure in -[_NSWindowFullScreenTransition transitionedWindowFrame], /SourceCache/AppKit/AppKit-1187/AppKit.subproj/NSWindowFullScreenTransition.m:1485
+2012-09-18 16:57:04.617 firefox-bin[836:707] Mozilla has caught an Obj-C exception [NSInternalInconsistencyException: transitionedWindow must not be nil]
+2012-09-18 16:57:04.659 firefox-bin[836:707] *** Assertion failure in -[_NSWindowFullScreenTransition transitionedWindowFrame], /SourceCache/AppKit/AppKit-1187/AppKit.subproj/NSWindowFullScreenTransition.m:1485
+2012-09-18 16:57:04.660 firefox-bin[836:707] Mozilla has caught an Obj-C exception [NSInternalInconsistencyException: transitionedWindow must not be nil]
+TEST-UNEXPECTED-FAIL | /tests/browser/components/feeds/test/test_bug494328.html | Exited with code 1 during test run
+INFO | automation.py | Application ran for: 0:00:28.604602
+INFO | automation.py | Reading PID log: /var/folders/5s/p34wrbxn7bx4tr_8mg2x35f400000w/T/tmpurpKClpidlog
+Downloading symbols from: http://ftp.mozilla.org/pub/mozilla.org/firefox/tinderbox-builds/mozilla-inbound-macosx64/1348008236/firefox-18.0a1.en-US.mac.crashreporter-symbols.zip
+PROCESS-CRASH | /tests/browser/components/feeds/test/test_bug494328.html | application crashed (minidump found)
+Crash dump filename: /var/folders/5s/p34wrbxn7bx4tr_8mg2x35f400000w/T/tmpVcFVsD/minidumps/74757F5C-6AD3-4029-A78E-C01EB222D035.dmp
+Operating system: Mac OS X
+                  10.8.0 12A269
+CPU: amd64
+     family 6 model 42 stepping 7
+     8 CPUs
+
+Crash reason:  EXC_BAD_ACCESS / KERN_INVALID_ADDRESS
+Crash address: 0xffffffffc0000012
+
+Thread 0 (crashed)
+ 0  libobjc.A.dylib + 0x62d0
+    rbx = 0x5fbf6398   r12 = 0x1c5ff370   r13 = 0x12b97e80   r14 = 0x5fbf6398
+    r15 = 0x864102c0   rip = 0x864102d0   rsp = 0x5fbf6330   rbp = 0x5fbf6380
+    Found by: given as instruction pointer in context
+ 1  XUL!GetObjCExceptionInfo [mac_utils.mm : 15 + 0x10]
+    rip = 0x01195538   rsp = 0x5fbf6340
+    Found by: stack scanning
+ 2  XUL!CrashReporter::AppendObjCExceptionInfoToAppNotes [nsExceptionHandler.cpp : 1578 + 0x7]
+    rip = 0x0119376a   rsp = 0x5fbf6390
+    Found by: stack scanning
+ 3  XUL!nsGetServiceByCIDWithError::operator() [nsComponentManagerUtils.cpp : 48 + 0xf]
+    rip = 0x020bf500   rsp = 0x5fbf63c0
+    Found by: stack scanning
+ 4  XUL!nsCOMPtr_base::assign_from_gs_contractid [nsCOMPtr.cpp : 92 + 0xa]
+    rip = 0x020be633   rsp = 0x5fbf63e0
+    Found by: stack scanning
+ 5  XUL!nsCocoaWindow::Create [mozilla-inbound:tions.h:94de0e883fdd : 45 + 0xb]
+    rip = 0x01e6a17a   rsp = 0x5fbf6410
+    Found by: stack scanning
+ 6  XUL + 0xd0c39f
+    rip = 0x01e863a0   rsp = 0x5fbf6478
+    Found by: stack scanning
+ 7  XUL!nsComponentManagerImpl::CreateInstance [mozilla-inbound::94de0e883fdd : 408 + 0x9]
+    rip = 0x020fc7a5   rsp = 0x5fbf64a0
+    Found by: stack scanning
+ 8  XUL!nsCreateInstanceByCID::operator() [nsComponentManagerUtils.cpp : 124 + 0x7]
+    rip = 0x020bf344   rsp = 0x5fbf64e0
+    Found by: stack scanning
+ 9  XUL!nsCOMPtr_base::assign_from_helper [nsCOMPtr.cpp : 110 + 0x11]
+    rip = 0x020be6cb   rsp = 0x5fbf6500
+    Found by: stack scanning
+10  XUL!nsChildView::AllocateChildPopupWidget [mozilla-inbound::94de0e883fdd : 603 + 0x13]
+    rip = 0x01e84c0f   rsp = 0x5fbf6520
+    Found by: stack scanning
+11  XUL!nsBaseWidget::CreateChild [nsBaseWidget.cpp : 265 + 0x15]
+    rip = 0x01eaacdc   rsp = 0x5fbf6560
+    Found by: stack scanning
+12  XUL!nsView::CreateWidgetForPopup [nsView.cpp : 614 + 0xb]
+    rip = 0x017e2064   rsp = 0x5fbf65d0
+    Found by: stack scanning
+13  XUL!nsMenuPopupFrame::CreateWidgetForView [nsMenuPopupFrame.cpp : 295 + 0x12]
+    rip = 0x015015ae   rsp = 0x5fbf6620
+    Found by: stack scanning

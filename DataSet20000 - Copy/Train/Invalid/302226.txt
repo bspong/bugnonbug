@@ -1,0 +1,71 @@
+Event object not passed to event handler specified with attribute
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.10) Gecko/20050716 Firefox/1.0.6
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.10) Gecko/20050716 Firefox/1.0.6
+
+Event object not passed to event handler function when using event handler
+attribute. Occurs with many clickable entities (IMG, reset, submit, etc.)
+<INPUT type="reset" onmousedown="mouseDown();" onmouseup="mouseUp();" > 
+Does not occur if global handlers are specified for the document, e.g.  
+document.onmousedown=mouseDown
+document.onmouseup=mouseUp
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+Load HTML file under "Additional information" into Firefox
+Click one of the buttons
+Press any key to see an event trace
+Look at the Javascript console
+
+Actual Results:  
+Alert box with:  MDMU 
+Open the Javascript console and you will see that "event" is being referenced.
+It should only be referenced if no event object was passed.
+No event object was passed to the handler function.  
+
+Expected Results:  
+Alert box with: MDmousedownMUmouseup 
+Open the Javascript console and you will see no problems.
+This result is what you get with global event handlers ala
+document.onmousedown=mouseDown
+document.onmouseup=mouseUp
+The event object is globally accessible and is being referenced correctly.
+This result is also what you get with Internet Exploder in either case
+
+
+<HTML>
+<!-- just load this HTML file into FireFox -->
+<HEAD>
+<SCRIPT language="JavaScript1.2" type="text/javascript">
+var ie5= document.all
+var trace=""
+function mouseDown(evt){
+  trace += "MD"
+  evt= (evt) ? evt : ((event) ? event : null);
+  trace += evt.type
+  return false
+}
+function mouseUp(evt){
+  trace += "MU"
+  evt= (evt) ? evt : ((event) ? event : null);
+  trace += evt.type
+  return false
+}
+</SCRIPT>
+</HEAD>
+<BODY>
+<FONT FACE="arial,helvetica">
+<FORM action="post" name="showForm" onsubmit="return false">
+<INPUT type="reset" onmousedown="mouseDown();" onmouseup="mouseUp();" > 
+<INPUT type="submit" onmousedown="mouseDown();" onmouseup="mouseUp();" > 
+</FORM>
+<SCRIPT language="JavaScript1.2">
+if( ie5 ) {
+  document.onkeypress= new Function('alert(trace); trace=""; return false')
+} else {
+  document.onkeypress= new Function('alert(trace); trace=""; return false')
+}
+</SCRIPT>
+</BODY>
+</HTML>

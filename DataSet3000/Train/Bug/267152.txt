@@ -1,0 +1,41 @@
+filepicker component on Linux with modeGetFolder doesn't  honour defaultString and displayDirectory properties
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.3) Gecko/20041026 Firefox/1.0RC1
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; it-IT; rv:1.7.3) Gecko/20041027 Firefox/1.0RC1
+
+When you open a filepicker dialog (interface nsIFilePicker and class
+@mozilla.org/filepicker;1) with mode=nsIFilePicker.modeGetFolder, the text input
+box is empty and the "Select" button is disabled no matter if displayDirectory
+and/or defaultString is specified. I've observed this behaviour is observed on
+Linux, with Firefox 1.0PR and 1.0RC1, with both filepickers (XUL and GTK2).
+
+Reproducible: Always
+Steps to Reproduce:
+1. open preferences|download
+2. check the "Save all files to this folder" radio button
+3. select "other" from the adjacent drop-down list
+
+Actual Results:  
+The displayed directory is last choosen one (equal to the displayDirectory
+property), but the folder name textbox is empty and the "Select" button is
+disabled. This prevents confirmation of the default (previous) choice.
+
+Expected Results:  
+The textbox should contain the leaf name of the last choosen directory.
+This is the behaviour observed on Windows, where you can see a tree view of
+directories with the displayDirectory selected and its leaf name displayed in
+the textbox. If you simply hit "enter" you confirm the default choice.
+The requested behaviour could raise another issue if the UI is not tree-based
+but GTK like instead (as in RC1), because the displayDirectory is shown in a
+drop-down list and the textbox value is appended to this path. In this case, I
+believe the value shown in the drop-down list should be the parent of the
+displayDirectory property.
+
+Someone could argue this is not a problem in the proposed test-case (a
+preference setting situation), because you can simply cancel the dialog if you
+want to confirm previous choice.
+This is not true if, for instance, you are using the dialog as a preliminary
+step of a multiple save operation (save many items in a folder): the "cancel"
+action should be interpreted as an abort message from the user, and this makes
+difficult to confirm previous save folder:
+user must go up in the directory tree and the re-select the folder, or
+alternatively type "./" in the textbox.

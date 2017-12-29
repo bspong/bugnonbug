@@ -1,0 +1,39 @@
+Applet with dialog breaks focus cycle for subsequent text components
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.10) Gecko/2009042316 Firefox/3.0.10 (.NET CLR 3.5.30729)
+Build Identifier: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.5; en-US; rv:1.9.1.2) Gecko/20090729 Firefox/3.5.2
+
+I have an applet that opens a dialog. The page that contains the applet has an input field of type=text. If I open the dialog and then close it, the html text component can never regain the focus. Namely, one cannot insert text into it. In addition, the browser's address bar is also non-editable. To recover one must open a new Firefox window and then close it. Afterward, the original Firefox window will operate normally.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Open the attached TestApplet.html file. It will display a text field and a button labeled "start".
+2.  Click the button. A dialog will be displayed with nothing in it.
+3.  Close the dialog.
+4.  The text field nor the address bar are editable.
+5.  Go to "File/New Window" to bring up a new FireFox window. 
+6.  Close the new window.
+7.  Note that the original window now behaves properly.
+Actual Results:  
+Focus cycle appears to be disrupted in that text components on the browser window are not editable.
+
+
+I am attaching the source, TestApplet.java, an html file and a .jar, containing a compiled version of the .java file. You will note that when the dialog is instantiated, it is given a parent component of (new JFrame()). Prior to the introduction of FF 3.5, I used to pass in the "parent" frame of the applet, acquired from this method...
+
+private Window getMainWindowComp() {
+            
+    	Container c = this;
+        while (c != null) {
+            if (c instanceof Window) {
+                if (c instanceof Frame) {
+                    break;
+                }
+                c = null;
+                break;
+            }
+            c = c.getParent();
+        }
+        return((Window)c);
+    }
+
+After FF 3.5 came out, the dialog in my "real" application was broken. It contained JTextFields that would never acquire focus. By accident I discovered that replacing the parent with an anonymous JFrame cured that problem. But with the side affect I am reporting here.

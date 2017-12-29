@@ -1,0 +1,53 @@
+Referencing tag from XUL reset font size in TD element
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9) Gecko/2008052906 Firefox/3.0
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9) Gecko/2008052906 Firefox/3.0
+
+When a particular tag is referenced from JS in an extension, it cause Firefox to override the site-defined font size with the default font size. Firebug doe not recognize this and show that the site-specified font size ha not been overridden. The computed styles, however, show that the style is the default size.
+
+To replicate this issue, I have a simple extension that us the following code:
+
+const STATE_START = Components.interfaces.nsIWebProgressListener.STATE_START;
+const STATE_STOP = Components.interfaces.nsIWebProgressListener.STATE_STOP;
+
+var stateListener = {
+QueryInterface: function(aIID) {
+if (aIID.equals(Components.interfaces.nsIWebProgressListener) ||
+aIID.equals(Components.interfaces.nsISupportsWeakReference) ||
+aIID.equals(Components.interfaces.nsISupports))
+return this;
+throw Components.results.NS_NOINTERFACE;
+},
+onLocationChange: function(aProgress, aRequest, aURI){
+// This line will cause the problem to occur:
+var doc_elem = window.content.document.lastChild;
+// Alternately, the following line will also produce the
+// undesirable results:
+var doc_elem_parent = window.content.document.getElementsByTagName('head');
+doc_elem = doc_elem_parent[0];
+}
+};
+
+window.addEventListener("load", function() {gBrowser.addProgressListener(stateListener, Components.interfaces.nsIWebProgress.NOTIFY_STATE_DOCUMENT);}, false);
+window.addEventListener("unload", function() {gBrowser.removeProgressListener(stateListener);}, false);
+
+Note that in the second instance of the troublesome code, the referenced tag is the HEAD element, while in the first instance, it is the HTML element. In the second instance, the problem occurs at the second line of code (the one that reference the first element of the list).
+
+I can confirm that this also occurs Firefox 2.x.
+
+The result are quite unexpected. They cause certain font size to default back to the default font size (specified in the Content tab of the Preferences dialog). This occurs most commonly in the text within TD element (see the box in the left sidebar of http://neeps.com/ or the search box in the upper right on http://wordpress.org/).
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Run the code provided in the Details field a part of an extension.
+2. Visit an affected page:
+a. http://neeps.com/
+b. http://wordpress.org/
+c. http://google.com/ (in the search results)
+Actual Results:
+Certain font size default back to the Firefox default font size.
+
+Expected Results:
+No change in the page rendering should be present.
+
+This ha been confirmed across Windows XP and Vista. It occurs in both Firefox 2 and 3.

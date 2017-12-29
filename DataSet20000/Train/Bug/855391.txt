@@ -1,0 +1,28 @@
+Useless error in @mozilla.org/browser/search-service;1 addEngine
+Created attachment 730252
+searchmix.xpi
+
+User Agent: Mozilla/5.0 (Windows NT 5.1; rv:20.0) Gecko/20100101 Firefox/20.0
+Build ID: 20130325214615
+
+Steps to reproduce:
+
+Mess around with Cc["@mozilla.org/browser/search-service;1"].getService(Ci.nsIBrowserSearchService).addEngine(). I've attached a reduced testcase (though the original testcase was never very big in the first place).
+
+
+Actual results:
+
+Timestamp: 2013-03-27 18:32:18
+Warning: WARN addons.xpi: Exception running bootstrap method startup on searchmix@agrell.info: [Exception... "addEngine: Error adding engine:
+TypeError: 'caller', 'callee', and 'arguments' properties may not be accessed on strict mode functions or the arguments objects for calls to them"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: resource://gre/components/nsSearchService.js :: FAIL :: line 262"  data: no]
+Source File: resource://gre/components/nsSearchService.js
+Line: 262
+
+Line 262 contains only some kind of rethrow. The original line number is nowhere.
+
+
+Expected results:
+
+The error message should point to the root cause. The only use of caller, callee or arguments in that file is when assertions fire; saying that the line number is 4124 would've saved me a couple of minutes. I don't know if there are other possible ways to trigger this bug, but assertions can't be that rare...
+
+I'd also prefer to see which assertion is firing, it would help in figuring out what I need to change.

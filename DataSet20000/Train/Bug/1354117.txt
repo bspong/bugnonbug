@@ -1,0 +1,23 @@
+On startup of a photon browser, migrate customized items from the hamburger panel to the overflow panel
+See bug 1354083.
+
+When browser.photon.menusRefresh (or whatever) is true, and wasn't the previous run, CustomizableUI should:
+
+- get a list of items that were in the hamburger menu
+- remove all the items that are in the default set for the hamburger menu
+- append those items to the overflow menu set
+- remove the stored data for the hamburger menu
+- store the data again
+
+When the pref is false, and wasn't the previous run, we do the opposite:
+- get a list of items that were in the permanent overflow menu
+- remove all the items that are in the default set for the *hamburger* menu
+- append those items to the hamburger menu set
+- remove the stored data for the overflow menu
+- store the data again
+
+This will lose ordering information and removed items out of default-set hamburger menu items if you go from australis->photon->australis. That seems an acceptable trade-off given that we'll need to store a lot more stuff if we want to keep that (and ordering/removal seems significantly less important than customized/added items generally).
+
+This will not only help while we're developing and channel-migrating, but should also do the Right Thing for add-on buttons from existing profiles on the first Photon startup (though once we're confident we're shipping we should probably remove the pref...). Seeing as we need to do that kind of thing once already for a UI migration, putting this into CUI.jsm and doing testing with it seems like the sensible thing to do.
+
+Potential bonus: in theory we could do this at runtime with a pref observer, too, if we ever end up supporting flipping the photon prefs at runtime (not a priority, though).

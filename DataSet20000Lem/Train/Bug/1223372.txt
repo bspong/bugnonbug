@@ -1,0 +1,64 @@
+devtools test_throw.html causing crash on osx 10.10.5 machine about 50% of the time
+I thought we were finished on osx 10.10.5, but ala there is a new issue on mochitest other (in this case we run the chrome suite, not browser-chrome) on the file devtools/shared/webconsole/test/test_throw.html:
+https://treeherder.mozilla.org/#/jobs?repo=try&revision=67186bce0bae&group_state=expanded&filter-searchStr=other
+
+since this doesn't happen everytime, it could have been the case when I verified a green run on oct 31:
+https://treeherder.mozilla.org/#/jobs?repo=try&revision=80c5a8048328&filter-searchStr=oth
+
+I have retriggered the 'oth' job on opt a well a opt/debug from the Oct 31 try run to see if this is debug only and something newer.
+
+you can see the stack in the raw log file:
+http://archive.mozilla.org/pub/firefox/try-builds/jmaher@mozilla.com-67186bce0bae0e3687ce2df523e03ae3d5ca0db7/try-macosx64-debug/try_yosemite_r7-debug_test-mochitest-other-bm107-tests1-macosx-build8.txt.gz
+
+04:55:53 INFO - Operating system: Mac OS X
+04:55:53 INFO - 10.10.5 14F27
+04:55:53 INFO - CPU: amd64
+04:55:53 INFO - family 6 model 69 stepping 1
+04:55:53 INFO - 4 CPUs
+04:55:53 INFO - Crash reason: EXC_BAD_ACCESS / KERN_INVALID_ADDRESS
+04:55:53 INFO - Crash address: 0x0
+04:55:53 INFO - Process uptime: 20 second
+04:55:53 INFO - Thread 0 (crashed)
+04:55:53 INFO - 0 XUL!xpc::WrapperFactory::PrepareForWrapping(JSContext*, JS::Handle<JSObject*>, JS::Handle<JSObject*>, JS::Handle<JSObject*>) [WrapperFactory.cpp:67186bce0bae : 165 + 0x0]
+04:55:53 INFO - rax = 0x0000000000000000 rdx = 0x00007fff70f751f8
+04:55:53 INFO - rcx = 0x0000000000000000 rbx = 0x00007fff70f75c50
+04:55:53 INFO - rsi = 0x0000fe000000fe00 rdi = 0x00000001062b9f5c
+04:55:53 INFO - rbp = 0x00007fff5fbfcc70 rsp = 0x00007fff5fbfcae0
+04:55:53 INFO - r8 = 0x00007fff5fbfca90 r9 = 0x00007fff72532300
+04:55:53 INFO - r10 = 0x0000000000000002 r11 = 0x0000000000004000
+04:55:53 INFO - r12 = 0x0000000109e1d000 r13 = 0x0000000113c02868
+04:55:53 INFO - r14 = 0x00007fff5fbfce00 r15 = 0x0000000109e1d018
+04:55:53 INFO - rip = 0x00000001025a4eea
+04:55:53 INFO - Found by: given a instruction pointer in context
+04:55:53 INFO - 1 XUL!JSCompartment::wrap(JSContext*, JS::MutableHandle<JSObject*>, JS::Handle<JSObject*>) [jscompartment.cpp:67186bce0bae : 441 + 0xc]
+04:55:53 INFO - rbx = 0x0000000109e1d018 rbp = 0x00007fff5fbfcd80
+04:55:53 INFO - rsp = 0x00007fff5fbfcc80 r12 = 0x0000000113c02868
+04:55:53 INFO - r13 = 0x0000000109e1d000 r14 = 0x00007fff5fbfce48
+04:55:53 INFO - r15 = 0x0000000113c02800 rip = 0x0000000105dab3d1
+04:55:53 INFO - Found by: call frame info
+04:55:53 INFO - 2 XUL!JS_WrapObject(JSContext*, JS::MutableHandle<JSObject*>) [jsapi.cpp:67186bce0bae : 850 + 0x12]
+04:55:53 INFO - rbx = 0x0000000132ea64c0 rbp = 0x00007fff5fbfcdb0
+04:55:53 INFO - rsp = 0x00007fff5fbfcd90 r12 = 0x00007fff5fbfcf40
+04:55:53 INFO - r13 = 0x00007fff5fbfd101 r14 = 0x00007fff5fbfce48
+04:55:53 INFO - r15 = 0x0000000109e1d000 rip = 0x0000000105d71a89
+04:55:53 INFO - Found by: call frame info
+04:55:53 INFO - 3 XUL!XPCConvert::NativeInterface2JSObject(JS::MutableHandle<JS::Value>, nsIXPConnectJSObjectHolder**, xpcObjectHelper&, nsID const*, XPCNativeInterface**, bool, nsresult*) [XPCConvert.cpp:67186bce0bae : 790 + 0x5]
+04:55:53 INFO - rbx = 0x000000011fe20808 rbp = 0x00007fff5fbfcf20
+04:55:53 INFO - rsp = 0x00007fff5fbfcdc0 r12 = 0x00007fff5fbfcf40
+04:55:53 INFO - r13 = 0x00007fff5fbfd101 r14 = 0x00007fff5fbfce38
+04:55:53 INFO - r15 = 0x00007fff5fbfd0c0 rip = 0x00000001025db92f
+04:55:53 INFO - Found by: call frame info
+04:55:53 INFO - 4 XUL!XPCConvert::NativeData2JS(JS::MutableHandle<JS::Value>, void const*, nsXPTType const&, nsID const*, nsresult*) [XPCConvert.cpp:67186bce0bae : 342 + 0x24]
+04:55:53 INFO - rbx = 0x00000001025dac12 rbp = 0x00007fff5fbfd050
+04:55:53 INFO - rsp = 0x00007fff5fbfcf30 r12 = 0x00007fff5fbfd094
+04:55:53 INFO - r13 = 0x00007fff5fbfd198 r14 = 0x00007fff5fbfd0b0
+04:55:53 INFO - r15 = 0x00007fff5fbfd0c0 rip = 0x00000001025dad5d
+04:55:53 INFO - Found by: call frame info
+04:55:53 INFO - 5 XUL!CallMethodHelper::GatherAndConvertResults() [XPCWrappedNative.cpp:67186bce0bae : 1633 + 0x5]
+04:55:53 INFO - rbx = 0x00007fff5fbfd150 rbp = 0x00007fff5fbfd100
+04:55:53 INFO - rsp = 0x00007fff5fbfd060 r12 = 0x0000000000000000
+04:55:53 INFO - r13 = 0x00007fff5fbfd190 r14 = 0x0000000000000000
+04:55:53 INFO - r15 = 0x0000000000000012 rip = 0x0000000102649889
+04:55:53 INFO - Found by: call frame info
+04:55:53 INFO - 6 XUL!CallMethodHelper::Call() [XPCWrappedNative.cpp:67186bce0bae : 1425 + 0x8]
+...

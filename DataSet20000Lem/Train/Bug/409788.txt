@@ -1,0 +1,41 @@
+queryCommandValue() function work incorreclty
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9b3pre) Gecko/2007121705 Minefield/3.0b3pre
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9b3pre) Gecko/2007121705 Minefield/3.0b3pre
+
+When iframe is in editing mode (iframe.contentDocument.designMode = "On") function iframe.contentDocument.queryCommandValue() return empty value when cursor is on a new line (after Enter key is pressed).
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.Open test.html file, provided in "Additional Information"
+2.Type something into the editable iframe, then click "Show Font" button and see correct value in alert box.
+3.While editing press Enter key, so that cursor go to a new line. Again click "Show Font" button and see empty value in alert box.
+Actual Results:
+Empty value are returned.
+
+Expected Results:
+Correct non-empty value are expected.
+
+test.html file:
+---------------
+<iframe id="iframe" onload="init();"></iframe>
+<input type="button" value="Show Font" onclick="showFont();">
+
+<script>
+function init() {
+var iframe = document.getElementById("iframe");
+var doc = iframe.contentDocument;
+doc.designMode = "On";
+doc.execCommand("FontName", false, "Arial");
+doc.execCommand("FontSize", false, 4);
+doc.execCommand("ForeColor", false, "red");
+}
+function showFont() {
+var iframe = document.getElementById("iframe");
+var doc = iframe.contentDocument;
+alert(doc.queryCommandValue("FontName") + "/" +
+doc.queryCommandValue("FontSize") + "/" +
+doc.queryCommandValue("ForeColor"));
+iframe.contentWindow.focus();
+}
+</script>

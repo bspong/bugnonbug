@@ -1,0 +1,37 @@
+Console is abysmally slow
+From a mailing list post I read earlier today:
+
+Firefox's console is catastrophically broken; on my system, it take about
+4ms *per log*.
+
+I had a hard time believing this, so I tried a testcase:
+
+var start = new Date();
+for (var i = 0; i < 1000; ++i)
+console.log(i);
+var end = new Date();
+alert(end - start);
+
+The alert indeed showed 4000ms or so.
+
+So I did a profile. I'll follow bug blocking this one on particular issue from it, but a summary.
+
+Some time is spent in general console.log security-check overhead, XPConnect, etc. But 91% of the total time is spent notifying console service observers, and in particular the HUDService. This break down a follows (all percentage of total runtime):
+
+40% of the time is spent flushing layout from scrollHeight getters.
+11% is spent calling querySelectorAll.
+11% is spent appending node (eager frame construction and whatnot, presumably
+due to XBL bindings).
+6% removing node from the document (a good chunk of this is XBL gunk).
+5% calling XPCOM goop (nsScrollBoxObject::EnsureElementIsVisible,
+nsJCID::CreateInstance, nsStringBundle::FormatStringFromName,
+nsWindowMediator::GetMostRecentWindow, nsObserverService::NotifyObservers,
+nsGlobalWindow::GetInterface, etc, etc).
+4% setting scrollTop.
+4% getting a non-numeric property from nodelists. Maybe .length? Hard to
+tell.
+4% calling the classList getter on elements.
+3% getting numeric property from nodelists.
+3% adding/removing class via classList.
+
+And a long tail of creating elements, creating text nodes, adding event listeners, .childNodes, .style gets, .tagName gets, .ownerDocument gets, etc, etc, etc.

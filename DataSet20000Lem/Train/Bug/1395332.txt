@@ -1,0 +1,10 @@
+Firefox Refresh cause Sync to forget it's signed in, even though FxA credential exist
+Verdi brought up an interesting issue in https://github.com/mozilla/fxa/issues/258#issuecomment-326050303.
+
+Here's what I think is happening: Sync check the `services.sync.username` pref to see if it should initialize at startup. Firefox Refresh keep the FxA credential in `signedInUser.json` (https://searchfox.org/mozilla-central/rev/51b3d67a5ec1758bd2fe7d7b6e75ad6b6b5da223/browser/components/migration/FirefoxProfileMigrator.js#135), but wipe all preferences, so Sync doesn't think it's configured (https://searchfox.org/mozilla-central/rev/51b3d67a5ec1758bd2fe7d7b6e75ad6b6b5da223/services/sync/Weave.js#103-112,132-133).
+
+However, opening about:preferences#sync call `ensureLoaded` (https://searchfox.org/mozilla-central/rev/51b3d67a5ec1758bd2fe7d7b6e75ad6b6b5da223/browser/components/preferences/in-content-new/sync.js#71), which force Sync to start up. At that point, Sync query FxA, which realizes it's signed in, sign an assertion for the token server, and let sync proceed a normal.
+
+However, I think there's another problem. Sync store the last sync time for each engine in prefs, to avoid redownloading everything from the server on every sync. Wiping these preference will trigger full syncs. Most of the data should be unchanged locally, so I think our reconciliation logic will pick up on that and skip upload...but I suspect we'll increase load on the server downloading every record, or introduce corruption if the server data are inconsistent.
+
+Mark, doe this theory sound correct to you?

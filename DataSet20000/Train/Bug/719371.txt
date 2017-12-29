@@ -1,0 +1,18 @@
+Selenium's webdriver stops working in Nightly builds starting from 2012-01-12 because it uses XPCOM proxies, which were removed.
+Starting with the Nightly build of Firefox from 2012-01-12 the extension stopped working when using webdriver. Further investigation with tinderbox builds revealed that one of the following changesets have been caused the regression in the extension:
+
+http://hg.mozilla.org/mozilla-central/pushloghtml?fromchange=4de07a341aab&tochange=17a76e33b6fe
+
+Could this be due to the removal of the XPCOM proxies in bug 675221? The failure we are getting is:
+
+Error: uncaught exception: [Exception... "Component returned failure code: 0x80570015 (NS_ERROR_XPC_CI_RETURNED_FAILURE) [nsIJSCID.createInstance]"  nsresult: "0x80570015 (NS_ERROR_XPC_CI_RETURNED_FAILURE)"  location: "JS frame :: chrome://fxdriver/content/server.js :: <TOP_LEVEL> :: line 26"  data: no]
+
+David or Dave, can one of you please point us to the code of webdriver for this specific module? 
+
+Also I wonder about the following error sent by Dave:
+
+Warning: Trying to re-register CID '{e26dbdcd-d3ba-4ded-88c3-6cb07ee3e9e0}' already registered by file:///var/folders/k8/h9q2wfcn6yxdsm_r9_l3fg040000gn/T/tmphm7IRP/extensions/fxdriver@googlecode.com/components/prompt_service.js.
+Source File: file:///var/folders/k8/h9q2wfcn6yxdsm_r9_l3fg040000gn/T/tmphm7IRP/extensions/fxdriver@googlecode.com/chrome.manifest
+Line: 31
+
+Could this be related to the change in bug 715576?

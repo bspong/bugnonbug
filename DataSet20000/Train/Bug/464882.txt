@@ -1,0 +1,62 @@
+Cannot trigger the INPUT event in FireFox 2
+User-Agent:       Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 5.1; Trident/4.0)
+Build Identifier: FireFox 2.0.0.18
+
+Following code is not work in Firefox 2:
+       
+        var evt = document.createEvent('HTMLEvents');
+        evt.initEvent(eventType, canBubble, true);
+        element.dispatchEvent(evt);
+
+It's work in FireFox3.
+
+Reproducible: Always
+
+Steps to Reproduce:
+Please get the HTML source code from the additional information text box, and click the 'Click me' button.
+Actual Results:  
+Cannot fire the input event and popup a alert message.
+
+Expected Results:  
+Can fire the input event
+
+<html>
+<head>
+
+</head>
+<body>
+  this is a test page!
+	<textarea id="a"></textarea>
+	<div id="msg"></div>
+	<button id="b" onclick="javascript:abc();">Click me</button>
+</body>
+<script>
+	 function handle(event) {
+	 		var msg = event.type + ' : you input content is: ' + document.getElementById('a').value;
+	 		alert(msg);
+	 } 
+	 
+	 
+   function triggerEvent(element, eventType, canBubble) {
+        var evt = document.createEvent('HTMLEvents');
+        evt.initEvent(eventType, canBubble, true);
+        element.dispatchEvent(evt);
+   }
+   
+   function abc(){
+   	    var elementA = document.getElementById('a');
+   	    triggerKeyEvent(elementA, 'keypress', "a", true);
+   			triggerEvent(elementA, "input", true)
+   }
+   
+   function triggerKeyEvent(element, eventType, keySequence, canBubble) {
+    		var keycode = 98;
+        var evt = document.createEvent('KeyEvents');
+        evt.initKeyEvent(eventType, true, true, window, false, false, false, false, keycode, keycode);
+        element.dispatchEvent(evt);
+		}
+
+	 document.getElementById('a').addEventListener("input",handle,false); 
+
+</script>
+</html>

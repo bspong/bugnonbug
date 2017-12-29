@@ -1,0 +1,104 @@
+Programatic (javascript) display:none/block produces inconsistent rendering
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.12) Gecko/20050915 Firefox/1.0.7
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.12) Gecko/20050915 Firefox/1.0.7
+
+When a group of elements programatically have their display attribute changed (say, in a FOR loop), inconsistent rendering outputs in the browser window.
+
+Reproducible: Always
+
+Steps to Reproduce:
+CUT-n-PASTE example (comments inside):
+--------------------------------------
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>Firefox Gecko Programatic "display:none" problem</title>
+	<style type="text/css">
+<!--
+
+	#leftside { float: left; background: #eee; width: 150px; }
+	#leftside ul { margin: 0; padding: 0; list-style: none; }
+	#leftside li { margin: 0; padding:0 0 0 9px; list-style: none; }
+	#leftside a { display: block; padding:5px 15px 5px 6px; text-decoration:none; font-weight:bold; color:#777; }
+	#leftside a:hover { color: #000; text-decoration: underline; }
+	#leftside .current { background: #ccc; }
+	#leftside .current a { padding-bottom: 5px; color: #000; }
+
+	#rightside { margin: 0 0 0 160px; width: 300px; background: #ccc; }
+	#rightside p { border-top: 1px solid #777; }
+
+  #section1 { display: block; }
+	#section2, #section3, #section4, #section5 { display: none; }
+
+-->
+	</style>
+
+	<script type="text/javascript">
+
+		window.onload = function() {
+// Set onclick handlers for each of the nav items
+			for (x=1; x<=5; x++) {
+				cur_section = document.getElementById('navtab' + x);
+
+
+				cur_section.onclick = function() {
+					section_number = this.id.substring(6);				// 6th char position in "navtab#" = the number of the section we want to open
+					for (x=1; x<=5; x++) {												// Loop through all the sections
+						if ((tempnav = document.getElementById("navtab" + x)) != null) {
+							tempnav.className = '';										// Reset navigational elements to "off" (not current)
+						}
+// Uncomment next line and suddenly everything works correctly.
+// ---
+//						alert("Wait for click.");
+						if ((tempsec = document.getElementById("section" + x)) != null) {		// Check for section# existance & set tempsec=section#
+							if (x != section_number) {								// If we're not on the activated section
+								if (tempsec.style.display != 'none') {	// ...and it's not already hidden (display: none)
+									tempsec.style.display= 'none';				// ...hide the section
+								}
+							} else {																		// Otherwise display the current section
+								tempsec.style.display='block';
+							}
+						}
+					}
+					this.className = "current";										// Set this as the current active nav element
+				}
+			}
+		}
+
+	</script>
+</head>
+<body>
+	<div id="leftside">
+		<ul>
+			<li id="navtab1" class="current"><a href="#">Section 1</a></li>
+			<li id="navtab2"><a href="#">Section 2</a></li>
+			<li id="navtab3"><a href="#">Section 3</a></li>
+			<li id="navtab4"><a href="#">Section 4</a></li>
+			<li id="navtab5"><a href="#">Section 5</a></li>
+		</ul>
+	</div>
+	
+	<div id="rightside">
+		<div id="section1">Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Vivamus pulvinar. Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Ut facilisis. In aliquet eleifend lectus. Pellentesque dolor augue, malesuada sit amet, cursus eget, porttitor eget, dolor. Sed sagittis risus in ante. Integer tristique, diam nec volutpat pharetra, felis tortor lobortis erat, sed euismod massa lorem sed nisi. In hac habitasse platea dictumst. Nam vehicula, nibh lobortis interdum tristique, ante nisl pretium leo, vitae nonummy arcu nunc in nisi. Sed mauris ligula, accumsan non, rutrum non, mollis sit amet, nibh. Nam pellentesque mauris nec urna. Pellentesque et erat. Nam eu massa. Nunc lorem tortor, malesuada et, pellentesque sed, suscipit eget, pede. Pellentesque magna.</div>
+		<div id="section2">Pellentesque vitae tellus at nibh ultrices mattis. Praesent mollis velit eu odio. Duis ut sem. Sed eget nunc. Sed at mi sit amet sem bibendum dictum. Aliquam imperdiet eros et leo. Aenean nonummy suscipit lorem. Donec tempus lorem eu dui. Duis ac arcu blandit libero volutpat blandit. In commodo lectus quis arcu. Praesent massa sapien, pulvinar id, ultricies eu, pellentesque a, mi. Nulla ac tellus et dui bibendum semper.</div>
+		<div id="section3">Sed ultrices nibh sed erat. Vestibulum quis velit vel dolor tincidunt venenatis. Cras euismod tempus mi. Fusce libero lectus, facilisis nec, iaculis pulvinar, egestas vel, pede. Nullam imperdiet nunc eget lorem. Aenean sagittis. Sed tortor odio, mollis ac, aliquam quis, iaculis in, odio. Quisque euismod felis vitae justo. Aliquam erat volutpat. Curabitur ipsum. Sed pretium mi vel massa. Curabitur et nisl. Donec velit turpis, condimentum tincidunt, dictum commodo, sagittis vitae, purus. Sed sagittis placerat arcu. Sed molestie placerat dolor. Mauris non felis eget tellus bibendum feugiat. Sed eu ante eget dolor tempus aliquet. Aliquam rutrum risus et elit. Etiam ornare, orci sed vulputate posuere, nibh justo tincidunt nisl, dignissim iaculis quam felis eu dolor.</div>
+		<div id="section4">Aenean vestibulum dolor eget lectus. Etiam fermentum, velit vitae tempus adipiscing, massa ligula aliquam velit, ut pellentesque eros magna sed felis. In hac habitasse platea dictumst. Donec magna urna, sollicitudin et, convallis id, ultrices varius, massa. Duis interdum libero. Suspendisse dignissim auctor tellus. Vestibulum ullamcorper sem ut eros. Maecenas quis sem. Nullam eleifend imperdiet est. Nunc convallis tempus nulla. Fusce molestie facilisis lectus. Nulla tincidunt auctor diam. Maecenas eget tellus. Duis gravida hendrerit dolor. Etiam sapien felis, euismod quis, ultrices egestas, mattis sed, erat. Donec ante libero, congue quis, hendrerit vitae, rhoncus eget, magna. In hac habitasse platea dictumst. Sed id dui.</div>
+		<div id="section5">Nullam at lacus quis ligula adipiscing semper. Vivamus diam pede, varius malesuada, luctus a, tempus non, dui. Phasellus ac risus. Pellentesque ut eros. Vestibulum lorem nibh, scelerisque id, scelerisque at, sodales sit amet, velit. Nam lobortis, leo quis pellentesque eleifend, tortor enim viverra ligula, id facilisis nisi nisi a lectus. Curabitur accumsan urna at dui dapibus blandit. Aenean augue pede, laoreet in, ultrices et, pulvinar vel, turpis. Mauris sollicitudin, lacus quis sagittis congue, augue nunc hendrerit nibh, at nonummy lacus metus nec tortor. Nulla facilisi. Aenean quis nisi. Vivamus eu eros. Ut pellentesque nunc et purus. Nulla feugiat varius metus. Proin ac turpis. Nunc sollicitudin vehicula neque. Nullam felis. Phasellus suscipit ipsum sit amet eros. Fusce nec justo. Praesent vel nibh quis augue tristique tempus.</div>
+		<p>Additional Text</p>
+	</div>
+</body>
+
+Actual Results:  
+The "righthand" container height is completely inconsistent.  Sometimes you click on a navigational element and it displays correctly.  Other times there is a bunch of empty space between the displayed DIV and the bottom line.  There is no rhyme or reason to it.
+
+Additionally, and suspiciously, if you uncomment the "ALERT" line and are forced to click OK through the iterative FOR loop, everything works fine.  This leads me to think that the Gecko engine is somehow getting ahead of itself, like perhaps it's recalculating the container DIV before the threads to close the DIVs have completed processing.
+
+Expected Results:  
+The change from display:block to display:none should correctly (and consistently) resize the holding container.
+
+Default everything, no special doo-dads.  Works properly in IE (PC/XP) and Conquerer (Debian).
+
+Does NOT work properly in FireFox/Debian, either.
+Haven't tested Opera.
+
+I'm 99.9% sure this is a Gecko issue.

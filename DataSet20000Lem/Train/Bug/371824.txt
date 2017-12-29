@@ -1,0 +1,25 @@
+improve error handling in the migrator
+From https://bugzilla.mozilla.org/show_bug.cgi?id=360133#c24:
+
+>Index: browser/components/migration/src/nsSafariProfileMigrator.cpp
+>===================================================================
+
+>@@ -1066,19 +1068,21 @@ nsSafariProfileMigrator::ParseBookmarksF
+> // Encountered a Bookmark, so add it to the current folder...
+> CFDictionaryRef URIDictionary = (CFDictionaryRef)
+> ::CFDictionaryGetValue(entry, CFSTR("URIDictionary"));
+> nsAutoString title, url;
+> if (GetDictionaryStringValue(URIDictionary, CFSTR("title"), title) &&
+> GetDictionaryStringValue(entry, CFSTR("URLString"), url)) {
+> #ifdef MOZ_PLACES_BOOKMARKS
+> nsCOMPtr<nsIURI> uri;
+>+ PRInt64 id;
+> rv |= NS_NewURI(getter_AddRefs(uri), url);
+>- rv |= aBookmarksService->InsertItem(aParentFolder, uri, -1);
+>- rv |= aBookmarksService->SetItemTitle(uri, title);
+>+ rv |= aBookmarksService->InsertItem(aParentFolder, uri,
+>+ aBookmarksService->DEFAULT_INDEX, &id);
+>+ rv |= aBookmarksService->SetItemTitle(id, title);
+
+This code was/is kinda wrong... we shouldn't set the item title if adding it
+failed.

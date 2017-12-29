@@ -1,0 +1,21 @@
+bug 771826 break Marionette's navigate() method
+Created attachment 644556
+test case
+
+bug 771826 ha broken Marionette's navigate method, which is implemented here:
+
+http://mxr.mozilla.org/mozilla-central/source/testing/marionette/marionette-listener.js#494
+
+Specifically, setting curWindow.location no longer ha any effect (and produce no error in the logfile); before https://hg.mozilla.org/mozilla-central/rev/934ef44ce5af it worked normally. See bug 776117 for full bisection details.
+
+To reproduce:
+
+- download a debug build from TBPL, or make a build yourself with ENABLE_MARIONETTE=1 in mozconfig
+- launch Firefox, and add the pref marionette.defaultPrefs.enabled = true; restart Firefox
+- go to m-c/testing/marionette/client and run 'python setup.py develop' to install Marionette Python dependency
+- download the attached test and execute: python navigate.py
+
+results: Marionette open a new tab (as it should) but the navigate command ha no effect. There are no error in the logfile.
+expected results: After opening a new tab, the browser would navigate immediately to www.mozilla.com.
+
+In stepping through Marionette code, everything work correctly until http://mxr.mozilla.org/mozilla-central/source/testing/marionette/marionette-listener.js#495; setting curWindow.location now ha no effect.

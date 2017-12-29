@@ -1,0 +1,27 @@
+NS_ERROR_DOM_INDEX_SIZE_ERR and lockup when closing popup from onunload handler in tabbed browser
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9b2pre) Gecko/2007112005 Minefield/3.0b2pre
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9b2pre) Gecko/2007112005 Minefield/3.0b2pre
+
+In the attached test case, a window is opened which creates a popup in a new tab. This then creates a further popup in a new tab (3 tab open). Upon selecting the second of the three tab and closing it, an error message is written to the error console. The browser then appears unusable from that point, e.g. will not load another page from the bookmark menu. The location field also show the wrong location.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Make sure your option are set to open page in a new tab.
+2. Open the attached test1.html. Press "Click me" and a second tab should open.
+3. Press "Click me" on the second tab and a third tab should open.
+4. The third tab will now have focus. Click on the second tab to give it focus.
+5. Click the little cross to close the second tab.
+Actual Results:
+For me, when I execute step 5 tab 2 and 3 are correctly closed but I get this in the error console
+
+Error: uncaught exception: [Exception... "Index or size is negative or greater than the allowed amount" code: "1" nsresult: "0x80530001 (NS_ERROR_DOM_INDEX_SIZE_ERR)" location: "chrome://browser/content/tabbrowser.xml Line: 1479"]
+
+The location field still show test2.html, the source for the tab I just closed even though the content of the tab are from test1.html.
+
+Expected Results:
+The error message should not be written and the location field should show test1.html, not test2.html. The browser should continue to be usable.
+
+I don't have a regression range for this but it must be in the last few month because in my particular application I use popups in tab all the time and this issue is very very obvious.
+
+If you omit step 4 - i.e. close the second tab without moving the focus - then it is fine. Or if you close tab 3 before closing tab 2. To recreate, stick to the sequence given - open all three, then move focus to tab 2, then close tab 2.

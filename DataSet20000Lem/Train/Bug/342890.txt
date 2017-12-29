@@ -1,0 +1,39 @@
+make tab minWidth 125px and heed the browser.tabs.tabMinWidth hidden pref
+bug 318168 add tab overflow and bump tab minWidth to 140, which would be about 5 tab at 800x600. I think there's probably a good amount of user who would be willing to go with smaller tab v overflow.
+
+Needs some error checking, but maybe something like this:
+
+--- ./content/global/bindings/tabbrowser.xml.orig 2006-06-26 15:35:08.000000000 -0500
++++ ./content/global/bindings/tabbrowser.xml 2006-06-27 13:27:31.000000000 -0500
+@@ -1095,7 +1095,7 @@
+
+t.setAttribute("crop", "end");
+t.maxWidth = 250;
+- t.minWidth = 140;
++ t.minWidth = this.mTabContainer.mTabMinWidth;
+t.width = 0;
+t.setAttribute("flex", "100");
+t.setAttribute("validate", "never");
+@@ -2389,12 +2389,15 @@
+Components.classes['@mozilla.org/preferences-service;1'].
+getService(Components.interfaces.nsIPrefBranch2);
+try {
++ this.mTabMinWidth = pb2.getIntPref("browser.tabs.tabMinWidth");
+this.mTabClipWidth = pb2.getIntPref("browser.tabs.tabClipWidth");
+this.mCloseButtons = pb2.getIntPref("browser.tabs.closeButtons");
+}
+catch (e) {
+}
+
++ this.childNodes[0].minWidth = this.mTabMinWidth;
++
+this._updateDisableBackgroundClose();
+this.adjustTabstrip(false);
+
+@@ -2464,6 +2467,7 @@
+}
+});
+</field>
++ <field name="mTabMinWidth">140</field>
+<field name="mTabClipWidth">130</field>
+<field name="mCloseButtons">1</field>

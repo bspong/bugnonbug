@@ -1,0 +1,54 @@
+.torrent download doesn't start Azureus/Vuze
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:2.0.1) Gecko/20100101 Firefox/4.0.1
+Build Identifier: Mozilla/5.0 (X11; Linux x86_64; rv:2.0.1) Gecko/20100101 Firefox/4.0.1
+
+I have the .torrent file type associated with /usr/bin/azureus. If I double-click on a .torrent file (see URL above), the download dialog appears, but Azureus is NOT invoked.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Find a .torrent file
+2. Double-click on it
+3. Click away the download dialog
+
+
+Actual Results:
+Nothing happens: no window appears, file is not downloaded.
+
+Expected Results:
+The Azureus window should come up and begin downloading the file.
+
+Using strace, I found the following:
+
+---------------------------------------------------------------------
+[pid 3689] open("/usr/lib/jvm/java-6-openjdk/jre/lib/amd64/libnspr4.so", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 3689] open("/opt/firefox-4.0/libnspr4.so", O_RDONLY) = 36
+[pid 3689] read(36, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\300\322\0\0\0\0\0\0"..., 832) = 832
+[pid 3689] fstat(36, {st_mode=S_IFREG|0755, st_size=238320, ...}) = 0
+[pid 3689] close(36) = 0
+[pid 3689] rt_sigprocmask(SIG_UNBLOCK, [ABRT], NULL, 8) = 0
+[pid 3689] tgkill(3663, 3689, SIGABRT <unfinished ...>
+[pid 3615] futex(0x7f27a3d5448c, FUTEX_WAIT_PRIVATE, 11, NULL <unfinished ...>
+[pid 3593] <... futex resumed> ) = 0
+[pid 3689] <... tgkill resumed> ) = 0
+[pid 3689] --- SIGABRT (Aborted) @ 0 (0) ---
+Process 3689 detached
+[pid 3690] +++ killed by SIGABRT +++
+[pid 3685] +++ killed by SIGABRT +++
+[pid 3678] +++ killed by SIGABRT +++
+[pid 3679] +++ killed by SIGABRT +++
+[pid 3684] +++ killed by SIGABRT +++
+[pid 3682] +++ killed by SIGABRT +++
+[pid 3677] +++ killed by SIGABRT +++
+[pid 3676] +++ killed by SIGABRT +++
+[pid 3681] +++ killed by SIGABRT +++
+[pid 3683] +++ killed by SIGABRT +++
+[pid 3686] +++ killed by SIGABRT +++
+[pid 3680] +++ killed by SIGABRT +++
+---------------------------------------------------------------------
+
+It look like process 3689 attempted to read /opt/firefox-4.0/libnspr4.so and didn't like it for some reason, and aborted the azureus invocation.
+
+As an experiment, I renamed /opt/firefox-4.0/libnspr4.so to something else, restarted firefox, and tried again. This time it worked, azureus started up, and the file wa retrieved.
+
+I'm not sure whether this is a real bug or a problem in my setup (e.g. load library path out of order). I'll mark this a 'minor', just in case.

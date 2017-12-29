@@ -1,0 +1,83 @@
+crash when executing firefox with X Window System error "BadAlloc (insufficient resource for operation)"
+User-Agent: Opera/9.62 (X11; Linux i686; U; en) Presto/2.1.1
+Build Identifier: firefox 3.0.3 from http://www.mozilla-europe.org/es/firefox/
+
+I wa surfing the web with several tab opened. Firefox begin to freeze so I xkilled it. After than I cannot execute firefox nor restarting session neither open new session (forgeting about opened tabs)
+
+When starting firefox it crash with the following error:
+
+The program 'firefox-bin' received an X Window System error.
+This probably reflects a bug in the program.
+The error wa 'RenderBadPicture (invalid Picture parameter)'.
+(Details: serial 4023 error_code 168 request_code 152 minor_code 5)
+(Note to programmers: normally, X error are reported asynchronously;
+that is, you will receive the error a while after causing it.
+To debug your program, run it with the --sync command line
+option to change this behavior. You can then get a meaningful
+backtrace from your debugger if you break on the gdk_x_error()
+function.)
+
+so I run firefox with --sync option to see the 'real' error and it says:
+
+The program 'firefox-bin' received an X Window System error.
+This probably reflects a bug in the program.
+The error wa 'BadAlloc (insufficient resource for operation)'.
+(Details: serial 2143 error_code 11 request_code 53 minor_code 0)
+(Note to programmers: normally, X error are reported asynchronously;
+that is, you will receive the error a while after causing it.
+To debug your program, run it with the --sync command line
+option to change this behavior. You can then get a meaningful
+backtrace from your debugger if you break on the gdk_x_error()
+function.)
+
+I executed it restarting session and also opening new session, always same error.
+
+At this point I try the following steps:
+
+1. Execute firefox in safe mode checking 'reset toolbar & controls' and 'reset default prefs' option and clicking on 'apply change & reset' button. I get same error.
+
+2. Execute firefox in safe mode checking all option and clicking on 'apply change & reset' button. I get same error.
+
+3. Execute firefox in safe mode checking all option and clicking on 'continue in safe mode' button. I get same error.
+
+4. Execute firefox creating new profie (-P). I get same error.
+
+Thinking it may be a problem with any pluggin or web page I removed personal folder .mozilla at my home folder. This way no session info persists. Try to execute firefox and again same error. Again tring the previous 4 step with same result. The only difference is this way it show license window before crashing.
+
+Now I tried to reinstalling firefox. I removed /opt/firefox folder and /home/myuser/.mozilla folder. Dowloaded firefox 3.0.3 from official site (http://www.mozilla-europe.org/es/firefox/), extracted to /opt/firefox and tried to execute it. I got same error. After 4 steps, always same error.
+
+Then I tried to install iceweasel from official debian repository to see if it wa a problem of firefox or common to both (maybe gecko or so). I removed /opt/firefox and /home/myuser/.mozilla folder and installed iceweasel with apt. Then when executing iceweasel I got exactly the same error.
+
+So I tried to trace firefox execution (clean install of official firefox and also iceweasel clean install):
+
+$ strace /opt/firefox/firefox
+
+I saw nothing strange but I can include the strace log if you want. Of course same error.
+
+So I tried to debug firefox-bin with gdb and again I saw nothing strange but a lot of thread opened wich I don't know if it is strange but I suspected due to error being 'BadAlloc (insufficient resource for operation)'. Obviously again same error.
+
+There is never any message in .mozilla/Crash Report so I suppose the error is prior to Crash Report system. I tried to remove all content in .mozilla/Crash Report and execute firefox (which obviously fails with same error). What I get in Crash Report folder is two files: InstallTime2008092416 and UserID
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. execute firefox: $ /opt/firefox/firefox --sync
+2.
+3.
+Actual Results:
+firefox crash with X window system error:
+The program 'firefox-bin' received an X Window System error.
+This probably reflects a bug in the program.
+The error wa 'BadAlloc (insufficient resource for operation)'.
+(Details: serial 2143 error_code 11 request_code 53 minor_code 0)
+(Note to programmers: normally, X error are reported asynchronously;
+that is, you will receive the error a while after causing it.
+To debug your program, run it with the --sync command line
+option to change this behavior. You can then get a meaningful
+backtrace from your debugger if you break on the gdk_x_error()
+function.)
+
+Expected Results:
+start firefox
+
+it may be similar to bug 450213 and bug 451956 and maybe related to bug 455701

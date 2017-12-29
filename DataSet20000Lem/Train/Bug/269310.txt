@@ -1,0 +1,44 @@
+META-INF/services/javax.xml.parsers.SAXParserFactory not routed correctly
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.7.5) Gecko/20041107 Firefox/0.10.1 StumbleUpon/1.998
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.7.5) Gecko/20041107 Firefox/0.10.1 StumbleUpon/1.998
+
+This bug doe require the Java 1.4.0 or greater plug-in to be installed and an
+applet that us the JAXP lib to parse an xml file.
+
+The JAXP class request META-INF/services/javax.xml.parsers.SAXParserFactory a
+one possible way to determine the appropriate parser factory. This request woudl
+be be satisfied within the classpath of the Applet. On of the jar doe contain
+the service description.
+
+However, in my application it is routed to the server a
+/plan-b/META-INF/services/javax.xml.parsers.SAXParserFactory (it is treated a a
+URL realtive to the codebase), where it doe not exist.
+
+This behavior is not the same with the same JDK and Internet Explorer.
+
+See
+http://java.sun.com/webservices/docs/1.0/api/javax/xml/parsers/SAXParserFactory.html#newInstance()
+for the JAXP behavior and configuration.
+
+Reproducible: Always
+Steps to Reproduce:
+1. Install a proxy server, so you can log the request to the server
+2. Call
+http://www.conficio.com/plan-b/examples/quickbooks/create_account/credit_card/index.html#plan_b_player
+a page with the appropriate applet. Download plan-b/bin/player22.jar containing
+the META-INF/services/... file
+3. See your proxy log for all request
+
+Actual Results:
+a request to plan-b/META-INF/services/javax.xml.parsers.SAXParserFactory to the
+server.
+
+Expected Results:
+A request to META-INF/services/javax.xml.parsers.SAXParserFactory that is
+satisfied from the code jar, that contains the service definition.
+
+I assume this ha somethign to do with the integration of the Java Plug-In.
+However, I could only classify it a a general bug. Please recategorieze at will.
+
+This bug indicates to me a breach of the classpath for java applications, which
+could be a security risk.

@@ -1,0 +1,46 @@
+Browser Toolbox Debugger stop working while initializing
+User Agent: Mozilla/5.0 (Windows NT 6.3; WOW64; rv:47.0) Gecko/20100101 Firefox/47.0
+Build ID: 20160225234551
+
+Steps to reproduce:
+
+1. Build nightly from mozilla-central
+
+2. Ensure that the Browser Toolbox is enabled (https://developer.mozilla.org/en-US/docs/Tools/Browser_Toolbox)
+
+3. Open the Browser Toolbox (Ctrl+Shift+Alt+i on Windows)
+
+4. Click 'ok' on the Allow incoming connection prompt.
+
+5. Once the toolbox loads, click the "performance" tab and "Start Recording Performance".
+
+6. Immediately open the scratchpad and type and run the following:
+window.allocations = [];
+function loop() {
+for (let i = 0; i < 10000; i++)
+window.allocations.push({});
+setTimeout(loop, 1);
+}
+setTimeout(loop, 1);
+
+7. Wait for about 20-30s and then "Stop recording". You should see a list of row indicating timeouts and GC events. Click on any of them to display a sidebar pertaining to that row. Because the toolbox doe a lazy loading of j files, step 5-7 will ensure that the marker-utils.js file would have been loaded.
+
+8. Now go to the debugger tab and search for the marker-utils.js file from the search bar. Type something like "marker-utils.js:12" to go for example to the 12th line.
+
+9. Or, you can also look for the file marker-utils.js in the left sidebar of the debugger tab.
+
+NOTE: This problem doesn't happen all the time.
+
+
+Actual results:
+
+The search bar is non-functional. It doesn't show the marker-utils.js file.
+In fact, the search bar is non-functional even before going beyond step 4. Try searching for anything like "Show all" which should list a couple of search results, but this doesn't happen.
+
+Also, the sidebar doesn't contain this file.
+
+
+Expected results:
+
+The search bar should navigate to the 12th line of the marker-utils.js file.
+Also, the sidebar should contain this file.

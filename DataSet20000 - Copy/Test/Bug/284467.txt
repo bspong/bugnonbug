@@ -1,0 +1,49 @@
+non critical halt or crash when javascript submit () in sequence with parent javascript function call
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.7.5) Gecko/20041107 Firefox/1.0
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.7.5) Gecko/20041107 Firefox/1.0
+
+I have a parent document with an iframe embeded in a table
+Parent document contains a javascript function that utilizes style.display to
+hide a table and resize the table containing the iframe.
+The parent javascript function is called from the iframe
+
+parent javascript:
+	function toggle_mid_display(val)
+	{
+		var ifrm_container	= document.getElementById('search_display');
+		var curr_container	= document.getElementById('current_display');
+		if(val) {
+			curr_container.style.display	= 'none'
+			ifrm_container.height 			= 500;
+		}else{
+			curr_container.style.display	= 'inline'
+			ifrm_container.height 			= 200;
+		}
+		return;
+	} 
+
+
+iframe javascript
+
+	function whatever() {
+		var obj 		= document.search_form;
+
+		if(!obj.key_words.value) {
+			alert('Please Enter a Keyword');
+			obj.key_words.focus();
+			return false;
+		}else{
+                        parent.toggle_mid_display(1);
+			obj.command.value = "search";
+			obj.submit();			
+			return true;
+		}
+	}
+
+	</script>
+
+the iframe script calls the parent function fine, but halts or crashes on the
+submit. This then requirs a second click on the submit button to complete the
+process.
+
+Reproducible: Always

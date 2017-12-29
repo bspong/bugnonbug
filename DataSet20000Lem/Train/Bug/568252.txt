@@ -1,0 +1,86 @@
+Improper handling of dom access of bad html option tag attribute value
+User-Agent: Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 5.1; Trident/4.0; .NET CLR 2.0.50727; .NET CLR 1.1.4322; InfoPath.1; .NET CLR 3.0.4506.2152; .NET CLR 3.5.30729; yie8)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.2.3) Gecko/20100401 Firefox/3.6.3
+
+I have a html page with 2 select (multi-select) box next to each other and 2 button between them. One button ha a < and the other ha > for the values.
+
+when the page load one select is filled with option that I had mistakenly forgot to include the attribute "value=", but I still had the value.
+
+For example:
+<option 1234 title='a title'>Customer Name</option>
+-- note the 1234, which is the record number in a db table.
+
+When I click a button to move the selected item to the other select box the above code fragment works.
+
+The button make use of a onclick event to run a javascript function to access the selected source option and move them to the destination select. In the process of doing this it properly read the 1234 a a value when I create each new option. The javascript make no error or warning when the value is filled in.
+
+While this is fine behaviour, it is still misleading. IF this wa a POST my mistake would have been obvious a the select would have sent the option text only.
+
+Reproducible: Always
+
+Actual Results:
+bad html work
+
+Expected Results:
+a warning should have been thrown, maybe an error.
+
+here is a fragment of the code I am using.
+
+=================== j
+function add_items()
+{
+var src_list = document.getElementById('rma_list');
+var ship_list = document.getElementById('ship_list');
+var vendor = document.getElementById('vendor').value;
+var cnt = src_list.length;
+var purge = new Array();
+for(var i=0;i<cnt;i++)
+{
+if(src_list.options[i].selected)
+{
+if(src_list.options[i].value!=0)
+{
+var title_array = src_list.options[i].title.split(' ');
+var title_vendor = title_array[0].split(':');
+if(vendor.length==0)
+{
+document.getElementById('vendor').value=title_vendor[1];
+vendor = document.getElementById('vendor').value;
+ship_list.options[ship_list.length]=new Option(src_list.options[i].text,src_list.options[i].value);
+ship_list.options[ship_list.length-1].title=src_list.options[i].title;
+purge[purge.length]=src_list.options[i].text;
+}
+else
+{
+if(vendor==title_vendor[1])
+{
+ship_list.options[ship_list.length]=new Option(src_list.options[i].text,src_list.options[i].value);
+ship_list.options[ship_list.length-1].title=src_list.options[i].title;
+purge[purge.length]=src_list.options[i].text;
+}
+}
+}
+}
+}
+for(var i=0;i<purge.length;i++)
+{
+for(var n=0;n<src_list.length;n++)
+{
+if(src_list.options[n].text==purge[i])
+{
+src_list.remove(n);
+break;
+}
+}
+}
+}
+
+========================== html
+<select size='18' style='width:200px;' multiple='multiple' id='ship_list' name='ship_list[]'>
+</select>
+
+<input type='button' value='<' title='Click to add selected items' onclick='add_items();'>
+
+<select size='18' style='width:200px;' multiple='multiple' id='rma_list' name='rma_list'>
+<option value='9' title='VEND:OCZ UPC:842024016366 Man:OCZSSD2-1CLSLT120G PID:SSD-OCZSSD2-1CLSLT120G'>RU112865</option>
+</select>

@@ -1,0 +1,52 @@
+bug in nsDragAndDrop.js in nsDragAndDrop.dragOver
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; pl; rv:1.8.1.9) Gecko/20071025 Firefox/2.0.0.9
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; pl; rv:1.8.1.9) Gecko/20071025 Firefox/2.0.0.9
+
+Here's the dragOver() func:
+http://lxr.mozilla.org/mozilla/source/toolkit/content/nsDragAndDrop.js#455
+and there's
+
+461       var flavourSet = aDragDropObserver.getSupportedFlavours();
+
+var flavourSet keeps a set of flavours which the drop target (aDragDropObserver) can accept. If flavours don't match with ones that dragSession can provide, drop should not be even possible (i.e. mouse pointer should also change on "forbid" sign).
+That's not true. Drop operation is possible (cursor does not change) even if flavours of target and drag don't match. 
+
+To test it make 
+
+1) aDragDropObserver returns empty FlavourSet
+getSupportedFlavours: function () {
+    return (new FlavourSet());
+}
+
+or
+
+2) aDragDropObserver returns other FlavourSet with some excotic flavour like some image flavour, so you are sure it surely does not match with the thing You will try to drop.
+
+AS THE RESULT:
+I got element like statusbar,
+I set that only specified flavours can be drop on it
+but nsDragAndDrop got error and it does not care about it, it allows to drop anything on my statusbar component.
+
+Users drops something which I don't serve on my statusbar and I got a bug in console + user is nervous as he tries to repeat the operation.
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Make your own xul component like statusbar.
+2. Make it drag and drop observer and set it's acceptable flavours on an empty list by this function:
+getSupportedFlavours: function () {
+    return (new FlavourSet());
+}
+or let it returns FlavourSet with some exotic image flavour...
+3. Select text, drag it and drag over on the component. 
+a) the cursor should change to deny sign - it doesn't
+b)
+Actual Results:  
+If flavours of drop target and dnd session does not match, the mouse pointer doesn't change to "forbid" sign and drop is possible - 
+onDrop function of drag observer is invoked and this can lead to exception
+
+Expected Results:  
+If flavours of drop target and dnd session does not match, the mouse pointer should change to "forbid" sign and drop should not be possible - 
+onDrop function of drag observer shouldn't be even invoked.

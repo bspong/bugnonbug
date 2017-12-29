@@ -1,0 +1,35 @@
+javascript embed dereference after plugin destroy crashes firefox
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.12) Gecko/20050922 Fedora/1.0.7-1.1.fc3 Firefox/1.0.7
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.12) Gecko/20050922 Fedora/1.0.7-1.1.fc3 Firefox/1.0.7
+
+If you de reference a cached embed element after the plugin it represents has been destroyed, the browser crashes
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+Load the following html, in a browser that has the mplayerplug-in from sourceforge available. Other plugins probably also work but I use this one...
+
+<html>
+<head>
+<title>Browser Crasher</title>
+<script type="text/javascript">
+function crashme() {
+	var embed = document.getElementById( "test_embed" );
+	if( embed == null ) {
+		alert( "unable to find 'test_embed', failing" );
+		return;
+	}
+	<!-- make the embed go away -->
+	embed.style.display = 'none';
+	alert( 'embed file name is ' + embed.filename );
+}
+</script>
+</head>
+<body onload="crashme()">
+<embed id="test_embed" type="application/x-mplayer2" src="http://junk.junk.junk/bogus.avi" ></embed>
+</body>
+</html>
+
+Actual Results:  
+/usr/lib/firefox-1.0.7/run-mozilla.sh: line 159: 22820 Segmentation fault      "$prog" ${1+"$@"}

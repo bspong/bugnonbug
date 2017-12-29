@@ -1,0 +1,23 @@
+setting document.location.hash to an empty string sometimes causes a 404 (an internal version of the url appears to get truncated by one or two characters, randomly)
+User-Agent:       Mozilla/5.0 (Macintosh; U; Intel Mac OS X; en-US; rv:1.9a9pre) Gecko/2007100504 Minefield/3.0a9pre
+Build Identifier: Mozilla/5.0 (Macintosh; U; Intel Mac OS X; en-US; rv:1.9a9pre) Gecko/2007100504 Minefield/3.0a9pre
+
+After setting document.location.hash to a non-empty string, setting it to an empty string sometimes causes strange behavior. Sometimes it's an immediate 404, and sometimes that 404 comes when the reload button is later used (on the same page).
+
+It seems that an internal version of the current url is getting a character or two chopped off. Setting location.hash shouldn't cause a page refresh, but when this happens on my test page "ffbug.html", the browser tries to request ".../ffbug.ht" or ".../ffbug.htm" from the server (even though the address bar still shows ".../ffbug.html")
+
+The test page (http://regex.info/tmp/ffbug.html) has a three-step procedure: step one sets location.hash to "foo". Step to sets it to "". If that doesn't 404 you right there, step 3 instructs you to hit the reload button, which will 404 you (but shouldn't).
+
+Happened on my PC and my Mac with the latest 2.x releases, and the Oct 5th nightly build on my Mac (I didn't try the nighly on my PC).
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Visit http://regex.info/tmp/ffbug.html and follow the instructions
+2.
+3.
+Actual Results:  
+A 404 response appears
+
+Expected Results:  
+No page refresh is done; no 404 appears

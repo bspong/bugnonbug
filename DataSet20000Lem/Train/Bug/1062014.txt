@@ -1,0 +1,10 @@
+Add node existence check to CustomizeMode's onDragEnd
+I've run into an issue where (because of the workaround I've had to implement due to bug 1058990), if a widget node is destroyed in mid-air after dragging it out of any area in customize mode, it can cause an exception in CustomizeMode's code here: http://mxr.mozilla.org/mozilla-central/source/browser/components/customizableui/CustomizeMode.jsm#1829
+
+> 1828 let draggedWrapper = document.getElementById("wrapper-" + draggedItemId);
+> 1829 draggedWrapper.hidden = false;
+> 1830 draggedWrapper.removeAttribute("mousedown");
+
+The exception seems harmless, a everything seems to remain working correctly afterwards. But the solution is simple: add a small check to make sure draggedWrapper exists before proceeding with the next couple of declarations.
+
+I realize this isn't a situation that the user would easily run into (or at all without my add-on causing it?), but it's not something I can fix within the add-on without doing some serious spelunking into the CustomizeMode and CustomizableUI code, when the fix from your side would be so incredibly simple. :) Unless of course if I missed something in the call after that bit of code, or unless you believe this fix could disguise the cause of some potential breakage in the future.

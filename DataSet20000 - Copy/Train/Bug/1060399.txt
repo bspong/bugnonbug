@@ -1,0 +1,31 @@
+[markup view] Isolate a node
+Feature request:
+
+- Right click on a node in the markup-view
+- Select "Isolate node"
+==> The markup-view refreshes and now shows the selected node as root.
+
+This feature should help when wanting to focus on a given part of the DOM and not be distracted by the rest.
+
+To go back to the normal root node, there could be multiple ways:
+- right-click the node again and choose "Un-isolate node"
+- choose another node from the page
+- navigate in the breadcrumb widget
+- maybe there should be a button in the markup-view (kind of like the "show more nodes" button) too
+
+I had a quick look at the code and didn't find an immediate solution for this, but I'm pretty sure this is possible.
+
+We can either do this on the client-side by reusing the "new-root" event that is sent by the WalkerFront. Adding a new function along these lines could work:
+
+  setNodeAsRoot: function(node) {
+    this._createRootNodePromise();
+    this.rootNode = node;
+    this._rootNodeDeferred.resolve(this.rootNode);
+  },
+
+Or we can do this on the server-side, by mimicking the way the iframe selection mechanism works, which basically is faking will-navigate/navigate events except that in our case, we wouldn't be navigating to a window but to a node.
+Reusing this might be easier in terms of amount of code, but it feels more hacky to pretend to be navigating to a new window.
+
+There's a few roadblocks in the way as I think both our actor and markup-view code assume that top level nodes are document nodes (also the default selection code assumes that a <body> node exists).
+
+See also bug 979344 for which we would need the markup-view to be able to display parts of a DOM tree too, not the whole document.

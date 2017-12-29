@@ -1,0 +1,39 @@
+CssHtmlTree should avoid hacking innerHTML
+From Justin Dolske's review.
+See https://bugzilla.mozilla.org/show_bug.cgi?id=582596#c78
+
+>+StyleGroupView.prototype = {
+>+ /**
+>+ * The click event handler for the title of the style group view.
+>+ */
+>+ click: function StyleGroupView_click()
+>+ {
+...
+>+ if (!this.closed) {
+>+ this.element.style.display = "none";
+>+ this.toggle.innerHTML = "&#x25B6;";
+
+Eww.
+
+This should just be done with CSS. Set an attribute (|open="true"|, like XUL),
+and have 1 structural rule that control .display, and 1 theme rule that
+control the twisty widget appearance.
+
+We've got native-looking twisties for Windows in
+toolkit/themes/winstripe/global/tree/, not sure where the OS X one are coming
+from. There's also toolkit/themes/*/global/arrow/ which is uglier but on all
+platforms. Maybe just use those for now, and file a theme bug to sort out where
+to get nice arrow for any platform.
+
+>+PropertyView.prototype = {
+...
+>+ click: function PropertyView_click(aEvent)
+>+ {
+...
+>+ if (!this.closed) {
+>+ this.element.style.display = "none";
+>+ if (this.toggle) {
+>+ this.toggle.innerHTML = "&#x25B6;";
+>+ }
+
+Ditto for using CSS and chrome:// image here.

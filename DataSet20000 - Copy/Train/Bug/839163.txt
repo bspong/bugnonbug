@@ -1,0 +1,26 @@
+browser_social_chatwindow.js is overly picky about its chat window sizes
+While running tests locally, I see:
+
+TEST-INFO | chrome://mochitests/content/browser/browser/base/content/test/social/browser_social_chatwindow.js | resizing window so chat area is 660 wide, currently it is 246.10000610351562.  Screen avail is 1600, current outer width is 521
+TEST-INFO | chrome://mochitests/content/browser/browser/base/content/test/social/browser_social_chatwindow.js | skipping this as we can't resize chat area to 660 - got 659.0999755859375
+TEST-UNEXPECTED-FAIL | chrome://mochitests/content/browser/browser/base/content/test/social/browser_social_chatwindow.js | can't do any tests without this width
+
+or:
+
+TEST-INFO | chrome://mochitests/content/browser/browser/base/content/test/social/browser_social_chatwindow.js | resizing window so chat area is 660 wide, currently it is 659.0999755859375.  Screen avail is 1600, current outer width is 934
+TEST-INFO | chrome://mochitests/content/browser/browser/base/content/test/social/browser_social_chatwindow.js | skipping this as we can't resize chat area to 660 - got 659.0999755859375
+TEST-UNEXPECTED-FAIL | chrome://mochitests/content/browser/browser/base/content/test/social/browser_social_chatwindow.js | can't do any tests without this width
+
+Is that extra .9 of a pixel really necessary for the tests to work properly?
+
+The test setup I use is an Xvfb server:
+
+$ Xvfb -screen :0 1600x1200x24 :99 &
+
+running openbox:
+
+$ DISPLAY=:99.0 openbox &
+
+and then running the tests like so:
+
+$ DISPLAY=:99.0 TEST_PATH=browser/base/content/test/ make mochitest-browser-chrome

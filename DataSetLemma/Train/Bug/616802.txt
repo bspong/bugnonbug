@@ -1,0 +1,329 @@
+crash during the execution of a nsDOMWorkerXHREvent handler
+User-Agent: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_5; en-us) AppleWebKit/533.19.4 (KHTML, like Gecko) Version/5.0.3 Safari/533.19.4
+Build Identifier: 1.9.2.10 - 1.9.2.12
+
+The application crashed during the execution of a nsDOMWorkerXHREvent handler. The reason for the crash is somehow related to the way an array is handled within the handler. There core reason is unknown at this stage.
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+It is possible to reproduce the bug with a specific xulrunner based application. The application is using the standard xulrunner binary provided by mozilla. Similar crash ha been reported on xulrunner build provided with Ubuntu. Since the specific xulrunner application is composed of only XPI extensions, the crash is probably also reproducible with firefox.
+
+The easiest way to reproduce the crash is to download the following app: http://bit.ly/hiVOHe and execute it with the option listed here: http://bit.ly/dCTE8K
+Actual Results:
+The application crashes!
+
+
+The crashed thread look like this:
+
+#0 0x0055fea2 in LeaveTree ()
+#1 0x00560791 in js_DeepBail ()
+#2 0x00475a44 in js_DiscountRequestsForGC ()
+#3 0x004bef2d in ClaimTitle ()
+#4 0x004bf2d6 in js_LockTitle ()
+#5 0x004bf7cc in js_LockObj ()
+#6 0x004cb520 in js_LookupPropertyWithFlags ()
+#7 0x0059d8a5 in js_HasNamedProperty ()
+#8 0x16f6c826 in ?? ()
+#9 0x00560b48 in ExecuteTree ()
+#10 0x00575cf1 in js_MonitorLoopEdge ()
+#11 0x004b87ac in js_Interpret ()
+#12 0x004bc8e1 in js_Invoke ()
+#13 0x0104412d in nsXPCWrappedJSClass::CallMethod (this=0x1bb2d6c0, wrapper=0x193ca010, methodIndex=3, info=0x995428, nativeParams=0xb07c4b54) at /Users/user/mozilla-1.9.2.10/js/src/xpconnect/src/xpcwrappedjsclass.cpp:1696
+#14 0x0103d623 in nsXPCWrappedJS::CallMethod (this=0x193ca010, methodIndex=3, info=0x995428, params=0xb07c4b54) at /Users/user/mozilla-1.9.2.10/js/src/xpconnect/src/xpcwrappedjs.cpp:570
+#15 0x01b30c05 in PrepareAndDispatch (self=0x193ca050, methodIndex=<value temporarily unavailable, due to optimizations>, args=0xb07c4c24) at /Users/user/mozilla-1.9.2.10/xpcom/reflect/xptcall/src/md/unix/xptcstubs_unixish_x86.cpp:93
+#16 0x01b2dc57 in nsXPTCStubBase::Stub3 (this=0x193ca050) at xptcstubsdef.inc:1
+#17 0x0162e5d9 in nsDOMWorkerMessageHandler::DispatchEvent (this=0x1e139dd8, aEvent=0x199513f0, _retval=0x0) at /Users/user/mozilla-1.9.2.10/dom/src/threads/nsDOMWorkerMessageHandler.cpp:345
+#18 0x0162a9a6 in nsDOMWorkerXHREvent::Run (this=0x199513f0) at /Users/user/mozilla-1.9.2.10/dom/src/threads/nsDOMWorkerEvents.cpp:595
+#19 0x0163bd1b in nsDOMWorkerXHRLastProgressOrLoadEvent::Run (this=0x19951360) at /Users/user/mozilla-1.9.2.10/dom/src/threads/nsDOMWorkerXHRProxy.cpp:192
+#20 0x01623976 in ~nsCOMPtr [inlined] () at /Users/user/mozilla-1.9.2.10/obj-xul-mac-res/dist/include/nsCOMPtr.h:500
+#21 0x01623976 in nsDOMWorkerRunnable::RunQueue () at /Users/user/mozilla-1.9.2.10/dom/src/threads/nsDOMThreadService.cpp:463
+#22 0x01623976 in nsDOMWorkerRunnable::Run (this=0x199514f0) at /Users/user/mozilla-1.9.2.10/dom/src/threads/nsDOMThreadService.cpp:415
+#23 0x01b2006f in ~nsCOMPtr [inlined] () at /Users/user/mozilla-1.9.2.10/obj-xul-mac-res/dist/include/nsCOMPtr.h:219
+#24 0x01b2006f in nsThreadPool::Run (this=0x1d3a7230) at /Users/user/mozilla-1.9.2.10/xpcom/threads/nsThreadPool.cpp:220
+#25 0x01b1df0c in nsThread::ProcessNextEvent (this=0x18da6a40, mayWait=1, result=0xb07c4eec) at /Users/user/mozilla-1.9.2.10/xpcom/threads/nsThread.cpp:527
+#26 0x01adc40a in NS_ProcessNextEvent_P (thread=0x18da6a40, mayWait=1) at nsThreadUtils.cpp:250
+#27 0x01b1e050 in nsThread::ThreadFunc (arg=0x18da6a40) at /Users/user/mozilla-1.9.2.10/xpcom/threads/nsThread.cpp:254
+#28 0x000488a2 in _pt_root ()
+#29 0x94da685d in _pthread_start ()
+#30 0x94da66e2 in thread_start ()
+
+The call stack of JS look like this:
+0 anonymous(webRequest = [object Object]) ["chrome://lite.websecurify.gnucitizen.org/content/imp/lib/lib.webhunt.js":82]
+issue = undefined
+resultSignature = undefined
+result = undefined
+i = 0
+issue =
+resultsLength = 2
+result = [object Object],[object Object]
+responseParts = [object Object]
+requestParts = [object Object]
+this = [object Object]
+1 anonymous(event = [xpconnect wrapped (nsISupports, nsIDOMEvent, nsIDOMProgressEvent)]) ["chrome://lite.websecurify.gnucitizen.org/content/imp/driver.web.js":171]
+observer = [object Object]
+i = 0
+observersLength = 3
+observer = [object Object],[object Object],[object Object]
+this = [object Object]
+2 anonymous(event = [xpconnect wrapped (nsISupports, nsIDOMEvent, nsIDOMProgressEvent)]) ["chrome://lite.websecurify.gnucitizen.org/content/imp/driver.web.js":93]
+this = [object XMLHttpRequest]
+
+The affected line is:
+var result = webanalyze.analyze(requestParts, responseParts);
+var resultsLength = results.length;
+var issue = [];
+
+var i, result, resultSignature, issue;
+
+for (i = 0; i < resultsLength; i += 1) {
+
+It is unclear at the moment why iterating over the array provided by the function webanalyze.analyze cause the crash. This code is within a function which handle the "load" event of a XMLHttpRequest object. If I remove the loop, the crash doesn't occur. It is also worth mentioning that the crash occurs by just trying to access the very first element of the array. From the stack trace we can see that this element is actually never used in any form within the function. Just accessing the first element cause the crash.
+
+The complete stack trace look like this:
+
+Thread 16 (process 24020):
+#0 0x94da70a6 in __semwait_signal ()
+#1 0x94da6d62 in _pthread_cond_wait ()
+#2 0x94da68b5 in pthread_cond_timedwait$UNIX2003 ()
+#3 0x00042027 in pt_TimedWait ()
+#4 0x00042dc7 in PR_WaitCondVar ()
+#5 0x00042eb9 in PR_Wait ()
+#6 0x01b201b9 in nsAutoMonitor::Wait () at /Users/user/mozilla-1.9.2.10/obj-xul-mac-res/dist/include/nsAutoLock.h:210
+#7 0x01b201b9 in nsThreadPool::Run (this=0x16d19020) at /Users/user/mozilla-1.9.2.10/xpcom/threads/nsThreadPool.cpp:210
+#8 0x01b1df0c in nsThread::ProcessNextEvent (this=0x1a0bd940, mayWait=1, result=0xb0b1beec) at /Users/user/mozilla-1.9.2.10/xpcom/threads/nsThread.cpp:527
+#9 0x01adc40a in NS_ProcessNextEvent_P (thread=0x1a0bd940, mayWait=1) at nsThreadUtils.cpp:250
+#10 0x01b1e050 in nsThread::ThreadFunc (arg=0x1a0bd940) at /Users/user/mozilla-1.9.2.10/xpcom/threads/nsThread.cpp:254
+#11 0x000488a2 in _pt_root ()
+#12 0x94da685d in _pthread_start ()
+#13 0x94da66e2 in thread_start ()
+
+Thread 15 (process 24020):
+#0 0x94da70a6 in __semwait_signal ()
+#1 0x94da6d62 in _pthread_cond_wait ()
+#2 0x94da89f8 in pthread_cond_wait$UNIX2003 ()
+#3 0x00042e61 in PR_WaitCondVar ()
+#4 0x00042eb9 in PR_Wait ()
+#5 0x01b1d0fa in nsEventQueue::GetEvent (this=0x1a3a1730, mayWait=1, result=0xb0a4eea8) at /Users/user/mozilla-1.9.2.10/xpcom/threads/nsEventQueue.cpp:85
+#6 0x01b1deeb in nsThread::ProcessNextEvent (this=0x1a3a1710, mayWait=1, result=0xb0a4eeec) at /Users/user/mozilla-1.9.2.10/xpcom/threads/nsThread.cpp:521
+#7 0x01adc40a in NS_ProcessNextEvent_P (thread=0x1a3a1710, mayWait=1) at nsThreadUtils.cpp:250
+#8 0x01b1e050 in nsThread::ThreadFunc (arg=0x1a3a1710) at /Users/user/mozilla-1.9.2.10/xpcom/threads/nsThread.cpp:254
+#9 0x000488a2 in _pt_root ()
+#10 0x94da685d in _pthread_start ()
+#11 0x94da66e2 in thread_start ()
+
+Thread 14 (process 24020):
+#0 0x94da70a6 in __semwait_signal ()
+#1 0x94da6d62 in _pthread_cond_wait ()
+#2 0x94da68b5 in pthread_cond_timedwait$UNIX2003 ()
+#3 0x00042027 in pt_TimedWait ()
+#4 0x00042dc7 in PR_WaitCondVar ()
+#5 0x010d821a in nsHostResolver::GetHostToLookup (this=0x1e7e80, result=0xb05d4f2c) at /Users/user/mozilla-1.9.2.10/netwerk/dns/src/nsHostResolver.cpp:773
+#6 0x010d88fc in nsHostResolver::ThreadFunc (arg=0x1e7e80) at /Users/user/mozilla-1.9.2.10/netwerk/dns/src/nsHostResolver.cpp:877
+#7 0x000488a2 in _pt_root ()
+#8 0x94da685d in _pthread_start ()
+#9 0x94da66e2 in thread_start ()
+
+Thread 13 (process 24020):
+#0 0x94da70a6 in __semwait_signal ()
+#1 0x94da6d62 in _pthread_cond_wait ()
+#2 0x94da68b5 in pthread_cond_timedwait$UNIX2003 ()
+#3 0x00042027 in pt_TimedWait ()
+#4 0x00042dc7 in PR_WaitCondVar ()
+#5 0x010d821a in nsHostResolver::GetHostToLookup (this=0x1e7e80, result=0xb08f6f2c) at /Users/user/mozilla-1.9.2.10/netwerk/dns/src/nsHostResolver.cpp:773
+#6 0x010d88fc in nsHostResolver::ThreadFunc (arg=0x1e7e80) at /Users/user/mozilla-1.9.2.10/netwerk/dns/src/nsHostResolver.cpp:877
+#7 0x000488a2 in _pt_root ()
+#8 0x94da685d in _pthread_start ()
+#9 0x94da66e2 in thread_start ()
+
+Thread 12 (process 24020):
+#0 0x0055fea2 in LeaveTree ()
+#1 0x00560791 in js_DeepBail ()
+#2 0x00475a44 in js_DiscountRequestsForGC ()
+#3 0x004bef2d in ClaimTitle ()
+#4 0x004bf2d6 in js_LockTitle ()
+#5 0x004bf7cc in js_LockObj ()
+#6 0x004cb520 in js_LookupPropertyWithFlags ()
+#7 0x0059d8a5 in js_HasNamedProperty ()
+#8 0x16f6c826 in ?? ()
+#9 0x00560b48 in ExecuteTree ()
+#10 0x00575cf1 in js_MonitorLoopEdge ()
+#11 0x004b87ac in js_Interpret ()
+#12 0x004bc8e1 in js_Invoke ()
+#13 0x0104412d in nsXPCWrappedJSClass::CallMethod (this=0x1bb2d6c0, wrapper=0x193ca010, methodIndex=3, info=0x995428, nativeParams=0xb07c4b54) at /Users/user/mozilla-1.9.2.10/js/src/xpconnect/src/xpcwrappedjsclass.cpp:1696
+#14 0x0103d623 in nsXPCWrappedJS::CallMethod (this=0x193ca010, methodIndex=3, info=0x995428, params=0xb07c4b54) at /Users/user/mozilla-1.9.2.10/js/src/xpconnect/src/xpcwrappedjs.cpp:570
+#15 0x01b30c05 in PrepareAndDispatch (self=0x193ca050, methodIndex=<value temporarily unavailable, due to optimizations>, args=0xb07c4c24) at /Users/user/mozilla-1.9.2.10/xpcom/reflect/xptcall/src/md/unix/xptcstubs_unixish_x86.cpp:93
+#16 0x01b2dc57 in nsXPTCStubBase::Stub3 (this=0x193ca050) at xptcstubsdef.inc:1
+#17 0x0162e5d9 in nsDOMWorkerMessageHandler::DispatchEvent (this=0x1e139dd8, aEvent=0x199513f0, _retval=0x0) at /Users/user/mozilla-1.9.2.10/dom/src/threads/nsDOMWorkerMessageHandler.cpp:345
+#18 0x0162a9a6 in nsDOMWorkerXHREvent::Run (this=0x199513f0) at /Users/user/mozilla-1.9.2.10/dom/src/threads/nsDOMWorkerEvents.cpp:595
+#19 0x0163bd1b in nsDOMWorkerXHRLastProgressOrLoadEvent::Run (this=0x19951360) at /Users/user/mozilla-1.9.2.10/dom/src/threads/nsDOMWorkerXHRProxy.cpp:192
+#20 0x01623976 in ~nsCOMPtr [inlined] () at /Users/user/mozilla-1.9.2.10/obj-xul-mac-res/dist/include/nsCOMPtr.h:500
+#21 0x01623976 in nsDOMWorkerRunnable::RunQueue () at /Users/user/mozilla-1.9.2.10/dom/src/threads/nsDOMThreadService.cpp:463
+#22 0x01623976 in nsDOMWorkerRunnable::Run (this=0x199514f0) at /Users/user/mozilla-1.9.2.10/dom/src/threads/nsDOMThreadService.cpp:415
+#23 0x01b2006f in ~nsCOMPtr [inlined] () at /Users/user/mozilla-1.9.2.10/obj-xul-mac-res/dist/include/nsCOMPtr.h:219
+#24 0x01b2006f in nsThreadPool::Run (this=0x1d3a7230) at /Users/user/mozilla-1.9.2.10/xpcom/threads/nsThreadPool.cpp:220
+#25 0x01b1df0c in nsThread::ProcessNextEvent (this=0x18da6a40, mayWait=1, result=0xb07c4eec) at /Users/user/mozilla-1.9.2.10/xpcom/threads/nsThread.cpp:527
+#26 0x01adc40a in NS_ProcessNextEvent_P (thread=0x18da6a40, mayWait=1) at nsThreadUtils.cpp:250
+#27 0x01b1e050 in nsThread::ThreadFunc (arg=0x18da6a40) at /Users/user/mozilla-1.9.2.10/xpcom/threads/nsThread.cpp:254
+#28 0x000488a2 in _pt_root ()
+#29 0x94da685d in _pthread_start ()
+#30 0x94da66e2 in thread_start ()
+
+Thread 11 (process 24020):
+#0 0x94da70a6 in __semwait_signal ()
+#1 0x94da6d62 in _pthread_cond_wait ()
+#2 0x94da68b5 in pthread_cond_timedwait$UNIX2003 ()
+#3 0x00042027 in pt_TimedWait ()
+#4 0x00042dc7 in PR_WaitCondVar ()
+#5 0x00042eb9 in PR_Wait ()
+#6 0x01b201b9 in nsAutoMonitor::Wait () at /Users/user/mozilla-1.9.2.10/obj-xul-mac-res/dist/include/nsAutoLock.h:210
+#7 0x01b201b9 in nsThreadPool::Run (this=0x1d3a7230) at /Users/user/mozilla-1.9.2.10/xpcom/threads/nsThreadPool.cpp:210
+#8 0x01b1df0c in nsThread::ProcessNextEvent (this=0x1d3d3730, mayWait=1, result=0xb0742eec) at /Users/user/mozilla-1.9.2.10/xpcom/threads/nsThread.cpp:527
+#9 0x01adc40a in NS_ProcessNextEvent_P (thread=0x1d3d3730, mayWait=1) at nsThreadUtils.cpp:250
+#10 0x01b1e050 in nsThread::ThreadFunc (arg=0x1d3d3730) at /Users/user/mozilla-1.9.2.10/xpcom/threads/nsThread.cpp:254
+#11 0x000488a2 in _pt_root ()
+#12 0x94da685d in _pthread_start ()
+#13 0x94da66e2 in thread_start ()
+
+Thread 10 (process 24020):
+#0 0x0056856b in TraceRecorder::snapshot ()
+#1 0x0056905b in TraceRecorder::traverseScopeChain ()
+#2 0x00572f47 in TraceRecorder::callProp ()
+#3 0x00573531 in TraceRecorder::scopeChainProp ()
+#4 0x0057372f in TraceRecorder::name ()
+#5 0x00581149 in TraceRecorder::monitorRecording ()
+#6 0x004adffd in js_Interpret ()
+#7 0x004bc8e1 in js_Invoke ()
+#8 0x00535fb3 in ReplaceCallback ()
+#9 0x0052a507 in DoMatch ()
+#10 0x0053772c in str_replace ()
+#11 0x004b51a8 in js_Interpret ()
+#12 0x004bc8e1 in js_Invoke ()
+#13 0x0104412d in nsXPCWrappedJSClass::CallMethod (this=0x1bb2d6c0, wrapper=0x193c96b0, methodIndex=3, info=0x995428, nativeParams=0xb0490b54) at /Users/user/mozilla-1.9.2.10/js/src/xpconnect/src/xpcwrappedjsclass.cpp:1696
+#14 0x0103d623 in nsXPCWrappedJS::CallMethod (this=0x193c96b0, methodIndex=3, info=0x995428, params=0xb0490b54) at /Users/user/mozilla-1.9.2.10/js/src/xpconnect/src/xpcwrappedjs.cpp:570
+#15 0x01b30c05 in PrepareAndDispatch (self=0x199318b0, methodIndex=<value temporarily unavailable, due to optimizations>, args=0xb0490c24) at /Users/user/mozilla-1.9.2.10/xpcom/reflect/xptcall/src/md/unix/xptcstubs_unixish_x86.cpp:93
+#16 0x01b2dc57 in nsXPTCStubBase::Stub3 (this=0x199318b0) at xptcstubsdef.inc:1
+#17 0x0162e5d9 in nsDOMWorkerMessageHandler::DispatchEvent (this=0x20cd6a28, aEvent=0x19949410, _retval=0x0) at /Users/user/mozilla-1.9.2.10/dom/src/threads/nsDOMWorkerMessageHandler.cpp:345
+#18 0x0162a9a6 in nsDOMWorkerXHREvent::Run (this=0x19949410) at /Users/user/mozilla-1.9.2.10/dom/src/threads/nsDOMWorkerEvents.cpp:595
+#19 0x0163bd1b in nsDOMWorkerXHRLastProgressOrLoadEvent::Run (this=0x193c96f0) at /Users/user/mozilla-1.9.2.10/dom/src/threads/nsDOMWorkerXHRProxy.cpp:192
+#20 0x01623976 in ~nsCOMPtr [inlined] () at /Users/user/mozilla-1.9.2.10/obj-xul-mac-res/dist/include/nsCOMPtr.h:500
+#21 0x01623976 in nsDOMWorkerRunnable::RunQueue () at /Users/user/mozilla-1.9.2.10/dom/src/threads/nsDOMThreadService.cpp:463
+#22 0x01623976 in nsDOMWorkerRunnable::Run (this=0x19949510) at /Users/user/mozilla-1.9.2.10/dom/src/threads/nsDOMThreadService.cpp:415
+#23 0x01b2006f in ~nsCOMPtr [inlined] () at /Users/user/mozilla-1.9.2.10/obj-xul-mac-res/dist/include/nsCOMPtr.h:219
+#24 0x01b2006f in nsThreadPool::Run (this=0x1d3a7230) at /Users/user/mozilla-1.9.2.10/xpcom/threads/nsThreadPool.cpp:220
+#25 0x01b1df0c in nsThread::ProcessNextEvent (this=0x1d3a6590, mayWait=1, result=0xb0490eec) at /Users/user/mozilla-1.9.2.10/xpcom/threads/nsThread.cpp:527
+#26 0x01adc40a in NS_ProcessNextEvent_P (thread=0x1d3a6590, mayWait=1) at nsThreadUtils.cpp:250
+#27 0x01b1e050 in nsThread::ThreadFunc (arg=0x1d3a6590) at /Users/user/mozilla-1.9.2.10/xpcom/threads/nsThread.cpp:254
+#28 0x000488a2 in _pt_root ()
+#29 0x94da685d in _pthread_start ()
+#30 0x94da66e2 in thread_start ()
+
+Thread 9 (process 24020):
+#0 0x94da70a6 in __semwait_signal ()
+#1 0x94da6d62 in _pthread_cond_wait ()
+#2 0x94da68b5 in pthread_cond_timedwait$UNIX2003 ()
+#3 0x00042027 in pt_TimedWait ()
+#4 0x00042dc7 in PR_WaitCondVar ()
+#5 0x010d821a in nsHostResolver::GetHostToLookup (this=0x1e7e80, result=0xb051bf2c) at /Users/user/mozilla-1.9.2.10/netwerk/dns/src/nsHostResolver.cpp:773
+#6 0x010d88fc in nsHostResolver::ThreadFunc (arg=0x1e7e80) at /Users/user/mozilla-1.9.2.10/netwerk/dns/src/nsHostResolver.cpp:877
+#7 0x000488a2 in _pt_root ()
+#8 0x94da685d in _pthread_start ()
+#9 0x94da66e2 in thread_start ()
+
+Thread 8 (process 24020):
+#0 0x94da70a6 in __semwait_signal ()
+#1 0x94da6d62 in _pthread_cond_wait ()
+#2 0x94da89f8 in pthread_cond_wait$UNIX2003 ()
+#3 0x00042e61 in PR_WaitCondVar ()
+#4 0x018eb383 in nsCertVerificationThread::Run (this=0x2e0d120) at /Users/user/mozilla-1.9.2.10/security/manager/ssl/src/nsCertVerificationThread.cpp:138
+#5 0x000488a2 in _pt_root ()
+#6 0x94da685d in _pthread_start ()
+#7 0x94da66e2 in thread_start ()
+
+Thread 7 (process 24020):
+#0 0x94da70a6 in __semwait_signal ()
+#1 0x94da6d62 in _pthread_cond_wait ()
+#2 0x94da89f8 in pthread_cond_wait$UNIX2003 ()
+#3 0x00042e61 in PR_WaitCondVar ()
+#4 0x018e9cce in nsSSLThread::Run (this=0x2e1ea70) at /Users/user/mozilla-1.9.2.10/security/manager/ssl/src/nsSSLThread.cpp:980
+#5 0x000488a2 in _pt_root ()
+#6 0x94da685d in _pthread_start ()
+#7 0x94da66e2 in thread_start ()
+
+Thread 6 (process 24020):
+#0 0x94da70a6 in __semwait_signal ()
+#1 0x94da6d62 in _pthread_cond_wait ()
+#2 0x94da68b5 in pthread_cond_timedwait$UNIX2003 ()
+#3 0x00042027 in pt_TimedWait ()
+#4 0x00042dc7 in PR_WaitCondVar ()
+#5 0x01b224df in TimerThread::Run (this=0x1149d0) at /Users/user/mozilla-1.9.2.10/xpcom/threads/TimerThread.cpp:344
+#6 0x01b1df0c in nsThread::ProcessNextEvent (this=0x14a540, mayWait=1, result=0xb030aeec) at /Users/user/mozilla-1.9.2.10/xpcom/threads/nsThread.cpp:527
+#7 0x01adc40a in NS_ProcessNextEvent_P (thread=0x14a540, mayWait=1) at nsThreadUtils.cpp:250
+#8 0x01b1e050 in nsThread::ThreadFunc (arg=0x14a540) at /Users/user/mozilla-1.9.2.10/xpcom/threads/nsThread.cpp:254
+#9 0x000488a2 in _pt_root ()
+#10 0x94da685d in _pthread_start ()
+#11 0x94da66e2 in thread_start ()
+
+Thread 5 (process 24020):
+#0 0x94da70a6 in __semwait_signal ()
+#1 0x94da6d62 in _pthread_cond_wait ()
+#2 0x94da68b5 in pthread_cond_timedwait$UNIX2003 ()
+#3 0x00042027 in pt_TimedWait ()
+#4 0x00042dc7 in PR_WaitCondVar ()
+#5 0x01038001 in XPCJSRuntime::WatchdogMain (arg=0x1195e0) at /Users/user/mozilla-1.9.2.10/js/src/xpconnect/src/xpcjsruntime.cpp:808
+#6 0x000488a2 in _pt_root ()
+#7 0x94da685d in _pthread_start ()
+#8 0x94da66e2 in thread_start ()
+
+Thread 4 (process 24020):
+#0 0x94da70a6 in __semwait_signal ()
+#1 0x94da6d62 in _pthread_cond_wait ()
+#2 0x94da89f8 in pthread_cond_wait$UNIX2003 ()
+#3 0x00042e61 in PR_WaitCondVar ()
+#4 0x005391a3 in JSBackgroundThread::work ()
+#5 0x000488a2 in _pt_root ()
+#6 0x94da685d in _pthread_start ()
+#7 0x94da66e2 in thread_start ()
+
+Thread 3 (process 24020):
+#0 0x94d980c6 in select$DARWIN_EXTSN ()
+#1 0x00049dae in poll ()
+#2 0x00044a29 in PR_Poll ()
+#3 0x010cc000 in nsSocketTransportService::Poll (this=0x303b800, wait=1, interval=0xb0184d4c) at /Users/user/mozilla-1.9.2.10/netwerk/base/src/nsSocketTransportService2.cpp:355
+#4 0x010cce3c in nsSocketTransportService::DoPollIteration (this=0x303b800, wait=1) at /Users/user/mozilla-1.9.2.10/netwerk/base/src/nsSocketTransportService2.cpp:660
+#5 0x010cd420 in nsSocketTransportService::OnProcessNextEvent (this=0x303b800, thread=0x2e0a040, mayWait=1, depth=1) at /Users/user/mozilla-1.9.2.10/netwerk/base/src/nsSocketTransportService2.cpp:539
+#6 0x01b1deb1 in nsThread::ProcessNextEvent (this=0x2e0a040, mayWait=1, result=0xb0184e1c) at /Users/user/mozilla-1.9.2.10/xpcom/threads/nsThread.cpp:508
+#7 0x01adc40a in NS_ProcessNextEvent_P (thread=0x2e0a040, mayWait=1) at nsThreadUtils.cpp:250
+#8 0x010cc99b in nsSocketTransportService::Run (this=0x303b800) at /Users/user/mozilla-1.9.2.10/netwerk/base/src/nsSocketTransportService2.cpp:581
+#9 0x01b1df0c in nsThread::ProcessNextEvent (this=0x2e0a040, mayWait=1, result=0xb0184eec) at /Users/user/mozilla-1.9.2.10/xpcom/threads/nsThread.cpp:527
+#10 0x01adc40a in NS_ProcessNextEvent_P (thread=0x2e0a040, mayWait=1) at nsThreadUtils.cpp:250
+#11 0x01b1e050 in nsThread::ThreadFunc (arg=0x2e0a040) at /Users/user/mozilla-1.9.2.10/xpcom/threads/nsThread.cpp:254
+#12 0x000488a2 in _pt_root ()
+#13 0x94da685d in _pthread_start ()
+#14 0x94da66e2 in thread_start ()
+
+Thread 2 (process 24020):
+#0 0x94d9f982 in kevent ()
+#1 0x94da009c in _dispatch_mgr_invoke ()
+#2 0x94d9f559 in _dispatch_queue_invoke ()
+#3 0x94d9f2fe in _dispatch_worker_thread2 ()
+#4 0x94d9ed81 in _pthread_wqthread ()
+#5 0x94d9ebc6 in start_wqthread ()
+
+Thread 1 (process 24020):
+#0 0x94d790fa in mach_msg_trap ()
+#1 0x94d79867 in mach_msg ()
+#2 0x951b937f in __CFRunLoopRun ()
+#3 0x951b8464 in CFRunLoopRunSpecific ()
+#4 0x951b8291 in CFRunLoopRunInMode ()
+#5 0x974d3f9c in RunCurrentEventLoopInMode ()
+#6 0x974d3d51 in ReceiveNextEventCommon ()
+#7 0x974d3bd6 in BlockUntilNextEventMatchingListInMode ()
+#8 0x98d8178d in _DPSNextEvent ()
+#9 0x98d80fce in -[NSApplication nextEventMatchingMask:untilDate:inMode:dequeue:] ()
+#10 0x98d43247 in -[NSApplication run] ()
+#11 0x01a429da in nsAppShell::Run (this=0x118d30) at /Users/user/mozilla-1.9.2.10/widget/src/cocoa/nsAppShell.mm:778
+#12 0x018d1367 in nsAppStartup::Run (this=0x2e18c00) at /Users/user/mozilla-1.9.2.10/toolkit/components/startup/src/nsAppStartup.cpp:183
+#13 0x0100c065 in XRE_main (argc=4, argv=0xbffff458, aAppData=0x2e00270) at /Users/user/mozilla-1.9.2.10/toolkit/xre/nsAppRunner.cpp:3483
+#14 0x00002616 in main (argc=4, argv=0xbffff458) at /Users/user/mozilla-1.9.2.10/xulrunner/stub/nsXULStub.cpp:583
+#15 0x00002356 in start ()

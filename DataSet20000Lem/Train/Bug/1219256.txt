@@ -1,0 +1,44 @@
+./mach build devtools doesn't reload file anymore
+I've been having this problem for a few days. It started right around the time 2 thing happened:
+
+- we changed the way devtools resource URLs look like (see https://github.com/jryans/devtools-migrate/blob/master/resource-devtools/README.md)
+- I played with the gcli 'tools reload' command.
+
+Since then, every time I execute './mach build devtools', then none of the change I made to my source file are loaded in firefox when I run it with './mach run -P dev'.
+I have to do a full './mach build' for it to work.
+
+Thinking this might have been related to me playing with the gcli command, I removed the srcdir pref and stopped using it.
+
+I'm on Windows 10.
+
+Let's take the example of this file:
+/devtools/client/animationinspector/components.js
+
+- I do a local change to the file in Sublime,
+- then I run './mach build devtools' (or even './mach build devtools/client', it ha the same effect for me),
+- then I run firefox './mach run -P dev' and open the devtools
+
+I can see that my change wasn't taken into account.
+
+In fact, if I then open this URL in a new browser tab:
+resource://devtools/client/animationinspector/components.js
+I can see that my change isn't here.
+
+I kept on digging around a bit more and found out that if I execute this piece of code:
+
+let target = "resource://devtools/client/animationinspector/components.js";
+let resourceHandler = Services.io.getProtocolHandler("resource")
+.QueryInterface(Ci.nsISubstitutingProtocolHandler);
+let resURI = Services.io.newURI(target, null, null);
+let uri = Services.io.newURI(resourceHandler.resolveURI(resURI), null, null);
+
+then I get uri.spec = file:///c:/Users/Patrick/dev/fx-team/obj-x86_64-pc-mingw32/dist/bin/browser/chrome/devtools/modules/devtools/client/animationinspector/components.js
+
+Using the window explorer (or a new tab in Firefox), I can see that this file doe exist but doesn't have my changes.
+
+In fact, keeping an explorer window opened on the parent folder while running './mach build devtools' show that this file isn't being overridden.
+If I run './mach build' then it doe get overridden.
+
+One more thing, the file doesn't appear to be a symlink file to the actual source file (which is what I think happens on Linux).
+
+I'm not sure what are the next step that I should take to investigate this further, but something is definitely wrong here.

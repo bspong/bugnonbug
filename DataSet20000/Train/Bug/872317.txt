@@ -1,0 +1,20 @@
+Download indicator toolbar button depends on an odd XBL quirk
+Created attachment 749584
+Proposed patch
+
+One of the odd quirks of the current XBL code is that if a binding is attached to a node that has an explicit child that doesn't match any of the binding's <children> elements, we still apply the binding, but ignoring its anonymous content. As a concrete example, given a binding:
+<binding id="b">
+  <content>Foo</content>
+  <implementation><property name="prop" onget="return 42" /></implementation>
+</binding>
+
+applying "b" to an element:
+<element id="e" style="-moz-binding: url(#b)">Bar</element>
+
+Results in the rendering: "Bar", even though document.getElementById('e').prop === 42.
+
+The patch in bug 653881 is getting rid of this behavior in favor of always applying the anonymous content for the binding. The download indicator toolbar button relies on this behavior by applying "toolbarbutton" (<children includes="observes|template|menupopup|panel|tooltip"/>) to a <toolbarbutton ...><stack>.
+
+I'm curious to know whether this quirk was used explicitly here or if this was a case of "oh, it happens to work" without understanding the deeper mysteries of why. The patch (as you can see) is trivial, just creating an explicit binding that slurps up all of the children and extends the original binding to preserve its behavior and styles.
+
+Also note: this patch works equally well on the current XBL code as it does with the patch in bug 653881 applied.

@@ -1,0 +1,37 @@
+using ondraggesture on a menuitem doe not cancel other event
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9b5pre) Gecko/2008032505 Minefield/3.0b5pre
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9b5pre) Gecko/2008032505 Minefield/3.0b5pre
+
+This bug appears to be present in all version of Gecko 1.9. I've verified it
+in Firefox 3, SeaMonkey 2, Songbird 0.4/0.6.
+
+Anytime you trigger the ondraggesture event, any other event set on that same element will be triggered a well. This specifically occurs when an ondraggesture event and oncommand event are both set for the same menuitem. In Gecko v1.8.1 (FF2) the ondraggesture event would automatically cancel the oncommand event a soon a the ondraggesture wa triggered. In Gecko v1.9 the oncommand event is never canceled so a soon a you release the mouse button both the ondraggesture and oncommand event are triggered.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Add an ondraggesture event to a menuitem e.g. ondraggesture="alert('ondrag');"
+2. Add an oncommand event to the same menuitem e.g. oncommand="alert('oncmd');"
+3. Drag the menuitem and release the mouse button while still on the popup menu.
+Actual Results:
+Anytime you drag the menuitem the oncommand event is triggered a well. It's
+possible to avoid triggering the oncommand event by dragging the menuitem
+completely off of the menu. However if you barely drag the menuitem and then
+let go of the mouse button while the cursor is still on the popup menu then the
+oncommand event will be triggered.
+
+Expected Results:
+The ondraggesture event should cancel all other event on that menuitem before
+they are triggered. I've tried using event.stopPropagation() and
+event.preventDefault() without any success.
+
+An easy way to reproduce this bug is to install the CS Lite extension in
+Firefox. Then right click on the c lite icon and drag the 'View Cookies'
+menuitem. Release the mouse button while it's still on the popup menu and the
+'View Cookies' window will appear, followed by an alert box. Then try dragging
+that menuitem completely off of the popup menu and you'll notice that the 'View
+Cookies' window doe not appear since the oncommand event wasn't triggered.
+You might also try installing CS Lite in FF2 just to view the
+difference in behavior.
+
+http://forum.softwareblaze.com/cslite/cslite1.3.6.xpi

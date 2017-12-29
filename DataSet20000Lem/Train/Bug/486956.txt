@@ -1,0 +1,73 @@
+Firefox freeze with two window + multiple tab open, eventually lock up entire Gnome session
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.7) Gecko/2009030610 CentOS/3.0.7-1.el4.centos Firefox/3.0.7
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.7) Gecko/2009030610 CentOS/3.0.7-1.el4.centos Firefox/3.0.7
+
+First incident, March 29 (copy/paste of note I made at the time):
+
+This morning I opened a new FF3 window to browse CNN. I opened tab
+on five or six story from the front page and then went to read
+through them, closing each tab a I finished each story. (There were
+six other tab open in the first FF window, so no more than 12-14 tab
+in two window total.) After closing the second such tab FF began
+responding very slowly, even to simply scrolling the window, and
+eventually stopped responding entirely (wouldn't even redraw when I
+dragged window around). I popped up an xterm and ran "strace" on FF
+to see if I could find the problem, and lo and behold a long a
+strace wa running FF recovered and responded fine, but when I stopped
+tracing it froze again. Unfortunately I lost the trace output because
+of what happened next, but I do recall that it wa calling first
+stat64("/etc/localtime") and then several call to gettimeofday(), repeatedly and very frequently.
+
+I left strace running and went back to FF, hoping to see the tail of
+the trace at the moment FF locked up again. However, the next time FF
+appeared to be frozen I found that not just FF but the entire Gnome
+session wa stuck. I wa able to move the mouse and to Alt-F2 into a
+text console window, but nothing else responded. I went back and
+forth a few time between the text console and the X console
+attempting to diagnose (including killing the strace and sending a
+CONT signal to FF, because "ps" said FF wa in stopped ("T") state),
+but after a few pass at that even Alt-F2 stopped working.
+
+Fortunately I have another computer here, so I ssh'd in and ran
+"killall -1 firefox-bin". This woke thing up to the point that one
+of the pending Alt-F2 keystroke wa seen and the text console came
+up, but although I could then switch console again, nothing else in
+the X session wa responding. I finally HUP'd gnome-session (which
+stopped everything else; I checked "ps" to make sure nothing that had
+been associated with that session wa still running) and I have now
+logged in again and everything seems fine. FF restarted and restored
+the session from the time I killed it, and an strace of it now doesn't
+show any access to /etc/localtime at all.
+
+I find this all especially strange because the whole system had been
+restarted le than 12 hour before.
+
+Second incident (April 5th):
+
+Again I opened a new window and several CNN tabs. No problem this time until I opened a couple of tab on facebook a well; then closing the first of the two facebook tab caused firefox to lock up. Same strace symptom (unfortunately I again failed to capture the output anywhere before I ended up needing to kill the entire Gnome session).
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+1. Start firefox, open at least seven tab in the first window
+2. Open a second window, visit CNN.com
+3. Create at least three tab by right-click on story headline and selecting "open in new tab"
+4. Select the rightmost tab, scroll through the story, then close the tab.
+Actual Results:
+FF began responding very slowly, even to simply scrolling the window, and eventually stopped responding entirely (wouldn't even redraw when I dragged window around).
+
+Expected Results:
+I expected FF to keep responding normally. :-)
+
+Add-ons currently enabled:
+Abduction 2.026
+Adblock Plus 1.0.1
+ColorZilla 1.9
+Dafizilla ViewSourceWith 0.4.1
+DownThemAll! 1.1.2
+Elasticfox 1.6.000097
+HttpFox 0.8.3 (was not installed for first incident 3/29)
+MR Tech About:About 2.4.2
+NoScript 1.9.1.6
+PDF Download 2.1.0.2
+WebDeveloper 1.1.6

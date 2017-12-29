@@ -1,0 +1,45 @@
+Firefox cause X to take 30%+ CPU while tabbed page waiting to load
+User-Agent: Mozilla/5.0 (X11; U; Linux i686 (x86_64); en-US; rv:1.9a3pre) Gecko/20070301 Minefield/3.0a3pre
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686 (x86_64); en-US; rv:1.9a3pre) Gecko/20070301 Minefield/3.0a3pre
+
+Originally raised by me against FC6 with mozilla-1.5.0.9. Also seen on 2.0.0.2 and 3.0a3pre.
+
+I've noticed that when firefox wait for a page to load the X server often take
+30%+ CPU. After trying a lot of combination I think i've finally narrowed this
+down to a problem with the tabbed window support.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Launch firefox -ProfileManager
+2. create new profile with default option and launch.
+3. try accessing a page which doe not exist. For me http://10.0.0.1 is a good
+one. This cause the browser to try loading the page for ~30 second until timeout.
+4. While firefox is still trying to load the page, open an xterm run top. Look
+at X cpu usage.
+5. After a few second of activity X will show ~1% CPU usage (i.e. everything
+look normal now).
+6. Stop page load in firefox.
+7. Go into preferences->tabs. Enable the "show tab even when only one window
+open" option so that the tab bar appears.
+8. Try going to http://10.0.0.1 again.
+9. Watch X CPU usage. For me X jump to 30%+ and stay there for the 30+ second
+that firefox try to load the page
+Actual Results:
+Having the tab bar open seems to cause firefox to hammer the X server while
+loading new pages.
+
+
+Expected Results:
+This is running FF on an AMD64 3000 so I don't expect the X server to need 30%+
+CPU in order to tell me that FF is waiting for a page to load. When the tab bar is not visible the same page load cause X cpu usage <1%.
+
+
+I'm using an NVidia FX5200 with the open source 'nv' driver.
+I tried disabling pango with no effect.
+The high X CPU still occurs even with firefox minimised so I don't think it is
+due to the X driver code trying to repaint the screen.
+
+Also the same occurs when 2+ tab are open, but only if the page waiting to load is in the foreground.
+
+I tried using xmon to see what Mozilla wa doing and I think it wa creating and destroying pixmaps very rapidly, but this wa the first time i've tried running this tool so i'm not certain about understanding the results.

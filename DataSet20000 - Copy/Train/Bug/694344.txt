@@ -1,0 +1,34 @@
+crash WaitForSingleObjectEx with invalid parameter handler called from rand_s
+This bug was filed from the Socorro interface and is 
+report bp-af2b41cf-b71c-4799-9977-980e52111013 .
+============================================================= 
+
+This showed up in the explosive report - there have been a few spikes recently. https://crash-stats.mozilla.com/report/list?signature=WaitForSingleObjectEx%20|%20WaitForSingleObject%20|%20google_breakpad%3A%3AExceptionHandler%3A%3AWriteMinidumpOnHandlerThread%28_EXCEPTION_POINTERS*%2C%20MDRawAssertionInfo*%29
+
+220 Crashes using the 2011101200 build and there have been spikes over 100 crashes using 2011092800 and 2011092900
+
+Frame 	Module 	Signature [Expand] 	Source
+0 	ntdll.dll 	KiFastSystemCallRet 	
+1 	ntdll.dll 	ZwWaitForSingleObject 	
+2 	kernel32.dll 	WaitForSingleObjectEx 	
+3 	kernel32.dll 	WaitForSingleObject 	
+4 	xul.dll 	google_breakpad::ExceptionHandler::WriteMinidumpOnHandlerThread 	toolkit/crashreporter/google-breakpad/src/client/windows/handler/exception_handler.cc:764
+5 	xul.dll 	google_breakpad::ExceptionHandler::HandleInvalidParameter 	toolkit/crashreporter/google-breakpad/src/client/windows/handler/exception_handler.cc:619
+6 	msvcr80.dll 	rand_s 	f:\\dd\\vctools\\crt_bld\\self_x86\\crt\\src\\rand_s.c:86
+7 	xul.dll 	`anonymous namespace'::RandUint32 	ipc/chromium/src/base/rand_util_win.cc:16
+8 	xul.dll 	base::RandUint64 	ipc/chromium/src/base/rand_util_win.cc:25
+9 	xul.dll 	base::RandInt 	ipc/chromium/src/base/rand_util.cc:20
+10 	xul.dll 	ChildProcessInfo::GenerateRandomChannelID 	ipc/chromium/src/chrome/common/child_process_info.cc:58
+11 	xul.dll 	ChildProcessHost::CreateChannel 	ipc/chromium/src/chrome/common/child_process_host.cc:78
+12 	xul.dll 	mozilla::ipc::GeckoChildProcessHost::InitializeChannel 	ipc/glue/GeckoChildProcessHost.cpp:350
+13 	xul.dll 	MessageLoop::RunTask 	ipc/chromium/src/base/message_loop.cc:318
+14 	xul.dll 	MessageLoop::DeferOrRunPendingTask 	ipc/chromium/src/base/message_loop.cc:326
+15 	xul.dll 	MessageLoop::DoWork 	ipc/chromium/src/base/message_loop.cc:426
+16 	xul.dll 	base::MessagePumpForIO::DoRunLoop 	ipc/chromium/src/base/message_pump_win.cc:462
+17 	xul.dll 	base::MessagePumpWin::RunWithDispatcher 	ipc/chromium/src/base/message_pump_win.cc:53
+18 	xul.dll 	base::MessagePumpWin::Run 	ipc/chromium/src/base/message_pump_win.h:78
+19 	xul.dll 	MessageLoop::RunHandler 	ipc/chromium/src/base/message_loop.cc:201
+20 	xul.dll 	MessageLoop::Run 	ipc/chromium/src/base/message_loop.cc:175
+21 	xul.dll 	base::Thread::ThreadMain 	ipc/chromium/src/base/thread.cc:156
+22 	xul.dll 	`anonymous namespace'::ThreadFunc 	ipc/chromium/src/base/platform_thread_win.cc:26
+23 	kernel32.dll 	BaseThreadStart

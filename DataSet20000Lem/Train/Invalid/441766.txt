@@ -1,0 +1,84 @@
+Program flow is broken during fast repeating of onclick event (probably also on other events)
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; pl; rv:1.9) Gecko/2008052906 Firefox/3.0
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; pl; rv:1.9) Gecko/2008052906 Firefox/3.0
+
+Somethings go wrong with event switching from FF2 into FF3.
+
+Example code from provided URL can be download from here:
+http://www.bobson.eu/bugzilla/firefox/events1/events1.tgz
+
+Idea is simple.
+Two div's are filled with data from HMTL request.
+Steps of event:
+1) clear div's
+2) get data for div 1
+3) concat cleared innerHTML of div 1 with new data ( innerHTML += )
+4) get data for div 2
+5) concat cleared innerHTML of div 2 with new data ( innerHTML += )
+
+Event is run in onclick event of anchor.
+When you click very fast (eg. using double-click button on mouse) it look like program flow is broken because it seam to doing such:
+clear div1; clear div1; concat div1 innerHTML; concat div1 innerHTML;
+
+instead of doing:
+clear div1; concat div1 innerHTML; clear div1; concat div1 innerHTML;
+
+In very rare case it even put data in wrong div - so it look that:
+- or it can happen that getElementById() return's wrong element
+- or local variable are not always loacal,
+- or data flow is broken and some code in function is skipped in execution
+
+There is counter of request in example put betwean [ and ]. As we see - sometimes it even not make event in proper order of click (it shall be asc sorted).
+
+
+BTW - FF3 freez from time to time for 10-40sec (several time per day) - usually when I'm scrolling or typing text. Its normal?
+
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+[notice] it happen very often.
+1. Open provided url
+2. Start to click on anhor very fast to get doubled text in divs
+Actual Results:
+[div id=t1]
+t1: [110] This is generated on server.
+[/div]
+[div id=t2]
+t2: [111] This is generated on server.
+t2: [109] This is generated on server.
+[/div]
+
+or
+
+[div id=t1]
+t1: [116] This is generated on server.
+t1: [117] This is generated on server.
+[/div]
+[div id=t2]
+t2: [118] This is generated on server.
+t2: [119] This is generated on server.
+[/div]
+
+very rare bug look like :
+
+[div id=t1]
+t1: [116] This is generated on server.
+t2: [118] This is generated on server.
+[/div]
+[div id=t2]
+t2: [118] This is generated on server.
+t2: [119] This is generated on server.
+[/div]
+
+
+Expected Results:
+every time:
+[div id=t1]
+t1: [126] This is generated on server.
+[/div]
+[div id=t2]
+t2: [127] This is generated on server.
+[/div]
+
+My FF3 is installed on directiory of FF2 instalation. I also have firebug plugin installed. Dont know if this is important - we can reproduce this bug here on several PC's.

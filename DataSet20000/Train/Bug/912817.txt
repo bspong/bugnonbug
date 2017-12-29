@@ -1,0 +1,28 @@
+Mixed display-only pages showing the wrong text
+Created attachment 799913
+MixedDisplayWrongMessage.png
+
+This is a regression from bug 865352.
+
+1) Go to https://people.mozilla.com/~tvyas/mixeddisplay.html
+2) You see a grey triangle as you should (from bug 865352).  And a message in the webconsole indicating that mixed display content was loaded:
+Loading mixed (insecure) display content on a secure page "http://cisforcookie.org/CookieMonster.jpg" @ https://people.mozilla.com/~tvyas/mixeddisplay.html
+3) Click on the grey triangle and you see the following message:
+Interactive content (such as script) that isn't encrypted has been blocked for your protection.
+
+What you should see is the following:
+The connection to this website is not fully secure because it contains unencrypted elements (such as images).
+
+The wrong identity string is being used - http://mxr.mozilla.org/mozilla-central/source/browser/locales/en-US/chrome/browser/browser.properties#261
+
+If I remove the "mixedDisplayContent" class from this line of code, then I get the right message:
+https://mxr.mozilla.org/mozilla-central/source/browser/base/content/browser.js#6366
+
+This makes no sense, since the mixedDisplayContent class was added as part of bug 865352 and is only tied to the icon, not the text.  The text is determined by the encryptionLabel defined here:
+https://mxr.mozilla.org/mozilla-central/source/browser/base/content/browser.js#6375
+
+Aside from not making sense, I can't just remove the mixedDisplayContent text from that line because then pages with mixed display loaded and mixed active blocked will show the grey globe instead of the grey triangle (ex: https://people.mozilla.com/~tvyas/mixedboth.html).
+
+Will dig into this more tomorrow.  But it needs to be fixed in Firefox 26, or else we will have to revert bug 865352.
+
++++ This bug was initially created as a clone of Bug #909920 +++

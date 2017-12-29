@@ -1,0 +1,38 @@
+CORS from extension no longer working in firefox 46
+Created attachment 8760011
+Screenshot-1.png
+
+User Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:46.0) Gecko/20100101 Firefox/46.0
+Build ID: 20160521140538
+
+Steps to reproduce:
+
+I made an extension which doe cross domain ajax call towards my own web server. It wa working fine in version 45, but no longer working after the update.
+
+To test the bug just create a simple extension with the following script content and run it on multiple page
+
+var ajax = new XMLHttpRequest();
+ajax.onload = function(){console.log("OK")};
+ajax.onerror = function(e){console.log(e)};
+ajax.open("POST", "some_url", true); <-- change some_url
+ajax.withCredentials = true;
+ajax.send(null);
+
+My web server doe allow cors and I do have the following about:config setting, allowing me to do CORS:
+security.mixed_content.block_active_content = false
+
+Not sure if it matters, but I am restricting the extension to run only on specific website by using the "matches" field from manifest.json
+
+
+Actual results:
+
+When sending the call from the extension, the onerror callback instantly is called, with the xmlHttp object having readystate=4 and status=0. There is no error shown in the console other then the one logged by me and the request doesn't even appear in the networking tab. Needless to say the request doe not reach my endpoint.
+
+I also tried testing cors by injecting the j script using a bookmark. This way seems to still work, so the problem might be specific to extensions.
+
+I have also tried deploying the extension into Chrome browser and it work fine from there.
+
+
+Expected results:
+
+The http request should have reached my webserver.

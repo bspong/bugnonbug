@@ -1,0 +1,32 @@
+Adblock Plus/AdBlock Edge cause FireFox 30 to crash on grsec kernel
+User Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:26.0) Gecko/20100101 Firefox/26.0 (Beta/Release)
+Build ID: 20140616181436
+
+Steps to reproduce:
+
+1) Install Hardened Kernel with PAX protection
+2) Install FireFox 30
+3) Install Adblock Plus
+4) Crash!
+
+
+Actual results:
+
+[26789.926076] PAX: execution attempt in: <anonymous mapping>, 6bdedff1f000-6bdedff21000 6bdedff1f000
+[26789.926083] PAX: terminating task: /usr/lib/firefox/firefox(firefox):947, uid/euid: 1000/1000, PC: 00006bdedff2097c, SP: 00007ab0ed13f1c0
+[26789.926086] PAX: byte at PC: 48 83 c4 18 e9 11 00 00 00 54 68 03 00 00 00 50 68 80 08 00
+[26789.926098] PAX: byte at SP-8: 00006bdedff2097c 0000000000000700 00006bdec989d540 0000000000000003 fff9000000000000 fffbebdeb790b440 fff8800000002dcf fffbebdeb8f23d00 0000aae4b8f23d00 00006bdeb8f23d00 00006bdec989d540
+
+
+
+Expected results:
+
+FireFox shouldn't have been blocked by PAX due to the problem with RANDMMAP.
+
+Temporary work around:
+-m: disable MPROTECT
+-r: disable RANDMMAP
+
+Highly unadvisable a no other extension cause or need this. Older version of FireFox e.g. 24 didn't have this issue.
+
+One other user ha already reproduced, but I would appreciate others confirming a well to help debug this possible security issue.

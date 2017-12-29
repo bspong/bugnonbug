@@ -1,0 +1,65 @@
+[e10s] "Add a Keyword for this Search…" in remote browser cause unsafe CPOW usage warning
++++ This bug wa initially created a a clone of Bug #1133577 +++
+
+STR:
+
+1) Visit a site with a search box (like the one at the top of this page) on it in an e10s window
+2) Right-click in the search box, and choose "Add a Keyword for this Search…"
+
+This cause lot of "unsafe CPOW usage" warning in the Browser Console.
+
+In browser/base/content/browser.js
+
+function GetSearchFieldBookmarkData(node) {
+var charset = node.ownerDocument.characterSet; <- Causes CPOW warning
+
+var formBaseURI = makeURI(node.form.baseURI, <- Causes CPOW warning
+charset);
+
+var formURI = makeURI(node.form.getAttribute("action"), <- Causes CPOW warning
+charset,
+formBaseURI);
+
+var spec = formURI.spec;
+
+var isURLEncoded =
+(node.form.method.toUpperCase() == "POST" <- Causes CPOW warning
+&& (node.form.enctype == "application/x-www-form-urlencoded" || <- Causes CPOW warning [I assume, didn't hit it]
+node.form.enctype == "")); <- Causes CPOW warning [assumed]
+
+var title = gNavigatorBundle.getFormattedString("addKeywordTitleAutoFill",
+[node.ownerDocument.title]); <- Causes CPOW warning
+var description = PlacesUIUtils.getDescriptionFromDocument(node.ownerDocument); <- Causes CPOW warning
+
+[...]
+
+for (let el of node.form.elements) { <- Causes CPOW warning
+if (!el.type) // happens with fieldsets <- Causes CPOW warning
+continue;
+
+if (el == node) {
+formData.push((isURLEncoded) ? escapeNameValuePair(el.name, "%s", true) : <- Causes CPOW warning [assumed]
+// Don't escape "%s", just append
+escapeNameValuePair(el.name, "", false) + "%s"); <- Causes CPOW warning
+continue;
+}
+
+let type = el.type.toLowerCase(); <- Causes CPOW warning
+
+if (((el instanceof HTMLInputElement && el.mozIsTextField(true)) || <- Causes CPOW warning
+type == "hidden" || type == "textarea") ||
+((type == "checkbox" || type == "radio") && el.checked)) { <- Causes CPOW warning [assumed]
+formData.push(escapeNameValuePair(el.name, el.value, isURLEncoded)); <- Causes CPOW warning
+} else if (el instanceof HTMLSelectElement && el.selectedIndex >= 0) { <- Causes CPOW warning
+for (var j=0; j < el.options.length; j++) { <- Causes CPOW warning [assumed]
+if (el.options[j].selected) <- Causes CPOW warning [assumed]
+formData.push(escapeNameValuePair(el.name, el.options[j].value, <- Causes CPOW warning [assumed]
+isURLEncoded));
+}
+}
+}
+
+[...]
+}
+
+plus I think pretty much the same bunch in PlacesUIUtils.getDescriptionFromDocument() a in bug 1135619, which I won't list right now.

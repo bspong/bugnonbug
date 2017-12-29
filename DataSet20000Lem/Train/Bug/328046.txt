@@ -1,0 +1,64 @@
+Dynamic form element out of order once submitted to a CGI script
+User-Agent: Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.1.4322; InfoPath.1)
+Build Identifier:
+
+I have a form that allowes user to add more form element (text boxes) to it by pushing a button. The text box display fine on the page but when the form is submitted to a CGI script, the dynamic element appear at the BOTTOM of the CGI-generated confirmation page instead of in their proper place. This is only a problem in FF, work fine in IE.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.Copy this code to a .html file:
+Code:
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<title>Untitled Document</title>
+<script language="javascript" type="text/javascript">
+var rnames=1;
+function addReq() {
+div=document.getElementById("rnames");
+button=document.getElementById("addRequestor");
+rnames++;
+newitem="Name " + rnames;
+newitem+="<input name=\"DYNAMIC Name " + rnames + "\"><br>";
+newnode=document.createElement("span");
+newnode.innerHTML=newitem;
+div.insertBefore(newnode,button);
+};
+
+function displayElements()
+{
+for(i=0; i<window.document.SomeForm.elements.length; i++)
+{
+alert(i + " - " + window.document.SomeForm.elements[i].name);
+}
+};
+</script>
+</head>
+
+<body>
+<form name='SomeForm'>
+<div ID="rnames">
+<span>Requesters Operator Auth For</span><br>
+Name 1<input name="Name 1" type="text" id="Name1" size="20" maxlength="40"><br>
+<input type="button" value="Add a Requester Name"
+onClick="addReq();" id="addRequestor">
+</div>
+Some more element for testing<input name="Other" type="text"><br>
+Some more element for testing<input name="Other" type="text"><br>
+
+<input type="button" name="Loop" value='Click here to loop through form elements' onClick="displayElements();">
+</form>
+</body>
+</html>
+
+2. add some text boxes, then push button to loop through elements.
+
+Actual Results:
+You will see that the dynamic one appear AFTER the last static element in FF.
+
+Expected Results:
+Dynamic element appear in their proper place.

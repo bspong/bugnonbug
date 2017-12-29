@@ -1,0 +1,47 @@
+Downloads corrupt when saved to remote share
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.2.10) Gecko/20100914 Firefox/3.6.10
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.2.10) Gecko/20100914 Firefox/3.6.10
+
+I'm Using Firefox 3.6.10 on Windows 7 x64 Ultimate. I am trying to save files to a remote Windows 2008 R2 x64 Server File Share. On larger files a few MB... For example i downloaded the June DirectX SDK ( http://download.microsoft.com/download/A/E/7/AE743F1F-632B-4809-87A9-AA1BB3458E31/DXSDK_Jun10.exe  ) and not only was the file cut off (missing almost 1MB) it was also corrupt (different to valid local download) after 2.81 MB. I know the local download was OK since the signature was verified (file is signed by Microsoft). I know this is not a problem with the share because i then copied a ~5GB ISO File that i had a SH256 Hash of to that share and the hash matched when verified there. To make absolutely certain that it was not a problem from either my computer, the server, or the download provider, i created my own little VB.Net Console download client that downloads and saves directly to the remote server destination in 4kb chunks and it worked perfectly! 
+
+I first posted this at:
+https://support.mozilla.com/en-US/questions/753738
+
+But didn't get any help :(
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Pick any large download (>15MB)
+2. Directly Save to a File Share on a Remote Window Server
+3. 
+Actual Results:  
+File is corrupt / truncated. Firefox acts as if download finished normally (no error / warning)
+
+Expected Results:  
+File to be ok. Save locally or saved to remote share via direct download by self made client works flawlessly (also tried IE and it worked, but IE saves files locally and then moves them to the destination when finished, so can't be used to compare)
+
+Using the following code i get a perfectly working download:
+Sub Main()
+Try
+Dim oRequest As Net.HttpWebRequest = Net.HttpWebRequest.Create("http://download.microsoft.com/download/A/E/7/AE743F1F-632B-4809-87A9-AA1BB3458E31/DXSDK_Jun10.exe")
+Dim oResponse As Net.HttpWebResponse = oRequest.GetResponse
+Dim oStream As IO.Stream = oResponse.GetResponseStream
+Dim byData(4095) As Byte, iRead As Integer = oStream.Read(byData, 0, byData.Length)
+Dim daInfo As Date = Now
+Using oOut As New IO.FileStream("\\192.168.1.33\Data\Downloads\HTTP\DXSDK_Jun10_MyTest.exe", IO.FileMode.Create, IO.FileAccess.Write, IO.FileShare.Read)
+While iRead > 0
+oOut.Write(byData, 0, iRead) : oOut.Flush()
+iRead = oStream.Read(byData, 0, byData.Length)
+If Now.Subtract(daInfo).TotalSeconds > 10 Then
+daInfo = Now
+Console.WriteLine("Downloaded " & (oOut.Position / (1024.0 * 1024.0)).ToString("0.00") & " MB!")
+End If
+End While
+End Using
+Catch oEx As Exception
+MsgBox(oEx.ToString)
+End Try
+End Sub
+
+Using FireFox 3.6 to Save to that location horribly fails without ANY errors on firefox even though the file is in even complete when firefox finishes and the file is totally unusable after just a few MB of data. Switching to Chome and hoping this will get fixed soon.

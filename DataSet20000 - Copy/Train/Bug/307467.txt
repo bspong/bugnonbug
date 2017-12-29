@@ -1,0 +1,49 @@
+call to a SQL autoinc query works properly on IE not on Firefox
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.0; fr-FR; rv:1.7.10) Gecko/20050717 Firefox/1.0.6
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.0; fr-FR; rv:1.7.10) Gecko/20050717 Firefox/1.0.6
+
+I've been working on it for 2 days now !
+I made a php page that calls this query to an Interbase database :
+SELECT GEN_ID(IDD_GEN,1) AS TOTAL FROM RDB$DATABASE
+This increments an autoinc called IDD_GEN by 1.
+If I call this query 4 times in a row and I write down the 'TOTAL' value it
+gives me 1,2,3,4. If I press 'Refresh' it writes 9,10,11,12.
+I first thought it was php. So I wrote the most simple script I could (=connect,
+send sql, write page, close). Didn't solve it.
+Then I thought it was SQL. So I tried it 'by hand', opening, querying 4 times,
+and closing. Didn't solve it (i.e. it increments one by one).
+Then I tried it on IE 6 and it worked like a charm (1,2,3,4. If I press
+'Refresh' it writes 5,6,7,8 and so on) !
+It can't be a cache problem. It seems it's the way Firefox sends its data or...
+or... I don't know actually, but what's for sure : it's neither php nor the
+database type (Interbase) or connection that causes this bug, because the same
+page behaves properly with IE.
+I tried to make it as w3c compliant as possible, so it may not be the way my
+page is structured.
+I tried to change my profile to a brand new, empty profile, with NO plugins (the
+alert message box told it), and it gave me the same result.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.create a simple php script doing the steps 2 to 7 :
+2.open a connexion to an interbase database where there's an autoinc variable
+3.call a SQL like that : SELECT GEN_ID(VALUE_GEN,1) AS TOTAL FROM RDB$DATABASE
+4.write down TOTAL to the page
+5.repeat steps 3-4 many times
+6.close connexion
+7.write down the results
+8.refresh the page
+Actual Results:  
+* With Firefox 1.0.6
+- If you try 9 times you can read : 1,2,3,4,5,6,7,8,9
+- After refreshing you can read : 19,20,21,22,23,24,25,26,27
+Seems like, after sending everything to interbase, it's sent a second time.
+* With IE 6.0 :
+- If you try 9 times you can read : 1,2,3,4,5,6,7,8,9
+- After refreshing you can read : 10,11,12,13,14,15,16,17,18
+
+
+Expected Results:  
+- If you try 9 times you should read : 1,2,3,4,5,6,7,8,9
+- After refreshing you should read : 10,11,12,13,14,15,16,17,18

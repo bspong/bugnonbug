@@ -1,0 +1,23 @@
+quirks mode is triggered when viewing Python WSGI application output on local computer
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.2) Gecko/2008091620 Firefox/3.0.2
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.2) Gecko/2008091620 Firefox/3.0.2
+
+I have found a situation where quirks mode is triggered in FF when browsing a python WSGI application.  The headers and output are all correct and IE and Opera both show standards mode, but FF does not.  If the same application is browsed from a different computer, FF shows standards mode.
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+1. Get Firefox 3.0.1 or Firefox 3.0.2 and install on Windows XP
+2. Make sure Python 2.5.* is installed
+3. Run this script: http://rcs-comp.com/code_examples/ff_quirks_bug/quirks_test.py
+4. Browse to http://localhost:5001/
+5. See if FF is in standards or quirks mode, if in standards mode, refresh the page several times until it shows quirks mode
+Actual Results:  
+Firefox will display "test" and most of the time show that the page is being rendered in quirks mode.
+
+Expected Results:  
+Firefox should display "test" and always render in standards mode.
+
+In the test script, when a string rather than a list is returned, the WSGI server iterates over each character of the string, outputting the character and then issuing a flush().  This slows down the response considerably.
+
+I am assuming there is some kind of metric in FF based on the connection that determines how long it should wait before testing the document for standards compliance mode.  When running on localhost with a slow response, quirksmode is being triggered.  When running over a network, FF waits longer, and tests for quirksmode after the correct content is loaded.

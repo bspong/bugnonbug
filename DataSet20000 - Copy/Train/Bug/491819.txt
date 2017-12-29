@@ -1,0 +1,32 @@
+No difference detectable between regular and IME key events
+User-Agent:       Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_5_6; en-us) AppleWebKit/525.27.1 (KHTML, like Gecko) Version/3.2.1 Safari/525.27.1
+Build Identifier: Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.0.8) Gecko/2009032712 Ubuntu/8.04 (hardy) Firefox/3.0.8
+
+
+
+Iit would be great if it were possible to distinguish an IME input event from a regular key event - Webkit & IE specify the special value 229 for the key code, which is actually very useful. Doesn't matter how it's done, but some way to distinguish would be great.
+
+For example, being able to distinguish:
+* Pressing "w" to enter the character w, -vs- pressing it as the start of the chinese word "wo"
+* Pressing SPACE to enter a regular space character -vs- pressing it to "commit" a character, resulting in no such space inserted
+* Pressing BACKSPACE to delete a character -vs- pressing it to select the previous choice in the IME menu
+* Arrow keys - same deal, navigatin vs selecting IME menu choices
+
+This is possible in the other browsers. What is not detectable (other than with mutation events) in other browsers is if an IME menu option is selected with the mouse. Support for that would be great as well.
+
+I am also very interested in general to get better, reliable IME support - this is something that should be part of HTML 5. Currently writing a rich text editor is riddled with problems when dealing with IME input, due to a severe lack of events and any control over what is going on.
+
+Reproducible: Always
+
+Steps to Reproduce:
+Please use FF3.0, as FF3.5, and the latest version of 3.6 are even worse and won't be able to demonstrate this problem properly, filed as bug 491816
+1. Go to the demo URL http://www.danilatos.com/event-test/ExperimentTest.html
+2. Select some form of Chinese input (I used ITABC)
+3. Type into the contentEditable div in the top left (starts with the text "Hello")
+4. Observe the event log. Click on event entries to see more information.
+5. Switch back to english and repeat
+Actual Results:  
+There is no way to tell the difference between "regular" and "IME" key events on the keydown event. The IME events will lack a keypress, but by then it's too late to deal with - the next event we get is a dom mutation event, so we can't know in advance.
+
+Expected Results:  
+Some way of being able to tell that a key event is IME before the dom mutates.

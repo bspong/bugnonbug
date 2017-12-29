@@ -1,0 +1,24 @@
+Investigate Australis tab animation performance compared to m-c
+Summary of previous events:
+
+Australis tab animation performance was improved greatly at bug 837885, up to a level which seemed quite close to m-c on a slow ATOM system (IIRC <10% and sometimes even slightly better than m-c).
+
+Later, a talos tab animation regression test was developed (TART - bug 848358). This test provides higher resolution results than the instrumentation which was used previously.
+
+Preliminary comparison using TART shows that on pure animation throughput, Australis is worse by 20-40% compared to m-c. These results are after testing on a single slow Win7 AMD E-350 system with blacklisted D2D and D3D HW.
+
+The main differences of TART compared to the previous instrumentation are:
+
+1. TART is running in ASAP mode (i.e. unlimited frame rate), which exposes perf differences even if under normal conditions both contenders would do 60fps.
+
+2. TART reports the overall intervals average, but also provides another result: the average interval over the 2nd half of the animation. The main difference between those is that the latter is mostly unaffected by overheads which are unrelated to Australis (tab initialization etc which typically affects the first few frame intervals negatively, regardless of Australis).
+
+
+The estimation of 20-40% regression is based on this "half duration" throughput on the test system.
+
+Note that under normal conditions, the performance difference between Australis and m-c is much less acute. e.g. in absolute frame intervals values, Australis did, on average, still better than 60FPS throughput during the second half of the animation.
+
+This bug is about investigating Australis regressions on more than one test system, maybe trying to find causes for these differences, and hopefully providing enough info to allow a more informed decision on how far do we want to go with improving Australis performance.
+
+
+CC'ing everyone which was on the mail thread. I won't be offended if one un-CC herself ;)

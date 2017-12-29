@@ -1,0 +1,35 @@
+Leaving Private Browsing mode resurrects a window that was closed at the time of entering PB
+Created attachment 475502
+browser-chrome mochitest
+
+nsISessionStore::setWindowState resurrects a window that was closed at the time of the getWindowState.
+
+The browser-chrome mochitest  browser/components/privatebrowsing/test/browser/browser_privatebrowsing_popupmode.js
+does something like this:
+
+  let stateBackup = ss.getWindowState(window);
+  // do a bunch of tests ...
+  ss.setWindowState(window, stateBackup, true);
+
+the problem is that when restoring the 'stateBackup' a window that was
+closed at the time of the 'getWindowState()' is opened.
+
+This is what bit me in bug 449734.  The tests I add in that bug create
+a tab, detaches it using 'replaceTabWithWindow', and finally close
+the new window.  My tests work fine when run individually, but when
+running the whole browser-chrome suite "browser_privatebrowsing_popupmode.js"
+which runs some 40 or 50 tests later, resurrected a window from my test.
+
+I have combined the essence of the two tests into a new test to demonstrate
+the problem, see the attached patch.
+
+STEPS TO REPRODUCE
+1. apply the attached patch
+2. rebuild browser/base/content/test/
+3. run "mochitest --browser-chrome --autorun
+--test=browser/base/content/test/browser_setWindowState_BUG.js"
+
+WORKAROUND
+After you 'close()' the window created by 'replaceTabWithWindow' you can do:
+Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore).forgetClosedWindow(0);
+to avoid it causing a problem with 'get/setWindowState' later.

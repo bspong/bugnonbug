@@ -1,0 +1,55 @@
+Building mobile-browser (moblin project) in Feisty (Ubuntu 7.04) with command "sudo pdebuild --use-pdebuild-internal" fails & give error:command not found for dh_testdir, dh_testroot, dh_clean & other dh_-related commands.
+User-Agent: Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 2.0.50727; InfoPath.1; .NET CLR 3.0.04506.30)
+Build Identifier:
+
+I am building mozilla in chroot environment using command pdebuild, pbuilder (package-building tools) with sudo & appropriate options. These package-builder tool use chroot intensively, so I cannot do away with chroot. I downloaded all module from http://www.moblin.org/repos/ for building mobile linux modules(there are 10-12 C/C++ modules, all I successfully built & installed), except mozilla, which fails at the starting phase itself. This is due to chroot being used. All other module also use chroot, but they do not fail due to this. I am confused a to how only mozilla fails when there seems to be no difference at all in the way the building take place.
+
+The error captured is :--
+
+dpkg-buildpackage: source package is mozilla
+dpkg-buildpackage: source version is 19990716.M8-3
+dpkg-buildpackage: source changed by Brent A. Fulgham <bfulgham@debian.org>
+dpkg-buildpackage: host architecture i386
+dpkg-buildpackage: source version without epoch 19990716.M8-3
+fakeroot debian/rules clean
+dh_testdir
+make: dh_testdir: Command not found
+make: *** [clean] Error 127
+Copying back the cached apt archive content
+-> unmounting /home/persist/moblin filesystem
+-> unmounting dev/pts filesystem
+-> unmounting proc filesystem
+-> cleaning the build env
+-> removing directory /var/cache/pbuilder/build//5553 and it subdirectory
+-------------------------------------------------------------------
+I am not using ./configure & such commands, a it will take me lot of time to install package manually. and also ./configure fails due to gtk+-2.0 & other package not present.
+Please use sudo with all package-building commands, a well a for download & installs.
+
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Download the package(takes quite some time).. the command is:-->
+git clone http://moblin.org/repos/projects/mobile-browser.git
+you can also download other moblin ( C/C++ ) module to see them succeeding in their respective builds. It downloads from the CVS repositories.
+2. ln -s ./build/package/debian ./debian to create soft-link
+3. sudo pdebuild --use-pdebuild-internal , it should do all the build process (i.e unpacking, installing packages, configure, running makefiles, etc) till creating the final executable (.exe, or .so)
+Actual Results:
+fakeroot debian/rules clean
+dh_testdir
+make: dh_testdir: Command not found
+make: *** [clean] Error 127
+Copying back the cached apt archive content
+-> unmounting /home/persist/moblin filesystem
+-> unmounting dev/pts filesystem
+-> unmounting proc filesystem
+-> cleaning the build env
+-> removing directory /var/cache/pbuilder/build//10107 and it subdirectory
+
+
+Expected Results:
+The build should go on, a with the other modules, and it should locate dh_testdir command in chroot environments.
+
+Please provide me a workaround or check if I am missing anything, a I tried hard to find any hacks/workarounds, but I have to use chroot,.

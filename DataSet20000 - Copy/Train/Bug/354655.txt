@@ -1,0 +1,26 @@
+Firefox 2 RC 1 http-encodes some characters (including spaces) twice when doing Google 'Browse By Name", making it fail
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-UK; rv:1.8.1) Gecko/20060918 Firefox/2.0
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-UK; rv:1.8.1) Gecko/20060918 Firefox/2.0
+
+When doing a search in the location bar that results in a Google 'browse by name' search, Firefox encodes the % in the already http-encoded results. This causes the keyword search to fail for all searches which contain these characters, including any with spaces.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Type "moo cow" (without the quotes) in the location bar and press enter
+2. Firefox briefly shows moo%20cow
+3. Firefox then goes to the Google Browse By Name search
+4. Firefox re-encodes the % in the already encoded moo%20cow, and instead ends up making the keyword in the URL be moo%2520cow
+5. The Google search comes up (because this particular example does not autocomplete), and the resulting search on Google is for the text "moo%cow" not "moo cow" (all without quotes)
+
+Actual Results:  
+Google searches for "moo%cow"
+
+Expected Results:  
+Google searches for "moo cow", as originally typed.
+
+This appears to be a regression from 1.5 - didn't file it earlier because I thought it was so obvious it had to have been filed already.
+
+This really has to block Firefox 2, because it makes all keyword searches including spaces (and some other characters - I imagine all those that get http-encoded) fail, and makes us look really silly.
+
+I don't think this should be hard to fix, I imagine it's just a case of evaluating which encoding step was not needed. Best probably to see how Firefox 1.5 did it.

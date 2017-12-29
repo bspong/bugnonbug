@@ -1,0 +1,29 @@
+3rd party driver incorrectly uses FirefoxHTML registry entry
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.5) Gecko/20070713 Firefox/2.0.0.5
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.5) Gecko/20070713 Firefox/2.0.0.5
+
+Since FF 2.0.0.5 the registry entry HKLM\SOFTWARE\Classes\FirefoxHTML\shell\open\command has changed from C:\PROGRA~1\MOZILL~1\FIREFOX.EXE -url "%1" -requestPending
+to
+C:\PROGRA~1\MOZILL~1\FIREFOX.EXE -requestPending -osint -url "%1"
+
+When a start default browser request is made by the system, this value is requested with an empty string for %1. FF does not start when called with:
+C:\PROGRA~1\MOZILL~1\FIREFOX.EXE -requestPending -osint -url
+However, it does start when called with
+C:\PROGRA~1\MOZILL~1\FIREFOX.EXE -requestPending -url -osint
+
+The solution to this problem is simple: rearrange the arguments given to FF in this specific registry entry
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Start FF by typing C:\PROGRA~1\MOZILL~1\FIREFOX.EXE -requestPending -osint -url
+2. Nothing happens
+3. Start FF by typing C:\PROGRA~1\MOZILL~1\FIREFOX.EXE -requestPending -url -osint
+4. FF starts correctly
+Actual Results:  
+Firefox does not start
+
+Expected Results:  
+Firefox does start
+
+The solution to this problem is simple: rearrange the arguments given to FF in this specific registry entry by swapping the -url %1 and -osint arguments

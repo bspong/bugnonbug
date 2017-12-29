@@ -1,0 +1,45 @@
+cant invoke a dragsession starting from 2.0.0.5 from remote/unprivileged code
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.8.1.5) Gecko/20070713 Firefox/2.0.0.5
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.8.1.5) Gecko/20070713 Firefox/2.0.0.5
+
+In FF 2.0.0.4 and before we used to be able to invoke a dragSession (invokeDragSession) from remote/unprivileged code by setting 'signed.applets.codebase_principal_support' to true and requesting UniversalXPConnect privileges.
+This suddenly stopped working in FF 2.0.0.5 and throws an 'Error: uncaught exception: Permission denied to get property UnnamedClass.classes' in the error console.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. call the function dragStart as listed below from any element you want to drag by adding 'ondraggesture="dragStart(event)"' to that element
+2. make sure you have set 'signed.applets.codebase_principal_support' to true in your config
+3. try to drag, error throws at ds.invokeDragSession(...
+
+method dragStart
+----------------------
+function dragStart(event){
+	try{
+		netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+	}catch(err){
+		alert("To allow dragging you should set 'signed.applets.codebase_principal_support' to true in your browser settings (surf to about:config)");
+		return false;
+	}
+	var ds = Components.classes["@mozilla.org/widget/dragservice;1"].getService(Components.interfaces.nsIDragService);
+	
+	// alert(event.target.tagName);
+	var trans = Components.classes["@mozilla.org/widget/transferable;1"].createInstance(Components.interfaces.nsITransferable);
+	trans.addDataFlavor("text/unicode");
+	var textWrapper = Components.classes["@mozilla.org/supports-string;1"].createInstance(Components.interfaces.nsISupportsString);
+	textWrapper.data = "Some data";
+	trans.setTransferData("text/unicode", textWrapper, textWrapper.data.length);
+	
+	var transArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
+	transArray.AppendElement(trans);
+	
+	ds.invokeDragSession(event.target, transArray, null, ds.DRAGDROP_ACTION_COPY + ds.DRAGDROP_ACTION_MOVE);
+	
+	event.stopPropagation();
+}
+
+Actual Results:  
+throws an error 'Error: uncaught exception: Permission denied to get property UnnamedClass.classes' in the error console.
+
+Expected Results:  
+no error on calling ds.invokeDragSession(...

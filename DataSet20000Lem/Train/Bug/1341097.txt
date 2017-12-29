@@ -1,0 +1,21 @@
+Reduce the number of notification to the main thread done through UpdatePlaces to improve UI responsiveness for import
+I would like to keep bug 1332225 open and still have something concrete to track these changes, so I'm filing a separate bug.
+
+I'll put patch up in a second. The TL;DR is that a big part of why history import from Chrome (and to a lesser degree, other browsers) are hanging the UI is that calling the relevant API (UpdatePlaces) doe most of it update per-visit-per-place *and* then sends a number of notification to the main thread for each of those. Specifically, it sends:
+
+1) a notification that a visit to that URL ha happened
+2) a notification that the place (ie URL)'s frecency ha changed
+3) a notification that the place's title ha changed (if it title changed OR if it's a new place/URL that we didn't know about, the latter of which is very likely for history imports, certainly at the start of the profile's lifetime ie first startup)
+4) a notification to any callback passed to the UpdatePlaces API for every individual result / error it sees.
+
+The patch I attach:
+
+a) remove (2) and replace it with a single notification after all place have updated (this is behind an additional flag passed to UpdatePlaces)
+b) remove (3) for new place (which fix bug 1280601)
+c) remove (4) based on opt-in bools on the observer caller pas in
+
+Then there's 1 extra small patch that tweak two minor thing I happened to notice on the way.
+
+The overall impact of this is that import of my very large, synthetically created chrome history file (~24000 unique URLs) now hang the UI 80% le than it did before a measured through Dão's work in bug 1338522. As a side-effect, the import is 8% faster (speeding up the import itself wasn't my primary aim, and might be tricky to balance with these notification if those are what's hanging the UI - if the import is faster, more of those notification will hit the main thread in the same timeframe).
+
+Unfortunately it is not possible to remove/replace (1) without potentially breaking consumers, so I haven't attempted that in these patches.

@@ -1,0 +1,42 @@
+Basic Auth details are not sent pre-emptively
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.5a) Gecko/20030730 Mozilla Firebird/0.6.1
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.5a) Gecko/20030730 Mozilla Firebird/0.6.1
+
+RFC2617 says "A client MAY preemptively send the corresponding Authorization
+header with requests for resources in that space without receipt of another
+challenge from the server."
+
+All versions of IE, Netscape, Opera, and Mozilla *do* choose to preemprively
+send Auth headers.  Firebird 0.6.1 does not; instead, it only ever sends auth
+headers in response to 401 challenges.
+
+The behaviour causes broken behaviour in the Zope CMF, and probably other web
+applications which assume pre-emptive auth headers.  You could correctly argue
+that these applications are broken in their assumptions, but (a) why change from
+the default behaviour in all other browsers, and (b) always waiting for a
+challenge is wasteful and will increase latency.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. visit a site which uses basic auth
+2. log the HTTP headers
+3. note that in Firebird, any request to that address / realm will always need
+two requests, because credentials are not sent pre-emptively.
+
+Actual Results:  
+Digest of HTTP Headers:
+
+> GET /Firebird.html
+< HTTP/1.1 401 Unauthorized
+
+> GET /Firebird.html
+> Authorization: Basic AWRtaWrtZmJHLHltdxJXZ1I=
+
+< HTTP/1.1 200 OK
+
+Expected Results:  
+> GET /Firebird.html
+> Authorization: Basic AWRtaWrtZmJHLHltdxJXZ1I=
+
+< HTTP/1.1 200 OK

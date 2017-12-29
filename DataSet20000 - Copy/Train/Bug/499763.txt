@@ -1,0 +1,40 @@
+AJAX style update of HTML tag containing applet has incorrect applet context behavior
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.11) Gecko/2009060215 Firefox/3.0.11
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.11) Gecko/2009060215 Firefox/3.0.11
+
+I have an application using applets in a signed Jar (i.e. trusted).  This is a complex "dashboard" style display, where AJAX replaceable display elements are a mix of Javascript driven elements and Java applets.  The problem occurs in the particular case when there is only one applet on the page and the tag containing it is replaced with a new tag containing a new applet.
+
+In this case the second applet receives a totally new AppletContext.  This in itself should be okay as my page is going from containing 1 applet to no applets to back to 1 so a new context should be OK.  The problem is that the ContextClassLoader (apparently) is retained from the prior AppletContext.  In particular, classes that contain static content, such as ThreadPool type classes that contain static collections of all instances have that static content preserve in spite of the fact that there is a new context.  This causes a race condition: when the AppletContext from the first applet is eventually destroyed, so is all of the static content of the above form, INCLUDING all the static content introduced by the new Applet and AppleContext.  In other words, the class loader and it's loaded classes are be carried over as if the two AppletContexts were the same, but is being lifecycle managed as if they were different.
+
+The specific example in my code is that the applets contain network listener threads.  The threads just go away in the second applet after the first context goes away.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Create an applet with the following code in it:
+
+static AppletContext myContext = null;
+
+public void init()
+{
+    if (myContext == null)
+    {
+        myContext = this.getAppletContext();
+    }
+    else if (myContext != this.getAppletContext())
+    {
+        //DO SOMETHING LIKE WRITE TO CONSOLE THAT WE HAVE A PROBLEM
+    }
+    ... rest of init should create threads that have a managed lifecycle that needs to be destroyed.  Simplest is to have the thread display a clock every second or something.
+
+2.  Create an HTML page that contains this applet within a DIV or something
+    and replace the DIV (Via javascript XMLHttpRequest) with a new div
+    containing another applet with the same init code.
+
+Actual Results:  
+Everytime, there will be a new applet context but a static reference to the old applet context meaning the old context's class loader was being used.  After a delay of time, the tread driven activity in the NEW applet will stop.  I'm assuming that the delay corresponds to the delay before the old AppletContext is destroyed.
+
+Expected Results:  
+I would never expect the static variable "myContext" to have any value other than null or the current applet's AppletContext.  Either the old context is retained for the new applet or the new context is completely new including new class loader, new loads of classes (meaning proper initial values on static members, etc).
+
+A simple workaround confirms the above "theory" as to the internal nature of the problem: If I put an Applet in the page that never goes away (I used a simple digital clock located in my base web page's header) so that an AJAX replacement of an Applet containing tag never reduces the number of applets on the page to zero, everything works exactly as expected.

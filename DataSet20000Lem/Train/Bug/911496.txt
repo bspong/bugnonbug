@@ -1,0 +1,9 @@
+WebNavigation:LoadURI message is handled twice
+Created attachment 798209
+double-loaduri-fix
+
+We have two handler for the WebNavigation:LoadURI message. One is in browser/base/content/content.js, and it just handle WebNavigation:LoadURI. The other one is in toolkit/content/browser-child.js.
+
+Having two handler cause an annoying problem whenever a URL is loaded. The first handler start the load. Then the second handler cancel it and start it again. When we cancel the first load, the WebProgressListener in the child sends a message to the parent, which act a if the user hit the stop button. There's some code there that reset the URL bar to match the current page URI. If the load wa initiated from the URL bar, it will be overwritten with the old URL until we actually get the onLocationChanged message, which will change the URL back to the new one. The overall effect is pretty bad.
+
+This patch remove the listener in content.js. One thing I'm not sure of is whether WebNavigation:LoadURI is used for anything besides e10s. The browser-child.js code is only loaded for remote browsers, so there's a potential problem if anyone else need the content.js listener. As far a I can tell, though, the original code wa added for e10s, and no one else is using it.

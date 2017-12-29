@@ -1,0 +1,34 @@
+"Allow incoming connections" dialogs stack up and eventually hangs the phone.
+When initiating a DevTools connection to a phone, the dialog "Allow inbound remote debugging connection" pops up.
+
+If another connection attempt is made and the user has not yet closed the previous dialog, these dialogs will start stacking up. Eventually the phone will hang and stop accepting debug connections and any other system dialogs will no longer open up either. E.g. pressing the power button will not show the "turn off/restart" options, but user must hard-reboot the phone by holding down the power button.
+
+STR:
+1. Have the device plugged in on USB, with ADB and DevTools options enabled.
+2. Make sure the pref devtools.debugger.prompt-connection is in its default unset value (true)
+3. Execute these on the command line
+
+wget http://clb.demon.fi/bugs/ffdos/ffdb_dos.py
+chmod +x ffdb_dos.py
+wget http://clb.demon.fi/bugs/ffdos/ffdos.sh
+chmod +x ffdos.sh
+./ffdos.sh
+
+The last line will start a barrage of incoming debug connection attempts. Wait some 10 minutes and try operating the phone.
+
+While ffdos.sh is running, 'adb logcat' will start spamming
+
+I/GeckoDump( 3442): Handler function DebuggerServer.onSocketAccepted threw an exception: InternalError: too much recursionLine: 553, column: 8
+E/GeckoConsole( 3442): [JavaScript Error: "Handler function DebuggerServer.onSocketAccepted threw an exception: InternalError: too much recursionLine: 553, column: 8" {file: "resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/DevToolsUtils.js" line: 60}]
+I/GeckoDump( 3442): Handler function DebuggerServer.onSocketAccepted threw an exception: InternalError: too much recursionLine: 553, column: 8
+E/GeckoConsole( 3442): [JavaScript Error: "Handler function DebuggerServer.onSocketAccepted threw an exception: InternalError: too much recursionLine: 553, column: 8" {file: "resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/DevToolsUtils.js" line: 60}]
+I/GeckoDump( 3442): Handler function DebuggerServer.onSocketAccepted threw an exception: InternalError: too much recursionLine: 553, column: 8
+E/GeckoConsole( 3442): [JavaScript Error: "Handler function DebuggerServer.onSocketAccepted threw an exception: InternalError: too much recursionLine: 553, column: 8" {file: "resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/DevToolsUtils.js" line: 60}]
+I/GeckoDump( 3442): Handler function DebuggerServer.onSocketAccepted threw an exception: InternalError: too much recursionLine: 553, column: 8
+E/GeckoConsole( 3442): [JavaScript Error: "Handler function DebuggerServer.onSocketAccepted threw an exception: InternalError: too much recursionLine: 553, column: 8" {file: "resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/DevToolsUtils.js" line: 60}]
+I/GeckoDump( 3442): Handler function DebuggerServer.onSocketAccepted threw an exception: InternalError: too much recursionLine: 553, column: 8
+E/GeckoConsole( 3442): [JavaScript Error: "Handler function DebuggerServer.onSocketAccepted threw an exception: InternalError: too much recursionLine: 553, column: 8" {file: "resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/DevToolsUtils.js" line: 60}]
+I/GeckoDump( 3442): Handler function DebuggerServer.onSocketAccepted threw an exception: InternalError: too much recursionLine: 553, column: 8
+E/GeckoConsole( 3442): [JavaScript Error: "Handler function DebuggerServer.onSocketAccepted threw an exception: InternalError: too much recursionLine: 553, column: 8" {file: "resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/DevToolsUtils.js" line: 60}]
+
+Expected: When a DevTools connection attempt is performed and the dialog is open, no other connection attempts are allowed until the user has acknowledged that dialog. All such attempts should effectively close the incoming socket connection immediately, instead of e.g. letting new inbound socket connections stack up.

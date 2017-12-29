@@ -1,0 +1,52 @@
+build error on fresh Mac OS X install
+I have had to come to a completely new copy of Mac OS X (10.4.11). I am sure there is something I did many, many moons ago that made Firefox builds work, but I have lost track of it.
+
+I am getting:
+
+checking for GLIB - version >= 1.2.0... no
+*** The glib-config script installed by GLIB could not be found
+*** If GLIB was installed in PREFIX, make sure PREFIX/bin is in
+*** your path, or set the GLIB_CONFIG environment variable to the
+*** full path to glib-config.
+checking for libIDL-config... no
+checking for libIDL - version >= 0.6.3... no
+*** The libIDL-config script installed by libIDL could not be found
+*** If libIDL was installed in PREFIX, make sure PREFIX/bin is in
+*** your path, or set the LIBIDL_CONFIG environment variable to the
+*** full path to libIDL-config.
+checking for pkg-config... no
+*** The pkg-config script could not be found. Make sure it is
+*** in your path, or set the PKG_CONFIG environment variable
+*** to the full path to pkg-config.
+*** Or see http://www.freedesktop.org/software/pkgconfig to get pkg-config.
+configure: error: Library requirements (libIDL-2.0 >= 0.8.0) not met; consider adjusting the PKG_CONFIG_PATH environment variable if your libraries are in a nonstandard prefix so pkg-config can find them.
+
+Here is my build script:
+
+#!/bin/sh -vx
+
+dir=`date '+browser_%Y%m%d_%H%M%S'`
+mkdir $dir
+cd $dir
+date '+BUILD_START %Y%m%d_%H%M%S'
+/usr/bin/ocvs -d :pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot co mozilla/client.mk
+sed 's/^CVS = cvs/CVS = \/usr\/bin\/ocvs/' mozilla/client.mk > mozilla/client.mk2
+# if no difference, then no modification, then abort.
+diff mozilla/client.mk mozilla/client.mk2 >/dev/null
+if [ $? -ne 1 ] || [ ! -f mozilla/client.mk2 ]; then exit 1; fi
+/bin/mv -f mozilla/client.mk2 mozilla/client.mk
+cd mozilla
+make -f client.mk checkout MOZ_CO_PROJECT=browser
+echo ". \$topsrcdir/browser/config/mozconfig" > ./.mozconfig
+echo "ac_add_options MOZ_CO_PROJECT=browser" > browser/config/mozconfig
+echo "ac_add_options --enable-debug" >> browser/config/mozconfig
+echo "ac_add_options --enable-application=browser" >> browser/config/mozconfig
+echo "ac_add_options --enable-test" >> browser/config/mozconfig
+echo "ac_add_options --enable-gtktest" >> browser/config/mozconfig
+echo "ac_add_options --enable-mochitest" >> browser/config/mozconfig
+echo "ac_add_options --enable-libIDLtest" >> browser/config/mozconfig
+echo "ac_add_options --enable-glibtest" >> browser/config/mozconfig
+./configure --enable-application=browser
+make
+
+I will probably figure out what I am missing from some old e-mails that I have no doubt forgotten about. At the very least, there is an opportunity to document something here. A few pages on MDC can be updated with the info.

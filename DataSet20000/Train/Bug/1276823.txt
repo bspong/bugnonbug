@@ -1,0 +1,56 @@
+Bookmarks de-duping changes item GUID without changing reference in parent record
+On a test profile, the validator tells me:
+
+> Server record references child DbFRuGKzK7e2 that doesn't exist on the server.
+
+and the record with the reference is "menu" with childGUIDs ["1upn0DjHWM0h", "q1otz3OaoK-6", "DbFRuGKzK7e2", "SpnHPUdolgVw", "ZsXNl9WUqjIe", "MCk-v4SG0eyk", "buaNIJIeTStt", "I6s-dTVEHJxm"]
+
+Grepping through the logs:
+
+> 1464576351527	Sync.Engine.Bookmarks	TRACE	Incoming: { id: menu  index: 1000000  modified: 1464576300.37  ttl: undefined  payload: {"id":"menu","children":["1upn0DjHWM0h","q1otz3OaoK-6","DbFRuGKzK7e2","SpnHPUdolgVw","ZsXNl9WUqjIe","MCk-v4SG0eyk","buaNIJIeTStt","I6s-dTVEHJxm"],"parentid":"places","title":"Bookmarks Menu","type":"folder","parentName":""}  collection: bookmarks }
+
+So an incoming "menu" record, with 2 children of interest: DbFRuGKzK7e2 and MCk-v4SG0eyk - both are separators
+
+> ...
+> 1464576351626	Sync.Engine.Bookmarks	TRACE	Incoming: { id: MCk-v4SG0eyk  index: 0  modified: 1464576300.37  ttl: undefined  payload: {"id":"MCk-v4SG0eyk","parentid":"menu","type":"separator","pos":2,"parentName":"Bookmarks Menu"}  collection: bookmarks }
+> 1464576351626	Sync.Store.Bookmarks	TRACE	Number of rows matching GUID MCk-v4SG0eyk: 0
+
+So MCk-v4SG0eyk is a new record we haven't seen before.
+
+> 1464576351627	Sync.Engine.Bookmarks	DEBUG	MCk-v4SG0eyk mapped to DbFRuGKzK7e2
+> 1464576351627	Sync.Engine.Bookmarks	TRACE	Local item DbFRuGKzK7e2 is a duplicate for incoming item MCk-v4SG0eyk
+
+We've decided the incoming item MCk-v4SG0eyk is a dupe of DbFRuGKzK7e2 - probably because of "pos" being wrong (bug 1228827 comment 4)
+
+> 1464576351628	Sync.Store.Bookmarks	TRACE	Number of rows matching GUID DbFRuGKzK7e2: 1
+> 1464576351628	Sync.Engine.Bookmarks	DEBUG	Switching local ID to incoming: DbFRuGKzK7e2 -> MCk-v4SG0eyk
+> 1464576351628	Sync.Store.Bookmarks	DEBUG	Changing GUID DbFRuGKzK7e2 to MCk-v4SG0eyk
+> 1464576351628	Sync.Store.Bookmarks	TRACE	Number of rows matching GUID DbFRuGKzK7e2: 1
+> 1464576351628	Sync.Store.Bookmarks	TRACE	Creating SQL statement: UPDATE moz_bookmarks SET guid = :guid WHERE id = :item_id
+> 1464576351628	Sync.Engine.Bookmarks	DEBUG	Local item after duplication: age=null; modified=false; exists=true
+> 1464576351628	Sync.Store.Bookmarks	TRACE	Number of rows matching GUID MCk-v4SG0eyk: 1
+
+So now there's no local record with DbFRuGKzK7e2 - the existing one had its GUID changed to MCk-v4SG0eyk.
+
+> 1464576351629	Sync.Engine.Bookmarks	TRACE	Finding mapping: Bookmarks Menu, s2
+> 1464576351629	Sync.Engine.Bookmarks	TRACE	Mapped dupe: DbFRuGKzK7e2
+> 1464576351630	Sync.Engine.Bookmarks	TRACE	Ignoring incoming item because the local item is identical.
+> 1464576351630	Sync.Engine.Bookmarks	TRACE	Skipping reconciled incoming item MCk-v4SG0eyk
+
+Then later we reorder the children of menu:
+> 1464576351894	Sync.Store.Bookmarks	TRACE	reordering children of: menu
+...
+> 1464576351895	Sync.Store.Bookmarks	TRACE	Number of rows matching GUID DbFRuGKzK7e2: 0
+> 1464576351895	Sync.Store.Bookmarks	TRACE	Could not locate record DbFRuGKzK7e2
+
+At which point we've removed the child from the local version of "menu", and finally:
+
+> 1464576352161	Sync.Collection	DEBUG	mesg: DELETE success 200 https://sync-345-us-west-2.sync.services.mozilla.com/1.5/46723051/storage/bookmarks?ids=DbFRuGKzK7e2
+
+We deleted the record from the server - but the parent record "menu" has not been updated on the server - the server record now references *both* GUIDs as being children.
+
+While this is a separator, I see no reason to believe the same thing isn't going to happen if a real bookmark is de-duped. There also don't seem to be any existing tests for bookmark duplicates :(
+
+Naively, it looks like _orderChildren should record a boolean to indicate if it actually changed the ordering, and if so, that item should be marked again for upload. The obvious risk here is a "sync loop" though - another client does its own faulty de-duplication and re-uploads the parent, then we do the same, repeat ad-nauseum.
+
+Richard, any insights here?

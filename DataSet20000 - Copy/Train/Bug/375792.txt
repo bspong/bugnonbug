@@ -1,0 +1,49 @@
+Win Firefox3 alpha3 build fails on test_characterdatasetdatanomodificationallowederrEE.html
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.3) Gecko/20070309 Firefox/2.0.0.3
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.3) Gecko/20070309 Firefox/2.0.0.3
+
+Building Firefox 3 alpha 3 under Windows fails with a makefile problem.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Install Mozilla Build Environment.
+2. Untar source to C:\mozilla.
+3. Set mozconfig to this:
+
+mk_add_options MOZ_CO_PROJECT=browser
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj
+ac_add_options --enable-application=browser
+ac_add_options --disable-static
+ac_add_options --enable-shared
+ac_add_options --disable-optimize
+ac_add_options --enable-debug
+
+4. Run the following commands to try to build:
+
+(in cmd)
+start-msvc8.bat
+(in bash)
+export MOZCONFIG=/c/Projects/ExternalSource/mozilla-obj/mozconfig
+cd /c/mozilla
+make -f client.mk build
+
+Actual Results:  
+make[8]: Entering directory `/c/Projects/ExternalSource/mozilla/obj-i686-pc-mingw32/dom/tests/mochitest/dom-level1-core/files'
+/c/mozilla-build/moztools/bin/nsinstall /c/Projects/ExternalSource/mozilla/dom/tests/mochitest/dom-level1-core/files/hc_nodtdstaff.html /c/Projects/ExternalSource/mozilla/dom/tests/mochitest/dom-level1-core/files/hc_nodtdstaff.xhtml /c/Projects/ExternalSource/mozilla/dom/tests/mochitest/dom-level1-core/files/hc_staff.html /c/Projects/ExternalSource/mozilla/dom/tests/mochitest/dom-level1-core/files/hc_staff.xhtml /c/Projects/ExternalSource/mozilla/dom/tests/mochitest/dom-level1-core/files/staff.dtd /c/Projects/ExternalSource/mozilla/dom/tests/mochitest/dom-level1-core/files/staff.xml /c/Projects/ExternalSource/mozilla/dom/tests/mochitest/dom-level1-core/files/svgunit.js /c/Projects/ExternalSource/mozilla/dom/tests/mochitest/dom-level1-core/files/xhtml-special.ent /c/Projects/ExternalSource/mozilla/dom/tests/mochitest/dom-level1-core/files/xhtml1-frameset.dtd /c/Projects/ExternalSource/mozilla/dom/tests/mochitest/dom-level1-core/files/xhtml1-transitional.dtd /c/Projects/ExternalSource/mozilla/dom/tests/mochitest/dom-level1-core/files/hc_nodtdstaff.svg /c/Projects/ExternalSource/mozilla/dom/tests/mochitest/dom-level1-core/files/hc_nodtdstaff.xml /c/Projects/ExternalSource/mozilla/dom/tests/mochitest/dom-level1-core/files/hc_staff.svg /c/Projects/ExternalSource/mozilla/dom/tests/mochitest/dom-level1-core/files/hc_staff.xml /c/Projects/ExternalSource/mozilla/dom/tests/mochitest/dom-level1-core/files/staff.svg /c/Projects/ExternalSource/mozilla/dom/tests/mochitest/dom-level1-core/files/svgtest.js /c/Projects/ExternalSource/mozilla/dom/tests/mochitest/dom-level1-core/files/xhtml-lat1.ent /c/Projects/ExternalSource/mozilla/dom/tests/mochitest/dom-level1-core/files/xhtml-symbol.ent /c/Projects/ExternalSource/mozilla/dom/tests/mochitest/dom-level1-core/files/xhtml1-strict.dtd ../../../../../_tests/testing/mochitest/tests/dom/tests/mochitest/dom-level1-core/files
+make[8]: Leaving directory `/c/Projects/ExternalSource/mozilla/obj-i686-pc-mingw32/dom/tests/mochitest/dom-level1-core/files'
+make[7]: *** No rule to make target `test_characterdatasetdatanomodificationallowederrEE.html', needed by `libs'.  Stop.
+
+Expected Results:  
+Build should have succeeded.
+
+XP 32 SP2 fully patched.
+MBE is installed to C:\mozilla-build.
+Firefox 2.0.0.3 compiles fine with VC6 and VC7.1 on this machine with the same build environment.
+
+This might be a filename length issue.  The fully-qualified path to that file would have been very close to 127 characters.
+
+My mozconfig originally had this line:
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-@CONFIG_GUESS@
+
+but when I suspected a filename length issue I deleted the end part to try to conserve filename length.

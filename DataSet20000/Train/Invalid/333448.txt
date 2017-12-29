@@ -1,0 +1,148 @@
+Firefox PHP Session Handling
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.0.1) Gecko/20060111 Firefox/1.5.0.1
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.0.1) Gecko/20060111 Firefox/1.5.0.1
+
+I am developing a web application that uploads images to a server via the new Flash upload components in Flash 8 in conjunction with a PHP
+back-end, inserts the image name and description into a MySQL database,
+and then resizes and stores the resized images for screen resolution
+via the GD imaging library.
+
+The entire application works fine in IE but there is a flaw in Firefox.
+The PHP pages that rename and insert the image name data into the MySQL
+database cannot seem to access the session variables unless the page is directly viewed; just what I am trying to avoid by having a back-end.  These pages are
+pure PHP they have no HTML so they should not be subject to browser
+compatibility problems.  Moreover, I am not using cookies for my session.
+
+The actual structure of the app is as follows:
+
+SWF uploader (Using the deconcept embed and passing the following page
+filenames and locations to the SWF.)
+
+1. PHP back-end uploader -- Once the file is uploaded the filename and
+description are inserted into a php SESSION variable.
+2. PHP MySQL inserter -- Inserts the SESSION data into the MySQL
+database
+3. PHP image processor -- Resizes the stored full resolution image to
+create and store a low-resolution thumbnail and a screen-optimized, 640
+X 480, image.
+
+In my debugging I have noticed that the PHP back-end uploader will
+in-fact upload the file, however, it will not append some crucial
+session data to the file name, namely MM_Username.  Moreover, it will
+indeed write the filename data to the session variable, however, it
+will not insert the session data into the MySQL database.  Furthermore,
+it will access the PHP page that resizes and processes.
+
+Once again, the whole combination works perfectly fine in IE.  At first
+I thought it was a problem with the firefox and the deconcept embed,
+but the SWF is certainly getting the data from the embed as it
+successfully uploads the files and processes them, it just doesn't
+insert them into the MySQL database?
+
+The code for the PHP-backend uploader is as follows:
+
+[CODE]
+
+<?php require_once('Connections/siteData.php'); ?>
+<?php
+if (!isset($_SESSION)) {
+  session_start();
+
+}
+
+?>
+<?php
+//path to storage
+$storage = 'images';
+
+//path name of file for storage
+$uploadfile = "$storage/". basename(
+$_SESSION['MM_Username']."_".$_FILES['Filedata']['name'] );
+
+//if the file is moved successfully
+if ( move_uploaded_file( $_FILES['Filedata']['tmp_name'] , $uploadfile
+) ) {
+ //populated session array to be passed to SQL
+ $_SESSION['upFile'][] = basename(
+$_SESSION['MM_Username']."_".$_FILES['Filedata']['name'] );
+ echo( '1 ' . $_FILES['Filedata']['name']);
+
+//file failed to move
+
+}else{
+ echo( '0');
+}
+
+?>
+
+[/CODE]
+
+The code for the MySQL inserter:
+
+[CODE]
+
+<?php require_once('Connections/siteData.php'); ?>
+<?php
+if (!isset($_SESSION)) {
+  session_start();
+
+}
+
+?>
+<?php
+// galleryInsert Recordset
+mysql_select_db($database_siteData, $siteData);
+$query_galleryInsert = "SELECT * FROM gallery";
+$galleryInsert = mysql_query($query_galleryInsert, $siteData) or
+die(mysql_error());
+$row_galleryInsert = mysql_fetch_assoc($galleryInsert);
+$totalRows_galleryInsert = mysql_num_rows($galleryInsert);
+?>
+<?php
+// Instantiate Date Variable
+$date = date ( 'D M j' );
+
+// Populate fileArray with uploaded files values
+$fileArray = $_SESSION['upFile'];
+
+// Insert image data SQL
+foreach($fileArray as $key => $value) {
+ $caption = '<A href=\"images/'.$value.'\"
+target=\"_blank\"><U>'.($_GET['upname']).'</U></A>';
+ $ins_str = "INSERT INTO gallery VALUES
+(NULL,'".$value."','".($_GET['upname'])."',
+'".$_SESSION['MM_Username']."','".$date."','".$caption."', -1,
+0,'".$_SESSION['sessionID']."', 0, 0)";
+ if (!mysql_query ($ins_str)) {
+  $r_string = '&errorcode=3&msg='.$msg;
+ } else {
+  // pass back id of inserted record
+  $r_string = '&errorcode=0&id='.$id.'&';
+ }
+
+}
+
+// Destroy $_SESSION['upFile'] array
+unset($_SESSION['upFile']);
+?>
+<?php
+mysql_free_result($galleryInsert);
+?>
+
+[/CODE]
+
+In regard to the session, it is valid.  If I run "print
+$_SESSION['MM_Username'];" it outputs the correct username.
+
+In case you are wondering, I use multiple <?php ?> tags in each page in order to more effeciantly structure the PHP for my editor, Dreamweaver 8.  As far as functionality goes, someone preveoiusly raised that as a concern so I changed all of the pages to a single <?php ?> tag per page.  However, this had no effect on the functionality within FireFox.
+
+Thanks.
+
+Steve 
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. You won't be able to reproduce this without all of my source code.
+2.
+3.

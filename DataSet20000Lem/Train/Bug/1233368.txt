@@ -1,0 +1,24 @@
+tabbrowser.xml call TelemetryStopwatch.finish() for FX_TAB_SWITCH_TOTAL_E10S_MS twice
+Created attachment 8699417
+tabbrowser-telemetry-stopwatch.log
+
+While working on bug 1205898 we noticed that some code in tabbrowser.xml is calling TelemetryStopwatch.timeElapsed twice for the Histogram FX_TAB_SWITCH_TOTAL_E10S_MS, where a TelemetryStopwatch.start("FX_TAB_SWITCH_TOTAL_E10S_MS") is only called once.
+
+According to callstacks, here is the place where it happens:
+https://dxr.mozilla.org/mozilla-central/source/browser/base/content/tabbrowser.xml#3535
+
+After the patch for bug 1205898 land this will cause a similar message to appear in testing log and possibly in browser console:
+
+13:24:23 INFO - 3 INFO TEST-INFO | (browser-test.js) | Console message: [JavaScript Error: "TelemetryStopwatch: requesting elapsed time for nonexisting stopwatch. Histogram: "FX_TAB_SWITCH_TOTAL_E10S_MS", key: "null"" {file: "resource://gre/modules/TelemetryStopwatch.jsm" line: 303}]
+
+STR:
+0. if bug 1205898 is still open modify
+https://dxr.mozilla.org/mozilla-central/source/toolkit/components/telemetry/TelemetryStopwatch.jsm#153
+to include some debug output a for example:
+dump("*** ERROR ***: TelemetryStopwatch: requesting elapsed time for nonexisting stopwatch. Histogram: " + aHistogram + "\n");
+
+1. ./mach test browser/base/content/test/ --e`0s | grep "TelemetryStopwatch"
+2. Observe the error reports.
+
+See the attached file for a sample output obtained by running:
+./mach test browser/base/content/test/general/browser_action_keyword.js --e10s > tabbrowser-telemetry-stopwatch.log

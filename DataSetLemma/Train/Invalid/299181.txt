@@ -1,0 +1,104 @@
+bad header showing in browser window -- http 1.1 incompatibility with cached request
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; rv:1.7.3) Gecko/20041001 Firefox/0.10.1
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; rv:1.7.3) Gecko/20041001 Firefox/0.10.1
+
+In a continuing effort to provide enterprise level tool to our clients,
+Omniture ha written Sitecatalyst to be fully compatible with Mozilla browsers.
+It ha come to our attention that there is an intermittent problem for our
+client with a known http 1.1 bug in Mozilla. Please see the following link
+which refers to what we believe to be a related issue.
+
+http://weblogs.mozillazine.org/asa/archives/004370.html
+
+The following is text taken from our testing environment showing the error that
+occurs, where header information is displayed in the browser:
+
+HTTP/1.1 200 OK Date: Wed, 29 Jun 2005 20:49:52 GMT Server: Apache/1.3.26 (Unix)
+mod_ssl/2.8.9 OpenSSL/0.9.6e xserver: www192 Set-Cookie:
+sc_user_settings=deleted; expires=Tue, 29-Jun-04 20:50:01 GMT; path=/;
+domain=.omniture.com Set-Cookie:
+sc_user_settings=qhlp%3D1%2Adet%3D1%2Aiav%3D1%2Afcst%3D1%2Amnu%3D0%2Amtrc%3D1%2Afrmt%3D1%2Aflsh_en%3D1%2Aapic%3D1%2Awkend%3D1%2Aforce_width%3D1%2Aexcel_intro%3D0;
+expires=Wed, 10-Aug-05 12:50:02 GMT; path=/; domain=.omniture.com Keep-Alive:
+timeout=15, max=86 Connection: Keep-Alive Transfer-Encoding: chunked
+Content-Type: text/html daf
+
+In our effort to understand the issue we set the following in the http.conf on
+our apache server:
+
+BrowserMatch "Mozilla/5" downgrade-1.0 force-response-1.0
+
+The problem wa then no longer reproducible leading u to believe it is an http
+1.1 incompatibility with Mozilla. The primary difference in http 1.1 is it
+ability to keep alive a persistent connection between the server and the
+browser, and the compression of the data stream being transferred. We notice
+the error occurs when returning to a report, which suggests it could be an issue
+dealing with cached pages. The following is a quote from w3.org which may
+address a possible hang up that Mozilla is having with http 1.1
+
+To improve the perceived response time, a browser need to learn basic size
+information of each object in a page (required for page layout) a soon a
+possible. The first byte typically contain the image size. To achieve better
+concurrency and retrieve the first few byte of embedded link while still
+receiving the byte for the master document, HTTP/1.0 browser usually use
+multiple TCP connections. We believe by using range request HTTP/1.1 client
+can achieve similar or better result over a single connection.
+HTTP /1.1 defines a part of the standard (and most current HTTP/1.0 server
+already implement) byte range facility that allow a client to perform partial
+retrieval of objects. The initial intent of range request wa to allow caching
+proxy to finish interrupted transfer by requesting only the byte of the
+document they currently do not hold in their cache.
+To solve the problem that browser need the size of embedded objects, we believe
+that the natural revalidation request for HTTP/1.1 will combine both cache
+validation header and an If-Range request header, to prevent large object from
+monopolizing the connection to the server over it connection. The range
+requested should be large enough to usually return any embedded metadata for the
+object for the common data types. This capability of HTTP/1.1 is implicit in it
+caching and range request design.
+When a browser revisits a page, it ha a very good idea what the type of any
+embedded object is likely to be, and can therefore both make a validation
+request and also simultaneously request the metadata of the embedded object if
+there ha been any change. The metadata is much more valuable than the embedded
+image data. Subsequently, the browser might generate request for the rest of
+the object, or for enough of each object to allow for progressive display of
+image data type (e.g. progressive PNG, GIF or JPEG images), or to multiplex
+between multiple large image on the page. We call this style of use of HTTP/1.1
+"poor man's multiplexing."
+We believe cache validation combined with range request will likely become a
+very common idiom of HTTP/1.1.
+
+
+This issue ha become a top priority for Omniture a many of our client are
+very high profile and they wish to access our tool with Mozilla. We would like
+to extend a hand of assistance in finding a final solution to this problem.
+
+Thank you,
+John Vandermay
+VP Engineering
+Omniture
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Load a page with pipelined data, served from a web server using http 1.1.
+2. Reload the now-cached page several times.
+3. See the garbage header text in the browser.
+
+We can reproduce this everytime, but it doe not always occur on the the first
+refresh.
+
+Actual Results:
+We see the following header text in the browser content window:
+HTTP/1.1 200 OK Date: Wed, 29 Jun 2005 20:49:52 GMT Server: Apache/1.3.26 (Unix)
+mod_ssl/2.8.9 OpenSSL/0.9.6e xserver: www192 Set-Cookie:
+sc_user_settings=deleted; expires=Tue, 29-Jun-04 20:50:01 GMT; path=/;
+domain=.omniture.com Set-Cookie:
+sc_user_settings=qhlp%3D1%2Adet%3D1%2Aiav%3D1%2Afcst%3D1%2Amnu%3D0%2Amtrc%3D1%2Afrmt%3D1%2Aflsh_en%3D1%2Aapic%3D1%2Awkend%3D1%2Aforce_width%3D1%2Aexcel_intro%3D0;
+expires=Wed, 10-Aug-05 12:50:02 GMT; path=/; domain=.omniture.com Keep-Alive:
+timeout=15, max=86 Connection: Keep-Alive Transfer-Encoding: chunked
+Content-Type: text/html daf
+
+
+
+
+Expected Results:
+We shouldn't see the header text and the header should have been handled correctly.

@@ -1,0 +1,67 @@
+cannot call child (iframe) function from parent (or from child to parent) after click 'Back' button
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.0.4) Gecko/20060508 Firefox/1.5.0.4
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.0.4) Gecko/20060508 Firefox/1.5.0.4
+
+Load the included the following html Firefox, click button ‘Init Child’ more than 2 times, click on the ‘Back’ on the tool bar once, then click either ‘Call Child’ or ‘Call Child’ cause firefox to issue ‘Permisson denied to get property Window.func’ exception.
+
+Please not, if the the 'Back' button had not been clicked, both function call (either from parent to child or child to parent) would work.
+
+the test html:
+
+<html>
+<head>
+<script type='text/javascript'>
+var count=0;
+function initchild() {
+count++;
+var iframeWin = frames['iFrame'];
+var iframeDoc = iframeWin.document;
+var newDoc=iframeDoc.open("text/html")
+var txt = "<html><head>";
+txt += "<script type='text/javascript'>";
+txt += "function func() {alert('called from parent "+count+"');}";
+txt += "function callParent() {parent.func("+count+");}";
+txt += "<\/script>";
+txt += "</head>";
+txt += "<body>";
+txt += "<input type='button' onclick='callParent()' value='Call Parnet" +count+"'>";
+txt += "</body></html>";
+newDoc.write(txt);
+newDoc.close();
+}
+
+function func(c) {
+alert("called from child "+c);
+}
+
+function callchild() {
+var iframeWin = frames['iFrame'];
+iframeWin.func();
+}
+</script>
+</head>
+<body>
+<iframe id='iFrame' name='iFrame'></iframe>
+<br /><br />
+<input type='button' onclick='initchild()' value='Init Child'>
+<br /><br />
+<input type='button' onclick='callchild()' value='Call Child'>
+</body>
+</html>
+
+
+
+I try the same html in IE (version 6.0.2600.0000.xpclient.010817-1148), everything work fine.
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. copy the test html text to a file
+2. load the file to Firefox
+3. click the 'Init Child' button twice
+4. click the 'Back' button once
+5. open the 'Javascript Console' from the 'Tools' menu
+6. click on the 'Call Child' button, the console should show 'uncaught exception: Permisson denied to get property Window.func'
+7. click on the 'Call Parent1' button, the console should show 'uncaught exception: Permisson denied to get property Window.func' again.

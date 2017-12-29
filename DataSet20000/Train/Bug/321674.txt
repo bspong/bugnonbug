@@ -1,0 +1,34 @@
+[RFE] Warn against cross-site https submission (to avoid possible exploits)
+User-Agent:       Mozilla/5.0 (Macintosh; U; PPC Mac OS X Mach-O; en-US; rv:1.8) Gecko/20051223 Camino/1.0b1+
+Build Identifier: Mozilla/5.0 (Macintosh; U; PPC Mac OS X Mach-O; en-US; rv:1.8) Gecko/20051223 Camino/1.0b1+
+
+This is a low to moderately likely (but highly severe) risk that could be addressed with a simple warning (similar to HTTP/HTTPS warning dialog).
+
+Scenario: Crackers divert their attention from phishing emails to cracking smaller ISPs.  Once they've cracked the ISP, they change the DNS for all popular banks to point to their fake bank websites.  These sites have a one-line/invisible frame that then re-encapuslates the bank website with a valid SSL certificate for the phishing site.  At present, there is no way for the user to know that the are submitting their bank credentials to an exploit website -- because the URL is the valid and correct one (other than looking at the source, and who can decipher bank HTML/JavaScript? :-)
+
+Proposed solution: Introduce a new warning dialog that displays if:
+i) You are submitting a password to a secure (HTTPS) website
+ii) The host/domain you are submitting the password to is *different* than the one in the location bar.
+
+Very strict mode would require exactly the same host (e.g. myciti.citibank.com)
+Strict mode would require only the same domain (e.g. citibank.com)
+No strict mode would provide no warning (as now)
+
+Very strict and strict modes would likely catch many websites out (especially ASP ecommerce sites that post from the shop to the ecommerce agent), but this may actually be a good thing (leading to better design of ecommerce transactions).  OTOH, it could be something that people only selectively switch on, when they are doing their banking (or it could be by a list of opt-in sites, as for allowing pop-ups).
+
+Whilst the likelyhood of this exploit is low at present, I think it is likely, given the level phishing activity.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Create your own DNS server as authoritative for your network/host
+2. Save your bank website's login page 
+3. Change the DNS for your bank
+4. Create a one-line/invisible HTML frame which includes the saved HTML from (2) but uses a valid SSL cert for your host/domain.
+5. See no warnings that you are about to give your credentials to an phishing website.
+
+Actual Results:  
+Lots of money lost :-)
+
+Expected Results:  
+Browser warning, similar to HTTP => HTTPS dialog

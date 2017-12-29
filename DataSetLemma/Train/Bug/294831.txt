@@ -1,0 +1,629 @@
+JS OOM crash [@ nsXBLPrototypeBinding::InitClass]
+step to reproduce:
+1. foolishly give a gecko derived product to QA
+2. foolishly let qa torture gecko until it dy
+* gecko derived product ha a tendency to exhaust jsruntime limit (qa ha not
+been playing with JS_RUNTIME_SIZE, and if QA decides to play with it, QA will be
+using *bigger* number for tuning instead of smaller number for strangulation).
+
+expected results:
+no feedback (complaints) from QA
+
+actual results:
+QA complains gecko crashed.
+
+details:
+[0 - nsXBLPrototypeBinding::InitClass]
++ aContext 0x00000000 nsIScriptContext *
+JSContext* cx = (JSContext*)aContext->GetNativeContext();
+[1 - nsXBLProtoImpl::CompilePrototypeMembers]
++ context 0x00000000 nsIScriptContext *
+{,,gklayout.dll}(*(nsXBLDocGlobalObject*){*}((nsIScriptGlobalObject*){,,gklayout.dll}((*(nsCOMPtr_base*)(&(*(nsXBLDocumentInfo*){*}((nsIScriptGlobalObjectOwner*)((*(nsCOMPtr_base*)(&globalOwner))).mRawPtr)).mGlobalObject))).mRawPtr)).mJSObject
+0x00000000 JSObject *
+nsresult rv = aBinding->InitClass(mClassName, context, nsnull, &classObject);
+
+The path to this unhappy code is:
+[1 - nsXBLProtoImpl::CompilePrototypeMembers]
+nsIScriptContext *context = globalObject->GetContext();
+http://bonsai.mozilla.org/cvsblame.cgi?file=mozilla/content/xbl/src/nsXBLDocumentInfo.cpp&rev=1.27&mark=189,193,204-206#178
+
+stack at time of death:
+gklayout.dll!nsXBLPrototypeBinding::InitClass(const nsCString &
+aClassName={...}, nsIScriptContext * aContext=0x00000000, void *
+aScriptObject=0x00000000, void * * aClassObject=0x00129314) Line 734 + 0x7 C++
+> gklayout.dll!nsXBLProtoImpl::CompilePrototypeMembers(nsXBLPrototypeBinding *
+aBinding=0x3bcc6d9c) Line 156 C++
+gklayout.dll!nsXBLProtoImpl::InitTargetObjects(nsXBLPrototypeBinding *
+aBinding=0x3bcc6670, nsIScriptContext * aContext=0x3ba818a0, nsIContent *
+aBoundElement=0x3bc546f0, void * * aScriptObject=0x00129370, void * *
+aTargetClassObject=0x00129374) Line 100 C++
+gklayout.dll!nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding *
+aBinding=0x3bcc6670, nsIContent * aBoundElement=0x3ba818a0) Line 77 C++
+gklayout.dll!nsXBLPrototypeBinding::InstallImplementation(nsIContent *
+aBoundElement=0x3bc546f0) Line 426 + 0xa C++
+gklayout.dll!nsXBLBinding::InstallImplementation() Line 812 C++
+gklayout.dll!nsXBLBinding::InstallImplementation() Line 809 C++
+gklayout.dll!nsXBLService::LoadBindings(nsIContent * aContent=0x3bc546f0,
+nsIURI * aURL=0x3ba91c80, int aAugmentFlag=0x00000000, nsIXBLBinding * *
+aBinding=0x00129404, int * aResolveStyle=0x00129410) Line 634 C++
+gklayout.dll!nsCSSFrameConstructor::ConstructFrameInternal(nsIPresShell *
+aPresShell=0x37745fd0, nsPresContext * aPresContext=0x3ba87810,
+nsFrameConstructorState & aState={...}, nsIContent * aContent=0x3bc546f0,
+nsIFrame * aParentFrame=0x3bcb1444, nsIAtom * aTag=0x00ace288, int
+aNameSpaceID=0x00000009, nsStyleContext * aStyleContext=0x3bcb1664, nsFrameItems
+& aFrameItems={...}, int aXBLBaseTag=0x00000000) Line 7494 C++
+gklayout.dll!nsCSSFrameConstructor::ConstructFrame(nsIPresShell *
+aPresShell=0x37745fd0, nsPresContext * aPresContext=0x3ba87810,
+nsFrameConstructorState & aState={...}, nsIContent * aContent=0x00000000,
+nsIFrame * aParentFrame=0x3bcb1664, nsFrameItems & aFrameItems={...}) Line 7451 C++
+gklayout.dll!nsCSSFrameConstructor::ProcessChildren(nsIPresShell *
+aPresShell=0x37745fd0, nsPresContext * aPresContext=0x3ba87810,
+nsFrameConstructorState & aState={...}, nsIContent * aContent=0x3bc545b8,
+nsIFrame * aFrame=0x3bc546f0, int aCanHaveGeneratedContent=0x00000000,
+nsFrameItems & aFrameItems={...}, int aParentIsBlock=0x00000000, nsTableCreator
+* aTableCreator=0x3bc546f0) Line 11703 + 0x25 C++
+gklayout.dll!nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell *
+aPresShell=0x37745fd0, nsPresContext * aPresContext=0x3ba87810,
+nsFrameConstructorState & aState={...}, nsIContent * aContent=0x3bc545b8,
+nsIFrame * aParentFrame=0x3bc92a74, nsIAtom * aTag=0x00ace0c8, int
+aNameSpaceID=0x00000001, nsStyleContext * aStyleContext=0x3bc92d8c, nsFrameItems
+& aFrameItems={...}, int aXBLBaseTag=0x00000000, int &
+aHaltProcessing=0x0012a62c) Line 5983 + 0x1a C++
+gklayout.dll!nsCSSFrameConstructor::ConstructFrameInternal(nsIPresShell *
+aPresShell=0x37745fd0, nsPresContext * aPresContext=0x3ba87810,
+nsFrameConstructorState & aState={...}, nsIContent * aContent=0x3bc545b8,
+nsIFrame * aParentFrame=0x3bc92a74, nsIAtom * aTag=0x00ace0c8, int
+aNameSpaceID=0x00000009, nsStyleContext * aStyleContext=0x3bc92b6c, nsFrameItems
+& aFrameItems={...}, int aXBLBaseTag=0x00000000) Line 7558 + 0x24 C++
+gklayout.dll!nsCSSFrameConstructor::ConstructFrame(nsIPresShell *
+aPresShell=0x37745fd0, nsPresContext * aPresContext=0x3ba87810,
+nsFrameConstructorState & aState={...}, nsIContent * aContent=0x00000000,
+nsIFrame * aParentFrame=0x3bc92d8c, nsFrameItems & aFrameItems={...}) Line 7451 C++
+gklayout.dll!nsCSSFrameConstructor::ProcessChildren(nsIPresShell *
+aPresShell=0x37745fd0, nsPresContext * aPresContext=0x3ba87810,
+nsFrameConstructorState & aState={...}, nsIContent * aContent=0x3bc8d310,
+nsIFrame * aFrame=0x3bc545b8, int aCanHaveGeneratedContent=0x00000000,
+nsFrameItems & aFrameItems={...}, int aParentIsBlock=0x00000000, nsTableCreator
+* aTableCreator=0x3bc545b8) Line 11703 + 0x25 C++
+gklayout.dll!nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell *
+aPresShell=0x37745fd0, nsPresContext * aPresContext=0x3ba87810,
+nsFrameConstructorState & aState={...}, nsIContent * aContent=0x3bc8d310,
+nsIFrame * aParentFrame=0x3bc6a3a0, nsIAtom * aTag=0x00ace0c8, int
+aNameSpaceID=0x00000001, nsStyleContext * aStyleContext=0x3bc92a28, nsFrameItems
+& aFrameItems={...}, int aXBLBaseTag=0x00000000, int &
+aHaltProcessing=0x0012a62c) Line 5983 + 0x1a C++
+gklayout.dll!nsCSSFrameConstructor::ConstructFrameInternal(nsIPresShell *
+aPresShell=0x37745fd0, nsPresContext * aPresContext=0x3ba87810,
+nsFrameConstructorState & aState={...}, nsIContent * aContent=0x3bc8d310,
+nsIFrame * aParentFrame=0x3bc6a3a0, nsIAtom * aTag=0x00ace0c8, int
+aNameSpaceID=0x00000009, nsStyleContext * aStyleContext=0x3bc92994, nsFrameItems
+& aFrameItems={...}, int aXBLBaseTag=0x00000000) Line 7558 + 0x24 C++
+gklayout.dll!nsCSSFrameConstructor::ConstructFrame(nsIPresShell *
+aPresShell=0x37745fd0, nsPresContext * aPresContext=0x3ba87810,
+nsFrameConstructorState & aState={...}, nsIContent * aContent=0x00000000,
+nsIFrame * aParentFrame=0x3bc92a28, nsFrameItems & aFrameItems={...}) Line 7451 C++
+gklayout.dll!nsCSSFrameConstructor::ProcessChildren(nsIPresShell *
+aPresShell=0x37745fd0, nsPresContext * aPresContext=0x3ba87810,
+nsFrameConstructorState & aState={...}, nsIContent * aContent=0x3bc44748,
+nsIFrame * aFrame=0x3bc8d310, int aCanHaveGeneratedContent=0x00000000,
+nsFrameItems & aFrameItems={...}, int aParentIsBlock=0x00000000, nsTableCreator
+* aTableCreator=0x3bc8d310) Line 11703 + 0x25 C++
+gklayout.dll!nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell *
+aPresShell=0x37745fd0, nsPresContext * aPresContext=0x3ba87810,
+nsFrameConstructorState & aState={...}, nsIContent * aContent=0x3bc44748,
+nsIFrame * aParentFrame=0x3bbb4140, nsIAtom * aTag=0x00acdef0, int
+aNameSpaceID=0x00000001, nsStyleContext * aStyleContext=0x3bc69768, nsFrameItems
+& aFrameItems={...}, int aXBLBaseTag=0x00000000, int &
+aHaltProcessing=0x0012a62c) Line 5983 + 0x1a C++
+gklayout.dll!nsCSSFrameConstructor::ConstructFrameInternal(nsIPresShell *
+aPresShell=0x37745fd0, nsPresContext * aPresContext=0x3ba87810,
+nsFrameConstructorState & aState={...}, nsIContent * aContent=0x00acdef0,
+nsIFrame * aParentFrame=0x3bbb4140, nsIAtom * aTag=0x00acdef0, int
+aNameSpaceID=0x00000009, nsStyleContext * aStyleContext=0x3bbb43cc, nsFrameItems
+& aFrameItems={...}, int aXBLBaseTag=0x00000000) Line 7558 + 0x24 C++
+gklayout.dll!nsCSSFrameConstructor::ConstructFrame(nsIPresShell *
+aPresShell=0x37745fd0, nsPresContext * aPresContext=0x3ba87810,
+nsFrameConstructorState & aState={...}, nsIContent * aContent=0x00000000,
+nsIFrame * aParentFrame=0x3bbb42c8, nsFrameItems & aFrameItems={...}) Line 7451 C++
+gklayout.dll!nsCSSFrameConstructor::ProcessChildren(nsIPresShell *
+aPresShell=0x37745fd0, nsPresContext * aPresContext=0x3ba87810,
+nsFrameConstructorState & aState={...}, nsIContent * aContent=0x3bbf3768,
+nsIFrame * aFrame=0x3bc44748, int aCanHaveGeneratedContent=0x00000000,
+nsFrameItems & aFrameItems={...}, int aParentIsBlock=0x00000000, nsTableCreator
+* aTableCreator=0x3bc44748) Line 11703 + 0x25 C++
+gklayout.dll!nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell *
+aPresShell=0x37745fd0, nsPresContext * aPresContext=0x3ba87810,
+nsFrameConstructorState & aState={...}, nsIContent * aContent=0x3bbf3768,
+nsIFrame * aParentFrame=0x3bbb406c, nsIAtom * aTag=0x00ace0d0, int
+aNameSpaceID=0x00000001, nsStyleContext * aStyleContext=0x3bbb40f4, nsFrameItems
+& aFrameItems={...}, int aXBLBaseTag=0x00000000, int &
+aHaltProcessing=0x0012a62c) Line 5983 + 0x1a C++
+gklayout.dll!nsCSSFrameConstructor::ConstructFrameInternal(nsIPresShell *
+aPresShell=0x37745fd0, nsPresContext * aPresContext=0x3ba87810,
+nsFrameConstructorState & aState={...}, nsIContent * aContent=0x3bbf3768,
+nsIFrame * aParentFrame=0x3bbb406c, nsIAtom * aTag=0x00ace0d0, int
+aNameSpaceID=0x00000009, nsStyleContext * aStyleContext=0x00000000, nsFrameItems
+& aFrameItems={...}, int aXBLBaseTag=0x00000000) Line 7558 + 0x24 C++
+gklayout.dll!nsCSSFrameConstructor::ConstructFrame(nsIPresShell *
+aPresShell=0x37745fd0, nsPresContext * aPresContext=0x3ba87810,
+nsFrameConstructorState & aState={...}, nsIContent * aContent=0x00000000,
+nsIFrame * aParentFrame=0x3bbb40f4, nsFrameItems & aFrameItems={...}) Line 7451 C++
+gklayout.dll!nsCSSFrameConstructor::ProcessChildren(nsIPresShell *
+aPresShell=0x37745fd0, nsPresContext * aPresContext=0x3ba87810,
+nsFrameConstructorState & aState={...}, nsIContent * aContent=0x3bc44958,
+nsIFrame * aFrame=0x3bbf3768, int aCanHaveGeneratedContent=0x00000000,
+nsFrameItems & aFrameItems={...}, int aParentIsBlock=0x00000000, nsTableCreator
+* aTableCreator=0x3bbf3768) Line 11703 + 0x25 C++
+gklayout.dll!nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell *
+aPresShell=0x37745fd0, nsPresContext * aPresContext=0x3ba87810,
+nsFrameConstructorState & aState={...}, nsIContent * aContent=0x3bc44958,
+nsIFrame * aParentFrame=0x3ba89028, nsIAtom * aTag=0x00acdf08, int
+aNameSpaceID=0x00000001, nsStyleContext * aStyleContext=0x3bbb3fc8, nsFrameItems
+& aFrameItems={...}, int aXBLBaseTag=0x00000000, int &
+aHaltProcessing=0x0012a62c) Line 5983 + 0x1a C++
+gklayout.dll!nsCSSFrameConstructor::ConstructFrameInternal(nsIPresShell *
+aPresShell=0x37745fd0, nsPresContext * aPresContext=0x3ba87810,
+nsFrameConstructorState & aState={...}, nsIContent * aContent=0x00acdf08,
+nsIFrame * aParentFrame=0x3ba89028, nsIAtom * aTag=0x00acdf08, int
+aNameSpaceID=0x00000009, nsStyleContext * aStyleContext=0x3bbb3e84, nsFrameItems
+& aFrameItems={...}, int aXBLBaseTag=0x00000000) Line 7558 + 0x24 C++
+gklayout.dll!nsCSSFrameConstructor::ConstructFrame(nsIPresShell *
+aPresShell=0x37745fd0, nsPresContext * aPresContext=0x3ba87810,
+nsFrameConstructorState & aState={...}, nsIContent * aContent=0x00000000,
+nsIFrame * aParentFrame=0x3bbb3bb4, nsFrameItems & aFrameItems={...}) Line 7451 C++
+gklayout.dll!nsCSSFrameConstructor::ProcessChildren(nsIPresShell *
+aPresShell=0x37745fd0, nsPresContext * aPresContext=0x3ba87810,
+nsFrameConstructorState & aState={...}, nsIContent * aContent=0x3bac4f78,
+nsIFrame * aFrame=0x3bc44958, int aCanHaveGeneratedContent=0x00000001,
+nsFrameItems & aFrameItems={...}, int aParentIsBlock=0x00000000, nsTableCreator
+* aTableCreator=0x3bc44958) Line 11703 + 0x25 C++
+gklayout.dll!nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell *
+aPresShell=0x37745fd0, nsPresContext * aPresContext=0x3ba87810,
+nsFrameConstructorState & aState={...}, nsIContent * aDocElement=0x3bac4f78,
+nsIFrame * aParentFrame=0x3ba88e54, nsIFrame * & aNewFrame=0x3ba89028) Line
+4037 C++
+gklayout.dll!nsCSSFrameConstructor::ContentInserted(nsPresContext *
+aPresContext=0x010c9de1, nsIContent * aContainer=0x3bcc6670, nsIFrame *
+aContainerFrame=0x3ba818a0, nsIContent * aChild=0x010c8949, int
+aIndexInContainer=0x3bc546f0, nsILayoutHistoryState * aFrameState=0x3bcd2980,
+int aInReinsertContent=0x010c8933) Line 8994 C++
+gklayout.dll!PresShell::InitialReflow(int aWidth=0x00002391, int
+aHeight=0x00001a22) Line 2721 C++
+gklayout.dll!nsXULDocument::StartLayout() Line 2157 C++
+gklayout.dll!nsXULDocument::ResumeWalk() Line 2978 C++
+gklayout.dll!nsXULDocument::EndLoad() Line 743 C++
+gklayout.dll!XULContentSinkImpl::DidBuildModel() Line 462 C++
+gkparser.dll!nsExpatDriver::DidBuildModel(unsigned int anErrorCode=0x00000000,
+int aNotifySink=0x00000001, nsIParser * aParser=0x3bb51e30, nsIContentSink *
+aSink=0x3aa83220) Line 1062 C++
+gkparser.dll!nsParser::DidBuildModel(unsigned int anErrorCode=0x00000000)
+Line 1316 + 0x11 C++
+gkparser.dll!nsParser::ResumeParse(int allowIteration=0x00000001, int
+aIsFinalChunk=0x00000001, int aCanInterrupt=0x00000001) Line 1953 C++
+gkparser.dll!nsParser::OnStopRequest(nsIRequest * request=0x3bc0cae8,
+nsISupports * aContext=0x00000000, unsigned int status=0x00000000) Line 2608
++ 0xf C++
+jar50.dll!nsJARChannel::OnStopRequest(nsIRequest * req=0x3bad35f8, nsISupports
+* ctx=0x00000000, unsigned int status=0x00000000) Line 689 C++
+necko.dll!nsInputStreamPump::OnStateStop() Line 505 C++
+necko.dll!nsInputStreamPump::OnInputStreamReady(nsIAsyncInputStream *
+stream=0x3bbf0048) Line 342 C++
+xpcom_core.dll!nsOutputStreamReadyEvent::EventHandler(PLEvent *
+plevent=0x3bb8b3cc) Line 119 C++
+xpcom_core.dll!PL_HandleEvent(PLEvent * self=0x3bb8b3cc) Line 693 C
+xpcom_core.dll!PL_ProcessPendingEvents(PLEventQueue * self=0x3ba81228) Line
+627 + 0x6 C
+xpcom_core.dll!_md_EventReceiverProc(HWND__ * hwnd=0x041f03b0, unsigned int
+uMsg=0x0000c142, unsigned int wParam=0x00000000, long lParam=0x3ba81228) Line
+1434 C
+user32.dll!_InternalCallWinProc@20() + 0x28
+user32.dll!_UserCallWinProcCheckWow@32() + 0xb7
+user32.dll!_DispatchMessageWorker@8() + 0xdc
+user32.dll!_DispatchMessageW@4() + 0xf
+gkwidget.dll!nsAppShell::DispatchNativeEvent(int aRealEvent=0x00000001, void *
+aEvent=0x012cc6a8) Line 221 C++
+appshell.dll!nsXULWindow::CreateNewContentWindow(int aChromeFlags=0x012cc6a8,
+nsIAppShell * aAppShell=0x00ad08d8, nsIXULWindow * * _retval=0x0012ade0) Line
+1808 C++
+appshell.dll!nsXULWindow::CreateNewWindow(int aChromeFlags=0x000004ae,
+nsIAppShell * aAppShell=0x00ad08d8, nsIXULWindow * * _retval=0x0012ade0) Line
+1690 C++
+appcomps.dll!nsAppStartup::CreateChromeWindow2(nsIWebBrowserChrome *
+aParent=0x017df488, unsigned int aChromeFlags=0x000004ae, unsigned int
+aContextFlags=0x00000000, nsIURI * aURI=0x3ba81638, int * aCancel=0x00000000,
+nsIWebBrowserChrome * * _retval=0x0012af0c) Line 892 C++
+embedcomponents.dll!nsWindowWatcher::OpenWindowJS(nsIDOMWindow *
+aParent=0x001293d8, const char * aUrl=0x010c9de1, const char * aName=0x3bcc6670,
+const char * aFeatures=0x3ba818a0, int aDialog=0x010c8949, unsigned int
+argc=0x3bc546f0, long * argv=0x3bcd2980, nsIDOMWindow * * _retval=0x010c8933)
+Line 620 + 0x31 C++
+embedcomponents.dll!nsWindowWatcher::OpenWindow(nsIDOMWindow *
+aParent=0x02478ebc, const char * aUrl=0x3b7cbd38, const char * aName=0x00000000,
+const char * aFeatures=0x3b947de0, nsISupports * aArguments=0x00000000,
+nsIDOMWindow * * _retval=0x0012b044) Line 458 + 0x2a C++
+gklayout.dll!GlobalWindowImpl::OpenInternal(const nsAString & aUrl={...},
+const nsAString & aName={...}, const nsAString & aOptions={...}, int
+aDialog=0x3ba818a0, long * argv=0x010c8949, unsigned int argc=0x3bc546f0,
+nsISupports * aExtraArgument=0x3bcd2980, nsIDOMWindow * * aReturn=0x010c8933)
+Line 4775 + 0x34 C++
+gklayout.dll!GlobalWindowImpl::Open(nsIDOMWindow * * _retval=0x010c8933)
+Line 3414 C++
+xpcom_core.dll!XPTC_InvokeByIndex(nsISupports * that=0x02478edc, unsigned int
+methodIndex=0x0000000f, unsigned int paramCount=0x00000001, nsXPTCVariant *
+params=0x0012b2a8) Line 102 C++
+xpc3250.dll!XPCWrappedNative::CallMethod(XPCCallContext & ccx={...},
+XPCWrappedNative::CallMode mode=CALL_METHOD) Line 2065 + 0x16 C++
+xpc3250.dll!XPC_WN_CallMethod(JSContext * cx=0x02479058, JSObject *
+obj=0x024061b8, unsigned int argc=0x00000003, long * argv=0x00aff818, long *
+vp=0x0012b50c) Line 1287 + 0xa C++
+js3250.dll!js_Invoke(JSContext * cx=0x3bc546f0, unsigned int argc=0x3bcd2980,
+unsigned int flags=0x010c8933) Line 1320 + 0x11 C
+js3250.dll!js_Interpret(JSContext * cx=0x3bc546f0, unsigned char *
+pc=0x3bcd2980, long * result=0x010c8933) Line 3612 C
+js3250.dll!js_Invoke(JSContext * cx=0x3bc546f0, unsigned int argc=0x3bcd2980,
+unsigned int flags=0x010c8933) Line 1340 + 0xc C
+js3250.dll!js_Interpret(JSContext * cx=0x3bc546f0, unsigned char *
+pc=0x3bcd2980, long * result=0x010c8933) Line 3612 C
+js3250.dll!js_Execute(JSContext * cx=0x00a9e130, JSObject * chain=0x024061b8,
+JSScript * script=0x3ba80cc8, JSStackFrame * down=0x00000000, unsigned int
+flags=0x00000000, long * result=0x0012b9d8) Line 1551 C
+js3250.dll!JS_EvaluateUCScriptForPrincipals(JSContext * cx=0x02479058,
+JSObject * obj=0x024061b8, JSPrincipals * principals=0x3b68ea7c, const unsigned
+short * chars=0x395769d8, unsigned int length=0x00000040, const char *
+filename=0x3b9ad5b8, unsigned int lineno=0x00000001, long * rval=0x0012b9d8)
+Line 3786 + 0xf C
+gklayout.dll!nsJSContext::EvaluateString(const nsAString & aScript={...}, void
+* aScopeObject=0x024061b8, nsIPrincipal * aPrincipal=0xffffffff, const char *
+aURL=0x3b9ad5b8, unsigned int aLineNo=0x00000001, const char *
+aVersion=0x00000000, nsAString * aRetValue=0x0012bb68, int *
+aIsUndefined=0x0012bb78) Line 995 + 0x36 C++
+gklayout.dll!nsJSThunk::EvaluateScript(nsIChannel * aChannel=0x010c8933) Line
+255 + 0x35 C++
+gklayout.dll!nsJSChannel::InternalOpen(int aIsAsync=0x00000001,
+nsIStreamListener * aListener=0x3ba80bc8, nsISupports * aContext=0x00000000,
+nsIInputStream * * aResult=0x00000000) Line 508 + 0x10 C++
+gklayout.dll!nsJSChannel::AsyncOpen(nsIStreamListener * aListener=0x3ba80bc8,
+nsISupports * aContext=0x00000000) Line 480 C++
+docshell.dll!nsDocumentOpenInfo::Open(nsIChannel * aChannel=0x3ba5dc90)
+Line 226 C++
+docshell.dll!nsURILoader::OpenURI(nsIChannel * channel=0x3ba800a8, int
+aIsContentPreferred=0x00000001, nsIInterfaceRequestor *
+aWindowContext=0x0247eb00) Line 846 + 0x9 C++
+docshell.dll!nsDocShell::DoChannelLoad(nsIChannel * aChannel=0x00000003,
+nsIURILoader * aURILoader=0x00af8f20) Line 5717 + 0x1b C++
+docshell.dll!nsDocShell::DoURILoad(nsIURI * aURI=0x3ba800a8, nsIURI *
+aReferrerURI=0x3b68cde8, nsISupports * aOwner=0x3b68ea78, const char *
+aTypeHint=0x3ba5e010, nsIInputStream * aPostData=0x00000000, nsIInputStream *
+aHeadersData=0x00000000, int firstParty=0x00000001, nsIDocShell * *
+aDocShell=0x00000000, nsIRequest * * aRequest=0x00000000) Line 5572 C++
+docshell.dll!nsDocShell::InternalLoad(nsIURI * aURI=0x3abc5bf8, nsIURI *
+aReferrer=0x00000000, nsISupports * aOwner=0x3bce80b8, int
+aInheritOwner=0x00000000, const unsigned short * aWindowTarget=0x00000000, const
+char * aTypeHint=0x001293d8, nsIInputStream * aPostData=0x010c9de1,
+nsIInputStream * aHeadersData=0x3bcc6670, unsigned int aLoadType=0x3ba818a0,
+nsISHEntry * aSHEntry=0x010c8949, int firstParty=0x3bc546f0, nsIDocShell * *
+aDocShell=0x3bcd2980, nsIRequest * * aRequest=0x010c8933) Line 5356 + 0x25 C++
+docshell.dll!nsWebShell::OnLinkClickSync(nsIContent * aContent=0x001293d8,
+nsLinkVerb aVerb=0x010c9de1, nsIURI * aURI=0x3bcc6670, const unsigned short *
+aTargetSpec=0x3ba818a0, nsIInputStream * aPostDataStream=0x010c8949,
+nsIInputStream * aHeadersDataStream=0x3bc546f0, nsIDocShell * *
+aDocShell=0x3bcd2980, nsIRequest * * aRequest=0x010c8933) Line 642 + 0x42 C++
+docshell.dll!OnLinkClickEvent::HandleEvent() Line 438 C++
+xpcom_core.dll!PL_HandleEvent(PLEvent * self=0x3ba800e8) Line 693 C
+xpcom_core.dll!PL_ProcessPendingEvents(PLEventQueue * self=0x3b71c080) Line
+627 + 0x6 C
+xpcom_core.dll!_md_EventReceiverProc(HWND__ * hwnd=0x01ff0324, unsigned int
+uMsg=0x0000c142, unsigned int wParam=0x00000000, long lParam=0x3b71c080) Line
+1434 C
+user32.dll!_InternalCallWinProc@20() + 0x28
+user32.dll!_UserCallWinProcCheckWow@32() + 0xb7
+user32.dll!_DispatchMessageWorker@8() + 0xdc
+user32.dll!_DispatchMessageW@4() + 0xf
+gkwidget.dll!nsAppShell::DispatchNativeEvent(int aRealEvent=0x00000001, void *
+aEvent=0x012cc6a8) Line 221 C++
+appshell.dll!nsXULWindow::CreateNewContentWindow(int aChromeFlags=0x012cc6a8,
+nsIAppShell * aAppShell=0x00ad08d8, nsIXULWindow * * _retval=0x0012c228) Line
+1808 C++
+appshell.dll!nsXULWindow::CreateNewWindow(int aChromeFlags=0x000004a6,
+nsIAppShell * aAppShell=0x00ad08d8, nsIXULWindow * * _retval=0x0012c228) Line
+1690 C++
+appcomps.dll!nsAppStartup::CreateChromeWindow2(nsIWebBrowserChrome *
+aParent=0x017df488, unsigned int aChromeFlags=0x000004a6, unsigned int
+aContextFlags=0x00000000, nsIURI * aURI=0x3b900820, int * aCancel=0x00000000,
+nsIWebBrowserChrome * * _retval=0x0012c354) Line 892 C++
+embedcomponents.dll!nsWindowWatcher::OpenWindowJS(nsIDOMWindow *
+aParent=0x001293d8, const char * aUrl=0x010c9de1, const char * aName=0x3bcc6670,
+const char * aFeatures=0x3ba818a0, int aDialog=0x010c8949, unsigned int
+argc=0x3bc546f0, long * argv=0x3bcd2980, nsIDOMWindow * * _retval=0x010c8933)
+Line 620 + 0x31 C++
+embedcomponents.dll!nsWindowWatcher::OpenWindow(nsIDOMWindow *
+aParent=0x02478ebc, const char * aUrl=0x3b8e3620, const char * aName=0x00000000,
+const char * aFeatures=0x3a3f55a8, nsISupports * aArguments=0x00000000,
+nsIDOMWindow * * _retval=0x0012c48c) Line 458 + 0x2a C++
+gklayout.dll!GlobalWindowImpl::OpenInternal(const nsAString & aUrl={...},
+const nsAString & aName={...}, const nsAString & aOptions={...}, int
+aDialog=0x3ba818a0, long * argv=0x010c8949, unsigned int argc=0x3bc546f0,
+nsISupports * aExtraArgument=0x3bcd2980, nsIDOMWindow * * aReturn=0x010c8933)
+Line 4775 + 0x34 C++
+gklayout.dll!GlobalWindowImpl::Open(nsIDOMWindow * * _retval=0x010c8933)
+Line 3414 C++
+xpcom_core.dll!XPTC_InvokeByIndex(nsISupports * that=0x02478edc, unsigned int
+methodIndex=0x0000000f, unsigned int paramCount=0x00000001, nsXPTCVariant *
+params=0x0012c6f0) Line 102 C++
+xpc3250.dll!XPCWrappedNative::CallMethod(XPCCallContext & ccx={...},
+XPCWrappedNative::CallMode mode=CALL_METHOD) Line 2065 + 0x16 C++
+xpc3250.dll!XPC_WN_CallMethod(JSContext * cx=0x02479058, JSObject *
+obj=0x024061b8, unsigned int argc=0x00000003, long * argv=0x00aff818, long *
+vp=0x0012c954) Line 1287 + 0xa C++
+js3250.dll!js_Invoke(JSContext * cx=0x3bc546f0, unsigned int argc=0x3bcd2980,
+unsigned int flags=0x010c8933) Line 1320 + 0x11 C
+js3250.dll!js_Interpret(JSContext * cx=0x3bc546f0, unsigned char *
+pc=0x3bcd2980, long * result=0x010c8933) Line 3612 C
+js3250.dll!js_Invoke(JSContext * cx=0x3bc546f0, unsigned int argc=0x3bcd2980,
+unsigned int flags=0x010c8933) Line 1340 + 0xc C
+js3250.dll!js_Interpret(JSContext * cx=0x3bc546f0, unsigned char *
+pc=0x3bcd2980, long * result=0x010c8933) Line 3612 C
+js3250.dll!js_Execute(JSContext * cx=0x00a9e130, JSObject * chain=0x024061b8,
+JSScript * script=0x3b917910, JSStackFrame * down=0x00000000, unsigned int
+flags=0x00000000, long * result=0x0012ce20) Line 1551 C
+js3250.dll!JS_EvaluateUCScriptForPrincipals(JSContext * cx=0x02479058,
+JSObject * obj=0x024061b8, JSPrincipals * principals=0x3b68ea7c, const unsigned
+short * chars=0x0012ce80, unsigned int length=0x0000003c, const char *
+filename=0x3a3f5638, unsigned int lineno=0x00000001, long * rval=0x0012ce20)
+Line 3786 + 0xf C
+gklayout.dll!nsJSContext::EvaluateString(const nsAString & aScript={...}, void
+* aScopeObject=0x024061b8, nsIPrincipal * aPrincipal=0xffffffff, const char *
+aURL=0x3a3f5638, unsigned int aLineNo=0x00000001, const char *
+aVersion=0x00000000, nsAString * aRetValue=0x0012cfb0, int *
+aIsUndefined=0x0012cfc0) Line 995 + 0x36 C++
+gklayout.dll!nsJSThunk::EvaluateScript(nsIChannel * aChannel=0x010c8933) Line
+255 + 0x35 C++
+gklayout.dll!nsJSChannel::InternalOpen(int aIsAsync=0x00000001,
+nsIStreamListener * aListener=0x3b72c2e0, nsISupports * aContext=0x00000000,
+nsIInputStream * * aResult=0x00000000) Line 508 + 0x10 C++
+gklayout.dll!nsJSChannel::AsyncOpen(nsIStreamListener * aListener=0x3b72c2e0,
+nsISupports * aContext=0x00000000) Line 480 C++
+docshell.dll!nsDocumentOpenInfo::Open(nsIChannel * aChannel=0x3b923620)
+Line 226 C++
+docshell.dll!nsURILoader::OpenURI(nsIChannel * channel=0x3b6931e8, int
+aIsContentPreferred=0x00000001, nsIInterfaceRequestor *
+aWindowContext=0x0247eb00) Line 846 + 0x9 C++
+docshell.dll!nsDocShell::DoChannelLoad(nsIChannel * aChannel=0x00000003,
+nsIURILoader * aURILoader=0x00af8f20) Line 5717 + 0x1b C++
+docshell.dll!nsDocShell::DoURILoad(nsIURI * aURI=0x3b6931e8, nsIURI *
+aReferrerURI=0x3b68cde8, nsISupports * aOwner=0x3b68ea78, const char *
+aTypeHint=0x3b7b55e8, nsIInputStream * aPostData=0x00000000, nsIInputStream *
+aHeadersData=0x00000000, int firstParty=0x00000001, nsIDocShell * *
+aDocShell=0x00000000, nsIRequest * * aRequest=0x00000000) Line 5572 C++
+docshell.dll!nsDocShell::InternalLoad(nsIURI * aURI=0x3abc5bf8, nsIURI *
+aReferrer=0x00000000, nsISupports * aOwner=0x3bce80b8, int
+aInheritOwner=0x00000000, const unsigned short * aWindowTarget=0x00000000, const
+char * aTypeHint=0x001293d8, nsIInputStream * aPostData=0x010c9de1,
+nsIInputStream * aHeadersData=0x3bcc6670, unsigned int aLoadType=0x3ba818a0,
+nsISHEntry * aSHEntry=0x010c8949, int firstParty=0x3bc546f0, nsIDocShell * *
+aDocShell=0x3bcd2980, nsIRequest * * aRequest=0x010c8933) Line 5356 + 0x25 C++
+docshell.dll!nsWebShell::OnLinkClickSync(nsIContent * aContent=0x001293d8,
+nsLinkVerb aVerb=0x010c9de1, nsIURI * aURI=0x3bcc6670, const unsigned short *
+aTargetSpec=0x3ba818a0, nsIInputStream * aPostDataStream=0x010c8949,
+nsIInputStream * aHeadersDataStream=0x3bc546f0, nsIDocShell * *
+aDocShell=0x3bcd2980, nsIRequest * * aRequest=0x010c8933) Line 642 + 0x42 C++
+docshell.dll!OnLinkClickEvent::HandleEvent() Line 438 C++
+xpcom_core.dll!PL_HandleEvent(PLEvent * self=0x3b80d178) Line 693 C
+xpcom_core.dll!PL_ProcessPendingEvents(PLEventQueue * self=0x3b3f1e20) Line
+627 + 0x6 C
+xpcom_core.dll!_md_EventReceiverProc(HWND__ * hwnd=0x02890314, unsigned int
+uMsg=0x0000c142, unsigned int wParam=0x00000000, long lParam=0x3b3f1e20) Line
+1434 C
+user32.dll!_InternalCallWinProc@20() + 0x28
+user32.dll!_UserCallWinProcCheckWow@32() + 0xb7
+user32.dll!_DispatchMessageWorker@8() + 0xdc
+user32.dll!_DispatchMessageW@4() + 0xf
+gkwidget.dll!nsAppShell::DispatchNativeEvent(int aRealEvent=0x00000001, void *
+aEvent=0x012cc6a8) Line 221 C++
+appshell.dll!nsXULWindow::CreateNewContentWindow(int aChromeFlags=0x012cc6a8,
+nsIAppShell * aAppShell=0x00ad08d8, nsIXULWindow * * _retval=0x0012d670) Line
+1808 C++
+appshell.dll!nsXULWindow::CreateNewWindow(int aChromeFlags=0x000004a6,
+nsIAppShell * aAppShell=0x00ad08d8, nsIXULWindow * * _retval=0x0012d670) Line
+1690 C++
+appcomps.dll!nsAppStartup::CreateChromeWindow2(nsIWebBrowserChrome *
+aParent=0x017df488, unsigned int aChromeFlags=0x000004a6, unsigned int
+aContextFlags=0x00000000, nsIURI * aURI=0x3b4c22f0, int * aCancel=0x00000000,
+nsIWebBrowserChrome * * _retval=0x0012d79c) Line 892 C++
+embedcomponents.dll!nsWindowWatcher::OpenWindowJS(nsIDOMWindow *
+aParent=0x001293d8, const char * aUrl=0x010c9de1, const char * aName=0x3bcc6670,
+const char * aFeatures=0x3ba818a0, int aDialog=0x010c8949, unsigned int
+argc=0x3bc546f0, long * argv=0x3bcd2980, nsIDOMWindow * * _retval=0x010c8933)
+Line 620 + 0x31 C++
+embedcomponents.dll!nsWindowWatcher::OpenWindow(nsIDOMWindow *
+aParent=0x02478ebc, const char * aUrl=0x3b3755e8, const char * aName=0x00000000,
+const char * aFeatures=0x39dc9548, nsISupports * aArguments=0x00000000,
+nsIDOMWindow * * _retval=0x0012d8d4) Line 458 + 0x2a C++
+gklayout.dll!GlobalWindowImpl::OpenInternal(const nsAString & aUrl={...},
+const nsAString & aName={...}, const nsAString & aOptions={...}, int
+aDialog=0x3ba818a0, long * argv=0x010c8949, unsigned int argc=0x3bc546f0,
+nsISupports * aExtraArgument=0x3bcd2980, nsIDOMWindow * * aReturn=0x010c8933)
+Line 4775 + 0x34 C++
+gklayout.dll!GlobalWindowImpl::Open(nsIDOMWindow * * _retval=0x010c8933)
+Line 3414 C++
+xpcom_core.dll!XPTC_InvokeByIndex(nsISupports * that=0x02478edc, unsigned int
+methodIndex=0x0000000f, unsigned int paramCount=0x00000001, nsXPTCVariant *
+params=0x0012db38) Line 102 C++
+xpc3250.dll!XPCWrappedNative::CallMethod(XPCCallContext & ccx={...},
+XPCWrappedNative::CallMode mode=CALL_METHOD) Line 2065 + 0x16 C++
+xpc3250.dll!XPC_WN_CallMethod(JSContext * cx=0x02479058, JSObject *
+obj=0x024061b8, unsigned int argc=0x00000003, long * argv=0x00aff818, long *
+vp=0x0012dd9c) Line 1287 + 0xa C++
+js3250.dll!js_Invoke(JSContext * cx=0x3bc546f0, unsigned int argc=0x3bcd2980,
+unsigned int flags=0x010c8933) Line 1320 + 0x11 C
+js3250.dll!js_Interpret(JSContext * cx=0x3bc546f0, unsigned char *
+pc=0x3bcd2980, long * result=0x010c8933) Line 3612 C
+js3250.dll!js_Invoke(JSContext * cx=0x3bc546f0, unsigned int argc=0x3bcd2980,
+unsigned int flags=0x010c8933) Line 1340 + 0xc C
+js3250.dll!js_Interpret(JSContext * cx=0x3bc546f0, unsigned char *
+pc=0x3bcd2980, long * result=0x010c8933) Line 3612 C
+js3250.dll!js_Execute(JSContext * cx=0x00a9e130, JSObject * chain=0x024061b8,
+JSScript * script=0x3b227cb0, JSStackFrame * down=0x00000000, unsigned int
+flags=0x00000000, long * result=0x0012e268) Line 1551 C
+js3250.dll!JS_EvaluateUCScriptForPrincipals(JSContext * cx=0x02479058,
+JSObject * obj=0x024061b8, JSPrincipals * principals=0x3ad25dec, const unsigned
+short * chars=0x3b2c8f00, unsigned int length=0x00000043, const char *
+filename=0x3b657ff8, unsigned int lineno=0x00000001, long * rval=0x0012e268)
+Line 3786 + 0xf C
+gklayout.dll!nsJSContext::EvaluateString(const nsAString & aScript={...}, void
+* aScopeObject=0x024061b8, nsIPrincipal * aPrincipal=0xffffffff, const char *
+aURL=0x3b657ff8, unsigned int aLineNo=0x00000001, const char *
+aVersion=0x00000000, nsAString * aRetValue=0x0012e3f8, int *
+aIsUndefined=0x0012e408) Line 995 + 0x36 C++
+gklayout.dll!nsJSThunk::EvaluateScript(nsIChannel * aChannel=0x010c8933) Line
+255 + 0x35 C++
+gklayout.dll!nsJSChannel::InternalOpen(int aIsAsync=0x00000001,
+nsIStreamListener * aListener=0x3b10a3a0, nsISupports * aContext=0x00000000,
+nsIInputStream * * aResult=0x00000000) Line 508 + 0x10 C++
+gklayout.dll!nsJSChannel::AsyncOpen(nsIStreamListener * aListener=0x3b10a3a0,
+nsISupports * aContext=0x00000000) Line 480 C++
+docshell.dll!nsDocumentOpenInfo::Open(nsIChannel * aChannel=0x3b48e080)
+Line 226 C++
+docshell.dll!nsURILoader::OpenURI(nsIChannel * channel=0x3b51ea08, int
+aIsContentPreferred=0x00000001, nsIInterfaceRequestor *
+aWindowContext=0x0247eb00) Line 846 + 0x9 C++
+docshell.dll!nsDocShell::DoChannelLoad(nsIChannel * aChannel=0x00000003,
+nsIURILoader * aURILoader=0x00af8f20) Line 5717 + 0x1b C++
+docshell.dll!nsDocShell::DoURILoad(nsIURI * aURI=0x3b51ea08, nsIURI *
+aReferrerURI=0x3ad207a0, nsISupports * aOwner=0x3ad25de8, const char *
+aTypeHint=0x3a3e1a00, nsIInputStream * aPostData=0x00000000, nsIInputStream *
+aHeadersData=0x00000000, int firstParty=0x00000001, nsIDocShell * *
+aDocShell=0x00000000, nsIRequest * * aRequest=0x00000000) Line 5572 C++
+docshell.dll!nsDocShell::InternalLoad(nsIURI * aURI=0x3abc5bf8, nsIURI *
+aReferrer=0x00000000, nsISupports * aOwner=0x3bce80b8, int
+aInheritOwner=0x00000000, const unsigned short * aWindowTarget=0x00000000, const
+char * aTypeHint=0x001293d8, nsIInputStream * aPostData=0x010c9de1,
+nsIInputStream * aHeadersData=0x3bcc6670, unsigned int aLoadType=0x3ba818a0,
+nsISHEntry * aSHEntry=0x010c8949, int firstParty=0x3bc546f0, nsIDocShell * *
+aDocShell=0x3bcd2980, nsIRequest * * aRequest=0x010c8933) Line 5356 + 0x25 C++
+docshell.dll!nsWebShell::OnLinkClickSync(nsIContent * aContent=0x001293d8,
+nsLinkVerb aVerb=0x010c9de1, nsIURI * aURI=0x3bcc6670, const unsigned short *
+aTargetSpec=0x3ba818a0, nsIInputStream * aPostDataStream=0x010c8949,
+nsIInputStream * aHeadersDataStream=0x3bc546f0, nsIDocShell * *
+aDocShell=0x3bcd2980, nsIRequest * * aRequest=0x010c8933) Line 642 + 0x42 C++
+docshell.dll!OnLinkClickEvent::HandleEvent() Line 438 C++
+xpcom_core.dll!PL_HandleEvent(PLEvent * self=0x3b66ea98) Line 693 C
+xpcom_core.dll!PL_ProcessPendingEvents(PLEventQueue * self=0x3b63a6e8) Line
+627 + 0x6 C
+xpcom_core.dll!_md_EventReceiverProc(HWND__ * hwnd=0x014f02f0, unsigned int
+uMsg=0x0000c142, unsigned int wParam=0x00000000, long lParam=0x3b63a6e8) Line
+1434 C
+user32.dll!_InternalCallWinProc@20() + 0x28
+user32.dll!_UserCallWinProcCheckWow@32() + 0xb7
+user32.dll!_DispatchMessageWorker@8() + 0xdc
+user32.dll!_DispatchMessageW@4() + 0xf
+gkwidget.dll!nsAppShell::DispatchNativeEvent(int aRealEvent=0x00000001, void *
+aEvent=0x012cc6a8) Line 221 C++
+appshell.dll!nsXULWindow::CreateNewContentWindow(int aChromeFlags=0x012cc6a8,
+nsIAppShell * aAppShell=0x00ad08d8, nsIXULWindow * * _retval=0x0012eab8) Line
+1808 C++
+appshell.dll!nsXULWindow::CreateNewWindow(int aChromeFlags=0x000004a6,
+nsIAppShell * aAppShell=0x00ad08d8, nsIXULWindow * * _retval=0x0012eab8) Line
+1690 C++
+appcomps.dll!nsAppStartup::CreateChromeWindow2(nsIWebBrowserChrome *
+aParent=0x017df488, unsigned int aChromeFlags=0x000004a6, unsigned int
+aContextFlags=0x00000000, nsIURI * aURI=0x3b634100, int * aCancel=0x00000000,
+nsIWebBrowserChrome * * _retval=0x0012ebe4) Line 892 C++
+embedcomponents.dll!nsWindowWatcher::OpenWindowJS(nsIDOMWindow *
+aParent=0x001293d8, const char * aUrl=0x010c9de1, const char * aName=0x3bcc6670,
+const char * aFeatures=0x3ba818a0, int aDialog=0x010c8949, unsigned int
+argc=0x3bc546f0, long * argv=0x3bcd2980, nsIDOMWindow * * _retval=0x010c8933)
+Line 620 + 0x31 C++
+embedcomponents.dll!nsWindowWatcher::OpenWindow(nsIDOMWindow *
+aParent=0x02478ebc, const char * aUrl=0x3b5da1c0, const char * aName=0x00000000,
+const char * aFeatures=0x3a363240, nsISupports * aArguments=0x00000000,
+nsIDOMWindow * * _retval=0x0012ed1c) Line 458 + 0x2a C++
+gklayout.dll!GlobalWindowImpl::OpenInternal(const nsAString & aUrl={...},
+const nsAString & aName={...}, const nsAString & aOptions={...}, int
+aDialog=0x3ba818a0, long * argv=0x010c8949, unsigned int argc=0x3bc546f0,
+nsISupports * aExtraArgument=0x3bcd2980, nsIDOMWindow * * aReturn=0x010c8933)
+Line 4775 + 0x34 C++
+gklayout.dll!GlobalWindowImpl::Open(nsIDOMWindow * * _retval=0x010c8933)
+Line 3414 C++
+xpcom_core.dll!XPTC_InvokeByIndex(nsISupports * that=0x02478edc, unsigned int
+methodIndex=0x0000000f, unsigned int paramCount=0x00000001, nsXPTCVariant *
+params=0x0012ef80) Line 102 C++
+xpc3250.dll!XPCWrappedNative::CallMethod(XPCCallContext & ccx={...},
+XPCWrappedNative::CallMode mode=CALL_METHOD) Line 2065 + 0x16 C++
+xpc3250.dll!XPC_WN_CallMethod(JSContext * cx=0x02479058, JSObject *
+obj=0x024061b8, unsigned int argc=0x00000003, long * argv=0x00aff818, long *
+vp=0x0012f1e4) Line 1287 + 0xa C++
+js3250.dll!js_Invoke(JSContext * cx=0x3bc546f0, unsigned int argc=0x3bcd2980,
+unsigned int flags=0x010c8933) Line 1320 + 0x11 C
+js3250.dll!js_Interpret(JSContext * cx=0x3bc546f0, unsigned char *
+pc=0x3bcd2980, long * result=0x010c8933) Line 3612 C
+js3250.dll!js_Invoke(JSContext * cx=0x3bc546f0, unsigned int argc=0x3bcd2980,
+unsigned int flags=0x010c8933) Line 1340 + 0xc C
+js3250.dll!js_Interpret(JSContext * cx=0x3bc546f0, unsigned char *
+pc=0x3bcd2980, long * result=0x010c8933) Line 3612 C
+js3250.dll!js_Execute(JSContext * cx=0x00a9e130, JSObject * chain=0x024061b8,
+JSScript * script=0x3b6303a8, JSStackFrame * down=0x00000000, unsigned int
+flags=0x00000000, long * result=0x0012f6b0) Line 1551 C
+js3250.dll!JS_EvaluateUCScriptForPrincipals(JSContext * cx=0x02479058,
+JSObject * obj=0x024061b8, JSPrincipals * principals=0x3ad25dec, const unsigned
+short * chars=0x3b63a580, unsigned int length=0x00000042, const char *
+filename=0x3a2f0b88, unsigned int lineno=0x00000001, long * rval=0x0012f6b0)
+Line 3786 + 0xf C
+gklayout.dll!nsJSContext::EvaluateString(const nsAString & aScript={...}, void
+* aScopeObject=0x024061b8, nsIPrincipal * aPrincipal=0xffffffff, const char *
+aURL=0x3a2f0b88, unsigned int aLineNo=0x00000001, const char *
+aVersion=0x00000000, nsAString * aRetValue=0x0012f840, int *
+aIsUndefined=0x0012f850) Line 995 + 0x36 C++
+gklayout.dll!nsJSThunk::EvaluateScript(nsIChannel * aChannel=0x010c8933) Line
+255 + 0x35 C++
+gklayout.dll!nsJSChannel::InternalOpen(int aIsAsync=0x00000001,
+nsIStreamListener * aListener=0x3b63a540, nsISupports * aContext=0x00000000,
+nsIInputStream * * aResult=0x00000000) Line 508 + 0x10 C++
+gklayout.dll!nsJSChannel::AsyncOpen(nsIStreamListener * aListener=0x3b63a540,
+nsISupports * aContext=0x00000000) Line 480 C++
+docshell.dll!nsDocumentOpenInfo::Open(nsIChannel * aChannel=0x36e45e98)
+Line 226 C++
+docshell.dll!nsURILoader::OpenURI(nsIChannel * channel=0x3b63a440, int
+aIsContentPreferred=0x00000001, nsIInterfaceRequestor *
+aWindowContext=0x0247eb00) Line 846 + 0x9 C++
+docshell.dll!nsDocShell::DoChannelLoad(nsIChannel * aChannel=0x00000003,
+nsIURILoader * aURILoader=0x00af8f20) Line 5717 + 0x1b C++
+docshell.dll!nsDocShell::DoURILoad(nsIURI * aURI=0x3b63a440, nsIURI *
+aReferrerURI=0x3ad207a0, nsISupports * aOwner=0x3ad25de8, const char *
+aTypeHint=0x3b63a4f8, nsIInputStream * aPostData=0x00000000, nsIInputStream *
+aHeadersData=0x00000000, int firstParty=0x00000001, nsIDocShell * *
+aDocShell=0x00000000, nsIRequest * * aRequest=0x00000000) Line 5572 C++
+docshell.dll!nsDocShell::InternalLoad(nsIURI * aURI=0x3abc5bf8, nsIURI *
+aReferrer=0x00000000, nsISupports * aOwner=0x3bce80b8, int
+aInheritOwner=0x00000000, const unsigned short * aWindowTarget=0x00000000, const
+char * aTypeHint=0x001293d8, nsIInputStream * aPostData=0x010c9de1,
+nsIInputStream * aHeadersData=0x3bcc6670, unsigned int aLoadType=0x3ba818a0,
+nsISHEntry * aSHEntry=0x010c8949, int firstParty=0x3bc546f0, nsIDocShell * *
+aDocShell=0x3bcd2980, nsIRequest * * aRequest=0x010c8933) Line 5356 + 0x25 C++
+docshell.dll!nsWebShell::OnLinkClickSync(nsIContent * aContent=0x001293d8,
+nsLinkVerb aVerb=0x010c9de1, nsIURI * aURI=0x3bcc6670, const unsigned short *
+aTargetSpec=0x3ba818a0, nsIInputStream * aPostDataStream=0x010c8949,
+nsIInputStream * aHeadersDataStream=0x3bc546f0, nsIDocShell * *
+aDocShell=0x3bcd2980, nsIRequest * * aRequest=0x010c8933) Line 642 + 0x42 C++
+docshell.dll!OnLinkClickEvent::HandleEvent() Line 438 C++
+xpcom_core.dll!PL_HandleEvent(PLEvent * self=0x3b63a480) Line 693 C
+xpcom_core.dll!PL_ProcessPendingEvents(PLEventQueue * self=0x00a88810) Line
+627 + 0x6 C
+xpcom_core.dll!_md_EventReceiverProc(HWND__ * hwnd=0x0012008a, unsigned int
+uMsg=0x0000c142, unsigned int wParam=0x00000000, long lParam=0x00a88810) Line
+1434 C
+user32.dll!_InternalCallWinProc@20() + 0x28
+user32.dll!_UserCallWinProcCheckWow@32() + 0xb7
+user32.dll!_DispatchMessageWorker@8() + 0xdc
+user32.dll!_DispatchMessageW@4() + 0xf
+gkwidget.dll!nsAppShell::Run() Line 159 C++
+appcomps.dll!nsAppStartup::Run() Line 216 C++
+mozilla.exe!main1(int argc=0x00000003, char * * argv=0x002e48c0, nsISupports *
+nativeApp=0x00000000) Line 1336 + 0x9 C++
+mozilla.exe!main(int argc=0x00000003, char * * argv=0x002e48c0) Line 1828 +
+0x13 C++
+mozilla.exe!WinMain(HINSTANCE__ * __formal=0x00400000, HINSTANCE__ *
+__formal=0x00400000, char * args=0x00152356, HINSTANCE__ * __formal=0x00400000)
+Line 1856 + 0x17 C++
+mozilla.exe!WinMainCRTStartup() Line 390 + 0x1b C
+kernel32.dll!_BaseProcessStart@4() + 0x23

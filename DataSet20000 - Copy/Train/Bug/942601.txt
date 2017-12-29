@@ -1,0 +1,14 @@
+Online Path of Exile Passive Skill Tree editor generates SessionStore jank by saving lots of page history
+(Created in response to bug 934934 comment #18)
+
+Having various Path of Exile character builds open significantly impacts SessionStore. It seems that every time you modify one of these builds, it creates a new entry in the page history, and each entry gets saved. I had two builds open in pinned tabs with lots of history from tweaking each build, and this caused me to experience significant jank whenever the SessionStore file was updated. about:sessionstore showed me that these tabs were causing around 26MiB of SessionStore usage, and Windows' task manager showed 400-500 MiB spikes in memory usage every time the SessionStore file was written.
+
+Opening these builds in new tabs (thereby losing the back button history) then clearing the closed tabs entries in about:sessionstore made SessionStore size drop back down to ~400kiB and made the jank go away (it also lowered average total memory usage by about 100MiB, even beyond eliminating the spikes).
+
+See the example build in the associated URL. You can play around with it by deallocating any of the leaf nodes and putting these points into something else - each change will increase the amount of pages showing up in the back button page history by one.
+
+As I see it there are two problems here:
+1) Page history ends up containing a large amount of Passive Skill Tree page instances - about:sessionstore showed over 300 children for each pinned tab. Perhaps the amount of data saved this way could be capped, but going back a long way in a tab's history is also a possible use case.
+2) SessionStore janks Firefox significantly while reading or writing all this data - a second or two on my fast PC - and memory usage spikes considerably. I don't know how much of this is done asynchronously right now, but I would expect that
+a) Nothing in the page history could have changed, so that data shouldn't need to be updated and
+b) If it is necessary to handle these entries every time, at least the inactive content should be done asynchronously (I expect that at least some part of saving *active* content will always be synchronous).

@@ -1,0 +1,27 @@
+crash in __delayLoadHelper2 | ffi_closure_STDCALL
+This bug wa filed from the Socorro interface and is
+report bp-266dbe5e-2d91-4d69-9a82-48ccb2140120.
+=============================================================
+
+This signature show up a #4 on the Aurora to crash list right now and it's pretty weird in term of stacks, most of them look similar to this one:
+
+0 KERNELBASE.dll RaiseException
+1 mozjs.dll __delayLoadHelper2 f:/dd/vctools/delayimp/delayhlp.cpp
+2 mozjs.dll ffi_closure_STDCALL
+3 xul.dll NS_InitXPCOM2 xpcom/build/nsXPComInit.cpp
+4 xul.dll ScopedXPCOMStartup::Initialize() toolkit/xre/nsAppRunner.cpp
+5 xul.dll XREMain::XRE_main(int,char * * const,nsXREAppData const *) toolkit/xre/nsAppRunner.cpp
+6 xul.dll XRE_main toolkit/xre/nsAppRunner.cpp
+7 yXpJpNW.TQO yXpJpNW.TQO@0x190c
+8 @0x40a2a8
+9 @0x74535f45
+10 msvcr100.dll msvcr100.dll@0x8b582
+11 @0x59330000
+12 yXpJpNW.TQO yXpJpNW.TQO@0x21d3
+
+The "yXpJpNW.TQO" file name here is a different random name in other reports, e.g. bp-568ff717-c0e7-4322-8c11-891042140120 ha "qtnouFI.yCR", bp-ed497ca6-2099-43e0-8c70-d9e4a2140120 ha "tnouFIy.CRI", bp-704cddeb-feb3-457c-a0e7-94c982140120 ha "UmuvyXp.JPp" etc.
+Those randomly-named file also show up on the module lists, without any debug ID etc.
+
+I found one report in bp-09e91f4c-0130-45b7-9103-e1c3d2140120 that doe have a better stack and no such weird module name, but then that one is not at startup.
+
+The crash happens across all Windows version from XP to 8.1 and on both 28.0a2 and 29.0a1.

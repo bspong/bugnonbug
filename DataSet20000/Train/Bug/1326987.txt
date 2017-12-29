@@ -1,0 +1,77 @@
+Session restore - Firefox windows blink many times and switch places
+>>>   My Info:   Win7_64, Nightly 49, 32bit, ID 20160526082509
+STR_1:
+1. Launch new Firefox profile
+2. Swith Firefox window to normal (not maximized) mode
+3. Open url "data:,red" in a new tab
+4. Open url "data:,green" in a new normal window. Open url "data:,blue" in a new normal window
+5. In the window with "data:,blue" click Australis menu -> Close Firefox
+6. Launch Firefox profile from Step 1
+
+
+STR_2:
+1. Launch new Firefox profile
+2. Maximize Firefox window
+3. Open url "data:,red" in a new tab
+4. Open url "data:,green" in a new normal window. Open url "data:,blue" in a new normal window
+5. In the tab "data:,blue" click Australis menu -> Close Firefox
+6. Launch Firefox profile from Step 1
+
+
+AR:  (read closely)
+ In Step 4 the sequence of 3 Firefox windows on Windows Taskbar is: "red", then "green", then "blue".
+ In Step 6:  There're 8 stages
+   1) Firefox "red" window opens at the same place as "blue" window, and in the same mode
+     (maximized/normal). The first tab shows "Connecting...". Actually, browser's trying to "connect"
+      to about:home  (see bug 1185158 that was intentionally ignored for a long time)
+   2) Tabs are created in that window
+   3) "red" window teleports to its position in normal (not maximized) mode
+   4) "red" window restores its real mode
+   5) 2nd FF window opens above other windows, becomes focused (either "green" or "blue")
+   6) 3rd FF window opens above other windows, becomes focused (either "green" or "blue")
+   7) "Connecting..." tab in the window from (5) closes, and a tab with normal url is created
+     (see bug 1185158). During this stage, window from (5) is displayed above other windows
+   8) "Connecting..." tab in the window from (6) closes, and a tab with normal url is created
+     (see bug 1185158). During this stage, window from (6) is displayed above other windows
+
+ So, windows blink 6 times: (3), (4), (5), (6), (7), (8). "green" and "blue" windows restore
+ their position and mode correctly, but they often switch places on Windows Taskbar.
+
+ER:  All windows should be restored in their original positions on Windows Taskbar w/ minimal blinking
+
+
+Notes:
+1) Explanation of ER (positions on Taskbar):
+   After senseless removal of Panorama, I have to store tabs in several windows instead of tab groups,
+   therefore I rely on windows positions in Taskbar (i.e. sequence of buttons in Windows Taskbar)
+   My expectation is either 1.1 or some better ideas to restore Firefox windows positions in Taskbar
+ 1.1) Firefox should first open necessary number of windows. When browser determines the sequence of
+      opened windows, it should open each tab from the last session in correct window (1st, 2nd, etc)
+
+2) Explanation of ER (blinking):
+   At least one of 2.1, 2.2, 2.3, 2.4 or better ideas to recuce blinking
+ 2.1) Firefox should first open the last focused window from the last session, focus it and place it
+      above other windows. Then browser should open other tabs
+ 2.2) When browser opens window, it should open it in the same place and same mode as in last session
+ 2.3) When browser opens window, it shouldn't focus it and place above other windows (unless it's the
+      tab that was the last focused in the last session)
+ 2.4) When browser opens window, it should not focus it and place above other windows afterwards, when
+      it opens tabs in that window (unless it's the tab that was the last focused in the last session)
+
+3) Explanation of ER (further explanation)
+   (1.1) in conjunction with (2.1) means either 3.1 or 3.2 if possible. Also, I'm sure that Firefox
+   developers, who have better understanding, might know what _really_ can be done to fix this bug.
+ 3.1) Firefox should open necessary number of windows [in Taskbar, but don't create the actual windows
+      yet (normal windows, not buttons on Taskbar)]. Then, when browser determines the sequence of
+      opened windows, it should open each tab from the last session in correct window (1st, 2nd, etc)
+ 3.2) Firefox should open necessary number of windows [in minimized mode]. Then, when browser
+      determines the sequence of opened windows, it should open each tab from the last session
+      in correct window (1st, 2nd, etc)
+
+4) It's possible for window to become focused and not placed above other windows.
+   It's possible for window to become not focused and placed above other windows.
+   This is not description of any bug, it's just my observations. On the contrary, this is what
+   Firefox could probably use to recuce blinking. OS Windows 7 is obviously capable of doing this.
+   I have STR for this, but don't know if it's possible to control this from Firefox side
+
+In particular, if last focused window was maximized, I should see only that window when I launch FF.

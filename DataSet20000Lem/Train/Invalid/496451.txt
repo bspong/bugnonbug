@@ -1,0 +1,37 @@
+Setting Default Search Engine Back Does not Work
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.10) Gecko/2009042316 Firefox/3.0.10
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.10) Gecko/2009042316 Firefox/3.0.10
+
+Sometimes a developer may wish to add a search engine to Firefox through an add-on. But adding a search engine through nsIBrowserSearchService change the default engine without user consent. So default search engine should be reset back. But setting default search engine back doe not work somehow.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Use below overlay javascript through chrome privileges. It will add bugzilla search engine to Search Toolbar of Firefox.
+
+
+
+var ss=Components.classes["@mozilla.org/browser/search-service;1"].getService(Components.interfaces.nsIBrowserSearchService);
+var curEngine=ss.currentEngine;
+var io = Components.classes["@mozilla.org/network/io-service;1"]
+.getService(Components.interfaces.nsIIOService);
+var URL = ios.newURI("https://bugzilla.mozilla.org/search_plugin.cgi",null,null);
+ss.addEngine(URL.spec,Components.interfaces.nsISearchEngine.DATA_XML,"https://bugzilla.mozilla.org/skins/custom/images/bugzilla.png",false);
+ss.currentEngine=curEngine;
+
+
+2. ss.currentEngine=curEngine;
+is the line which set Google Search Engine back a default search engine.
+
+
+Actual Results:
+Bugzilla Search engine is persistent although ss.currentEngine=curEngine; is used.
+
+Expected Results:
+ss.currentEngine=curEngine;
+should set Google Search Engine back a default search engine.
+
+
+Windows XP
+Firefox 3.0.10
+Default Theme

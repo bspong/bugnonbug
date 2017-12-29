@@ -1,0 +1,36 @@
+"Save Image As" context menu allows to silently save executables instead of image
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.7) Gecko/20050414 Firefox/1.0.3
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.7) Gecko/20050414 Firefox/1.0.3
+
+The context menu option "Save Image As" doe not validate if the src image is
+valid. By using absolute positioning and the moz-opacity filter an attacker can
+easily fool the user to think he is going to save a valid image but is
+downloading an executable file instead.
+
+Since file extension are default disabled on window and an exe file can have
+any file icon - including the standard image icon - the user can only tell the
+difference when he recognizes that the save dialog file type drop down show
+"Application" instead of an image file. Unlikely average user will see that or
+realize the consequences. Probably most poeple will just double-click the "image
+file" they downloaded when they are going to view it and will run the executable
+in that moment.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Open http://bugzilla:Ha8T4wc@www.mikx.de/firesaving/
+2. Follow instruction
+
+
+
+
+It seems Firefox sometimes raise an "the web page might have been removed or
+it name changed" error when supplying a larger exe directly a an image source
+and then trying to save it (is that a bug or a security feature?). Anyway, an
+attacker can work around this problem with a little php script like this:
+
+$fp = fopen("exe.exe", "rb");
+header("Content-Type: image/gif");
+header("Content-Disposition: inline; filename=booom.exe");
+fpassthru($fp);
+fclose($fp);

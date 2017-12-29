@@ -1,0 +1,22 @@
+replace non-fatal assertions with warnings in places xpcshell tests
+assertions in the places c++ code during xpcshell tests are causing an immediate crash. this does not happen during regular application run. changing these assertions to warn but still return a failure code also works fine.
+
+below is one example. i asserted randomly in a few places in the nsNavHistoryResult(Node) code, and it crashed the xpcshell test whenever an assertion occurred.
+
+###!!! ASSERTION: Removing item we don't have: 'node', file /Users/dietrich/moz/trunk/mozilla/toolkit/components/places/src/nsNavHistoryResult.cpp, line 3371
+nsPrintfCString::~nsPrintfCString()+0x00022485 [/Users/dietrich/moz/trunk/build-dbg/dist/bin/components/libplaces.dylib +0x0005C6C3]
+nsPrintfCString::~nsPrintfCString()+0x000212EE [/Users/dietrich/moz/trunk/build-dbg/dist/bin/components/libplaces.dylib +0x0005B52C]
+nsXPCOMCycleCollectionParticipant::nsXPCOMCycleCollectionParticipant()+0x00012B00 [/Users/dietrich/moz/trunk/build-dbg/dist/bin/components/libplaces.dylib +0x00075472]
+NS_InvokeByIndex_P+0x00000063 [/Users/dietrich/moz/trunk/build-dbg/xpcom/build/libxpcom_core.dylib +0x0009EFFB]
+nsSupportsArray::AppendElement(nsISupports*)+0x0000540E [/Users/dietrich/moz/trunk/build-dbg/dist/bin/components/libxpconnect.dylib +0x0004EAEE]
+nsCRT::free(unsigned short*)+0x00004FD9 [/Users/dietrich/moz/trunk/build-dbg/dist/bin/components/libxpconnect.dylib +0x000590D9]
+js_Invoke+0x00000A21 [/Users/dietrich/moz/trunk/build-dbg/js/src/libmozjs.dylib +0x00077383]
+JS_CompareValues+0x0000F2A4 [/Users/dietrich/moz/trunk/build-dbg/js/src/libmozjs.dylib +0x0006A348]
+js_Invoke+0x00001324 [/Users/dietrich/moz/trunk/build-dbg/js/src/libmozjs.dylib +0x00077C86]
+JS_ExecuteScript+0x00000083 [/Users/dietrich/moz/trunk/build-dbg/js/src/libmozjs.dylib +0x000172A1]
+start+0x000017A0 [/Users/dietrich/moz/trunk/build-dbg/toolkit/components/places/tests/../../../../dist/bin/xpcshell +0x00002D58]
+start+0x00001AD7 [/Users/dietrich/moz/trunk/build-dbg/toolkit/components/places/tests/../../../../dist/bin/xpcshell +0x0000308F]
+start+0x00002131 [/Users/dietrich/moz/trunk/build-dbg/toolkit/components/places/tests/../../../../dist/bin/xpcshell +0x000036E9]
+start+0x00003343 [/Users/dietrich/moz/trunk/build-dbg/toolkit/components/places/tests/../../../../dist/bin/xpcshell +0x000048FB]
+start+0x000000FC [/Users/dietrich/moz/trunk/build-dbg/toolkit/components/places/tests/../../../../dist/bin/xpcshell +0x000016B4]
+start+0x00000029 [/Users/dietrich/moz/trunk/build-dbg/toolkit/components/places/tests/../../../../dist/bin/xpcshell +0x000015E1]

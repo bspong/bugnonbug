@@ -1,0 +1,25 @@
+Pocket a a built-in add-on not supported by language packs, manifest problem
+bug 1215694 comment 106:
+
+I'm pretty sure this break in language packs.
+
+Seems there's nothing hooking up browser/features/firefox@getpocket.com/chrome.manifest.
+
+Fuchsia:locale-fr axelhecht$ find . -name \*manif\*
+./browser/chrome/fr.manifest
+./browser/chrome.manifest
+./browser/features/chrome.manifest
+./browser/features/firefox@getpocket.com/chrome.manifest
+./browser/features/firefox@getpocket.com/fr.manifest
+./chrome/fr.manifest
+./chrome.manifest
+./webapprt/chrome/fr.manifest
+./webapprt/chrome.manifest
+Fuchsia:locale-fr axelhecht$ find . -name \*manif\* -exec grep -H getpocket {} \;
+./browser/features/chrome.manifest:manifest firefox@getpocket.com/chrome.manifest application={ec8030f7-c20a-464f-9b0e-13a3a9e97384}
+
+I haven't run a localized nightly yet that actually ha their locale file moved, but the chrome.manifest in /Applications/FirefoxNightly.app/Contents/Resources/browser/features/firefox@getpocket.com.xpi look OK to me.
+
+bug 1215694 comment 110:
+
+Ah, that's because jarmaker put the extra manifest in browser/features... and that one is not referenced anywhere. Please file a followup bug. A quick way around is to forcefully add a "manifest features/chrome.manifest" in "browser/chrome.manifest", using buildlist.py, when doing a repack.

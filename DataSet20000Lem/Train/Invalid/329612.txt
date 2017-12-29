@@ -1,0 +1,14 @@
+nsTextFrame.cpp::PaintAsciiText may use uninitialized variable
+nsTextFrame.cpp::PaintAsciiText may use uninitialized variable
+
+1) http://lxr.mozilla.org/seamonkey/source/layout/generic/nsTextFrame.cpp#3834
+const char* text;
+at this point |text| may point to anything depending on previous stack content.
+
+2) http://lxr.mozilla.org/seamonkey/source/layout/generic/nsTextFrame.cpp#3888
+if this branch is hit, |text| is uninitialized and may point to anything.
+
+later in this method |text| is used at least for reading, but if it is used
+for writing this may be exploitable.
+
+so if 2) is hit, at least a crash may be guaranteed

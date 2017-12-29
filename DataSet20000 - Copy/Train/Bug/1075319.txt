@@ -1,0 +1,33 @@
+devtools tests should use standard add_task instead of custom asyncTest
+This applies to many devtools test directories, but I first struck this with the style inspector.
+
+browser_ruleview_pseudo-element_02.js is currently failing on e10s with the log showing:
+
+21 INFO TEST-UNEXPECTED-FAIL | chrome://mochitests/content/browser/browser/devtools/styleinspector/test/browser_ruleview_pseudo-element_02.js | {u'_capturedTaskStack': u'TaskImpl@resource://gre/modules/Task.jsm:270:20\ncreateAsyncFunction/asyncFunction@resource://gre/modules/Task.jsm:249:14\nTask_spawn@resource://gre/modules/Task.jsm:164:12\nasyncTest/<@chrome://mochitests/content/browser/browser/devtools/styleinspector/test/head.js:94:16\nTester_execTest@chrome://mochikit/content/browser-test.js:669:9\nTester.prototype.nextTest</<@chrome://mochikit/content/browser-test.js:566:7\n'} - 
+Stack trace:
+resource://gre/modules/Promise.jsm -> resource://gre/modules/Promise-backend.js:Handler.prototype.process:868
+resource://gre/modules/Promise.jsm -> resource://gre/modules/Promise-backend.js:this.PromiseWalker.walkerLoop:744
+null:null:0
+
+which isn't particularly useful.  Digging in, I see this (and many others) is using a custom task implementation for tests:
+
+let test = asyncTest(function*() {
+
+But mochitests have recently grown native support for generators, using add_task() similarly to how it is unsed in xpcshell tests.  Changing that line to read:
+
+add_task(function*() {
+
+(ie, no assignment to "test" and no need to reference any additional modules) the error is reported as:
+
+22 INFO TEST-UNEXPECTED-FAIL | chrome://mochitests/content/browser/browser/devtools/styleinspector/test/browser_ruleview_pseudo-element_02.js | Uncaught exception - at resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/actors/inspector.js:2809 - Error: Could not find client side for actor conn0.child2/domwalker23
+Stack trace:
+    exports.WalkerFront<.frontForRawNode@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/actors/inspector.js:2809:1
+    testTopLeft@chrome://mochitests/content/browser/browser/devtools/styleinspector/test/browser_ruleview_pseudo-element_02.js:19:14
+    Handler.prototype.process@resource://gre/modules/Promise.jsm -> resource://gre/modules/Promise-backend.js:865:23
+    this.PromiseWalker.walkerLoop@resource://gre/modules/Promise.jsm -> resource://gre/modules/Promise-backend.js:744:7
+    Tester_execTest@chrome://mochikit/content/browser-test.js:640:9
+    Tester.prototype.nextTest</<@chrome://mochikit/content/browser-test.js:566:7
+    Tester_execTest@chrome://mochikit/content/browser-test.js:640:9
+    Tester.prototype.nextTest</<@chrome://mochikit/content/browser-test.js:566:7
+
+Which seems saner.

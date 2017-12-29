@@ -1,0 +1,35 @@
+Firebug + firefox net console dont reliably report response headers
+User Agent: Mozilla/5.0 (Windows NT 6.3; WOW64; rv:34.0) Gecko/20100101 Firefox/34.0
+Build ID: 20141125180439
+
+Steps to reproduce:
+
+I spent a large amount of time thinking that my tomcat 7 setups weren't compressing things correctly
+
+http://stackoverflow.com/questions/27816958/problems-getting-tomcat-7-to-use-gzip-compression
+
+I was trying to check that gzip compression was in effect on our servers using the different firefox tools available (the normal net console, firebug's net console and yslow).  I had firebug installed just because yslow requires it, but both consoles were failing in a similar way.
+
+
+Actual results:
+
+It appeared that gzip compression was not working when in fact it was.  This was also intermittent and led to me spending somewhere in the region of 2 days of googling about tomcat gzip compression, diffing and changing config options, and generally being baffled about what could be causing what I was seeing.
+
+When looking at a compressed response firefox was intermittently misreporting what was going on and showing a type of bytes and a content length with a number, rather than 'chunked' and type gzip.
+
+Some of the time it was reporting the right thing which really confused things more as it wasn't giving me a clear picture of the effect (if any) that the changes I was making were having to the state of the compression.
+
+After going round in circles I accidentally used chrome on a computer which didn't have firefox which correctly reported that compression was indeed switched on in the place where it didn't seem to be working at all according to firefox (see the stack overflow post for more details).  After seeing that I then began checking what was going on with curl and wireshark.
+
+Curl was consistently reporting compression as being on and then wireshark confirmed that compression was indeed on for a browser request that firefox reported it as not being.
+
+I could see this in two ways - the headers shown in wireshark were different (showing gzip and chunked as you'd expect) and because you could look at the content and see that it was compressed as it looked like gibberish.
+
+In firefox you can't see the raw content (which is fine) but the headers that were reported were incorrect - they did not say gzip and specified an exact length (which is what you would see if the file was not compressed).  
+
+
+Expected results:
+
+Firefox network console should report the response headers from the server correctly.  It clearly doesn't do this as I observed from the discrepancy between the sniffed packets in wireshark and what was reported by the developer tools.
+
+I dont know what is going on there - possibly those values have been calculated after decompression in an effort to be more helpful.  If so it is definitely not more helpful!!  Please report exactly the headers that the server sends back!

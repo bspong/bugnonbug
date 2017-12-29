@@ -1,0 +1,27 @@
+params added nsISearchEngine::addParam() are sometimes forgotten after a restart (especially for engine added without icons)
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1) Gecko/20061116 BonEcho/2.0
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1) Gecko/20061116 BonEcho/2.0
+
+When a search engine is created using addEngineWithDetails and no or an invalid icon URI is specified, the parameter added later using nsISearchEngine::addEngine for this engine are not serialized to the file. This means, that the created engine only work until Firefox is restarted.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. execute this javascript code with privilege (from j console or something):
+var iconURL = "";
+/* var iconURL = "http://www.google.com/favicon.ico"; */
+var s = Cc["@mozilla.org/browser/search-service;1"]
+.getService(Ci.nsIBrowserSearchService);
+var name = "Google 2";
+ss.addEngineWithDetails(name, iconURL, "", "", "GET", "http://www.google.com/search");
+var addedEngine = ss.getEngineByName(name);
+addedEngine.addParam("q", "{searchTerms}", null);
+
+2. try the newly created engine, see that it work
+2. restart Firefox
+3. notice that the engine doe not work anymore
+
+(check that this ha something to do with the icon:)
+4. delete the engine
+5. execute the above code again but with the first instead of the second line commented out
+6. see that the engine work even after restarting a hundred time

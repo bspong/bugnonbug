@@ -1,0 +1,63 @@
+change in bookmarks.html causes folder to have bookmark type properties
+User-Agent:       Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; .NET CLR 1.1.4322)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.6) Gecko/20040206 Firefox/0.8
+
+When editing bookmarks.html in your profile, if you change the ID for a 
+bookmark and folder to the same ID, Firefox merges the two entries into a 
+single folder entry with the contents of the folder entry and the some of the 
+properties of the bookmark entry.  Depending on the pair of entries sharing an 
+ID, an infinite recursion can be produced in which the folder contains itself.
+
+On a restart of Firefox, the bookmark properties are absent from the entry, 
+but the infinite resursion remains.  The bookmark mananger displays the folder 
+as having only the original folder's links, but the bookmark menu makes the 
+folder contain the links and itself.
+
+Reproducible: Always
+Steps to Reproduce:
+1. Change the id property of a bookmark entry to the same as a folder entry
+2. Start Firefox
+3. Open Bookmark Manager
+4. View properties of the folder
+5. View recursion from bookmark menu
+6. Restart Firefox
+7. View bookmarks from bookmark menu
+
+Actual Results:  
+Folder with schedule property tabs and infinite recursion of folder item in 
+bookmark menu.
+
+Expected Results:  
+Remove the second item with the same ID as it does for two bookmarks with the 
+same ID value.
+
+Example change to get both behaviors:
+
+Exerpt from original file
+...
+    <DT><H3 ID="rdf:#$tWFWx1">Firefox &amp; Mozilla Information</H3>
+<DD>Information about Firefox and Mozilla
+    <DL><p>
+        <DT><A HREF="http://texturizer.net/firefox/extensions/" 
+ID="rdf:#$uWFWx1">Firefox Extensions</A>
+<DD>Firefox add-ons and extensions
+...
+
+Exerpt from changed file before Firefox start
+...
+    <DT><H3 ID="rdf:#$tWFWx1">Firefox &amp; Mozilla Information</H3>
+<DD>Information about Firefox and Mozilla
+    <DL><p>
+        <DT><A HREF="http://texturizer.net/firefox/extensions/" 
+ID="rdf:#$tWFWx1">Firefox Extensions</A>
+<DD>Firefox add-ons and extensions
+...
+
+Exerpt from file after Firefox start and close
+...
+    <DT><H3 ID="rdf:#$tWFWx1">Firefox Extensions</H3>
+<DD>Information about Firefox and Mozilla
+    <DL><p>
+        <DT><H3 ID="rdf:#$tWFWx1">Firefox Extensions</H3>
+<DD>Information about Firefox and Mozilla
+...

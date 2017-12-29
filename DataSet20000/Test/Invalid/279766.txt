@@ -1,0 +1,80 @@
+Does not go to the anchor refernce from a perl program
+User-Agent:       Mozilla/4.0 (compatible; MSIE 6.0; AOL 9.0; Windows NT 5.1; AtHome021SI)
+Build Identifier: 
+
+When a visitor selects a county in the HTML file it runs PERL code to track the 
+click and it goes to the proper anchor in the HTML file. It works in IE but not 
+in Mozilla Firefox. The address bar has the right anchor but does not scroll to 
+it.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.go to http://www.divorcehq.com/attorney/atty_nj.shtml
+2.Click on any county
+3.
+
+Actual Results:  
+It stayed at the top of the page
+
+Expected Results:  
+Go to the proper anchor
+
+Perl Code used:
+
+#!/usr/bin/perl
+$|=1;
+
+$in = $ENV{'QUERY_STRING'};
+@elements = split /&/, $in;
+
+for $element (@elements)
+    {$element =~ tr/+/ /;       # decode +'s to spaces
+    ($key, $value) = split /=/, $element;
+    $key =~ s/%([\dA-Fa-f]{2})/pack("C".hex($1))/ge;   # decode key
+     $value =~ s/%([\dA-Fa-f]{2})/pack("C".hex($1))/ge; # decode value
+
+     if ($key eq "state") {$state = $value};
+     if ($key eq "id")    {$id = $value};
+    }
+
+($day, $month, $year) = (localtime)[3,4,5];
+$year = $year+1900;
+$month=$month+1;
+
+open(logfile,">> logdhqatty $year $month.log");
+
+open(trackfile,"datadhqatty.dat");
+    while($trackrec = <trackfile>)
+      {chomp($trackrec);
+       ($trackid,$trackstate,$tracksect,$tracklink) = split(/~/,$trackrec);
+          if ($trackid eq $id) 
+              {$newrecord = join ("\~",$trackid,$trackstate,$tracksect,"\n");
+               print logfile $newrecord;
+               close(logfile);
+               close(trackfile);
+               print "Content-type: text/html\n";
+               print "Location: http://$tracklink\n\n";exit}
+      }
+
+
+Data that the above code uses:
+
+1912~NJ~Camden~www.divorcehq.com/attorney/atty_nj.shtml#camd
+1913~NJ~Cape May~www.divorcehq.com/attorney/atty_nj.shtml#cape
+1914~NJ~Cumberland~www.divorcehq.com/attorney/atty_nj.shtml#cumb
+1915~NJ~Essex~www.divorcehq.com/attorney/atty_nj.shtml#esse
+1916~NJ~Gloucester~www.divorcehq.com/attorney/atty_nj.shtml#glou
+1917~NJ~Hudson~www.divorcehq.com/attorney/atty_nj.shtml#huds
+1918~NJ~Hunterdon~www.divorcehq.com/attorney/atty_nj.shtml#hunt
+1919~NJ~Mercer~www.divorcehq.com/attorney/atty_nj.shtml#merc
+1920~NJ~Middlesex~www.divorcehq.com/attorney/atty_nj.shtml#midd
+1921~NJ~Monmouth~www.divorcehq.com/attorney/atty_nj.shtml#monm
+1922~NJ~Morris~www.divorcehq.com/attorney/atty_nj.shtml#morr
+1923~NJ~Ocean~www.divorcehq.com/attorney/atty_nj.shtml#ocea
+1924~NJ~Passaic~www.divorcehq.com/attorney/atty_nj.shtml#pass
+1925~NJ~Salem~www.divorcehq.com/attorney/atty_nj.shtml#sale
+1926~NJ~Somerset~www.divorcehq.com/attorney/atty_nj.shtml#some
+1927~NJ~Sussex~www.divorcehq.com/attorney/atty_nj.shtml#suss
+1928~NJ~Union~www.divorcehq.com/attorney/atty_nj.shtml#unio
+1929~NJ~Warren~www.divorcehq.com/attorney/atty_nj.shtml#warr

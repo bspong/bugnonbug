@@ -1,0 +1,28 @@
+navigate and will-navigate event for remoted target carry payload that is incompatible with the non-remoted case
+In the latest fx-team, Open inspector, switch to web console, reload page. You will see two error in error console:
+
+
+Timestamp: 3/9/2013 3:17:46 PM
+Error: [Exception... "Component returned failure code: 0x80004003 (NS_ERROR_INVALID_POINTER) [inIDOMUtils.clearPseudoClassLocks]" nsresult: "0x80004003 (NS_ERROR_INVALID_POINTER)" location: "JS frame :: resource:///modules/devtools/InspectorPanel.jsm :: InspectorPanel_clearPseudoClasses/< :: line 636" data: no]: undefined
+Source File: resource:///modules/devtools/EventEmitter.jsm
+Line: 105
+
+Timestamp: 3/9/2013 3:17:46 PM
+Error: TypeError: newWindow.document is undefined: InspectorPanel_onNavigatedAway@resource:///modules/devtools/InspectorPanel.jsm:261
+EventEmitter_emit@resource:///modules/devtools/EventEmitter.jsm:100
+onRemoteTabNavigated@resource:///modules/devtools/Target.jsm:302
+EV_notify@resource://gre/modules/devtools/dbg-client.jsm:147
+DC_onPacket/<@resource://gre/modules/devtools/dbg-client.jsm:506
+effort@resource://gre/modules/commonjs/sdk/core/promise.js:55
+resolved@resource://gre/modules/commonjs/sdk/core/promise.js:117
+then@resource://gre/modules/commonjs/sdk/core/promise.js:37
+then@resource://gre/modules/commonjs/sdk/core/promise.js:123
+DC_onPacket@resource://gre/modules/devtools/dbg-client.jsm:517
+LDT_send/<.run@chrome://global/content/devtools/dbg-transport.js:224
+
+Source File: resource:///modules/devtools/EventEmitter.jsm
+Line: 105
+
+What is happening is that the navigateaway notification from the server is coming too early that the window.document is not present at that point, thus Inspector fails to load after that. Which mean that if you switch back to inspector after the reload is complete, you will not see the markup view.
+
+This might be a regression because of bug 820524 a I cannot reproduce the same error in latest nightly.

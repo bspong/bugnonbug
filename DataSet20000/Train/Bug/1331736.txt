@@ -1,0 +1,27 @@
+Alt+down in location bar searches for original search term rather than selected search term
+I noticed this while working on bug 1330462, and I think it should be somewhat easy to fix, provided we know what it should do.
+
+Steps:
+
+- Type "corgis" in the location bar
+- Hit the down key until you have a search suggestion selected, like "corgis near me"
+- Hit alt+down, which will let you cycle through one-off search engine buttons, until you're on, say, Bing
+- Notice that on the highlighted search suggestion line, it says something like "corgis near me -- Search with Bing"
+- Hit return, and notice that you searched Bing for "corgis", and not "corgis near me"
+
+The same steps in the search bar will result in searching Bind for "corgis near me." It seems we missed this bit when adapting the one-off buttons for the location bar. I feel like the best course of action is just to make the location bar match the behavior of the search bar in this regard, no? What seems to be getting in the way is this getter in urlbarBindings.xml:
+
+```
+      <property name="oneOffSearchQuery">
+        <getter><![CDATA[
+          // this.textValue may be an autofilled string.  Search only with the
+          // portion that the user typed, if any, by preferring the autocomplete
+          // controller's searchString (including handleEnterInstance.searchString).
+          return (this.handleEnterInstance && this.handleEnterInstance.searchString) ||
+                 this.mController.searchString ||
+                 this.textValue;
+        ]]></getter>
+      </property>
+```
+
+I think we can work around this fairly easily so we keep the previous behavior so long as the user hasn't scrolled through the search suggestions.

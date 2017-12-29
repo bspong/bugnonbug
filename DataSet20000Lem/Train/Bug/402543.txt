@@ -1,0 +1,21 @@
+NPP_WriteReady returning zero hang URL until you clear cache or restart Firefox
+User-Agent: Mozilla/5.0 (X11; U; Linux i686 (x86_64); en-US; rv:1.8.1.8) Gecko/20071008 Firefox/2.0.0.8
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686 (x86_64); en-US; rv:1.8.1.8) Gecko/20071008 Firefox/2.0.0.8
+
+I am porting a plugin to Firefox. This plugin requires the ability to throttle HTTP streams. It is doing this by using NPP_WriteReady to return zero to temporarily halt the stream until buffer space is free. A problem arises in Firefox 2.0.0.8 if you destroy the stream while the stream is halted in this way. That URL will no longer work until you either clear the browser cache or restart the browser. For example if you change the browser page while the stream is stopped and the stream and plugin are destroyed you get in this mode. If you then come back and try to display the same URL again the stream is still blocked until you clear the browser cache or restart the browser.
+
+It appears there is some flag set in the browser cache on the stream used to halt the stream and it doesn't get properly cleared when the stream is destroyed. It persists in to the next stream instance created on the URL until you clear the cache.
+
+Unfortunately this is a proprietary plugin so I can't easily provide a test case. I'm hoping this ring a bell with someone who know the stream code and maybe you can just make sure this flag in the stream cache is cleared when the stream/plugin is destroyed, or when it reopened, so the stream will work the next time around.
+
+I'll continue to look for a workaround. The only one I can think of requires I delay closing the stream and destroying the plugin until NPP_WriteReady is called again so I can return a non zero value. Its awkward delaying destruction of a plugin when a page is unloaded though.
+
+Reproducible: Always
+
+Steps to Reproduce:
+Reproduction requires a plugin which ha NPP_WriteReady returning zero to throttle a stream unfortunately. Sorry.
+Actual Results:
+A URL for a stream end up bugged until you clear browser cache or restart the browser
+
+Expected Results:
+URL should work the next time you use it, even when it wa throttled in the previous plugin instance.

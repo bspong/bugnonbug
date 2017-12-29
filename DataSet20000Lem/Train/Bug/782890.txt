@@ -1,0 +1,25 @@
+BrowserNewTabPreloader.jsm and SafeBrowsing.jsm are referenced using the wrong URI
+I'm using Fx from mozilla-inbound and after Bug 753448 (exactly -r102295:a5b58ae99ac9) fixed 'New Tab' button open new tab, but doesn't switch to it.
+
+I should mention that I'm using firefox from objdir without actually installing it, so I have 'mk_add_options MOZ_OBJDIR=/home/ojab/opt' in mozconfig and running Fx with `~/opt/browser/dist/bin/firefox`.
+
+I've found that there is two error in 'Error Console':
+
+Timestamp: 15.08.2012 11:50:04
+Error: NS_ERROR_FILE_NOT_FOUND: Component returned failure code: 0x80520012 (NS_ERROR_FILE_NOT_FOUND) [nsIXPCComponents_Utils.import]
+Source File: chrome://browser/content/browser.js
+Line: 153
+
+Timestamp: 15.08.2012 11:50:06
+Error: NS_ERROR_FILE_NOT_FOUND: Component returned failure code: 0x80520012 (NS_ERROR_FILE_NOT_FOUND) [nsIXPCComponents_Utils.import]
+Source File: chrome://browser/content/browser.js
+Line: 146
+
+
+which are "resource://gre/modules/BrowserNewTabPreloader.jsm" and "resource://gre/modules/SafeBrowsing.jsm", which are resides only in /home/ojab/opt/browser/dist/bin/modules/.
+
+I've looked on PluralForm.jsm a an other example of file in resource://gre/modules/ and it resides in /home/ojab/opt/xulrunner/dist/bin/modules/PluralForm.jsm and /home/ojab/opt/browser/dist/bin/xulrunner/modules/PluralForm.jsm, so I've copied BrowserNewTabPreloader.jsm and SafeBrowsing.jsm to /home/ojab/opt/browser/dist/bin/xulrunner/modules and 'New Tab' button work a expected even after I've deleting this file again (looks like it's cached somewhere in profile or something like that).
+
+As a side note: I've had an issue with session restore (Bug 779107) related to SafeBrowsing.jsm not found, but it a fixed somehow (most likely when I've run official Nightly build for the test) and I haven't found the source.
+
+So I think that BrowserNewTabPreloader.jsm and SafeBrowsing.jsm should actually be built in xulrunner, not in browser.

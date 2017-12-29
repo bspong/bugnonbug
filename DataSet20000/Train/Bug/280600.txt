@@ -1,0 +1,44 @@
+Link to local WMV file with path containing spaces won't open in Windows Media Player (space passed to helper app as %20)
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; rv:1.7.3) Gecko/20041001 Firefox/0.10.1
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; rv:1.7.3) Gecko/20041001 Firefox/0.10.1
+
+Links to local wmv files are passed url-encoded to Windows Media Player, so a
+file  on the desktop for example will cause Windows Media Player to complain
+about not finding "C:\Document%20and%20Settings\user\Desktop\file.wmv"  FWIW, I
+checked it in Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8b)
+Gecko/20050131 and it works fine there.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.Create a directory c:\foo bar\
+2.put a file with the extension .wmv in there.
+3.create an html file with a line like:
+<a href="file:///c:/bar%20foo/test.wmv">Link</a>
+4. Open the file, click on the link
+5. When Windows Media Player opens, you'll see a fairly useless error message,
+don't click more information.  You get more information, but it has little to no
+relevance.
+6. After all that nonsense is dismissed, Windows Media Player will busy itself
+with opening its online store, trying in vain to get you to purchase a copy of
+your test WMV file from it's mothership.  While it's doing this, you can click
+on the entry in the 'Now Playing List' corresponding to your file.  It will have
+an exclamation point in front of it.  Note: This does not mean WMP is playing
+the negation of your file.  It means there is a problem.  When you click on it,
+you'll see the path Windows Media Player was looking for:
+'c:\foo%20bar'
+If you replace the %20 with a space and hit enter, everything'll work.
+Actual Results:  
+My windows media file failed to play.
+
+Expected Results:  
+I think it probably should have reversed the URL encoding process.  It's clearly
+already doing something, because the forward slashes have been returned to
+backwards ones, the leading slash has been removed, and the 'file://' is gone. 
+This makes me think it's the browser's responsibility to translate URLs into
+system filenames, not the media player's.  Perhaps I'm wrong, but this does work
+in MSIE and Mozilla.
+
+I'm using a fresh user account created for this purpose with fresh nightlies of
+Moz and FF.  I would check to see if the bug is broader (e.g. if it affects any
+more helper apps) but I don't have any other helper apps on my system.

@@ -1,0 +1,15 @@
+[PPC] Bookmarks root folder get deleted when removing a folder [@ nsINavBookmarksService.getFolderIdForItem]
+Created attachment 361441
+Broken places.sqlite
+
+Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.5; en-US; rv:1.9.1b3pre) Gecko/20090209 Shiretoko/3.1b3pre Ubiquity/0.1.5 ID:20090209020514
+
+Marcia showed me a serious problem today while sitting together in the QA lab. There is no way to edit a bookmark while clicking the star or pressing Cmd+D. The following exception is thrown:
+
+Error: uncaught exception: [Exception... "Component returned failure code: 0x8000ffff (NS_ERROR_UNEXPECTED) [nsINavBookmarksService.getFolderIdForItem]" nsresult: "0x8000ffff (NS_ERROR_UNEXPECTED)" location: "JS frame :: file:///Applications/Minefield.app/Contents/MacOS/modules/utils.js :: anonymous :: line 877" data: no]
+
+After digging into this problem I've noticed that we have a broken places.sqlite file. The folder hierarchy is infinite. Means opening the unsorted bookmark always display the bookmark root folder with all it sub-folders again. Further this also result in broken JSON backups. All backup which were made the last day have a filesize of zero. All bookmark will be lost if you have the need to restore them.
+
+I'll attach the affected places.sqlite file here, so it is easier to reproduce. The problem is that we don't have an idea how it get broken. Even the step are not known how to get into this problem. Sadly. :/ The profile wa created with Shiretoko a month ago. So we don't suffer from an older bug, which ha been already fixed.
+
+Marco and Dietrich, could you have a look at this places.sqlite file?

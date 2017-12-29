@@ -1,0 +1,81 @@
+XMLHttpRequest doesn not like complex authorization with PUT request
+User-Agent: Mozilla/5.0 (compatible; Konqueror/3.5; Linux) KHTML/3.5.7 (like Gecko)
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; pl; rv:1.8.1.9) Gecko/20071105 Firefox/2.0.0.9
+
+I'm working at a large project. Two part of it are:
+1. make Firefox authorize on Apache2 server using SAML2.0
+2. make a simple Firefox-based WebDav interface
+
+These two now work ok separately, but they don't want to work together. The problem is that WebDav interface cannot put new resource on SAML2.0 protected directory on server.
+SAML2.0 authorization is a multi-round-trips one. It work great when doing normal GETs and POSTs, PROPFINDs.
+
+Is also work grean when doing HTML-based XMLHttpRequests with GETs, POSTs, PROPFINDs and PUTs (by HTML-based XMLHttpRequest I mean:
+var xmlRequest = new XMLHttpRequest(); ...
+).
+
+It stop working when using chrome-based XMLHttpRequest:
+var xmlHttpRequest = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance();
+
+The GETs, PROPFINDs work great, but PUT doe only one round-trip and stop without reason or error message.
+
+I've created a simple autohization module named twophase with is basically stripped version of SAML2.0 module. It just doesn't do any of SAML2.0, only sending simple string between server and client. Using of it proved that this is not any bug in SAML2.0 implementation.
+
+I've also created a simple test page that doe XMLHttpRequest with GET, POST and PUT and it work great with twophase.
+
+Next I've run WebDavBrowser on Firefox that doe XMLHttpRequest the chrome-way and PUT doe not work (for the same resource a in previous test).
+
+I'm attaching everything needed to confirm this.
+You need:
+1. heimdal library, version at least 1.0: http://www.pdc.kth.se/heimdal/#code,
+1.1 set up firefox for using heimdal:
+
+network.negotiate-auth.gsslib = /path/to/heimdal/library/libgssapi.so
+network.negotiate-auth.trusted-uris = 127.0.0.1
+network.negotiate-auth.using-native-gsslib = flase
+
+2. twophase g module (attached) - install with simple ./configure --with-heimdal-dir=dir && make all install
+3. /etc/gss/mech should be:
+
+gss-twophase 1.1.1.1.3 /path/to/libgss-twophase.so somerandomtext
+
+4. apache2 installed
+5. apache2 web-dav module installed and configured with some resource (collections)
+6. one webdav resource with .htaccess looking like:
+
+AuthType TwoPhase
+Require valid-user
+
+7. apache twophase module (attached) - install with ./configure --with-apache=dir --with-gss=dir --with-gss_twophase=dir
+8. load twophase module into apache by adding this line into config file of apache:
+
+LoadModule auth_twophase_module path/to/mod_auth_twophase.so
+
+9. test page (attached) - please update PUT method with Your path
+
+After installing everything and restarting apache the test page should work:
+1. GET and POST button after click display the source code of the page
+2. PUT button doe not display anything but creates a simple file in a hard-coded directory
+
+It is very convinent to use Wireshark to check round-trips.
+
+The second test us WebDavBrowser extension. It can be found on: https://bugzilla.mozilla.org/attachment.cgi?id=287936.
+
+Install and run it by typing webdav://localhost/uploads.
+Try tu add one file to normal directory and one to twophase-protected one.
+The first should go ok, the second won't.
+
+It would be nice if someone point me where to strart searching for the bug and how to:
+1. fix it
+2. workaround it in my code, so the plugins will work event in not-fixed Firefoxes
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Install heimdal, twophase, apache2, webdav, webdavbrowser and everyting a pointed in descrption
+2. run WebDavBrowser by typing webdav://127.0.0.1/uploads
+3. try to upload a file to twophase-protected directory
+Actual Results:
+The status of file is 'Creating' and there is nothing on the server.
+
+Expected Results:
+The status of file after a while change to '' and it can be found on the server.

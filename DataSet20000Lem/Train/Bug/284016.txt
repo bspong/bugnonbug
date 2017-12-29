@@ -1,0 +1,64 @@
+DOMWINDOW count not going to zero when using radiogroup.selectedIndex within a Modal Dialog
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.5) Gecko/20041107 Firefox/1.0
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.5) Gecko/20041107 Firefox/1.0
+
+Xul code:
+
+<row align="start">
+<hbox flex="1" pack="end" align="end">
+<label class="fieldname" value="Status"/>
+<spacer width="5px"/>
+</hbox>
+<radiogroup id="mr_record_status" orient="horizontal">
+<radio id="mr_status_open" label="Open" selected="true"/>
+<radio id="mr_status_closed" label="Closed"/>
+</radiogroup>
+</row>
+
+Javascript code:
+
+if ( document.getElementById( "mr_record_status" ).selectedIndex == 0 ) {
+....
+}
+
+where "mr_record_status" is a radiogroup cause the DomWindow count to not
+decrement to 0
+
+The work around is:
+
+if ( document.getElementById( "mr_status_open" ).selected ) {
+....
+}
+
+where "mr_status_open" is a radio button.
+
+When closing the browser, the DomWindow count stay greater than 0. Everytime
+the code is executed, in my case a Modal Dialog that is open and closed, the
+DOMWindow count increment by 2. The following out is what I have in a debug build:
+
+--WEBSHELL == 1
+--DOMWINDOW == 4
+--WEBSHELL == 0
+--DOMWINDOW == 3
+nsPluginHostImpl::Observe "xpcom-shutdown"
+WARNING: nsExceptionService ignoring thread destruction after shutdown, file
+c:/firefox/mozilla/xpcom/base/nsExceptionService.cpp, line 191
+WARNING: NS_ENSURE_TRUE(NS_SUCCEEDED(rv)) failed, file
+c:/firefox/mozilla/toolkit/components/history/src/nsGlobalHistory.cpp, line 2520
+WARNING: NS_ENSURE_TRUE(NS_SUCCEEDED(OpenDB())) failed, file
+c:/firefox/mozilla/toolkit/components/history/src/nsGlobalHistory.cpp, line 1221
+nsPluginHostImpl dtor
+--DOMWINDOW == 2
+JS engine warning: 1 atom remain after destroying the JSRuntime.
+These atom may point to freed memory. Things reachable
+through them have not been finalized.
+nsStringStats
+=> mAllocCount: 12982
+=> mReallocCount: 1548
+=> mFreeCount: 12978
+=> mShareCount: 15046
+=> mAdoptCount: 2577
+=> mAdoptFreeCount: 2576
+
+
+Reproducible: Always

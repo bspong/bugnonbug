@@ -1,0 +1,53 @@
+XUL Parsing Error if DTD is not saved as UTF-8
+User-Agent:       Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.1.4322)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.6) Gecko/20050317 Firefox/ jpeg;q=0, gif; q=0
+
+An XML Parsing error occurs when I load a XUL file with a corresponding DTD, 
+and the DTD has international characters, like below:
+
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!ENTITY dtd_bug_msg1 "There is a bug here!!">
+<!ENTITY dtd_bug_msg2 "Tem um bug que é o cão chupando manga!!">
+
+Firefox is ignoring the encoding declaration. Only functions if the DTD file is 
+saved as UTF-8 encoding by the text editor.
+
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.Create a XUL file as below
+
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<!DOCTYPE dialog SYSTEM "bug_dtd_encoding.dtd">
+
+<dialog id="dtd_bug_test"
+	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+	title="DTD Bug Test Dialog"
+	buttons="accept,cancel">
+	<vbox flex="1">
+		<description>&dtd_bug_msg1;</description>
+		<description>&dtd_bug_msg2;</description>
+	</vbox> 
+</dialog>
+
+2. Create the corresponding DTD, save as DOS/ASCII (not UTF-8):
+
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!ENTITY dtd_bug_msg1 "There is a bug here!!">
+<!ENTITY dtd_bug_msg2 "Tem um bug que é o cão chupando manga!!">
+
+3. Run the xul file
+
+Actual Results:  
+XML Parsing Error: error in processing external entity reference:
+
+<!DOCTYPE dialog SYSTEM "bug_dtd_encoding.dtd">
+
+Expected Results:  
+Followed the xml encoding declaration, accepting the international characters 
+in DTD.

@@ -1,0 +1,31 @@
+getFolderContents() can crash [@nsNavHistoryContainerResultNode::CloseContainer] when JS GC happens
+getFolderContents() can crash when JS GC happens
+
+with the patch in #378558 I am crashing when I attempt to copy the "root" bookmark in the left hand pane of the bookmark organizer.
+
+What I think is going is that JS GC is happening, and we are garbage collecting "result" [see getFolderContents()]
+
+  getFolderContents:
+  function PU_getFolderContents(aFolderId, aExcludeItems, aExpandQueries) {
+    var query = this.history.getNewQuery();
+    query.setFolders([aFolderId], 1);
+    var options = this.history.getNewQueryOptions();
+    options.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
+    options.excludeItems = aExcludeItems;
+    options.expandQueries = aExpandQueries;
+
+    var result = this.history.executeQuery(query, options);
+    result.root.containerOpen = true;
+    return asContainer(result.root);
+  },
+
+See attachment #1 for the stack to when we GC.
+
+Later, I'll crash in nsNavHistoryContainerResultNode::CloseContainer() because result points to freed memory.  See attachment #2 for the stack
+
+Not, this is obviously not 100% reproducable, depending on when GC runs.
+(I think cyen didn't see it with a new profile, but did with an old one.)
+
+To fix this, in nsNavHistoryContainerResultNode, make mResult be a nsCOMPtr instead of a regular nsNavHistoryResult *.  This way, mResult won't get collected until the node is no longer referenced.
+
+I'll attach a patch.

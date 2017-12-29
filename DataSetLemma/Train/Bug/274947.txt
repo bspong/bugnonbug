@@ -1,0 +1,734 @@
+Build of Firefox 1.0 for MIPS little endian fails in link phase - patch included
+User-Agent: Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; .NET CLR 1.0.3705)
+Build Identifier: Firefox/1.0
+
+Limitations to global offset table size in most MIPS compiler cause Firefox
+build to fail in link phase. We found out that gcc 3.3.3 / glibc 2.3.2 would
+yield a successful build. The trick is to compile all used code (all the way
+from gcc/glibc) with -Wa,-xgot flag enabled. In addition, xptcstubs for mips
+were written for version 2.x of gcc, so these need to be modified.
+
+Firefox is now running on our MIPS platform with no know issues.
+
+We haven't found any information about successful Firefox build for MIPS on
+the Internet. Please let u know if we're the first one - we'd like to claim
+the credits. If you need additional info, please let me know.
+
+Attached in the "Additional information" section please find:
+1. the patch file
+2. the .mozconfig file
+3. summary of build environment
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Try building Firefox with off-the-shelf mipsel-linux-gcc compiler from
+http://www.linux-mips.org/.
+
+Actual Results:
+Build fails in the link stage.
+
+Expected Results:
+Successful build.
+
+1. Firefox patch file - patch with
+cd ${FIREFOX_DIR}
+patch -Np0 -i ${PATH_TO_PATCH}/firefox-1.0-mips.patch -
+r ./firefox1.0.patch.rej > /dev/null 2>&1
+
+----begin Firefox patch file----
+diff -ruN /home/marinkov/tmp/firefox-
+1.0/./xpcom/reflect/xptcall/src/md/unix/Makefile.in ./xpcom/reflect/xptcall/src
+/md/unix/Makefile.in
+--- /home/marinkov/tmp/firefox-
+1.0/./xpcom/reflect/xptcall/src/md/unix/Makefile.in 2004-04-22
+13:50:05.000000000 -0700
++++ ./xpcom/reflect/xptcall/src/md/unix/Makefile.in 2004-11-23
+15:48:32.000000000 -0800
+@@ -210,11 +210,7 @@
+ifneq (,$(findstring mips, $(OS_TEST)))
+CPPSRCS := xptcinvoke_mips.cpp xptcstubs_mips.cpp
+ASFILES := xptcinvoke_asm_mips.s xptcstubs_asm_mips.s
+-#xptcstubs_mips.cpp
+-# xptcstubs_asm_mips.s
+-ifdef GNU_CC
+-ASFLAGS += $(INCLUDES) -x assembler-with-cpp -D__GNUC__
+-endif
++AS := $(CC) $(CFLAGS) $(INCLUDES) -c -x assembler-with-cpp
+endif
+endif
+
+@@ -359,10 +355,8 @@
+
+ifeq ($(OS_ARCH),Linux)
+ifneq (,$(findstring mips, $(OS_TEST)))
+-xptcstubs_asm_mips.o: xptcstubs_asm_mips.s.m4 $(PUBLIC)/xptcstubsdef.inc
+- m4 $(INCLUDES) $< > ./xptcstubs_asm_mips.s && \
+- $(AS) -o $@ $(ASFLAGS) $(AS_DASH_C_FLAG) ./xptcstubs_asm_mips.s
+- $(RM) -f ./xptcstubs_asm_mips.s
++xptcstubs_asm_mips.o: xptcstubs_asm_mips.s $(PUBLIC)/xptcstubsdef.inc
++ $(AS) -o $@ $<
+endif
+endif
+
+diff -ruN /home/marinkov/tmp/firefox-
+1.0/./xpcom/reflect/xptcall/src/md/unix/xptcinvoke_asm_mips.s ./xpcom/reflect/x
+ptcall/src/md/unix/xptcinvoke_asm_mips.s
+--- /home/marinkov/tmp/firefox-
+1.0/./xpcom/reflect/xptcall/src/md/unix/xptcinvoke_asm_mips.s 2001-10-11
+00:19:01.000000000 -0700
++++ ./xpcom/reflect/xptcall/src/md/unix/xptcinvoke_asm_mips.s 2004-11-23
+16:40:36.000000000 -0800
+@@ -21,6 +21,7 @@
+* Contributor(s):
+* Brendan Eich <brendan@mozilla.org>
+* Stuart Parmenter <pavlov@netscape.com>
++ * Thiemo Seufer <seufer@csv.ica.uni-stuttgart.de>
+*/
+
+/* This code is for MIPS using the O32 ABI. */
+@@ -28,139 +29,128 @@
+#include <sys/regdef.h>
+#include <sys/asm.h>
+
+-.text
+-.globl invoke_count_words
+-.globl invoke_copy_to_stack
+-
+-# We need a variable number of word allocated from the stack for copy of
+-# the params, and this space must come between the high frame (where ra, gp,
+-# and s0 are saved) and the low frame (where a0-a3 are saved by the callee
+-# function we invoke).
+-
+-LOCALSZ=4 # s0, s1, ra, gp
+-NARGSAVE=4 # a0, a1, a2, a3
+-HIFRAMESZ=(LOCALSZ*SZREG)
+-LOFRAMESZ=(NARGSAVE*SZREG)
+-FRAMESZ=(HIFRAMESZ+LOFRAMESZ+ALSZ)&ALMASK
+-
+-# XXX these 2*SZREG, etc. are very magic -- we *know* that ALSZ&ALMASK cause
+-# FRAMESZ to be 0 mod 8, in this case to be 16 and not 12.
+-RAOFF=FRAMESZ - (2*SZREG)
+-GPOFF=FRAMESZ - (3*SZREG)
+-S0OFF=FRAMESZ - (4*SZREG)
+-S1OFF=FRAMESZ - (5*SZREG)
+-
+-# These are not magic -- they are just our argsave slot in the caller frame.
+-A0OFF=FRAMESZ
+-A1OFF=FRAMESZ + (1*SZREG)
+-A2OFF=FRAMESZ + (2*SZREG)
+-A3OFF=FRAMESZ + (3*SZREG)
+-
+- #
+- # _XPTC_InvokeByIndex(that, methodIndex, paramCount, params)
+- # a0 a1 a2 a3
+-
+-NESTED(_XPTC_InvokeByIndex, FRAMESZ, ra)
+-
+- .set noreorder
+- .cpload t9
+- .set reorder
+-
++#define SETUP_GP \
++ .set noreorder; \
++ .cpload $25; \
++ .set reorder
++
++# NARGSAVE is the argument space in the caller frame, including extra
++# 'shadowed' space for the argument registers. The minimum of 4
++# argument slot is sometimes predefined in the header files.
++#ifndef NARGSAVE
++#define NARGSAVE 4
++#endif
++
++#define LOCALSZ 3 /* gp, fp, ra */
++#define FRAMESZ ((((NARGSAVE+LOCALSZ)*SZREG)+ALSZ)&ALMASK)
++
++#define RAOFF (FRAMESZ - (1*SZREG))
++#define FPOFF (FRAMESZ - (2*SZREG))
++#define GPOFF (FRAMESZ - (3*SZREG))
++
++#define A0OFF (FRAMESZ + (0*SZREG))
++#define A1OFF (FRAMESZ + (1*SZREG))
++#define A2OFF (FRAMESZ + (2*SZREG))
++#define A3OFF (FRAMESZ + (3*SZREG))
++
++ .text
++
++#
++# _XPTC_InvokeByIndex(that, methodIndex, paramCount, params)
++# a0 a1 a2 a3
++
++ .globl _XPTC_InvokeByIndex
++ .align 2
++ .type _XPTC_InvokeByIndex,@function
++ .ent _XPTC_InvokeByIndex,0
++ .frame fp, FRAMESZ, ra
++_XPTC_InvokeByIndex:
++ SETUP_GP
+subu sp, FRAMESZ
+
+- # specify the save register mask -- XXX do we want the a0-a3 here,
+given
+- # our "split" frame where the args are saved below a dynamicly
+allocated
+- # region under the high frame?
+- #
+- # 10010000000000010000000011110000
+- .mask 0x900100F0, -((NARGSAVE+LOCALSZ)*SZREG)
+-
+- # thou shalt not use .cprestore if yer frame ha variable size...
+- # .cprestore GPOFF
+-
+- REG_S ra, RAOFF(sp)
+-
+- # this happens automatically with .cprestore, but we cannot use that
+op...
+- REG_S gp, GPOFF(sp)
+- REG_S s0, S0OFF(sp)
+- REG_S s1, S1OFF(sp)
+-
+- REG_S a0, A0OFF(sp)
+- REG_S a1, A1OFF(sp)
+- REG_S a2, A2OFF(sp)
+- REG_S a3, A3OFF(sp)
++ # specify the save register mask for gp, fp, ra, a3 - a0
++ .mask 0xD00000F0, RAOFF-FRAMESZ
+
+- # invoke_count_words(paramCount, params)
+- move a0, a2
+- move a1, a3
++ sw ra, RAOFF(sp)
++ sw fp, FPOFF(sp)
+
+- jal invoke_count_words
+- lw gp, GPOFF(sp)
++ # we can't use .cprestore in a variable stack frame
++ sw gp, GPOFF(sp)
+
+- # save the old sp so we can pop the param area and any "low frame"
+- # needed a an argsave area below the param block for callees that
+- # we invoke.
+- move s0, sp
+-
+- REG_L a1, A2OFF(sp) # a1 = paramCount
+- REG_L a2, A3OFF(sp) # a2 = params
+-
+- # we define a word a 4 bytes, period end of story!
+- sll v0, 2 # 4 byte * result of invoke_copy_words
+- subu v0, LOFRAMESZ # but we take back the argsave area built into
+- # our stack frame -- SWEET!
+- subu sp, sp, v0 # make room
+- move a0, sp # a0 = param stack address
+- move s1, a0 # save it for later -- it should be safe here
+-
+- # the old sp is still saved in s0, but we now need another argsave
+- # area ("low frame") for the invoke_copy_to_stack call.
+- subu sp, sp, LOFRAMESZ
++ sw a0, A0OFF(sp)
++ sw a1, A1OFF(sp)
++ sw a2, A2OFF(sp)
++ sw a3, A3OFF(sp)
++
++ # save bottom of fixed frame
++ move fp, sp
++
++ # extern "C" uint32
++ # invoke_count_words(PRUint32 paramCount, nsXPTCVariant* s);
++ la t9, invoke_count_words
++ move a0, a2
++ move a1, a3
++ jalr t9
++ lw gp, GPOFF(fp)
+
+- # copy the param into the stack area
++ # allocate variable stack, with a size of:
++ # wordsize (of 4 bytes) * result (already aligned to dword)
++ # but a minimum of 16 byte
++ sll v0, 2
++ slt t0, v0, 16
++ beqz t0, 1f
++ li v0, 16
++1: subu sp, v0
++
++ # let a0 point to the bottom of the variable stack, allocate
++ # another fixed stack for:
++ # extern "C" void
+# invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount,
+- # nsXPTCVariant* s)
+- jal invoke_copy_to_stack
+- lw gp, GPOFF(s0)
+-
+- move sp, s0 # get orig sp back, popping params and argsave
+-
+- REG_L a0, A0OFF(sp) # a0 = set "that" to be "this"
+- REG_L a1, A1OFF(sp) # a1 = methodIndex
+-
+- # t1 = methodIndex * 4
+- # (use shift instead of mult)
+- sll t1, a1, 2
+-
+- # calculate the function we need to jump to,
+- # which must then be saved in t9
++ # nsXPTCVariant* s);
++ la t9, invoke_copy_to_stack
++ move a0, sp
++ lw a1, A2OFF(fp)
++ lw a2, A3OFF(fp)
++ subu sp, 16
++ jalr t9
++ lw gp, GPOFF(fp)
++
++ # back to the variable stack frame
++ addu sp, 16
++
++ # calculate the function we need to jump to, which must then be
++ # stored in t9
++ lw a0, A0OFF(fp) # a0 = set "that" to be "this"
++ lw t0, A1OFF(fp) # a1 = methodIndex
+lw t9, 0(a0)
+- addu t9, t9, t1
+- lw t9, 8(t9)
+-
+- # a1..a3 and f13..f14 should now be set to what
+- # invoke_copy_to_stack told us. skip a0 and f12
+- # because that is the "this" pointer
+-
+- REG_L a1, 1*SZREG(s1)
+- REG_L a2, 2*SZREG(s1)
+- REG_L a3, 3*SZREG(s1)
+-
+- l.d $f13, 8(s1)
+- l.d $f14, 16(s1)
+-
+- # Create the stack pointer for the function, which must have 4 word
+- # of space for callee-saved args. invoke_count_words allocated space
+- # for a0 starting at s1, so we just move s1 into sp.
+- move sp, s1
+-
+- jalr ra, t9
+- lw gp, GPOFF(s0)
+
+- move sp, s0
++ # t0 = methodIndex << PTRLOG
++ sll t0, t0, PTRLOG
++ addu t9, t0
++#if defined(__GXX_ABI_VERSION) && __GXX_ABI_VERSION >= 100 /* G++ V3 ABI */
++ lw t9, (t9)
++#else /* not G++ V3 ABI */
++ lw t9, 2*PTRSIZE(t9)
++#endif /* G++ V3 ABI */
++
++ # Set a1-a3 to what invoke_copy_to_stack told us. a0 is already
++ # the "this" pointer. We don't have to care about floating
++ # point arguments, the non-FP "this" pointer a first argument
++ # mean they'll never be used.
++ lw a1, 1*SZREG(sp)
++ lw a2, 2*SZREG(sp)
++ lw a3, 3*SZREG(sp)
++
++ jalr t9
++ # Micro-optimization: There's no gp usage below this point, so
++ # we don't reload.
++ # lw gp, GPOFF(fp)
++
++ # leave variable stack frame
++ move sp, fp
++ lw ra, RAOFF(sp)
++ lw fp, FPOFF(sp)
+
+- REG_L ra, RAOFF(sp)
+- REG_L s0, S0OFF(sp)
+- addu sp, FRAMESZ
++ addiu sp, FRAMESZ
+j ra
+-.end _XPTC_InvokeByIndex
++END(_XPTC_InvokeByIndex)
+diff -ruN /home/marinkov/tmp/firefox-
+1.0/./xpcom/reflect/xptcall/src/md/unix/xptcinvoke_mips.cpp ./xpcom/reflect/xpt
+call/src/md/unix/xptcinvoke_mips.cpp
+--- /home/marinkov/tmp/firefox-
+1.0/./xpcom/reflect/xptcall/src/md/unix/xptcinvoke_mips.cpp 2001-10-05
+20:45:29.000000000 -0700
++++ ./xpcom/reflect/xptcall/src/md/unix/xptcinvoke_mips.cpp 2004-11-23
+16:15:10.000000000 -0800
+@@ -21,7 +21,7 @@
+* Contributor(s):
+* Stuart Parmenter <pavlov@netscape.com>
+* Brendan Eich <brendan@mozilla.org>
+- *
++ * Thiemo Seufer <seufer@csv.ica.uni-stuttgart.de>
+*/
+
+/* This code is for MIPS using the O32 ABI. */
+@@ -37,10 +37,8 @@
+// Count a word for a0 even though it's never stored or loaded
+// We do this only for alignment of register pairs.
+PRUint32 result = 1;
+- for (PRUint32 i = 0; i < paramCount; i++, s++)
++ for (PRUint32 i = 0; i < paramCount; i++, result++, s++)
+{
+- result++;
+-
+if (s->IsPtrData())
+continue;
+
+@@ -53,6 +51,9 @@
+result++;
+result++;
+break;
++
++ default:
++ break;
+}
+}
+return (result + 1) & ~(PRUint32)1;
+@@ -73,8 +74,6 @@
+continue;
+}
+
+- *((void**)d) = s->val.p;
+-
+switch(s->type)
+{
+case nsXPTType::T_I64 :
+@@ -89,6 +88,9 @@
+if ((PRWord)d & 4) d++;
+*((double*) d) = s->val.d; d++;
+break;
++ default:
++ *((void**)d) = s->val.p;
++ break;
+}
+}
+}
+@@ -103,5 +105,4 @@
+PRUint32 paramCount, nsXPTCVariant* params)
+{
+return _XPTC_InvokeByIndex(that, methodIndex, paramCount, params);
+-}
+-
++}
+diff -ruN /home/marinkov/tmp/firefox-
+1.0/./xpcom/reflect/xptcall/src/md/unix/xptcstubs_asm_mips.s ./xpcom/reflect/xp
+tcall/src/md/unix/xptcstubs_asm_mips.s
+--- /home/marinkov/tmp/firefox-
+1.0/./xpcom/reflect/xptcall/src/md/unix/xptcstubs_asm_mips.s 1969-12-31
+16:00:00.000000000 -0800
++++ ./xpcom/reflect/xptcall/src/md/unix/xptcstubs_asm_mips.s 2004-11-23
+17:19:05.000000000 -0800
+@@ -0,0 +1,149 @@
++/* -*- Mode: asm; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
++ * Version: MPL 1.1
++ *
++ * The content of this file are subject to the Mozilla Public License Version
++ * 1.1 (the "License"); you may not use this file except in compliance with
++ * the License. You may obtain a copy of the License at
++ * http://www.mozilla.org/MPL/
++ *
++ * Software distributed under the License is distributed on an "AS IS" basis,
++ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
++ * for the specific language governing right and limitation under the
++ * License.
++ *
++ * The Original Code is mozilla.org code.
++ *
++ * The Initial Developer of the Original Code is
++ * Netscape Communications Corp, Inc.
++ * Portions created by the Initial Developer are Copyright (C) 2001
++ * the Initial Developer. All Rights Reserved.
++ *
++ * Contributor(s):
++ * Stuart Parmenter <pavlov@netscape.com>
++ * Chris Waterson <waterson@netscape.com>
++ * Thiemo Seufer <seufer@csv.ica.uni-stuttgart.de>
++ */
++
++/* This code is for MIPS using the O32 ABI. */
++
++#include <sys/regdef.h>
++#include <sys/asm.h>
++
++#define SETUP_GP \
++ .set noreorder; \
++ .cpload $25; \
++ .set reorder
++#define SAVE_GP(x) .cprestore x
++
++# NARGSAVE is the argument space in the caller frame, including extra
++# 'shadowed' space for the argument registers. The minimum of 4
++# argument slot is sometimes predefined in the header files.
++#ifndef NARGSAVE
++#define NARGSAVE 4
++#endif
++
++#define LOCALSZ 2 /* gp, ra */
++#define FRAMESZ ((((NARGSAVE+LOCALSZ)*SZREG)+ALSZ)&ALMASK)
++
++#define RAOFF (FRAMESZ - (1*SZREG))
++#define GPOFF (FRAMESZ - (2*SZREG))
++
++#define A0OFF (FRAMESZ + (0*SZREG))
++#define A1OFF (FRAMESZ + (1*SZREG))
++#define A2OFF (FRAMESZ + (2*SZREG))
++#define A3OFF (FRAMESZ + (3*SZREG))
++
++ .text
++
++#if defined(__GXX_ABI_VERSION) && __GXX_ABI_VERSION >= 100 /* G++ V3 ABI */
++#define STUB_ENTRY(x) \
++ .if x < 10; \
++ .globl _ZN14nsXPTCStubBase5Stub ##x ##Ev; \
++ .type _ZN14nsXPTCStubBase5Stub ##x ##Ev,@function; \
++ .aent _ZN14nsXPTCStubBase5Stub ##x ##Ev,0; \
++_ZN14nsXPTCStubBase5Stub ##x ##Ev:; \
++ SETUP_GP; \
++ li t0,x; \
++ b sharedstub; \
++ .elseif x < 100; \
++ .globl _ZN14nsXPTCStubBase6Stub ##x ##Ev; \
++ .type _ZN14nsXPTCStubBase6Stub ##x ##Ev,@function; \
++ .aent _ZN14nsXPTCStubBase6Stub ##x ##Ev,0; \
++_ZN14nsXPTCStubBase6Stub ##x ##Ev:; \
++ SETUP_GP; \
++ li t0,x; \
++ b sharedstub; \
++ .elseif x < 1000; \
++ .globl _ZN14nsXPTCStubBase7Stub ##x ##Ev; \
++ .type _ZN14nsXPTCStubBase7Stub ##x ##Ev,@function; \
++ .aent _ZN14nsXPTCStubBase7Stub ##x ##Ev,0; \
++_ZN14nsXPTCStubBase7Stub ##x ##Ev:; \
++ SETUP_GP; \
++ li t0,x; \
++ b sharedstub; \
++ .else; \
++ .err; \
++ .endif
++#else /* not G++ V3 ABI */
++#define STUB_ENTRY(x) \
++ .globl Stub ##x ##__14nsXPTCStubBase; \
++ .type Stub ##x ##__14nsXPTCStubBase,@function; \
++ .aent Stub ##x ##__14nsXPTCStubBase,0; \
++Stub ##x ##__14nsXPTCStubBase:; \
++ SETUP_GP; \
++ li t0,x; \
++ b sharedstub
++#endif /* G++ V3 ABI */
++
++# SENTINEL_ENTRY is handled in the cpp file.
++#define SENTINEL_ENTRY(x)
++
++#
++# open a dummy frame for the function entry
++#
++ .align 2
++ .type dummy,@function
++ .ent dummy, 0
++ .frame sp, FRAMESZ, ra
++dummy:
++ SETUP_GP
++
++#include "xptcstubsdef.inc"
++
++sharedstub:
++ subu sp, FRAMESZ
++
++ # specify the save register mask for gp, ra, a0-a3
++ .mask 0x900000F0, RAOFF-FRAMESZ
++
++ sw ra, RAOFF(sp)
++ SAVE_GP(GPOFF)
++
++ # Micro-optimization: a0 is already loaded, and it slot get
++ # ignored by PrepareAndDispatch, so no need to save it here.
++ # sw a0, A0OFF(sp)
++ sw a1, A1OFF(sp)
++ sw a2, A2OFF(sp)
++ sw a3, A3OFF(sp)
++
++ la t9, PrepareAndDispatch
++
++ # t0 is methodIndex
++ move a1, t0
++ # have a2 point to the begin of the argument space on stack
++ addiu a2, sp, FRAMESZ
++
++ # PrepareAndDispatch(that, methodIndex, args)
++ jalr t9
++
++ # Micro-optimization: Using jalr explicitly ha the side-effect
++ # of not triggering .cprestore. This is ok because we have no
++ # gp reference below this point. It also allows better
++ # instruction sscheduling.
++ # lw gp, GPOFF(fp)
++
++ lw ra, RAOFF(sp)
++ addiu sp, FRAMESZ
++ j ra
++ END(dummy)
++
+diff -ruN /home/marinkov/tmp/firefox-
+1.0/./xpcom/reflect/xptcall/src/md/unix/xptcstubs_asm_mips.s.m4 ./xpcom/reflect
+/xptcall/src/md/unix/xptcstubs_asm_mips.s.m4
+--- /home/marinkov/tmp/firefox-
+1.0/./xpcom/reflect/xptcall/src/md/unix/xptcstubs_asm_mips.s.m4 2001-10-11
+00:19:01.000000000 -0700
++++ ./xpcom/reflect/xptcall/src/md/unix/xptcstubs_asm_mips.s.m4 1969-12-31
+16:00:00.000000000 -0800
+@@ -1,93 +0,0 @@
+-/* -*- Mode: asm; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+- * Version: MPL 1.1
+- *
+- * The content of this file are subject to the Mozilla Public License Version
+- * 1.1 (the "License"); you may not use this file except in compliance with
+- * the License. You may obtain a copy of the License at
+- * http://www.mozilla.org/MPL/
+- *
+- * Software distributed under the License is distributed on an "AS IS" basis,
+- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+- * for the specific language governing right and limitation under the
+- * License.
+- *
+- * The Original Code is mozilla.org code.
+- *
+- * The Initial Developer of the Original Code is
+- * Netscape Communications Corp, Inc.
+- * Portions created by the Initial Developer are Copyright (C) 2001
+- * the Initial Developer. All Rights Reserved.
+- *
+- * Contributor(s):
+- * Stuart Parmenter <pavlov@netscape.com>
+- * Chris Waterson <waterson@netscape.com>
+- */
+-
+-/* This code is for MIPS using the O32 ABI. */
+-
+-#include <sys/regdef.h>
+-#include <sys/asm.h>
+-
+- .text
+- .globl PrepareAndDispatch
+-
+-NARGSAVE=4 # extra space for the callee to use. gccism
+- # we can put our a0-a3 in our caller space.
+-LOCALSZ=2 # gp, ra
+-FRAMESZ=(((NARGSAVE+LOCALSZ)*SZREG)+ALSZ)&ALMASK
+-
+-define(STUB_NAME, `Stub'$1`__14nsXPTCStubBase')
+-
+-define(STUB_ENTRY,
+-` .globl 'STUB_NAME($1)`
+- .align 2
+- .type 'STUB_NAME($1)`,@function
+- .ent 'STUB_NAME($1)`, 0
+-'STUB_NAME($1)`:
+- .frame sp, FRAMESZ, ra
+- .set noreorder
+- .cpload t9
+- .set reorder
+- subu sp, FRAMESZ
+- .cprestore 16
+- li t0, '$1`
+- b sharedstub
+-.end 'STUB_NAME($1)`
+-
+-')
+-
+-define(SENTINEL_ENTRY, `')
+-
+-include(xptcstubsdef.inc)
+-
+- .globl sharedstub
+- .ent sharedstub
+-sharedstub:
+-
+- REG_S ra, 20(sp)
+-
+- REG_S a0, 24(sp)
+- REG_S a1, 28(sp)
+- REG_S a2, 32(sp)
+- REG_S a3, 36(sp)
+-
+- # t0 is methodIndex
+- move a1, t0
+-
+- # put the start of a1, a2, a3, and stack
+- move a2, sp
+- addi a2, 24 # have a2 point to sp + 24 (where a0 is)
+-
+- # PrepareAndDispatch(that, methodIndex, args)
+- # a0 a1 a2
+- #
+- jal PrepareAndDispatch
+-
+- REG_L ra, 20(sp)
+- REG_L a1, 28(sp)
+- REG_L a2, 32(sp)
+-
+- addu sp, FRAMESZ
+- j ra
+-
+-.end sharedstub
+
+----end Firefox patch file------
+
+2. .mozconfig configuration file
+----begin .mozconfig file------
+export FT2_CONFIG=${X11_PREFIX}/usr/X11R6/bin/freetype-config
+export CROSS_COMPILE=1
+export MOZILLA_OFFICIAL=1
+export BUILD_OFFICIAL=1
+export MOZ_PHOENIX=1
+export CC="${TARGET}-gcc -Wa,-xgot"
+export LD=${TARGET}-ld
+export AR=${TARGET}-ar
+export AS=${TARGET}-as
+export CXX="${TARGET}-g++ -Wa,-xgot"
+export RANLIB=${TARGET}-ranlib
+export STRIP=${TARGET}-strip
+
+mk_add_options MOZ_PHOENIX=1
+
+ac_add_options --prefix=${PREFIX}
+ac_add_options --target=${TARGET}
+ac_add_options --x-includes=${X11_INCLUDES}
+ac_add_options --x-libraries=${X11_LIBS}
+ac_add_options --with-x
+ac_add_options --with-system-jpeg=${LIBJPEG_PREFIX}
+ac_add_options --with-system-zlib=${ZLIB_PREFIX}
+ac_add_options --with-system-png=${LIBPNG_PREFIX}
+ac_add_options --with-gtk-prefix=${GTK_PREFIX}
+ac_add_options --with-libIDL-prefix=${LIBIDL_PREFIX}
+ac_add_options --with-glib-prefix=${GLIB_PREFIX}
+ac_add_options --enable-optimize=${OPTIMIZE}
+ac_add_options --enable-default-toolkit=gtk2
+ac_add_options --disable-mailnews
+ac_add_options --disable-ldap
+ac_add_options --disable-xft
+ac_add_options --enable-freetype2
+ac_add_options --enable-crypto
+ac_add_options --enable-xinerama
+ac_add_options --enable-single-profile
+ac_add_options --disable-composer
+ac_add_options --enable-extensions=all,-typeaheadfind,-wallet
+ac_add_options --disable-installer
+ac_add_options --disable-tests
+ac_add_options --disable-debug
+ac_add_options --disable-logging
+ac_add_options --enable-reorder
+ac_add_options --enable-strip
+ac_add_options --disable-pedantic
+ac_add_options --enable-cpp-rtti
+ac_add_options --disable-profilesharing
+ac_add_options --enable-static
+ac_add_options --disable-shared
+ac_add_options --disable-accessibility
+ac_add_options --disable-jsd
+ac_add_options --disable-view-source
+----end .mozconfig file-----
+
+3. summary of build environment
+* gcc 3.3.3/glibc 2.3.2
+* XFree86 4.4.0
+* glib 2.4.7, atk 1.8.0, pango 1.6.0, gtk 2.4.3
+* Firefox 1.0

@@ -1,0 +1,52 @@
+Standardize bookmarks property dialogs both in terms of code and user interface
+Created attachment 343138
+This is pretty strange
+
+In https://bugzilla.mozilla.org/show_bug.cgi?id=411261#c25 Dietrich wrote:
+
+>Thanks for the patch Andrew, but I don't think we should be extending that
+>dialog. Instead, we should be standardizing on the new bookmark properties
+>panel, and removing the old one.
+>
+>I think that the dialog should embed the new panel, like the library does. This
+>will reduce code and provide a consistent experience for users.
+>
+>I also don't like that there are two versions of bookmark properties UI
+>available via primary UI that are so radically different in appearance, but
+>that's an issue for another bug.
+
+To review all of the motivations here:
+1) reuse code to reduce complexity
+2) use a consistent interface so that users are not confused
+
+I think everyone is on board with both of those motivations, but I'm not sure how far we go with matching the bookmark contextual dialog (the thing that hangs off of the star in the location bar) in the other instances of the bookmark properties dialog.  Here is the list Marco gave me on irc:
+
+1. history sidebar, right click and choose Bookmark this link
+2. places views (menu, toolbar) context menu New Bookmark, New Folder
+3. subscribe a livemark
+4. Add keyword for this search
+5. add a sidebar panel clicking on a link or through js function addPanel
+6. drop a bookmark over the bookmarks Library icon after customize toolbars
+7. Bookmark all tabs
+8. Context menu properties
+
+Also, I think:
+9. Library window properties pane (?)
+10. "Bookmark this Link" on the contextual menu of a hyperlink in the content area (screenshot in attachment).
+
+There might be more instances of creating / editing a bookmarks properties, but those are all of the ones I know about.
+
+In terms of Dietrich's comment:
+
+>I also don't like that there are two versions of bookmark properties UI
+>available via primary UI that are so radically different in appearance
+
+The bookmark contextual dialog is instant apply, and has a click outside to dismiss behavior (the click outside to dismiss behavior is conveyed visually by referencing other interfaces that are click outside to dismiss).
+
+Adapting the instant apply nature of the interface to other instances of the bookmarks property dialog is fine, but carrying over click outside to dismiss behavior doesn't make any sense in the other contexts.  For instance, the "Bookmark this Link" interface isn't visually associated with anything that could recreate the interface (like the star in the location bar) and it is kind of awkward in the upper left hand corner of the content area.
+
+So I propose that we leverage some of the existing code, which means that they will become instant apply.  However, they should really remain (including the "Bookmark this Link" instance) real modal dialog boxes, with Done / Cancel buttons.
+
+Also, the large star icon, title and "Remove bookmark" items don't need to appear in these other instances of the bookmarks property interfaces, since a contextual command already set the context of what the user is doing, and there was also a contextual delete command.
+
+I probably still need to clarify a bunch of stuff, but what do people think of that overall approach?

@@ -1,0 +1,33 @@
+On browser startup, browser window load event fires before SessionStore component is initialized
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.6) Gecko/20070725 Firefox/2.0.0.6
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.6) Gecko/20070725 Firefox/2.0.0.6
+
+I noticed that when I try to access SessionStore API function in functions that listen for the window load event, that SessionStore throws an exception on browser startup.
+
+The exception given is:  Error: this._windows[aWindow.__SSi] has no properties
+
+I put a dump statement on the first line of SessionStore's init and onLoad functions and one the first line of my extensions window load listener and saw that on browser startup, my listener ran before both SessionStore's init and onLoad functions.  Since my listener tries to use the SessionStore API it causes SessionStore to throw exception since it hasn't been initialized yet.
+
+On opening subsequent windows, SessionStore's onLoad function fires first, then my listener function and finally SessionStore's init function.  So my listener works fine in this case.
+
+The SessionStore's init function should execute before the browser notifies the listeners of the window load event.
+
+Currently SessionStore's init function is called in browser.js's delayedStartup() function which is called via a SetTimeout call:
+http://lxr.mozilla.org/seamonkey/source/browser/base/content/browser.js#1122
+
+I don't know if it's possible to call it sooner, but it would definitely help.  As it is now, the init function is called after the onLoad function which seems backwards.
+
+Reproducible: Always
+
+Steps to Reproduce:
+Add this to extension window load event listener function:
+
+var count = Components.classes["@mozilla.org/browser/sessionstore;1"].getService(Components.interfaces.nsISessionStore).getClosedTabCount(window);
+
+Actual Results:  
+Error: this._windows[aWindow.__SSi] has no properties
+Source File: file:///C:/Documents%20and%20Settings/mkraft/My%20Documents/firefox/components/nsSessionStore.js
+Line: 671
+
+Expected Results:  
+Return closed tab count

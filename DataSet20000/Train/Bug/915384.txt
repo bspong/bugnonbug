@@ -1,0 +1,25 @@
+Intermittent ASAN browser_thumbnails_background.js,browser_thumbnails_update.js,browser_thumbnails_background_crash.js | This test exceeded the timeout threshold. It should be rewritten or split up. If that's not possible, use requestLongerTimeout(N)
+Bug 910563 is the only thumbnail-related patch that I see having landed around the time this regressed. As decoder will point out, ASAN often exposes slow-running tests more easily than regular opt/debug builds. Is it possible that bug 910563 is somehow making browser_thumbnails_background.js run slower?
+
+Also, maybe the right solution is a requestLongerTimeout, but it might be good if we at least understood why this test got slower all of a sudden.
+
+https://tbpl.mozilla.org/php/getParsedLog.php?id=27710505&tree=Mozilla-Inbound
+
+Ubuntu ASAN VM 12.04 x64 mozilla-inbound opt test mochitest-browser-chrome on 2013-09-11 08:33:28 PDT for push bc729c5726bb
+slave: tst-linux64-ec2-101
+
+09:54:14     INFO -  TEST-INFO | chrome://mochitests/content/browser/toolkit/components/thumbnails/test/browser_thumbnails_background.js | starting sub-test noAlert
+09:54:14     INFO -  TEST-PASS | chrome://mochitests/content/browser/toolkit/components/thumbnails/test/browser_thumbnails_background.js | Thumbnail file should not already exist.
+09:54:14     INFO -  JavaScript error: , line 0: uncaught exception: out of memory
+09:54:14     INFO -  TEST-INFO | chrome://mochitests/content/browser/toolkit/components/thumbnails/test/browser_thumbnails_background.js | Console message: [JavaScript Error: "uncaught exception: out of memory"]
+09:54:14     INFO -  TEST-INFO | chrome://mochitests/content/browser/toolkit/components/thumbnails/test/browser_thumbnails_background.js | Console message: [JavaScript Error: "The character encoding of the HTML document was not declared. The document will render with garbled text in some browser configurations if the document contains characters from outside the US-ASCII range. The character encoding of the page must be declared in the document or in the transfer protocol." {file: "data:text/html,<script>alert('yo!');</script>" line: 0}]
+09:54:14     INFO -  TEST-PASS | chrome://mochitests/content/browser/toolkit/components/thumbnails/test/browser_thumbnails_background.js | Captured URL should be URL passed to capture.
+09:54:14     INFO -  TEST-PASS | chrome://mochitests/content/browser/toolkit/components/thumbnails/test/browser_thumbnails_background.js | Thumbnail file should exist even though it alerted.
+09:54:14     INFO -  TEST-INFO | chrome://mochitests/content/browser/toolkit/components/thumbnails/test/browser_thumbnails_background.js | starting sub-test noDuplicates
+09:54:14     INFO -  TEST-PASS | chrome://mochitests/content/browser/toolkit/components/thumbnails/test/browser_thumbnails_background.js | Thumbnail file should not already exist.
+09:54:14     INFO -  TEST-PASS | chrome://mochitests/content/browser/toolkit/components/thumbnails/test/browser_thumbnails_background.js | called back with correct url
+09:54:14     INFO -  TEST-PASS | chrome://mochitests/content/browser/toolkit/components/thumbnails/test/browser_thumbnails_background.js | Thumbnail file should now exist.
+09:54:14     INFO -  TEST-PASS | chrome://mochitests/content/browser/toolkit/components/thumbnails/test/browser_thumbnails_background.js | called back with correct url
+09:54:14     INFO -  TEST-PASS | chrome://mochitests/content/browser/toolkit/components/thumbnails/test/browser_thumbnails_background.js | Thumbnail file should still be deleted.
+09:54:14  WARNING -  TEST-UNEXPECTED-FAIL | chrome://mochitests/content/browser/toolkit/components/thumbnails/test/browser_thumbnails_background.js | This test exceeded the timeout threshold. It should be rewritten or split up. If that's not possible, use requestLongerTimeout(N), but only as a last resort.
+09:54:14     INFO -  INFO TEST-END | chrome://mochitests/content/browser/toolkit/components/thumbnails/test/browser_thumbnails_background.js | finished in 31885ms

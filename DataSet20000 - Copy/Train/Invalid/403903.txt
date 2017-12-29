@@ -1,0 +1,75 @@
+type information lost for objects passed across iframes
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.9) Gecko/20071025 Firefox/2.0.0.9
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.9) Gecko/20071025 Firefox/2.0.0.9
+
+In JavaScript, when I pass an object across iframes, the type info of the object is being lost. So, if I pass an Array, foo instanceof Array returns true in the initial iframe, but false in the iframe it was passed to. Same thing happened with XML objects.
+
+Reproducible: Always
+
+Steps to Reproduce:
+save the HTML below in a file and open it in Firefox
+
+<html>
+<head>
+<script type="text/javascript">
+	function load()
+	{
+		var frame1 = 'function frame1Method(arg)\n{ \n' + 
+	 '\t var someXml = <outerTag><innerTag>foo</innerTag></outerTag>; \n' + 
+	 '\t alert("in frame1, someXml instanceof XML = "' +
+	 ' + (someXml instanceof XML)); \n' + 
+	 '\t return someXml; \n}';
+		
+		var frame2 = 'var someXml = parent.document.' + 
+		 'getElementById("frame1")' +					 '.contentWindow["frame1Method"].apply(this,new Array()); \n' +
+		 'alert("in frame2, someXml instanceof XML = "' +
+		 ' +  (someXml instanceof XML) );';
+
+		var frame3 = 'function frame3Method(){ \n' + 
+		 '\t var myArray = new Array(); \n'+
+		 '\t myArray[0] = "test"; \n'+
+		 '\t alert("in frame3 myArray instanceof Array = "' +
+		 ' + (myArray instanceof Array));\n' +
+		 '\t return myArray; \n}';
+
+		var frame4 = 'var someArray = parent.document.getElementById("frame3")' +
+	 '.contentWindow["frame3Method"].apply(this,new Array()); \n' +
+	 'alert("in frame4, someArray instanceof Array = "' +
+	 ' +  (someArray instanceof Array) );';
+
+	buildFrame(frame1,"frame1");
+	buildFrame(frame2,"frame2");
+	buildFrame(frame3,"frame3");
+	buildFrame(frame4,"frame4");
+	}
+	
+	function buildFrame(txt, frameName)
+	{	
+		var newIFrame = document.createElement('iframe');
+	newIFrame.id = frameName;
+	newIFrame.name = frameName;
+	newIFrame.style.display = "none"
+	document.body.appendChild(newIFrame);
+	var jsText = '<script type="text/javascript">' + txt + '<\/script>';
+	document.getElementById(frameName).contentDocument.write(jsText);
+	}
+</script>
+</head>
+<body onload="load()">
+</body>
+</html>
+Actual Results:  
+the following alerts are shown, demonstrating that the objects lost their types when passed across iframes
+
+in frame1, someXml instanceof XML = true
+in frame2, someXml instanceof XML = false
+in frame3 myArray instanceof Array = true
+in frame4 myArray instanceof Array = false
+
+Expected Results:  
+it should've maintained object type info and alerted the following:
+
+in frame1, someXml instanceof XML = true
+in frame2, someXml instanceof XML = true
+in frame3 myArray instanceof Array = true
+in frame4 myArray instanceof Array = true

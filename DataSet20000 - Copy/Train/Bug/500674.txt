@@ -1,0 +1,98 @@
+xkb redirected keys don't work with autocompletion
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.1) Gecko/20090626 Gentoo Firefox/3.5
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.1) Gecko/20090626 Gentoo Firefox/3.5
+
+Using XKB it is possible to redirect some key combination to some other key.  For example I redirect [Control-j] to [Left].  In Firefox this does not work when autocompletion is in effect otherwise it does.  Once there are no completion suggestions anymore redirection works again.
+
+This affects the urlbar as well as any form with autocompletion enabled and ubiquity. I have tried with 3.5_rc2 as well as 3.0.x. I am using xorg-server-1.6.1.901. In 1.5 (and 1.4?) redirection is generally broken. Redirection used to work in Firefox (3.0.x) when I was still using xorg-server-1.3 (or was it 1.4?).
+
+Admitted this is quite an unusual requirement but it seams there is a bigger underlying problem with event handling when autocompletion is in effect.  See e.g. #61439, #87240.  Clearly the autocompletion feature somehow handles events differently than the rest of Firefox.
+
+So while this particular bug might not have a high priority for developers (it has for me, I might start using a different browser because of it) it would probably be a good idea to check if autocompletion really needs different key handling than the rest of Firefox. And if it does to figure out why it's implementation keeps breaking in more esoteric cases (though entering an @ is not that esoteric (see reverenced bugs)).
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Add these files and modify the xkb configuration you use to include it:
+
+// /usr/share/X11/xkb/symbols/redirect
+
+alphanumeric_keys xkb_symbols "redirected" {
+   key <I155> { [      Left ] };
+};
+
+alphanumeric_keys xkb_symbols "redirecting" {
+    key.type           = "REDIRECTING";
+    key.repeat         = yes;
+    Redirect.clearmods = all;
+
+    key <AC07> { [     j,          J,          quotedbl    ],
+         actions =
+       [ NoAction(), NoAction(), NoAction(),
+         Redirect(key=<I155>),
+         Redirect(key=<I155>, modifiers=Control),
+         NoAction(),
+         Redirect(key=<I155>, modifiers=Mod1)
+       ] };
+};
+
+// /usr/share/X11/xkb/types/redirect
+
+xkb_types "redirect" {
+    virtual_modifiers LevelThree;
+
+    type "REDIRECTING" {
+        modifiers = Shift+Lock+LevelThree+Control+Mod1+Mod4+Mod3;
+        map[None]            = Level1;
+        map[Shift]           = Level2;
+        map[LevelThree]      = Level3;
+        map[Control]         = Level4;
+        map[Mod1]            = Level5;
+        map[Mod4]            = Level6;
+        map[Mod3]	     = Level7;
+
+        map[Lock]            = Level2;
+        map[Lock+Shift]      = Level2;
+        map[Lock+LevelThree] = Level3;
+        map[Lock+Control]    = Level4;
+        map[Lock+Mod1]       = Level5;
+        map[Lock+Mod4]       = Level6;
+        map[Lock+Mod3]       = Level7;
+
+        level_name[Level1]   = "Base";
+        level_name[Level2]   = "Shift";
+        level_name[Level3]   = "LevelThree";
+        level_name[Level4]   = "Control";
+        level_name[Level5]   = "Meta";
+        level_name[Level6]   = "Hyper";
+        level_name[Level7]   = "Super";
+    };
+};
+
+// Modify the files you use to include the above files. E.g.
+
+// /usr/share/X11/xkb/symbols/us
+
+xkb_symbols "basic" {
+
+    name[Group1]= "USA";
+    include "redirect"
+    ...
+    // key <AC07> {	[	  j,	J		]	};
+    ...
+};
+
+// /usr/share/X11/xkb/types/basic
+
+xkb_types "basic" {
+
+   include "redirect"
+   ...
+};
+
+// Make sure the imported definitions are not later overwritten.
+// Test if [Control-j] moves left in your favorite editor.
+// If it doesn't work edit the files you use directly.
+
+2. Enter some text that will complete in the urlbar.
+3. See how [Control-j] doesn't do anything.

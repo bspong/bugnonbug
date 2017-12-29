@@ -1,0 +1,72 @@
+Firefox 48a regularly stalls
+User Agent: Mozilla/5.0 (X11; Linux x86_64; rv:48.0) Gecko/20100101 Firefox/48.0
+Build ID: 20160523004008
+
+Steps to reproduce:
+
+In basic use, every few minutes the whole browser will hang for a few (or more) seconds.
+Running in safe mode does not stop the issue, so pretty certain extensions are not causing this.
+
+Looking at an strace, firefox keeps getting stuck on a futex>
+
+mprotect(0x7fe76ba77000, 4096, PROT_READ|PROT_WRITE) = 0
+mprotect(0x7fe76ba77000, 4096, PROT_READ|PROT_EXEC) = 0
+futex(0x7fe792800048, FUTEX_WAIT_PRIVATE, 2, NULL) = -1 EAGAIN (Resource temporarily unavailable)
+futex(0x7fe792800048, FUTEX_WAKE_PRIVATE, 1) = 0
+futex(0x7fe792800048, FUTEX_WAIT_PRIVATE, 2, NULL) = -1 EAGAIN (Resource temporarily unavailable)
+futex(0x7fe792800048, FUTEX_WAKE_PRIVATE, 1) = 0
+futex(0x7fe792800048, FUTEX_WAIT_PRIVATE, 2, NULL) = -1 EAGAIN (Resource temporarily unavailable)
+futex(0x7fe792800048, FUTEX_WAKE_PRIVATE, 1) = 0
+futex(0x7fe792800048, FUTEX_WAIT_PRIVATE, 2, NULL) = -1 EAGAIN (Resource temporarily unavailable)
+futex(0x7fe792800048, FUTEX_WAKE_PRIVATE, 1) = 0
+futex(0x7fe792800048, FUTEX_WAIT_PRIVATE, 2, NULL) = -1 EAGAIN (Resource temporarily unavailable)
+futex(0x7fe792800048, FUTEX_WAIT_PRIVATE, 2, NULL) = 0
+futex(0x7fe792800048, FUTEX_WAKE_PRIVATE, 1) = 0
+futex(0x7fe792800048, FUTEX_WAIT_PRIVATE, 2, NULL) = 0
+futex(0x7fe792800048, FUTEX_WAKE_PRIVATE, 1) = 0
+futex(0x7fe792800048, FUTEX_WAIT_PRIVATE, 2, NULL) = -1 EAGAIN (Resource temporarily unavailable)
+futex(0x7fe792800048, FUTEX_WAKE_PRIVATE, 1) = 0
+futex(0x7fe792800048, FUTEX_WAIT_PRIVATE, 2, NULL) = -1 EAGAIN (Resource temporarily unavailable)
+futex(0x7fe792800048, FUTEX_WAIT_PRIVATE, 2, NULL) = -1 EAGAIN (Resource temporarily unavailable)
+futex(0x7fe792800048, FUTEX_WAKE_PRIVATE, 1) = 0
+
+and this repeats until the browser is free again.
+
+
+Application Basics
+------------------
+
+Name: Firefox
+Version: 48.0a2
+Build ID: 20160522004024
+Update Channel: aurora
+User Agent: Mozilla/5.0 (X11; Linux x86_64; rv:48.0) Gecko/20100101 Firefox/48.0
+OS: Linux 4.2.0-36-generic x86-64
++ Ubuntu & gnome-flashback
+Multiprocess Windows: 0/2 (Disabled)
+Safe Mode: false
+
+Graphics
+--------
+
+Features
+Compositing: Basic
+Asynchronous Pan/Zoom: none
+WebGL Renderer: NVIDIA Corporation -- GeForce GTX 660 Ti/PCIe/SSE2
+Hardware H264 Decoding: No
+GPU #1
+Active: Yes
+Description: NVIDIA Corporation -- GeForce GTX 660 Ti/PCIe/SSE2
+Vendor ID: NVIDIA Corporation
+Device ID: GeForce GTX 660 Ti/PCIe/SSE2
+Driver Version: 4.5.0 NVIDIA 364.19
+
+Diagnostics
+AzureCanvasAccelerated: 0
+AzureCanvasBackend: cairo
+AzureContentBackend: cairo
+AzureFallbackCanvasBackend: none
+CairoUseXRender: 0
+
+
+It hung / stalled twice while searching bugzilla to report this… to highlight the frequency of it.

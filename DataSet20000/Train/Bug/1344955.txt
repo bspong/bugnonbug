@@ -1,0 +1,6 @@
+Saving a page should probably preserve a dir structures so as not to break on-page but lazy loading JS content injection
+"save page" currently saves a webpage with a flat file resource dir/folder for all the linked scripts, stylesheets, images, etc. However, especially with the popularity of React it is not unusual to find a page that has 100% local content that isn't loaded in until after DOMReady has occurred, which means that Firefox's current save behaviour of saving to flat directory guarantees a broken offline page.
+
+For example, a page might start life without any images, and the as its last DOM element have a <script src="app.js"></script> that then start loading in assets and building content, using relative URLs for assets. In this case, a user saving the page will end up with a "page.html" and a filter "page" that contains all the .js, .css, .png etc resources necessary to rebuild the page offline, but organized in a way that makes it impossible to do so because the directory structure necessary to rebuild the page has been removed.
+
+While Chrome currently does the wrong thing here, too, it would be super useful if FF could be made to write page assets to disk in a way that preserves the directory structure necessary to rebuild the page regardless of whether the page is immediate content, or lazy-loaded.

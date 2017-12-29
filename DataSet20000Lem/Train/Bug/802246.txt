@@ -1,0 +1,23 @@
+Figure out what to do with the tab consoleActor in b2g
+The tab consoleActor is entirely silent on b2g because page errors, console api call and network request cannot be associated to the top level chrome window of b2g.
+
+Findings:
+
+1. outerWindowID is almost always 0 for nsIScriptError objects. When it is provided, the ID doesn't match the top chrome window of b2g (the window that load shell.xul).
+2. nsIScriptError.category is generally fine.
+3. console API message seem to have outer window IDs, but they don't match the top level chrome window (shell.xul).
+4. no network request can be logged because the nsILoadContext of the nsIHttpChannel doe not have the |associatedWindow| property. I get NS_ERROR_UNEXPECTED whenever I try to read that property.
+
+For the few case when I get window IDs, their URLs are of the form:
+
+http://system.gaiamobile.org:8080/
+http://keyboard.gaiamobile.org:8080/
+http://browser.gaiamobile.org:8080/
+... etc
+
+This seems to suggest we can have some system-known window and per app windows? Or am I wrong?
+
+
+This bug report is about: figuring out if we want to make the tab consoleActor work (and how?), or just remove it. Here we should also get a perspective on a very related topic: do we want a consoleActor per app? How do we do that in b2g? I learned from Rob that there's a plan to have per-app processes.
+
+Looking forward for thought and suggestions. Thanks!

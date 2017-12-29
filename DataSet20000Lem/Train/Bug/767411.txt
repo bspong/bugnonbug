@@ -1,0 +1,29 @@
+one-time 5-minute startup hang due to deleting page thumbnail
+I restart to update Nightly, and wa saddened to find it wa not bringing up a window.
+
+A quick sample showed:
+
+Call graph:
+2524 Thread_1973076 DispatchQueue_1: com.apple.main-thread (serial)
+2524 start
+2524 main
+2524 XRE_main
+2524 XREMain::XRE_main(int, char**, nsXREAppData const*)
+2524 XREMain::XRE_mainRun()
+2524 nsObserverService::NotifyObservers
+2524 nsObserverList::NotifyObservers
+...many js:blah frames...
+2524 nsLocalFile::Remove(bool)
+...syscalls...
+
+A little dtruss output made the culprit obvious:
+
+stat64("/Users/dolske/Library/Application Support/Firefox/Profiles/xxxx/thumbnails/d/8/f5fb411e3f1eb7f722071ec9d33f8c.png\0", 0x11A3E3998, 0x1) = 0 0
+lstat64("/Users/dolske/Library/Application Support/Firefox/Profiles/xxxx/thumbnails/d/8/f5fb411e3f1eb7f722071ec9d33f8c.png\0", 0x7FFF5FBFB400, 0x0) = 0 0
+unlink("/Users/dolske/Library/Application Support/Firefox/Profiles/xxxx/thumbnails/d/8/f5fb411e3f1eb7f722071ec9d33f8c.png\0", 0x7FFF5FBFB400, 0x0) = 0 0
+
+So, recent landing of bug 752407 which clear the thumb from this location.
+
+Looking at log timestamps, this went on for 5 minute until the browser window finally came up. That is... bad. :(
+
+I couple day ago I noticed again that bug 754671 wa hitting my hard, a my profile had ~1.7GB of thumbnails.

@@ -1,0 +1,28 @@
+If shutdown Firefox when all closed window are popups, exception occurs and session isn't saved.
+For a while now, I've noticed that sometimes when shutting down Firefox 4.0 (betas and RC), especially after having used it for a long period of time, that the sessionstore.js file still indicates the session is "running", meaning the final write never occurred. I've seen this on both my work and home PC's (running XP SP3). I've also had experience when starting Firefox (I have it set to load window and tab from last time), that long closed window open. Normally I quit Firefox with a single blank tab open, which may be what's causing this problem.
+
+I have logging enabled in my Session Manager add-on and I'm seeing the following exception occur on shutdown when this occurs.
+
+Thu, 17 Mar 2011 22:51:36 GMT: {'[JavaScript Error: "total[0] is undefined" {file: "resource://gre/components/nsSessionStore.js" line: 2267}]' when calling method: [nsISessionStore::getBrowserState]}
+
+
+I looked at the code and the only explanation I can come up with is if all the closed window were popups and sure enough my sessionstore.js file indicated a such. There wa one closed window and it wa a popup.
+
+What happens then is that the following code will shift all the closed popup window and then finally shift a NULL into total[0] which will throw an exception since total[0] will then be 0.
+
+do {
+total.unshift(lastClosedWindowsCopy.shift())
+} while (total[0].isPopup)
+
+
+My guess is that this should probably be changed to:
+
+do {
+total.unshift(lastClosedWindowsCopy.shift())
+} while (total[0].isPopup && lastClosedWindowsCopy.length > 0)
+
+
+Though since the code appears to be trying to find the last non-popup closed window, I'm not sure this is exactly correct since there are no non-popup closed windows.
+
+
+This problem is fairly easy to reproduce, simply clear your session data, find a page that ha a popup window and open it. Then close the window. Finally shut down Firefox and look at the sessionstore.js file and it will show a "running".

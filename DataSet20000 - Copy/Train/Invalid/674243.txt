@@ -1,0 +1,59 @@
+XPCOM: "Bad NPObject as private data!" after close first FF window
+User Agent: Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/534.30 (KHTML, like Gecko) Chrome/12.0.742.122 Safari/534.30
+
+Steps to reproduce:
+
+Firstly I make XPCOM (Singeltone service): 
+this component use java(java logic should singelton to):
+After First FF run I init Java and make JavaLoader and init my XPCOM: 
+Components.classes["@xxxx.xxx/manager;1"].getService().wrappedJSObject.initJava(javaLoader);
+/*
+method createClass:
+createClass: function(className)
+    {
+        return java.lang.Class.forName(className, true, this.loader).newInstance();
+    },
+*/
+
+
+initJava: function(javaLoader)
+    {
+        try
+        {           
+            if (!this._initialized)
+            {
+
+                var factory = javaLoader.createClass("xxx.xx.CommanderFactory");         
+                this.commander = factory.createCommander();
+                this._initialized = true;                
+            }
+        }
+        catch (e)
+        {
+            LOG(e + '::' + e.lineNumber);
+            throw e;
+        }
+    }, 
+
+doSomthing: function(){
+       this.commander.doSome();
+}
+
+
+then, for example I push my button and run method "doSomthing"
+and all working well.
+
+Then I open new FF window (not new tab) and push button again/
+all working well in both window
+
+
+
+BUT! if I close First Firefox and push button in second FF I have exception: 
+NPObject as private data! at this line "this.commander.doSome();"
+
+I can open many window and close them/ Only if i close First FF will be exception/
+
+
+Could do please provide workaround.
+
+Thanks

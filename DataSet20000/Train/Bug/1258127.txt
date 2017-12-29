@@ -1,0 +1,45 @@
+Track bookmark sync changes in Places
+Shower thoughts. This is similar to Bug 1235269.
+
+We persist changed IDs to a JSON file after one second, assuming the event loop isn't busy.
+
+* Open Firefox.
+* Bookmark a page with the star. It'll add a record to Unfiled Bookmarks, modifying two IDs (the new bookmark and the parent).
+* A sync will immediately occur because of the score bump. Now the server has both records.
+* Relaunch Firefox so that the next sync takes a while.
+
+Either wait for Sync to init, or don't, then:
+
+* Delete that bookmark by hitting the star again, then immediately quit the browser.
+
+
+Results:
+
+* If you didn't wait for Sync to init, we miss the change altogether, because we're not listening for changes. That's a known issue, but I don't have the bug number to hand.
+
+* If you did wait, then we saw the change, but because of the long FxA, token, i/c, m/g, c/k dance on a first sync, our score-triggered bookmark sync didn't get a chance to run. The deletion and the changed parent _did not make it to the server_.
+
+* Because you quit within one second, the tracked IDs also didn't make it to disk. The only thing that _did_ make it to disk was the deletion from the Places database!
+
+The server now has one model of our bookmarks, Places has another, and Sync didn't really see either.
+
+
+If you subsequently bookmark another Unfiled Bookmark, the new server record for the folder will no longer contain the locally-deleted child… but the server still has the record for that child, orphaned forever.
+
+
+This is one particular manifestation of a fundamental problem with Weave/Sync: that change tracking is divorced from storage itself. There are probably other ways beyond the three we know of (ignoreAll, quit-too-quick, Sync not inited) in which we fail to correctly track all changes for subsequent syncing.
+
+There are two approaches to fixing this:
+
+1. Try to make change tracking better. We could avoid ignoring by threading identifiers around. We could persist to disk immediately. This feels like whack-a-mole.
+2. Have data sources take responsibility for tracking changes.
+
+The latter is what we do on Android and iOS; it's impossible for those platforms to miss changes. Probably the only reason we don't do it on desktop is because Weave was built as an add-on layer on top of Firefox.
+
+On desktop it'd look something like this:
+
+* Add a SYNC_STATUS column to whatever we sync.
+* New items start in NEW. Changed items are marked as CHANGED. After a sync we mark items as SYNCED.
+* When Sync makes changes to Places, we need some way to identify ourselves.
+* Deletions are marked with a sentinel.
+* The entire BookmarkTracker concept goes away, with the exception of score bumping.

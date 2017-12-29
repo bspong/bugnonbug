@@ -1,0 +1,109 @@
+How to easily fix Firefox extension crash
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.10) Gecko/20050716 Firefox/1.0.6
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.10) Gecko/20050716 Firefox/1.0.6
+
+Firefox generates an access violation at address 0, i.e. "0xC0000005: Access
+violation reading location 0x00000000," when accessing some page containing
+flash animations. This is almost certainly an attempt to dereference a null
+pointer. This occurs if you have version 1.2.9 of the Flashblock extension. It
+doe NOT happen with the latest version of Flashblock or without Flashblock.
+
+Now, of course, there must be a bug in the Flashblock extension itself, which
+ha been fixed. This bug report is not about Flashblock. This bug report is
+about the ability of an extension to cause Firefox to crash.
+
+Flashblock is a very popular extenstion, second only to AdBlock. This bug could
+also happen with any extension that contains a flaw. This is extremely
+important a extension are a leading reason why people prefer Firefox over IE,
+and without such protection, an extension can easily bring Firefox down.
+
+The most desirable behavior would be to have an insolation layer to protect
+Firefox from ill-behaved extensions.
+
+Luckily, there is a simple way to protect Firefox from almost everything that a
+wayward extension would likely do. This strategy would work in Java, C#, or
+C++. Since I suspect that Firefox is written in C++, I'll give the example in
+that language.
+
+The essence of the strategy is to restrict extension from creating their own
+thread except via a runThread function that creates the thread and invokes a
+"run" function or method for the extension. Now whenever the Firefox
+application hand control over to an extension (by calling some function of the
+extension) it should:
+1. Do so only in a worker thread created either by Firefox internally or by
+Firefox within the runThread function.
+2. Surround the call the extension's function with a try-catch block that
+catch all exceptions.
+
+The following C++ program illustrates how to do this. Without the try-catch
+block, the program will crash generating the "0xC0000005: Access violation
+reading location 0x00000000" in Windows or a core dump in Unix (for a Unix
+equivalent program). With the try-catch block, nothing bad happens.
+
+--- Start of program ---
+#include "stdafx.h"
+
+int _tmain(int argc, _TCHAR* argv[])
+{
+long *x = 0;
+
+try
+{
+printf("The answer is %ld\n", *x);
+}
+catch (...)
+{
+printf("Not so fast\n");
+}
+
+printf("Done\n");
+
+return 0;
+}
+--- End of program ---
+
+This technique work for division by zeros, accessing non-null address
+outside of the program's memory area, illegal op codes, and most other thing
+that go wrong in other people's code. I have used this technique quite
+successfully to protect myself from other programmer in both Java and C++
+environments. It protects me from 100% of the "real world" screw-ups and only
+fails if I write a function intended to *make it fail* by doing something
+deliberate like overwriting the caller's memory space. But stuff like that doe
+not happen accidentally. So this will protect you against the mistake that do
+happen in real production systems. It's what I call "defensive programming."
+
+If you have any questions, you can reach me at the email address: barbalace at
+clearthought.info. (Don't let bot learn the address).
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Install version 1.2.9 of the Flashblock extension. You can find it at
+https://addons.mozilla.org/extensions/showlist.php?application=firefox&category=Web%20Annoyances&numpg=10&pageid=2
+2. Go to the page
+http://www.google.com/url?sa=t&ct=res&cd=29&url=http%3A//www.world-of-newave.info/computers/2004-november-16.htm&ei=5V4mQ6_uEcru4AGfy4DsDQ
+3. Wait for the crash
+
+Actual Results:
+Windows displayed the generic application caused and exception message with an
+option to send Microsoft the information. Firefox displayed it feedback dialog
+box for crashes.
+
+Expected Results:
+The Firefox application should have isolated itself from the access violation by
+invoking extension code within a try-catch block and making sure extension
+cannot directly spawn thread so that Firefox can ensure that those thread also
+only call extension code within a try-catch block.
+
+
+This could also be considered a security problem in that it is possible that
+someone might deliberately write an extension that periodically cause Firefox
+to crash for no plausible reason. Something like
+
+if today is Monday, Thursday, or Friday
+sleep for ten minute then
+crash Firefox unexpectedly
+
+Such an extension might not be readibly identifiable a the cause of the
+crashes. So don't tell Microsoft ;)

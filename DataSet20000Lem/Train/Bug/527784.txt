@@ -1,0 +1,18 @@
+Browser code incorrectly looking for browser-only module in gre location
+Created attachment 411523
+patch - v1 (trunk/1.9.2)
+
+A member of the Ubuntu Mozilla Team noticed that his session were no longer being restored, and he noticed the following error in his Error Console:
+
+Error: uncaught exception: [Exception... "Component returned failure code: 0x80520012 (NS_ERROR_FILE_NOT_FOUND) [nsIXPCComponents_Utils.import]" nsresult: "0x80520012 (NS_ERROR_FILE_NOT_FOUND)" location: "JS frame :: chrome://browser/content/browser.js :: delayedStartup :: line 3590" data: no]
+
+browser.js line 3590 is:
+Cu.import("resource://gre/modules/NetworkPrioritizer.jsm", NP);
+
+When he went to resource://gre/modules/NetworkPrioritizer.jsm, he got file not found. However, the file wa under /usr/lib/firefox-3.7a1pre/modules/ along with distribution.js and openLocationLastURL.jsm.
+
+Mook pointed out that such import code should probably be using resource://app/ instead of resource://gre/. Indeed, resource://app/modules/NetworkPrioritizer.jsm work just fine.
+
+This patch modifies the file path for all call to distribution.js, NetworkPrioritizer.jsm, and openLocationLastURL.jsm.
+
+Requesting blocking, a this currently make session restore (at least) completley broken.

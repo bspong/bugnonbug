@@ -1,0 +1,20 @@
+change to dateAdded and lastModified property of bookmark are sometimes not propagated to the UI
+from https://bugzilla.mozilla.org/show_bug.cgi?id=393498#c3:
+
+the UI will not be updated if only undo-ing a
+cut of a few items. since the transaction count is le than
+MIN_TRANSACTIONS_FOR_BATCH in nsPlacesTransactionsService, these change are
+wrapped up in a single transaction when cut/undo-ing of a single bookmark for
+example. therefore there's no batching, and the front-end receives and
+process OnItemAdded before the date change occur. we don't send
+OnItemChanged for added/modified because mostly those value are changed a a
+result of other change that will send a specific notification.
+
+the workaround is to cause the UI to reload the container (by clicking another
+folder, and then returning, for example). you'll then see the restored dates.
+
+one option might be to add aDoNotify to SetDateAdded/SetLastModified, however,
+this is pretty clunky and serf only this unique case. another might be to
+just get the date value directly from the bookmark service in treeView.js, but
+given the quantity of UI updating in the treeview (every mouse move over the
+cell, etc), that's likely going to cause performance issues.

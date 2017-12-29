@@ -1,0 +1,14 @@
+Can't access complex preference from a bootstrapped addons startup() function [caused by JSONovich]
+Ok, I'm not sure the bug title is entirely appropriate, and I'm not sure whether the addon manager is the appropriate place for this bug.
+
+This wa initially reported at https://launchpad.net/bugs/867753
+
+This started off when the reporter stated that the Accept-Language header in all of their outgoing http request wa set to the wrong value ("en-us,en;q=0.5"), despite the fact that intl.accept_languages wa set to the correct value according to about:config ("en-gb, en"). This is set to a complex value, with the real value coming from the reporter en-GB language pack addon.
+
+We initially suspected that the bug wa due to the JSONovich addon, a the problem wa resolved after disabling that addon. However, further investigation ha shown that JSONovich doesn't appear to be doing anything wrong.
+
+Note, than JSONovich is a bootstrapped extension.
+
+What appears to be happening is that something in it's startup() entry point trigger the initialization of the nsHttpHandler service, and nsHttpHandler read and process the value of intl.accept_languages at this point. However, when this happens, no extension chrome ha been loaded - so the value end up being provided by the built-in en-US provider instead.
+
+So, it seems that it currently isn't possible to reliably read complex prefs from anything which run inside the startup() function.

@@ -1,0 +1,23 @@
+Don't log "The object cannot be linked to the inspector without a toolbox" message in the browser console
+The console can log DOM nodes. And when it does, it generates a nice preview of the node that:
+- is syntax highlighted
+- displays the highlighter in the page when you hover over it
+- has an inspector icon next to it that, when clicked, selects that node in the inspector
+
+The last 2 features require the particular instance of the console that logged the node to be part of a complete toolbox that has an inspector panel.
+
+Unfortunately if you use the Browser Console panel, there's no toolbox around it, so there's no inspector panel that can be used.
+That's fine, you just can't select the node or highlight it in the page, but the code throws an error that therefore appears in the browser console too. So every DOM node logged gets followed by the error:
+"The object cannot be linked to the inspector without a toolbox"
+
+Relevant code is in:
+/browser/devtools/webconsole/console-output.js
+in the function |linkToInspector|
+
+    // Checking the presence of a toolbox
+    let target = this.message.output.toolboxTarget;
+    this.toolbox = gDevTools.getToolbox(target);
+    if (!this.toolbox) {
+      throw new Error("The object cannot be linked to the inspector without a " +
+        "toolbox");
+    }

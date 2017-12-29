@@ -1,0 +1,21 @@
+Bookmark folder deletion executes too many SQL statements
+Created attachment 304511
+SQL statements executed during deletion
+
+Deleting a bookmark folder with 10 bookmarks generates more than 470 database operations, 20% of them are write operations (see attachment - simple queries are not visible).
+
+The reason is very inefficient implementation of nsNavBookmarks::RemoveFolderChildren. This function deletes one by one all the child folders and items. 
+
+The problem starts with deletion of annotations, all annotations are removed and even if there were no (we should add support for number of affected rows - sqlite3_changes), item's last modification time gets updated and observers notified. nsNavHistoryResult observer then does two more selects, and goes deeper...
+
+Another problem is updating of bookmark positions - an update is done after each item removal. However, as we are deleting all children, this is cleanly wasting of time, there will be no items when we finish.
+
+The last problem is that each item updates last modification time of its parent. What is definitely superfluous, it should be enough to call this once, when we are finished with deletion.
+
+Suggestion:
+
+1) We should avoid calling annotation observers when we are deleting bookmarks.
+2) We should reduce number of last modification time changes on parent folders.
+3) We should be deleting all items belonging to one folder with one SQL statement using their parent column.
+
+Deleting of bookmarks will be much faster. At the moment there is visible delay even when deleting folder with 10 items (in debug mode 3 seconds). Similar optimization is necessary for importing bookmarks (perhaps bug 392193?)

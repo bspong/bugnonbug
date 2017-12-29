@@ -1,0 +1,411 @@
+[@ nsCounterManager::AddCounterResetsAndIncrements] aFrame->GetStyleContent() returned null
+i was closing venkman (it was unhappy)
+
++	((*((*((*aFrame).mStyleContext)).mRuleNode)).mStyleData).mResetData
+	0x00000000 {mBackgroundData=??? mPositionData=??? 
+mTextResetData=??? ...}	nsResetStyleData *
++	((*((*((*aFrame).mStyleContext)).mRuleNode)).mStyleData).mInheritedData
+	0x00000000 {mFontData=??? mColorData=??? mListData=??? ...}
+	nsInheritedStyleData *
+
+EAX = 00000000 EBX = 00000000 ECX = 00000000 EDX = 0165C08C ESI = 00000000 EDI 
+= 00000000 EIP = 0146F657 ESP = 0012DC48 EBP = 0012DC5C EFL = 00200246 
+
+PRBool
+nsCounterManager::AddCounterResetsAndIncrements(nsIFrame *aFrame)
+{
+0146F63B  push        ebp  
+0146F63C  mov         ebp,esp 
+0146F63E  sub         esp,0Ch 
+    const nsStyleContent *styleContent = aFrame->GetStyleContent();
+0146F641  mov         eax,dword ptr [ebp+8] 
+0146F644  push        esi  
+0146F645  push        edi  
+0146F646  mov         dword ptr [ebp-0Ch],ecx 
+0146F649  mov         ecx,dword ptr [eax+18h] 
+0146F64C  push        9    
+0146F64E  call        nsStyleContext::GetStyleData (14DF50Bh) 
+0146F653  mov         esi,eax /* styleContent = esi = eax = return value from 
+call        nsStyleContext::GetStyleData */
+    if (!styleContent->CounterIncrementCount() &&
+        !styleContent->CounterResetCount())
+0146F655  xor         edi,edi 
+0146F657  cmp         dword ptr [esi+10h],edi /* crash here, styleContent = esi 
+= 0x0 */
+0146F65A  jne         nsCounterManager::AddCounterResetsAndIncrements+2Ah 
+(146F665h) 
+0146F65C  cmp         dword ptr [esi+18h],edi 
+0146F65F  jne         nsCounterManager::AddCounterResetsAndIncrements+2Ah 
+(146F665h) 
+        return PR_FALSE;
+
+>	gklayout.dll!nsCounterManager::AddCounterResetsAndIncrements(nsIFrame * 
+aFrame=0x038ba7a0)  Line 196 + 0x2	C++
+ 	gklayout.dll!nsCSSFrameConstructor::InitAndRestoreFrame(const 
+nsFrameConstructorState & aState={...}, nsIContent * aContent=0x042fce78, 
+nsIFrame * aParentFrame=0x038ba610, nsStyleContext * aStyleContext=0x03fc6fb0, 
+nsIFrame * aPrevInFlow=0x00000000, nsIFrame * aNewFrame=0x038ba7a0, int 
+aAllowCounters=1)  Line 6741 + 0x18	C++
+ 	gklayout.dll!nsCSSFrameConstructor::ConstructXULFrame
+(nsFrameConstructorState & aState={...}, nsIContent * aContent=0x00000001, 
+nsIFrame * aParentFrame=0x00a63f1c, nsIAtom * aTag=0x00000001, int 
+aNameSpaceID=0, nsStyleContext * aStyleContext=0x00000000, nsFrameItems & 
+aFrameItems={...}, int aXBLBaseTag=0, int aHasPseudoParent=0, int & 
+aHaltProcessing=)  Line 6117	C++
+ 	gklayout.dll!nsCSSFrameConstructor::ConstructFrameInternal
+(nsFrameConstructorState & aState={...}, nsIContent * aContent=0x038ba610, 
+nsIFrame * aParentFrame=0x00000000, nsIAtom * aTag=0x002ae960, int 
+aNameSpaceID=9, nsStyleContext * aStyleContext=0x00000000, nsFrameItems & 
+aFrameItems={...}, int aXBLBaseTag=0)  Line 7613 + 0x21	C++
+ 	gklayout.dll!nsCSSFrameConstructor::ConstructFrame
+(nsFrameConstructorState & aState={...}, nsIContent * aContent=0x00000000, 
+nsIFrame * aParentFrame=0x03fc6fb0, nsFrameItems & aFrameItems={...})  Line 7498
+	C++
+ 	gklayout.dll!nsCSSFrameConstructor::ProcessChildren
+(nsFrameConstructorState & aState={...}, nsIContent * aContent=0x02ab5030, 
+nsIFrame * aFrame=0x042fce78, int aCanHaveGeneratedContent=0, nsFrameItems & 
+aFrameItems={...}, int aParentIsBlock=0, nsTableCreator * 
+aTableCreator=0x042fce78)  Line 11816 + 0x1f	C++
+ 	gklayout.dll!nsCSSFrameConstructor::ConstructXULFrame
+(nsFrameConstructorState & aState={...}, nsIContent * aContent=0x00000001, 
+nsIFrame * aParentFrame=0x00a63f1c, nsIAtom * aTag=0x00000001, int 
+aNameSpaceID=0, nsStyleContext * aStyleContext=0x00000000, nsFrameItems & 
+aFrameItems={...}, int aXBLBaseTag=0, int aHasPseudoParent=0, int & 
+aHaltProcessing=)  Line 6196 + 0x17	C++
+ 	gklayout.dll!nsCSSFrameConstructor::ConstructFrameInternal
+(nsFrameConstructorState & aState={...}, nsIContent * aContent=0x038ba4ec, 
+nsIFrame * aParentFrame=0x00000000, nsIAtom * aTag=0x00ac1028, int 
+aNameSpaceID=9, nsStyleContext * aStyleContext=0x00000000, nsFrameItems & 
+aFrameItems={...}, int aXBLBaseTag=0)  Line 7613 + 0x21	C++
+ 	gklayout.dll!nsCSSFrameConstructor::ConstructFrame
+(nsFrameConstructorState & aState={...}, nsIContent * aContent=0x00000000, 
+nsIFrame * aParentFrame=0x03fef970, nsFrameItems & aFrameItems={...})  Line 7498
+	C++
+ 	gklayout.dll!nsCSSFrameConstructor::ProcessChildren
+(nsFrameConstructorState & aState={...}, nsIContent * aContent=0x042fc980, 
+nsIFrame * aFrame=0x02ab5030, int aCanHaveGeneratedContent=0, nsFrameItems & 
+aFrameItems={...}, int aParentIsBlock=0, nsTableCreator * 
+aTableCreator=0x02ab5030)  Line 11816 + 0x1f	C++
+ 	gklayout.dll!nsCSSFrameConstructor::ConstructXULFrame
+(nsFrameConstructorState & aState={...}, nsIContent * aContent=0x00000001, 
+nsIFrame * aParentFrame=0x00a63f1c, nsIAtom * aTag=0x00000001, int 
+aNameSpaceID=0, nsStyleContext * aStyleContext=0x00000000, nsFrameItems & 
+aFrameItems={...}, int aXBLBaseTag=0, int aHasPseudoParent=0, int & 
+aHaltProcessing=)  Line 6196 + 0x17	C++
+ 	gklayout.dll!nsCSSFrameConstructor::ConstructFrameInternal
+(nsFrameConstructorState & aState={...}, nsIContent * aContent=0x038ba3c8, 
+nsIFrame * aParentFrame=0x00000000, nsIAtom * aTag=0x00ac10e8, int 
+aNameSpaceID=9, nsStyleContext * aStyleContext=0x00000000, nsFrameItems & 
+aFrameItems={...}, int aXBLBaseTag=0)  Line 7613 + 0x21	C++
+ 	gklayout.dll!nsCSSFrameConstructor::ConstructFrame
+(nsFrameConstructorState & aState={...}, nsIContent * aContent=0x00000000, 
+nsIFrame * aParentFrame=0x04310b74, nsFrameItems & aFrameItems={...})  Line 7498
+	C++
+ 	gklayout.dll!nsCSSFrameConstructor::ProcessChildren
+(nsFrameConstructorState & aState={...}, nsIContent * aContent=0x038bb1c0, 
+nsIFrame * aFrame=0x042fc980, int aCanHaveGeneratedContent=0, nsFrameItems & 
+aFrameItems={...}, int aParentIsBlock=0, nsTableCreator * 
+aTableCreator=0x042fc980)  Line 11816 + 0x1f	C++
+ 	gklayout.dll!nsCSSFrameConstructor::ConstructXULFrame
+(nsFrameConstructorState & aState={...}, nsIContent * aContent=0x00000001, 
+nsIFrame * aParentFrame=0x00a63f1c, nsIAtom * aTag=0x00000001, int 
+aNameSpaceID=0, nsStyleContext * aStyleContext=0x00000000, nsFrameItems & 
+aFrameItems={...}, int aXBLBaseTag=0, int aHasPseudoParent=0, int & 
+aHaltProcessing=)  Line 6196 + 0x17	C++
+ 	gklayout.dll!nsCSSFrameConstructor::ConstructFrameInternal
+(nsFrameConstructorState & aState={...}, nsIContent * aContent=0x038ba294, 
+nsIFrame * aParentFrame=0x00000000, nsIAtom * aTag=0x00ac1100, int 
+aNameSpaceID=9, nsStyleContext * aStyleContext=0x00000000, nsFrameItems & 
+aFrameItems={...}, int aXBLBaseTag=0)  Line 7613 + 0x21	C++
+ 	gklayout.dll!nsCSSFrameConstructor::ConstructFrame
+(nsFrameConstructorState & aState={...}, nsIContent * aContent=0x00000000, 
+nsIFrame * aParentFrame=0x04310640, nsFrameItems & aFrameItems={...})  Line 7498
+	C++
+ 	gklayout.dll!nsCSSFrameConstructor::ProcessChildren
+(nsFrameConstructorState & aState={...}, nsIContent * aContent=0x02b5afe8, 
+nsIFrame * aFrame=0x038bb1c0, int aCanHaveGeneratedContent=0, nsFrameItems & 
+aFrameItems={...}, int aParentIsBlock=0, nsTableCreator * 
+aTableCreator=0x038bb1c0)  Line 11816 + 0x1f	C++
+ 	gklayout.dll!nsCSSFrameConstructor::ConstructXULFrame
+(nsFrameConstructorState & aState={...}, nsIContent * aContent=0x00000001, 
+nsIFrame * aParentFrame=0x00a63f1c, nsIAtom * aTag=0x00000001, int 
+aNameSpaceID=0, nsStyleContext * aStyleContext=0x00000000, nsFrameItems & 
+aFrameItems={...}, int aXBLBaseTag=0, int aHasPseudoParent=0, int & 
+aHaltProcessing=)  Line 6196 + 0x17	C++
+ 	gklayout.dll!nsCSSFrameConstructor::ConstructFrameInternal
+(nsFrameConstructorState & aState={...}, nsIContent * aContent=0x038ba1f4, 
+nsIFrame * aParentFrame=0x00000000, nsIAtom * aTag=0x018dfcf0, int 
+aNameSpaceID=9, nsStyleContext * aStyleContext=0x00000000, nsFrameItems & 
+aFrameItems={...}, int aXBLBaseTag=0)  Line 7613 + 0x21	C++
+ 	gklayout.dll!nsCSSFrameConstructor::ConstructFrame
+(nsFrameConstructorState & aState={...}, nsIContent * aContent=0x00000000, 
+nsIFrame * aParentFrame=0x04310190, nsFrameItems & aFrameItems={...})  Line 7498
+	C++
+ 	gklayout.dll!nsCSSFrameConstructor::ProcessChildren
+(nsFrameConstructorState & aState={...}, nsIContent * aContent=0x02d73248, 
+nsIFrame * aFrame=0x02b5afe8, int aCanHaveGeneratedContent=0, nsFrameItems & 
+aFrameItems={...}, int aParentIsBlock=0, nsTableCreator * 
+aTableCreator=0x02b5afe8)  Line 11816 + 0x1f	C++
+ 	gklayout.dll!nsCSSFrameConstructor::ConstructXULFrame
+(nsFrameConstructorState & aState={...}, nsIContent * aContent=0x00000001, 
+nsIFrame * aParentFrame=0x00a63f1c, nsIAtom * aTag=0x00000001, int 
+aNameSpaceID=0, nsStyleContext * aStyleContext=0x00000000, nsFrameItems & 
+aFrameItems={...}, int aXBLBaseTag=0, int aHasPseudoParent=0, int & 
+aHaltProcessing=)  Line 6196 + 0x17	C++
+ 	gklayout.dll!nsCSSFrameConstructor::ConstructFrameInternal
+(nsFrameConstructorState & aState={...}, nsIContent * aContent=0x030d84bc, 
+nsIFrame * aParentFrame=0x00000000, nsIAtom * aTag=0x00ac1030, int 
+aNameSpaceID=9, nsStyleContext * aStyleContext=0x00000000, nsFrameItems & 
+aFrameItems={...}, int aXBLBaseTag=0)  Line 7613 + 0x21	C++
+ 	gklayout.dll!nsCSSFrameConstructor::ConstructFrame
+(nsFrameConstructorState & aState={...}, nsIContent * aContent=0x00000000, 
+nsIFrame * aParentFrame=0x04310340, nsFrameItems & aFrameItems={...})  Line 7498
+	C++
+ 	gklayout.dll!nsCSSFrameConstructor::ContentInserted(nsIContent * 
+aContainer=0x00000000, nsIFrame * aContainerFrame=0x00000000, nsIContent * 
+aChild=0x00000000, int aIndexInContainer=0, nsILayoutHistoryState * 
+aFrameState=0x00000000, int aInReinsertContent=0)  Line 9238	C++
+ 	gklayout.dll!nsCSSFrameConstructor::RecreateFramesForContent(nsIContent 
+* aContent=0x00000000)  Line 11697 + 0x16	C++
+ 	gklayout.dll!nsCSSFrameConstructor::MaybeRecreateFramesForContent
+(nsIContent * aContent=0x02d73248)  Line 11613 + 0xa	C++
+ 	gklayout.dll!nsCSSFrameConstructor::RestyleElement(nsIContent * 
+aContent=0x00000000, nsIFrame * aPrimaryFrame=0x00000000, nsChangeHint 
+aMinHint=0)  Line 10269 + 0xa	C++
+ 	gklayout.dll!nsCSSFrameConstructor::ProcessOneRestyle(nsIContent * 
+aContent=0x00000000, nsReStyleHint aRestyleHint=eReStyle_Self, nsChangeHint 
+aChangeHint=0)  Line 13652	C++
+ 	gklayout.dll!nsCSSFrameConstructor::AttributeChanged(nsIContent * 
+aContent=0x02d73248, int aNameSpaceID=45898392, nsIAtom * 
+aAttribute=0x00000001, int aModType=11276336)  Line 10461	C++
+ 	gklayout.dll!PresShell::AttributeChanged(nsIDocument * 
+aDocument=0x02e9d360, nsIContent * aContent=0x02d73248, int aNameSpaceID=0, 
+nsIAtom * aAttribute=0x00ac1060, int aModType=2)  Line 5443	C++
+ 	gklayout.dll!nsXULDocument::AttributeChanged(nsIContent * 
+aElement=0x00000000, int aNameSpaceID=0, nsIAtom * aAttribute=0x00000000, int 
+aModType=0)  Line 1137 + 0x14	C++
+ 	gklayout.dll!nsXULElement::SetAttrAndNotify(int aNamespaceID=10895132, 
+nsIAtom * aAttribute=0x00000001, nsIAtom * aPrefix=0x00000000, const 
+nsAString_internal & aOldValue={...}, nsAttrValue & aParsedValue={...}, int 
+aModification=0, int aFireMutation=0, int aNotify=0)  Line 1567	C++
+ 	gklayout.dll!nsXULElement::SetAttr(int aNamespaceID=0, nsIAtom * 
+aName=0x00000000, nsIAtom * aPrefix=0x00000000, const nsAString_internal & 
+aValue={...}, int aNotify=0)  Line 1488 + 0x1f	C++
+ 	gklayout.dll!nsMenuFrame::MarkAsGenerated()  Line 685 + 0x33	C++
+ 	gklayout.dll!nsMenuBarFrame::SetCurrentMenuItem(nsIMenuFrame * 
+aMenuItem=0x030d8524)  Line 565	C++
+ 	gklayout.dll!nsMenuFrame::HandleEvent(nsPresContext * 
+aPresContext=0x02d71410, nsGUIEvent * aEvent=0x00000001, nsEventStatus * 
+aEventStatus=0x0012f904)  Line 566	C++
+ 	gklayout.dll!PresShell::HandleEventInternal(nsEvent * 
+aEvent=0x02e9d790, nsIView * aView=0x02e9d790, unsigned int aFlags=48879504, 
+nsEventStatus * aStatus=0x0012f904)  Line 6420	C++
+ 	gklayout.dll!PresShell::HandleEvent(nsIView * aView=0x02e9d790, 
+nsGUIEvent * aEvent=0x0012f9e0, nsEventStatus * aEventStatus=0x0012f904, int 
+aForceHandle=51217596, int & aHandled=23296720)  Line 6193 + 0x13	C++
+ 	gklayout.dll!nsViewManager::HandleEvent(nsView * aView=0x00000000, 
+nsGUIEvent * aEvent=0x00000000, int aCaptured=0)  Line 2547	C++
+ 	gklayout.dll!nsViewManager::DispatchEvent(nsGUIEvent * 
+aEvent=0x3d888889, nsEventStatus * aStatus=0x0012f98c)  Line 2234 + 0x15
+	C++
+ 	gklayout.dll!HandleEvent(nsGUIEvent * aEvent=0x0012f9e0)  Line 173
+	C++
+ 	gkwidget.dll!nsWindow::DispatchEvent(nsGUIEvent * event=0x0012f9e0, 
+nsEventStatus & aStatus=nsEventStatus_eIgnore)  Line 1172 + 0x3	C++
+ 	gkwidget.dll!nsWindow::DispatchWindowEvent(nsGUIEvent * 
+event=0x00000000)  Line 1193	C++
+ 	gkwidget.dll!nsWindow::DispatchMouseEvent(unsigned int aEventType=0, 
+unsigned int wParam=0, nsPoint * aPoint=0x00000000)  Line 5819	C++
+ 	gkwidget.dll!ChildWindow::DispatchMouseEvent(unsigned int 
+aEventType=300, unsigned int wParam=0, nsPoint * aPoint=0x00000000)  Line 6065 
++ 0x13	C++
+ 	gkwidget.dll!nsWindow::ProcessMessage(unsigned int msg=512, unsigned 
+int wParam=0, long lParam=459003, long * aRetValue=0x0012fd14)  Line 4420
+	C++
+ 	gkwidget.dll!nsWindow::WindowProc(HWND__ * hWnd=0x013f03f8, unsigned 
+int msg=512, unsigned int wParam=0, long lParam=47311964)  Line 1349 + 0x10
+	C++
+ 	user32.dll!_InternalCallWinProc@20()  + 0x28	
+ 	user32.dll!_UserCallWinProcCheckWow@32()  + 0xb7	
+ 	user32.dll!_DispatchMessageWorker@8()  + 0xdc	
+ 	user32.dll!_DispatchMessageW@4()  + 0xf	
+ 	gkwidget.dll!nsAppShell::Run()  Line 159	C++
+ 	appcomps.dll!nsAppStartup::Run()  Line 208	C++
+ 	seamonkey.exe!main1(int argc=2, char * * argv=0x002a2d30, nsISupports * 
+nativeApp=0x00000000)  Line 1272 + 0x9	C++
+ 	seamonkey.exe!main(int argc=2, char * * argv=0x002a2d30)  Line 1777 + 
+0x15	C++
+ 	seamonkey.exe!WinMain(HINSTANCE__ * __formal=0x00400000, HINSTANCE__ * 
+__formal=0x00400000, char * args=0x0015231e, HINSTANCE__ * 
+__formal=0x00400000)  Line 1801 + 0x17	C++
+ 	seamonkey.exe!WinMainCRTStartup()  Line 390 + 0x1b	C
+ 	kernel32.dll!_BaseProcessStart@4()  + 0x23	
+
+-	aFrame	0x038ba7a0 {mCropType=CropRight mTitle={...} mCroppedTitle=
+{...} ...}	nsIFrame *
+|-	[nsTextBoxFrame]	{mCropType=CropRight mTitle={...} mCroppedTitle=
+{...} ...}	nsTextBoxFrame
+||+	nsLeafBoxFrame	{mMouseThrough=unset }	nsLeafBoxFrame
+||	mCropType	CropRight	nsTextBoxFrame::CroppingStyle
+||-	mTitle	{...}	nsString
+||\-	nsSubstring	{...}	nsSubstring
+|| \-	nsAString_internal	{mVTable=0x00875c08 const 
+nsObsoleteAStringThunk::`vftable' mData=0x042fd430 "Navigator" mLength=9 ...}
+	nsAString_internal
+||  |	mVTable	0x00875c08 const nsObsoleteAStringThunk::`vftable'	const 
+void *
+||  |+	mData	0x042fd430 "Navigator"	unsigned short *
+||  |	mLength	9	unsigned int
+||  \	mFlags	5	unsigned int
+||+	mCroppedTitle	{...}	nsString
+||-	mAccessKey	{...}	nsString
+||\-	nsSubstring	{...}	nsSubstring
+|| |-	nsAString_internal	{mVTable=0x00875c08 const 
+nsObsoleteAStringThunk::`vftable' mData=0x024901a0 "n" mLength=1 ...}
+	nsAString_internal
+|| |	mVTable	0x00875c08 const nsObsoleteAStringThunk::`vftable'	const 
+void *
+|| |+	mData	0x024901a0 "n"	unsigned short *
+|| |	mLength	1	unsigned int
+|| \	mFlags	5	unsigned int
+||	mTitleWidth	0	int
+||+	mAccessKeyInfo	0x00000000 {mAccesskeyIndex=??? mBeforeWidth=??? 
+mAccessWidth=??? ...}	nsAccessKeyInfo *
+||	mNeedsRecalc	1	int
+||+	mTextSize	{width=0 height=0 }	nsSize
+||	mAscent	0	int
+||	gAlwaysAppendAccessKey	0	int
+||	gAccessKeyPrefInitialized	1	int
+||	gInsertSeparatorBeforeAccessKey	0	int
+|\	gInsertSeparatorPrefInitialized	0	int
+|+	nsISupports	{...}	nsISupports
+|+	mRect	{x=0 y=0 width=0 ...}	nsRect
+|-	mContent	0x042fce78 {gXBLService=0x00000000 
+gCSSOMFactory=0x00000000 mPrototype=0x025d9a68 {mNumChildren=0 
+mChildren=0x00000000 mNodeInfo={...} ...} ...}	nsIContent *
+||+	[nsXULElement]	{gXBLService=0x00000000 gCSSOMFactory=0x00000000 
+mPrototype=0x025d9a68 {mNumChildren=0 mChildren=0x00000000 mNodeInfo=
+{...} ...} ...}	nsXULElement
+||+	nsISupports	{...}	nsISupports
+||	sTabFocusModel	7	int
+||	sTabFocusModelAppliesToXUL	0	int
+|\	mParentPtrBits	0	long
+|-	mStyleContext	0x03fc6fb0 {mParent=0x03a9cdc4 {mParent=0x04310b74 
+{mParent=0x04310640 {mParent=0x04310190 mChild=0x04310aac 
+mEmptyChild=0x00000000 ...} mChild=0x03fef970 {mParent=0x04310b74 
+mChild=0x00000000 mEmptyChild=0x00000000 ...} mEmptyChild=0x00000000 
+{mParent=??? mChild=??? mEmptyChild=??? ...} ...} mChild=0x03f23118 
+{mParent=0x03a9cdc4 {mParent=0x04310b74 mChild=0x03f23118 
+mEmptyChild=0x00000000 ...} mChild=0x03fc6f58 {mParent=0x03f23118 
+mChild=0x00000000 mEmptyChild=0x00000000 ...} mEmptyChild=0x00000000 
+{mParent=??? mChild=??? mEmptyChild=??? ...} ...} mEmptyChild=0x00000000 
+{mParent=??? mChild=??? mEmptyChild=??? ...} ...} mChild=0x00000000 
+{mParent=??? mChild=??? mEmptyChild=??? ...} mEmptyChild=0x00000000 
+{mParent=??? mChild=??? mEmptyChild=??? ...} ...}	nsStyleContext *
+||+	mParent	0x03a9cdc4 {mParent=0x04310b74 {mParent=0x04310640 
+{mParent=0x04310190 {mParent=0x04310340 mChild=0x0431073c 
+mEmptyChild=0x00000000 ...} mChild=0x04310aac {mParent=0x04310640 
+mChild=0x00000000 mEmptyChild=0x00000000 ...} mEmptyChild=0x00000000 
+{mParent=??? mChild=??? mEmptyChild=??? ...} ...} mChild=0x03fef970 
+{mParent=0x04310b74 {mParent=0x04310640 mChild=0x03fef970 
+mEmptyChild=0x00000000 ...} mChild=0x00000000 {mParent=??? mChild=??? 
+mEmptyChild=??? ...} mEmptyChild=0x00000000 {mParent=??? mChild=??? 
+mEmptyChild=??? ...} ...} mEmptyChild=0x00000000 {mParent=??? mChild=??? 
+mEmptyChild=??? ...} ...} mChild=0x03f23118 {mParent=0x03a9cdc4 
+{mParent=0x04310b74 {mParent=0x04310640 mChild=0x03fef970 
+mEmptyChild=0x00000000 ...} mChild=0x03f23118 {mParent=0x03a9cdc4 
+mChild=0x03fc6f58 mEmptyChild=0x00000000 ...} mEmptyChild=0x00000000 
+{mParent=??? mChild=??? mEmptyChild=??? ...} ...} mChild=0x03fc6f58 
+{mParent=0x03f23118 {mParent=0x03a9cdc4 mChild=0x03fc6f58 
+mEmptyChild=0x00000000 ...} mChild=0x00000000 {mParent=??? mChild=??? 
+mEmptyChild=??? ...} mEmptyChild=0x00000000 {mParent=??? mChild=??? 
+mEmptyChild=??? ...} ...} mEmptyChild=0x00000000 {mParent=??? mChild=??? 
+mEmptyChild=??? ...} ...} mEmptyChild=0x00000000 {mParent=??? mChild=??? 
+mEmptyChild=??? ...} ...}	nsStyleContext *
+||+	mChild	0x00000000 {mParent=??? mChild=??? mEmptyChild=??? ...}
+	nsStyleContext *
+||+	mEmptyChild	0x00000000 {mParent=??? mChild=??? mEmptyChild=??? ...}
+	nsStyleContext *
+||+	mPrevSibling	0x03f23118 {mParent=0x03a9cdc4 {mParent=0x04310b74 
+{mParent=0x04310640 {mParent=0x04310190 mChild=0x04310aac 
+mEmptyChild=0x00000000 ...} mChild=0x03fef970 {mParent=0x04310b74 
+mChild=0x00000000 mEmptyChild=0x00000000 ...} mEmptyChild=0x00000000 
+{mParent=??? mChild=??? mEmptyChild=??? ...} ...} mChild=0x03f23118 
+{mParent=0x03a9cdc4 {mParent=0x04310b74 mChild=0x03f23118 
+mEmptyChild=0x00000000 ...} mChild=0x03fc6f58 {mParent=0x03f23118 
+mChild=0x00000000 mEmptyChild=0x00000000 ...} mEmptyChild=0x00000000 
+{mParent=??? mChild=??? mEmptyChild=??? ...} ...} mEmptyChild=0x00000000 
+{mParent=??? mChild=??? mEmptyChild=??? ...} ...} mChild=0x03fc6f58 
+{mParent=0x03f23118 {mParent=0x03a9cdc4 {mParent=0x04310b74 mChild=0x03f23118 
+mEmptyChild=0x00000000 ...} mChild=0x03fc6f58 {mParent=0x03f23118 
+mChild=0x00000000 mEmptyChild=0x00000000 ...} mEmptyChild=0x00000000 
+{mParent=??? mChild=??? mEmptyChild=??? ...} ...} mChild=0x00000000 
+{mParent=??? mChild=??? mEmptyChild=??? ...} mEmptyChild=0x00000000 
+{mParent=??? mChild=??? mEmptyChild=??? ...} ...} mEmptyChild=0x00000000 
+{mParent=??? mChild=??? mEmptyChild=??? ...} ...}	nsStyleContext *
+||+	mNextSibling	0x03f23118 {mParent=0x03a9cdc4 {mParent=0x04310b74 
+{mParent=0x04310640 {mParent=0x04310190 mChild=0x04310aac 
+mEmptyChild=0x00000000 ...} mChild=0x03fef970 {mParent=0x04310b74 
+mChild=0x00000000 mEmptyChild=0x00000000 ...} mEmptyChild=0x00000000 
+{mParent=??? mChild=??? mEmptyChild=??? ...} ...} mChild=0x03f23118 
+{mParent=0x03a9cdc4 {mParent=0x04310b74 mChild=0x03f23118 
+mEmptyChild=0x00000000 ...} mChild=0x03fc6f58 {mParent=0x03f23118 
+mChild=0x00000000 mEmptyChild=0x00000000 ...} mEmptyChild=0x00000000 
+{mParent=??? mChild=??? mEmptyChild=??? ...} ...} mEmptyChild=0x00000000 
+{mParent=??? mChild=??? mEmptyChild=??? ...} ...} mChild=0x03fc6f58 
+{mParent=0x03f23118 {mParent=0x03a9cdc4 {mParent=0x04310b74 mChild=0x03f23118 
+mEmptyChild=0x00000000 ...} mChild=0x03fc6f58 {mParent=0x03f23118 
+mChild=0x00000000 mEmptyChild=0x00000000 ...} mEmptyChild=0x00000000 
+{mParent=??? mChild=??? mEmptyChild=??? ...} ...} mChild=0x00000000 
+{mParent=??? mChild=??? mEmptyChild=??? ...} mEmptyChild=0x00000000 
+{mParent=??? mChild=??? mEmptyChild=??? ...} ...} mEmptyChild=0x00000000 
+{mParent=??? mChild=??? mEmptyChild=??? ...} ...}	nsStyleContext *
+||+	mPseudoTag	{...}	nsCOMPtr<nsIAtom>
+||-	mRuleNode	0x03fef768 {mPresContext=0x02d71410 {mRefCnt=
+{mValue=2 } mType=eContext_Galley mShell=0x00000000 {mDocument=??? 
+mPresContext=??? mStyleSet=??? ...} ...} mParent=0x03fef73c 
+{mPresContext=0x02d71410 {mRefCnt={mValue=2 } mType=eContext_Galley 
+mShell=0x00000000 {mDocument=??? mPresContext=??? mStyleSet=??? ...} ...} 
+mParent=0x03fef710 {mPresContext=0x02d71410 {mRefCnt={...} 
+mType=eContext_Galley mShell=0x00000000 ...} mParent=0x03fef61c 
+{mPresContext=0x02d71410 mParent=0x02e126b8 mRule=0x00000000 ...} 
+mRule=0x00000000 ...} mRule=0x00000000 ...} mRule=0x00000000 ...}
+	nsRuleNode * const
+|||+	__vfptr	0x03f604e8	*
+|||+	mPresContext	0x02d71410 {mRefCnt={mValue=2 } mType=eContext_Galley 
+mShell=0x00000000 {mDocument=??? mPresContext=??? mStyleSet=??? ...} ...}
+	nsPresContext *
+|||+	mParent	0x03fef73c {mPresContext=0x02d71410 {mRefCnt={mValue=2 } 
+mType=eContext_Galley mShell=0x00000000 {mDocument=??? mPresContext=??? 
+mStyleSet=??? ...} ...} mParent=0x03fef710 {mPresContext=0x02d71410 {mRefCnt=
+{mValue=2 } mType=eContext_Galley mShell=0x00000000 {mDocument=??? 
+mPresContext=??? mStyleSet=??? ...} ...} mParent=0x03fef61c 
+{mPresContext=0x02d71410 {mRefCnt={...} mType=eContext_Galley 
+mShell=0x00000000 ...} mParent=0x02e126b8 {mPresContext=0x02d71410 
+mParent=0x02e11fe0 mRule=0x00000000 ...} mRule=0x00000000 ...} 
+mRule=0x00000000 ...} mRule=0x00000000 ...}	nsRuleNode *
+|||+	mRule	0x00000000	nsIStyleRule *
+|||	mChildrenTaggedPtr	0x00000000	void *
+|||+	mStyleData	{gInfo=0x0165c020 struct 
+nsCachedStyleData::StyleStructInfo * nsCachedStyleData::gInfo 
+mInheritedData=0x00000000 {mFontData=??? mColorData=??? mListData=??? ...} 
+mResetData=0x00000000 {mBackgroundData=??? mPositionData=??? 
+mTextResetData=??? ...} }	nsCachedStyleData
+|||	mDependentBits	983764	unsigned int
+|||	mNoneBits	257	unsigned int
+||\+	gLangService	0x00000000	nsILanguageAtomService *
+||+	mCachedStyleData	{gInfo=0x0165c020 struct 
+nsCachedStyleData::StyleStructInfo * nsCachedStyleData::gInfo 
+mInheritedData=0x04073188 {mFontData=0x00000000 {mFlags=??? mFont={name={...} 
+style=??? systemFont=??? ...} mSize=??? } mColorData=0x00000000 {mColor=??? } 
+mListData=0x00000000 {mListStyleType=??? mListStylePosition=??? mListStyleImage=
+{...} ...} ...} mResetData=0x00000000 {mBackgroundData=??? mPositionData=??? 
+mTextResetData=??? ...} }	nsCachedStyleData
+||	mBits	256	unsigned int
+|\	mRefCnt	3	unsigned int
+|+	mParent	0x038ba610 {mRefCnt={mValue=0 } mPopupFrames=
+{mFirstChild=0x00000000 {mRect={x=??? y=??? width=??? ...} mContent=??? 
+mStyleContext=??? ...} } mIsMenu=0 ...}	nsIFrame *
+|+	mNextSibling	0x00000000 {mRect={x=??? y=??? width=??? ...} 
+mContent=??? mStyleContext=??? ...}	nsIFrame *
+\	mState	16778402	unsigned int

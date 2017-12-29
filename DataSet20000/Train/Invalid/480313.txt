@@ -1,0 +1,43 @@
+Object delivered to Accessibility event listener, "(redundant object)", is no help
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.6) Gecko/2009011913 Firefox/3.0.6
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.5) Gecko/2009012320 Minefield/3.0.5
+
+Why can't Minefield (and Firefox for that matter) deliver the actual object instead of "(redundant object)" to AT-SPI event listeners?
+
+My accessibility app sets up the listener with this code:
+
+ buttonPressListener = SPI_createAccessibleEventListener(buttonPressHandler, 0);
+ SPI_registerGlobalEventListener(buttonPressListener, "Gtk:GtkWidget:button-press-event");
+
+Here's the beginning of the handler:
+
+void buttonPressHandler (const AccessibleEvent *event, void *user_data)
+{
+    char buf[1024];
+    myLog("ev %s (x: %d, y: %d) %s", event->type, current_x, current_y,
+        accessibleAsString(event->source, buf));
+
+accessibleAsString tries to print "role(name)" where:
+  roll = Accessible_getRoleName(event->source);
+  name = Accessible_getName(event->source);
+
+ It prints "(redundant object)", so role == "".
+
+The Accessibility object, event->source, has no parent.  What gives?  Why can't Minefield (and Firefox) deliver an Accessible *pointer to the actual object under the mouse?
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.  In your AT app, set up a listener as described above
+2.  run the AT-SPI event loop
+3.  click on anything in Minefield (I chose the "Help" menu item in the main menu).
+
+
+Actual Results:  
+The event->source delivered to the listener is (redundant object).
+
+Expected Results:  
+An Accessible *pointer to the object in the AT-SPI tree.
+
+See Expected Results.

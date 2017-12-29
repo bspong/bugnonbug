@@ -1,0 +1,45 @@
+Integrate Tab Groups data into Session Restore proper
+Right now Tab Candy is using Session Restore to stash data. However this approach is falling short in a few ways:
+
+Undo Close Tab know nothing about tab sets. So recently closed tab are shown from all tab sets. This should be local to the current tab set (and stored independently). If we're going to handle this inside session restore, then we need to actually acknowledge that Tab Candy exists & is using session restore for data.
+
+If tab set become window-independent, then we need to restructure how session data is stored.
+
+Current:
+> {
+> "windows":[
+> {
+> "tabs":[
+> { ... },
+> { ... }
+> ],
+> "_closedTabs":[...],
+> }
+> ],
+> "_closedWindows":[...]
+> }
+
+Proposed (haven't necessarily covered all details)
+> {
+> "tabsets":[
+> {
+> "id":100100101010,
+> "title": "foo",
+> "tabs":[
+> { ... },
+> { ... }
+> ],
+> "_closedTabs":[...],
+> },
+> ]
+> "windows":[
+> {
+> "tabset":100100101010,
+> },
+> { ... }
+> ]
+> }
+
+This would break consumers, hard. If it's going to happen, it should happen now.
+
+We'd need new APIs. We'd need to get rid of some old APIs

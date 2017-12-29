@@ -1,0 +1,35 @@
+l10n repacks broken on all platform on mozilla-central (probably aurora, too)
+All repacks on mozilla-central are hosed right now, with something like
+
+mv /builds/moz2_slave/cen-lnx-l10n-ntly/build/mozilla-central/browser/locales/../../dist/l10n-stage/firefox/chrome/be.manifest /builds/moz2_slave/cen-lnx-l10n-ntly/build/mozilla-central/browser/locales/../../dist/l10n-stage/firefox/chrome/localized.manifest
+/builds/moz2_slave/cen-lnx-l10n-ntly/build/mozilla-central/config/nsinstall -D ../../dist/l10n-stage/
+cd ../../dist/l10n-stage; \
+(cd firefox && rm -f omni.jar components/binary.manifest && grep -h '^binary-component' components/*.manifest > binary.manifest ; sed -e 's/^binary-component/#binary-component/' components/components.manifest > components.manifest && mv components.manifest component && find . | xargs touch -t 201001010000 && zip -r9mX omni.jar chrome chrome.manifest components/*.js components/*.xpt components/*.manifest module re default greprefs.js jsloader -x chrome/icons/\* defaults/pref/channel-prefs.js res/cursors/\* res/MainMenu.nib/\* && true && /tools/python/bin/python2.5 /builds/moz2_slave/cen-lnx-l10n-ntly/build/mozilla-central/browser/locales/../../config/optimizejars.py --optimize /builds/moz2_slave/cen-lnx-l10n-ntly/build/mozilla-central/browser/locales/../../dist/jarlog/ ./ ./ && mv binary.manifest component && printf "manifest components/binary.manifest\n" > chrome.manifest) && (cd firefox && /tools/python/bin/python2.5 ../../config/createprecomplete.py) && gtar -c --owner=0 --group=0 --numeric-owner --mode="go-w" -f - firefox | bzip2 -vf > firefox-4.2a1pre.be.linux-i686.tar.bz2
+grep: components/*.manifest: No such file or directory
+sed: can't read components/components.manifest: No such file or directory
+make[1]: *** [repackage-zip] Error 2
+make[1]: Leaving directory `/builds/moz2_slave/cen-lnx-l10n-ntly/build/mozilla-central/browser/locales'
+make: *** [repackage-zip-be] Error 2
+program finished with exit code 2
+elapsedTime=2.841612
+=== Output ended ===
+======== BuildStep ended ========
+
+or
+
+adding: jsloader/resource/services-sync/notifications.js.bin (deflated 59%)
+adding: jsloader/resource/services-sync/record.js.bin (deflated 63%)
+adding: jsloader/resource/services-sync/resource.js.bin (deflated 61%)
+adding: jsloader/resource/services-sync/service.js.bin (deflated 62%)
+adding: jsloader/resource/services-sync/status.js.bin (deflated 56%)
+adding: jsloader/resource/services-sync/util.js.bin (deflated 63%)
+make[2]: Leaving directory `/e/builds/moz2_slave/cen-w32-l10n-ntly/build/mozilla-central/browser/locales'
+make[1]: Leaving directory `/e/builds/moz2_slave/cen-w32-l10n-ntly/build/mozilla-central/browser/locales'
+d:\mozilla-build\python25\python2.5.exe: can't open file '../../config/createprecomplete.py': [Errno 2] No such file or directory
+make[2]: *** [repackage-zip] Error 2
+make[1]: *** [repackage-win32-installer] Error 2
+make: *** [repackage-win32-installer-bn-IN] Error 2
+program finished with exit code 2
+elapsedTime=36.968000
+
+Possible candidate are robstrong and the exe unpack, I guess.

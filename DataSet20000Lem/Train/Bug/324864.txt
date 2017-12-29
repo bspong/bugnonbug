@@ -1,0 +1,31 @@
+[mlk] Memory leak with Session Saver v0.2.1.031 extension
+Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.9a1) Gecko/20060126 Firefox/1.6a1 ID:2006012609
+
+To see this leak you must install an extension whose <maxversion> is set to 1.5
+Since the trunk is 1.6a you have to do an extra few step to get the extension installed.
+Steps 4 & 5 are to force compatibility. (Alternatively, download the SessionSaver xpi and manually update the install.rdf to allow installation on 1.6a)
+Nightly Tester Tools extension doe not contribute to the leakage (You can uninstall it after Session Saver ha been installed if you really want to)
+
+1. New profile
+2. Start Firefox
+3. Tools > Options > General ; set homepage to about:blank
+4. Install Nightly Tester Tools extension from https://addons.mozilla.org/extensions/moreinfo.php?id=958&application=firefox
+5. Restart Firefox.
+6. Install Session Saver 0.2.1.031 extension from https://addons.mozilla.org/extensions/moreinfo.php?id=436&application=firefox (Using Nightly Tester Tools to override the version clash.)
+7. Restart Firefox.
+8. Close Firefox
+
+Analysis of nspr.log with leak-gauge.pl gives:
+
+Leaked inner window 21845d8 (outer 15eb890) at address 21845d8.
+... with URI "about:blank".
+Leaked outer window 15eb890 at address 15eb890.
+Leaked inner window 15e2d48 (outer 1e482e8) at address 15e2d48.
+... with URI "chrome://browser/content/browser.xul".
+Leaked outer window 1e482e8 at address 1e482e8.
+Summary:
+Leaked 4 out of 8 DOM Windows
+Leaked 0 out of 25 document
+Leaked 0 out of 4 docshells
+
+SessionSaver ha currently been downloaded 451370 time from umo.

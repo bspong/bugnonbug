@@ -1,0 +1,34 @@
+decouple service on update.mozilla.org
+The app update service (AUS), plugin finder service (PFS), and extension/theme
+directory (ETD) all live on the update.mozilla.org domain name. They should
+each live on their own domain name so we can allocate hardware resource to
+them independently and isolate them from each other.
+
+We need to do this in the most minimally disruptive way to existing Firefox
+client while still meeting the goal of putting each service on it own domain
+name and making update.mozilla.org only redirect to each service.
+
+AUS and PFS can both handle arbitrary HTTP redirects without breaking.
+Extension/theme installation whitelists update.mozilla.org explicitly, but the
+whitelisting may be subdomain-recursive, in which case we could relocate the
+site to foo.update.mozilla.org without breaking the whitelisting.
+
+foo.update.mozilla.org is clumsy for long-term use, however, so we should pick a
+better long-term name, whitelist both, redirect user to foo.update.mozilla.org
+in the short-term, and then switch to the long-term name once we're satisfied
+that the vast majority of user have upgraded to version that whitelist the
+long-term name.
+
+We should get this into not only the next major version of Firefox but also the
+next maintenance release, if any, to propagate this change a quickly a possible.
+
+Possible name for these services:
+
+AUS: aus.mozilla.org
+PFS: pfs.mozilla.org
+ETD: addons|extras.(update.)mozilla.org
+
+Note that AUS and PFS domain name should be invisible to the end user, so it's
+not critical for their name to make sense to someone unfamiliar with the
+services. ETD's domain name, on the other hand, should make sense to regular
+end users.

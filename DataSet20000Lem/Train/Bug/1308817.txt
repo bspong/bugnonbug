@@ -1,0 +1,33 @@
+HTTP basic auth go directly to 401 error page when foxyproxy is enabled
+This is a regression introduced on 2016-09-01 between af5df7bd and d3bf9bbe, with the fix for this bug:
+
+https://bugzilla.mozilla.org/show_bug.cgi?id=1266836
+
+Steps to reproduce:
+
+1. Install foxyproxy standard https://addons.mozilla.org/en-US/firefox/addon/foxyproxy-standard/
+2. Ensure it's enabled (toolbar icon not crossed out, set to "Use proxy based on their pre-defined pattern and priorities")
+3. Go to a page requiring http basic auth, such a http://test.webdav.org/auth-basic/
+
+Expected results:
+
+- Get asked for user/pass
+
+Actual results:
+
+- Get 401 error page from the server
+
+Other notes:
+
+- Doesn't happen in non-e10s windows.
+- One workaround I've used (before finding out that it wa foxyproxy) is to pas the credential in the url bar, in the format http://user:pass@example.com
+
+mozregression logs:
+
+44:38.56 INFO: Last good revision: af5df7bd1d265bb95c76b69fa4fbcc60a84094f9
+44:38.56 INFO: First bad revision: d3bf9bbe73ba35c4257dcd10339f6ccecbb1fd5e
+44:38.56 INFO: Pushlog:
+https://hg.mozilla.org/integration/fx-team/pushloghtml?fromchange=af5df7bd1d265bb95c76b69fa4fbcc60a84094f9&tochange=d3bf9bbe73ba35c4257dcd10339f6ccecbb1fd5e
+
+44:40.57 INFO: Looks like the following bug ha the change which introduced the regression:
+https://bugzilla.mozilla.org/show_bug.cgi?id=1266836

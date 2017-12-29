@@ -1,0 +1,44 @@
+JavaScript failing to change style/class info in Wikipedia special/talk page
+User-Agent: Mozilla/5.0 (X11; Linux i686; rv:2.0b7) Gecko/20100101 Firefox/4.0b7
+Build Identifier: Mozilla/5.0 (X11; Linux i686; rv:2.0b7) Gecko/20100101 Firefox/4.0b7
+
+A JavaScript addon (User:ais523/adminrights.js), which is supposed to highlight user name of Wikipedia administrators, ha stopped working in the 4.0 beta.
+
+The relevant portion of the script is here:
+
+function highlightadmins_inner(n,h) //node, relevant hyperlink fragment
+{
+if (n.nodeType!=1||n.tagName.toLowerCase()!="a") return 0; // not an anchor
+if (n.href.indexOf(wgScript+"?title="+h) == -1 &&
+n.href.indexOf(wgArticlePath.split("$1")[0]+h) == -1) return 0; // to the wrong target
+var u=n.href.split(h)[1];
+if(adminrights[u.split("_").join("%20")]==1)
+{
+n.style.backgroundColor="#00FFFF";
+if(n.className==null||n.className=="") n.className="ais523_adminrights_admin";
+else n.className+=" ais523_adminrights_admin";
+}
+return 1;
+}
+
+I've verified (using Firebug) that the backgroundColor and className attribute are not being modified, even when a link doe match a current list of administrator in the adminrights[] array.
+
+The really strange thing is that if I add an alert() inside the "if", just before setting the backgroundColor -- *and* if I also add an "else" clause to the "if" with another alert() -- the highlighting action *do* happen. But if I check the box in one of these alerts, saying not to produce any more dialog on the page, no more administrator name get highlighted after that point.
+
+Another script (User:NuclearWarfare/Mark-blocked script.js), which mark the name of currently blocked user with a strikethrough, seems to work fine.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Have (or create) a Wikipedia account, and log in to your account.
+2. In your account's vector.js or monobook.js file, include the following line: importScript('User:Ais523/watchlistnotifier.js');
+3. Display a page with signed contribution from administrator (such a WP:ANI).
+Actual Results:
+There should be lot of user name highlighted with a cyan background -- but there aren't, because of this bug.
+
+Expected Results:
+There should be lot of user name highlighted with a cyan background -- but there aren't, because of this bug.
+
+I went through these same step using the Opera and Chrome browsers, and the admin-highlighting function worked just fine. It also worked fine in FF 3.6 before I switched to 4.0b7.
+
+The author of the script in question (User:Ais523) ha been made aware of the problem. He can't see anything wrong with his code right now and belief it's a FF4 bug. He's open to the idea of devising a workaround, but he understandably think the bug need to be found and fixed.

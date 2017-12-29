@@ -1,0 +1,27 @@
+sessionstore.js store content of password field in plaintext
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.1) Gecko/2008070206 Firefox/3.0.1
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.1) Gecko/2008070206 Firefox/3.0.1
+
+If browser.sessionstore.privacy_level is set to either 1 (default) or 0 some extra page details, including form data, are stored in sessionstore.js. This _includes_ field whose type is marked "password," and this is done in plaintext.
+
+This occurs regardless of a user's "remember password" settings, whether they have a master password set or not, or whether they have form autofill turned on or not.
+
+While I agree that for many case this is good behaviour (e.g. for large forms), and that setting privacy level to 1 reduces the chance of highly secure password becoming stored, I believe that an exception should be made for password field in _all_ cases. This is especially important in a world where user often have the same password for http and other, le secure, protocols.
+
+I in fact came accross this problem using the Remote PwdHash form (https://www.pwdhash.com) saved to a USB stick, so that the URL had a file:// prefix, so privacy level set to 1 issued me no protection. This problem is a significant threat to such a strategy since it can leave a user's master password, in plaintext, on disk.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Navigate to a page with a password field, that is not https://
+2. Enter "testpassword" into the password field
+3. Execute `cd ~/.mozilla/firefox`
+4. Execute `grep -R testpassword *`
+5. Observe.
+Actual Results:
+sessionstore.js contains the string "testpassword"
+
+Expected Results:
+No copy of the password string should be found (at least not in relation to the one just entered in the password field)
+
+A workaround is to set browser.sessionstore.privacy_level to 2, and prevent _any_ form data being stored from any page. However this loses the advantage (mentioned above) of such a feature.

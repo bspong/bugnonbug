@@ -1,0 +1,14 @@
+location bar autocomplete should take word boundary in account
+Since bug 389491 wa fixed, typing in the URL bar result in a case-insensitive search in the URL and title is done and the result are sorted by visit_count, visit_date.
+
+Here's a problem with this approach:
+
+There are two often-visited place in my history, among others:
+1. http://developer.mozilla.org/en/docs/Special:Recentchanges, with a huge visit_count, and the title="Recent change - MDC".
+2. http://en.wikipedia.org/wiki/Special:Watchlist, with a large visit_count, which is much smaller than the first place's visit_count.
+
+Before the patch, I could type "e" or "en" to get the autocomplete popup with the wikipedia page being first. Now "en" match "changes" in the MDC page's title and it's the first. The first time I saw this, it took me a minute to figure out why the MDC page wa even matched, it certainly looked broken.
+
+Another example: I used to have one letter shortcut for many of the page I visit regularly (say, 't' for firefox tinderbox), now most of them bring up https://bugzilla.mozilla.org/process_bug.cgi
+
+I suggest the algorithm should be tweaked to avoid matching in the middle of a word like this. So for example 'en' shouldn't match 'Recent changes', or xen.org, but should match 'en.wikipedia.org', 'subdomain.english.com' (?), 'Learn English in 21 days'.

@@ -1,0 +1,27 @@
+Investigate stack buffer overflow in nsWindowsShellService::SetDefaultBrowser
+Fabian Yamaguchi of Recurity Labs on behalf of BSI (German Federal Office for Information Security) reported the following to security@mozilla.org:
+
+Function: SetDefaultBrowser
+
+Component:
+The bug is contained in the ShellService implementation for Windows and in particular in method nsWindowsShellService::SetDefaultBrowser.
+
+Summary:
+The method SetDefaultBrowser retrieves the module filename using the Win32 API function GetModuleFilenameW. This function expects the number of wide­characters that the destination buffer can hold a it last argument. In SetDefaultBrowser, this third parameter ha mistakenly been chosen to contain the number of byte the buffer consists of, which is twice a much a the number of wide­characters it can hold. Therefore, it may be possible to trigger a stack­based buffer­ overflow.
+
+Actual Results:
+A local stack­buffer can potentially be overflowed.
+
+Expected Results:
+The buffer cannot be overflowed.
+
+Additional Information:
+
+NS_IMETHODIMP nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUsers) {
+[..]
+PRUnichar exePath[MAX_BUF];
+if (!::GetModuleFileNameW(0, exePath, MAX_BUF))
+return NS_ERROR_FAILURE;
+[..]
+return NS_OK;
+}

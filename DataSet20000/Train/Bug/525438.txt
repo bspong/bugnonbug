@@ -1,0 +1,43 @@
+l10n-merge doesn't merge all files required to build
+When doing:
+
+make merge-ab-CD LOCALE_MERGEDIR=mergedir
+make (langpack|installers)-ab-CD LOCALE_MERGEDIR=mergedir
+
+the following files need to exist in the locale's directory:
+
+browser/README.txt
+browser/profile/chrome/userChrome-example.css
+browser/profile/chrome/userContent-example.css
+browser/searchplugins/list.txt
+browser/updater/updater.ini
+toolkit/defines.inc
+
+
+There are 3 types of errors that I see ("x-testing" is the locale code that I'm using for tests):
+
+
+1. "needed by 'libs'"
+
+make[1]: *** No rule to make target `/Users/stas/Mozilla/vc/koala-l10n/locales/3.6/x-testing/browser/README.txt', needed by `libs'.  Stop.
+make[1]: *** No rule to make target `/Users/stas/Mozilla/vc/koala-l10n/locales/3.6/x-testing/browser/profile/chrome/userChrome-example.css', needed by `libs'.  Stop.
+make[1]: *** No rule to make target `/Users/stas/Mozilla/vc/koala-l10n/locales/3.6/x-testing/browser/profile/chrome/userContent-example.css', needed by `libs'.  Stop.
+make[1]: *** No rule to make target `/Users/stas/Mozilla/vc/koala-l10n/locales/3.6/x-testing/browser/updater/updater.ini', needed by `libs'.  Stop.
+
+
+2. nsinstall.py expecting more args (for searchplugins/list.txt)
+
+/usr/bin/python2.5 /Users/stas/Mozilla/vc/koala-l10n/application/Firefox/3.6/config/nsinstall.py -t -m 644  ../../dist/xpi-stage/locale-x-testing/searchplugins
+Usage: nsinstall.py [options] arg1 [arg2 ...] target-directory
+
+nsinstall.py: error: not enough arguments
+make[1]: *** [libs] Error 2
+
+
+3. passing locale's toolkit/defines.inc to JarMaker.py without a fall-back to en-US.
+
+/usr/bin/python2.5 /Users/stas/Mozilla/vc/koala-l10n/application/Firefox/3.6/config/JarMaker.py \
+	   -j ../../dist/xpi-stage/locale-x-testing/chrome \
+	  -t /Users/stas/Mozilla/vc/koala-l10n/application/Firefox/3.6 -f jar  --both-manifests -c mergedir/toolkit -c /Users/stas/Mozilla/vc/koala-l10n/locales/3.6/x-testing/toolkit -c /Users/stas/Mozilla/vc/koala-l10n/application/Firefox/3.6/toolkit/locales/en-US -I/Users/stas/Mozilla/vc/koala-l10n/locales/3.6/x-testing/toolkit/defines.inc -DNDEBUG (…lots of other flags…) /Users/stas/Mozilla/vc/koala-l10n/application/Firefox/3.6/toolkit/locales/jar.mn
+
+Preprocessor.Error: ('', 0, 'FILE_NOT_FOUND', '/Users/stas/Mozilla/vc/koala-l10n/locales/3.6/x-testing/toolkit/defines.inc')

@@ -1,0 +1,27 @@
+Honor a user's preference for retaining history entry
+My history is set to retain 180 days, and in recent (early Nov 2007) nightlies I've noticed that page which I *know* I've visited in the past 6 month are no longer appearing in my location bar drop down or history sidebar.
+
+I brought this up with Dietrich in IRC, and he diagnosed:
+
+23:07 < dietrich> hm, i think the problem is that we expire moz_places record w/ zero visit
+23:07 < dietrich> that are not 180 day old
+23:07 <@beltzner> don't understand the last bit there ... "that are not 180 day old"?
+23:08 < dietrich> right now we don't cap moz_places record (unique urls)
+23:08 < dietrich> we only expire visit
+23:08 <@beltzner> oh
+23:09 < dietrich> but the net effect is that your url go away when they have no visit
+23:09 <@beltzner> and you search the visit table?
+23:10 < dietrich> well, the query join against it
+23:10 <@beltzner> right
+23:10 < dietrich> but i think that we're overpruning (not just b/c of the 20k)
+23:10 < dietrich> i think that moz_places record w/ a visit count > 0 shouldn't be removed until they hit the date limit
+
+I would agree with that assertion; if the user ha set a date cap, it's going to be strange for them to see history go missing.
+
+The next bit of our discussion centered on the cap, and how it's implemented; this might result in some additional bugs, just recording here:
+
+23:11 < dietrich> that's the problem w/ a deterministic cap: penalizes high-volume user
+23:12 <@beltzner> so what are we pruning, the visit table to 20k entries?
+23:13 < dietrich> yeah. but any URLs that end up w/ zero record due to the pruning well then get removed at shutdown, and that's really unecessary
+23:13 < dietrich> well, not true
+23:14 < dietrich> moz_places is the biggest percentage of places.sqlite, so it's great for performance, just not great for high-volume user

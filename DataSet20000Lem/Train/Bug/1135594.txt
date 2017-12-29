@@ -1,0 +1,35 @@
+console logging DOM element is messing with promise
+Created attachment 8567826
+extract to desktop.zip
+
+User Agent: Mozilla/5.0 (Windows NT 6.3; WOW64; rv:36.0) Gecko/20100101 Firefox/36.0
+Build ID: 20150219174507
+
+Steps to reproduce:
+
+1) Extract image folder from attached zip to desktop
+2) Ran this code: https://gist.github.com/Noitidart/0fe2b94770bd966116f4#file-gistfile1-txt-L633
+3) Ran the code again, then you see error of "promise failed to handle rejection". These error will come on all subsequent runs.
+4) Run the code here: https://gist.github.com/Noitidart/4df61ccb95e217a915b0 which ha the DOM element console logged toString'ed, on first run we will see the "promise failed to handle rejectoin" erros but on consequent run we dont see the error anymore
+
+
+
+Actual results:
+
+This code creates a badged icon set at the location of OS.Constants.Path.userApplicationDataDir / profilist_data / launcher_icons / myGenIcns iconset
+
+However in the browser console on run after first run you will see a bunch of "A promise chain failed to handle a rejection." on Linux and on Windows you will see a bunch of "A promise chain failed to handle a rejection. Did you forget to '.catch', or did you forget to 'return'?
+See https://developer.mozilla.org/Mozilla/JavaScript_code_modules/Promise.jsm/Promise" messages.
+
+I drove myself nut trying to get rid of that, then thanks to Mook he helped me figure out:
+
+22:07 Mook Not sure _why_ yet, but I'm pretty sure it's caused by one of the throw null in https://hg.mozilla.org/releases/mozilla-release/file/28f1dab5c3aa/browser/devtools/webconsole/console-output.js#l3095
+22:29 Mook Okay; so, go through your console log, and any time you see a <img> or a ChromeWindow, String() it before showing. The bug is Firefox-side, when you show thing that might be in DOM in the browser console it throw that.
+22:30 Mook That's nearestImg:, nearestImg2:, "the nearest found is of size:", and "savePngToDisk, this:"
+
+
+Expected results:
+
+These error should not happen. When we changed ChromeWindow to log a this.toString() and all image to be logged a image.toString() [we didnt have to change blob to be blob.toString()] then the error mentioned above were not thrown.
+
+Also something werid, about having to run it twice to make it take affect. But thats probably something else.

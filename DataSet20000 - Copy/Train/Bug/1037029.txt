@@ -1,0 +1,33 @@
+Update hotfix may be installed in disabled state
+Catalin discovered that the update hotfix is installed in disabled mode on OS X and Linux and never gets uninstalled. I can reproduce.
+
+STR:
+
+1) New profile on Linux or Mac
+2) Hook up extension updating to addons-dev.allizom.org
+3) Trigger some extension updates
+
+Results:
+
+1) We get the SSL cert hotfix on first trigger
+1a) If your Firefox version is really old, we'll get another cert hotfix on 2nd trigger
+2) We get the update hotfix on next trigger
+3) Hotfix is installed, but disabled
+
+This doesn't make much sense because bootstrap.js's install() explicitly sets userDisabled = false [1].
+
+I dug into things and the add-on's appDisabled is true!
+
+During the review stages of bug 1014194, <em:targetPlatform>WINNT</em:targetPlatform> was added to the install.rdf. I reckon this is what's causing appDisabled to be true.
+
+A handful of existing hotfixes set <targetPlatform>, so there's precedent for it.
+
+Looking at the implementation of other hotfixes, they each perform an "is compatible" check in bootstrap.js:install() and do an uninstall if not. This code runs even if appDisabled is set.
+
+The update hotfix, by contrast, performs its "is compatible" check in update.jsm, which runs after startup(). startup() never runs because appDisabled=true.
+
+The easy fix is to remove <targetPlatform> from install.rdf and let the hotfix code post startup() do the uninstall. This code works fine on Linux and Mac.
+
+I knew better than this. I should have pushed back on the review comment that asked to add <targetPlatform> :/
+
+[1] https://hg.mozilla.org/releases/firefox-hotfixes/file/fc3c622aff83/v20140527.01/bootstrap.js#l29

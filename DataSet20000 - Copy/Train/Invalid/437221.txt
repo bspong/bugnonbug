@@ -1,0 +1,121 @@
+Javascript createElement img tag is not closing the img tag, same with br tag, hr tag.
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.1a1pre) Gecko/2008060403 Minefield/3.1a1pre
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.1a1pre) Gecko/2008060403 Minefield/3.1a1pre
+
+When Javascript's createElement tag is used to create an img tag, a br tag, an hr tag - the element is getting created however, it is not closed.
+
+The img tag is created like this: <img src="someimg.gif" alt="image" width="10" height="10" >  
+
+Instead of <img src="someimg.gif" alt="image" width="10" height="10" /> 
+
+Similarly when a br tag, hr tag is created with Javascript's createElement , the tags are not closing. 
+
+To see this behavior, create an html file with the html code given in the "Steps to Reproduce" box, click on the link that calls the javascript function, 
+when the image tags are created by the javascript, righ-click and select just the images , and click on the "View Selection Source" option ( View Selection Source may require an extension - not sure if it comes with Firefox)
+
+The "View Selection Source" shows that the img tags are not closed.
+
+I think this behavior also occurs in Intenet Explorer 6. 
+
+The fact that the img tags are not closed doesn't affect the output in Firefox, but in InternetExplorer the page appears broken, because the rest of the tags are xhtml but the img tags are not.
+
+Possible related bug: https://bugzilla.mozilla.org/show_bug.cgi?id=280692
+
+Reproducible: Always
+
+Steps to Reproduce:
+<?xml version="1.0" encoding="utf-8"?>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns:xhtml="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+	<title>An XHTML 1.0 Strict page</title>
+	<meta http-equiv="Content-Type" content="application/xhtml+xml; charset=utf-8" />
+	<meta http-equiv="Content-Style-Type" content="text/css" />
+    <script type="text/javascript" xml:space="preserve">
+    /*<![CDATA[*/
+    function testMyDiv() {
+        var myDiv = document.getElementById("mydiv");
+        if (myDiv) {
+
+            var myImage = document.createElement("IMG");
+            myImage.setAttribute("src","/animage.gif");
+            myImage.setAttribute("alt","Image One");
+            myImage.setAttribute("width","276");
+            myImage.setAttribute("height","110");
+            myDiv.appendChild(myImage);
+
+            var myImage2 = document.createElement("img");
+            myImage2.setAttribute("src","/animage.gif");
+            myImage2.setAttribute("alt","Image Two");
+            myImage2.setAttribute("width","276");
+            myImage2.setAttribute("height","110");
+            myDiv.appendChild(myImage2);
+
+            var myImage3 = document.createElementNS("http://www.w3.org/1999/xhtml","img");
+            myImage3.setAttribute("src","/animage.gif");
+            myImage3.setAttribute("alt","Image Three");
+            myImage3.setAttribute("width","276");
+            myImage3.setAttribute("height","110");             
+            myDiv.appendChild(myImage3);
+
+            var preWrittenImage = document.getElementById("placeholderimg");
+            preWrittenImage.
+
+            alert('this reached');
+        }
+
+    }
+    /*]]>*/
+    </script>
+</head>
+
+<body>
+
+     <div id="mydiv" >This is my div</div>
+
+     <div>
+        <a onclick="testMyDiv()" href="#">Test images</a>
+     </div>
+
+    <div>
+        The above code is creating image tags but none of the image tags are closed.
+        That is the code appears like this when viewed with Fierfox's "View Selection Source".
+    </div>
+
+    <pre xml:space="preserve">
+    &lt;div id="mydiv"&gt;
+        This is my div
+        &lt;img alt="Image One" src="http://www.google.com/logos/balloon08.gif" height="110" width="276"&gt;
+        &lt;img alt="Image Two" src="http://www.google.com/logos/balloon08.gif" height="110" width="276"&gt;
+        &lt;img alt="Image Three" src="http://www.google.com/logos/balloon08.gif" height="110" width="276"&gt;
+    &lt;/div&gt;
+    </pre>
+
+    <div>Since this is an XHTML document I was expecting the image tags to be closed as shown below (so that the xhtml is well formed.):</div>
+    <pre xml:space="preserve">
+    &lt;div id="mydiv"&gt;
+        This is my div
+        &lt;img alt="Image One" src="http://www.google.com/logos/balloon08.gif" height="110" width="276"/&gt;
+        &lt;img alt="Image Two" src="http://www.google.com/logos/balloon08.gif" height="110" width="276"/&gt;
+        &lt;img alt="Image Three" src="http://www.google.com/logos/balloon08.gif" height="110" width="276"/&gt;
+    &lt;/div&gt;
+    </pre>
+
+</body>
+</html>
+Actual Results:  
+When viewed with "View Selection Source" in Firefox this is what appears:
+<div id="mydiv">This is my div<img alt="Image One" src="/animage.gif" height="110" width="276"><img alt="Image Two" src="/animage.gif" height="110" width="276"><img alt="Image Three" src="/animage.gif" height="110" width="276"></div>
+
+(The img tags are not closed)
+
+Expected Results:  
+<div id="mydiv">This is my div<img alt="Image One" src="/animage.gif" height="110" width="276"/><img alt="Image Two" src="/animage.gif" height="110" width="276"/><img alt="Image Three" src="/animage.gif" height="110" width="276"/></div>
+
+Well formed XHTML img tags.
+
+The rendered images and the rest of the html appear fine when viewed with Firefox,
+even though the image tags are not well formed. Also, HTML Validators don't complain about the non-wellformed img tags generated with Javascript.

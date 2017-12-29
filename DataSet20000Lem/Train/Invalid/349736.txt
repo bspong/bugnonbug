@@ -1,0 +1,66 @@
+node.attributes.nodeValue fails to get value attribute of an input element
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.0.6) Gecko/20060728 Firefox/1.5.0.6
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.0.6) Gecko/20060728 Firefox/1.5.0.6
+
+trying to read the value of an input element on a document, by taversing the document tree, and reading the node.attributes.nodeValue, work ok,
+except for trying to read the value attribute of an input.
+It seems to read the default value( if existing ), but when the user change
+the value of the input, the old default value is returned
+
+example html:
+<!--start -->
+<html>
+<head>
+<script language="JavaScript">
+function checkFields() {
+var test = document.testForm.testInput.value;
+var name = document.testForm.testInput.name;
+alert(name + " : " + test);
+}
+
+function getNodeText(node, nodeName) {
+var text = "";
+for (var a = 0; a < node.attributes.length; a++) {
+if (node.attributes[a].nodeName == nodeName) {
+text += node.attributes[a].nodeValue;
+}
+}
+return text;
+}
+
+function checkWithNodes() {
+var test2 = getNodeText(document.testForm.testInput, "value")
+var name2 = getNodeText(document.testForm.testInput, "name")
+alert(name2 + " : " + test2);
+}
+
+function setValue() {
+document.testForm.testInput.value = "TEST";
+}
+</script>
+</head>
+<body>
+<p>
+<form name="testForm">
+<label for="test">Test Input : </label>
+<input type="text" id="test" name="testInput" value="DEFAULT"/><br />
+<input type="button" value="Test 'document.testForm.testInput.value'" onclick="javascript:checkFields()"/><br />
+<input type="button" value="Test 'node.attributes[a].nodeValue'" onclick="javascript:checkWithNodes()"/><br />
+<input type="button" value="SET VALUE TO 'TEST' " onclick="javascript:setValue()"/><br />
+</form>
+</p>
+</body>
+</html>
+<!-- end -->
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. save included html to file.
+2. Open file
+3. click the buttons.
+
+
+
+Expected Results:
+would expect the second test button to display the correct value in the input box.

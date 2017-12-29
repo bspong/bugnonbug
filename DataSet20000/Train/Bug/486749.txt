@@ -1,0 +1,28 @@
+Firefox handle handle multiple instances on multiple machines sharing a common filesystem (NFS)
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686 (x86_64); en-GB; rv:1.9.0.7) Gecko/2009022800 SUSE/3.0.7-1.1 Firefox/3.0.7
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686 (x86_64); en-GB; rv:1.9.0.7) Gecko/2009022800 SUSE/3.0.7-1.1 Firefox/3.0.7
+
+Basically running firefox on more than one machine sharing the same filesytem should be possible but isn't because FF won't share profiles and / or negotiate locks AND it handles the problem with no grace.
+
+Reproducible: Always
+
+Steps to Reproduce:
+Run FF one one machine using a share filesystem
+Try running it on another using the same filesystem
+Actual Results:  
+The second instance won't run because FF won't share profiles and can't negotiate the file locking.
+
+Expected Results:  
+Multiple instances on multiple machines should be able to run.  Ideally they would share the same profile, at the very least some lock hierarcy / negotiation would allow the most recent one to take control of the profile and run. 
+
+The error reporting should be more informative (ie FF appears to be running on this host XXXX with PID YYYY). 
+
+I notice variations of this problem have been posted and ignored many times.  This is a real problem and it is a very big failure of functionality.  At the very least FF should handle the problem gracefully and assist the user to overcome it*.  It should, as a minimum, allow the profile lock to be taken over.  From a design point of view this is trivial programming (the profile is always written atomically whenever changed, an additional write lock is taken before the write and then released immediately, before this lock is taken out the profile lock is checked, if we still own it proceed otherwise the profile is owned by someone else and is RO, new processes can take the old lock over).
+
+Ideally the profile should be capable of being shared.  This doesn't seem to fox other browsers and it doesn't fox other programs (eg konqueror and kde face exactly the same issue but work seemlessly on multiple machines).
+
+I move between machines several times a day it really pisses me off to have to hunt down the stray FF process on across these machines in order to find out what is on TV tonight.  I know this pisses a lot of other people off as well and it is a major pain in the arse but no one seems to care.
+
+At the very least the lock file could contain the hostname and PID of the holding process so it could be found in a hurry - in fact this simple bodge would allow all sorts of quick fixes (parse, ssh HOST kill PID, start FF).
+
+Please don't (a) ignore (b) just mark as a duplicate of another version that is being actively ignored, (c) at the very least sort out the hostname / PID issue.

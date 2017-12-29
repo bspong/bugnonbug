@@ -1,0 +1,30 @@
+The new Privacy Preferences Pane misfires an <enter> keypress into a check box
+The new privacy preference panel (bug 462041) introduces an odd error in keyboard navigation that has some serious consequences for testing and disability access.
+
+Essentially what happens is that an <enter> keypress is fired at a checkbox instead of selecting the option from a <menulist> control.  That has serious implications because the checkbox that gets checked in this case is "Always start Firefox in Private Browsing Mode", which has deep implications for test infrastructure and session state.
+
+= STR **Follow these steps exactly** =
+1. Open a Shiretoko (anything later than Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.5; en-US; rv:1.9.1b4pre) Gecko/20090416 Shiretoko/3.5b4pre)
+2. Open the Preferences panel
+3. Use the Mouse to clisk on the "Privacy" icon
+4. Use the Tab key to focus the historyMode <menulist> dropdown
+5. Use the Down Cursor (arrow) key to select the "Use Custom Settings for History" option
+6. Hit Enter with the "Custom settings" option selected
+
+= Expected =
+That should simply bring up the deck containing the detailed custom history settings *the same way it would if you'd used the mouse to make that selection*
+
+= Actual =
+The enter keystroke in step 6 somehow selects the "Always start in private browsing mode" keystroke which immediately throws you into PB mode.  
+
+If you reset the preferences window to the way it was and re-run the steps using nothing but the mouse as your selection mechanism, you will see that when you select "Use Custom history settings" from the drop down you are presented with an entirely different list of defaults and the "Always start in private browsing mode" is unchecked in that list of defaults.
+
+Also happens in Linux, except you do not need to hit the <enter> key in step 6 on linux: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.1b4pre) Gecko/20090416 Shiretoko/3.5b4pre
+
+= How does this affect testing =
+If you have any state listeners using sockets, those sockets are destroyed upon entry into PB mode. We use a socket mechanism to allow jsbridge to remote control a mozmill test running in "automatic" mode.  That's how we originally found this bug, in fact, the mozmill test stopped working.  I don't think this would affect a mochitest run.
+
+= How does this affect A11y =
+Many A11y uses use the keyboard exclusively for navigation. So, that path needs to work the same way as using a mouse to navigate through the software.
+
+I'm going into such great detail here because I'm going to ask for blocking because of the last two points.  I really think this is a basic navigational bug and ought to be fixed before we ship 3.5.

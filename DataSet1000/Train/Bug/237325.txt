@@ -1,0 +1,37 @@
+mailto protocol should be a non-exposed protocol in firefox [makes SendPage work correctly with xremote]
+i have the following shell script configured as my default mailto handler in GNOME:
+
+  #!/bin/sh
+                                                                               
+                                                              export
+MOZILLA_FIVE_HOME="/opt/mozilla-builds/thunderbird-current"
+                                                                               
+                                                              addr_trim="$(echo
+"$1" | cut -d':' -f2-)"
+                                                                               
+                                                              if
+$MOZILLA_FIVE_HOME/mozilla-xremote-client 'mailto('"$addr_trim"')'; then
+    exit 0
+  fi
+                                                                               
+                                                             
+$MOZILLA_FIVE_HOME/thunderbird -P default -compose "$1"
+
+when firefox is running, it intercepts and tries to handle the mailto xremote
+command.  it discovers that it can handle this protocol using the external
+protocol handler service.  it does so, which launches the script again.  but,
+this time mozilla-xremote-client fails, and thunderbird is launched.  however,
+for some reason it ends up in a loop launching several instances of thunderbird.
+ there seems to be some kind of race because the number of thunderbird instances
+is limited, but varies from run to run.  i usually end up with several compose
+windows and several profile selection dialogs.
+
+now, if i just set this pref in firefox, the problem goes away:
+
+pref("network.protocol-handler.expose.mailto", false);
+
+this pref causes firefox's xremoteservice to reject any mailto requests.  i
+think we might want this pref for the next release of firefox.
+
+with this pref and the script above, send-page and mailto links work perfectly
+from firefox to thunderbird.

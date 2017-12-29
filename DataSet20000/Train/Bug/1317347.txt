@@ -1,0 +1,21 @@
+TypeError: this.docShell is null when opening about:newtab
+I don't think that's specific to about:newtab, but sometime you can see tons of these exception in the browser console:
+console.error: 
+  Handler function threw an exception: TypeError: this.docShell is null
+Stack: get_contentWindow@chrome://global/content/bindings/browser.xml:466:1
+get_outerWindowID@chrome://global/content/bindings/browser.xml:435:11
+matchRequest@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/shared/webconsole/network-monitor.js:87:1
+NetworkMonitor.prototype._onRequestHeader@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/shared/webconsole/network-monitor.js:1148:10
+NetworkMonitor.prototype.observeActivity<@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/shared/webconsole/network-monitor.js:1012:7
+exports.makeInfallible/<@resource://gre/modules/commonjs/toolkit/loader.js -> resource://devtools/shared/ThreadSafeDevToolsUtils.js:101:14
+Line: 466, column: 1
+
+Here is a possible STR (note it is racy or it depends on same caches from about:newtab or something)
+* open data:text/html,foo
+* open webconsole
+* open about:newtab in a new tab
+* over website previews
+
+> you should see many of these exceptions
+
+If you don't, try closing about:newtab tab, it sometimes forces this exception.

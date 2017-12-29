@@ -1,0 +1,20 @@
+Wrong viewIndex after lazy changes of title
+Created attachment 297814
+Fix order when title gets updated
+
+When a page is added to a history query node sorted by title, it is inserted often on wrong place, because it uses part of the query string as sort key, instead of using the title. Title is lazily updated later and item is resorted.
+
+I have observed during implementation of bug 385245 in "By Date and Site" view, that a page belonging to one site gets added to a wrong one.
+
+Initial insert is:
+
+[-] Today
+    [-] SiteA
+        - http://sitea.com/blog  "blog"
+        - http://sitea.com/about "SiteA::About"
+    [-] SiteB
+        - "SiteB::About"
+
+Temporary title "blog" is less than "SiteA::About" so it is initially inserted on position 0 inside of SiteA (viewIndex=2). "SiteA::About" has viewIndex=3.
+
+Now title gets updated to "SiteA::Blog" and the code calculates new position inside of "SiteA" which is 1 (2nd item). Now the old algorithm would calculate the new viewIndex for "SiteA::Blog" as viewIndex of "SiteA::About" + 1. That is 4. This would place it to SiteB. So the fix is that if we detect, that we are swapping the elements inside of one parent, we need to subtract one, because "SiteA::About" will be moving by one up.

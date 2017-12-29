@@ -1,0 +1,74 @@
+not able to build a 64bit mozilla on HP-UX/IA64
+User-Agent: Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.2; SV1; .NET CLR 1.1.4322; InfoPath.1)
+Build Identifier:
+
+I'm trying to build a 64bit firefox on HP-UX/IA64 but failing with
+
+aCC +DD64 +DSitanium2 -Wc,-ansi_for_scope,on -DNDEBUG -DTRIMMED -O -b -Wl,+s -L../../dist/bin -o libxpcom_core.so
+pldhash.o nsCOMPtr.o nsComponentManagerUtils.o nsDebug.o nsID.o nsIInterfaceRequestorUtils.o nsINIParser.o nsMemo
+ry.o nsTraceRefcnt.o nsWeakReference.o nsGREGlue.o nsVersionComparator.o nsTHashtable.o nsTArray.o nsGenericFactory
+.o nsXPComInit.o nsStringAPI.o nsAtomTable.o nsAtomService.o nsByteBuffer.o nsCheapSets.o nsCRT.o nsDeque.o nsEmpt
+yEnumerator.o nsEnumeratorUtils.o nsFixedSizeAllocator.o nsHashSets.o nsHashtable.o nsObserverList.o nsObserverServ
+ice.o nsProperties.o nsPersistentProperties.o nsQuickSort.o nsRecyclingAllocator.o nsStaticNameTable.o nsStringEnum
+erator.o nsSupportsArray.o nsSupportsArrayEnumerator.o nsSupportsPrimitives.o nsUnicharBuffer.o nsVariant.o nsVoidA
+rray.o nsTextFormatter.o nsTimelineService.o nsValueArray.o nsCOMArray.o nsArray.o nsArrayEnumerator.o nsHashProper
+tyBag.o nsAppFileLocationProvider.o nsBinaryStream.o nsByteArrayInputStream.o nsDirectoryService.o nsEscape.o nsFas
+tLoadFile.o nsFastLoadService.o nsInputStreamTee.o nsLinebreakConverter.o nsLocalFileCommon.o nsMultiplexInputStrea
+m.o nsPipe3.o nsStreamUtils.o nsScriptableInputStream.o nsSegmentedBuffer.o SpecialSystemDirectory.o nsStorageStrea
+m.o nsStringStream.o nsUnicharInputStream.o nsNativeCharsetUtils.o nsLocalFileUnix.o nsCategoryManager.o nsCategory
+Cache.o nsComponentManager.o nsNativeComponentLoader.o nsStaticComponentLoader.o nsServiceManagerObsolete.o xcDll.o
+plevent.o nsAutoLock.o nsEnvironment.o nsEventQueue.o nsEventQueueService.o nsThread.o nsTimerImpl.o nsProcessComm
+on.o TimerThread.o nsProxyEvent.o nsProxyEventClass.o nsProxyEventObject.o nsProxyObjectManager.o nsProxyRelease.o
+nsAllocator.o nsVersionComparatorImpl.o nsConsoleMessage.o nsConsoleService.o nsDebugImpl.o nsErrorService.o nsExce
+ptionService.o nsMemoryImpl.o nsTraceRefcntImpl.o nsInterfaceRequestorAgg.o nsUUIDGenerator.o nsStackFrameUnix.o xp
+tcall.o xptiFile.o xptiInterfaceInfo.o xptiInterfaceInfoManager.o xptiManifest.o xptiMisc.o xptiTypelibGuts.o xptiW
+orkingSet.o xptiZipItem.o xptiZipLoader.o xpt_arena.o xpt_struct.o xpt_xdr.o xptcinvoke_ipf64.o xptcstubs_ipf64.o x
+ptcstubs_asm_ipf64.o xptcinvoke_asm_ipf64.o nsDependentString.o nsDependentSubstring.o nsPrintfCString.o nsPromiseF
+latString.o nsReadableUtils.o nsSubstring.o nsSubstringTuple.o nsString.o nsStringComparator.o nsStringObsolete.o n
+sAString.o nsObsoleteAStringThunk.o -L../../dist/lib -lplds4 -lplc4 -lnspr4 -lpthread -ldl -ldl -lm
+ld: Mismatched data endianness. Expected EF_IA_64_BE but found None in file xptcstubs_asm_ipf64.o
+Fatal error.
+gmake[4]: *** [libxpcom_core.so] Error 1
+
+I modified makefile.in to use the ipf64 rather than the ipf32 part but that is not the correct solution :/
+
+Is that combination not supported?
+
+doehrm@hpvm ~> aCC -V
+aCC: HP aC++/ANSI C B3910B A.06.07 [Feb 2 2006]
+
+doehrm@hpvm ~> uname -a
+HP-UX hpvm B.11.23 U ia64 XXXXXXXXXXX unlimited-user license
+
+my .mozconfig:
+
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/deerpark
+mk_add_options MOZ_CVS_FLAGS="-q -z9 "
+mk_add_options MOZ_CO_PROJECT=browser
+ac_add_options --enable-optimize
+ac_add_options --enable-application=browser
+ac_add_options --enable-default-toolkit=gtk
+ac_add_options --with-gtk-prefix=/opt/mozbuild
+ac_add_options --with-glib-prefix=/opt/mozbuild
+ac_add_options --disable-debug
+ac_add_options --enable-shared
+ac_add_options --disable-tests
+ac_add_options --enable-crypto
+ac_add_options --disable-shared
+ac_add_options --enable-static
+ac_add_options --disable-freetype2
+ac_add_options --with-x-includes=/usr/include/X11
+ac_add_options --disable-system-cairo
+
+
+I wa trying to build with
+
+CC="aCC -AC99" CXX=aCC \
+CFLAGS="+DD64 +DSitanium2" CXXFLAGS=$CFLAGS \
+MAKE="gmake -j3" \
+gmake -f client.mk build_all
+
+
+Reproducible: Always
+
+Steps to Reproduce:

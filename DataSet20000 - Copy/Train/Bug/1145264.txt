@@ -1,0 +1,25 @@
+Define as many high-level categories as possible for Timeline rendering
+TimelineMarkers should have a category property used to determine which "line" of the timeline the marker is rendered at, as well as a color. If we took our current markers, and made groups according to how they're laid out: (ignore my terrible group names)
+
+Graphics -> [PaintCategory]
+Scripting -> []
+Console -> [Timestamp]
+
+We need to specify a difference between line, and if there should be multiple colors on a line. For example, "DOMEvent" and "Function Call" (these are labels) are both on the same line, and the same color. They can be categorized as "Scripting", as we do not have/need further subcategories yet.
+
+For the top line in the timeline, we'll call "Graphics" for now, have 3 unique markers, with 2 possible colors.
+* Layout (purple)
+* Recalculate Style (purple)
+* Paint (green)
+
+If we categorize the purple markers as just general graphics markers, we can categorize them as just "Graphics", to indicate they're on the first line, and just use that line's default color (purple?). An interesting subcategorization here are the Paint markers, which live on the same line as other Graphics markers, but should be a different color, so Paint markers have category "PaintCategory". Again, ignore my terrible names.
+
+This allows platform developers to just pick ONE category, and it's up to the devtools front end to map that to see if it's a broad category, or a more specific one. As an example with media markers...
+
+Media -> [Audio, Video, WebRTC]
+
+Creating a TimelineMarker, realistically, most of these markers would just be categorized as "Media", with unique labels like "Web Audio Processing" or "Video Element Buffering", but as they're tagged "Media", they're all the same color, which for the most part is ok. If we wanted to add additional subcategories to expose additional colors, developers could categorize the markers as "Audio", which would render the marker in the "Media" timeline as well, just a different color. This approach would work for network requests too, and anything we wanted to render here.
+
+All these categories are just for example. Does this sound like a good way to categorize markers and allow platform devs to only have to pick ONE category, as well as allowing the client to render multiple colors?
+
+What are some categories that we'd like to show and organize?

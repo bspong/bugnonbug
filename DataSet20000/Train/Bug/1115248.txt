@@ -1,0 +1,30 @@
+Can't downloads MP3s from Amazon music due to chrome code throwing exceptions
+Steps to reproduce:
+
+1)  Be in non-e10s mode.
+2)  Log in to Amazon music.
+3)  Click "Songs" under "Your Library"
+4)  Check the checkbox next to the first song.
+5)  Click the Download button.
+6)  When the helper app dialog comes up, select "Save File" and click OK.
+7)  When the filepicker comes up, just click OK (in my case on the home
+    directory).
+
+EXPECTED RESULTS: File starts downloading
+
+ACTUAL RESULTS: No download.
+
+Additional information:
+
+1)  I can't seem to reproduce this in a clean profile, though I haven't tried
+    that hard.
+2)  I can't seem to reproduce this in e10s mode.
+3)  At the failure point, the browser console says:
+
+[Exception... "[JavaScript Error: "can't access dead object" {file: "resource://gre/modules/DownloadLastDir.jsm" line: 176}]'[JavaScript Error: "can't access dead object" {file: "resource://gre/modules/DownloadLastDir.jsm" line: 176}]' when calling method: [nsIContentPrefCallback2::handleCompletion]"  nsresult: "0x80570021 (NS_ERROR_XPC_JAVASCRIPT_ERROR_WITH_DETAILS)"  location: "JS frame :: resource://gre/modules/ContentPrefUtils.jsm :: safeCallback :: line 47"  data: yes]
+
+which is why a clean profile might not reproduce this; afaik whether an object is dead is GC-timing-dependent.
+
+Blake has blame for that ContentPrefUtils bit, but not sure where the real issue here is in terms of someone holding on to a content object after its window is unloaded...
+
+If someone has concrete steps for troubleshooting this, happy to try them.

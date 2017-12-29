@@ -1,0 +1,41 @@
+Firefox 3.6.x leak DNS query when using a SOCKS proxy
+User-Agent: Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.2.12) Gecko/20101027 Ubuntu/10.04 (lucid) Firefox/3.6.12
+Build Identifier: Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.2.12) Gecko/20101027 Ubuntu/10.04 (lucid) Firefox/3.6.12
+
+This wa originally posted on the Mozilla and Ubuntu forums.
+
+http://forums.mozillazine.org/viewtopic.php?f=38&t=2034767
+
+I'm using an SSH tunnel on Firefox 3.6.12 and I believe that DNS query are being leaked.
+
+I am forwarding my SSH connection using the following command:
+
+ssh -vN -D 3000 <user>@<host>
+
+Under Firefox's connection settings, I have selected "Manual proxy configuration" and I have all of the field blank except for "SOCKS Host" which is set to "localhost" on port 3000 and "No proxy for" which is set to "localhost, 127.0.0.1".
+
+In about:config, the value of network.proxy.socks_remote_dns is set to "true". (I have restarted Firefox a few time since I set this.)
+
+I know that my SSH tunnel is working because when I view network traffic using Wireshark, all web traffic is marked a "TCP" and go between my computer and the remote host. However, DNS query are still leaked to the nameserver defined in /etc/resolv.conf. (The nameserver is my wireless router.)
+
+I have read about this problem happening in Firefox 3.5, but I haven't seen any mention of it in 3.6. E.g.:
+
+http://edge.i-hacked.com/firefox-35-dns-leaks-like-a-waterfall
+
+Basically, my problem is the exact same a the person's on that page.
+
+I'm not using FoxyProxy, fwiw.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Open SSH tunnel using at least the "-D" option to SSH
+2. Configure Firefox to use the port you are using for the tunnel
+3. Sniff traffic using Wireshark and see that DNS query are not sent to your SOCKS host
+Actual Results:
+DNS query are routed directly to the nameservers defined in /etc/resolv.conf
+
+Expected Results:
+DNS query would be directed to the SOCKS host I have defined.
+
+I have filed this under Security because this could be a security problem if someone needed to keep their DNS query secret. If there is a better component to file it under, then feel free to move it.

@@ -1,0 +1,57 @@
+Windows8 attempts to kill Nightly classic firefox on startup, due to faulting
+STR:
+- Click on firefox desktop shortcut in classic mode on windows8
+-- local build of m-c, from tuesday
+- See fx addon compatibility dialog
+- See Windows8 "Nightly has stopped working" dialog, with options to attach the debugger ot close the program
+- If you wait & ignore the dialog, Nightly classic might start running anyway
+- If you attach to a debugger, it breaks immediately at the end of
+C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\crt\src\crt0dat.c
+void __cdecl __crtExitProcess (
+        int status
+        )
+{
+        __crtCorExitProcess(status);
+
+        /*
+         * Either mscoree.dll isn't loaded,
+         * or CorExitProcess isn't exported from mscoree.dll,
+         * or CorExitProcess returned (should never happen).
+         * Just call ExitProcess.
+         */
+
+        ExitProcess(status);
+}
+
+-- hit 'continue', fx classic exits outputting the following to vs log
+
+'firefox.exe' (Win32): Loaded 'C:\Windows\SysWOW64\apphelp.dll'. Cannot find or open the PDB file.
+The thread 0xc9c has exited with code 0 (0x0).
+firefox.exe has triggered a breakpoint. 
+    [ally: this is the breakpoint mentioned above]
+Object type: ID2D1Bitmap
+	Device-dependent size: 16 x 16
+	Device-independent size: 16.00 x 16.00
+	Format: DXGI_FORMAT_B8G8R8A8_UNORM
+	Alpha mode: D2D1_ALPHA_MODE_PREMULTIPLIED
+	Outstanding reference count: 1
+
+DXGI WARNING: Process is terminating. Using simple reporting. Please call ReportLiveObjects() at runtime for standard reporting. [ STATE_CREATION WARNING #0: ]
+DXGI WARNING: Live Producer at 0x02D95190, Refcount: 5. [ STATE_CREATION WARNING #0: ]
+DXGI WARNING: 	Live Object at 0x02DA9928, Refcount: 3. [ STATE_CREATION WARNING #0: ]
+DXGI WARNING: Live                         Object :      1 [ STATE_CREATION WARNING #0: ]
+The program '[4256] firefox.exe' has exited with code 0 (0x0).
+
+Digging into the System Event Log, I find:
+Faulting application name: firefox.exe, version: 28.0.0.5073, time stamp: 0x528e62bc
+Faulting module name: KERNELBASE.dll, version: 6.2.9200.16451, time stamp: 0x50988950
+Exception code: 0x80000003
+Fault offset: 0x00089bfc
+Faulting process id: 0x52c
+Faulting application start time: 0x01cee7bc5457444d
+Faulting application path: C:\Users\A\m-c\obj\dist\bin\firefox.exe
+Faulting module path: C:\Windows\SYSTEM32\KERNELBASE.dll
+Report Id: 2dcff765-53b0-11e3-be95-083e8ec6a046
+Faulting package full name: 
+Faulting package-relative application ID: 
+Keywords: Classic

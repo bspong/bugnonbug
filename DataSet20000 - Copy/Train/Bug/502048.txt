@@ -1,0 +1,18 @@
+Page refresh doesn't trigger events on preserved fields
+User-Agent:       Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.0; WOW64; Trident/4.0; GTB6; Syncosoft AppManager;  Embedded Web Browser from: http://bsalsa.com/; SLCC1; .NET CLR 2.0.50727; Media Center PC 5.0; InfoPath.2; .NET CLR 3.5.30729; .NET CLR 3.0.30729)
+Build Identifier: 3.0.11
+
+When a page is refreshed in firefox, the browser sometimes intentionally or accidentally preserves previous user's options. For instance, if there is a <select> element with no default selected <option>, or a few <input type="checkbox"> items, when hitting Refresh, Mozilla will keep the previous option selected (the one before the refresh). I don't see any problem with this behavior, BUT the problem is that it doesn't trigger any events to notify of the change (such as onchange). This is a problem for AJAX and pages that dynamically deliver content based on change events, it can happen that the user sees some options selected but a completely mismatched content. I havent checked if this happens with other elements but it sure does with <select> and <input type="checkbox">. This is problematic for dynamic pages since there's no consistent resolution to it (or is there?).
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Drop a <select> with no default selected option and a few <input type="checkbox" checked="checked"> items on a page. A <form> container is not necessary.
+2. Uncheck a few boxes, select an option from the <select>
+3. Click Refresh
+4. You will notice that previous options are preserved
+5. But no onchange/onclick events are triggered.
+
+
+Expected Results:  
+Either the input fields should not preserve user selection on refresh, or they should trigger appropriate events. If they are to fire events however, there is a problem of picking the time for such. Indeed a golden rule of design would be that when an event is set, the code for handling the event is guaranteed to be loaded. However, many pages out there rather rely on the principle that "the user won't click this fast" and assume (with no appropriate countermeasure) that user-triggered events happen 2-3 seconds in the loading of the page (possibly after onload).

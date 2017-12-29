@@ -1,0 +1,10 @@
+Sync is janky when processing incoming history entries due to work done for about:newtab
+Sync causes significant UI jank when processing incoming history records, which I've tracked down to onFrecencyChanged() in NewTabUtils.jsm being called once per new record while Sync is adding up to 5000 records.
+
+Sync calls Cc["@mozilla.org/browser/history;1"].getService(Ci.mozIAsyncHistory).updatePlaces() in batches of 50 items. While nsINavHistoryObserver has onBeginUpdateBatch and onEndUpdateBatch, this history implementation doesn't make use of it - mainly because almost noone seems to call this interface with multiple records at once - sync and profile migrators seem to be the exceptions.
+
+I'm a little reluctant to change History.cpp to make this call if multiple items are being added. History.jsm doesn't implement its |update| method, and if it did implement it as described it wouldn't suit Sync's requirements (there's no callback for errors). So I took a "low road" approach of having Sync send these notification before and after it does its thing, and having NewTabUtils do the right thing on that notification.
+
+These methods were added to NewTabUtils in bug 911307, which was implemented by Drew (hence r?) and reviewed by Tim (hence f?), and cc Mak as he knows everything about places :)
+
+I've struggled to measure jank accurately, so I've just been observing it by having the Sync button in the toolbar and watching how smooth it is. The button spins very jankily without this patch and quite smoothly with it, and about:newtab looks correct after Sync completes. What do you think?

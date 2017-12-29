@@ -1,0 +1,18 @@
+allowing for per-grouping sorts
+allowing for per-grouping sorts
+
+while places allows for multiple groupings (see bug #358784, for example), we do not allow for different sorts per-group.
+
+what I'd like to do is allow for GROUP_BY_DAY to be sorted by SORT_BY_DATE_DESCENDING followed by GROUP_BY_HOST sorted by SORT_BY_TITLE_ASCENDING.
+
+for a serialized query, that would be something like:
+
+place:&beginTime=-2592000000000&beginTimeRef=1&endTime=7200000000&endTimeRef=2&type=1&group=0&sort=4&group=1&sort=1
+
+This would be the uri we'd used for the history sidebar, "View | By Date and Site"
+
+To accomplish this, in addition to fixing the code that serializes / deserializes the queries, we'd need to fix nsNavHistoryContainerResultNode::RecursiveSort() to not simply pass through the sort comparator, but to allow the container to have a sort type that would override the parent node's sort type.
+
+the real goal is to avoid hard coding the assumption of "when sorting by title ascending, sort date containers by date descending", because that is what we want for the history sidebar.
+
+removing that assumption will make it easier for extenstion authors to write a "better" history sidebar.

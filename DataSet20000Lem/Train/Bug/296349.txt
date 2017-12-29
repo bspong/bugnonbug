@@ -1,0 +1,48 @@
+X need to also check the "Buffer" - needed so that pasting work better.
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.8) Gecko/20050511 Firefox/1.0.4
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.8) Gecko/20050511 Firefox/1.0.4
+
+I've been developing Clipboard.pm (http://search.cpan.org/~king), and in doing
+so, I've gotten to the root of a bug that ha pestered me for years:
+
+Sometimes you can't paste into Firefox (middle click doe nothing), but you can
+paste into other X program (e.g., xterm).
+
+As anyone familiar with xlib/nsClipboard.cpp will know, X ha a funky
+"clipboard" concept. There are primary, secondary, and clipboard selections.
+Then there's this other thing, the Buffer. I don't know why it's a separate
+concept, but it is. Any one of those selection could be the one the user
+wish to paste from.*
+
+I whittled down xclip's source to a ~25 line program that dump the content of
+the Buffer. It just boil down to a call to XFetchBuffer(), which doesn't need
+much more than a Display.
+
+As for where to add the call, I'm not quite sure. Through experimentation, my
+opinion is that the canonical order of importance is: primary, buffer,
+clipboard, secondary. Really, this is up to implementor's preference - a long
+a the Buffer get checked at some point, I'll be thrilled. Maybe play with the
+xclip loop* and see if you can figure out your preference.
+
+* If you're interested in observing these behaviors, try installing xclip and
+running the following while you play around:
+watch -n1 'for n in primary secondary clipboard buffer; do echo == $n ==; xclip
+-o -selection $n; echo; done'
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Open an xterm
+2. Highlight something
+3. Paste into Firefox.
+
+Ha! It works. I tricked you.
+
+Now try:
+4. Doing something in the xterm that cause the selection to go away - move the
+cursor, single click somewhere, etc.
+5. Paste to Firefox.
+
+A practical example: from mutt, highlight a URL, delete the message, and then
+don't expect to paste it into Firefox. (Current workaround: paste into xterm,
+re-highlight, come back to Firefox)

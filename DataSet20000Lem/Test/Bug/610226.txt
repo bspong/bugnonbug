@@ -1,0 +1,81 @@
+Replacing content of a <div> inside an <a> using jquery's .html() function cause ignoring of local styles.
+User-Agent: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; en-US; rv:1.9.2.12) Gecko/20101026 Firefox/3.6.12
+Build Identifier: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; en-US; rv:1.9.2.12) Gecko/20101026 Firefox/3.6.12
+
+When jquery's .html() function is used to replace the content of a <div> tag within an <a> tag the <div> tag assumes the styling of the <a> tag without respect for any styling that ha been assigned to the element locally.
+
+Here is the code needed to reproduce the problem:
+
+<html>
+<head>
+<title>Bug Test</title>
+<style type='text/css'>
+a
+{
+color: red;
+text-decoration: none;
+}
+</style>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+<script type='text/javascript'>
+$(document).ready(function () {
+$('#aReplaceInsideA').html("This text should be green.");
+$('#divReplaceInsideA').html("This text should be green.");
+$('#spanReplaceInsideA').html("This text should be green.");
+$('#aReplaceInsideDiv').html("This text should be green.");
+$('#divReplaceInsideDiv').html("This text should be green.");
+$('#spanReplaceInsideDiv').html("This text should be green.");
+$('#aReplaceInsideSpan').html("This text should be green.");
+$('#divReplaceInsideSpan').html("This text should be green.");
+$('#spanReplaceInsideSpan').html("This text should be green.");
+});
+</script>
+</head>
+<body>
+<a style='display: block;'>
+<span id='spanReplaceInsideA' style='color: green;'>
+Default text, that isn't replaced yet.
+</span>
+<div id='divReplaceInsideA' style='color: green; display: block;'>
+Default text, that isn't replaced yet.
+</div>
+</a>
+<div>
+<a id='aReplaceInsideDiv' style='color: green;'>
+Default text, that isn't replaced yet.
+</a>
+<div id='divReplaceInsideDiv' style='color: green;'>
+Default text, that isn't replaced yet.
+</div>
+<span id='spanReplaceInsideDiv' style='color: green;'>
+Default text, that isn't replaced yet.
+</span>
+</div>
+<span>
+<a id='aReplaceInsideSpan' style='color: green;'>
+Default text, that isn't replaced yet.
+</a>
+<div id='divReplaceInsideSpan' style='color: green;'>
+Default text, that isn't replaced yet.
+</div>
+<span id='spanReplaceInsideSpan' style='color: green;'>
+Default text, that isn't replaced yet.
+</span>
+</span>
+</body>
+</html>
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Put a <div> tag inside an <a> tag.
+2. Use jQuery to replace the content of the <div> tag using the <a> tag
+Actual Results:
+The <div> tag inside the <a> tag ha red styling, unlike the other element which all have the correct green styling.
+
+Expected Results:
+The <div> tag should have had green styling because of it local style directive.
+
+I have tested this in three major browsers: Safari, Chrome, and Firefox. In Safari and Chrome the page behaves a expected, with all line appearing in the green color. In Firefox the <div> tag within the <a> tag appears red instead of green.
+
+It would be easy to assume that this is a jQuery bug, but since the problem only manifest itself in Firefox I suspect that it is a Firefox bug.

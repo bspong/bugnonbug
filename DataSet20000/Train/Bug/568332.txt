@@ -1,0 +1,35 @@
+Document loads forever if page writes out a script element that includes javascript that writes to document.
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.9.2.3) Gecko/20100401 Firefox/3.6.3 (.NET CLR 3.5.30729)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.9.2.3) Gecko/20100401 Firefox/3.6.3 (.NET CLR 3.5.30729)
+
+create infinite.html with this contents:
+<html>
+<body>
+<script type="text/javascript">
+  var R = document.getElementsByTagName("body").item(0);
+  var element = document.createElement("script");
+  element.type = "text/javascript";
+  element.src = "infinite.js";
+  R.appendChild(element);
+</script>
+</body>
+</html>
+
+create infinite.js in the same folder with this contents:
+document.write('');
+
+Open the file infinite.html in FF 3.6.3 and the tab never finishes loading.
+
+If you directly import infinite.js via a script tag in the html, instead of adding the script tag via dom manipulation, the bug does not manifest.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.  Create infinite.html and infinite.js files in the same folder.
+2.  Open infinite.html in FF 3.6.3.
+
+Actual Results:  
+Tab never stop loading, spinny icon goes on forever.
+
+Expected Results:  
+The spinny icon should disappear and the tab should appear fully loaded.  I believe this is the result in FF 3.5.9

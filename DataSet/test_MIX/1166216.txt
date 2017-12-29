@@ -1,0 +1,145 @@
+FF38, Secure Connection Failed (sec_error_bad_der) on internal certificates
+User Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:37.0) Gecko/20100101 Firefox/37.0
+Build ID: 20150417180243
+
+Steps to reproduce:
+
+With Firefox 38, visit corporate internal SSL websites.
+
+
+
+Actual results:
+
+With Firefox 38, SSL certs signed by our internal CA are rejected with this message :
+Secure Connection Failed
+An error occurred during a connection to xxxxx.xxxxx.com. security library: improperly formatted DER-encoded message. (Error code: sec_error_bad_der)
+
+
+Expected results:
+
+Up to Firefox 37.0.2, these certificates are accepted.
+
+Here is the info from the site certificate, and from the CA certificate :
+
+> openssl x509 -text -in site-xxxxx.pem -noout
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number: 6 (0x6)
+    Signature Algorithm: sha1WithRSAEncryption
+        Issuer: C=FR, O=xxxxx, OU=xxxxx, CN=Internal services CA
+        Validity
+            Not Before: Oct 11 14:35:49 2010 GMT
+            Not After : Oct  8 09:54:28 2015 GMT
+        Subject: C=FR, O=xxxxx, OU=xxxxx, CN=xxxxx.xxxxx.com
+        Subject Public Key Info:
+            Public Key Algorithm: rsaEncryption
+                Public-Key: (1024 bit)
+                Modulus:
+                    00:be:df:15:e7:a2:8d:a1:8e:7e:f9:5a:9e:7e:07:
+                    67:43:c6:c7:8d:8c:78:fe:15:d8:47:e2:d4:32:35:
+                    bc:60:8a:f8:4a:8a:4c:84:c3:24:ea:0f:d1:5e:80:
+                    d9:23:88:29:99:14:66:da:87:aa:bb:91:59:26:93:
+                    68:b4:2d:b7:f3:b3:8c:e6:1f:ac:69:2f:7e:b9:70:
+                    99:1b:02:ac:fb:e1:07:ba:56:a4:32:e1:3e:1e:cd:
+                    33:df:0f:16:59:17:39:4b:4a:37:0d:e6:06:e6:cd:
+                    75:df:27:b1:af:5f:8b:12:6f:1b:02:61:39:08:65:
+                    d1:55:94:c2:a1:35:da:c6:13
+                Exponent: 65537 (0x10001)
+        X509v3 extensions:
+            X509v3 Authority Key Identifier: 
+                keyid:BD:44:52:6F:2F:D9:6A:DB:AA:07:AA:29:07:55:B2:51:99:B8:10:65
+
+            X509v3 Basic Constraints: critical
+                CA:FALSE
+            X509v3 Key Usage: critical
+                Digital Signature, Key Encipherment, Data Encipherment, Key Agreement
+            X509v3 Extended Key Usage: 
+                E-mail Protection, TLS Web Client Authentication, TLS Web Server Authentication
+            X509v3 CRL Distribution Points: 
+
+                Full Name:
+                  URI:http://www.xxxxx.com/crl
+
+    Signature Algorithm: sha1WithRSAEncryption
+         aa:b7:c9:d5:09:46:25:bd:f2:60:cc:ab:9b:b9:08:db:64:8d:
+         14:71:c3:d6:ce:87:11:4e:d0:ac:20:46:16:32:4c:61:d8:1e:
+         96:98:57:bc:16:eb:a7:cd:70:b4:e9:bf:20:89:40:f8:79:5a:
+         98:51:71:15:ea:28:05:99:34:f2:ab:9e:87:78:1c:29:fe:83:
+         28:ff:14:b0:c7:21:4a:37:93:ee:cc:ef:78:2e:19:2c:66:d0:
+         29:f7:02:9d:16:b5:df:76:86:1c:4a:7c:4c:51:6a:1b:cd:4c:
+         96:a3:06:7e:02:1b:2c:5f:8d:bc:43:7f:69:81:b4:12:b7:73:
+         95:06:06:32:e7:f2:6f:8b:db:4b:ad:b6:4b:24:ab:d6:f2:40:
+         9a:26:a8:48:24:fa:91:5f:d8:d7:aa:43:78:45:56:bc:de:3e:
+         07:0a:0f:73:85:a6:e9:dd:83:d1:1b:27:b8:84:32:dd:1d:db:
+         f6:62:66:8d:81:af:42:19:02:96:83:33:8b:35:c3:00:73:60:
+         29:1d:ff:31:8b:5f:e9:32:c1:86:52:a4:8a:06:50:5b:41:6a:
+         dd:83:db:18:a7:2c:fd:0f:20:d2:a4:bb:46:29:e1:c0:bb:9f:
+         9c:a0:4a:5c:23:09:58:5c:0a:a9:8c:61:aa:32:fd:79:fd:95:
+         a4:67:c5:03
+
+> openssl x509 -text -in InternalservicesCA.pem -noout 
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number: 2 (0x2)
+    Signature Algorithm: sha1WithRSAEncryption
+        Issuer: C=FR, O=xxxxx, OU=xxxxx, CN=xxxxx root CA
+        Validity
+            Not Before: Oct  8 09:54:28 2010 GMT
+            Not After : Oct  8 09:54:28 2015 GMT
+        Subject: C=FR, O=xxxxx, OU=xxxxx, CN=Internal services CA
+        Subject Public Key Info:
+            Public Key Algorithm: rsaEncryption
+                Public-Key: (2048 bit)
+                Modulus:
+                    00:d9:56:83:09:c7:12:cb:9b:39:53:a0:10:df:6e:
+                    24:b4:df:31:7a:ca:25:9c:c0:1c:10:da:8f:61:a7:
+                    57:e1:fd:dd:41:8a:4c:80:87:6f:74:e6:68:15:d2:
+                    ec:56:69:89:8b:49:70:62:f8:2d:ab:91:1a:af:6e:
+                    dc:98:86:38:f5:15:3e:f7:2b:f8:f8:10:13:12:b6:
+                    15:57:22:90:0c:b6:38:6d:87:fc:25:aa:bd:62:f6:
+                    69:1d:53:4d:9e:03:99:42:bf:0c:da:79:54:fb:88:
+                    2e:a9:fb:1d:3e:ff:f5:48:97:e6:02:e9:0d:f3:5f:
+                    c1:6f:1f:99:bf:e6:08:3d:34:cf:3a:df:77:23:ea:
+                    8d:2b:70:4e:74:8d:b6:aa:18:49:9d:92:65:39:bb:
+                    89:f7:b3:e2:38:38:46:34:ea:01:58:06:f3:04:be:
+                    0d:df:93:ef:93:7d:4f:0e:ae:62:9e:09:50:2b:f2:
+                    1f:ed:ba:4e:67:f1:19:bb:4f:53:59:19:2c:76:67:
+                    f9:b1:c3:af:43:c1:97:69:3c:ad:40:da:da:60:cd:
+                    07:21:d8:67:b1:a8:e2:03:a7:16:4c:2d:4d:49:d4:
+                    a9:7f:d6:24:db:b0:78:1d:0d:71:7f:35:55:be:a5:
+                    ee:41:0e:d8:70:f9:43:6c:c2:92:7d:e0:3d:d1:ea:
+                    e3:4d
+                Exponent: 65537 (0x10001)
+        X509v3 extensions:
+            X509v3 Authority Key Identifier: 
+                keyid:E0:A7:FA:EE:4E:CF:22:A3:A3:9A:6E:96:E0:5B:62:1E:6E:CD:91:BF
+
+            X509v3 Basic Constraints: critical
+                CA:TRUE
+            X509v3 Subject Key Identifier: 
+                BD:44:52:6F:2F:D9:6A:DB:AA:07:AA:29:07:55:B2:51:99:B8:10:65
+            X509v3 Key Usage: critical
+                Certificate Sign, CRL Sign
+            X509v3 CRL Distribution Points: 
+
+                Full Name:
+                  URI:http://www.xxxxx.com/crl
+
+    Signature Algorithm: sha1WithRSAEncryption
+         11:1c:42:2c:2e:92:15:3d:c4:8f:76:82:95:e5:06:d2:e7:06:
+         6f:4d:91:28:5e:f5:6d:8f:db:e5:e9:bc:3a:97:08:36:d6:cb:
+         02:61:3a:3a:23:5c:6a:9d:96:70:f6:ae:b0:e0:64:39:d2:80:
+         15:5d:a1:4e:43:b1:16:0c:00:bd:db:b3:5a:1a:29:0f:08:56:
+         f3:a7:af:49:18:e9:a9:65:bd:b6:66:0d:ce:5c:51:27:12:cf:
+         ac:f5:3f:41:b8:61:c2:28:1d:d5:55:4b:c3:51:86:b5:46:5d:
+         ba:51:ed:8a:5e:59:77:eb:39:9f:f4:74:eb:f4:d5:ad:34:b5:
+         5f:bf:ee:66:fb:1c:7d:f7:21:97:b1:26:8f:96:ed:e7:78:ab:
+         d1:51:a3:48:07:41:07:c3:c1:16:e0:b6:be:ee:f4:32:46:9c:
+         f4:2e:13:fa:28:e9:94:60:e6:f7:a6:96:c4:7d:7d:6d:54:f3:
+         77:dc:c9:52:31:d3:91:b4:1a:5a:ac:3f:90:96:e1:56:d1:1c:
+         b6:2f:1c:73:c9:d9:af:bf:42:4e:d9:47:bf:df:9e:37:9c:62:
+         d9:4e:73:35:b7:32:8d:eb:ab:68:d6:d9:d5:48:e8:5b:d5:9d:
+         ae:e9:d0:9a:c0:ab:0d:eb:9a:af:fd:06:85:0f:68:2b:79:33:
+         73:34:ca:d7

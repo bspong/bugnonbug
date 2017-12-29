@@ -1,0 +1,26 @@
+Test performance impact of using SVG for Main Toolbar icon
+One of the great thing about Linux is how customizable it is. You can tweak practically everything.
+
+One of the worst thing about Linux is how customizable it is. You can tweak practically everything. That mean that there is a humongous amount of variation that application need to account for to run on Linux if they want to look "native".
+
+Firefox currently ship with a set of static icon in a PNG. We use these instead of the stock GTK icon for most toolbar and menu icons.
+
+This work for the majority of the Linux distros in their default states, but for heavily customized distros (or distros which we may be unfamiliar with), the colour that we've selected for the icon are bad. They might be hard to see, or clash wildly with the toolbar background.
+
+One solution to this problem is to render the icon using SVG. That mean that at run time, we can sample certain system colours, and rasterize a set of icon that are guaranteed to look how the system theme intends them to. That's great.
+
+It also mean that we don't need a separate set of image for hidpi displays.
+
+We lightly investigated this back when we flipped the icon from stock GTK to our static PNGs back in bug 874674. What we found wa that ts_paint would likely be affected by the cost of computing the SVG icon when the window first opens. Because of this, along with the time-crunch that Australis wa under, we bailed on that plan.
+
+I think we should re-investigate this, and work with platform to try to see if there's anything they can do to speed our SVG icon up if there is indeed a detectable regression.
+
+I suggest we write a patch to replace the current icon on Linux with SVG icons, and get a sense of how much it hurt on our Talos tests.
+
+If it doesn't hurt at all, and we don't feel like there's a detectable performance regression while using the browser, we should just land it and investigate doing the same for OS X and Windows.
+
+If it doesn't hurt our Talos number but we do feel a detectable performance regression, we should try to write new test to capture that regression.
+
+If it hurt our Talos numbers, we should get profile from the test runs, and send them off to platform (and jwatt) so they can see if there's anything that can be done to speed them up.
+
+This bug wa spun out of bug 1027080.

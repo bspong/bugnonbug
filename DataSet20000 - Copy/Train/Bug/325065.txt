@@ -1,0 +1,15 @@
+browser/app/ needs to link against zlib in cairo-gtk2 builds
+When building a cairo-gtk2 build, I get this error:
+
+c++ -o firefox-bin -fno-rtti -fno-exceptions -Wall -Wconversion -Wpointer-arith -Wcast-align -Woverloaded-virtual -Wsynth -Wno-ctor-dtor-privacy -Wno-non-virtual-dtor -Wno-long-long -pedantic -fshort-wchar -pthread -pipe -DDEBUG -D_DEBUG -DDEBUG_djc -DTRACING -g -fno-inline nsBrowserApp.o -lpthread -L../../dist/bin -L../../dist/lib -lxul -lthebes -L../../dist/bin -lmozjs -L../../dist/bin -lxpcom -lxpcom_core -L../../dist/lib -lplds4 -lplc4 -lnspr4 -lpthread -ldl -lgtk-x11-2.0 -latk-1.0 -lgdk-x11-2.0 -lgdk_pixbuf-2.0 -lm -lpangocairo-1.0 -lpango-1.0 -lcairo -lgmodule-2.0 -ldl -lgobject-2.0 -lglib-2.0 -L../../dist/lib -lmozcairo -lmozlibpixman -lXrender -lfreetype -lfontconfig -lmozglitz -lmozglitzglx -lGL -lX11 -ldl -lm
+/usr/lib/gcc-lib/i686-pc-linux-gnu/3.3.6/../../../../i686-pc-linux-gnu/bin/ld: warning: libmozz.so, needed by ../../dist/bin/libthebes.so, not found (try using -rpath or -rpath-link)
+../../dist/bin/libthebes.so: undefined reference to `MOZ_Z_compress'
+collect2: ld returned 1 exit status
+gmake[5]: *** [firefox-bin] Error 1
+gmake[5]: Leaving directory `browser/app'
+
+This broke after a recent checkin to gfx/thebes/src/Makefile.in by pavlov@pavlov.net which added $(ZLIB_LIBS)
+
+> EXTRA_DSO_LDOPTS += $(MOZ_PANGO_LIBS) $(ZLIB_LIBS)
+
+I have a patch which fixed this for me (after some help from biesi on IRC), however I've no idea if it's the right thing to do. I also don't know why the Linux Firefox-Cairo tinderbox isn't busted...

@@ -1,0 +1,18 @@
+funnelcake change applied to all late 51.0 beta builds
+Bug 1322723 implemented the preference browser.shell.skipDefaultBrowserCheckOnFirstRun so the funnel can show the default browser prompt on the second launch like Nightly and Developer Edition do. By default, it's false and Firefox will prompt on the first launch (unless you hit bug 1343938).
+
+For Firefox 51.0b12 and b14 (haven't tested b13) in non-stub builds downloaded from https://ftp.mozilla.org/pub/firefox/releases/51.0b12/win32/en-US/ or https://ftp.mozilla.org/pub/firefox/releases/51.0b14/win32/en-US/ , the preference value is true:
+> pref("browser.shell.skipDefaultBrowserCheckOnFirstRun", true);
+
+The code would generate a value of false:
+https://hg.mozilla.org/releases/mozilla-beta/file/9ddd4fee0784/browser/app/profile/firefox.js#l215
+
+So this seems to have been overridden by the funnel test.
+
+There is a problem here:
+a) Either the funnel settings got applied to the default builds
+b) or the whole beta was part of the funnel. According to other source code, funnelcakes should have a distribution.id preference set:
+https://dxr.mozilla.org/mozilla-beta/rev/25ee9d2ee428d3cc16ba425ad2dd74496cf1d7a6/toolkit/components/search/nsSearchService.js#380
+But e.g. 51.0b12 doesn't have a distribution.id preference.
+
+In case the whole late betas where part of the funnel and the distribution.id had been omitted for that reason: How can a developer check that a build has changes applied which are not in hg.mozilla.org/dxr.mozilla.org and where can they download builds where the binary matches the source?

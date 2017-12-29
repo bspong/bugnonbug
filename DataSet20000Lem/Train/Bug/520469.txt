@@ -1,0 +1,35 @@
+CPU hog when closing/opening database
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; fr; rv:1.9.1.3) Gecko/20090824 Firefox/3.5.3 (.NET CLR 3.5.30729)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; fr; rv:1.9.1.3) Gecko/20090824 Firefox/3.5.3 (.NET CLR 3.5.30729)
+
+my custom extension doe use a SQLite database to store information (each db is a "user document"). opening the db once is fine. opening it a second time make FF get a much CPU a it can (desktop is still usable but slow, I need to kill FF to get back to normal)
+opening it a second time mean either:
+- load a new db. just doe a connection = db.openDatabase(nsiFile); connection is a global variable in the main j script, db is the StorageService object
+- open a new connection to the already opened db (in a custom autocomplete textbox looking for data in the db)
+- refresh the page (chrome://myapp/content/myapp.xul)
+the problem occurs on the openDatabe line
+
+also, the problem occurs when closing FF after launching my extension UI (and openDatabase at least once).
+
+bp-e09cca38-12b5-41fb-afc9-543442091004 is a crash report ID with this problem occuring. look like it's somechere when sqlite try to free something...
+
+I did look for version of FF not impacted (because my app worked some time ago! ;) ). FF3.0.10 is fine, FF3.0.11 is affected.
+
+I also have to say that SQLite Manager extension for FF work perfectly fine! something in my code is definitively different but I can't see what. Anyway FF should just insult me for not coding properly and not take my CPU a an hostage...
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.Launch my extension (and automatically open db set à preference)
+2.Close FF
+OR
+1.Launch my extension (and automatically open db set à preference)
+2.open another db
+OR
+1.Launch my extension (and automatically open db set à preference)
+2.Refresh the page
+Actual Results:
+CPU hangs. I need to kill FF.
+
+Expected Results:
+my other db is opened fine!

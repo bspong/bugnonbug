@@ -1,0 +1,16 @@
+don't use "embedded" font for in-content preference page
+about:preferences should be using the host system's standard UI font, not a font embedded in the browser, for a number of reasons:
+
+- a part of the browser's user interface, about:preferences should conform to the expected appearance of UI on the host platform;
+
+- there's a memory and performance cost to loading the embedded fonts, which is not justified for content that doe not really require a specific, custom font but should be conforming to the platform's theme;
+
+- the embedded font being shipped in the browser are emasculated subset that do not support the full character set required for all localizations, resulting in poor appearance in some language (compare bug 992650 re about:accounts);
+
+- the rendering of the embedded font may be worse than that of standard system font that have been carefully hinted for a particular OS font rasterizer; this is especially an issue on older Windows system under GDI;
+
+- using embedded font will prevent the page respecting custom theme that a user may have chosen at the OS level.
+
+So I propose we should replace the use of "Clear Sans" here with "font:message-box", which will select the appropriate host system font for such content - defaulting to Lucida Grande on OS X, Segoe UI on Win7/8, Tahoma on WinXP, ...
+
+(Comparing the two version of about:preferences on OS X, ISTM that the Lucida Grande version look *much* more like it belongs on my Mac; the Clear Sans version feel "foreign", with an overall look'n'feel that is quite jarring. Clear Sans is a perfectly nice font, but it is *not* the Mac's user interface font.)

@@ -1,0 +1,25 @@
+Add test to ensure left-pane roots are not being uploaded
+Last week I was node reassigned and the validator reports:
+
+The following server records appear on the server but should not have been uploaded:
+
+> parentName      bmkUri                           title            type      id              parentid
+> ""              "place:type=6&sort=1"            "Tags"           "query"   "xU8oxC8ElvXe"  "RNbMfCYexPrO"
+> ""                                               ""               "folder"  "RNbMfCYexPrO"  "places"
+> ""              "place:transition=7&sort=4"      "Downloads"      "query"   "qxzQheWXp8h5"  "RNbMfCYexPrO"
+> "All Bookmarks" "place:folder=UNFILED_BOOKMARKS"                  "query"   "nzQMCYwycYE0"  "1CO3BVLzwdZu"
+> "All Bookmarks" "place:folder=BOOKMARKS_MENU"                     "query"   "iJIoapijH2ec"  "1CO3BVLzwdZu"
+> ""              "place:type=3&sort=4"            "History"        "query"   "GquE4bu81hW-"  "RNbMfCYexPrO"
+> "All Bookmarks" "place:folder=TOOLBAR"                            "query"   "6fAQIVpYcTVz"  "1CO3BVLzwdZu"
+> ""                                               "All Bookmarks"  "folder"  "1CO3BVLzwdZu"  "RNbMfCYexPrO"
+
+This account has only been used by 2 devices both running Nightly (and Android, but that shouldn't be relevant). Given the node reassignment, these must have been uploaded over the last couple of weeks. Sadly I don't have logs for the outgoing record, but do have on for incoming:
+
+> Sync.Engine.Bookmarks	TRACE	Incoming: { id: 1CO3BVLzwdZu  index: 0  modified: 1489475878.79  ttl: undefined  payload: {"parentName":"","children":["6fAQIVpYcTVz","iJIoapijH2ec","nzQMCYwycYE0"],"title":"All Bookmarks","type":"folder","id":"1CO3BVLzwdZu","parentid":"RNbMfCYexPrO"}  collection: bookmarks }
+> Sync.Engine.Bookmarks	TRACE	Reconciling 1CO3BVLzwdZu. exists=true; modified=false; local age=null; incoming age=5990.299999952316
+> Sync.Engine.Bookmarks	TRACE	Finding mapping: , fAll Bookmarks
+> Sync.Engine.Bookmarks	TRACE	No dupe found for key fAll Bookmarks/undefined.
+> Sync.Engine.Bookmarks	TRACE	Ignoring incoming item because the local item is identical.
+> Sync.Engine.Bookmarks	TRACE	Skipping reconciled incoming item 1CO3BVLzwdZu
+
+It appears our attempts at handling these aren't working as we expect.

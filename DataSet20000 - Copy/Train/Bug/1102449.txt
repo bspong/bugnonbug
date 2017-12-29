@@ -1,0 +1,35 @@
+RectHighlighter should be able to draw multiple rectangles at once
+It's useful to be able to highlight multiple rectangles at once. Especially in the timeline, when hovering paint markers.
+Instead of having the front-end create multiple instances of the highlighter and sending multiple requests, why not making the RectHighlighter accept an array of rects instead.
+
+For now the RectHighlighter uses a simple <div> element to render the rectangle on screen, but it would be just as easy to make it use a <svg><path></svg> instead.
+Using a path, we can draw as many rectangles as we want.
+
+Consider the following simple script:
+
+let rects = [
+  {
+    x: 0,
+    y: 0,
+    width: 100,
+    height: 200
+  },
+  {
+    x: 200,
+    y: 100,
+    width: 50,
+    height: 150
+  }
+];
+
+let cmds = [];
+for (let {x, y, width, height} of rects) {
+  let cmd = "M " + x + " " + y + " ";
+  cmd += "L " + (x + width) + " " + y + " ";
+  cmd += "L " + (x + width) + " " + (y + height) + " ";
+  cmd += "L " + x + " " + (y + height);
+  cmds.push(cmd);
+});
+path.setAttribute("d", cmds.join(" "));
+
+That's it! Just one svg element, created from the start using the canvasframe markup helper, able to draw as many rectangles as we need.

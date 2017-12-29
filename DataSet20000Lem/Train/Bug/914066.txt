@@ -1,0 +1,58 @@
+chrome://global/content/bindings/preferences.xml:696, in strict mode code, function may be declared only at top level or immediately within another function
+I got the following warning with DEBUG BUILD of comm-central thunderbird.
+The warning come from preferences.xml.
+
+chrome://global/content/bindings/preferences.xml:696, in strict mode code, function may be declared only at top level or immediately within another function.
+
+I see a few different perferences.xml files:
+mozilla/mobile/android/base/resources/xml/preferences.xml.in
+mozilla/mobile/android/base/resources/xml-v11/preferences.xml
+mozilla/toolkit/content/widgets/preferences.xml
+
+Since I wa building and testing for Debian GNU/Linux 32 bits,
+I assume the last file is the one that caused the printing of the warning.
+The line number may be slightly off in the current code.
+The code around the line 696 on my copy is a follows.
+(mxr.mozilla.org show similar code at
+http://mxr.mozilla.org/comm-central/source/mozilla/toolkit/content/widgets/preferences.xml#733
+)
+
+
+<method name="showPane">
+<parameter name="aPaneElement"/>
+<body>
+<![CDATA[
+if (!aPaneElement)
+return;
+
+this._selector.selectedItem = document.getAnonymousElementByAttribute(this, "pane", aPaneElement.id);
+if (!aPaneElement.loaded) {
+---> function OverlayLoadObserver(aPane)
+{
+this._pane = aPane;
+}
+OverlayLoadObserver.prototype = {
+_outer: this,
+observe: function (aSubject, aTopic, aData)
+{
+this._pane.loaded = true;
+this._outer._fireEvent("paneload", this._pane);
+this._outer._selectPane(this._pane);
+}
+};
+
+var ob = new OverlayLoadObserver(aPaneElement);
+document.loadOverlay(aPaneElement.src, obs);
+}
+else
+this._selectPane(aPaneElement);
+]]>
+</body>
+</method>
+
+The code look clever, but since this is one of the few file that
+triggered this warning, I think it ought to be fixed to suppress the warning.
+But I am not sure how to rewrite the code for this type of embedded javascript.
+So I defer the modification to people in the know.
+
+TIA

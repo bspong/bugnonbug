@@ -1,0 +1,41 @@
+[RFC] USABILITY: Create config option to make mouse wheel scrolling stop at top/bottom of textarea, instead of starting to scroll entire page.
+User-Agent:       Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.1.2) Gecko/20090813 Gentoo Firefox/3.5.2
+Build Identifier: Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.1.2) Gecko/20090813 Gentoo Firefox/3.5.2
+
+Here is the use case that demonstrates my problem:
+
+I use a CMS to enter content for my web site. When I am entering content, I have a large (enough columns to nearly fill the vertical view space) <textarea> that I type in. The textarea box fills most of the vertical viewing area. Once I have typed in more lines of text than there are rows in the textarea, the scrollbar appears on the side, and I can put the mouse cursor over the textarea, and use the mouse wheel to scroll up and down the textarea. If I move the mouse cursor outside of the textarea, it scrolls the entire page up and down.
+
+My problem is with the fact that once I have scrolled to the top of the text area with the mouse wheel, if I keep doing mouse wheel up, it starts scrolling the entire page, even if I still have the mouse cursor over the textarea. This makes it where I have to "recenter" the textarea in the viewing area, so that I can see all of it again (because scrolling the entire page up causes part or all of the input area to go offscreen). This is especially annoying when I have a huge amount of text in the textarea, and am trying to quickly scroll to the top with the wheel. If I go too fast, then I have to waste time repositioning the textarea again.
+
+What I am suggesting is to add a configuration option to about:config, which will make it where if the mouse cursor is over a textarea, then it will not scroll anything but that textarea, even if you have reached the top/bottom of the textarea and keep rolling the mouse wheel -- the mouse cursor *must* be *outside* of the textarea for it to scroll the rest of the page. 
+
+I feel like this should be fairly easy to implement. The code is already there to detect when the mouse cursor is over a textarea, and to cause it to scroll the text area if it is. I'm guessing that all that would need to be changed is the conditional that checks if we have scrolled to the top of the textarea, and changing it from:
+
+if (at top of textarea) {begin scrolling entire page}
+to 
+if (at top of textarea && !new_config_option) {begin scrolling entire page}
+
+The only possible problem I see with doing this (besides potentially being difficult to implement for some reason .. although I highly doubt it) is one that user "Cork" pointed out on #firefox IRC channel: What about the case of a 100% wide text area that fills 100% vertical as well? Where would you place the mouse cursor to scroll the entire page with a wheel? First off, that's an extreme case, and second if the user knows enough to set an option in about:config, then they probably are aware of the "Page Up" key, and would figure out how to deal with this extreme case.
+
+And I want to reiterate that am not talking about making my desired behavior default, but rather adding it as a config option in about:config, which a user would have to manually set.
+
+For me, this is a consistent irritation, and I have been unable to find any way to disable it. Is this something that any of you have a problem with as well?
+
+How much work would it be to fix this?
+
+Thanks,
+Jesse Taylor
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Click in the input area you want to type in.
+2. Type text until there are more lines than the input box can show (a scrollbar appears now)
+3. use mouse wheel to scroll up to top of input box
+4. Now keep scrolling up ...
+Actual Results:  
+Rather than doing nothing when I keep doing mouse wheel up after I reach the top of the input box, it begins scrolling the rest of the page up. I hate this, and there is no way (that I've found) for me to disable it.
+
+Expected Results:  
+Allow me to set a configuration option so that once I have scrolled to the top of the input box, it does nothing instead of beginning to scroll the entire page up.

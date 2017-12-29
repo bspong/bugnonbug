@@ -1,0 +1,49 @@
+Quote entity in object/applet param tag is incorrectly interpreted
+User-Agent: Mozilla/5.0 (X11; Linux i686; rv:2.0b9pre) Gecko/20110109 Firefox/4.0b9pre
+Build Identifier: Mozilla/5.0 (X11; Linux i686; rv:2.0b9pre) Gecko/20110109 Firefox/4.0b9pre
+
+In <param name="foo" value="HELLO&quot;WORLD" /> the value is parsed a HELLO only. The quote entity incorrectly end the attribute value evaluation.
+
+Reproduced in stable FF 3.6.13 and nightly build 4.0b9pre on Ubuntu 10.04. Windows version of FF 3.6.13 work fine.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Create and compile simple applet:
+
+import java.applet.Applet;
+import java.awt.Graphics;
+
+public class Test extends Applet {
+
+public void paint(Graphics g) {
+g.drawString(this.getParameter("foo"), 10, 50);
+}
+
+}
+
+2. Create a simple page
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+</head>
+<body>
+<div>
+<applet code="Test.class" width="250" height="100">
+<param name="foo" value="HELLO&quot;WORLD" />
+</applet>
+</div>
+</body>
+</html>
+
+3. Open the test page and check the printed text.
+
+Actual Results:
+Firefox 3.6.13 and 4.0b9pre on Ubuntu 10.04 display text HELLO.
+
+Expected Results:
+The text HELLO WORLD should be displayed.
+
+Issue is NOT present in the Windows 3.6.13 build.

@@ -1,0 +1,1036 @@
+TEST-UNEXPECTED-FAIL | /tests/layout/base/tests/test_bug441782-1c.html | Exited with code 1 during test run followed by crash
+This test when orange, then ehsan retriggered it and it ran green, so it looks random orange to me.
+
+https://tbpl.mozilla.org/php/getParsedLog.php?id=7934499&tree=Firefox&full=1#error0
+
+the pertinent part of the log seems to be:
+XRE_main+0x00005001 [/Users/cltbld/talos-slave/test/build/NightlyDebug.app/Contents/MacOS/XUL +0x0002DBA1]
+start+0x00000811 [/Users/cltbld/talos-slave/test/build/NightlyDebug.app/Contents/MacOS/firefox-bin +0x00001CA1]
+###!!! ABORT: PresArena: poison overwritten: '*reinterpret_cast<PRUword*>(p) == ARENA_POISON', file /builds/slave/m-cen-osx64-dbg/build/layout/base/nsPresArena.cpp, line 362
+TEST-UNEXPECTED-FAIL | /tests/layout/base/tests/test_bug441782-1c.html | Exited with code 1 during test run
+INFO | automation.py | Application ran for: 0:01:13.933452
+INFO | automation.py | Reading PID log: /var/folders/qd/srwd5f710sj0fcl9z464lkj00000gn/T/tmpoHOKbvpidlog
+PROCESS-CRASH | /tests/layout/base/tests/test_bug441782-1c.html | application crashed (minidump found)
+
+and then of course, we get a stack now:
+
+Crash dump filename: /var/folders/qd/srwd5f710sj0fcl9z464lkj00000gn/T/tmpWXIt5g/minidumps/B4A2E70A-034C-4D13-B865-B8F74A316BD4.dmp
+Operating system: Mac OS X
+                  10.7.2 11C74
+CPU: amd64
+     family 6 model 23 stepping 10
+     2 CPUs
+
+Crash reason:  EXC_BAD_ACCESS / KERN_INVALID_ADDRESS
+Crash address: 0x0
+
+Thread 0 (crashed)
+ 0  libmozalloc.dylib + 0x1ac5
+    rbx = 0x7dd84630   r12 = 0x5fbfbd90   r13 = 0x7dd84630   r14 = 0x034c1868
+    r15 = 0x034c1768   rip = 0x000a3ac5   rsp = 0x5fbfbd50   rbp = 0x5fbfbd60
+    Found by: given as instruction pointer in context
+ 1  XUL + 0x1269e
+    rip = 0x0101269f   rsp = 0x5fbfbd70
+    Found by: stack scanning
+ 2  firefox-bin + 0x0
+    rip = 0x00000001   rsp = 0x5fbfbd80
+    Found by: stack scanning
+
+Thread 1
+ 0  libsystem_kernel.dylib + 0x177e6
+    rbx = 0x7dd951e0   r12 = 0x7dd94540   r13 = 0x00000000   r14 = 0x7dd95270
+    r15 = 0x00607668   rip = 0x95ccb7e6   rsp = 0x00607528   rbp = 0x006076a0
+    Found by: given as instruction pointer in context
+ 1  libdispatch.dylib + 0x35bd
+    rip = 0x9480a5be   rsp = 0x00607530
+    Found by: stack scanning
+
+Thread 2
+ 0  libsystem_kernel.dylib + 0x177e6
+    rbx = 0x00135d10   r12 = 0x00813000   r13 = 0x05503d30   r14 = 0x00135d10
+    r15 = 0x03ef4120   rip = 0x95ccb7e6   rsp = 0x05503af8   rbp = 0x05503b30
+    Found by: given as instruction pointer in context
+ 1  XUL + 0x1cae4d2
+    rip = 0x02cae4d3   rsp = 0x05503b00
+    Found by: stack scanning
+ 2  libsystem_c.dylib + 0x3e1ef
+    rip = 0x947671f0   rsp = 0x05503b10
+    Found by: stack scanning
+ 3  XUL + 0x1cac677
+    rip = 0x02cac678   rsp = 0x05503b40
+    Found by: stack scanning
+ 4  0xffffffff
+    rip = 0x00000000   rsp = 0x05503b70
+    Found by: stack scanning
+ 5  libnspr4.dylib + 0x1a6bf
+    rip = 0x000596c0   rsp = 0x05503b90
+    Found by: stack scanning
+ 6  XUL + 0x1cd18ee
+    rip = 0x02cd18ef   rsp = 0x05503ba0
+    Found by: stack scanning
+ 7  XUL + 0x1cc720d
+    rip = 0x02cc720e   rsp = 0x05503be0
+    Found by: stack scanning
+
+Thread 3
+ 0  libsystem_kernel.dylib + 0x16bca
+    rbx = 0x05481000   r12 = 0x00000a00   r13 = 0x00000b00   r14 = 0x0500de88
+    r15 = 0x0500de80   rip = 0x95ccabca   rsp = 0x05480c48   rbp = 0x05480d00
+    Found by: given as instruction pointer in context
+ 1  libsystem_c.dylib + 0x52273
+    rip = 0x9477b274   rsp = 0x05480c50
+    Found by: stack scanning
+ 2  0xffffffff
+    rip = 0x00000000   rsp = 0x05480c60
+    Found by: stack scanning
+ 3  0xffffffff
+    rip = 0x00000000   rsp = 0x05480c80
+    Found by: stack scanning
+ 4  libsystem_c.dylib + 0x5230e
+    rip = 0x9477b30f   rsp = 0x05480ca0
+    Found by: stack scanning
+ 5  libnspr4.dylib + 0x1c6fd
+    rip = 0x0005b6fe   rsp = 0x05480d10
+    Found by: stack scanning
+ 6  XUL + 0x1bfef3e
+    rip = 0x02bfef3f   rsp = 0x05480d40
+    Found by: stack scanning
+ 7  XUL + 0x1c8e054
+    rip = 0x02c8e055   rsp = 0x05480d70
+    Found by: stack scanning
+ 8  XUL + 0x1c741de
+    rip = 0x02c741df   rsp = 0x05480da0
+    Found by: stack scanning
+ 9  libsystem_c.dylib + 0x4d6aa
+    rip = 0x947766ab   rsp = 0x05480e00
+    Found by: stack scanning
+10  XUL + 0xdebc
+    rip = 0x0100debd   rsp = 0x05480e50
+    Found by: stack scanning
+11  XUL + 0x1c759dc
+    rip = 0x02c759dd   rsp = 0x05480e80
+    Found by: stack scanning
+12  libsystem_c.dylib + 0x4d6aa
+    rip = 0x947766ab   rsp = 0x05480ea0
+    Found by: stack scanning
+13  libnspr4.dylib + 0x22d9f
+    rip = 0x00061da0   rsp = 0x05480ef0
+    Found by: stack scanning
+14  libnspr4.dylib + 0x22e45
+    rip = 0x00061e46   rsp = 0x05480f00
+    Found by: stack scanning
+15  libsystem_c.dylib + 0x4e8be
+    rip = 0x947778bf   rsp = 0x05480f20
+    Found by: stack scanning
+16  libsystem_c.dylib + 0x51b74
+    rip = 0x9477ab75   rsp = 0x05480f60
+    Found by: stack scanning
+
+Thread 4
+ 0  libsystem_kernel.dylib + 0x16bca
+    rbx = 0x05be3000   r12 = 0x001a0400   r13 = 0x001a0a00   r14 = 0x0500b508
+    r15 = 0x0500b500   rip = 0x95ccabca   rsp = 0x05be2ba8   rbp = 0x05be2c60
+    Found by: given as instruction pointer in context
+ 1  libsystem_c.dylib + 0x52273
+    rip = 0x9477b274   rsp = 0x05be2bb0
+    Found by: stack scanning
+ 2  XUL + 0xab3b17
+    rip = 0x01ab3b18   rsp = 0x05be2bc0
+    Found by: stack scanning
+ 3  libsystem_c.dylib + 0x5230e
+    rip = 0x9477b30f   rsp = 0x05be2c00
+    Found by: stack scanning
+ 4  firefox-bin + 0x26bc
+    rip = 0x000026bd   rsp = 0x05be2c20
+    Found by: stack scanning
+ 5  libnspr4.dylib + 0x1ad5a
+    rip = 0x00059d5b   rsp = 0x05be2c70
+    Found by: stack scanning
+ 6  libnspr4.dylib + 0x1c5ba
+    rip = 0x0005b5bb   rsp = 0x05be2cc0
+    Found by: stack scanning
+ 7  XUL + 0x1bfef3e
+    rip = 0x02bfef3f   rsp = 0x05be2cf0
+    Found by: stack scanning
+ 8  XUL + 0x1c7d2da
+    rip = 0x02c7d2db   rsp = 0x05be2d20
+    Found by: stack scanning
+ 9  libnspr4.dylib + 0x1c967
+    rip = 0x0005b968   rsp = 0x05be2d60
+    Found by: stack scanning
+10  XUL + 0x1c741de
+    rip = 0x02c741df   rsp = 0x05be2da0
+    Found by: stack scanning
+11  libsystem_c.dylib + 0x4d6aa
+    rip = 0x947766ab   rsp = 0x05be2e00
+    Found by: stack scanning
+12  XUL + 0xdebc
+    rip = 0x0100debd   rsp = 0x05be2e50
+    Found by: stack scanning
+13  XUL + 0x1c759dc
+    rip = 0x02c759dd   rsp = 0x05be2e80
+    Found by: stack scanning
+14  libsystem_c.dylib + 0x4d6aa
+    rip = 0x947766ab   rsp = 0x05be2ea0
+    Found by: stack scanning
+15  libnspr4.dylib + 0x22d9f
+    rip = 0x00061da0   rsp = 0x05be2ef0
+    Found by: stack scanning
+16  libnspr4.dylib + 0x22e45
+    rip = 0x00061e46   rsp = 0x05be2f00
+    Found by: stack scanning
+17  libsystem_c.dylib + 0x4e8be
+    rip = 0x947778bf   rsp = 0x05be2f20
+    Found by: stack scanning
+18  libsystem_c.dylib + 0x51b74
+    rip = 0x9477ab75   rsp = 0x05be2f60
+    Found by: stack scanning
+
+Thread 5
+ 0  libsystem_kernel.dylib + 0x16df2
+    rbx = 0x05cc8840   r12 = 0x00000001   r13 = 0x05cc8a50   r14 = 0x05cc88c0
+    r15 = 0xffffffff   rip = 0x95ccadf2   rsp = 0x05cc8818   rbp = 0x05cc8a00
+    Found by: given as instruction pointer in context
+ 1  libnspr4.dylib + 0x242ad
+    rip = 0x000632ae   rsp = 0x05cc8820
+    Found by: stack scanning
+
+Thread 6
+ 0  libsystem_kernel.dylib + 0x16bca
+    rbx = 0x07291000   r12 = 0x00000000   r13 = 0x00000100   r14 = 0x050427b8
+    r15 = 0x050427b0   rip = 0x95ccabca   rsp = 0x07290d98   rbp = 0x07290e50
+    Found by: given as instruction pointer in context
+ 1  libsystem_c.dylib + 0x52273
+    rip = 0x9477b274   rsp = 0x07290da0
+    Found by: stack scanning
+ 2  0xffffffff
+    rip = 0x00000000   rsp = 0x07290db0
+    Found by: stack scanning
+ 3  libsystem_c.dylib + 0x5230e
+    rip = 0x9477b30f   rsp = 0x07290df0
+    Found by: stack scanning
+ 4  libnspr4.dylib + 0x1c6fd
+    rip = 0x0005b6fe   rsp = 0x07290e60
+    Found by: stack scanning
+ 5  XUL + 0x1bfef3e
+    rip = 0x02bfef3f   rsp = 0x07290e90
+    Found by: stack scanning
+ 6  XUL + 0x1c7e8c9
+    rip = 0x02c7e8ca   rsp = 0x07290ec0
+    Found by: stack scanning
+ 7  libnspr4.dylib + 0x22d9f
+    rip = 0x00061da0   rsp = 0x07290ef0
+    Found by: stack scanning
+ 8  libnspr4.dylib + 0x22e45
+    rip = 0x00061e46   rsp = 0x07290f00
+    Found by: stack scanning
+ 9  libsystem_c.dylib + 0x4e8be
+    rip = 0x947778bf   rsp = 0x07290f20
+    Found by: stack scanning
+10  libsystem_c.dylib + 0x51b74
+    rip = 0x9477ab75   rsp = 0x07290f60
+    Found by: stack scanning
+
+Thread 7
+ 0  libsystem_kernel.dylib + 0x16bca
+    rbx = 0x082a9000   r12 = 0x00002b00   r13 = 0x00002c00   r14 = 0x0015dd18
+    r15 = 0x0015dd10   rip = 0x95ccabca   rsp = 0x082a8dc8   rbp = 0x082a8e80
+    Found by: given as instruction pointer in context
+ 1  libsystem_c.dylib + 0x52273
+    rip = 0x9477b274   rsp = 0x082a8dd0
+    Found by: stack scanning
+ 2  0xffffffff
+    rip = 0x00000000   rsp = 0x082a8de0
+    Found by: stack scanning
+ 3  0xffffffff
+    rip = 0x00000000   rsp = 0x082a8e00
+    Found by: stack scanning
+ 4  libsystem_c.dylib + 0x5230e
+    rip = 0x9477b30f   rsp = 0x082a8e20
+    Found by: stack scanning
+ 5  XUL + 0x205c2f3
+    rip = 0x0305c2f4   rsp = 0x082a8e78
+    Found by: stack scanning
+ 6  libnspr4.dylib + 0x22d9f
+    rip = 0x00061da0   rsp = 0x082a8e80
+    Found by: stack scanning
+ 7  libnspr4.dylib + 0x1c6fd
+    rip = 0x0005b6fe   rsp = 0x082a8e90
+    Found by: stack scanning
+ 8  XUL + 0x205c2f3
+    rip = 0x0305c2f4   rsp = 0x082a8eb0
+    Found by: stack scanning
+ 9  XUL + 0x205c340
+    rip = 0x0305c341   rsp = 0x082a8ec0
+    Found by: stack scanning
+10  libnspr4.dylib + 0x22e45
+    rip = 0x00061e46   rsp = 0x082a8f00
+    Found by: stack scanning
+11  libsystem_c.dylib + 0x4e8be
+    rip = 0x947778bf   rsp = 0x082a8f20
+    Found by: stack scanning
+12  libsystem_c.dylib + 0x51b74
+    rip = 0x9477ab75   rsp = 0x082a8f60
+    Found by: stack scanning
+
+Thread 8
+ 0  libsystem_kernel.dylib + 0x16bca
+    rbx = 0x0832c000   r12 = 0x00002600   r13 = 0x00004900   r14 = 0x0015f568
+    r15 = 0x0015f560   rip = 0x95ccabca   rsp = 0x0832bd88   rbp = 0x0832be40
+    Found by: given as instruction pointer in context
+ 1  libsystem_c.dylib + 0x52273
+    rip = 0x9477b274   rsp = 0x0832bd90
+    Found by: stack scanning
+ 2  0xffffffff
+    rip = 0x00000000   rsp = 0x0832bdc0
+    Found by: stack scanning
+ 3  libsystem_c.dylib + 0x5230e
+    rip = 0x9477b30f   rsp = 0x0832bde0
+    Found by: stack scanning
+ 4  libnssutil3.dylib + 0x18413
+    rip = 0x000be414   rsp = 0x0832be00
+    Found by: stack scanning
+ 5  libnspr4.dylib + 0x22d9f
+    rip = 0x00061da0   rsp = 0x0832be40
+    Found by: stack scanning
+ 6  libnspr4.dylib + 0x1ad5a
+    rip = 0x00059d5b   rsp = 0x0832be50
+    Found by: stack scanning
+ 7  libnspr4.dylib + 0x1c5ba
+    rip = 0x0005b5bb   rsp = 0x0832bea0
+    Found by: stack scanning
+ 8  XUL + 0x12ff4c7
+    rip = 0x022ff4c8   rsp = 0x0832bed0
+    Found by: stack scanning
+ 9  libnspr4.dylib + 0x22e45
+    rip = 0x00061e46   rsp = 0x0832bf00
+    Found by: stack scanning
+10  libsystem_c.dylib + 0x4e8be
+    rip = 0x947778bf   rsp = 0x0832bf20
+    Found by: stack scanning
+11  libsystem_c.dylib + 0x51b74
+    rip = 0x9477ab75   rsp = 0x0832bf60
+    Found by: stack scanning
+
+Thread 9
+ 0  libsystem_kernel.dylib + 0x16bca
+    rbx = 0x08e9e000   r12 = 0x00000000   r13 = 0x00000100   r14 = 0x08aa05c8
+    r15 = 0x08aa05c0   rip = 0x95ccabca   rsp = 0x08e9dd88   rbp = 0x08e9de40
+    Found by: given as instruction pointer in context
+ 1  libsystem_c.dylib + 0x52273
+    rip = 0x9477b274   rsp = 0x08e9dd90
+    Found by: stack scanning
+ 2  0xffffffff
+    rip = 0x00000000   rsp = 0x08e9dda0
+    Found by: stack scanning
+ 3  libsystem_c.dylib + 0x5230e
+    rip = 0x9477b30f   rsp = 0x08e9dde0
+    Found by: stack scanning
+ 4  libnspr4.dylib + 0x1c6fd
+    rip = 0x0005b6fe   rsp = 0x08e9de50
+    Found by: stack scanning
+ 5  XUL + 0x1bfef3e
+    rip = 0x02bfef3f   rsp = 0x08e9de80
+    Found by: stack scanning
+ 6  XUL + 0x15ef26a
+    rip = 0x025ef26b   rsp = 0x08e9deb0
+    Found by: stack scanning
+ 7  libnspr4.dylib + 0x22d9f
+    rip = 0x00061da0   rsp = 0x08e9def0
+    Found by: stack scanning
+ 8  libnspr4.dylib + 0x22e45
+    rip = 0x00061e46   rsp = 0x08e9df00
+    Found by: stack scanning
+ 9  libsystem_c.dylib + 0x4e8be
+    rip = 0x947778bf   rsp = 0x08e9df20
+    Found by: stack scanning
+10  libsystem_c.dylib + 0x51b74
+    rip = 0x9477ab75   rsp = 0x08e9df60
+    Found by: stack scanning
+
+Thread 10
+ 0  libsystem_kernel.dylib + 0x16bca
+    rbx = 0x09201000   r12 = 0x00000100   r13 = 0x00000200   r14 = 0x08ac5a58
+    r15 = 0x08ac5a50   rip = 0x95ccabca   rsp = 0x092009c8   rbp = 0x09200a80
+    Found by: given as instruction pointer in context
+ 1  libsystem_c.dylib + 0x52273
+    rip = 0x9477b274   rsp = 0x092009d0
+    Found by: stack scanning
+ 2  0xffffffff
+    rip = 0x00000000   rsp = 0x092009e0
+    Found by: stack scanning
+ 3  libsystem_c.dylib + 0x5230e
+    rip = 0x9477b30f   rsp = 0x09200a20
+    Found by: stack scanning
+ 4  libnspr4.dylib + 0x1c6fd
+    rip = 0x0005b6fe   rsp = 0x09200a90
+    Found by: stack scanning
+ 5  XUL + 0x1bfef3e
+    rip = 0x02bfef3f   rsp = 0x09200ac0
+    Found by: stack scanning
+ 6  XUL + 0xd8cdd4
+    rip = 0x01d8cdd5   rsp = 0x09200af0
+    Found by: stack scanning
+
+Thread 11
+ 0  libsystem_kernel.dylib + 0x16bca
+    rbx = 0x09284000   r12 = 0x00000000   r13 = 0x00000100   r14 = 0x0506ab68
+    r15 = 0x0506ab60   rip = 0x95ccabca   rsp = 0x09283dc8   rbp = 0x09283e80
+    Found by: given as instruction pointer in context
+ 1  libsystem_c.dylib + 0x52273
+    rip = 0x9477b274   rsp = 0x09283dd0
+    Found by: stack scanning
+ 2  0xffffffff
+    rip = 0x00000000   rsp = 0x09283e00
+    Found by: stack scanning
+ 3  libsystem_c.dylib + 0x5230e
+    rip = 0x9477b30f   rsp = 0x09283e20
+    Found by: stack scanning
+ 4  XUL + 0x205c2f3
+    rip = 0x0305c2f4   rsp = 0x09283e78
+    Found by: stack scanning
+ 5  libnspr4.dylib + 0x22d9f
+    rip = 0x00061da0   rsp = 0x09283e80
+    Found by: stack scanning
+ 6  libnspr4.dylib + 0x1c6fd
+    rip = 0x0005b6fe   rsp = 0x09283e90
+    Found by: stack scanning
+ 7  XUL + 0x205c2f3
+    rip = 0x0305c2f4   rsp = 0x09283eb0
+    Found by: stack scanning
+ 8  XUL + 0x205c340
+    rip = 0x0305c341   rsp = 0x09283ec0
+    Found by: stack scanning
+ 9  libnspr4.dylib + 0x22e45
+    rip = 0x00061e46   rsp = 0x09283f00
+    Found by: stack scanning
+10  libsystem_c.dylib + 0x4e8be
+    rip = 0x947778bf   rsp = 0x09283f20
+    Found by: stack scanning
+11  libsystem_c.dylib + 0x51b74
+    rip = 0x9477ab75   rsp = 0x09283f60
+    Found by: stack scanning
+
+Thread 12
+ 0  libsystem_kernel.dylib + 0x16bca
+    rbx = 0x09b01000   r12 = 0x00000100   r13 = 0x00000200   r14 = 0x08ad7d18
+    r15 = 0x08ad7d10   rip = 0x95ccabca   rsp = 0x09b009c8   rbp = 0x09b00a80
+    Found by: given as instruction pointer in context
+ 1  libsystem_c.dylib + 0x52273
+    rip = 0x9477b274   rsp = 0x09b009d0
+    Found by: stack scanning
+ 2  0xffffffff
+    rip = 0x00000000   rsp = 0x09b009e0
+    Found by: stack scanning
+ 3  libsystem_c.dylib + 0x5230e
+    rip = 0x9477b30f   rsp = 0x09b00a20
+    Found by: stack scanning
+ 4  libnspr4.dylib + 0x1c6fd
+    rip = 0x0005b6fe   rsp = 0x09b00a90
+    Found by: stack scanning
+ 5  XUL + 0x1bfef3e
+    rip = 0x02bfef3f   rsp = 0x09b00ac0
+    Found by: stack scanning
+ 6  XUL + 0xd8cdd4
+    rip = 0x01d8cdd5   rsp = 0x09b00af0
+    Found by: stack scanning
+
+Thread 13
+ 0  libsystem_kernel.dylib + 0x16bca
+    rbx = 0x09bce000   r12 = 0x00000000   r13 = 0x00000100   r14 = 0x050819b8
+    r15 = 0x050819b0   rip = 0x95ccabca   rsp = 0x09bcddc8   rbp = 0x09bcde80
+    Found by: given as instruction pointer in context
+ 1  libsystem_c.dylib + 0x52273
+    rip = 0x9477b274   rsp = 0x09bcddd0
+    Found by: stack scanning
+ 2  0xffffffff
+    rip = 0x00000000   rsp = 0x09bcde00
+    Found by: stack scanning
+ 3  libsystem_c.dylib + 0x5230e
+    rip = 0x9477b30f   rsp = 0x09bcde20
+    Found by: stack scanning
+ 4  XUL + 0x205c2f3
+    rip = 0x0305c2f4   rsp = 0x09bcde78
+    Found by: stack scanning
+ 5  libnspr4.dylib + 0x22d9f
+    rip = 0x00061da0   rsp = 0x09bcde80
+    Found by: stack scanning
+ 6  libnspr4.dylib + 0x1c6fd
+    rip = 0x0005b6fe   rsp = 0x09bcde90
+    Found by: stack scanning
+ 7  XUL + 0x205c2f3
+    rip = 0x0305c2f4   rsp = 0x09bcdeb0
+    Found by: stack scanning
+ 8  XUL + 0x205c340
+    rip = 0x0305c341   rsp = 0x09bcdec0
+    Found by: stack scanning
+ 9  libnspr4.dylib + 0x22e45
+    rip = 0x00061e46   rsp = 0x09bcdf00
+    Found by: stack scanning
+10  libsystem_c.dylib + 0x4e8be
+    rip = 0x947778bf   rsp = 0x09bcdf20
+    Found by: stack scanning
+11  libsystem_c.dylib + 0x51b74
+    rip = 0x9477ab75   rsp = 0x09bcdf60
+    Found by: stack scanning
+
+Thread 14
+ 0  libsystem_kernel.dylib + 0x16bca
+    rbx = 0x0a3a8000   r12 = 0x00005800   r13 = 0x00005900   r14 = 0x0a4189d8
+    r15 = 0x0a4189d0   rip = 0x95ccabca   rsp = 0x0a3a7c08   rbp = 0x0a3a7cc0
+    Found by: given as instruction pointer in context
+ 1  libsystem_c.dylib + 0x52273
+    rip = 0x9477b274   rsp = 0x0a3a7c10
+    Found by: stack scanning
+ 2  0xffffffff
+    rip = 0x00000000   rsp = 0x0a3a7c20
+    Found by: stack scanning
+ 3  libsystem_c.dylib + 0x5230e
+    rip = 0x9477b30f   rsp = 0x0a3a7c60
+    Found by: stack scanning
+ 4  libnspr4.dylib + 0x1c6fd
+    rip = 0x0005b6fe   rsp = 0x0a3a7cd0
+    Found by: stack scanning
+ 5  libnspr4.dylib + 0x1c800
+    rip = 0x0005b801   rsp = 0x0a3a7d00
+    Found by: stack scanning
+ 6  XUL + 0x1bfeea1
+    rip = 0x02bfeea2   rsp = 0x0a3a7d30
+    Found by: stack scanning
+ 7  XUL + 0x1c720bb
+    rip = 0x02c720bc   rsp = 0x0a3a7d70
+    Found by: stack scanning
+ 8  XUL + 0x1c740ba
+    rip = 0x02c740bb   rsp = 0x0a3a7da0
+    Found by: stack scanning
+ 9  libsystem_c.dylib + 0x4d6aa
+    rip = 0x947766ab   rsp = 0x0a3a7e00
+    Found by: stack scanning
+10  XUL + 0xdebc
+    rip = 0x0100debd   rsp = 0x0a3a7e50
+    Found by: stack scanning
+11  XUL + 0x1c759dc
+    rip = 0x02c759dd   rsp = 0x0a3a7e80
+    Found by: stack scanning
+12  libsystem_c.dylib + 0x4d6aa
+    rip = 0x947766ab   rsp = 0x0a3a7ea0
+    Found by: stack scanning
+13  libnspr4.dylib + 0x22d9f
+    rip = 0x00061da0   rsp = 0x0a3a7ef0
+    Found by: stack scanning
+14  libnspr4.dylib + 0x22e45
+    rip = 0x00061e46   rsp = 0x0a3a7f00
+    Found by: stack scanning
+15  libsystem_c.dylib + 0x4e8be
+    rip = 0x947778bf   rsp = 0x0a3a7f20
+    Found by: stack scanning
+16  libsystem_c.dylib + 0x51b74
+    rip = 0x9477ab75   rsp = 0x0a3a7f60
+    Found by: stack scanning
+
+Thread 15
+ 0  libsystem_kernel.dylib + 0x16bca
+    rbx = 0x0f045000   r12 = 0x00007800   r13 = 0x00007b00   r14 = 0x001e79b8
+    r15 = 0x001e79b0   rip = 0x95ccabca   rsp = 0x0f044ce8   rbp = 0x0f044da0
+    Found by: given as instruction pointer in context
+ 1  libsystem_c.dylib + 0x52273
+    rip = 0x9477b274   rsp = 0x0f044cf0
+    Found by: stack scanning
+ 2  libsystem_c.dylib + 0x5230e
+    rip = 0x9477b30f   rsp = 0x0f044d40
+    Found by: stack scanning
+ 3  libnspr4.dylib + 0x1ad5a
+    rip = 0x00059d5b   rsp = 0x0f044db0
+    Found by: stack scanning
+ 4  libnspr4.dylib + 0x1c5ba
+    rip = 0x0005b5bb   rsp = 0x0f044e00
+    Found by: stack scanning
+ 5  XUL + 0x1bfef3e
+    rip = 0x02bfef3f   rsp = 0x0f044e30
+    Found by: stack scanning
+ 6  XUL + 0xca444
+    rip = 0x010ca445   rsp = 0x0f044e60
+    Found by: stack scanning
+ 7  libnspr4.dylib + 0x22d9f
+    rip = 0x00061da0   rsp = 0x0f044ec0
+    Found by: stack scanning
+ 8  XUL + 0xcb5fa
+    rip = 0x010cb5fb   rsp = 0x0f044ed0
+    Found by: stack scanning
+ 9  libnspr4.dylib + 0x22e45
+    rip = 0x00061e46   rsp = 0x0f044f00
+    Found by: stack scanning
+10  libsystem_c.dylib + 0x4e8be
+    rip = 0x947778bf   rsp = 0x0f044f20
+    Found by: stack scanning
+11  libsystem_c.dylib + 0x51b74
+    rip = 0x9477ab75   rsp = 0x0f044f60
+    Found by: stack scanning
+
+Thread 16
+ 0  libsystem_kernel.dylib + 0x16bca
+    rbx = 0x12a82000   r12 = 0x00000600   r13 = 0x00000700   r14 = 0x12c768a8
+    r15 = 0x12c768a0   rip = 0x95ccabca   rsp = 0x12a81c08   rbp = 0x12a81cc0
+    Found by: given as instruction pointer in context
+ 1  libsystem_c.dylib + 0x52273
+    rip = 0x9477b274   rsp = 0x12a81c10
+    Found by: stack scanning
+ 2  libplds4.dylib + 0x1fd8
+    rip = 0x00097fd9   rsp = 0x12a81c40
+    Found by: stack scanning
+ 3  libsystem_c.dylib + 0x5230e
+    rip = 0x9477b30f   rsp = 0x12a81c60
+    Found by: stack scanning
+ 4  libnspr4.dylib + 0x1c6fd
+    rip = 0x0005b6fe   rsp = 0x12a81cd0
+    Found by: stack scanning
+ 5  libnspr4.dylib + 0x1c800
+    rip = 0x0005b801   rsp = 0x12a81d00
+    Found by: stack scanning
+ 6  XUL + 0x1bfeea1
+    rip = 0x02bfeea2   rsp = 0x12a81d30
+    Found by: stack scanning
+ 7  XUL + 0x1c720bb
+    rip = 0x02c720bc   rsp = 0x12a81d70
+    Found by: stack scanning
+ 8  XUL + 0x1c740ba
+    rip = 0x02c740bb   rsp = 0x12a81da0
+    Found by: stack scanning
+ 9  libsystem_c.dylib + 0x4d6aa
+    rip = 0x947766ab   rsp = 0x12a81e00
+    Found by: stack scanning
+10  XUL + 0xdebc
+    rip = 0x0100debd   rsp = 0x12a81e50
+    Found by: stack scanning
+11  XUL + 0x1c759dc
+    rip = 0x02c759dd   rsp = 0x12a81e80
+    Found by: stack scanning
+12  libsystem_c.dylib + 0x4d6aa
+    rip = 0x947766ab   rsp = 0x12a81ea0
+    Found by: stack scanning
+13  libnspr4.dylib + 0x22d9f
+    rip = 0x00061da0   rsp = 0x12a81ef0
+    Found by: stack scanning
+14  libnspr4.dylib + 0x22e45
+    rip = 0x00061e46   rsp = 0x12a81f00
+    Found by: stack scanning
+15  libsystem_c.dylib + 0x4e8be
+    rip = 0x947778bf   rsp = 0x12a81f20
+    Found by: stack scanning
+16  libsystem_c.dylib + 0x51b74
+    rip = 0x9477ab75   rsp = 0x12a81f60
+    Found by: stack scanning
+
+Thread 17
+ 0  libsystem_kernel.dylib + 0x16bca
+    rbx = 0x151c1000   r12 = 0x0005a000   r13 = 0x0005a100   r14 = 0x12d525f8
+    r15 = 0x12d525f0   rip = 0x95ccabca   rsp = 0x151c0c08   rbp = 0x151c0cc0
+    Found by: given as instruction pointer in context
+ 1  libsystem_c.dylib + 0x52273
+    rip = 0x9477b274   rsp = 0x151c0c10
+    Found by: stack scanning
+ 2  0xffffffff
+    rip = 0x00000000   rsp = 0x151c0c20
+    Found by: stack scanning
+ 3  libplds4.dylib + 0x1fd8
+    rip = 0x00097fd9   rsp = 0x151c0c40
+    Found by: stack scanning
+ 4  libsystem_c.dylib + 0x5230e
+    rip = 0x9477b30f   rsp = 0x151c0c60
+    Found by: stack scanning
+ 5  libnspr4.dylib + 0x1c6fd
+    rip = 0x0005b6fe   rsp = 0x151c0cd0
+    Found by: stack scanning
+ 6  libnspr4.dylib + 0x1c800
+    rip = 0x0005b801   rsp = 0x151c0d00
+    Found by: stack scanning
+ 7  XUL + 0x1bfeea1
+    rip = 0x02bfeea2   rsp = 0x151c0d30
+    Found by: stack scanning
+ 8  XUL + 0x1c720bb
+    rip = 0x02c720bc   rsp = 0x151c0d70
+    Found by: stack scanning
+ 9  XUL + 0x1c740ba
+    rip = 0x02c740bb   rsp = 0x151c0da0
+    Found by: stack scanning
+10  libsystem_c.dylib + 0x4d6aa
+    rip = 0x947766ab   rsp = 0x151c0e00
+    Found by: stack scanning
+11  XUL + 0xdebc
+    rip = 0x0100debd   rsp = 0x151c0e50
+    Found by: stack scanning
+12  XUL + 0x1c759dc
+    rip = 0x02c759dd   rsp = 0x151c0e80
+    Found by: stack scanning
+13  libsystem_c.dylib + 0x4d6aa
+    rip = 0x947766ab   rsp = 0x151c0ea0
+    Found by: stack scanning
+14  libnspr4.dylib + 0x22d9f
+    rip = 0x00061da0   rsp = 0x151c0ef0
+    Found by: stack scanning
+15  libnspr4.dylib + 0x22e45
+    rip = 0x00061e46   rsp = 0x151c0f00
+    Found by: stack scanning
+16  libsystem_c.dylib + 0x4e8be
+    rip = 0x947778bf   rsp = 0x151c0f20
+    Found by: stack scanning
+17  libsystem_c.dylib + 0x51b74
+    rip = 0x9477ab75   rsp = 0x151c0f60
+    Found by: stack scanning
+
+Thread 18
+ 0  libsystem_kernel.dylib + 0x16bca
+    rbx = 0x0a304000   r12 = 0x0002a200   r13 = 0x0002a300   r14 = 0x15038068
+    r15 = 0x15038060   rip = 0x95ccabca   rsp = 0x0a303c08   rbp = 0x0a303cc0
+    Found by: given as instruction pointer in context
+ 1  libsystem_c.dylib + 0x52273
+    rip = 0x9477b274   rsp = 0x0a303c10
+    Found by: stack scanning
+ 2  firefox-bin + 0xc6c
+    rip = 0x00000c6d   rsp = 0x0a303c40
+    Found by: stack scanning
+ 3  libsystem_c.dylib + 0x5230e
+    rip = 0x9477b30f   rsp = 0x0a303c60
+    Found by: stack scanning
+ 4  libnspr4.dylib + 0x1c6fd
+    rip = 0x0005b6fe   rsp = 0x0a303cd0
+    Found by: stack scanning
+ 5  libnspr4.dylib + 0x1c800
+    rip = 0x0005b801   rsp = 0x0a303d00
+    Found by: stack scanning
+ 6  XUL + 0x1bfeea1
+    rip = 0x02bfeea2   rsp = 0x0a303d30
+    Found by: stack scanning
+ 7  XUL + 0x1c720bb
+    rip = 0x02c720bc   rsp = 0x0a303d70
+    Found by: stack scanning
+ 8  XUL + 0x1c740ba
+    rip = 0x02c740bb   rsp = 0x0a303da0
+    Found by: stack scanning
+ 9  libsystem_c.dylib + 0x4d6aa
+    rip = 0x947766ab   rsp = 0x0a303e00
+    Found by: stack scanning
+10  XUL + 0xdebc
+    rip = 0x0100debd   rsp = 0x0a303e50
+    Found by: stack scanning
+11  XUL + 0x1c759dc
+    rip = 0x02c759dd   rsp = 0x0a303e80
+    Found by: stack scanning
+12  libsystem_c.dylib + 0x4d6aa
+    rip = 0x947766ab   rsp = 0x0a303ea0
+    Found by: stack scanning
+13  libnspr4.dylib + 0x22d9f
+    rip = 0x00061da0   rsp = 0x0a303ef0
+    Found by: stack scanning
+14  libnspr4.dylib + 0x22e45
+    rip = 0x00061e46   rsp = 0x0a303f00
+    Found by: stack scanning
+15  libsystem_c.dylib + 0x4e8be
+    rip = 0x947778bf   rsp = 0x0a303f20
+    Found by: stack scanning
+16  libsystem_c.dylib + 0x51b74
+    rip = 0x9477ab75   rsp = 0x0a303f60
+    Found by: stack scanning
+
+Thread 19
+ 0  libsystem_kernel.dylib + 0x16bca
+    rbx = 0x15446000   r12 = 0x00000700   r13 = 0x00000800   r14 = 0x15045568
+    r15 = 0x15045560   rip = 0x95ccabca   rsp = 0x15445c08   rbp = 0x15445cc0
+    Found by: given as instruction pointer in context
+ 1  libsystem_c.dylib + 0x52273
+    rip = 0x9477b274   rsp = 0x15445c10
+    Found by: stack scanning
+ 2  0xffffffff
+    rip = 0x00000000   rsp = 0x15445c20
+    Found by: stack scanning
+ 3  libsystem_c.dylib + 0x5230e
+    rip = 0x9477b30f   rsp = 0x15445c60
+    Found by: stack scanning
+ 4  libnspr4.dylib + 0x1c6fd
+    rip = 0x0005b6fe   rsp = 0x15445cd0
+    Found by: stack scanning
+ 5  libnspr4.dylib + 0x1c800
+    rip = 0x0005b801   rsp = 0x15445d00
+    Found by: stack scanning
+ 6  XUL + 0x1bfeea1
+    rip = 0x02bfeea2   rsp = 0x15445d30
+    Found by: stack scanning
+ 7  XUL + 0x1c720bb
+    rip = 0x02c720bc   rsp = 0x15445d70
+    Found by: stack scanning
+ 8  XUL + 0x1c740ba
+    rip = 0x02c740bb   rsp = 0x15445da0
+    Found by: stack scanning
+ 9  libsystem_c.dylib + 0x4d6aa
+    rip = 0x947766ab   rsp = 0x15445e00
+    Found by: stack scanning
+10  XUL + 0xdebc
+    rip = 0x0100debd   rsp = 0x15445e50
+    Found by: stack scanning
+11  XUL + 0x1c759dc
+    rip = 0x02c759dd   rsp = 0x15445e80
+    Found by: stack scanning
+12  libsystem_c.dylib + 0x4d6aa
+    rip = 0x947766ab   rsp = 0x15445ea0
+    Found by: stack scanning
+13  libnspr4.dylib + 0x22d9f
+    rip = 0x00061da0   rsp = 0x15445ef0
+    Found by: stack scanning
+14  libnspr4.dylib + 0x22e45
+    rip = 0x00061e46   rsp = 0x15445f00
+    Found by: stack scanning
+15  libsystem_c.dylib + 0x4e8be
+    rip = 0x947778bf   rsp = 0x15445f20
+    Found by: stack scanning
+16  libsystem_c.dylib + 0x51b74
+    rip = 0x9477ab75   rsp = 0x15445f60
+    Found by: stack scanning
+
+Thread 20
+ 0  libsystem_kernel.dylib + 0x16bca
+    rbx = 0x1559f000   r12 = 0x00139a00   r13 = 0x00139b00   r14 = 0x156049f8
+    r15 = 0x156049f0   rip = 0x95ccabca   rsp = 0x1559ec08   rbp = 0x1559ecc0
+    Found by: given as instruction pointer in context
+ 1  libsystem_c.dylib + 0x52273
+    rip = 0x9477b274   rsp = 0x1559ec10
+    Found by: stack scanning
+ 2  libsystem_c.dylib + 0x5230e
+    rip = 0x9477b30f   rsp = 0x1559ec60
+    Found by: stack scanning
+ 3  libnspr4.dylib + 0x1c6fd
+    rip = 0x0005b6fe   rsp = 0x1559ecd0
+    Found by: stack scanning
+ 4  libnspr4.dylib + 0x1c800
+    rip = 0x0005b801   rsp = 0x1559ed00
+    Found by: stack scanning
+ 5  XUL + 0x1bfeea1
+    rip = 0x02bfeea2   rsp = 0x1559ed30
+    Found by: stack scanning
+ 6  XUL + 0x1c720bb
+    rip = 0x02c720bc   rsp = 0x1559ed70
+    Found by: stack scanning
+ 7  XUL + 0x1c740ba
+    rip = 0x02c740bb   rsp = 0x1559eda0
+    Found by: stack scanning
+ 8  libsystem_c.dylib + 0x4d6aa
+    rip = 0x947766ab   rsp = 0x1559ee00
+    Found by: stack scanning
+ 9  XUL + 0xdebc
+    rip = 0x0100debd   rsp = 0x1559ee50
+    Found by: stack scanning
+10  XUL + 0x1c759dc
+    rip = 0x02c759dd   rsp = 0x1559ee80
+    Found by: stack scanning
+11  libsystem_c.dylib + 0x4d6aa
+    rip = 0x947766ab   rsp = 0x1559eea0
+    Found by: stack scanning
+12  libnspr4.dylib + 0x22d9f
+    rip = 0x00061da0   rsp = 0x1559eef0
+    Found by: stack scanning
+13  libnspr4.dylib + 0x22e45
+    rip = 0x00061e46   rsp = 0x1559ef00
+    Found by: stack scanning
+14  libsystem_c.dylib + 0x4e8be
+    rip = 0x947778bf   rsp = 0x1559ef20
+    Found by: stack scanning
+15  libsystem_c.dylib + 0x51b74
+    rip = 0x9477ab75   rsp = 0x1559ef60
+    Found by: stack scanning
+
+Thread 21
+ 0  libsystem_kernel.dylib + 0x16bca
+    rbx = 0x17303000   r12 = 0x00002d00   r13 = 0x00002e00   r14 = 0x189419f8
+    r15 = 0x189419f0   rip = 0x95ccabca   rsp = 0x17302c08   rbp = 0x17302cc0
+    Found by: given as instruction pointer in context
+ 1  libsystem_c.dylib + 0x52273
+    rip = 0x9477b274   rsp = 0x17302c10
+    Found by: stack scanning
+ 2  0xffffffff
+    rip = 0x00000000   rsp = 0x17302c20
+    Found by: stack scanning
+ 3  XUL + 0x260cedc
+    rip = 0x0360cedd   rsp = 0x17302c40
+    Found by: stack scanning
+ 4  libsystem_c.dylib + 0x5230e
+    rip = 0x9477b30f   rsp = 0x17302c60
+    Found by: stack scanning
+ 5  libnspr4.dylib + 0x1c6fd
+    rip = 0x0005b6fe   rsp = 0x17302cd0
+    Found by: stack scanning
+ 6  libnspr4.dylib + 0x1c800
+    rip = 0x0005b801   rsp = 0x17302d00
+    Found by: stack scanning
+ 7  XUL + 0x1bfeea1
+    rip = 0x02bfeea2   rsp = 0x17302d30
+    Found by: stack scanning
+ 8  XUL + 0x1c720bb
+    rip = 0x02c720bc   rsp = 0x17302d70
+    Found by: stack scanning
+ 9  XUL + 0x1c740ba
+    rip = 0x02c740bb   rsp = 0x17302da0
+    Found by: stack scanning
+10  libsystem_c.dylib + 0x4d6aa
+    rip = 0x947766ab   rsp = 0x17302e00
+    Found by: stack scanning
+11  XUL + 0xdebc
+    rip = 0x0100debd   rsp = 0x17302e50
+    Found by: stack scanning
+12  XUL + 0x1c759dc
+    rip = 0x02c759dd   rsp = 0x17302e80
+    Found by: stack scanning
+13  libsystem_c.dylib + 0x4d6aa
+    rip = 0x947766ab   rsp = 0x17302ea0
+    Found by: stack scanning
+14  libnspr4.dylib + 0x22d9f
+    rip = 0x00061da0   rsp = 0x17302ef0
+    Found by: stack scanning
+15  libnspr4.dylib + 0x22e45
+    rip = 0x00061e46   rsp = 0x17302f00
+    Found by: stack scanning
+16  libsystem_c.dylib + 0x4e8be
+    rip = 0x947778bf   rsp = 0x17302f20
+    Found by: stack scanning
+17  libsystem_c.dylib + 0x51b74
+    rip = 0x9477ab75   rsp = 0x17302f60
+    Found by: stack scanning
+
+Thread 22
+ 0  libsystem_kernel.dylib + 0x16bca
+    rbx = 0x302a5000   r12 = 0x00007700   r13 = 0x00007900   r14 = 0x001e79b8
+    r15 = 0x001e79b0   rip = 0x95ccabca   rsp = 0x302a4ce8   rbp = 0x302a4da0
+    Found by: given as instruction pointer in context
+ 1  libsystem_c.dylib + 0x52273
+    rip = 0x9477b274   rsp = 0x302a4cf0
+    Found by: stack scanning
+ 2  libsystem_c.dylib + 0x5230e
+    rip = 0x9477b30f   rsp = 0x302a4d40
+    Found by: stack scanning
+ 3  libnspr4.dylib + 0x1ad5a
+    rip = 0x00059d5b   rsp = 0x302a4db0
+    Found by: stack scanning
+ 4  libnspr4.dylib + 0x1c5ba
+    rip = 0x0005b5bb   rsp = 0x302a4e00
+    Found by: stack scanning
+ 5  XUL + 0x1bfef3e
+    rip = 0x02bfef3f   rsp = 0x302a4e30
+    Found by: stack scanning
+ 6  XUL + 0xca444
+    rip = 0x010ca445   rsp = 0x302a4e60
+    Found by: stack scanning
+ 7  libnspr4.dylib + 0x22d9f
+    rip = 0x00061da0   rsp = 0x302a4ec0
+    Found by: stack scanning
+ 8  XUL + 0xcb5fa
+    rip = 0x010cb5fb   rsp = 0x302a4ed0
+    Found by: stack scanning
+ 9  libnspr4.dylib + 0x22e45
+    rip = 0x00061e46   rsp = 0x302a4f00
+    Found by: stack scanning
+10  libsystem_c.dylib + 0x4e8be
+    rip = 0x947778bf   rsp = 0x302a4f20
+    Found by: stack scanning
+11  libsystem_c.dylib + 0x51b74
+    rip = 0x9477ab75   rsp = 0x302a4f60
+    Found by: stack scanning
+
+Thread 23
+ 0  libsystem_kernel.dylib + 0x16bca
+    rbx = 0x30328000   r12 = 0x00007700   r13 = 0x00007a00   r14 = 0x001e79b8
+    r15 = 0x001e79b0   rip = 0x95ccabca   rsp = 0x30327ce8   rbp = 0x30327da0
+    Found by: given as instruction pointer in context
+ 1  libsystem_c.dylib + 0x52273
+    rip = 0x9477b274   rsp = 0x30327cf0
+    Found by: stack scanning
+ 2  libsystem_c.dylib + 0x5230e
+    rip = 0x9477b30f   rsp = 0x30327d40
+    Found by: stack scanning
+ 3  libnspr4.dylib + 0x1ad5a
+    rip = 0x00059d5b   rsp = 0x30327db0
+    Found by: stack scanning
+ 4  libnspr4.dylib + 0x1c5ba
+    rip = 0x0005b5bb   rsp = 0x30327e00
+    Found by: stack scanning
+ 5  XUL + 0x1bfef3e
+    rip = 0x02bfef3f   rsp = 0x30327e30
+    Found by: stack scanning
+ 6  XUL + 0xca444
+    rip = 0x010ca445   rsp = 0x30327e60
+    Found by: stack scanning
+ 7  libnspr4.dylib + 0x22d9f
+    rip = 0x00061da0   rsp = 0x30327ec0
+    Found by: stack scanning
+ 8  XUL + 0xcb5fa
+    rip = 0x010cb5fb   rsp = 0x30327ed0
+    Found by: stack scanning
+ 9  libnspr4.dylib + 0x22e45
+    rip = 0x00061e46   rsp = 0x30327f00
+    Found by: stack scanning
+10  libsystem_c.dylib + 0x4e8be
+    rip = 0x947778bf   rsp = 0x30327f20
+    Found by: stack scanning
+11  libsystem_c.dylib + 0x51b74
+    rip = 0x9477ab75   rsp = 0x30327f60
+    Found by: stack scanning
+
+Thread 24
+ 0  libsystem_kernel.dylib + 0x16bca
+    rbx = 0x39a3d000   r12 = 0x00023a00   r13 = 0x00023b00   r14 = 0x08af78a8
+    r15 = 0x08af78a0   rip = 0x95ccabca   rsp = 0x39a3cb08   rbp = 0x39a3cbc0
+    Found by: given as instruction pointer in context
+ 1  libsystem_c.dylib + 0x52273
+    rip = 0x9477b274   rsp = 0x39a3cb10
+    Found by: stack scanning
+ 2  0xffffffff
+    rip = 0x00000000   rsp = 0x39a3cb20
+    Found by: stack scanning
+ 3  libsystem_c.dylib + 0x5230e
+    rip = 0x9477b30f   rsp = 0x39a3cb60
+    Found by: stack scanning
+ 4  libnspr4.dylib + 0x1ad5a
+    rip = 0x00059d5b   rsp = 0x39a3cbd0
+    Found by: stack scanning
+ 5  libnspr4.dylib + 0x1c5ba
+    rip = 0x0005b5bb   rsp = 0x39a3cc20
+    Found by: stack scanning
+ 6  libnspr4.dylib + 0x1c800
+    rip = 0x0005b801   rsp = 0x39a3cc50
+    Found by: stack scanning
+ 7  XUL + 0x1bfeea1
+    rip = 0x02bfeea2   rsp = 0x39a3cc80
+    Found by: stack scanning
+ 8  XUL + 0x1c789af
+    rip = 0x02c789b0   rsp = 0x39a3ccc0
+    Found by: stack scanning
+ 9  libsystem_c.dylib + 0x4d6aa
+    rip = 0x947766ab   rsp = 0x39a3cd20
+    Found by: stack scanning
+10  libnspr4.dylib + 0x1c967
+    rip = 0x0005b968   rsp = 0x39a3cd60
+    Found by: stack scanning
+11  XUL + 0x1c741de
+    rip = 0x02c741df   rsp = 0x39a3cda0
+    Found by: stack scanning
+12  libsystem_c.dylib + 0x4d6aa
+    rip = 0x947766ab   rsp = 0x39a3ce00
+    Found by: stack scanning
+13  XUL + 0xdebc
+    rip = 0x0100debd   rsp = 0x39a3ce50
+    Found by: stack scanning
+14  XUL + 0x1c759dc
+    rip = 0x02c759dd   rsp = 0x39a3ce80
+    Found by: stack scanning
+15  libsystem_c.dylib + 0x4d6aa
+    rip = 0x947766ab   rsp = 0x39a3cea0
+    Found by: stack scanning
+16  libnspr4.dylib + 0x22d9f
+    rip = 0x00061da0   rsp = 0x39a3cef0
+    Found by: stack scanning
+17  libnspr4.dylib + 0x22e45
+    rip = 0x00061e46   rsp = 0x39a3cf00
+    Found by: stack scanning
+18  libsystem_c.dylib + 0x4e8be
+    rip = 0x947778bf   rsp = 0x39a3cf20
+    Found by: stack scanning
+19  libsystem_c.dylib + 0x51b74
+    rip = 0x9477ab75   rsp = 0x39a3cf60
+    Found by: stack scanning

@@ -1,0 +1,39 @@
+Facebook activation fails when checking for blocklisted provider
+Steps to Reproduce
+1. Log in to www.facebook.com
+2. Go to www.facebook.com/about/messenger-for-firefox
+3. Click the "Turn On" button
+
+Result:
+Social toolbar button and sidebar fail to appear
+
+Expected:
+Social toolbar button and sidebar should appear
+
+Error in Error Console:
+> Error: TypeError: data is null
+> Source File: resource://gre/modules/SocialService.jsm
+> Line: 378
+
+This correlate to the following code:
+> 372: installProvider: function(sourceURI, data, installCallback) {
+> 373: let URI = Services.io.newURI(sourceURI, null, null);
+> 374: let principal = Services.scriptSecurityManager.getNoAppCodebasePrincipal(URI);
+> 375: let installOrigin = principal.origin;
+> 376:
+> 377: let id = getAddonIDFromOrigin(installOrigin);
+> 378: if (bs.getAddonBlocklistState(id, data.version || "0") == Ci.nsIBlocklistService.STATE_BLOCKED)
+> 379: throw new Error("installProvider: provider with origin [" +
+> 380: installOrigin + "] is blocklisted");
+
+Upon activation in a known good build my prefs become:
+> social.activeProviders = {"https://www.facebook.com":1}
+> social.enabled = true
+> social.provider.current = https://www.facebook.com
+> social.sidebar.open = true
+
+Upon activation in the latest Nightly my prefs become:
+> social.activeProviders (does not exist)
+> social.enabled = false
+> social.provider.current (does not exist)
+> social.sidebar.open = true

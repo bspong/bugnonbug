@@ -1,0 +1,79 @@
+Secure site, yet gray security bar and "connection ... not encrypted"
+User-Agent:       Mozilla/5.0 (Macintosh; U; PPC Mac OS X 10.5; en-US; rv:1.9.0.1) Gecko/2008070206 Firefox/3.0.1
+Build Identifier: Mozilla/5.0 (Macintosh; U; PPC Mac OS X 10.5; en-US; rv:1.9.0.1) Gecko/2008070206 Firefox/3.0.1
+
+When an attempt is made to visit the secure URL https://www.iboxav.co.uk/login.aspx, the browser successfully displays the page without error or warning.
+
+The security bar however stays gray, and the security information claims that the connection is not encrypted.
+
+To an unsophisticated user, they will assume that the website is legitimate because no warnings appeared.
+
+An attempt to connect to the webserver directly using openssl shows that a certificate is present, but it is not clear whether this certificate is signed by a CA (the openssl output is not unambiguous):
+
+[root@chandler ~]# openssl s_client -connect www.iboxav.co.uk:443
+CONNECTED(00000003)
+depth=0 /C=GB/O=www.iboxav.co.uk/OU=GT07200511/OU=See www.geotrust.com/resources/cps (c)07/OU=Domain Control Validated - QuickSSL(R)/CN=www.iboxav.co.uk
+verify error:num=20:unable to get local issuer certificate
+verify return:1
+depth=0 /C=GB/O=www.iboxav.co.uk/OU=GT07200511/OU=See www.geotrust.com/resources/cps (c)07/OU=Domain Control Validated - QuickSSL(R)/CN=www.iboxav.co.uk
+verify error:num=27:certificate not trusted
+verify return:1
+depth=0 /C=GB/O=www.iboxav.co.uk/OU=GT07200511/OU=See www.geotrust.com/resources/cps (c)07/OU=Domain Control Validated - QuickSSL(R)/CN=www.iboxav.co.uk
+verify error:num=21:unable to verify the first certificate
+verify return:1
+---
+Certificate chain
+ 0 s:/C=GB/O=www.iboxav.co.uk/OU=GT07200511/OU=See www.geotrust.com/resources/cps (c)07/OU=Domain Control Validated - QuickSSL(R)/CN=www.iboxav.co.uk
+   i:/C=US/O=Equifax Secure Inc./CN=Equifax Secure Global eBusiness CA-1
+---
+Server certificate
+-----BEGIN CERTIFICATE-----
+MIIDTTCCAragAwIBAgIDByhEMA0GCSqGSIb3DQEBBAUAMFoxCzAJBgNVBAYTAlVT
+MRwwGgYDVQQKExNFcXVpZmF4IFNlY3VyZSBJbmMuMS0wKwYDVQQDEyRFcXVpZmF4
+IFNlY3VyZSBHbG9iYWwgZUJ1c2luZXNzIENBLTEwHhcNMDcxMTE0MTQyMTUwWhcN
+MDgxMjE0MTQyMTUwWjCBvDELMAkGA1UEBhMCR0IxGTAXBgNVBAoTEHd3dy5pYm94
+YXYuY28udWsxEzARBgNVBAsTCkdUMDcyMDA1MTExMTAvBgNVBAsTKFNlZSB3d3cu
+Z2VvdHJ1c3QuY29tL3Jlc291cmNlcy9jcHMgKGMpMDcxLzAtBgNVBAsTJkRvbWFp
+biBDb250cm9sIFZhbGlkYXRlZCAtIFF1aWNrU1NMKFIpMRkwFwYDVQQDExB3d3cu
+aWJveGF2LmNvLnVrMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDIocbBrdeY
+6CZeV93TD3hTP6vxDJ/fzVd0Wmf+QMyLifWmnPWCiVgZz6JyozEb/muW80IN2FUu
+CSnNVX8T/1NfidWb+1ukKapwNF0zUSnz2gpMjcWNDm2Q63Xys3TqBvT2sU4Y0z6+
+vB364jpk/l0DA4IPUyqC+etYe74cb8uSsQIDAQABo4G9MIG6MA4GA1UdDwEB/wQE
+AwIE8DAdBgNVHQ4EFgQUPmRsFLs9Xms7DSwUkVuuui+5Bh8wOwYDVR0fBDQwMjAw
+oC6gLIYqaHR0cDovL2NybC5nZW90cnVzdC5jb20vY3Jscy9nbG9iYWxjYTEuY3Js
+MB8GA1UdIwQYMBaAFL6ooHRyUGtEt8kj2Puo/7NXa2hsMB0GA1UdJQQWMBQGCCsG
+AQUFBwMBBggrBgEFBQcDAjAMBgNVHRMBAf8EAjAAMA0GCSqGSIb3DQEBBAUAA4GB
+ADcJIQCrXFbf2HlwhetQzCJVhOVjhALuwegru+RRYbZfl7pTgnsKZtfFtegc8Rzb
+VOpWQI0Hl5kIE0hunjZsGlvfZT1eMb14VwDkXaitJu5Uuti6pBXZPIQ2GLLQviFD
+2zMYBTqKF+mCxx1OP/tEgYp7hTy8wMpWbKNQf+RaCoXW
+-----END CERTIFICATE-----
+subject=/C=GB/O=www.iboxav.co.uk/OU=GT07200511/OU=See www.geotrust.com/resources/cps (c)07/OU=Domain Control Validated - QuickSSL(R)/CN=www.iboxav.co.uk
+issuer=/C=US/O=Equifax Secure Inc./CN=Equifax Secure Global eBusiness CA-1
+---
+No client certificate CA names sent
+---
+SSL handshake has read 985 bytes and written 315 bytes
+---
+New, TLSv1/SSLv3, Cipher is RC4-MD5
+Server public key is 1024 bit
+Compression: NONE
+Expansion: NONE
+SSL-Session:
+    Protocol  : TLSv1
+    Cipher    : RC4-MD5
+    Session-ID: C8230000E9BA0A5A1C4B6A55DBCEAB11AC478887635BFFAA5FD509B21B9DCB8D
+    Session-ID-ctx: 
+    Master-Key: 1D0E540803F6AF08996090C15165EF2ACBA550A893C045D9809DA7D10114470D48DB2F7B873700A1EA654D6FB17BD8DC
+    Key-Arg   : None
+    Krb5 Principal: None
+    Start Time: 1218800857
+    Timeout   : 300 (sec)
+    Verify return code: 21 (unable to verify the first certificate)
+---
+read:errno=104
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+xxx

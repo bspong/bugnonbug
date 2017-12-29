@@ -1,0 +1,52 @@
+nsNavBookmarks.cpp: can't moveItem() one index down?
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.12) Gecko/20080129 Iceweasel Firefox/2.0.0.4 (Debian-2.0.0.12-2)
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9b4) Gecko/2008030318 Firefox/3.0b4
+
+I can't seem to use the bookmark service moveItem() function to move an item exactly one index down in it folder. I believe this is due to a bad check found on line 1620 of nsNavBookmarks.cpp:
+
+http://mxr.mozilla.org/mozilla/source/toolkit/components/places/src/nsNavBookmarks.cpp#1620
+
+1620 if (oldParent == aNewParent && newIndex > oldIndex) {
+1621 // when an item is being moved lower in the same folder, the new index
+1622 // refers to the index before it wa removed. Removal cause everything
+1623 // to shift up.
+1624 --newIndex;
+1625 }
+1626 }
+1627
+1628 // this is like the previous check, except this cover if
+1629 // the specified index wa -1 (append), and the calculated
+1630 // new index is the same a the existing index
+1631 if (aNewParent == oldParent && newIndex == oldIndex) {
+1632 // Nothing to do!
+1633 return NS_OK;
+1634 }
+
+If the new index is exactly one greater than the original index of the item, newIndex is decremented and the very next check result in no action.
+
+Reproducible: Always
+
+Steps to Reproduce:
+var BMSVC = Components.classes["@mozilla.org/browser/nav-bookmarks-service;1"]
+.getService(Components.interfaces.nsINavBookmarksService);
+var BM = BMSVC.bookmarksMenuFolder;
+var item = BMSVC.getIdForItemAt(BM, 0);
+var oIdx = BMSVC.getItemIndex(item);
+BMSVC.moveItem(item, BM, 1);
+if (BMSVC.getItemIndex(item) == oIdx)
+alert('fail');
+else
+alert('success');
+Actual Results:
+alert show 'fail'
+
+Expected Results:
+alert show 'success'
+
+I believe the solution is to make the check on line 1620:
+
+"if (oldParent == aNewParent && newIndex > oldIndex+1)"
+
+This should result in the proper behavior while removing the bad edge case that is failing.
+
+The workaround I'm currently using is to get the item at the index I want to move to and then moving it up one instead.

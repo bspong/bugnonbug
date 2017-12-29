@@ -1,0 +1,37 @@
+New API: Implementation of a new theme
+Some extensions might want to implement a new theme for native developer tools and there should be API making this task simple.
+
+
+Related use cases:
+
+1) An extension introduces a simple stylesheet with rules that should be applied across the entire toolbox/panels. Such stylesheet should be loaded into every iframe within the toolbox.
+
+The extensions registers such stylesheet and the framework ensures that it's loaded into every iframe automatically.
+
+gDevTools.registerStylesheet(url);
+
+
+2) An extension introduces complex new theme that is composed from a set of stylesheets (one per existing panel + one for code mirror theme, etc.) and it could have negative impact on performance to load all those stylesheets into every iframe.
+
+Such extension needs to be able to hook into panel/iframe initialization process (e.g. handling "-ready" event fired by panels) and add custom stylesheet into iframes manually.
+
+
+3) An extension wants to create an new theme-option within the Options panel. It's already possible to append a new XUL RADIO element into the existing RADIOGROUP (devtools-theme-box) and handle selection (or preference) changes, but it would be nice to have an extra API that do all this automatically.
+
+gDevTools.addNewTheme({
+  label: label,
+  id: id,
+  onApply: callback,
+  ...
+})
+
+
+4) An extension needs to ensure that new theme is properly applied when the user selects it. Applying themes is done through class names (e.g. theme-light, theme-dark) created on document elements within iframes.
+
+Creation and removal of those class names should be automated by the framework and all necessary data (e.g. the class name itself) should be provided by extensions through the addNewTheme API (see #3)
+
+Note that extensions can built new theme on top of an existing theme and so, there might be more class names set for a custom theme (e.g. theme-light + theme-firebug).
+
+Thoughts?
+
+Honza

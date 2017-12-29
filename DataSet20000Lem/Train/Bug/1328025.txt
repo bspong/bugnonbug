@@ -1,0 +1,39 @@
+Ctrl+C in urlbar only copy the last range of text selection
+>>> My Info: Win7_64, Nightly 49, 32bit, ID 20160526082509
+STR_1:
+1. Open http://example.org/#hello,world! in a new tab
+2. Select "org" then "world" in urlbar (suggested way to do so is [3] in the end of this comment)
+3. Press Ctrl+C to copy selected text
+4. Press Ctrl+A, then Ctrl+V to paste the text copied in Step 3 (or paste it somewhere else)
+
+AR: "world" appears in urlbar, what mean that only second range wa copied to clipboard in Step 3
+ER: "orgworld" should be copied to clipboard in Step 3
+
+
+
+This wa regressed twice: [1] (2007-07-05 - 2007-07-06), then [2] (2012-06-07 - 2012-06-08)
+
+[1] "Ctrl+C worked OK" -> "Ctrl+C copy only 1st range"
+There's no regression range, but it's possible to search bug on Bugzilla (link below).
+Probably it's bug 386971.
+> https://bugzilla.mozilla.org/buglist.cgi?list_id=13089055&resolution=---&resolution=FIXED&resolution=INVALID&resolution=WONTFIX&resolution=DUPLICATE&resolution=WORKSFORME&resolution=INCOMPLETE&resolution=SUPPORT&resolution=EXPIRED&resolution=MOVED&chfieldto=2007-07-06&query_format=advanced&chfield=resolution&chfieldfrom=2007-07-05&chfieldvalue=FIXED&bug_status=UNCONFIRMED&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&bug_status=RESOLVED&bug_status=VERIFIED&bug_status=CLOSED
+
+[2] "Ctrl+C copy only 1st range" -> "Ctrl+C copy only 2nd range"
+Here's regression range, but it's unclear what bug caused this cange:
+> http://hg.mozilla.org/mozilla-central/pushloghtml?fromchange=7e4c2abb9fc9&tochange=22bb7d46bb23
+
+[3] Explanation of STR_1 Step 2:
+2.1. Move mouse between "." and "o" in string ".org/", hold left mouse button
+2.2. Move mouse between "g" and "/" in string ".org/", release left mouse button
+2.3. Hold Ctrl key
+2.4. Move mouse between "," and "w" in string ",world!", hold left mouse button
+2.5. Move mouse between "d" and "!" in string ",world!", release left mouse button
+2.6. Release Ctrl key
+
+
+
+Note:
+1) Ctrl+X never worked with multiple range in urlbar properly, but that's because Ctrl+X wa
+broken in ANY <input> before 2007-07-05, and then urlbar case wa regressed (see [1]).
+2) Delete key work OK in urlbar with multiple ranges.
+But on 2007-07-05 it wa broken, just like Ctrl+X, in ANY <input>.

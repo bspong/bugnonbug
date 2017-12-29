@@ -1,0 +1,58 @@
+Clearing the recording list while a console.profile is in progress produce error
+STR:
+
+- open the perf tool
+- open the split console
+- enter 'console.profile("test")' in the console
+- click the "Clear" button in the perf tool's sidebar
+
+=> the following exception is thrown:
+
+*************************
+A coding exception wa thrown and uncaught in a Task.
+
+Full message: TypeError: recording is null
+Full stack: OverviewView.render<@chrome://browser/content/devtools/performance/views/overview.js:177:5
+TaskImpl_run@resource://gre/modules/Task.jsm:314:40
+TaskImpl@resource://gre/modules/Task.jsm:275:3
+createAsyncFunction/asyncFunction@resource://gre/modules/Task.jsm:249:14
+OverviewView._onRecordingTick<@chrome://browser/content/devtools/performance/views/overview.js:189:11
+TaskImpl_run@resource://gre/modules/Task.jsm:314:40
+TaskImpl@resource://gre/modules/Task.jsm:275:3
+createAsyncFunction/asyncFunction@resource://gre/modules/Task.jsm:249:14
+
+*************************
+
+- try to enter 'console.profile("test")' again in the console
+
+=> nothing happens
+
+- enter 'console.profileEnd("test")' in the console
+
+=> the following exception is thrown:
+
+TypeError: recordingItem is null: RecordingsView<._onRecordingWillStop@chrome://browser/content/devtools/performance/views/recordings.js:153:9
+EventEmitter_emit@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/event-emitter.js:147:11
+PerformanceController._onRecordingStateChange@chrome://browser/content/devtools/performance/performance-controller.js:464:9
+EventEmitter_emit@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/event-emitter.js:147:11
+PerformanceFront/</<@resource://gre/modules/commonjs/toolkit/loader.js -> resource:///modules/devtools/performance/front.js:452:84
+EventEmitter_emit@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/event-emitter.js:147:11
+PerformanceActorsConnection.prototype.stopRecording<@resource://gre/modules/commonjs/toolkit/loader.js -> resource:///modules/devtools/performance/front.js:368:5
+TaskImpl_run@resource://gre/modules/Task.jsm:314:40
+TaskImpl@resource://gre/modules/Task.jsm:275:3
+createAsyncFunction/asyncFunction@resource://gre/modules/Task.jsm:249:14
+PerformanceActorsConnection.prototype._onConsoleProfileEnd<@resource://gre/modules/commonjs/toolkit/loader.js -> resource:///modules/devtools/performance/front.js:271:11
+TaskImpl_run@resource://gre/modules/Task.jsm:314:40
+TaskImpl@resource://gre/modules/Task.jsm:275:3
+createAsyncFunction/asyncFunction@resource://gre/modules/Task.jsm:249:14
+EventEmitter_emit@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/event-emitter.js:147:11
+ProfilerFrontFacade.prototype._onProfilerEvent@resource://gre/modules/commonjs/toolkit/loader.js -> resource:///modules/devtools/performance/actors.js:197:9
+eventSource/aProto.emit@resource://gre/modules/devtools/dbg-client.jsm:193:9
+DebuggerClient.prototype.onPacket@resource://gre/modules/devtools/dbg-client.jsm:1008:7
+LocalDebuggerTransport.prototype.send/<@resource://gre/modules/devtools/dbg-client.jsm -> resource://gre/modules/devtools/transport/transport.js:561:11
+makeInfallible/<@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/DevToolsUtils.js:82:14
+makeInfallible/<@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/DevToolsUtils.js:82:14
+
+Of course, if you're being nice with the tool and always end your console.profiles before clearing the list, then this doe not happen, but it look like we should handle that case better.
+
+I don't think the tool should auto end the console.profile, but it should at least not throw.

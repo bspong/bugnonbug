@@ -1,0 +1,147 @@
+Website slow load (hangs at Waiting for...) after submitting form
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; cs-CZ; rv:1.8.1.1) Gecko/20061205 Iceweasel/2.0.0.1 (Debian-2.0.0.1+dfsg-2)
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; cs-CZ; rv:1.8.1.1) Gecko/20061205 Iceweasel/2.0.0.1 (Debian-2.0.0.1+dfsg-2)
+
+When I submit form, page slow load.
+
+Test page:
+https://test.chlup.net:8099/bug/
+
+How test page works?
+1. Form page: index.html
+2. Redirect page: redirect.pl (in this script is command for sleep 1.5s before redirect to pageoutput.pl)
+3. Output page: pageoutput.pl
+
+This bug show randomly.
+This bug show only when redirect.pl is not fast (sleep 1.5s).
+This bug show only with "https" ("http" is ok).
+
+Redirect time - compare Mozilla (ok) with Firefox 2 (bad)
+---------------------------------------------------------
+Number. Mozilla 1.7.12 [first value]; Firefox 2 (Iceweasel/2.0.0.1) [second value]
+1. 0.059s; 7.425s
+2. 0.059s; 4.422s
+3. 0.057s; 5.566s
+4. 0.055s; 0.068s
+5. 0.054s; 7.424s
+6. 0.055s; 0.067s
+7. 0.058s; 13.081s
+8. 0.059s; 0.095s
+9. 0.062s; 0.069s
+10. 0.057s; 14.150s
+11. 0.062s; 9.177s
+12. 0.058s; 0.060s
+13. 0.098s; 0.069s
+14. 0.058s; 14.473s
+15. 0.059s; 2.338s
+
+This bug may be similar with Bug 361212.
+
+
+My test web page and scripts:
+
+index.html
+----------
+<html>
+<head>
+</head>
+<body>
+<p>
+<form action="redirect.pl" method="get">
+Input box: <input value="" name="searchtext" type="text" size="25">
+</form>
+<p>
+Go to input box and press Enter.
+</body>
+</html>
+
+redirect.pl
+-----------
+#!/usr/bin/perl
+
+use strict;
+use CGI;
+use Time::HiRes;
+
+my $query=new CGI;
+my $searchtext=$query->param("searchtext");
+my $hledco=$query->param("hledco");
+
+Time::HiRes::usleep(1500000); # sleep is impotant for this bug!!!
+
+my $redirecturl;
+$redirecturl.='/bug/pageoutput.pl';
+$redirecturl.='?searchtextnew=';
+$redirecturl.=encode_uri($searchtext);
+$redirecturl.='&time=';
+$redirecturl.=encode_uri(Time::HiRes::time());
+
+redirect($redirecturl);
+
+
+sub redirect {
+my ($location)=@_;
+print "Status: 302 Moved";
+print "\n";
+print "Location: ";
+print $location;
+print "\n";
+print "Content-Type: text/html\n\n";
+print '<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">';
+print '<HTML><HEAD>';
+print '<TITLE>Presmerovani</TITLE>';
+print '</HEAD><BODY>';
+print 'Dokument je <A HREF="' .$location. '">zde</A>.<P>';
+print '</BODY></HTML>';
+exit;
+}
+
+sub encode_uri {
+my ($str)=@_;
+use URI::Escape;
+$str=uri_escape($str,'^A-Za-z0-9/.:_');
+return $str;
+}
+
+pageoutput.pl
+-------------
+#!/usr/bin/perl
+
+use strict;
+use CGI;
+use Time::HiRes;
+
+my $query=new CGI;
+my $searchtext=$query->param("searchtextnew");
+my $time=$query->param("time");
+my $timenow=Time::HiRes::time();
+my $delay=$timenow-$time;
+
+print "Content-Type: text/html\n\n";
+print q{
+<html>
+<body>
+};
+
+print q{
+<p>
+Redirect time = } . ($delay) . q{ s
+};
+
+if($delay>1.5) {
+print q{
+<span style="color: red;"> - redirect too long!</span>
+};
+}
+
+print q{
+<p>
+<a href="./">Back</a>
+<p>
+Redirected page loaded.
+</body>
+</html>
+};
+
+
+Reproducible: Sometimes

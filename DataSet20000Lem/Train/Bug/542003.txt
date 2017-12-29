@@ -1,0 +1,28 @@
+various symptom ("view image" without effect, private browsing not possible, overfull context menu, not restoring tab after crash)
+User-Agent: Mozilla/5.0 (X11; U; Linux i686 (x86_64); en-US; rv:1.9.2.0) Gecko/20100115 SUSE/3.6.0-1.2 Firefox/3.6
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686 (x86_64); en-US; rv:1.9.2.0) Gecko/20100115 SUSE/3.6.0-1.2 Firefox/3.6
+
+/contents/browser/browser.js contains a delayedStartup function (around line 1189, sorry if I mess up the line number but in order to track this down I had to insert a few statements) which is calling
+gHomeButton.updateTooltip(homeButton);
+at around line 1247.
+Within updateTooltip, "this.getHomePage()" is being called, and then without checking whether the return is null or not, the result is used.
+
+On my system, no HomePage wa ever set from anywhere, a such getHomePage() return null, causing a silent error that prevents further initialization code from being run.
+
+Please fix the code so that "The Right Thing (tm)" is being done when getHomePage() is null. As the delayed initialization routine seems to be somewhat vital, please consider reviewing it to prevent other failure scenario from stopping it to finish.
+
+PS: Yes, a a workaround you can set a homepage, but not everyone want this...
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. start a clean firefox without any distro specific addition that set a default home page
+2. open any website with an image (e.g. google.com)
+3. right click on the image and try to execute "view image"
+
+note: It might be possible that the homepage isn't null, but the empty string. There seems to be no way to distinguish this in the setting menu, so please be extra careful in verifying this (or just have a look at the above mentioned code, it should be quite obvious what happens)
+Actual Results:
+nothing happened
+
+Expected Results:
+image should have been displayed in the tab alone

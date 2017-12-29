@@ -1,0 +1,45 @@
+sqlite keep losing preference and bookmark after crash on NFS
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.7) Gecko/2009030516 Ubuntu/9.04 (jaunty) Firefox/3.0.7
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.7) Gecko/2009030516 Ubuntu/9.04 (jaunty) Firefox/3.0.7
+
+Possibly related to Bug 452193, Bug 431558 and others.
+
+I use firefox with NFS home directories. Sometimes network connectivity is lost for the session, or firefox crashes.
+
+The result is
+1. that firefox will never run again without severe intervention
+2. it loos all settings.
+
+The non-trivial intervention may be reduced to:
+rm -f .mozilla/*/lock .mozilla/*/.parentlock
+
+and then it starts, but all the setting are missing, page navigation doesn't work properly and bookmark are missing.
+
+The better fix is:
+
+mv .mozilla/firefox .mozilla/firefox.old
+then start firefox and import the bookmark from .mozilla/firefox.old/*/bookmarkbackups
+
+which just leaf the case of all other preference and certificate missing.
+
+I've had this problem ever since sqlite wa used for storing configuration and now I'm fed up with it.
+
+It seems like sqlite is only suitable for local storage.
+
+If firefox insists on using it, I wish it would be more robust, my family are gnashing their teeth over it and so am I
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. have a merry browsing session with NFS home directory
+2. pull out the network cable and ctrl-alt-sysreq-b
+3. reboot and try and use firefox
+Actual Results:
+Claims firefox is already running.
+It's bad enough that the lock file is a symlink to something a uselss as:
+127.0.1.1:+27801
+- a hostname would be more useful - or perhaps a combination of hostname's IP and hostname - but thats not the real problem
+
+Expected Results:
+Firefox might work or tell me something useful about where it is supposedly running.
+Deleting the lock file should not result in missing bookmark and broken toolbar button requiring a new firefox profile.

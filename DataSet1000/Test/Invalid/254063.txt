@@ -1,0 +1,837 @@
+Javascript based menus fail to work. Example, Cisco CallManager web based administration, all menus fail.
+User-Agent:       Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; .NET CLR 1.1.4322)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7) Gecko/20040707 Firefox/0.9.2
+
+Page source below, the javascript menus display as "javascript: toggleMenuState
+(4)" for mouse over, but no drop-down menu appears.
+
+Reproducible: Always
+Steps to Reproduce:
+1. log onto any Cisco CallManager web admin page
+2. try to use menus, no drop down menus are displayed.
+3.
+
+Actual Results:  
+try to use menus, no drop down menus are displayed.
+
+Expected Results:  
+drop down menus should appear
+
+Example Page source detail below:
+
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta http-equiv="Pragma" content="No-Cache">
+<link rel="Stylesheet" href="styles/basic.css" type="text/css">
+<link rel="Stylesheet" href="styles/menu.css" type="text/css">
+<title>Cisco CallManager 3.3 Administration - Cisco CallManager 
+Administration</title>
+<script language="JavaScript" src="includes/standard.js"></script>
+
+<script language="JavaScript">
+<!--
+
+//
+// Client-side JavaScript functions for this page
+//
+function showDetail()
+  {
+  var buildInfo = "When reporting or troubleshooting a problem, please give 
+\nthe following information to Technical Assistance:"
+  var versionCCMAdmin = "Cisco CallManager Administration version: 3.1(0.5)";
+  var versionSystem = "Cisco CallManager System version: " + "3.3(3)sr3";   
+  var installID = "Cisco CallManager Installation ID: " + "3.3(3)sr3"; 
+  var databaseLayerHeading = "Database DLL version ";
+  var databaseInfoHeading = "Database Information ";
+  var DSN = "DSN" + ":           " + "CiscoCallManager";
+  var server = "SERVER" + ":      " + "DNZWLG-CM1";
+  var database = "DATABASE" + ": " + "CCM0301";
+  var versionStatus = 0;
+  var str;
+    
+  //General Build info
+  str = buildInfo + "\n \n" + versionSystem + "\n" + versionCCMAdmin + "\n" + 
+installID + "\n";
+  //Database info
+  str += "\n" + databaseInfoHeading + "\n\t" + DSN + "\n\t" + server + "\n\t" 
++ database + "\n";
+    
+  //show if error occurred
+  if (versionStatus == -1)
+    str += "\n\n";
+
+  alert(str);
+  }
+  
+  var csHelpPage = "index.html";  // set online help context to Contents and 
+Index
+
+//-->
+</script>
+</head>
+
+<SCRIPT language="JavaScript">
+
+  //  browser dependent object model for menus;
+  var layerObject = (document.layers) ? "document.layers." : "document.all.";
+  var visibilityProperty = 
+(document.layers) ? ".visibility" : ".style.visibility";
+  var hideValue = (document.layers) ? "hide" : "hidden";
+  var showValue = (document.layers) ? "show" : "visible";
+
+  var menuList = new Array();
+  menuList[0]     = new Array();
+  menuList[0][0]  = null;               // used to hide all menus
+  menuList[1]     = new Array();
+  menuList[1][0]  = "menuSystem";
+  menuList[2]     = new Array();
+  menuList[2][0]  = "menuRoutePlan";
+  menuList[3]     = new Array();
+  menuList[3][0]  = "menuService";
+  menuList[3][1]  = "menuAttendantConsole";
+  menuList[3][2]  = "menuServiceMediaResources";
+  menuList[4]     = new Array();
+  menuList[4][0]  = "menuFeature";
+  menuList[4][1]  = "menuFeatureVoiceMail";
+  menuList[5]     = new Array();
+  menuList[5][0]  = "menuDevice";
+  menuList[5][1]  = "menuDeviceSettings";
+  menuList[6]     = new Array();
+  menuList[6][0]  = "menuUser";
+  menuList[7]     = new Array();
+  menuList[7][0]  = "menuApplication";
+  menuList[8]     = new Array();
+  menuList[8][0]  = "menuHelp";
+
+
+  function toggleMenuState(thisMenu)
+  {
+
+    if (thisMenu)
+    {
+      if (!showMenus)
+      {
+        showMenus = true;
+        showHideMainMenu(thisMenu);
+      }
+      else
+      {
+        hideAllMenus();
+      }
+    }
+    else
+    {
+      hideAllMenus();   // for document.click handling
+    }
+  }
+
+  function hideAllMenus()
+  {
+
+    showHideMainMenu(0);
+    showMenus = false;
+    return;
+  }
+
+  function showHideMainMenu(thisMenu, thisSubMenu)
+  {
+    if (!showMenus) return;   // if menus are not active, don't show (or hide) 
+anything
+
+    if (!thisSubMenu) thisSubMenu = 0;
+
+    // loop through menus hiding all but the selected menu and submenu;
+    // if thisMenu=0, all menus are hidden
+    for (var i = 1; i < menuList.length; i++)
+    {
+      // main menu
+      var thisLayer = layerObject + menuList[i][0];
+      var showOrHide = (thisMenu == i) ? showValue : hideValue;
+      eval(thisLayer + visibilityProperty + ' = "' + showOrHide + '"');
+
+      // sub menu
+      for (var j = 1; j < menuList[i].length; j++)
+      {
+        var thisLayer = layerObject + menuList[i][j];
+        var showOrHide = ((thisMenu == i) && (thisSubMenu == j)) ? showValue : 
+hideValue;
+        eval(thisLayer + visibilityProperty + ' = "' + showOrHide + '"');
+      }
+    }
+  }
+
+  function handleClick(e)
+  {
+    if (showMenus)
+    {
+      if (document.releaseEvents)
+      {
+        document.releaseEvents(Event.CLICK);
+      }
+      else
+      {
+        // pass the click through to the link if it's a menu item
+        var srcClass = window.event.srcElement.className;
+        if ((srcClass.indexOf("menu") == 0) && (srcClass != "menuBar"))
+          return;
+      }
+      toggleMenuState();
+    }
+    else if (document.routeEvent)
+    {
+      document.routeEvent(e);
+    }
+  }
+
+  // set up event handler for Netscape
+  if (document.captureEvents)
+  {
+    document.captureEvents(Event.CLICK);
+  }
+  document.onclick = handleClick;
+
+  var showMenus = false;    // initial menu state
+
+
+  /***********************************
+  * ---- Show CCM Online Help  ----- *
+  ************************************/
+  function ccmHelp()
+  {
+    var helpURL = "/help/";
+
+    // turn off menu since config page is still displayed
+    toggleMenuState(0);
+
+    // get the target help page
+    if (ccmHelp.arguments.length == 1)
+    {
+      // help page is passed in as parameter
+      helpURL += ccmHelp.arguments[0];
+    }
+    else if (csHelpPage)
+    {
+      // help page is defined in javascript on page (overrides menu)
+      helpURL += csHelpPage;
+    }
+    else
+    {
+      // get the help page name from the current page name
+      var s = document.location.pathname;
+
+      s = "ccm_" + s.slice(s.lastIndexOf(charForwardSlash) + 1, s.lastIndexOf
+(charDot)) + ".html";
+      if (s== "ccm_userheader.html")
+        {
+        //The Users page have multiple frames and we needs to retrieve
+        //the page name of the 2nd frame.  The 1st frame of the user pages
+        //always retuen userHeader, so when we detect that, we look
+        //further to get the page name that can link to the on-line help 
+documentation
+        var s= parent.frames[1].document.location.pathname;
+        s = "ccm_" + s.slice(s.lastIndexOf(charForwardSlash) + 1, s.lastIndexOf
+(charDot)) + ".html";
+        }
+
+      helpURL += "ctx/" + s;
+    }
+    hw = window.open(helpURL, "HelpSystem");
+    return;
+  }
+  var w;
+  //show new window when user launch any plug in applications
+  function showApplicationWindow(url, index)
+  {
+    var appWin;
+
+    // since IE and NN handle window positioning differently, do browser 
+specific options
+    //if (document.all)         //IE browser
+    //  var options 
+= "menubar,toolbar,scrollbars,location,status,resizable,top=" + 
+(window.screenTop - 70) + ",left=" + (window.screenLeft + 50) 
++ ",width=760,height=475";
+    //else if (document.layers) //Netscape
+    //  var options 
+= "menubar=yes,toolbar=yes,scrollbars=yes,location=yes,status=yes,resizable=yes
+,screenY=" + (window.screenY + 25) + ",screenX=" + (window.screenX + 55) 
++ ",width=765,height=475";
+
+    appWin = appWinArray[index];
+    if (!appWin)
+    {
+      appWin = "appWindow" + index;
+      appWinArray[index]= appWin;
+    }
+    //var w = window.open(url, appWin, options); omit option, get the user's 
+settings
+    if(document.all)       // IE browser
+    {
+      if(w) {w.close();} // Close and open the window before focus, to avoid 
+runtime error
+      w = window.open(url, appWin);
+      w.focus();         //bring window to front
+    }
+    else if(document.layers) //Netscape
+    {
+      w = window.open(url, appWin);
+      w.focus();         //bring window to front
+    }                      //bring window to front
+  }
+
+
+  var csHelpPage;   // context sensitive help page
+  var appWinArray = new Array();  // manage application windows
+
+//-->
+
+</SCRIPT>
+<BODY bgColor="#FFFFFF" text="#000000" marginheight="5px" marginwidth="10px" 
+topmargin="5px" leftmargin="10px">
+<!-- Standard Menus -->
+<!-- 'main.asp?pageStatus=NotImplemented' will take the page back to the main 
+page -->
+<TABLE border="0" cellPadding="3" cellSpacing="0" width="745">
+<TR><TD class="menuBar">
+
+<TABLE width="510" border="0" cellpadding="0" cellspacing="0">
+<TR>
+  <TD class="menuBar" nowrap><!--System Menu-->
+    <A class="menuItem" target="_self" href="javascript:toggleMenuState(1);" 
+onMouseOver="showHideMainMenu(1);">System</A></TD>
+  <TD class="menuBar" nowrap><!--Dial Plan Menu-->
+    <A class="menuItem" target="_self" href="javascript:toggleMenuState(2);" 
+onMouseOver="showHideMainMenu(2);">Route Plan</A></TD>
+
+  <TD class="menuBar" nowrap><!--Plug-in Menu-->
+    <A class="menuItem" target="_self" href="javascript:toggleMenuState(3);" 
+onMouseOver="showHideMainMenu(3);">Service</A></TD>
+  <TD class="menuBar" nowrap><!--Feature Menu-->
+    <A class="menuItem" target="_self" href="javascript:toggleMenuState(4);" 
+onMouseOver="showHideMainMenu(4);">Feature</A></TD>
+  <TD class="menuBar" nowrap><!--Device Menu-->
+    <A class="menuItem" target="_self" href="javascript:toggleMenuState(5);" 
+onMouseOver="showHideMainMenu(5);">Device</A></TD>
+  <TD class="menuBar" nowrap><!--User Menu-->
+
+    <A class="menuItem" target="_self" href="javascript:toggleMenuState(6);" 
+onMouseOver="showHideMainMenu(6);">User</A></TD>
+  <TD class="menuBar" nowrap><!--Application Menu-->
+    <A class="menuItem" target="_self" href="javascript:toggleMenuState(7);" 
+onMouseOver="showHideMainMenu(7);">Application</A></TD>
+  <TD class="menuBar" nowrap><!--Help Menu-->
+    <A class="menuItem" target="_self" href="javascript:toggleMenuState(8);" 
+onMouseOver="showHideMainMenu(8);">Help</A></TD>
+</TR>
+</TABLE>
+<!-- end of menu bar -->
+<!-- start of drop-down menus -->
+
+<SPAN id="menuSystem">
+<TABLE border="1" bgColor="#003333" borderColor="#FFFFFF" cellSpacing="0" 
+cellPadding="6" borderColorDark="#999999">
+  <TR>
+    <TD valign="top" bgColor="#003333">
+      <TABLE cellSpacing="0" cellPadding="1" border="0">
+      <TR>
+        <TD class="menuItem"><A class="menu" onMouseOver="javascript: 
+showHideMainMenu(1,0)" href="/ccmadmin/serverlist.asp">Server</A></TD>
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+      <TR>
+
+        <TD class="menuItem"><A class="menu" onMouseOver="javascript: 
+showHideMainMenu(1,0)" href="/ccmadmin/callmanagerlist.asp">Cisco 
+CallManager</A></TD>
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+      <TR>
+        <TD class="menuItem"><A class="menu" onMouseOver="javascript: 
+showHideMainMenu(1,0)" href="/ccmadmin/callmanagergrouplist.asp">Cisco 
+CallManager Group</A></TD>
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+      <TR>
+        <TD class="menuItem"><A class="menu" onMouseOver="javascript: 
+showHideMainMenu(1,0)" href="/ccmadmin/datetimegrouplist.asp">Date/Time 
+Group</A></TD>
+
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+      <TR>
+        <TD class="menuItem"><A class="menu" onMouseOver="javascript: 
+showHideMainMenu(1,0)" href="/ccmadmin/defaultdeviceconfig.asp?
+Action=New">Device Defaults</A></TD>
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+      <TR>
+        <TD class="menuItem"><A class="menu" onMouseOver="javascript: 
+showHideMainMenu(1,0)" href="/ccmadmin/regionlist.asp">Region</A></TD>
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+      <TR>
+
+        <TD class="menuItem"><A class="menu" onMouseOver="javascript: 
+showHideMainMenu(1,0)" href="/ccmadmin/devicepoollist.asp">Device Pool</A></TD>
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+      <TR>
+        <TD class="menuItem"><A class="menu" onMouseOver="javascript: 
+showHideMainMenu(1,0)" href="/ccmadmin/aargrouplist.asp">AAR Group</A></TD>
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+      <TR>
+        <TD class="menuItem"><A class="menu" onMouseOver="javascript: 
+showHideMainMenu(1,0)" href="/ccmadmin/enterpriseparamsnew.asp">Enterprise 
+Parameters</A></TD>
+
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+      <TR>
+        <TD class="menuItem"><A class="menu" onMouseOver="javascript: 
+showHideMainMenu(1,0)" href="/ccmadmin/locationlist.asp">Location</A></TD>
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+      <TR>
+        <TD class="menuItem"><A class="menu" onMouseOver="javascript: 
+showHideMainMenu(1,0)" href="/ccmadmin/srstList.asp">SRST</A></TD>
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+    </TABLE></TD>
+
+  </TR>
+</TABLE>
+</SPAN>
+<SPAN id="menuRoutePlan">
+<TABLE border="1" bgColor="#003333" borderColor="#FFFFFF" cellSpacing="0" 
+cellPadding="6" borderColorDark="#999999">
+  <TR>
+    <TD valign="top" bgColor="#003333">
+      <TABLE cellSpacing="0" cellPadding="1" border="0">
+      <TR>
+	  	<TD class="menuItem"><A class="menu" onMouseOver="javascript: 
+showHideMainMenu(2,0)" href="/ccmadmin/dialrules.asp">Application Dial 
+Rules</A></TD>
+
+	    <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+      <TR>
+        <TD class="menuItem"><A class="menu" onMouseOver="javascript: 
+showHideMainMenu(2,0)" 
+href="/ccmadmin/routepartitionlist.asp">Partition</A></TD>
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+      <TR>
+        <TD class="menuItem"><A class="menu" onMouseOver="javascript: 
+showHideMainMenu(2,0)" href="/ccmadmin/callingsearchspacelist.asp">Calling 
+Search Space</A></TD>
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+      <TR>
+
+        <TD class="menuItem"><A class="menu" onMouseOver="javascript: 
+showHideMainMenu(2,0)" href="/ccmadmin/routefilterlist.asp">Route 
+Filter</A></TD>
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+      <TR>
+        <TD class="menuItem"><A class="menu" onMouseOver="javascript: 
+showHideMainMenu(2,0)" href="/ccmadmin/routegrouplist.asp">Route Group</A></TD>
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+      <TR>
+        <TD class="menuItem"><A class="menu" onMouseOver="javascript: 
+showHideMainMenu(2,0)" href="/ccmadmin/routelistlist.asp">Route List</A></TD>
+
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+      <TR>
+        <TD class="menuItem"><A class="menu" onMouseOver="javascript: 
+showHideMainMenu(2,0)" href="/ccmadmin/routepatternlist.asp">Route 
+Pattern</A></TD>
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+      <TR>
+        <TD class="menuItem"><A class="menu" onMouseOver="javascript: 
+showHideMainMenu(2,0)" href="/ccmadmin/translationlist.asp">Translation 
+Pattern</A></TD>
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+      <TR>
+
+        <TD class="menuItem"><A class="menu" onMouseOver="javascript: 
+showHideMainMenu(2,0)" href="/ccmadmin/wizards/routePlan/rpwmain.asp">External 
+Route Plan Wizard</A></TD>
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+      <TR>
+        <TD class="menuItem"><A class="menu" onMouseOver="javascript: 
+showHideMainMenu(2,0)" href="/ccmadmin/routeplanreportlist.asp">Route Plan 
+Report</A></TD>
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+    </TABLE></TD>
+  </TR>
+</TABLE>
+
+</SPAN>
+<SPAN id="menuService">
+<TABLE border="1" bgColor="#003333" borderColor="#FFFFFF" cellSpacing="0" 
+cellPadding="6" borderColorDark="#999999">
+  <TR>
+    <TD valign="top" bgColor="#003333">
+      <TABLE cellSpacing="0" cellPadding="1" border="0">
+      <TR>
+      	<TD class="menuItem"><A class="menu" onMouseOver="javascript: 
+showHideMainMenu(3,0)" href="/ccmadmin/wizards/IPMAConfig/ipmawmain.asp">Cisco 
+IPMA Configuration Wizard</A></TD>
+	    <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+      <TR>
+
+        <TD class="menuItem"><A class="menu" onMouseOver="javascript: 
+showHideMainMenu(3,1)" href="javascript: ">Cisco CM Attendant 
+Console&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</A></TD>
+        <TD><A class="menu" onMouseOver="javascript: showHideMainMenu(3,1)" 
+href="javascript: "><img src="/ccmadmin//images/arrow_menu.gif" height="12" 
+width="12" border="0"></A></TD></TR>
+      <TR>
+        <TD class="menuItem"><A class="menu" onMouseOver="javascript: 
+showHideMainMenu(3,2)" href="javascript: ">Media 
+Resource&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</A></TD>
+        <TD><A class="menu" onMouseOver="javascript: showHideMainMenu(3,2)" 
+href="javascript: "><img src="/ccmadmin//images/arrow_menu.gif" height="12" 
+width="12" border="0"></A></TD></TR>
+      <TR>
+        <TD class="menuItem"><A class="menu" onMouseOver="javascript: 
+showHideMainMenu(3,0)" href="/ccmadmin/spserver.asp">Service 
+Parameters</A></TD>
+
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+    </TABLE></TD>
+  </TR>
+</TABLE>
+</SPAN>
+<SPAN id="menuServiceMediaResources">
+<TABLE border="1" bgColor="#003333" borderColor="#FFFFFF" cellSpacing="0" 
+cellPadding="6" borderColorDark="#999999">
+  <TR>
+    <TD valign="top" bgColor="#003333">
+      <TABLE cellSpacing="0" cellPadding="1" border="0">
+      <TR>
+
+        <TD class="menuItem"><A class="menu" 
+href="/ccmadmin/conferencebridgedevicelist.asp">Conference Bridge</A></TD>
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+      <TR>
+        <TD class="menuItem"><A class="menu" 
+href="/ccmadmin/mtplist.asp">Media Termination Point</A></TD>
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+      <TR>
+        <TD class="menuItem"><A class="menu" 
+href="/ccmadmin/mohaudiosource.asp">Music On Hold Audio Source</A></TD>
+
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+      <TR>
+        <TD class="menuItem"><A class="menu" 
+href="/ccmadmin/mohserverlist.asp">Music On Hold Server</A></TD>
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+      <TR>
+        <TD class="menuItem"><A class="menu" 
+href="/ccmadmin/transcoderlist.asp">Transcoder</A></TD>
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TR>
+      <TR>
+
+        <TD class="menuItem"><A class="menu" 
+href="/ccmadmin/mediaresourcegrouplist.asp">Media Resource Group</A></TD>
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+      <TR>
+        <TD class="menuItem"><A class="menu" 
+href="/ccmadmin/mediaresourcelistlist.asp">Media Resource Group List</A></TD>
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+    </TABLE></TD>
+  </TR>
+</TABLE>
+
+</SPAN>
+<SPAN id="menuAttendantConsole">
+<TABLE border="1" bgColor="#003333" borderColor="#FFFFFF" cellSpacing="0" 
+cellPadding="6" borderColorDark="#999999">
+  <TR>
+    <TD valign="top" bgColor="#003333">
+      <TABLE cellSpacing="0" cellPadding="1" border="0">
+      <TR>
+        <TD class="menuItem"><A class="menu" 
+href="/ccmadmin/pilotlist.asp">Pilot Point</A></TD>
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+      <TR>
+
+        <TD class="menuItem"><A class="menu" 
+href="/ccmadmin/pilothuntgroupconfig.asp">Hunt Group</A></TD>
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+      <TR>
+        <TD class="menuItem"><A class="menu" 
+href="/ccmadmin/cwauserlist.asp">Cisco CM Attendant Console User</A></TD>
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+      <TR>
+        <TD class="menuItem"><A class="menu" href="/ccmadmin/tcd.asp">Cisco CM 
+Attendant Console Server</A></TD>
+
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+    </TABLE></TD>
+  </TR>
+</TABLE>
+</SPAN>
+<SPAN id="menuFeature">
+<TABLE border="1" bgColor="#003333" borderColor="#FFFFFF" cellSpacing="0" 
+cellPadding="6" borderColorDark="#999999">
+  <TR>
+    <TD valign="top" bgColor="#003333">
+      <TABLE cellSpacing="0" cellPadding="1" border="0">
+      <TR>
+
+        <TD class="menuItem"><A class="menu" onMouseOver="javascript: 
+showHideMainMenu(4,0)" href="/ccmadmin/callparklist.asp">Call Park</A></TD>
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+      <TR>
+        <TD class="menuItem"><A class="menu" onMouseOver="javascript: 
+showHideMainMenu(4,0)" href="/ccmadmin/callpickuplist.asp">Call Pickup</A></TD>
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+      <TR>
+        <TD class="menuItem"><A class="menu" onMouseOver="javascript: 
+showHideMainMenu(4,0)" href="/ccmadmin/ipphoneserviceslist.asp">Cisco IP Phone 
+Services</A></TD>
+
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+      <TR>
+        <TD class="menuItem"><A class="menu" onMouseOver="javascript: 
+showHideMainMenu(4,0)" href="/ccmadmin/meetmenumberlist.asp">Meet-Me 
+Number/Pattern</A></TD>
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+      <TR>
+        <TD class="menuItem"><A class="menu" onMouseOver="javascript: 
+showHideMainMenu(4,1)" href="javascript: ">Voice 
+Mail&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb
+sp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</A></TD>
+        <TD><A class="menu" onMouseOver="javascript: showHideMainMenu(4,1)" 
+href="javascript: "><img src="/ccmadmin//images/arrow_menu.gif" height="12" 
+width="12" border="0"></A></TD></TR>
+    </TABLE></TD>
+
+  </TR>
+</TABLE>
+</SPAN>
+<SPAN id="menuFeatureVoiceMail">
+<TABLE border="1" bgColor="#003333" borderColor="#FFFFFF" cellSpacing="0" 
+cellPadding="6" borderColorDark="#999999">
+  <TR>
+    <TD valign="top" bgColor="#003333">
+      <TABLE cellSpacing="0" cellPadding="1" border="0">
+      <TR>
+        <TD class="menuItem"><A class="menu" 
+href="/ccmadmin/voicemailportlist.asp">Cisco Voice Mail Port</A></TD>
+
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+      <TR>
+        <TD class="menuItem"><A class="menu" 
+href="/ccmadmin/wizards/voicemailports/default.asp">Cisco Voice Mail Port 
+Wizard</A></TD>
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+      <TR>
+        <TD class="menuItem"><A class="menu" 
+href="/ccmadmin/messagewaitinglist.asp">Message Waiting</A></TD>
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+      <TR>
+
+        <TD class="menuItem"><A class="menu" 
+href="/ccmadmin/voicemailpilotlist.asp">Voice Mail Pilot</A></TD>
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+      <TR>
+        <TD class="menuItem"><A class="menu" 
+href="/ccmadmin/voicemailprofilelist.asp">Voice Mail Profile</A></TD>
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+      </TABLE>
+    </TD>
+  </TR>
+
+</TABLE>
+</SPAN>
+<SPAN id="menuDevice">
+<TABLE border="1" bgColor="#003333" borderColor="#FFFFFF" cellSpacing="0" 
+cellPadding="6" borderColorDark="#999999">
+  <TR>
+    <TD valign="top" bgColor="#003333">
+      <TABLE cellSpacing="0" cellPadding="1" border="0">
+      <TR>
+        <TD class="menuItem"><A class="menu" onMouseOver="javascript: 
+showHideMainMenu(5,0)" href="/ccmadmin/devicenew.asp">Add a New Device</A></TD>
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+
+      <TR>
+        <TD class="menuItem"><A class="menu" onMouseOver="javascript: 
+showHideMainMenu(5,0)" href="/ccmadmin/ctiroutepointlist.asp">CTI Route 
+Point</A></TD>
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+      <TR>
+        <TD class="menuItem"><A class="menu" onMouseOver="javascript: 
+showHideMainMenu(5,0)" href="/ccmadmin/gatekeeperlist.asp">Gatekeeper</A></TD>
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+      <TR>
+        <TD class="menuItem"><A class="menu" onMouseOver="javascript: 
+showHideMainMenu(5,0)" href="/ccmadmin/gatewaylist.asp">Gateway</A></TD>
+
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+      <TR>
+        <TD class="menuItem"><A class="menu" onMouseOver="javascript: 
+showHideMainMenu(5,0)" href="/ccmadmin/phonelist.asp">Phone</A></TD>
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+      <TR>
+        <TD class="menuItem"><A class="menu" onMouseOver="javascript: 
+showHideMainMenu(5,0)" href="/ccmadmin/trunklist.asp">Trunk</A></TD>
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+      <TR>
+
+        <TD class="menuItem"><A class="menu" onMouseOver="javascript: 
+showHideMainMenu(5,1)" href="javascript: ">Device 
+Settings&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</A></TD>
+        <TD><A class="menu" onMouseOver="javascript: showHideMainMenu(5,1)" 
+href="javascript: "><img src="/ccmadmin//images/arrow_menu.gif" height="12" 
+width="12" border="0"></A></TD></TR>
+    </TABLE></TD>
+  </TR>
+</TABLE>
+</SPAN>
+<SPAN id="menuDeviceSettings">
+  <TABLE border="1" bgColor="#003333" borderColor="#FFFFFF" cellSpacing="0" 
+cellPadding="6" borderColorDark="#999999">
+  <TR>
+    <TD valign="top" bgColor="#003333">
+
+      <TABLE cellSpacing="0" cellPadding="1" border="0">
+        <TR>
+        <TD class="menuItem"><A class="menu" 
+href="/ccmadmin/deviceprofilelist.asp">Device Profile</A></TD>
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+        <TR>
+        <TD class="menuItem"><A class="menu" 
+href="/ccmadmin/firmwareload.asp">Firmware Load Information</A></TD>
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+        <TR>
+
+        <TD class="menuItem"><A class="menu" 
+href="/ccmadmin/phonetemplatelist.asp">Phone Button Template</A></TD>
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+        <TR>
+        <TD class="menuItem"><A class="menu" 
+href="/ccmadmin/softkeytemplatelist.asp">Softkey Template</A></TD>
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+      </TABLE>
+    </TD>
+  </TR>
+
+</TABLE>
+</SPAN>
+<SPAN id="menuUser">
+<TABLE border="1" bgColor="#003333" borderColor="#FFFFFF" cellSpacing="0" 
+cellPadding="6" borderColorDark="#999999">
+  <TR>
+    <TD valign="top" bgColor="#003333">
+      <TABLE cellSpacing="0" cellPadding="1" border="0">
+      <TR>
+        <TD class="menuItem"><A class="menu" onMouseOver="javascript: 
+showHideMainMenu(6,0)" href="/ccmadmin/userprefsconfig.asp?pageType=New">Add a 
+New User</A></TD>
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+
+      <TR>
+        <TD class="menuItem"><A class="menu" onMouseOver="javascript: 
+showHideMainMenu(6,0)" href="/ccmadmin/userprefsconfig.asp?
+pageDisp=Search">Global Directory</A></TD>
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+    </TABLE></TD>
+  </TR>
+</TABLE>
+</SPAN><SPAN id="menuApplication">
+<TABLE border="1" bgColor="#003333" borderColor="#FFFFFF" cellSpacing="0" 
+cellPadding="6" borderColorDark="#999999">
+   <TR>
+    <TD valign="top" bgColor="#003333">
+
+      <TABLE cellSpacing="0" cellPadding="1" border="0">
+       <TD class="menuItem"><A class="menu" onMouseOver="javascript: 
+showHideMainMenu(7,0)" href="/ccmadmin/install.asp">Install Plugins </A></TD>
+      <TR>
+       <TD class="menuItem"><A class="menu" onMouseOver="javascript: 
+showHideMainMenu(7,0)" href="/ccmadmin/pluginconfig.asp">Update Plugin 
+URL</A></TD>
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+      <TR>
+       <TD class="menuItem"><A class="menu" onMouseOver="javascript: 
+showHideMainMenu(7,0)" href="/ccmadmin/../CCMService/main.asp">Cisco 
+CallManager Serviceability</A></TD>
+
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+
+
+
+      <TR>
+        <TD class="menuItem"><A class="menuDisabled" target="_self" 
+onMouseOver="javascript: showHideMainMenu(7,0)" href="javascript:void(0);">No 
+Applications Installed</A></TD>
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+
+    </TABLE></TD>
+  </TR>
+
+</TABLE>
+</SPAN>
+<SPAN id="menuHelp">
+<TABLE border="1" bgColor="#003333" borderColor="#FFFFFF" cellSpacing="0" 
+cellPadding="6" borderColorDark="#999999">
+  <TR>
+    <TD valign="top" bgColor="#003333">
+      <TABLE cellSpacing="0" cellPadding="1" border="0">
+      <TR>
+        <TD class="menuItem"><A class="menu" target="_self" 
+onMouseOver="javascript: showHideMainMenu(8,0)" href="javascript: ccmHelp
+('index.html')">Contents and Index</A></TD>
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+
+      <TR>
+        <TD class="menuItem"><A class="menu" target="_self" 
+onMouseOver="javascript: showHideMainMenu(8,0)" href="javascript: ccmHelp
+()">For this page</A></TD>
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+      <TR>
+        <TD class="menuItem"><A class="menu" onMouseOver="javascript: 
+showHideMainMenu(8,0)" href="/ccmadmin/componentversions.asp">Component 
+Versions</A></TD>
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+      <TR>
+        <TD class="menuItem"><A class="menu" onMouseOver="javascript: 
+showHideMainMenu(8,0)" href="/ccmadmin/main.asp">About Cisco 
+CallManager</A></TD>
+
+        <TD><IMG src="images/blank.gif" height="1" width="1"></TD></TR>
+    </TABLE></TD>
+  </TR>
+</TABLE>
+</SPAN>
+<!-- End of the drop-down menus -->
+</TD></TR></TABLE>
+<!-- Banner for all pages -->
+<TABLE border="0" cellPadding="0" cellSpacing="0" width="745">
+<TR><TD><IMG src="/ccmadmin/images/banner.gif" border="0" height="74" 
+width="745" alt="Cisco CallManager 3.3 Administration"></TD></TR>
+</TABLE>
+
+<!-- Table to frame page contents - do not modify attributes -->
+<table border="0" cellpadding="10" cellspacing="0" width="745" 
+height="80%"><tr>
+
+<td class="content" valign="top"><br>
+
+<!-- Page Contents Start -->
+<table border="0" cellSpacing="0" cellPadding="3">
+	<tr>
+		<td><img src="images/masthead.jpg" border="0" hspace="5" 
+vspace="5" WIDTH="196" HEIGHT="197"></td>
+		<td>
+      <h3>Cisco CallManager 3.3 Administration</h3>
+      <p>
+   	  <form id="form1" name="form1">
+
+      <input type="button" value="Details" name="cmdDetails" id=cmdDetails 
+onClick="showDetail()">
+      </form>
+      <P>Copyright &copy; 1999 - 2002 Cisco Systems, Inc.<br>
+All rights reserved.</P>
+
+      </td>
+	</tr>
+</table>
+
+<!-- End of Page Contents - DO NOT add content below this line -->
+
+</td></tr></table>
+</body>
+</html>

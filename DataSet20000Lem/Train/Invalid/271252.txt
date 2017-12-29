@@ -1,0 +1,36 @@
+Firefox render BASE HREF comment when comment is broken
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.5) Gecko/20041107 Firefox/1.0
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.5) Gecko/20041107 Firefox/1.0
+
+This is a typical "base href" comment, found in the <head> element:
+
+<!-- base href="http://www.foo.bar/" -->
+
+When the base-href comment is broken, such as:
+
+<!-- base -- href = "http://www.foo.bar/" -->
+
+Firefox ignores the "<!--" and render the comment a part of the page (usually
+displayed at the top of all page content)
+
+You can work around it by putting something infront of the "base" keyword, it
+seems Firefox look for "<!-- base" in HTML documents, so by breaking this, it
+doesn't appear
+
+Reproducible: Always
+Steps to Reproduce:
+1. Create any old HTML document (I used XHTML1.1)
+2. Put "<!-- base href="http://www.foo.bar/" -->" in your <head> to tell the UA
+what the default base to truncated HREF'd URIs are
+3. Render... it look fine
+4. Replace the comment with "<!-- base -- href = "http://www.foo.bar/" -->"
+5. Render....you'll notice that "-- base -- href = "http://www.foo.bar/" -->"
+appear at the top of the page
+
+Actual Results:
+The string "-- base -- href = "http://www.foo.bar/" -->" appear at the top of
+the page
+
+Expected Results:
+Firefox is supposed to treat it a a comment if the string is broken or poorly
+formed, rather than rendering it

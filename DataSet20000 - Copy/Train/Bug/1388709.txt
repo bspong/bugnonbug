@@ -1,0 +1,22 @@
+Console `originAttributes` attributes slow things down and is unused
+Based on bug 1382968 comment 42, it looks like the call to Cu.cloneInto()
+has significant impact on console.log performances.
+http://searchfox.org/mozilla-central/rev/0f16d437cce97733c6678d29982a6bcad49f817b/dom/console/ConsoleAPIStorage.js#132-135
+    // Clone originAttributes to prevent "TypeError: can't access dead object"
+    // exceptions when cached console messages are retrieved/filtered
+    // by the devtools webconsole actor.
+    aEvent.originAttributes = Cu.cloneInto(aEvent.originAttributes, {});
+
+Commenting this line introduces a 30% win in console.log performances under heavy usage (see bug 1382968 comment 42).
+
+I'm not an active contributor for the console, but I looked into its codebase, and I wasn't able to find any usage of this `originAttributes` object:
+http://searchfox.org/mozilla-central/search?q=originAttributes&case=false&regexp=false&path=devtools%2F
+
+The only one reference coming from webconsole code is this one:
+http://searchfox.org/mozilla-central/rev/bd39b6170f04afeefc751a23bb04e18bbd10352b/devtools/server/actors/webconsole.js#1783
+    delete result.originAttributes;
+
+Where we immediately delete it as soon as we receive the console-api-log-event message...
+It has been introduced in bug 1318006, as well as the cloneInto, in order to prevent Dead wrapper exceptions.
+
+If that is really unused, it looks like we should remove it completely.

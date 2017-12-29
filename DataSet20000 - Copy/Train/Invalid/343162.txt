@@ -1,0 +1,72 @@
+segmentation fault on page reload (with POST file upload)
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.0.4) Gecko/20060508 Firefox/1.5.0.4
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.0.4) Gecko/20060508 Firefox/1.5.0.4
+
+I have the small form:
+<html>
+<head>
+<title>
+Crossmatch test
+</title>
+</head>
+<body>
+<form action="http://localhost:8080/sai_cas/crossmatch" method="post"
+    enctype="multipart/form-data">
+<input type="file" name="ff"/>
+<input type="submit"/>
+</form>
+</body>
+</html>
+
+I submit the file to this form, and get the response from the web-server, and then I reload the page. Firefox as usual asks me whether I want to resubmit my POST data, I answer yes, and firefox crashes. 
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Open the web-form with the file upload field
+2. Submit the form with the file
+3. Get the response of the web server
+4. Reload the results
+( I didn't tried with the different forms and different web-server (the web-form
+triggering the bug is shown in "Details" part of the bug report. )
+Actual Results:  
+Segmentation fault
+
+
+Talkback crash ID : TB20417024Q
+
+GDB backtrace: 
+Program received signal SIGSEGV, Segmentation fault.  
+[Switching to Thread -1221309520 (LWP 30539)]
+0x080cf9f7 in nsTHashtable<nsBaseHashtableET<nsDepCharHashKey,
+nsAutoPtr<nsINIParser::INIValue> > >::~nsTHashtable ()
+(gdb) bt
+#0  0x080cf9f7 in nsTHashtable<nsBaseHashtableET<nsDepCharHashKey,
+nsAutoPtr<nsINIParser::INIValue> > >::~nsTHashtable ()
+#1  0xb7e79a5a in nsMultiplexInputStream::nsMultiplexInputStream ()
+   from /opt/firefox/libxpcom_core.so
+#2  0xb7e79a5a in nsMultiplexInputStream::nsMultiplexInputStream ()
+   from /opt/firefox/libxpcom_core.so
+#3  0x080d7ec9 in nsTHashtable<nsBaseHashtableET<nsDepCharHashKey,
+nsAutoPtr<nsINIParser::INIValue> > >::~nsTHashtable ()
+#4  0xb7e79a5a in nsMultiplexInputStream::nsMultiplexInputStream ()
+   from /opt/firefox/libxpcom_core.so
+#5  0x080cfb59 in nsTHashtable<nsBaseHashtableET<nsDepCharHashKey,
+nsAutoPtr<nsINIParser::INIValue> > >::~nsTHashtable ()
+#6  0x080cfabb in nsTHashtable<nsBaseHashtableET<nsDepCharHashKey,
+nsAutoPtr<nsINIParser::INIValue> > >::~nsTHashtable ()
+#7  0x08139a7b in nsBaseHashtable<nsStringHashKey, nsCOMPtr<nsIVariant>,
+nsIVariant*>::s_EnumReadStub ()
+#8  0x0813cd90 in nsReadingIterator<char>::advance ()
+#9  0x0813d3a8 in nsReadingIterator<char>::advance ()
+#10 0x0812ab9c in nsBaseHashtable<nsStringHashKey, nsCOMPtr<nsIVariant>,
+nsIVariant*>::s_EnumReadStub ()
+#11 0x0812cb6a in nsBaseHashtable<nsStringHashKey, nsCOMPtr<nsIVariant>,
+nsIVariant*>::s_EnumReadStub ()
+#12 0x080e3900 in nsTHashtable<nsBaseHashtableET<nsDepCharHashKey,
+nsAutoPtr<nsI---Type <return> to continue, or q <return> to quit---
+NIParser::INIValue> > >::~nsTHashtable ()
+#13 0xb7e904bb in nsThread::Main () from /opt/firefox/libxpcom_core.so
+#14 0xb7e03740 in PR_Select () from /opt/firefox/libnspr4.so
+#15 0xb7db80fb in start_thread () from /lib/tls/libpthread.so.0
+#16 0xb755299e in clone () from /lib/tls/libc.so.6

@@ -1,0 +1,45 @@
+Plantage de session du aux tags : href='', src='', background: url(). Sous Mac
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 6.0; fr; rv:1.9.0.10) Gecko/2009042316 Firefox/3.0.10 FirePHP/0.2.4
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 6.0; fr; rv:1.9.0.10) Gecko/2009042316 Firefox/3.0.10 FirePHP/0.2.4
+
+Bonjour,
+
+Les lignes de codes HTML suivantes :
+
+<div style='background: url();'></div>
+<img src='' />
+<script type='text/javascript' src=''></script>
+<link rel='stylesheet' href='' type="text/css" />
+
+Relance un appel vers la page dans laquelles elles sont appelées si l'information dans les attributs href, src ou la propriete url() est manquante.
+
+Si des sessions sont utilisées dans la page en question, un freeze de firefox peu être constaté. Ce freeze est aléatoire et semble être sensible à la vitesse de connexion internet ou à la puissance du processeur de la machine. (bug constaté à 99% sous Firefox Mac)
+
+Il se peu que cela soit du au faite que la page n'ait pas encore fini de charger côté serveur lorsque Firefox relance un appel à la page. du coup la session est relancé, mais bloqué car non libéré par le script parent. Ce qui pourrait posé ce problème.
+
+Bien entendu il n'y as aucune raison que ces tags soient saisi ainsi dans une page HTML. Mais je trouve ce rappel assez étrange.
+
+Reproducible: Always
+
+Steps to Reproduce:
+Dans un script PHP
+<?php
+session_start();
+?>
+<html>
+<head>
+<link rel='stylesheet' href='' type="text/css" />
+<script type='text/javascript' src=''></script>
+</head>
+<body>
+<img src='' />
+<div style='background: url();'>test</div>
+</body>
+</html>
+<?php
+session_write_close();
+?>
+Actual Results:  
+Avec firebug, vous devriez voir apparaitre 4 appels à la page dans lequel ce code source est enregistré.
+
+Si vous êtes sous mac, et actualiser plusieurs fois cette page, vous pouvez avoir un freeze du à la fonction session_start();

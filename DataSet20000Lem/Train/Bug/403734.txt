@@ -1,0 +1,214 @@
+POST data malformed & browser hang
+User-Agent: Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.1.4322; .NET CLR 2.0.50727)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.9) Gecko/20071025 Firefox/2.0.0.9
+
+When posting data from a very simple form with two text field firefox submits HTTP POST data multiple time and in an invalid format.
+
+When the form is submitted the server recieves the post data multiple times. When the post data is received for the 2nd or 3rd time the Content-Length is missing and the application/x-www-form-urlencoded form value appear immediately after a request header with no CRLF to indicate the body. The server will then block during a socket read whilst it try to look for the terminating CRLFCRLF which indicates the end of the request, during which time firefox hang and becomes completely unresponsive until the server socket read time out.
+
+Each time firefox submits the form data, it creates a new connection. After the first connection the server return the form data a a json object in the HTML body by doing a string replacement in the source with the token "<?$json?>" where the json object look like this:
+
+{ "name":"", "method":"", "action":"", "fields":[{"name":"action", "value":""},, {"name":"pass", "value":"bar"},, {"name":"tab", "value":"tab_text"},, {"name":"user", "value":"foo"},]};
+
+The bug doe not occur if the json object is not placed in the HTML, so it appears a though the multiple submission and the malformed HTTP header are somehow related to the javascript code executing and perhaps performing a submission in some corrupt manner.
+
+This bug may be related to the following bugs:
+
+
+https://bugzilla.mozilla.org/show_bug.cgi?id=401248
+https://bugzilla.mozilla.org/show_bug.cgi?id=361212
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.Submit form data in provided web page.
+2.Look at raw socket data received, any simple socket server will do.
+3.
+Actual Results:
+POST / HTTP/1.1
+Host: localhost
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.9) Gecko/20
+071025 Firefox/2.0.0.9
+Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plai
+n;q=0.8,image/png,*/*;q=0.5
+Accept-Language: en-us,en;q=0.5
+Accept-Encoding: gzip,deflate
+Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7
+Keep-Alive: 300
+Connection: keep-alive
+Referer: http://localhost/
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 38
+
+action=&tab=tab_text&user=foo&pass=bar
+
+POST / HTTP/1.1
+Host: localhost
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.9) Gecko/20
+071025 Firefox/2.0.0.9
+Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plai
+n;q=0.8,image/png,*/*;q=0.5
+Accept-Language: en-us,en;q=0.5
+Accept-Encoding: gzip,deflate
+Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7
+Keep-Alive: 300
+Connection: keep-alive
+action=&tab=tab_text&user=foo&pass=bar
+
+Expected Results:
+POST / HTTP/1.1
+Host: localhost
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.9) Gecko/20
+071025 Firefox/2.0.0.9
+Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plai
+n;q=0.8,image/png,*/*;q=0.5
+Accept-Language: en-us,en;q=0.5
+Accept-Encoding: gzip,deflate
+Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7
+Keep-Alive: 300
+Connection: keep-alive
+Referer: http://localhost/
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 38
+
+action=&tab=tab_text&user=foo&pass=bar
+
+<html>
+<head>
+</head>
+<style type="text/css">
+
+.feed {text-decoration:none;font: bold 18pt;color:green;}
+.title {text-decoration:none;font:bold 12pt;color:blue;}
+.excerpt {}
+.time {color:#777777;}
+.url {color:green;}
+.topic {color:#777777;font-style:italic;}
+.topics {color:#777777;font-style:italic;border: 1px solid; width: 630px;}
+.topics td {color:#777777;font-style:italic;border: 1px solid;}
+
+</style>
+<script language="javascript">
+
+
+function process(name)
+{
+//alert(name);
+document.all.tab.value = name;
+document.forms[0].submit();
+}
+
+function load()
+{
+//alert(document.all.tab.value);
+tab(document.all.tab.value);
+}
+
+function tab(name)
+{
+for (var i=0;i<tabs.length;++i)
+{
+eval("document.all." + tabs[i] + ".style.display=" + ((tabs[i] == name) ? "''":"'none'"));
+}
+
+document.all.tab.value = name;
+}
+
+var tab = new Array();
+tabs[0] = "tab_login";
+tabs[1] = "tab_text";
+tabs[2] = "tab_result";
+
+
+</script>
+<body bgcolor="#ffffff" onload="load()">
+
+<table width="500" height="100%" cellpadding="10" cellspacing="0"><tr>
+<td width="100" valign="top">
+</td>
+<td valign=top>
+
+<font size="+3"><i>poc:login<br></i></font>
+
+<p>
+
+<form method="post" action="/">
+
+
+<table cellpadding="3" cellspacing="1" width="800" class=bodyline>
+<tr class=cell><td colspan=3 class=cat>
+
+
+<input type="hidden" name="action" value="">
+<input type="hidden" name="tab" value="tab_login">
+
+<br>
+
+<div id="tab_login" style="display:'';">
+
+<table cellpadding="0" cellspacing="3">
+<tr><td>Username:</td><td><input type="text" name="user" id="name"></td></tr>
+<tr><td>Password:</td><td><input type="text" name="pass"></td></tr>
+</table>
+
+<p>
+<input id="button_login" type="button" value="Login" onclick="process('tab_text');">
+
+</div>
+
+<div id="tab_text" style="display:none;">
+
+<textarea style="width:500;height:200;">
+</textarea>
+<br>
+
+<input type="submit" value="Process" onclick="process('tab_text')">
+<br>
+
+<br>
+</div>
+
+
+<div id="tab_result">
+
+<?$result?>
+
+</div>
+
+
+</td></tr>
+</table>
+
+</form>
+
+</td></tr></table>
+<script language="javascript">
+
+
+var form = <?$json?>
+
+{
+//document.write("<div style='color:green'>");
+//for(var field in form.fields)
+for (var i=0;i<form.fields.length;++i)
+{
+var field = form.fields[i];
+//alert(field.name);
+//alert(field.name);
+var element = eval('document.forms[0].' + field.name);
+//alert(element);
+if (element != undefined)
+{
+element.value = field.value;
+}
+//document.write(field.name + "=" + field.value);
+//document.write("<br>");
+}
+//document.write("</div>");
+}
+
+</script>
+</body>
+</html>

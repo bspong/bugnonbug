@@ -1,0 +1,304 @@
+Hang when shutting down CompositorOGL on Linux Talos machines
+When running the talos suite with OpenGL layers enabled on Linux, it appears that we hang when waiting for the OpenGL compositor to shut down.
+
+Try push: https://treeherder.mozilla.org/#/jobs?repo=try&revision=c7905ff5a35f
+
+Main thread stack trace:
+
+>12:54:56     INFO -  Thread 0
+>12:54:56     INFO -   0  linux-gate.so + 0x424
+>12:54:56     INFO -      eip = 0xb77be424   esp = 0xbff28cd8   ebp = 0x00000015   ebx = 0x9d8eadc8
+>12:54:56     INFO -      esi = 0x00000000   edi = 0x97749f40   eax = 0xfffffe00   ecx = 0x00000080
+>12:54:56     INFO -      edx = 0x00000015   efl = 0x00000282
+>12:54:56     INFO -      Found by: given as instruction pointer in context
+>12:54:56     INFO -   1  libpthread-2.15.so + 0xa96a
+>12:54:56     INFO -      eip = 0xb779896b   esp = 0xbff28ce8   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -   2  libnspr4.so!_fini + 0xeac3
+>12:54:56     INFO -      eip = 0xb749f54c   esp = 0xbff28d00   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -   3  libnspr4.so!PR_WaitCondVar [ptsynch.c:c7905ff5a35f : 396 + 0x11]
+>12:54:56     INFO -      eip = 0xb7485124   esp = 0xbff28d10   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -   4  libxul.so!mozilla::ipc::MessageChannel::ProcessPendingRequests() [MessageChannel.cpp:c7905ff5a35f : 796 + 0x1f]
+>12:54:56     INFO -      eip = 0xb26bd19b   esp = 0xbff28d20   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -   5  libpthread-2.15.so + 0xb87e
+>12:54:56     INFO -      eip = 0xb779987f   esp = 0xbff28d34   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -   6  libxul.so!_fini + 0x1baaa47
+>12:54:56     INFO -      eip = 0xb61b7800   esp = 0xbff28d38   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -   7  libxul.so!_fini + 0x1baaa47
+>12:54:56     INFO -      eip = 0xb61b7800   esp = 0xbff28d40   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -   8  libxul.so!mozilla::Monitor::Wait(unsigned int) [CondVar.h:c7905ff5a35f : 79 + 0xf]
+>12:54:56     INFO -      eip = 0xb24b5171   esp = 0xbff28d50   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -   9  libxul.so!_fini + 0x1baaa47
+>12:54:56     INFO -      eip = 0xb61b7800   esp = 0xbff28d64   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  10  libxul.so!mozilla::ipc::MessageChannel::WaitForSyncNotify() [MessageChannel.cpp:c7905ff5a35f : 1572 + 0xa]
+>12:54:56     INFO -      eip = 0xb26b54d3   esp = 0xbff28d70   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  11  libxul.so!_fini + 0x1baaa47
+>12:54:56     INFO -      eip = 0xb61b7800   esp = 0xbff28da0   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  12  libxul.so!mozilla::ipc::MessageChannel::Send(IPC::Message*, IPC::Message*) [MessageChannel.cpp:c7905ff5a35f : 944 + 0x8]
+>12:54:56     INFO -      eip = 0xb26bd4c2   esp = 0xbff28db0   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  13  libxul.so!mozilla::ipc::MessageChannel::Send(IPC::Message*, IPC::Message*) [MessageChannel.h:c7905ff5a35f : 291 + 0x7]
+>12:54:56     INFO -      eip = 0xb26bd3e6   esp = 0xbff28dc0   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  14  libxul.so!_fini + 0x1baaa47
+>12:54:56     INFO -      eip = 0xb61b7800   esp = 0xbff28df4   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  15  libxul.so!_fini + 0x1baaa47
+>12:54:56     INFO -      eip = 0xb61b7800   esp = 0xbff28e00   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  16  libxul.so!mozilla::layers::PCompositorChild::SendWillStop() [PCompositorChild.cpp:c7905ff5a35f : 193 + 0x10]
+>12:54:56     INFO -      eip = 0xb284a740   esp = 0xbff28e10   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  17  libxul.so!_fini + 0x19d24ef
+>12:54:56     INFO -      eip = 0xb5fdf2a8   esp = 0xbff28e38   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  18  libxul.so!_fini + 0x1cf4c8
+>12:54:56     INFO -      eip = 0xb47dc281   esp = 0xbff28e50   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  19  firefox!_fini + 0x67a7
+>12:54:56     INFO -      eip = 0x080672b4   esp = 0xbff28e54   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  20  libxul.so!mozilla::layers::PCompositorChild::SendWillStop() [PCompositorChild.cpp:c7905ff5a35f : 176 + 0xa]
+>12:54:56     INFO -      eip = 0xb284a6a9   esp = 0xbff28e5c   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  21  libxul.so!_fini + 0x1baaa47
+>12:54:56     INFO -      eip = 0xb61b7800   esp = 0xbff28e60   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  22  libxul.so!mozilla::layers::CompositorChild::Destroy() [CompositorChild.cpp:c7905ff5a35f : 79 + 0x7]
+>12:54:56     INFO -      eip = 0xb2ab7dcb   esp = 0xbff28e70   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  23  libxul.so!mozilla::layers::CompositorChild::Destroy() [CompositorChild.cpp:c7905ff5a35f : 64 + 0x10]
+>12:54:56     INFO -      eip = 0xb2ab7d9d   esp = 0xbff28e80   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  24  libxul.so!mozilla::layers::Layer::~Layer() [Layers.cpp:c7905ff5a35f : 230 + 0xa]
+>12:54:56     INFO -      eip = 0xb2a62b4b   esp = 0xbff28e9c   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  25  libxul.so!_fini + 0x1baaa47
+>12:54:56     INFO -      eip = 0xb61b7800   esp = 0xbff28ea0   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  26  libxul.so!_fini + 0x1baaa47
+>12:54:56     INFO -      eip = 0xb61b7800   esp = 0xbff28eb0   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  27  libxul.so!nsBaseWidget::DestroyCompositor() [nsBaseWidget.cpp:c7905ff5a35f : 248 + 0xd]
+>12:54:56     INFO -      eip = 0xb3608463   esp = 0xbff28ec0   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  28  libxul.so!mozilla::layers::Layer::Release() [Layers.h:c7905ff5a35f : 745 + 0x3]
+>12:54:56     INFO -      eip = 0xb2a5a209   esp = 0xbff28ed0   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  29  libxul.so!nsWindow::Destroy() [nsWindow.cpp:c7905ff5a35f : 611 + 0xb]
+>12:54:56     INFO -      eip = 0xb363309f   esp = 0xbff28ef0   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  30  libxul.so!nsContentTreeOwner::~nsContentTreeOwner() [nsContentTreeOwner.cpp:c7905ff5a35f : 90 + 0xc]
+>12:54:56     INFO -      eip = 0xb3a62ccf   esp = 0xbff28f10   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  31  libxul.so!_fini + 0x1baaa47
+>12:54:56     INFO -      eip = 0xb61b7800   esp = 0xbff28f14   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  32  libxul.so!nsContentTreeOwner::Release() [nsContentTreeOwner.cpp:c7905ff5a35f : 100 + 0x5]
+>12:54:56     INFO -      eip = 0xb3a62d13   esp = 0xbff28f20   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  33  libxul.so!_fini + 0x1baaa47
+>12:54:56     INFO -      eip = 0xb61b7800   esp = 0xbff28f30   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  34  libxul.so!nsXULWindow::Destroy() [nsXULWindow.cpp:c7905ff5a35f : 504 + 0x7]
+>12:54:56     INFO -      eip = 0xb3a6da52   esp = 0xbff28f40   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  35  libnspr4.so!_fini + 0xeac3
+>12:54:56     INFO -      eip = 0xb749f54c   esp = 0xbff28f54   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  36  libxul.so!_fini + 0x1baaa47
+>12:54:56     INFO -      eip = 0xb61b7800   esp = 0xbff28f74   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  37  libxul.so!_fini + 0x1baaa47
+>12:54:56     INFO -      eip = 0xb61b7800   esp = 0xbff28f90   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  38  libxul.so!nsWebShellWindow::Destroy() [nsWebShellWindow.cpp:c7905ff5a35f : 779 + 0x7]
+>12:54:56     INFO -      eip = 0xb3a6db8b   esp = 0xbff28fa0   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  39  libxul.so!_fini + 0x1baaa47
+>12:54:56     INFO -      eip = 0xb61b7800   esp = 0xbff28fd4   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  40  libxul.so!nsChromeTreeOwner::Destroy() [nsChromeTreeOwner.cpp:c7905ff5a35f : 355 + 0x8]
+>12:54:56     INFO -      eip = 0xb3a61aad   esp = 0xbff28fe0   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  41  libxul.so!nsGlobalWindow::ReallyCloseWindow() [nsGlobalWindow.cpp:c7905ff5a35f : 8917 + 0x8]
+>12:54:56     INFO -      eip = 0xb2b9440b   esp = 0xbff29000   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  42  libxul.so!_fini + 0x1baaa47
+>12:54:56     INFO -      eip = 0xb61b7800   esp = 0xbff29020   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  43  libxul.so!_fini + 0x21a14
+>12:54:56     INFO -      eip = 0xb462e7cd   esp = 0xbff2904c   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  44  libxul.so!_fini + 0x1baaa47
+>12:54:56     INFO -      eip = 0xb61b7800   esp = 0xbff29050   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  45  libxul.so!nsCloseEvent::Run() [nsGlobalWindow.cpp:c7905ff5a35f : 8691 + 0x8]
+>12:54:56     INFO -      eip = 0xb2b9497e   esp = 0xbff29060   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  46  libxul.so!_fini + 0x1baaa47
+>12:54:56     INFO -      eip = 0xb61b7800   esp = 0xbff29070   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  47  libxul.so!nsThread::ProcessNextEvent(bool, bool*) [nsThread.cpp:c7905ff5a35f : 867 + 0x5]
+>12:54:56     INFO -      eip = 0xb24ba0b9   esp = 0xbff29080   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  48  libxul.so!_fini + 0x19e9b48
+>12:54:56     INFO -      eip = 0xb5ff6901   esp = 0xbff290a4   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  49  libnspr4.so!_fini + 0xeac3
+>12:54:56     INFO -      eip = 0xb749f54c   esp = 0xbff290b4   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  50  libnspr4.so!PR_Unlock [ptsynch.c:c7905ff5a35f : 209 + 0x7]
+>12:54:56     INFO -      eip = 0xb7484fe8   esp = 0xbff290c0   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  51  libxul.so!_fini + 0x1baaa47
+>12:54:56     INFO -      eip = 0xb61b7800   esp = 0xbff290d4   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  52  libxul.so!nsThread::ProcessNextEvent(bool, bool*) [nsThread.cpp:c7905ff5a35f : 753 + 0xa]
+>12:54:56     INFO -      eip = 0xb24b9d7f   esp = 0xbff290dc   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  53  libxul.so!_fini + 0x1baaa47
+>12:54:56     INFO -      eip = 0xb61b7800   esp = 0xbff290e0   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  54  libxul.so!NS_ProcessNextEvent(nsIThread*, bool) [nsThreadUtils.cpp:c7905ff5a35f : 277 + 0xf]
+>12:54:56     INFO -      eip = 0xb24d4f1c   esp = 0xbff290f0   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  55  libxul.so!nsThread::Shutdown() [nsThread.cpp:c7905ff5a35f : 665 + 0xb]
+>12:54:56     INFO -      eip = 0xb24bdb6c   esp = 0xbff29130   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  56  libnspr4.so!PR_CallOnceWithArg [prinit.c:c7905ff5a35f : 800 + 0xf]
+>12:54:56     INFO -      eip = 0xb747b600   esp = 0xbff29160   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  57  libxul.so!nsThread::Shutdown() [nsThread.cpp:c7905ff5a35f : 625 + 0xa]
+>12:54:56     INFO -      eip = 0xb24bda5d   esp = 0xbff2916c   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  58  libxul.so!_fini + 0x1baaa47
+>12:54:56     INFO -      eip = 0xb61b7800   esp = 0xbff29170   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  59  libxul.so!_fini + 0x19bd597
+>12:54:56     INFO -      eip = 0xb5fca350   esp = 0xbff29174   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  60  libxul.so!nsRunnableMethodImpl<nsresult (nsIThread::*)(), true>::Run() [nsThreadUtils.h:c7905ff5a35f : 621 + 0x12]
+>12:54:56     INFO -      eip = 0xb24b4c0c   esp = 0xbff29180   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  61  libxul.so!_fini + 0x1baaa47
+>12:54:56     INFO -      eip = 0xb61b7800   esp = 0xbff29190   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  62  libxul.so!nsThread::ProcessNextEvent(bool, bool*) [nsThread.cpp:c7905ff5a35f : 867 + 0x5]
+>12:54:56     INFO -      eip = 0xb24ba0b9   esp = 0xbff291a0   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  63  libxul.so!nsComponentManagerImpl::CreateInstance(nsID const&, nsISupports*, nsID const&, void**) [nsComponentManager.cpp:c7905ff5a35f : 1098 + 0x5]
+>12:54:56     INFO -      eip = 0xb24afed2   esp = 0xbff291bc   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  64  libxul.so!_fini + 0x1baaa48
+>12:54:56     INFO -      eip = 0xb61b7801   esp = 0xbff291c4   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  65  libxul.so!_fini + 0x1e74b
+>12:54:56     INFO -      eip = 0xb462b504   esp = 0xbff291e0   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  66  libxul.so!TimerThread::RemoveTimer(nsTimerImpl*) [TimerThread.cpp:c7905ff5a35f : 433 + 0xb]
+>12:54:56     INFO -      eip = 0xb24bba10   esp = 0xbff291f0   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  67  libxul.so!nsThread::ProcessNextEvent(bool, bool*) [nsThread.cpp:c7905ff5a35f : 753 + 0xa]
+>12:54:56     INFO -      eip = 0xb24b9d7f   esp = 0xbff291fc   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  68  libxul.so!_fini + 0x1baaa47
+>12:54:56     INFO -      eip = 0xb61b7800   esp = 0xbff29200   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  69  libxul.so!NS_ProcessNextEvent(nsIThread*, bool) [nsThreadUtils.cpp:c7905ff5a35f : 277 + 0xf]
+>12:54:56     INFO -      eip = 0xb24d4f1c   esp = 0xbff29210   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  70  libxul.so!_fini + 0x1baaa47
+>12:54:56     INFO -      eip = 0xb61b7800   esp = 0xbff29244   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  71  libxul.so!mozilla::ipc::MessagePump::Run(base::MessagePump::Delegate*) [MessagePump.cpp:c7905ff5a35f : 95 + 0xb]
+>12:54:56     INFO -      eip = 0xb26b6a54   esp = 0xbff29250   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  72  libpthread-2.15.so + 0xb87e
+>12:54:56     INFO -      eip = 0xb779987f   esp = 0xbff29264   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  73  libnspr4.so!_fini + 0xeac3
+>12:54:56     INFO -      eip = 0xb749f54c   esp = 0xbff29268   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  74  libxul.so!_fini + 0x19bf2af
+>12:54:56     INFO -      eip = 0xb5fcc068   esp = 0xbff29274   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  75  libxul.so!_fini + 0x1bbc447
+>12:54:56     INFO -      eip = 0xb61c9200   esp = 0xbff29278   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  76  libnspr4.so!PR_GetCurrentThread [ptthread.c:c7905ff5a35f : 646 + 0x8]
+>12:54:56     INFO -      eip = 0xb748bde9   esp = 0xbff29284   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  77  libnspr4.so!_fini + 0xeac3
+>12:54:56     INFO -      eip = 0xb749f54c   esp = 0xbff29288   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  78  libxul.so!mozilla::ipc::MessagePump::Run(base::MessagePump::Delegate*) [MessagePump.cpp:c7905ff5a35f : 79 + 0xa]
+>12:54:56     INFO -      eip = 0xb26b69f9   esp = 0xbff2928c   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  79  libxul.so!_fini + 0x1baaa47
+>12:54:56     INFO -      eip = 0xb61b7800   esp = 0xbff29290   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  80  libxul.so!MessageLoop::RunInternal() [message_loop.cc:c7905ff5a35f : 234 + 0x5]
+>12:54:56     INFO -      eip = 0xb26a26ec   esp = 0xbff292a0   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  81  libpthread-2.15.so + 0x8cbe
+>12:54:56     INFO -      eip = 0xb7796cbf   esp = 0xbff292b0   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  82  libpthread-2.15.so + 0xb87e
+>12:54:56     INFO -      eip = 0xb779987f   esp = 0xbff292b4   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  83  libxul.so!_fini + 0x1baaa47
+>12:54:56     INFO -      eip = 0xb61b7800   esp = 0xbff292b8   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  84  libxul.so!MessageLoop::Run() [message_loop.cc:c7905ff5a35f : 227 + 0x7]
+>12:54:56     INFO -      eip = 0xb26a281a   esp = 0xbff292c0   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  85  libxul.so!_fini + 0x1baaa47
+>12:54:56     INFO -      eip = 0xb61b7800   esp = 0xbff292d0   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  86  libxul.so!_fini + 0x1baaa47
+>12:54:56     INFO -      eip = 0xb61b7800   esp = 0xbff292d8   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  87  libxul.so!nsBaseAppShell::Run() [nsBaseAppShell.cpp:c7905ff5a35f : 165 + 0xd]
+>12:54:56     INFO -      eip = 0xb3616659   esp = 0xbff292f0   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  88  libxul.so!nsBaseAppShell::Run() [nsBaseAppShell.cpp:c7905ff5a35f : 165 + 0x4]
+>12:54:56     INFO -      eip = 0xb3616650   esp = 0xbff29300   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  89  libxul.so!nsAppStartup::Run() [nsAppStartup.cpp:c7905ff5a35f : 280 + 0x5]
+>12:54:56     INFO -      eip = 0xb3bda523   esp = 0xbff29310   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -  90  libxul.so!EnumValidate [nsCommandLine.cpp:c7905ff5a35f : 590 + 0x1]
+>12:54:56     INFO -      eip = 0xb3b3da3e   esp = 0xbff29318   ebp = 0x00000015
+>12:54:56     INFO -      Found by: stack scanning
+
+Compositor thread stack trace:
+
+>12:54:56     INFO -  Thread 26
+>12:54:56     INFO -   0  linux-gate.so + 0x424
+>12:54:56     INFO -      eip = 0xb77be424   esp = 0xa476bb1c   ebp = 0x00000004   ebx = 0x00000000
+>12:54:56     INFO -      esi = 0x95601000   edi = 0x00000000   eax = 0x00000000   ecx = 0x9aa300a4
+>12:54:56     INFO -      edx = 0x00000001   efl = 0x00200293
+>12:54:56     INFO -      Found by: given as instruction pointer in context
+>12:54:56     INFO -   1  libc-2.15.so + 0xc583b
+>12:54:56     INFO -      eip = 0xb756a83c   esp = 0xa476bb2c   ebp = 0x00000004
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -   2  libGL.so.310.32 + 0x36fd2
+>12:54:56     INFO -      eip = 0x99236fd3   esp = 0xa476bb30   ebp = 0x00000004
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -   3  libnvidia-glcore.so.310.32 + 0x1302b7d
+>12:54:56     INFO -      eip = 0x96ae1b7e   esp = 0xa476bb70   ebp = 0x00000004
+>12:54:56     INFO -      Found by: stack scanning
+>12:54:56     INFO -   4  libxul.so!mozilla::layers::CompositorOGL::GetShaderProgramFor(mozilla::layers::ShaderConfigOGL const&)[CompositorOGL.cpp:c7905ff5a35f : 841 + 0x4]
+>12:54:56     INFO -      eip = 0xb2ad5ca5   esp = 0xa476bb80   ebp = 0x00000004
+>12:54:56     INFO -      Found by: stack scanning

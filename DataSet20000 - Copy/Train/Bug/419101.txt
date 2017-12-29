@@ -1,0 +1,67 @@
+[FF3] Exception if parent of <observes> have observed attribute
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; ru; rv:1.8.1.11) Gecko/20071127 Firefox/2.0.0.11 WebMoney Advisor
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; ru; rv:1.9b3) Gecko/2008020514 Firefox/3.0b3
+
+Following code in <toolbarbutton> element with part 'atr1="123"' makes exception (see Error Console) when customization starts. And no exception when part 'atr1="123"' not present.
+
+For more information see 'Steps to Reproduce'
+
+Code:
+<?xml version="1.0"?>
+
+<overlay id="example_overlay" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+	<toolbarpalette id="BrowserToolbarPalette">
+		<toolbarbutton atr1="123">
+			<observes element="example_broadcaster1" attribute="atr1" />
+		</toolbarbutton>
+	</toolbarpalette>
+
+	<toolbox id="navigator-toolbox">
+		<broadcasterset id="example_broadcaster_set">
+			<broadcaster id="example_broadcaster1" atr1="" />
+		</broadcasterset>
+	</toolbox>
+	
+</overlay>
+
+Exception 1:
+Illegal operation on WrappedNative prototype object = NS_ERROR_XPC_BAD_OP_ON_WN_PROTO
+chrome://global/content/customizeToolbar.js
+446
+
+Exception 2:
+UpdateUrlbarSearchSplitterState is not defined
+chrome://browser/content/browser.js
+2767
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Install attached *.xpi extension
+2. Restart Firefox
+3. Open Error Console
+4. Right click on toolbar area and open customization window.
+5. Verify: Exception 1 occurred in Error Console
+6. Close browser window
+7. Verify: Exception 2 occurred in Error Console
+Actual Results:  
+User have no access to any elements within <toolbarpalette> from current Firefox Extension.
+
+Expected Results:  
+No exception appear. User have access to any customizable elements from current Firefox Extension (elements within <toolbarpalette>).
+
+about:buildconfig
+
+Build platform
+target
+i686-pc-mingw32
+
+Build tools
+Compiler 	Version 	Compiler flags
+cl 	14.00.50727 	-GL -TC -nologo -W3 -Gy -Fd$(PDBFILE)
+cl 	14.00.50727 	-GR- -GL -TP -nologo -Zc:wchar_t- -W3 -Gy -Fd$(PDBFILE)
+
+Configure arguments
+--enable-application=browser --enable-update-channel=beta --enable-optimize --disable-debug --disable-tests --enable-update-packaging --enable-official-branding

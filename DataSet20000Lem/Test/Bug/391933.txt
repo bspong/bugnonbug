@@ -1,0 +1,84 @@
+Memory leak in firefox on page with big number of image
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.6) Gecko/20070809 Fedora/2.0.0.6-2.fc8 Firefox/2.0.0.6
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.6) Gecko/20070809 Fedora/2.0.0.6-2.fc8 Firefox/2.0.0.6
+
+Huge memory used by X server process when firefox open several page with 100+
+image inside (I used locally created page with photo collection). Even after
+firefox closed tab with this pages, X server still used ton of memory. Only
+after full termination of firefox, X server free memory.
+
+For example now X used 400Mb VIRT/167Mb RES of memory.
+
+Opened 3 page in tab each with ~100 of 1024x768 images.
+
+Got more memory used by X (862/535Mb):
+
+2150 root 20 0 862m 535m 8916 S 2 26.7 127:15.07 X
+
+Closed tab with that pages. The same result:
+
+2150 root 20 0 865m 539m 8916 R 6 26.9 127:16.86 X
+
+This is 100% memory leak.
+
+The only way to avoid swapping is full restart of firefox.
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1) Create 5 local html page with 100 image per page 1024x768 each.
+2) Note memory used by X process.
+3) Open all 5 page in firefox tabs.
+4) Note memory used by X process.
+5) Close firefix tabs.
+6) Note memory used by X process.
+7) Exit firefox.
+8) Note memory used by X process.
+Actual Results:
+Overswap/system down when continuous using of firefox.
+
+Expected Results:
+Firefox must free memory resources.
+
+Tested same page under Opera 9. No huge memory used when opened all page (i.e.
+Opera used different way to allocate X server resources?). Also X server
+memory's go lower after closing of Opera's tabs.
+
+Some comments:
+
+1) Not only X server memory problem. Firefox process leak too:
+
+189 VIRT/63 RES before open page
+
+328 VIRT/204 RES after open page and the same after closing tab with pages!
+
+
+2) This is the browser cache keeping thing in memory so it is very quick if you
+want to go back to the same page you once visited. If you don't want this, you
+can disable the feature. There are several preferences. Load up about:config
+and search for 'cache' and you can tweak to your liking.
+
+3) This is bad idea to keep cache for closed tabs!!! Most of user never use "Undo
+closed tab" feature. So actually this is memory leak which don't allow continuo
+using of firefox when surfing big pages.
+
+So best solution will be cleaning cache for closed tab. IMHO ;)
+
+-------------------------------------------------------------------------------
+4) This bug is *much* deeper.
+
+Have just disabled memory cache (browser.cache.memory.enable=false)
+
+firefox-bin process no more eats huge memory, it's ok
+
+But X process still have problem. I opened 20 page 100 image each, X grows to
+~800Mb RES/1200Mb VIRT memory used even after I closed all tab in browser!
+
+Maybe there is some tool to view X resource allocated by process?
+Seems firefox just not free some resources.
+-------------------------------------------------------------------------------
+
+Here is my original post to redhat bugzilla:
+https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=249947

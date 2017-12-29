@@ -1,0 +1,61 @@
+Simple string-doubling loop cause Firefox 1.0-3.0b2 to take up 100% CPU and 100% RAM
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.8.0.9) Gecko/20061206 Firefox/1.5.0.9
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.8.0.9) Gecko/20061206 Firefox/1.5.0.9
+
+While writing two Javascript function for a project (and testing them out) I experienced a weird bug that constantly cause Firefox to consume 100% CPU usage a well a 100% RAM usage.
+
+Take the snippet from below, create a html file from it, move your mouse over the submit button (the form field should become colored red), then switch the focus from the first form field to the second - your browser should freeze now (or at least take up your RAM).
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Take the snippet from below
+2. create a html file from it
+3. move your mouse over the submit button
+4. switch the focus from the first form field to the second
+Actual Results:
+100% CPU
+100% RAM taken up
+
+Expected Results:
+Not hang
+
+<script language="JavaScript" type="text/JavaScript">
+function checkFilled(evt) {
+our = "";
+for (var tmp in evt) { our = our + "evt." + our + ": " + evt[tmp] + "<br>"; }
+document.getElementById('alertNotice').innerHTML = our;
+return false;
+}
+
+function checkEntries() {
+f = document.testy.elements;
+len = f.length;
+
+var complete = true;
+for (var i = 0; i < len; i++) {
+var selem = f[i];
+var tmptyp = selem.type;
+if (tmptyp == "text" && selem.value.length == 0) {
+complete = false;
+selem.style.borderColor = "#FF0000";
+selem.onblur = checkFilled;
+}
+else if (selem.style.borderColor == "#FF0000") selem.style.borderColor = "";
+}
+
+if (!complete) {
+document.getElementById('alertNotice').innerHTML = '<?=say("fill_all_fields")?>';
+return false;
+}
+document.testy.submit();
+}
+</script>
+
+<form name="testy" method="post" action="index.php" class="form_einzelplatz_testbericht">
+
+<input type="text" name="xyz" value="">
+<script language=\"JavaScript\" type=\"text/JavaScript\">document.getElementsByName("xyz")[0].focus();</script>"
+<input type="text" name="abc" value="">
+<input type="hidden" name="onetwothree" value="">
+<input type="submit" name="Submit" value="submit" onClick="javascript:checkEntries(); return false;"> <span id="alertNotice">&nbsp;</span></form>

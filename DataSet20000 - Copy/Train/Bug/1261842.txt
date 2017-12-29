@@ -1,0 +1,19 @@
+Make initial browser remote sooner if we're defaulting to using remote tabs
+When a new browser window is opened (either just at start-up, or if the user does it by opening it from the parent, or if content opens a new window), the initial browser in the tabbrowser.xml binding is not remote.
+
+In the case of start-up, or the user has opened the window from the parent via something like Ctrl-N, this is fine - as soon as the browser navigates to a page that is remote-friendly, the remoteness will flip automatically.
+
+For windows that are opened from content, the new window is opened, and then ContentParent::RecvCreateWindow will call forceInitialBrowserRemote on the nsIXULBrowserWindow, which will force a remoteness flip on the initial browser before it unblocks the child (which is waiting on a sync message for an nsIDOMWindow to load content into).
+
+This forceInitialBrowserRemote technique has some advantages, but also some disadvantages.
+
+Advantages:
+* Because the initial browser is non-remote, we can access the content docshell, which is very useful for sizing the viewport based on what has been passed through window.open.
+
+Disadvantages:
+* A number of our testing frameworks (talos, marionette are two that I know of) have to jump through some hoops in order to ensure that the windows that they create are remote.
+* Forcing the initial browser to flip remoteness destroys the initially non-remote DocShell, which kicks off some async work to notify others that a window has been destroyed, and also "nukes JS compartment wrappers". This takes time, and is slowing down our getting to present the content to the user.
+
+From my experimentation, it doesn't look like trying to update the remoteness of the browser inside the tabbrowser.xml <constructor> is soon enough - by the time the constructor is run, the initBrowser's docShell has already been created. We need to do the remoteness flip earlier, probably just as soon as the XUL DOM has been loaded.
+
+I have confirmed that this works, and that we can avoid the original docShell destruction costs. There is, however, the problem of sizing the window; because the content docShell is no longer accessible by nsWindowWatcher, it computes size differently, meaning that that window.open calls that set a particular size are going to have their heights be incorrect. We'll need to do some work there to calculate the height correctly in this case.

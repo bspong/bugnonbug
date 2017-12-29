@@ -1,0 +1,54 @@
+Mouse-selecting text of greater width than the input of a form doesn't select text correctly.
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.0; rv:1.7.3) Gecko/20040913 Firefox/0.10
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.0; rv:1.7.3) Gecko/20040913 Firefox/0.10
+
+I have tested this on Firefox 1.0PR on my Win2k machine as well as 0.93 on a
+co-worker's WinXP machine.  Both experienced the glitch.
+
+There are a few conditions which must exist for the bug to occur:
+1. You must be looking at an HTML form with either an <input type="text"> or a
+<textarea>.
+2. There must be a wide enough amount of text that it is not all displayed
+concurrently.
+3. You must be attempting to select the text with the mouse, not the keyboard.
+4.(optional) The cursor should not be in the field you are testing before you
+attempt to select the text. (It *sometimes* works normally if the cursor starts
+out in the field, though very seldom.)
+
+Also, the strange behavior only occurs if you attempt to select text starting
+from before the first character or after the last character of a form's text
+input, and only if there is enough text that one would need to "scroll" or
+cursor horizontally to see all of it.
+
+Situation 1: Clicking into the input just before the first (leftmost) character
+and dragging the cursor to the right -- Firefox appears to jump the cursor about
+30 characters into the document and highlights text based on that position as
+the anchor.  It also will not scroll to the right end of the text input to
+select the text that is sitting out of visible range.
+
+Situation 2: Clicking into the input just after the last (rightmost) character
+and dragging to the left -- The highlighting of selected text will at first seem
+to work correctly.  However, Firefox will not scroll to the left to select all
+the text off screen, and when the mouse cursor leaves the text input, the
+text-cursor will jump back 30-ish characters just like the jump in situation 1
+above.
+
+Selecting from anywhere other than the very beginning or end of the text works
+absolutely correctly.  If the text fits on the screen such that scrolling to
+select everything is not necessary, there is no problem.
+
+Reproducible: Always
+Steps to Reproduce:
+1. Take any text input on an HTML form such as one on Bugzilla and place enough
+characters such that the text is longer than the width of the input and you must
+scroll to see it all.
+2. Attempt to select all the text in the input by click & dragging, starting
+from either the very beginning or very end.
+Actual Results:  
+Firefox will not scroll to select all the text, and it jumps the anchor position
+as detailed in the "Details".
+
+Expected Results:  
+I should be able to scroll back and forth to select all the text with the mouse, no?
+
+Workaround: Simply use the keyboard to select the text.

@@ -1,0 +1,41 @@
+When the browser attempt to load the HushMail.com Encryption Engine, it sliently crashes.
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.6b) Gecko/20031125 Firebird/0.7+ (daihard; XFT+GTK2; optimized for P4/SSE-2)
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.6b) Gecko/20031125 Firebird/0.7+ (daihard; XFT+GTK2; optimized for P4/SSE-2)
+
+HushMail.com us a Java-based Encryption Engine to encrypt and sign e-mail
+through it web-based interface. When you log into your HushMail account, the
+browser start the Java VM and load the engine. When I try to do this with this
+particular build, upon loading the encryption applet, the browser simply dies.
+This is on a glibc 2.3.2-82 system, with Java SDK version 1.4.2 and the
+appropriate plugin.
+
+I have experienced this problem on all nightlies past 20031103, optimized and
+unoptimized. I checked bug 225423, but that bug affected Windows nightlies and
+did not fix my problem.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Go to the enclosed URL.
+2. Log into HushMail with a valid HushMail account.
+3. Pass the cover page.
+4. Wait for the page to signal Firebird to load the Java VM and the encryption
+applet.
+5. The browser crash when the applet is loaded and the passphrase dialog appears.
+
+Actual Results:
+The browser silently crashed - no error message output on stderr, no pop-up
+dialogs, no nothing.
+
+Expected Results:
+It should have locked up while the Java encryption engine parsed the passphrase,
+and then unlocked and allowed access to the HushMail web interface.
+
+In build later than 20031103 but earlier than the current one, the browser
+would not even reach the passphrase dialog page; it would crash during the
+loading of the Java applet. In the referenced build it load the applet but
+crash immediately afterward. The strangest thing about this bug is that
+simpler Java applet are completely unaffected -- the ticker tape on the
+Transport for London web page at http://www.tfl.gov.uk/tfl load perfectly fine,
+albeit with some lag. I have been to Java-testing URLs a well and the test
+applet load every single time.

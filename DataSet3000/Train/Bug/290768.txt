@@ -1,0 +1,69 @@
+iframe does not render in a seperate thread as the main page
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; rv:1.7.3) Gecko/20041001 Firefox/0.10.1
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; rv:1.7.3) Gecko/20041001 Firefox/0.10.1
+
+In IE, if I have a page that has an iframe, the loading of the page is
+independent of the loading of the iframe i.e. the page loads regardless of
+whether the iframe loads or not. 
+
+I noticed that this is not the case with Firefox. The iframe loads at the same
+time as the page containing it. 
+
+Is this expected behavior?. I believe the iframe is just like a frame and like a
+regular frame it should load independently of the main page containing it.
+
+Reproducible: Always
+
+Steps to Reproduce:
+Create a wrapper.html page. Type the following in the wrapper page.
+
+<script>
+  function setStatus () {
+   document.getElementById("help").innerHTML = "&nbsp;";
+  }  
+
+  function setText (txt) {
+   document.getElementById("panel3").innerHTML = txt;
+  }  
+</script>
+
+<span id="help">&nbsp;</span><br>
+<div id="panel3"></div>
+
+
+<script>
+  document.getElementById("help").innerHTML = "Loading. Please wait...";
+</script>
+
+<iframe style="display:none" id="loader" name="loader"
+src="lotofmarkup.html"></iframe>
+
+Create another file lotofmarkup.html. Type the following in that file
+
+<div>
+<!-- Add a table with 1000 rows here  -->
+</div>
+
+<script>
+parent.setStatus();
+parent.setText(document.getElementById("panel3").innerHTML)
+</script>
+
+
+
+
+
+The basic idea of this example is that when I load wrapper.html. It loads first
+and the iframe containing lotofmarkup.html loads independently of wrapper.html
+and upon a complete load it updates the status label on the wrapper.html 
+
+The above behavior happens in IE not in Firefox. In Firefox, wrapper.html does
+not load until lotofmarkup.html finishes loading.
+
+
+
+Actual Results:  
+See "Steps to Reproduce" to see a complete description
+
+Expected Results:  
+See "Steps to Reproduce" to see a complete description

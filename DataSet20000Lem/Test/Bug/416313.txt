@@ -1,0 +1,14 @@
+Define the identity of the visit_count column
+In moz_places we have a visit_count column, that *should* be used to have the count of valid visit (eg visit NOT IN (0,4))
+
+Problem there is that visit_count is not in synch with moz_historyvisits real count, and we don't clear visit_count on clear private data because we use it for frecency recalculation on idle.
+The same frecency recalculation can't rely on visit_count because it doe not contain all visits.
+So we can't rely on that value since it's not resetted, and that could be a privacy complain for some user (why is my visit_count not resetted on clear private data?) even if that's really affect those page that are bookmark or have some expire_never annotation.
+Moreover we also have query option maxVisits and minVisits that rely on visit_count, but again that is not always guaranteed to be in synch (we also have some glitch there since user expect it to contain all visits, but that's not true, see Bug 415716)
+Moreover we use visit_count to get fast most_visited query, but bookmark site always appear in the query even if unvisited (after a cpd).
+
+So what we should do is take a decision on the content of visit_count.
+We should state if it should contain all visit (also embedded) to be used in frecency calc and in maxVisits query.
+We should check that it is mantained in synch when we delete any visit (through trigger or by backend code).
+
+for frecency recalculation in idle i suggest moving to a different approach, if i'm not wrong now we are using visit count to see what frecency should be calculated before and we use -1 to identify a non valid frecency. We could instead set frecency = -visit_count, and reset visit_count = 0, then an invalid visit_count will be <0 while to decide on which frecency to rebuild first we could sort by frecency <0 ASC

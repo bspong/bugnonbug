@@ -1,0 +1,26 @@
+ServerSocket from js chrome code stops listening after wakeup from hibernation mode
+User-Agent:       Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.0; Trident/4.0; SLCC1; .NET CLR 2.0.50727; .NET CLR 3.5.21022; .NET CLR 3.5.30729; .NET CLR 1.1.4322; .NET CLR 3.0.30729)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 6.0; de; rv:1.9.1.3) Gecko/20090824 Firefox/3.5.3 (.NET CLR 3.5.30729)
+
+In an extension a server socket is opened on load:
+
+var serverSock = Components.classes["@mozilla.org/network/server-socket;1"].createInstance(Components.interfaces.nsIServerSocket);
+serverSock.init(port, true, -1);
+serverSock.asyncListen(listener);
+
+This socket accepts connections without a problem, but after returning from Windows hibernation mode it does not accept any more.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Create an extension that listens for connections on a port and let it listen.
+2. Make a TCP connection (e.g. using telnet) to that port and make some commmunication.
+3. Set computer in hibernation mode.
+4. Make a new connection - you'll get timeout.
+Actual Results:  
+You get a timeout for that connection request.
+
+Expected Results:  
+TCP Connection should be established.
+
+After restarting Firefox it works again.

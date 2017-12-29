@@ -1,0 +1,40 @@
+Create new sync telemetry ping type.
+Created attachment 8745856
+sync-telemetry.json
+
+We want to submit custom telemetry data for Sync health. This bug is for the client side work of this effort and encompasses defining the first cut of a json schema for the data, then collecting this data and submitting it as a new ping type. I'll open further bugs (so the pipeline ops team knows about the new ping type, and for redshift processing etc) once we have general agreement on the direction.
+
+I believe the back-end processing of this ping data will expect to validate the data against the defined schema - so I think we also need to perform this validation as part of client-side tests to have any hope of getting it right - bug 1249925 tracks that in general so I'm having that bug block this.
+
+I'm attaching a proposed JSON Schema for this work. At a high-level, each ping will include an array of "syncs", where each element is the info for a single sync - so no data is rolled-up between Syncs (ie, there's no concept like "count of successful syncs" - just an array of syncs, each one of which may have success or failure information). Each "sync" record has its own "engines" array, which lists information about every engine that synced. The expectation is that the reduction of these records into summary information will be done at the back-end.
+
+In later bugs we will look to extend this schema into collecting further "health" related stats, but this bug is just to get the ball rolling with a relatively minimal set of data for our initial dashboards.
+
+An example of this data is below. It shows a ping containing a single sync that started at the timestamp 12345467, took 560ms, was done on behalf of the Sync user with UID "abcdefg", has no failure (ie, it succeeded), and only Synced one engine, "bookmarks". The bookmarks engine took 500ms to sync, saw 100 incoming records, but only applied 50 of them, and 50 of them failed with 5 of them being new failures in this sync. It also attempted to upload 100 records, but the server reported 3 of them failed:
+
+{     
+  syncs: [{
+    when: 12345467,
+    took: 560,
+    uid: "abcdefg",
+    failureReason: null,
+    engines: [{
+      name: "bookmarks",
+      took: 500,
+      incoming: {
+        considered: 100,
+        applied: 50,
+        failed: 50,
+        failedNew: 5,
+      },
+      outgoing: [{
+        sent: 100,
+        failed: 3,
+      }],
+    }]
+  }],
+}
+
+Note that the attached schema is more JS than JSON - it has comments, doesn't include quotes around all property names, has trailing commas, etc. From my experiments some validators allow this while others do not. Allowing comments seems particularly useful - but ultimately this will probably depend on exactly what validator we choose to use in the front-end (which I assume itself depends on what is used on the back-end?). This schema is valid according to http://www.jsonschemavalidator.net/
+
+Georg, does this all look like it is the correct direction to take here? Does the schema look reasonable and looks like something we can start working from? (the schema is a WIP and requires further fleshing out, but it should convey the idea)

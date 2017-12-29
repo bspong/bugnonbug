@@ -1,0 +1,58 @@
+malloc_init deadlock
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.1b3pre) Gecko/20090107 firefox/3.01
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.1b3pre) Gecko/20090107 firefox/3.01
+
+malloc_init call malloc_ncpus which in turn call malloc_init trapping itself in malloc_mutex_lock. I see this on a Ubuntu 8.04 server but not on a Ubuntu 8.10 laptop, but there may be other differences. Here is a traceback:
+
+#0 malloc_init_hard ()
+at /var/dept/scratch/km/src/mozilla/memory/jemalloc/jemalloc.c:5383
+#1 0x08056c22 in malloc_init ()
+at /var/dept/scratch/km/src/mozilla/memory/jemalloc/jemalloc.c:5362
+#2 0x08057411 in calloc (num=1, size=20)
+at /var/dept/scratch/km/src/mozilla/memory/jemalloc/jemalloc.c:6098
+#3 0xb7c3332c in ?? () from /lib/tls/i686/cmov/libdl.so.2
+#4 0xb7c32d73 in dlsym () from /lib/tls/i686/cmov/libdl.so.2
+#5 0xb7efe97a in open (path=0x805800f "/proc/cpuinfo", oflag=0, mode=0)
+at libc_ut.c:97
+#6 0x08054388 in malloc_ncpus ()
+at /var/dept/scratch/km/src/mozilla/memory/jemalloc/jemalloc.c:5111
+#7 0x08055edf in malloc_init_hard ()
+at /var/dept/scratch/km/src/mozilla/memory/jemalloc/jemalloc.c:5415
+#8 0x08056c22 in malloc_init ()
+at /var/dept/scratch/km/src/mozilla/memory/jemalloc/jemalloc.c:5362
+#9 0x08057411 in calloc (num=1, size=20)
+at /var/dept/scratch/km/src/mozilla/memory/jemalloc/jemalloc.c:6098
+#10 0xb7c3332c in ?? () from /lib/tls/i686/cmov/libdl.so.2
+#11 0xb7c32b51 in dlopen () from /lib/tls/i686/cmov/libdl.so.2
+#12 0xb7c4b443 in pr_FindSymbolInProg (name=0x0)
+at /var/dept/scratch/km/src/mozilla/nsprpub/pr/src/malloc/prmem.c:130
+#13 0xb7c4b52f in _PR_InitZones ()
+---Type <return> to continue, or q <return> to quit---
+at /var/dept/scratch/km/src/mozilla/nsprpub/pr/src/malloc/prmem.c:186
+#14 0xb7c510c1 in _PR_InitStuff ()
+at /var/dept/scratch/km/src/mozilla/nsprpub/pr/src/misc/prinit.c:172
+#15 0xb7c62568 in PR_GetCurrentThread ()
+at /var/dept/scratch/km/src/mozilla/nsprpub/pr/src/pthreads/ptthread.c:646
+#16 0xb7ca134b in nsAutoOwningThread (this=0xb7d44974)
+at ../../../../dist/include/xpcom/nsISupportsImpl.h:70
+#17 0xb7d0d70f in __static_initialization_and_destruction_0 (
+__initialize_p=<value optimized out>, __priority=0)
+at /var/dept/scratch/km/src/mozilla/xpcom/base/nsTraceRefcntImpl.cpp:1287
+#18 0xb7d2b685 in __do_global_ctors_aux ()
+from ./objdir-ff/dist/bin/libxpcom_core.so
+#19 0xb7c9c7b0 in _init () from ./objdir-ff/dist/bin/libxpcom_core.so
+#20 0xb7f11990 in ?? () from /lib/ld-linux.so.2
+#21 0xb7f11ac3 in ?? () from /lib/ld-linux.so.2
+#22 0xb7f0484f in ?? () from /lib/ld-linux.so.2
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.
+2.
+3.
+
+
+
+This happens in both thunderbird 3.0bx and firefox 3.1bx using the same 1.91 mozilla.

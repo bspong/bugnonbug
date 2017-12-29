@@ -1,0 +1,79 @@
+Showing Facebook sidebar completely freezes Firefox (permanently, afaict)
+STR:
+
+* Enable Facebook messenger for Firefox
+* Click the "F" icon
+* Click "show sidebar"
+
+Result:
+
+* We open the sidebar window and load most of its content.  (There's a bit missing towards the bottom.)  Then Firefox freezes completely.
+
+Profile from perf (with the usual caveat that glandium tells me perf is unreliable due to elfhack, but this profile seems sane enough):
+
+> -  15.15%  firefox  libxul.so           [.] INT__moz_cairo_matrix_transform_point                                  
+>    - INT__moz_cairo_matrix_transform_point                                                                         
+>       - 79.00% gfxMatrix::TransformBounds(gfxRect const&) const                                                    
+>            mozilla::layers::TransformIntRect(nsIntRect&, gfxMatrix const&, nsIntRect (*)(gfxRect const&))          
+>            mozilla::layers::MarkLayersHidden(mozilla::layers::Layer*, nsIntRect const&, nsIntRect const&, nsIntRegi
+>            mozilla::layers::MarkLayersHidden(mozilla::layers::Layer*, nsIntRect const&, nsIntRect const&, nsIntRegi
+>          + mozilla::layers::MarkLayersHidden(mozilla::layers::Layer*, nsIntRect const&, nsIntRect const&, nsIntRegi
+>       + 21.00% mozilla::layers::TransformIntRect(nsIntRect&, gfxMatrix const&, nsIntRect (*)(gfxRect const&))      
+> -  10.04%  firefox  libxul.so           [.] mozilla::layers::MarkLayersHidden(mozilla::layers::Layer*, nsIntRect co
+>    - mozilla::layers::MarkLayersHidden(mozilla::layers::Layer*, nsIntRect const&, nsIntRect const&, nsIntRegion&, u
+>    - mozilla::layers::MarkLayersHidden(mozilla::layers::Layer*, nsIntRect const&, nsIntRect const&, nsIntRegion&, u
+>       - 91.32% mozilla::layers::MarkLayersHidden(mozilla::layers::Layer*, nsIntRect const&, nsIntRect const&, nsInt
+>          - 61.94% mozilla::layers::BasicLayerManager::EndTransactionInternal(void (*)(mozilla::layers::ThebesLayer*
+>               mozilla::layers::BasicShadowLayerManager::EndTransaction(void (*)(mozilla::layers::ThebesLayer*, gfxC
+>               nsDisplayList::PaintForFrame(nsDisplayListBuilder*, nsRenderingContext*, nsIFrame*, unsigned int) con
+>               nsDisplayList::PaintRoot(nsDisplayListBuilder*, nsRenderingContext*, unsigned int) const             
+>               nsLayoutUtils::PaintFrame(nsRenderingContext*, nsIFrame*, nsRegion const&, unsigned int, unsigned int
+>               PresShell::Paint(nsIView*, nsRegion const&, nsIPresShell::PaintType, bool)                           
+>               nsViewManager::ProcessPendingUpdatesForView(nsView*, bool)                                           
+>               nsViewManager::ProcessPendingUpdates()                                                               
+>               nsRefreshDriver::Notify(nsITimer*)                                                                   
+>               nsTimerImpl::Fire()                                                                                  
+>               nsTimerEvent::Run()                                                                                  
+>               nsThread::ProcessNextEvent(bool, bool*)                                                              
+>               NS_ProcessNextEvent_P(nsIThread*, bool)                                                              
+>               mozilla::ipc::MessagePump::Run(base::MessagePump::Delegate*)                                         
+>               MessageLoop::Run()                                                                                   
+>               nsBaseAppShell::Run()                                                                                
+>               nsAppStartup::Run()                                                                                  
+>               XREMain::XRE_mainRun()                                                                               
+>               XREMain::XRE_main(int, char**, nsXREAppData const*)                                                  
+>               XRE_main                                                                                             
+>               main                                                                                                 
+>               __libc_start_main                                                                                    
+>          + 38.06% mozilla::layers::MarkLayersHidden(mozilla::layers::Layer*, nsIntRect const&, nsIntRect const&, ns
+>       + 8.68% mozilla::layers::BasicLayerManager::EndTransactionInternal(void (*)(mozilla::layers::ThebesLayer*, gf
+> -   8.06%  firefox  libxul.so           [.] gfxMatrix::TransformBounds(gfxRect const&) const                       
+>    - gfxMatrix::TransformBounds(gfxRect const&) const                                                              
+>       - 93.14% mozilla::layers::TransformIntRect(nsIntRect&, gfxMatrix const&, nsIntRect (*)(gfxRect const&))      
+>            mozilla::layers::MarkLayersHidden(mozilla::layers::Layer*, nsIntRect const&, nsIntRect const&, nsIntRegi
+>            mozilla::layers::MarkLayersHidden(mozilla::layers::Layer*, nsIntRect const&, nsIntRect const&, nsIntRegi
+>          - mozilla::layers::MarkLayersHidden(mozilla::layers::Layer*, nsIntRect const&, nsIntRect const&, nsIntRegi
+>             - 54.94% mozilla::layers::BasicLayerManager::EndTransactionInternal(void (*)(mozilla::layers::ThebesLay
+>                  mozilla::layers::BasicShadowLayerManager::EndTransaction(void (*)(mozilla::layers::ThebesLayer*, g
+>                  nsDisplayList::PaintForFrame(nsDisplayListBuilder*, nsRenderingContext*, nsIFrame*, unsigned int) 
+>                  nsDisplayList::PaintRoot(nsDisplayListBuilder*, nsRenderingContext*, unsigned int) const          
+>                  nsLayoutUtils::PaintFrame(nsRenderingContext*, nsIFrame*, nsRegion const&, unsigned int, unsigned 
+>                  PresShell::Paint(nsIView*, nsRegion const&, nsIPresShell::PaintType, bool)                        
+>                  nsViewManager::ProcessPendingUpdatesForView(nsView*, bool)                                        
+>                  nsViewManager::ProcessPendingUpdates()                                                            
+>                  nsRefreshDriver::Notify(nsITimer*)                                                                
+>                  nsTimerImpl::Fire()                                                                               
+>                  nsTimerEvent::Run()                                                                               
+>                  nsThread::ProcessNextEvent(bool, bool*)                                                           
+>                  NS_ProcessNextEvent_P(nsIThread*, bool)                                                           
+>                  mozilla::ipc::MessagePump::Run(base::MessagePump::Delegate*)                                      
+>                  MessageLoop::Run()                                                                                
+>                  nsBaseAppShell::Run()                                                                             
+>                  nsAppStartup::Run()                                                                               
+>                  XREMain::XRE_mainRun()                                                                            
+>                  XREMain::XRE_main(int, char**, nsXREAppData const*)                                               
+>                  XRE_main                                                                                          
+>                  main                                                                                              
+>                  __libc_start_main                                                                                 
+>             + 45.06% mozilla::layers::MarkLayersHidden(mozilla::layers::Layer*, nsIntRect const&, nsIntRect const&,
+>       + 6.86% mozilla::layers::MarkLayersHidden(mozilla::layers::Layer*, nsIntRect const&, nsIntRect const&, nsIntR

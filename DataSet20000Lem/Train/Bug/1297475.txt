@@ -1,0 +1,12 @@
+Provide a way for system add-on to add handler for nsIContentPermissionRequests
+nsContentPermissionHelper.cpp and nsIContentPermissionRequest exist a a way for platform to request permission from the user to access various devices.
+
+nsIContentPermissionRequest isn't used by everybody. For example, WebRTC us their own home-brew permission mechanism, specifically because they have more sophisticated demand from the user when they request permission (they need to know which device(s) the user want to allow the site to access).
+
+The only two permission type that still use nsIContentPermissionRequest are the geolocation permission prompt and desktop permissions.
+
+Bug 1292639 need to request the user's permission to open a server. Bug 1289974 need to request the user's permission to present content on a nearby known device.
+
+Both of those bug are related to UI that is currently being developed a system add-ons.
+
+Instead of forcing those system add-on devs to modify the nsIContentPermissionPrompt inside nsBrowserGlue.js (and the Fennec equivalent), I suggest we alter nsIContentPermissionPrompt so that handler can be set (and unset) dynamically. This way, the permission prompting logic for, example, FlyWeb, can stay strictly within the FlyWeb system add-on. Same go for Presentation API.

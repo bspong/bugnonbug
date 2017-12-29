@@ -1,0 +1,47 @@
+Uses a lot of "Shmem" memory on heavy site
+Created attachment 571444
+About:memory after Firefox start before page loading
+
+User Agent: Mozilla/5.0 (X11; Linux i686; rv:7.0.1) Gecko/20100101 Firefox/7.0.1
+Build ID: 20110930100559
+
+Steps to reproduce:
+
+System:
+Linux xxxxxx 3.0-ARCH #1 SMP PREEMPT Wed Oct 19 12:14:48 UTC 2011 i686 Intel(R) Atom(TM) CPU N270 @ 1.60GHz GenuineIntel GNU/Linux
+
+Firefox:
+-> ./firefox -v
+Mozilla Firefox 9.0a2
+
+*New Profile*
+
+I scrolled through this URL: https://docs.google.com/viewer?a=v&q=cache:nPvWr0Lm-iQJ:www.redhat.com/promo/summit/2008/downloads/pdf/Wednesday_1015am_John_Shakshober_and_Larry_Woodman_Decoding_the_Code.pdf+&hl=de&pid=bl&srcid=ADGEESgSJ8YIme93hrZGWt5caUKaCqJTFkcKkM1yy4CfyVyABTP-MkYy4Bpjvae4neIJEYyvy6qkLA9yG0F3uTpPI7h7YduOAq3WQI9qde1BtQjMuyxxb4Tre2-L_nFiusjMX7x5--I1&sig=AHIEtbTbm9JLlWrnWEFGkt85kkCSyc3pXQ&pli=1
+
+
+
+Actual results:
+
+"Shmem" in /proc/meminfo went through the roof (70 -> 570 MB) and "Cached" too. About:memory doe not reflect this.
+
+Before (in MB):
+Cached: 769
+Active(file): 205
+Inactive(file): 554
+SwapFree: 486
+Shmem: 77
+
+After (in MB)
+Cached: 1278
+Active(file): 206
+Inactive(file): 560
+SwapFree: 486
+Shmem: 579
+
+Command for displaying: cat /proc/meminfo|egrep 'SwapFree|Active\(file\)|Inactive\(file\)|Shmem|^Cached|MemFree' | awk '{printf \"%-15s %4d\n\",$1,$2/1024}'
+
+
+
+Expected results:
+
+Shmem should stay low especially since it account towards the "Cached" type of memory under Linux. People expect that "Cached" eventually get evicted when memory pressure is high but this is not the case here. Actually this mean just 500 MB more memory consumed by Firefox.

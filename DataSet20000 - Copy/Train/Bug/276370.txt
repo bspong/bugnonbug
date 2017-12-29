@@ -1,0 +1,71 @@
+crash when changing style.left and setting innerHTML of div containing object in table with crash recovery or sessionsaver extension [@ nsLineBox::IsEmpty ]
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.5) Gecko/20041107 Firefox/1.0
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.5) Gecko/20041107 Firefox/1.0
+
+The code below crashes Firefox if the crash recovery extension is installed (and
+perhaps other Gecko-based apps, I haven't got any others to test with)
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Install the Crash Recovery 0.4.2 extension by zeniko from
+http://forums.mozillazine.org/viewtopic.php?t=164513
+(http://www.haslo.ch/zeniko/software/crashrecovery.xpi)
+
+2. Go to the testcase I uploaded at http://jomel.freeprohost.com/crash.html
+
+The source code for it is:
+
+<a href="javascript:void(0);" onclick="go();">If you click this twice, Firefox
+will crash.</a>
+<div id="_div"></div>
+<script type="text/javascript">
+var _div=document.getElementById("_div");
+function go(){
+	_div.style.left='0px';
+	_div.style.left='1px';
+	_div.innerHTML='<table><tr><td><object data="about:blank" type="text/html"
+/></td></tr></table>';
+}
+</script>
+Actual Results:  
+Browser crashed.
+
+Expected Results:  
+Not crashed :)
+
+1. Talkback crash id: TB2805819W
+
+2. Crash info: (more in attachment)
+AppName: firefox.exe	 AppVer: 1.0.0.0	 ModName: firefox.exe
+ModVer: 1.0.0.0	 Offset: 002cb05b
+
+3. You can also add a setTimeout("go();",0); to the end of go() and then it will
+crash with one click only.
+adding go(); to the end of go() doesn't make it crash with one click though.
+
+4. This can be made to crash the browser without user interaction, e.g. so links
+to a page with the code from another app will crash the browser.
+Here's the code to crash on page load (not attaching as a testcase in case
+people click it by accident, and it's using the same bug as the one I attached):
+<html>
+<body onload="go();">
+<div id="_div"></div>
+<script type="text/javascript">
+var _div=document.getElementById("_div");
+function go(){
+	_div.style.left='0px';
+	_div.style.left='1px';
+	_div.innerHTML='<table><tr><td><object data="about:blank" type="text/html"
+/></td></tr></table>';
+	setTimeout("go();",0);
+}
+</script>
+</body>
+</html>
+
+5. The "_div.style.left='1px';" line is optional the second time the method
+executes, but must be run the first time for there to be a crash
+
+6. All of the code within the go() method seems necessary except
+'data="about:blank"'.

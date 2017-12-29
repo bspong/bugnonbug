@@ -1,0 +1,77 @@
+mutation.oldValue does not hold old value when attribute is removed
+User Agent: Mozilla/5.0 (Windows NT 5.1; rv:26.0) Gecko/20100101 Firefox/26.0 (Beta/Release)
+Build ID: 20131205075310
+
+Steps to reproduce:
+
+I attached a mutation observer to the findbar (xul), when the attribute hidden is added it holds proper oldValue of null. However when hidden attribute is removed, mutation.oldValue does not hold the old value which was true
+
+here is the code to run from scratchpad:
+
+function disconMObs() { //run this to undo the changes
+  for (var m=0; m<mObservers.length; m++) {
+    if (mObservers[m].win == domWindow) {
+        mObservers[m].obs.disconnect()
+    }
+  }
+}
+
+if (!mObservers) {
+var mObservers = []; //a new observer per window //holds [{win: window, obs: observer}
+var mObserverConfig = { attributes: true };
+}
+
+  var browserEnumerator = Services.wm.getEnumerator("navigator:browser");
+  while (browserEnumerator.hasMoreElements()) {
+    var browserWin = browserEnumerator.getNext();
+    var tabbrowser = browserWin.gBrowser;
+    var numTabs = tabbrowser.browsers.length;
+    var domWindow = browserWin.QueryInterface(Ci.nsIDOMWindow);
+    
+    for (var index = 0; index < numTabs; index++) {
+      //var currentBrowser = tabbrowser.getBrowserAtIndex(index);
+      var aTab = tabbrowser.tabContainer.childNodes[index];
+      var findbar = aTab._findBar;
+      if(!findbar) {
+        findbar = tabbrowser.getFindBar(aTab);
+      }
+      
+      var obsForWinFound = false;
+      for (var m=0; m<mObservers.length; m++) {
+        if (mObservers[m].win == domWindow) {
+            mObservers[m].obs.observe(findbar, mObserverConfig);
+            obsForWinFound = true;
+            break;
+        }
+      }
+      
+      if (!obsForWinFound) {
+        mObservers.push({
+            win: domWindow,
+            obs: new domWindow.MutationObserver(function(mutations) {
+                     mutations.forEach(function(mutation) {
+                        var attributeName = mutation.attributeName;
+                        if (attributeName == 'hidden') {
+                            var oldValue = mutation.oldValue;
+                            alert(attributeName + ' changed to ' + mutation.target.getAttribute('hidden'));
+                        }
+                     });    
+                 })
+        });
+        mObservers[mObservers.length-1].obs.observe(findbar, mObserverConfig);
+      }
+      break;
+    }
+  }
+
+
+
+
+Actual results:
+
+when attribute is removed it woudl show that mutaiton.oldValue holds null
+
+
+Expected results:
+
+mutation.oldValue should have held true

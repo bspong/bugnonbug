@@ -1,0 +1,38 @@
+"Auto-detect proxy settings" and the autodetected proxy becomes unavailable
+User-Agent: Mozilla/5.0 (X11; U; Linux ppc; en-US; rv:1.7.12) Gecko/20051002 Firefox/1.0.7
+Build Identifier: Mozilla/5.0 (X11; U; Linux ppc; en-US; rv:1.7.12) Gecko/20051002 Firefox/1.0.7
+
+Setting the automatic detection of Firefox, the browser try to resolve
+wpad.domain.tld until it find a record pointing to a webserver hosting a
+wpad.dat autoconfiguration script. This works.
+
+The problem is with laptop users, who often change location, and then internet
+access (e.g. from a WiFi net to another), sometimes not closing Firefox, just
+suspending the machine.
+
+When the laptop is woken and get access to another network, Firefox still hold
+the parameter for the old network, and trying to access any website will result
+in the "The proxy server you have configured cannot be found" message box.
+
+When this happens _and_ in auto-detect proxy setting mode, Firefox should try
+and re-detect the proxy setting (keeping in mind that this might not be the
+same network, so the domain.tld might have changed) and, failing that, fallback
+to the no-proxy configuration
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Start Firefox in a network (say domain1.tld) with
+http://wpad.domain1.tld/wpad.dat. Firefox then set it proxy setting according
+to this script.
+2. Suspend the machine without exiting Firefox
+3. Plug the machine to another network (say domain2.tld)
+Actual Results:
+Trying and access any website with Firefox will result in "The proxy server you
+have configured cannot be found"
+
+Expected Results:
+Firefox go through detection of the proxy parameter again:
+1. resolve wpad.domain2.tld and, if it exists, get http://wpad.domain2.tld/wpad.dat
+2. fall back to direct connection to the internet
+3. display an error message _only_ if all of the above ha failed

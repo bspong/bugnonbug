@@ -1,0 +1,17 @@
+Allow SessionStart to work if true JSON string are returned by _readStateFile() call
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.1b2) Gecko/20081201 Firefox/3.1b2 (.NET CLR 3.5.30729)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.2a1pre) Gecko/20090221 Minefield/3.2a1pre (.NET CLR 3.5.30729)
+
+As extension can modify the value returned by the _readStateFile function in the SessionStart compoment, it would be a good idea to wrap the returned result in parenthesis before trying to call the evalInSandbox function. Otherwise if an extension return a true JSON string (one created by JSON.stringify and not wrapped in parenthesis) the evalinSandbox call with throw an exception.
+
+Since the SessionStore component also read the _iniString variable from SessionStart, either the _iniString variable itself should contain the parenthesis wrapped string or the evalinSandbox call in SessionStart and the _safeeval() call in SessionStore's init function should explicitly wrap it.
+
+
+The main reason I ask for this is to keep thing consistent:
+
+1. Firefox's SessionStore component will wrap API function parameter before attempting to _safeeval() them so I think it SessionStart should a well.
+
+2. Making this change would keep consistency between Firefox and SeaMonkey 2.0a3. Both Firefox and SeaMonkey allow extension to modify the initial state by observing the "sessionstore-state-read" notification, but a SeaMonkey doe a JSON.parse and Firefox doe an evalInSandBox, an extension would need to return parenthesis wrapped JSON string to Firefox and true JSON string to SeaMonkey to prevent exceptions. This requires adding extra browser detection code to extension which would otherwise not be needed.
+
+
+Reproducible: Always

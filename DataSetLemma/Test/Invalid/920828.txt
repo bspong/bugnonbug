@@ -1,0 +1,85 @@
+Missing JS Request around ConstructJSImplementation
+STR: Debug B2G desktop build
+go to http://sanfrancisco.cbslocal.com
+
+I see 2 problem here that might or might not be related.
+
+1) missing keyboard permission and return null from the init method
+2) Missing JS Request around ConstructJSImplementation which might be sec-sensitive
+
+
+Stack:
+No permission to use the keyboard API for http://sanfrancisco.cbslocal.com
+Assertion failure: initReturn.isUndefined() (nsIDOMGlobalPropertyInitializer should return undefined), at /Volumes/mac/code/src/dom/bindings/BindingUtils.cpp:1992
+
+Program received signal EXC_BAD_ACCESS, Could not access memory.
+Reason: KERN_INVALID_ADDRESS at address: 0x0000000000000000
+mozilla::dom::ConstructJSImplementation (aCx=<value temporarily unavailable, due to optimizations>, aContractId=<value temporarily unavailable, due to optimizations>, aGlobal=<value temporarily unavailable, due to optimizations>, aRv=<value temporarily unavailable, due to optimizations>) at RootingAPI.h:657
+657 MOZ_ASSERT(js::IsInRequest(cx));
+(gdb) bt
+#0 mozilla::dom::ConstructJSImplementation (aCx=<value temporarily unavailable, due to optimizations>, aContractId=<value temporarily unavailable, due to optimizations>, aGlobal=<value temporarily unavailable, due to optimizations>, aRv=<value temporarily unavailable, due to optimizations>) at RootingAPI.h:657
+#1 0x0000000102e21c27 in nsCOMPtr<nsPIDOMWindow>::nsCOMPtr () at InputMethodBinding.cpp:1639
+#2 nsCOMPtr<nsPIDOMWindow>::nsCOMPtr () at /Volumes/mac/code/build/dist/include/nsCOMPtr.h:1639
+#3 mozilla::dom::MozInputMethodBinding::ConstructNavigatorObjectHelper () at /Volumes/mac/code/build/dom/bindings/InputMethodBinding.cpp:569
+#4 0x0000000102e21c27 in mozilla::dom::MozInputMethodBinding::ConstructNavigatorObject (aCx=0x10cdbc2c0) at nsCOMPtr.h:1656
+#5 0x00000001021101f8 in JS::Rooted<JSObject*>::operator= () at /Volumes/mac/code/build/dist/include/js/RootingAPI.h:1530
+#6 0x00000001021101f8 in mozilla::dom::Navigator::DoNewResolve (this=<value temporarily unavailable, due to optimizations>, aCx=0x10cdbc2c0) at /Volumes/mac/code/src/dom/base/Navigator.cpp:1530
+#7 0x00000001030c8855 in mozilla::dom::NavigatorBinding::_newResolve (cx=0x10cdbc2c0, flags=<value temporarily unavailable, due to optimizations>) at NavigatorBinding.cpp:1850
+#8 0x0000000103bf9ee3 in CallResolveOp () at /Volumes/mac/code/src/js/src/jsobj.cpp:3682
+#9 0x0000000103bf9ee3 in LookupOwnPropertyWithFlagsInline (cx=0x10cdbc2c0, flags=<value temporarily unavailable, due to optimizations>, donep=<value temporarily unavailable, due to optimizations>) at /Volumes/mac/code/src/js/src/jsobj.cpp:3759
+#10 0x0000000103bf91f0 in LookupPropertyWithFlagsInline (cx=0x10cdbc2c0, flags=0) at /Volumes/mac/code/src/js/src/jsobj.cpp:3801
+#11 0x0000000103bf9640 in JSObject::lookupGeneric (cx=0x10cdbc2c0) at /Volumes/mac/code/src/js/src/jsobj.cpp:3842
+#12 0x0000000103b2e9a8 in JS_LookupPropertyById (cx=0x10cdbc2c0, objArg=<value temporarily unavailable, due to optimizations>) at /Volumes/mac/code/src/js/src/jsapi.cpp:2869
+#13 0x0000000103b2f0c3 in JS_LookupUCProperty (cx=0x10cdbc2c0, objArg=<value temporarily unavailable, due to optimizations>, name=<value temporarily unavailable, due to optimizations>, namelen=<value temporarily unavailable, due to optimizations>) at /Volumes/mac/code/src/js/src/jsapi.cpp:2947
+#14 0x00000001030c864f in mozilla::dom::NavigatorBinding::_enumerate (cx=0x10cdbc2c0) at NavigatorBinding.cpp:1882
+#15 0x0000000103bceda3 in Snapshot (cx=0x10cdbc2c0, pobj_=<value temporarily unavailable, due to optimizations>, flags=1, props=0x7fff5fbfb968) at /Volumes/mac/code/src/js/src/jsiter.cpp:203
+#16 0x0000000103bd0a4d in js::GetIterator (cx=0x10cdbc2c0, flags=1) at /Volumes/mac/code/src/js/src/jsiter.cpp:706
+#17 0x0000000103bd1372 in js::ValueToIterator (cx=0x10cdbc2c0, flags=1) at /Volumes/mac/code/src/js/src/jsiter.cpp:998
+#18 0x00000001039df131 in Interpret (cx=0x10cdbc2c0, state=@0x7fff5fbfc4f0) at /Volumes/mac/code/src/js/src/vm/Interpreter.cpp:1778
+#19 0x00000001039db4a1 in js::RunScript (cx=0x10cdbc2c0, state=@0x7fff5fbfc4f0) at /Volumes/mac/code/src/js/src/vm/Interpreter.cpp:419
+#20 0x00000001039e5dfe in js::ExecuteKernel (cx=0x10cdbc2c0, scopeChainArg=@0x1088352e0, thisv=@0x7fff5fbfc5c8, type=js::EXECUTE_GLOBAL, result=<value temporarily unavailable, due to optimizations>) at /Volumes/mac/code/src/js/src/vm/Interpreter.cpp:603
+#21 0x00000001039e6063 in js::Execute (cx=0x10cdbc2c0, scopeChainArg=<value temporarily unavailable, due to optimizations>, rval=0x0) at /Volumes/mac/code/src/js/src/vm/Interpreter.cpp:639
+#22 0x0000000103b3a86e in JS::Evaluate (cx=0x10cdbc2c0, obj={<js::HandleBase<JSObject *>> = {<No data fields>}, ptr = 0x7fff5fbfc800}, options={principals_ = 0x11694c5c8, originPrincipals_ = 0x117dc8388, version = JSVERSION_DEFAULT, versionSet = true, utf8 = false, filename = 0x117dc9b08 "http://tags.bkrtx.com/js/bk-coretag.js", sourceMapURL = 0x105061948, lineno = 1, column = 0, element = {<js::HandleBase<JSObject *>> = {<No data fields>}, ptr = 0x10444a708}, compileAndGo = true, forEval = false, noScriptRval = true, selfHostingMode = false, canLazilyParse = true, strictOption = false, extraWarningsOption = false, werrorOption = false, asmJSOption = true, sourcePolicy = JS::CompileOptions::SAVE_SOURCE}, chars=0x11a717008, length=<value temporarily unavailable, due to optimizations>, rval=0x0) at /Volumes/mac/code/src/js/src/jsapi.cpp:4870
+#23 0x000000010219f0f4 in nsJSUtils::EvaluateString (aCx=0x10cdbc2c0, aScript=@0x11a2a5f68, aCompileOptions=@0x7fff5fbfc940, aEvaluateOptions=@0x7fff5fbfc890, aRetValue=0x0, aOffThreadToken=<value temporarily unavailable, due to optimizations>) at /Volumes/mac/code/src/dom/base/nsJSUtils.cpp:280
+#24 0x0000000102195ae4 in nsJSContext::EvaluateString (this=0x1154f7be0, aScript=@0x11a2a5f68, aCompileOptions=@0x7fff5fbfc940, aCoerceToString=false, aRetValue=0x0, aOffThreadToken=0x0) at /Volumes/mac/code/src/dom/base/nsJSEnvironment.cpp:995
+#25 0x0000000101daff22 in nsScriptLoader::EvaluateScript (this=<value temporarily unavailable, due to optimizations>, aRequest=<value temporarily unavailable, due to optimizations>, aScript=@0x11a2a5f68, aOffThreadToken=0x0) at /Volumes/mac/code/src/content/base/src/nsScriptLoader.cpp:1002
+#26 0x0000000101daf082 in nsScriptLoader::ProcessRequest (this=0x11694a100, aRequest=0x11a2a5f30, aOffThreadToken=0x0) at /Volumes/mac/code/src/content/base/src/nsScriptLoader.cpp:869
+#27 0x0000000101dae94c in nsScriptLoader::ProcessScriptElement (this=0x11694a100, aElement=<value temporarily unavailable, due to optimizations>) at /Volumes/mac/code/src/content/base/src/nsScriptLoader.cpp:588
+#28 0x0000000101dab4b7 in nsScriptElement::MaybeProcessScript (this=0x11bddced0) at /Volumes/mac/code/src/content/base/src/nsScriptElement.cpp:139
+#29 0x00000001023e4c26 in nsCOMPtr<nsIScriptElement>::operator-> () at /Volumes/mac/code/build/dist/include/nsCOMPtr.h:220
+#30 0x00000001023e4c26 in nsHtml5TreeOpExecutor::RunScript (this=0x11a3ac820, aScriptElement=<value temporarily unavailable, due to optimizations>) at nsIScriptElement.h:789
+#31 0x00000001023e3e35 in nsContentSink::StopDeflecting () at /Volumes/mac/code/build/dist/include/nsContentSink.h:593
+#32 0x00000001023e3e35 in nsHtml5TreeOpExecutor::RunFlushLoop (this=0x11a3ac820) at /Volumes/mac/code/src/parser/html/nsHtml5TreeOpExecutor.cpp:596
+#33 0x00000001023e6cd0 in nsHtml5ExecutorReflusher::Run (this=<value temporarily unavailable, due to optimizations>) at /Volumes/mac/code/src/parser/html/nsHtml5TreeOpExecutor.cpp:61
+#34 0x0000000103156e9f in nsThread::ProcessNextEvent (this=0x100523760, mayWait=<value temporarily unavailable, due to optimizations>, result=0x7fff5fbfd507) at /Volumes/mac/code/src/xpcom/threads/nsThread.cpp:622
+#35 0x00000001030f393b in NS_ProcessPendingEvents (thread=<value temporarily unavailable, due to optimizations>, timeout=20) at nsThreadUtils.cpp:188
+#36 0x00000001029ad70a in nsBaseAppShell::NativeEventCallback (this=0x107fd6340) at /Volumes/mac/code/src/widget/xpwidgets/nsBaseAppShell.cpp:95
+#37 0x00000001029436bf in nsAppShell::ProcessGeckoEvents (aInfo=0x107fd6340) at /Volumes/mac/code/src/widget/cocoa/nsAppShell.mm:388
+#38 0x00007fff83dddb31 in __CFRUNLOOP_IS_CALLING_OUT_TO_A_SOURCE0_PERFORM_FUNCTION__ ()
+#39 0x00007fff83ddd455 in __CFRunLoopDoSources0 ()
+#40 0x00007fff83e007f5 in __CFRunLoopRun ()
+#41 0x00007fff83e000e2 in CFRunLoopRunSpecific ()
+#42 0x00007fff840aceb4 in RunCurrentEventLoopInMode ()
+#43 0x00007fff840acb94 in ReceiveNextEventCommon ()
+#44 0x00007fff840acae3 in BlockUntilNextEventMatchingListInMode ()
+#45 0x00007fff8a4c0533 in _DPSNextEvent ()
+#46 0x00007fff8a4bfdf2 in -[NSApplication nextEventMatchingMask:untilDate:inMode:dequeue:] ()
+#47 0x0000000102942736 in -[GeckoNSApplication nextEventMatchingMask:untilDate:inMode:dequeue:] (self=0x1081da1a0, _cmd=<value temporarily unavailable, due to optimizations>, mask=18446744073709551615, expiration=0x422d63c37f00000d, mode=0x7fff71e7c1c0, flag=1 '\001') at /Volumes/mac/code/src/widget/cocoa/nsAppShell.mm:165
+#48 0x00007fff8a4b71a3 in -[NSApplication run] ()
+#49 0x0000000102943cfe in nsAppShell::Run (this=<value temporarily unavailable, due to optimizations>) at /Volumes/mac/code/src/widget/cocoa/nsAppShell.mm:742
+#50 0x0000000102797972 in nsAppStartup::Run (this=0x107f905b0) at /Volumes/mac/code/src/toolkit/components/startup/nsAppStartup.cpp:269
+#51 0x00000001014e785e in XREMain::XRE_mainRun (this=<value temporarily unavailable, due to optimizations>) at /Volumes/mac/code/src/toolkit/xre/nsAppRunner.cpp:3868
+#52 0x00000001014e7e75 in XREMain::XRE_main (this=0x7fff5fbff000, argc=<value temporarily unavailable, due to optimizations>, argv=<value temporarily unavailable, due to optimizations>, aAppData=<value temporarily unavailable, due to optimizations>) at /Volumes/mac/code/src/toolkit/xre/nsAppRunner.cpp:3936
+#53 0x00000001014e8216 in XRE_main (argc=0, argv=0xffffffffffffffff, aAppData=0x422d63c37f00000d, aFlags=<value temporarily unavailable, due to optimizations>) at /Volumes/mac/code/src/toolkit/xre/nsAppRunner.cpp:4138
+#54 0x0000000100000ed4 in main (argc=<value temporarily unavailable, due to optimizations>, argv=<value temporarily unavailable, due to optimizations>) at /Volumes/mac/code/src/b2g/app/nsBrowserApp.cpp:168
+(gdb) l
+652 Rooted(JSContext *cx
+653 MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+654 : ptr(js::GCMethods<T>::initial())
+655 {
+656 MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+657 MOZ_ASSERT(js::IsInRequest(cx));
+658 init(js::ContextFriendFields::get(cx));
+659 }
+660
+661 Rooted(JSContext *cx, T initial

@@ -1,0 +1,86 @@
+XSL transformation and xHtml namespace incompatibility
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8) Gecko/20060110 Debian/1.5.dfsg-4 Firefox/1.5
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8) Gecko/20060110 Debian/1.5.dfsg-4 Firefox/1.5
+
+I use an xml file tranformed by an xsl style sheet in xHtml.
+my xml :
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="bookListHTML.xsl"?>
+
+<bookList>
+
+<book num="1">
+
+<title>test</title>
+
+<publisher>test</publisher>
+
+<isbn>14646464</isbn>
+
+<language>fr</language>
+
+<nbPage>200</nbPage>
+
+<price>25</price>
+
+</book>
+<book num="2">
+<title>test 2</title>
+<publisher>test 2</publisher>
+<isbn>333336565454</isbn>
+<language>fr</language>
+<nbPage>200</nbPage>
+<price>25</price>
+</book>
+</bookList>
+
+A very simple bookListHTML.xsl :
+<?xml version="1.0" encoding="ISO-8859-15"?>
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
+<xsl:output method="xml"/>
+<xsl:template match="/">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Book list</title>
+</head>
+<body>
+<xsl:apply-templates/>
+</body>
+</html>
+</xsl:template>
+
+<xsl:template match="bookList">
+<table>
+<tr>
+<td>Title</td>
+</tr>
+<xsl:apply-templates/>
+</table>
+</xsl:template>
+
+<xsl:template match="book">
+<tr>
+<td>
+<xsl:value-of select="title"/>
+</td>
+</tr>
+</xsl:template>
+</xsl:stylesheet>
+
+In that case, all title are shown by ff on the same line a if they are not in a table.
+The dom inspector show the right structure (with the table and all lines) !
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.test my code example
+2.see the result
+3.compare it to the dom inspector result
+
+Actual Results:
+No formating applied to every xsl template outside the <html xmlns="http://www.w3.org/1999/xhtml"/> tag even if it is html added during the transformation process... all html part are shown a if there wa xml fragment !
+
+Expected Results:
+All Xhtml generate by the xsl transformation must be interpreted a a real new document, not a a part of xsl namespaces
+
+My current workaround : I add every time the xHtml namespace in <xsl:stylesheet> namespace declaration (<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0" xmlns="http://www.w3.org/1999/xhtml">) and firefox show the full document a expected...

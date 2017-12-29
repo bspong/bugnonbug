@@ -1,0 +1,27 @@
+All font files are re-requested when stylesheets containing new @font-face rules are added
+User-Agent:       Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_6; en-us) AppleWebKit/533.20.25 (KHTML, like Gecko) Version/5.0.4 Safari/533.20.27
+Build Identifier: 4.0
+
+When dynamically adding new stylesheets which contain @font-face rules to the page, all hosted fonts are re-requested and potentially downloaded again.
+
+In other words, Firefox won't download a new font file without re-requesting all previously downloaded font files.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Load the specified URL above.
+2. Notice that on initial page load a CSS file containing 1 @font-face rule is downloaded.
+3. Notice that this font is required to render an h1 so the font file (Woff) is downloaded.
+4. Click 'Show Linear Ultra Bold Oblique' and notice a link to a new stylesheet is added to the DOM.
+5. Notice that this new stylesheet containing a new @font-face rule is downloaded.
+6. Notice that this font is required to render an h2 so the new font file is downloaded.
+7. Notice that the original Woff downloaded in step 3 is requested again and potentially downloaded again.
+
+This behaviour can be repeated when clicking 'Show Egyptienne URW Extra Light'. In this case the previous 2 fonts will both be requested again.
+Actual Results:  
+Fonts that have already been downloaded and shown on the page, are re-requested for no clear reason. 
+
+Expected Results:  
+Fonts that have already been downloaded and rendered to the page should NOT be re-requested.
+
+The example page is using a font hosting service called Fontdeck which does not allow for caching in the browser. Aggressively caching the fonts would help mitigate this issue, but this is still a behaviour that seems undesirable and is not exhibited in the latest versions of other browsers.

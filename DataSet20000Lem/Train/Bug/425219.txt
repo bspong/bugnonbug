@@ -1,0 +1,24 @@
+Places' history expiration algorithm seems overly complicated
+Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9b5pre) Gecko/2008032523 Minefield/3.0b5pre ID:2008032523
+
+The Places history expiration algorithm seems overly complicated.
+
+The three relevant prefs are:
+- browser.history_expire_days_min = 90
+- browser.history_expire_sites = 40,000
+- browser.history_expire_days = 180
+
+Firefox will:
+(1) Remember _all_ place visited for the first 90 days, with no exception (even if it's something like 200,000 history entries)
+(2) If after 90 day of browsing there are le then 40,000 history entries, additional history entry will be remembered, up to the limit of 40,000; with the proviso that:
+(3) If by 180 day the user still hasn't hit the 40,000 history entry limit, site older than the 180 day limit will be removed from history.
+
+For point (1) the user can set the number of day of history to remember in the Firefox prefs. Firefox is guaranteed to remember all URLs visited in this period, and this is what user expect. In this case, the size of the user's places.sqlite file is unbound and can be any size, depending on how many URLs they visit in this 90 day period.
+
+For point (2) browser.history_expire_sites will make Firefox remember more history than the user expects, providing that in the last 90 day they haven't visited more than 40,000 URLs. Why this arbitrary limit of 40,000? For the first 90 day the user's history size is unbound and could reach into the 100,000s and beyond anyway. All this pref seems to do is potentially make firefox remember more of the user's history than they expect.
+
+Then for point (3), if after 180 day the user ha visited le than 40,000 sites, we start removing their history for no real purpose. Either the 40,000 limit is good enough, or it's not, so I don't see the reason after unexpectedly keeping more history than the user expected, to then unexpectedly start removing history item after an arbitrary length of time ha elapsed.
+
+My main point is, since (1) is true, why bother with the complication of (2) and (3) both in term of code complexity, but also with respect to doing what the user expects. Randomly keeping more history than is expected with the possibility of then randomly loosing the history that wa randomly kept in the first place seems silly to me.
+
+Whether the user want to keep 10 day of history or 200 day of history, why can't we just do exactly what they want (point (1), which we do anyway) and not bother going to the effort of doing unexpected thing by enforcing arbitrary limit (points (2) and (3))

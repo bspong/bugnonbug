@@ -1,0 +1,48 @@
+JavaScript encounters errors when a AJAX GET variable contains "160.html"
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.9.2.8) Gecko/20100722 Firefox/3.6.8 GTB7.1 (.NET CLR 3.5.30729)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.9.2.8) Gecko/20100722 Firefox/3.6.8 GTB7.1 (.NET CLR 3.5.30729)
+
+I set up a script to make an AJAX call to each page on the site to check it was loading properly. Everytime, the script would die on the page "http://www.foamtecintlwcc.com/documents/application-notes/eaton-nv10-160.html" with the error "uncaught exception: [Exception... "Component returned failure code: 0x805e000a[nsIXMLHttpRequest.open] nresult: "0x805e000a(<unknown>)" location: "JS Frame :: (pageurl) :: (script name) :: (line #) data:no]
+
+I also noticed when I tried to modify the database record for this page in PHPMyAdmin it would totally screw up the page layout. After inserting and modifying dozens of variations (159.html, 160.htm, 60.html etc...), the only time it would give this error is when the value contained "160.html" (160.htmlxxx) still gives errors
+
+At first, I thought this was a mysql error, but I tried both my script and phpmyadmin in ie8 and chrome 5 and both work normally, as does firefox 3.0.10 on my older XP machine...
+
+I just changed my ajax script from GET to POST, and it is now working, so apparently its only when a GET variable is used containing in the "160.html"
+
+Reproducible: Always
+
+Steps to Reproduce:
+Here is sample code that should show the problem:
+<html>
+<head>
+<script language="javascript" type="text/javascript">
+var xmlhttp=GetXmlHttpObject();	
+function GetXmlHttpObject(){
+	if (window.XMLHttpRequest){	return new XMLHttpRequest();}
+	if (window.ActiveXObject){return new ActiveXObject("Microsoft.XMLHTTP");}
+	return null;
+}
+function checkpage(url){
+	xmlhttp.onreadystatechange = function pageUpdated(){
+		if (xmlhttp.readyState==4 && xmlhttp.status == 200){
+			alert(xmlhttp.responseText);
+		}
+	}
+	xmlhttp.open("GET",url,true);
+	xmlhttp.send(null);
+}
+</script>
+</head>
+<body>
+<h1>Mozilla Bug Test</h1>
+<input type="button" onClick="checkpage('http://www.foamtecintlwcc.com/160.html')" value="test" />
+</body>
+</html>
+
+alternatively, in PHPMyAdmin, make a record containing "160.html" and then try to use the pencil on that record's line to edit it
+Actual Results:  
+If you change the url in the checkpage() onclick event to any working page, you will get the html of the page in an alert message. For my page ending in "-160.html", it will give the uncaught exception (unless you try in a different browser, then still works as normal)
+
+Expected Results:  
+it should have called the "160.html" page just like any other working url, or like it does in any other browser.

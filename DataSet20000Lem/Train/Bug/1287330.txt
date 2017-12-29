@@ -1,0 +1,12 @@
+Insert tabs' linkedBrowser lazily into the document
+Support bug for bug 906076.
+
+As we begin to actually implement lazy-browser strategy, we will need to modify the code which is presently accustomed to dealing with tab.linkedBrowser, to work with lazy-browser tabs.
+
+However we need a fallback so if any consumer out there try to access linkedBrowser property on a lazy-browser tab, thing won't break. This would be especially true for addons which have not yet adjusted to the lazy-browser strategy.
+
+This bug creates a proxy for linkedBrowser which, if the tab is still in it lazy-browser state, will instantiate the browser if linkedBrowser property are accessed.
+
+Note that we use a proxy rather than a simple getter for linkedBrowser, because in some case we can return some property based on prior knowledge of the tab, and avoid linking the browser before we want to.
+
+Note that in this bug, we are only setting up the proxy implementation, and in practice we still will not be experiencing the optimization of lazy-browser linking, a the proxy will nearly immediately force the browser to be linked by code accessing linkedBrowser in SessionRestore. In later incarnation of lazy-browser tabs, we will be training SessionRestore to deal with lazy-browser tabs.

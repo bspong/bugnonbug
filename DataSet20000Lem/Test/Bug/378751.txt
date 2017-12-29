@@ -1,0 +1,37 @@
+memory leak in content/global/config.js (about:config)
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.3) Gecko/20061201 Firefox/2.0.0.3 (Ubuntu-feisty)
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.3) Gecko/20061201 Firefox/2.0.0.3 (Ubuntu-feisty)
+
+When closing the about:config tab, Leak Monitor alert of a leaked object in chrome://content/global/config.js
+
+Reproducible: Always
+
+Steps to Reproduce:
+0. Requires Leak Monitor add-on
+1. Open a new tab
+2. Write about:config in the address bar
+3. Close the tab
+Actual Results:
+Leak Monitor alert of a JavaScript object from a window that wa recently closed that is still held by native code.
+
+Expected Results:
+No leaked object.
+
+I tracked that object to the the one initialized in the variable view. I looked at this code:
+
+function onConfigLoad()
+{
+//etc etc
+document.getElementById("configTree").view = view;
+//etc etc
+}
+
+function onConfigUnload()
+{
+gPrefBranch.removeObserver("", gPrefListener);
+document.getElementById("configTree").view = null;
+}
+
+and tried to add view=null after and before document.getElementById("configTree").view=null with no result.
+
+I wa using the LeBreeze 2.0.0.2 theme when I detected this, but I switched to the defaut theme and the problem persists.

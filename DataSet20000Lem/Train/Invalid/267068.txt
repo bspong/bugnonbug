@@ -1,0 +1,45 @@
+DNS lookup are reattempted with the localdomain (and derivatives) appended too quickly
+User-Agent: Mozilla/5.0 (Macintosh; U; PPC Mac OS X Mach-O; rv:1.7.3) Gecko/20040913 Firefox/0.10
+Build Identifier: Mozilla/5.0 (Macintosh; U; PPC Mac OS X Mach-O; rv:1.7.3) Gecko/20040913 Firefox/0.10
+
+Frequently when browsing to new site (like when clicking on link in Google
+search results), if I watch the DNS traffic with tcpdump, I see about four
+request for the domain get fired off, closely followed by the original domain
+with my local domain appended, which tends to return an NXDomain response faster
+than my local nameserver return a response for the original question, resulting
+in Firefox displaying a "$DOMAIN could not be found" type error message.
+
+Reproducible: Sometimes
+Steps to Reproduce:
+1. Pick a website that's probably not in the local computer's DNS cache
+2. Attempt to browse to it
+3. If it say "Looking up $DOMAIN" for too long in the status bar, it's
+generally going to do it
+
+Actual Results:
+Either the website loads, or a DNS resolution error dialog pop up. If analysing
+the DNS traffic with tcpdump, it's quite clear what's going on.
+
+Expected Results:
+Loaded the website
+
+Here's some tcpdump output:
+
+09:24:56.154469 IP 172.16.1.12.50723 > 172.16.1.1.53: 16753+ A?
+www.froogle.com. (33)
+09:24:56.867043 IP 172.16.1.12.50723 > 172.16.1.1.53: 16753+ A?
+www.froogle.com. (33)
+09:24:57.579458 IP 172.16.1.12.50723 > 172.16.1.1.53: 16753+ A?
+www.froogle.com. (33)
+09:24:58.286637 IP 172.16.1.12.50723 > 172.16.1.1.53: 16753+ A?
+www.froogle.com. (33)
+09:24:58.993697 IP 172.16.1.12.50724 > 172.16.1.1.53: 46736+ A?
+www.froogle.com.andrew.net.au. (47)
+09:24:58.995855 IP 172.16.1.1.53 > 172.16.1.12.50724: 46736 NXDomain* 0/1/0 (98)
+09:24:58.996180 IP 172.16.1.12.50725 > 172.16.1.1.53: 56194+ A?
+www.froogle.com.net.au. (40)
+09:24:59.031906 IP 172.16.1.1.53 > 172.16.1.12.50725: 56194 NXDomain 0/1/0 (111)
+09:25:01.447109 IP 172.16.1.1.53 > 172.16.1.12.50723: 16753 4/11/6 CNAME[|domain]
+09:25:01.448866 IP 172.16.1.1.53 > 172.16.1.12.50723: 16753 4/11/6 CNAME[|domain]
+09:25:01.450252 IP 172.16.1.1.53 > 172.16.1.12.50723: 16753 4/11/6 CNAME[|domain]
+09:25:01.451811 IP 172.16.1.1.53 > 172.16.1.12.50723: 16753 4/11/6 CNAME[|domain]

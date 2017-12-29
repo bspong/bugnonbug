@@ -1,0 +1,23 @@
+unquoted font-family names or fragments starting with digits break parsing
+User-Agent:       Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_5_6; en-ca) AppleWebKit/525.27.1 (KHTML, like Gecko) Version/3.2.1 Safari/525.27.1
+Build Identifier: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.5; en-GB; rv:1.9.0.4) Gecko/2008102920 Firefox/3.0.4
+
+A font name starting with a digit, like “1font”, will cause the entire font-family declaration to be discarded with the error “Error in parsing value for property 'font-family'. Declaration dropped”.  A font name with a digit after a space, like “MPH 2B Damase” also prepends “Expected end of value for property but found '2B'.”  
+
+In either case, quoting the font-family works around the problem.
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. create a XHTML 1.0 web page which includes the CSS declarations “.foo { font-family: 1font, monospace; } .bar { font-family: MPH 2B Damase, serif; }”
+2. load the page in Firefox
+
+Actual Results:  
+1. check the error console: 2 messages are generated
+2. check the page rendering, the fallback fonts are not applied to the elements either
+
+Expected Results:  
+The fake font name “1font” should be ignored and the fallback “monospace” applied.  The real font “MPH 2B Damase” should be applied if present, otherwise the fallback “serif”.
+
+See bug Bug 292271, which may be an example of the same problem.

@@ -1,0 +1,33 @@
+A javascript error in an extension's progress listener shouldn't interfere with normal operation of tabbed browsing
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.9a4pre) Gecko/20070327 Minefield/3.0a4pre
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.9a4pre) Gecko/20070327 Minefield/3.0a4pre
+
+The progress listener handlers are independent of each other and should be isolated so that
+a) they don't interfere with normal tabbed browsing operation
+b) they don't interfere with each other
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Install (pathological) extension (to follow)
+2. Browse normally
+3.
+Actual Results:  
+Some unusual behaviour - for instance
+o the window title doesn't update.
+o the tabbar doesn't position properly when overflowing
+
+Expected Results:  
+No noticable change.
+
+Normally these effects will be fairly random but I do I have one, real life, extension that can reproducibly exhibit this problem but I don't particularly want to go into specifics for this bug.
+
+There is a tendency to dismiss all bugs if they disappear when replicated in a clean profile however, in this case, I feel that the tabbrowser has some responsibility in maintaining normal operation. I would propose that the dispatchers should be changed to something like this:
+
+  if (p)
++   try {
+      p.onFooChange(....);
++   } catch (e) {
++     // don't inhibit other listeners
++     // XXX log exception to console?
++   }

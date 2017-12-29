@@ -1,0 +1,29 @@
+add chromeutils for JS manipulation of origin attributes
+in the file browsers/components/preferences/translation.js there are two callsites that use the createCodebasePrincipalFromOrigin:
+
+> 213   onSiteDeleted: function() {
+> 214     let removedSites = this._siteTree.getSelectedItems();
+> 215     for (let origin of removedSites) {
+> 216       let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(origin);
+> 217       Services.perms.removeFromPrincipal(principal, kPermissionType);
+> 218     }
+> 219   },
+
+and
+
+> 221   onAllSitesDeleted: function() {
+> 222     if (this._siteTree.isEmpty)
+> 223       return;
+> 224
+> 225     let removedSites = this._sites.splice(0, this._sites.length);
+> 226     this._siteTree.boxObject.rowCountChanged(0, -removedSites.length);
+> 227
+> 228     for (let origin of removedSites) {
+> 229       let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(origin);
+> 230       Services.perms.removeFromPrincipal(principal, kPermissionType);
+> 231     }
+> 232
+> 233     this.onSiteSelected();
+> 234   },
+
+this removes the translate permission from the principal.  this creates a principal from an origin, then internally the origin is pulled back out of the principal when creating the premission object that needs to be removed.  since we are not isolating on user context id for permissions, the fix is, create an origin attributes from the origin (e.g. populateFromOrigin), then create a GlobalContextOriginAttributes from that to force user context id to 0, then call createCodebasePrincipal with the origin and origin attributes.

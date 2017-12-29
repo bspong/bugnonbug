@@ -1,0 +1,61 @@
+Functions registered with setTimeout may be executed in the same stack on MacOS X
+User-Agent:       Mozilla/5.0 (Macintosh; U; Intel Mac OS X; en-US; rv:1.8.0.7) Gecko/20060909 Firefox/1.5.0.7
+Build Identifier: Mozilla/5.0 (Macintosh; U; Intel Mac OS X; en-US; rv:1.8.0.7) Gecko/20060909 Firefox/1.5.0.7
+
+The Firefox native method XSLTProcessor.importStylesheet() causes functions registered with window.setTimeout() to be called in the same stack that they are registered. This only occurs on MacOS X. This may occur with other native methods though this is the only one I have verified.
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+// here's the method I use to get the stack:
+function getStack() {
+    var stack = [];
+    var skip = 1;
+    for (var a = arguments.callee; a != null; a = a.caller) {
+      if (--skip >= 0) continue;
+      stack.push(a.caller);
+    }
+    return stack;
+  };
+
+// here's my code that uses setTimeout:
+
+var _SLEEP_QUEUE = [];
+var _SLEEP_MAP = [];
+var _SLEEP_TO = null;
+
+function sleep(objFunction, strId, objThis) {
+    if (strId && _SLEEP_MAP[strId]) return;
+    var record = [objFunction, strId, objThis];
+    _SLEEP_QUEUE.push(record);
+    _SLEEP_MAP[strId] = record;
+
+    if (_SLEEP_TO == null)
+      _SLEEP_TO = window.setTimeout(_sleepChunk, 0);
+  };
+
+function _sleepChunk() {
+    var record = _SLEEP_QUEUE.shift();
+    if (_SLEEP_QUEUE.length > 0) {
+      _SLEEP_TO = window.setTimeout(_sleepChunk, 0);
+    } else {
+      _SLEEP_TO = null;
+    }
+
+    var objFunction = record[0];
+    var strId = record[1];
+    var objThis = record[2];
+
+    delete _SLEEP_MAP[strId];
+    objFunction.apply(objThis);
+  };
+Actual Results:  
+If I call getStack() at the top of _sleepChunk() I can see the following stack even though _sleepChunk() is only ever referenced in my code from a timeout.
+
+09:55:56.564 global (WARN) - Stack weirdness ...
+    at jsx3#_sleepChunk()
+    at importStylesheet() { [native code] }
+    ... my code that calls XSLTProcessor.importStylesheet()
+
+Expected Results:  
+_sleepChunk() should only ever be invoked with a fresh stack.

@@ -1,0 +1,26 @@
+Remove _resume_session_once_on_shutdown code from SessionStore
+This code has been added back in bug 600545:
+
+> // The original "sessionstore.resume_session_once" preference value before it
+> // was modified by saveState.  saveState will set the
+> // "sessionstore.resume_session_once" to true when the
+> // the "sessionstore.resume_from_crash" preference is false (crash recovery
+> // is disabled) so that pinned tabs will be restored in the case of a
+> // crash.  This variable is used to restore the original value so the
+> // previous session is not always restored when
+> // "sessionstore.resume_from_crash" is true.
+> _resume_session_once_on_shutdown: null,
+
+So the whole _resume_session_once_on_shutdown code is there so that pinned tabs are restored when Firefox crashes for people with resume_from_crash=false. It's quite obvious that we don't need this code as it works fine without it. Looking at nsSessionStartup.js:
+
+> // set the startup type
+> if (lastSessionCrashed && resumeFromCrash)
+>   this._sessionType = Ci.nsISessionStartup.RECOVER_SESSION;
+> else if (!lastSessionCrashed && doResumeSession)
+>   this._sessionType = Ci.nsISessionStartup.RESUME_SESSION;
+> else if (this._initialState)
+>   this._sessionType = Ci.nsISessionStartup.DEFER_SESSION;
+> else
+>   this._initialState = null; // reset the state
+
+If we have a valid state and we crash with resumeFromCrash=false we will always end up in the third branch and we will have a deferred session. That means only pinned tabs will be restored as desired.

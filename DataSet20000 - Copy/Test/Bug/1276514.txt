@@ -1,0 +1,8 @@
+Refactor xul:browser.permanentKey implementation to accommodate lazy-browser tabs
+This is a support bug for bug 906076, lazy-browser-tabs, which deals with tabbrowser tabs in order to provide startup optimization and resource conservation.
+
+With lazy instantiation of xul:browser, we must now have a way of associating permanentKey with both the tab and the browser, since there will be instances where only one or the other will be present.  Bug 1167923 laid the groundwork for this; we must now provide a strategy for applying this to the xul:tab and xul:browser.
+
+Were it not for preloadBrowser, it seems this would be a simple matter of creating the permanentKey for the xul:tab upon tab creation, then upon xul:browser instantiation, referencing browser.permanentKey to the same key.  However preloadBrowser puts a little fly in the ointment, since it is created before the xul:tab is created in addTab, and in the case of lazy-browser instantiation, there is no way of knowing to which tab the preload browser will be applied.  There are cases where browser.permanentKey is referenced on the preloadBrowser, and also (once lazy-browser tabs is fully implemented) tab.permanentKey may also be referenced before browser instantiation.
+
+This bug will be exploring strategies for this.

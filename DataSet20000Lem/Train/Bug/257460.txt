@@ -1,0 +1,50 @@
+Dynamically generated form get submitted twice
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7) Gecko/20040803 Firefox/0.9.3
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7) Gecko/20040803 Firefox/0.9.3
+
+Form generated in child window using DHTML is submitted twice, once with all
+field empty, and a second time with all field containing their proper values.
+
+
+
+
+
+Reproducible: Always
+Steps to Reproduce:
+1.Open the following HTML in Firefox, after changing the ACTION attribute to an
+appropriate URL (any old CGI or other script you have handy):
+<html>
+<head>
+<script language="javascript">
+function openLookup(){
+myWin = window.open("", "child", "width=400,height=200");
+myWin.focus();
+myWin.document.writeln('<html><body');
+myWin.document.writeln('<form name="proxyForm" action="lookupForm.do"
+method="post">');
+myWin.document.writeln('<input type="hidden" name="command" value="INIT">');
+myWin.document.writeln('</form></body></html>');
+myWin.document.proxyForm.submit();
+}
+
+</script>
+</head>
+<body>
+
+<a href="javascript:openLookup()"> TEST </a>
+
+</body>
+</html>
+
+
+2. Click on the single link.
+
+
+Actual Results:
+Child window open and display output from whatever CGI you configured in. The
+script on the back end actually get run twice each time you click the link (use
+a debugger, or logging to confirm this), and the hidden parameter named
+"command" is passed only on the first form submission.
+
+Expected Results:
+The dynamically generated form should be submitted only once.

@@ -1,0 +1,52 @@
+Firefox has segmentation faults (crashes) and fails in strange ways with limited memory
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.12) Gecko/20051205 Epiphany/1.6.4
+Build Identifier: Firefox 1.5.0.1
+
+If one performs perfectly reasonable memory stress testing on current "production" versions of Firefox it fails in a variety of ways, the most obvious of which is "crashing" with a segmentation fault.
+
+There are indications that little or no stress testing has been done on Firefox with constrained memory.  Doing this is one obvious way to reveal bugs which may be present in the basic system code.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. ulimit -Sv 53000
+2. /usr/bin/firefox  (with a minimal profile, e.g. home = about:blank)
+3. Enter URL: http://www.nytimes.com/
+
+
+Actual Results:  
+Firefox crashes and starts the bug reporting agent.
+
+One wants to limit the available virtual memory to just slightly above that required to start firefox and test the limits of various functions.  If the available memory is set too low one cannot map the libraries but at slightly above that one should be able to "stress" all various aspects of memory allocation/management.
+
+Attempting to test various options I have seen at least the following problems:
+1. Crashes on opening pages.
+2. Crashes on Bookmarks >> Manage Bookmarks (with only about 10 small bookmarks)
+3. Fails to open a functional new window (Ctrl-N will open a window but you can't use it for navigation, it ends up with a grey background rather than a white background -- in theory one shouldn't open a non-functional window).
+4. Specifying a new URL will allow navigation to a new page but will not navigate back (hitting the back button does nothing).
+
+
+
+Expected Results:  
+1) Never crash.
+2) Not perform an action which is useless (e.g. opening a window which cannot be used, warn if navigating forward will disallow navigating back, etc).
+3) Fail gracefully for excessive requests (e.g. if one wants to display a huge image but can't allocate memory for it, one should still be able to figure out how big the image would be, properly tell the display manager to block out that space, and provide some text in its place, e.g. "Place for 10MB image 'my-really-big-img.jpg'"
+
+The fact that these bugs exist at this state of Firefox development and "production" release shows an extreme disregard for stress testing, particularly with regard to memory usage.  When problems started being reported with Firefox memory usage (some of which are memory leaks but many of which are heap fragmentation problems) one of the first questions which should have been examined was "Does Firefox fail gracefully under severe memory constraints?"  It does not appear that that has been done.
+
+The reason for this is as follows.  Most people are not going to bother watching Firefox memory usage (using top / vmstat / System Monitor).  Instead they might want to receive "reasonable" warnings when memory consumption has gotten out of hand (Linux system performance goes down the tubes when the Firefox resident memory requirements exceed 60-70% of physical memory).  Though this is a Linux paging problem, it is ascerbated by Firefox's poor heap memory management causing execessive paging.  One obvious solution is to limit Firefox so its virtual memory requirements can never exceed 50-60% of physical memory.  This is what the ulimits are for (one could even have the script /usr/bin/firefox preset the virtual memory limit!).  If Firefox then warned the user -- but did *not* fail or exit -- the user would (a) be aware of pages which may be memory hogs; and (b) choose to continue browsing with perhaps some degradation in performance or (c) restart Firefox to reinitialize (compactify) the heap.
+
+The flexibility of constraining Firefox using the Linux Soft & Hard memory limits is a very reasonable way to manage the browser.  (I.e. there should be some config flag to allow Firefox to push the soft limits up to the hard limits.)  [I suspect the ability to set ulimits is also available with Solaris and perhaps even Mac OS X -- so this approach would only not work under Windows.]
+
+Tests under memory constraints should include:
+1) Browsing to a new page (when memory for the "history" allocation fails).
+2) Opening "Manage Bookmarks" under tight constraints (use Firefox with an empty bookmarks file, then replace it with one which is 2-5MB).
+3) Opening lots of new windows (Ctrl-N)
+4) Opening lots of new tabs (Ctrl-T)
+5) Saving pages (requires opening files)
+6) Downloading a binary files (requires starting the download manager)
+7) Opening successively more difficult windows, e.g. (a) a blank page; (b) a text page with various simple fonts; (c) a text page with small images; (d) a text page with small images and style sheets; (e) a text page with javascript; (f) a text page with images & javascript; (g) a page which requires starting Java (presumably may require resetting the ulimit if it drags in additional shared libraries); (h) any of the various pages with streamed or direct video, etc.
+
+In cases where the action involves page display it should give me *all* of the page which is possible, e.g. a page with a big image followed by a large number of small images should *still* give me the small images even if the big image will not fit into memory.  If there isn't memory for a large Javascript or a Style Sheet, give me as much of the page as you can without them.  Etc.
+
+I believe if this stress testing and solutions provided it would give people a much better understanding of what pages and/or browser activities may be contributing to the  so called "memory leak" problems.

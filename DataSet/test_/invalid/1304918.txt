@@ -1,0 +1,43 @@
+uBlock Origin causes Assertion failure: clasp->specDefined(), at js/xpconnect/wrappers/XrayWrapper.cpp:584
+I hit the MOZ_ASSERT(clasp->specDefined()) assertion added in bug 1243824 when browsing to any website in a debug build with uBlock Origin enabled.
+
+[Parent 38006] WARNING: Silently denied access to property "toJSON": Access to privileged JS object not permitted (@(null):0:0): file js/xpconnect/wrappers/XrayWrapper.cpp, line 214
+[Parent 38006] WARNING: Silently denied access to property (void 0): Access to privileged JS object not permitted (@(null):0:0): file js/xpconnect/wrappers/XrayWrapper.cpp, line 214
+
+Assertion failure: clasp->specDefined(), at js/xpconnect/wrappers/XrayWrapper.cpp:584
+#01: xpc::XrayWrapper<js::CrossCompartmentWrapper, xpc::JSXrayTraits>::getOwnPropertyDescriptor(JSContext*, JS::Handle<JSObject*>, JS::Handle<jsid>, JS::MutableHandle<JS::PropertyDescriptor>) const[NightlyDebug.app/Contents/MacOS/XUL +0xabb347]
+#02: js::BaseProxyHandler::hasOwn(JSContext*, JS::Handle<JSObject*>, JS::Handle<jsid>, bool*) const[NightlyDebug.app/Contents/MacOS/XUL +0x48d1a94]
+#03: js::Proxy::get(JSContext*, JS::Handle<JSObject*>, JS::Handle<JS::Value>, JS::Handle<jsid>, JS::MutableHandle<JS::Value>)[NightlyDebug.app/Contents/MacOS/XUL +0x48da478]
+#04: JS_ForwardGetPropertyTo(JSContext*, JS::Handle<JSObject*>, JS::Handle<jsid>, JS::Handle<JS::Value>, JS::MutableHandle<JS::Value>)[NightlyDebug.app/Contents/MacOS/XUL +0x47af92f]
+#05: mozilla::jsipc::WrapperAnswer::RecvGet(mozilla::jsipc::ObjectId const&, mozilla::jsipc::JSVariant const&, mozilla::jsipc::JSIDVariant const&, mozilla::jsipc::ReturnStatus*, mozilla::jsipc::JSVariant*)[NightlyDebug.app/Contents/MacOS/XUL +0xa9039a]
+#06: non-virtual thunk to mozilla::jsipc::JavaScriptBase<mozilla::jsipc::PJavaScriptChild>::RecvGet(unsigned long long const&, mozilla::jsipc::JSVariant const&, mozilla::jsipc::JSIDVariant const&, mozilla::jsipc::ReturnStatus*, mozilla::jsipc::JSVariant*)[NightlyDebug.app/Contents/MacOS/XUL +0xaa0549]
+#07: mozilla::jsipc::PJavaScriptChild::OnMessageReceived(IPC::Message const&, IPC::Message*&)[NightlyDebug.app/Contents/MacOS/XUL +0x769c2c]
+#08: mozilla::dom::PContentChild::OnMessageReceived(IPC::Message const&, IPC::Message*&)[NightlyDebug.app/Contents/MacOS/XUL +0xa052f2]
+#09: mozilla::ipc::MessageChannel::DispatchSyncMessage(IPC::Message const&, IPC::Message*&)[NightlyDebug.app/Contents/MacOS/XUL +0x641b0e]
+#10: mozilla::ipc::MessageChannel::DispatchMessage(IPC::Message&&)[NightlyDebug.app/Contents/MacOS/XUL +0x64089a]
+#11: mozilla::ipc::MessageChannel::ProcessPendingRequest(IPC::Message&&)[NightlyDebug.app/Contents/MacOS/XUL +0x63dbc1]
+#12: mozilla::ipc::MessageChannel::ProcessPendingRequests(mozilla::ipc::AutoEnterTransaction&)[NightlyDebug.app/Contents/MacOS/XUL +0x63d78b]
+#13: mozilla::ipc::MessageChannel::Send(IPC::Message*, IPC::Message*)[NightlyDebug.app/Contents/MacOS/XUL +0x63e56b]
+#14: mozilla::dom::PContentChild::SendRpcMessage(nsString const&, mozilla::dom::ClonedMessageData const&, nsTArray<mozilla::jsipc::CpowEntry> const&, IPC::Principal const&, nsTArray<mozilla::dom::ipc::StructuredCloneData>*)[NightlyDebug.app/Contents/MacOS/XUL +0x9ea720]
+#15: ChildProcessMessageManagerCallback::DoSendBlockingMessage(JSContext*, nsAString_internal const&, mozilla::dom::ipc::StructuredCloneData&, JS::Handle<JSObject*>, nsIPrincipal*, nsTArray<mozilla::dom::ipc::StructuredCloneData>*, bool)[NightlyDebug.app/Contents/MacOS/XUL +0x11cc666]
+#16: nsFrameMessageManager::SendMessage(nsAString_internal const&, JS::Handle<JS::Value>, JS::Handle<JS::Value>, nsIPrincipal*, JSContext*, unsigned char, JS::MutableHandle<JS::Value>, bool)[NightlyDebug.app/Contents/MacOS/XUL +0x11c3ce9]
+#17: nsFrameMessageManager::SendRpcMessage(nsAString_internal const&, JS::Handle<JS::Value>, JS::Handle<JS::Value>, nsIPrincipal*, JSContext*, unsigned char, JS::MutableHandle<JS::Value>)[NightlyDebug.app/Contents/MacOS/XUL +0x11c42a5]
+#18: NS_InvokeByIndex[NightlyDebug.app/Contents/MacOS/XUL +0x103f3f]
+#19: CallMethodHelper::Call()[NightlyDebug.app/Contents/MacOS/XUL +0xb4bb96]
+#20: XPC_WN_CallMethod(JSContext*, unsigned int, JS::Value*)[NightlyDebug.app/Contents/MacOS/XUL +0xb4de03]
+#21: js::CallJSNative(JSContext*, bool (*)(JSContext*, unsigned int, JS::Value*), JS::CallArgs const&)[NightlyDebug.app/Contents/MacOS/XUL +0x49ed1dd]
+#22: js::InternalCallOrConstruct(JSContext*, JS::CallArgs const&, js::MaybeConstruct)[NightlyDebug.app/Contents/MacOS/XUL +0x49eceb3]
+#23: js::Call(JSContext*, JS::Handle<JS::Value>, JS::Handle<JS::Value>, js::AnyInvokeArgs const&, JS::MutableHandle<JS::Value>)[NightlyDebug.app/Contents/MacOS/XUL +0x49ed9de]
+#24: js::Wrapper::call(JSContext*, JS::Handle<JSObject*>, JS::CallArgs const&) const[NightlyDebug.app/Contents/MacOS/XUL +0x491c40a]
+#25: js::CrossCompartmentWrapper::call(JSContext*, JS::Handle<JSObject*>, JS::CallArgs const&) const[NightlyDebug.app/Contents/MacOS/XUL +0x48d5575]
+#26: js::Proxy::call(JSContext*, JS::Handle<JSObject*>, JS::CallArgs const&)[NightlyDebug.app/Contents/MacOS/XUL +0x48db23b]
+#27: js::proxy_Call(JSContext*, unsigned int, JS::Value*)[NightlyDebug.app/Contents/MacOS/XUL +0x48dc62d]
+#28: js::CallJSNative(JSContext*, bool (*)(JSContext*, unsigned int, JS::Value*), JS::CallArgs const&)[NightlyDebug.app/Contents/MacOS/XUL +0x49ed1dd]
+#29: js::InternalCallOrConstruct(JSContext*, JS::CallArgs const&, js::MaybeConstruct)[NightlyDebug.app/Contents/MacOS/XUL +0x49eceb3]
+#30: Interpret(JSContext*, js::RunState&)[NightlyDebug.app/Contents/MacOS/XUL +0x49e4a74]
+#31: js::RunScript(JSContext*, js::RunState&)[NightlyDebug.app/Contents/MacOS/XUL +0x49dc254]
+#32: js::InternalCallOrConstruct(JSContext*, JS::CallArgs const&, js::MaybeConstruct)[NightlyDebug.app/Contents/MacOS/XUL +0x49ece47]
+#33: js::Call(JSContext*, JS::Handle<JS::Value>, JS::Handle<JS::Value>, js::AnyInvokeArgs const&, JS::MutableHandle<JS::Value>)[NightlyDebug.app/Contents/MacOS/XUL +0x49ed9de]
+#34: JS_CallFunctionValue(JSContext*, JS::Handle<JSObject*>, JS::Handle<JS::Value>, JS::HandleValueArray const&, JS::MutableHandle<JS::Value>)[NightlyDebug.app/Contents/MacOS/XUL +0x47b173d]
+#35: nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS*, unsigned short, XPTMethodDescriptor const*, nsXPTCMiniVariant*)[NightlyDebug.app/Contents/MacOS/XUL +0xb40dca]
+#36: PrepareAndDispatch[NightlyDebug.app/Contents/MacOS/XUL +0x1052d1]

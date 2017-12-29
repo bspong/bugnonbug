@@ -1,0 +1,19 @@
+AJAX POST-requests makes SCRIPT-tags download using POST
+User-Agent:       Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.0; WOW64; Trident/4.0; SLCC1; .NET CLR 2.0.50727; .NET CLR 3.5.21022; .NET CLR 3.5.30729; .NET CLR 3.0.30729; .NET CLR 4.0.20506; Creative AutoUpdate v1.40.01)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.9.1.2) Gecko/20090729 Firefox/3.5.2 (.NET CLR 4.0.20506)
+
+When doing an AJAX POST-request (in my case using jQuery) to insert HTML that contains <SCRIPT SRC="...">-tags into the DOM causes these SCRIPT-tags to load the files using POST instead of GET... the request headers for the script files also reports them as being requested by XMLHttpRequest, which I would believe is incorrect as the injection into the DOM has nothing to do with them being loaded by AJAX or not. The main issue (for me) this has is that it this bypasses the cache and always downloads the script-files, regardless of them being cached or not.
+
+It should be noted that the actual problem most likely is that AJAX requests overwrite the request method for all subsequent loads with whatever request method it is set to use. However, it does not appear to affect the loading of images, only SCRIPT-tags.
+
+Reproducible: Always
+
+Steps to Reproduce:
+Load a page that contains <SCRIPT SRC="..."> using an AJAX POST-request from any page (that was loaded using GET) and insert it anywhere into the DOM.
+Actual Results:  
+The script-file is requested using POST (regardless of being cached) and is also specified as being requested by XMLHttpRequest... even though the page itself was loaded using GET and the script-file is loaded during the DOM-injection and not specifically by the AJAX request.
+
+Expected Results:  
+The script-file should be loaded using GET (or possibly whatever request method was used to load the page itself) and should not be specified as being requested by XMLHttpRequest.
+
+I used jQuery for the AJAX requests and DOM-injection, which might affect the result in some way, but I doubt the root of this problem is jQuery but rather a bug in Firefox (IE8 handles this "correctly" and uses the cached script-files).

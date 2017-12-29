@@ -1,0 +1,39 @@
+Crash in nsAppShell::ProcessNextNativeEvent
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9a9pre) Gecko/2007110618 Minefield/3.0a9pre
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9a9pre) Gecko/2007110618 Minefield/3.0a9pre
+
+Whenever i go to URL mentioned above and hover (not click) on the links that pops up a javascript dialog with the news embedded in the overlay window after moving the mouse a few times over the popups, the browser crashes. It is 100% reproduceable
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Go to http://cm.my.yahoo.com
+2. Hover over the news links 
+3. bang
+Actual Results:  
+Program received signal SIGSEGV, Segmentation fault.
+[Switching to Thread 0xb5f9f6c0 (LWP 7428)]
+0xb68b460d in IA__gdk_window_get_toplevel (window=0x89885a0) at gdkwindow.c:617
+617     gdkwindow.c: No such file or directory.
+        in gdkwindow.c
+(gdb) where
+#0  0xb68b460d in IA__gdk_window_get_toplevel (window=0x89885a0) at gdkwindow.c:617
+#1  0xb68b7719 in gdk_window_is_toplevel_frozen (window=0x89885a0) at gdkwindow.c:2298
+#2  0xb68b7a49 in IA__gdk_window_process_all_updates () at gdkwindow.c:2438
+#3  0xb68b7701 in gdk_window_update_idle (data=0x0) at gdkwindow.c:2288
+#4  0xb689e2ab in gdk_threads_dispatch (data=0x8f4e370) at gdk.c:470
+#5  0xb6719be3 in g_idle_dispatch (source=0xa0b42f8, callback=0xb689e255 <gdk_threads_dispatch>, user_data=0x8f4e370) at gmain.c:4132
+#6  0xb6716464 in g_main_dispatch (context=0x808a258) at gmain.c:2061
+#7  0xb671784e in IA__g_main_context_dispatch (context=0x808a258) at gmain.c:2613
+#8  0xb6717d65 in g_main_context_iterate (context=0x808a258, block=0, dispatch=1, self=0x804db38) at gmain.c:2694
+#9  0xb6717f97 in IA__g_main_context_iteration (context=0x808a258, may_block=0) at gmain.c:2753
+#10 0xb79e99d1 in nsAppShell::ProcessNextNativeEvent (this=0x81331b0, mayWait=0) at /usr/src/moz/ff/mozilla/widget/src/gtk2/nsAppShell.cpp:144
+#11 0xb79ff85f in nsBaseAppShell::DoProcessNextNativeEvent (this=0x81331b0, mayWait=0) at /usr/src/moz/ff/mozilla/widget/src/xpwidgets/nsBaseAppShell.cpp:1!
+#12 0xb79ffb68 in nsBaseAppShell::OnProcessNextEvent (this=0x81331b0, thr=0x80a9ae8, mayWait=1, recursionDepth=0) at /usr/src/moz/ff/mozilla/widget/src/xpw!
+#13 0xb7b2d9a1 in nsThread::ProcessNextEvent (this=0x80a9ae8, mayWait=1, result=0xbfd3ff94) at /usr/src/moz/ff/mozilla/xpcom/threads/nsThread.cpp:477
+#14 0xb7aded7b in NS_ProcessNextEvent_P (thread=0x80a9ae8, mayWait=1) at nsThreadUtils.cpp:227
+#15 0xb79ffd80 in nsBaseAppShell::Run (this=0x81331b0) at /usr/src/moz/ff/mozilla/widget/src/xpwidgets/nsBaseAppShell.cpp:154
+#16 0xb78314a4 in nsAppStartup::Run (this=0x816a3c0) at /usr/src/moz/ff/mozilla/toolkit/components/startup/src/nsAppStartup.cpp:170
+#17 0xb6f29b4f in XRE_main (argc=1, argv=0xbfd40614, aAppData=0x804d128) at /usr/src/moz/ff/mozilla/toolkit/xre/nsAppRunner.cpp:3142
+#18 0x08048d21 in main (argc=1, argv=0xbfd40614) at /usr/src/moz/ff/mozilla/browser/app/nsBrowserApp.cpp:153
+(gdb)

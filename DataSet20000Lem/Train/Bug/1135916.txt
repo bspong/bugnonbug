@@ -1,0 +1,40 @@
+[e10s] "Copy Email Address" in remote browser cause unsafe CPOW usage warning
++++ This bug wa initially created a a clone of Bug #1133577 +++
+
+STR:
+
+1) Visit a site with a mailto: link on it in an e10s window
+2) Right-click on the mailto: link, and choose "Copy Email Address"
+
+This cause an "unsafe CPOW usage" warning in the Browser Console.
+
+In browser/base/content/nsContextMenu.js:
+
+// Generate email address and put it on clipboard.
+copyEmail: function() {
+// Copy the comma-separated list of email address only.
+// There are other way of embedding email address in a mailto:
+// link, but such complex parsing is beyond us.
+var url = this.linkURL;
+var qmark = url.indexOf("?");
+var addresses;
+
+// 7 == length of "mailto:"
+address = qmark > 7 ? url.substring(7, qmark) : url.substr(7);
+
+// Let's try to unescape it using a character set
+// in case the address is not ASCII.
+try {
+var characterSet = this.target.ownerDocument.characterSet; <- Causes CPOW warning
+const textToSubURI = Cc["@mozilla.org/intl/texttosuburi;1"].
+getService(Ci.nsITextToSubURI);
+address = textToSubURI.unEscapeURIForUI(characterSet, addresses);
+}
+catch(ex) {
+// Do nothing.
+}
+
+var clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].
+getService(Ci.nsIClipboardHelper);
+clipboard.copyString(addresses, document);
+},

@@ -1,0 +1,43 @@
+DDE topic WWW_OpenURL implementation broken
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.5) Gecko/20041107 Firefox/1.0
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.5) Gecko/20041107 Firefox/1.0
+
+The window ID specified in the DDE topic WWW_OpenURL is ignored in Firefox 1.0:
+all URLs opened by another application are opened in accordance with the Tabbed
+Browsing 'Open link from other application in' preference.
+
+Previously (and in all other DDE-compliant browsers), the window ID could be
+used to specify whether a URL is opened in a new window/tab (ID = 0) or the
+frontmost or last used window/tab (ID = -1).
+
+WWW_OpenURL also doe not activate the window in which the URL is opened.
+
+The window ID is the 3rd parameter in the parameter string:
+"http://myurl./",,windowID,0,,,
+
+
+
+Reproducible: Always
+Steps to Reproduce:
+Open a bookmark using a third party bookmark manager that us DDE to
+communicate with the browser, e.g. Bookmark Buddy or URL Organizer 2
+(urlorg.com/download.shtml).
+Actual Results:
+New URL is always opened in accordance with the Tabbed Browsing 'Open link from
+other application in' preference, irrespective of the windowID used, and the
+relevant window is not activated.
+
+Expected Results:
+The default behavior for WWW_OpenURL should be a follows:
+- a windowID of 0 should open a URL in a new tab
+- a windowID of -1 should open a URL in the most recent tab
+- a windowID > 0 should open a URL in the corresponding tab*
+Whichever window the URL is opened in should be activated.
+
+The 'Open link from other applications' Tabbed Browsing option should be
+changed to:
+x Use new window instead of new tab
+x Always open in: [a new tab] OR [a new window] OR [the most recent tab/window]
+
+*This requires WWW_ListWindows to be implemented; see:
+https://bugzilla.mozilla.org/show_bug.cgi?id=84363

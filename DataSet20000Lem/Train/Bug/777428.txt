@@ -1,0 +1,12 @@
+debug webapps running in desktop webapp runtime
+Now that the debugger is remotable, we should make it possible to debug webapps running in the desktop webapp runtime.
+
+I'm not sure how much knowledge of the runtime the eventual owner of this bug will need to implement the functionality; here's a general overview:
+
+The runtime, like Firefox, is a GRE/XUL application. It get built and packaged with Firefox on Windows/Mac/Linux a the webapprt-stub[.exe] executable in the Firefox installation directory and the webapprt/ subdirectory of the Firefox installation directory.
+
+Firefox make a copy of the stub for each webapp it installs, but all copy share the webapprt/ subdirectory, which contains the runtime-specific code (chrome/, components/, modules/, the application INI file, which is called webapprt.ini due to bug 747394, etc.). The runtime also ha access to GRE code, including all code in toolkit/ that is built/packaged with Firefox.
+
+The runtime's XUL code is minimal and stored in the webapprt/content/ source directory. Starting a webapp open a single window with one <browser> element in which the webapp's primary launch URL is loaded.
+
+Webapps may open multiple window via the standard mechanism (<a target="something">, window.openWindow), each of which contains one <browser> element. The runtime doe not support tabs, so there is never more than one <browser> element per window.

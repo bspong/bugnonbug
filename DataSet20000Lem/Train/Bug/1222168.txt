@@ -1,0 +1,45 @@
+Severe BetterPrivacy add-on issue
+User Agent: Mozilla/5.0 (en-US) Gecko Firefox/20
+Build ID: 20140314220517
+
+Steps to reproduce:
+
+While the BetterPrivacy (default) option 'Prevent the Firefox Clear History function from handling LSOs a usual cookies' is enabled,
+the native 'Clear cache' function of FF 42 no longer work. BetterPrivacy need to override the native Cookie handling for certain reason and therefore us a an override function a follows:
+
+handleSanitizeCookies: function (onShutdown, overrides) {
+try{
+if ( typeof Sanitizer !== 'function' ) {
+Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
+.getService(Components.interfaces.mozIJSSubScriptLoader)
+.loadSubScript("chrome://browser/content/sanitize.js", null);
+}
+var handleCookieClearing = bprivacy.shouldHandleCookieClearing (overrides) ;
+if ( handleCookieClearing ) {
+var range = null; // If we ignore timespan, clear everything
+if (!Sanitizer.ignoreTimespan)
+range = Sanitizer.range || Sanitizer.getClearRange();
+try{
+Sanitizer.prototype.items.cookies = undefined;
+} catch(e) {}
+Sanitizer.prototype.items.cookies =
+{
+clear : function () {
+bprivacy.BPSanitizeCookies(range);
+},
+get canClear ()
+{
+return true;
+}
+}
+}
+
+
+Actual results:
+
+It seems this function no longer work due to a change in FF 42.
+
+
+Expected results:
+
+Any information related to the FF code of recent change addressing this topic is helpful, especially information about the new location of code which is handling those special function (omni.ja or elsewhere??) . Is it overridable??

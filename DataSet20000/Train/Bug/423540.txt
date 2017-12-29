@@ -1,0 +1,24 @@
+Component instantiation during component registration can fail
+Created attachment 310113
+Avoid attempting to use other components during XPCOM registration in FeedProcessor.js
+
+During the component registration phase of startup, it is unwise to assume that any other random component is available for use; your component may be one of the earliest ones registered.
+
+Furthermore, just because abusing this works for you does not mean it will work for others; component load order differs between debug and release builds, as well as between different platforms.
+
+How might this look? Consider the following snippet:
+
+var gIoService = Cc[@mozilla.org/network/io-service;1].
+                 getService(Ci.nsIIOService);
+
+function MyComponent() {}
+
+function NSGetModule(compMgr, fileSpec) {
+  return XPCOMUtils.generateModule([MyComponent]);
+}
+
+In this example, .getService() will be called on the component that implements @mozilla.org/network/io-service;1 during component registration. If that component has not yet been registered, this call will fail, and the load of the JS file will abort.
+
+The component loader is smart enough to retry registering components that fail, but sometimes that isn't good enough. This becomes particularly challenging to track down when the debug build works, but the release build does not. (This happened to us recently at Flock.)
+
+I have updated toolkit/components/feeds/src/FeedProcessor.js to avoid making assumptions about component load order (patch attached). If addressing this issue is deemed worthy of attention and the patch is acceptable, I can look for other occurances of this and provide more patches.

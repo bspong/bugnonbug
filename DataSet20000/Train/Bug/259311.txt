@@ -1,0 +1,31 @@
+firefox -remote broken if some mozilla packages not present
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7) Gecko/20040803 Firefox/0.9.3
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7) Gecko/20040803 Firefox/0.9.3
+
+NOTE: I am running this on Suse 9.2 with Mozilla installed, but firefox requires
+mozilla components that are not installed by default, and are not part of the
+Suse 9.2 distro.
+
+Bug is that firefox install should check for required shared libs and at least
+warn on installation, or better yet download them...
+
+Trying to run firefox -remote 'openURL(http://www.yahoo.com)' yields
+Error: No running window found
+
+On investigation, this is because it calls mozilla-xremote-client which requires
+libplds4.so which is part of the mozilla-nspr package which is not part of Suse 9.2.
+
+Installing mozilla-nspr-1.3-0_rh7 allows mozilla-xremote-client to work, but
+firefox -remote still fails because it requires libmozjs.so which is not part of
+the mozilla package distributed with Suse 9.2 (mozilla-1.6-74.9).
+
+Reproducible: Always
+Steps to Reproduce:
+1. Uninstall all mozilla files.
+2. Install RPM mozilla-1.6-74.9
+3. Run firefox -remote 'openURL(http://www.yahoo.com)'
+Actual Results:  
+Error: No running window found
+
+Expected Results:  
+Opened the URL

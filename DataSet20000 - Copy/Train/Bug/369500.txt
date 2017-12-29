@@ -1,0 +1,80 @@
+Ajax gets old form values when reloading page, and not when entered as a new url.
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.8.1.1) Gecko/20061204 Firefox/2.0.0.1
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.8.1.1) Gecko/20061204 Firefox/2.0.0.1
+
+The code on the page is built to update the other button text (button 1 updates button 2 and the other way around). This works fine in IE6 and Opera9, however in FF2 this does not work.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Enter address: http://dev.webreport.se/AjaxToolkit/ajaxtoolkit.aspx
+2. Click both buttons on the page, they should now have the text of current date and time.
+3. Reload the page by either CTRL+R or right click and "reload".
+4. Click one of the buttons, this now updates both buttons.
+Actual Results:  
+The button clicked gets its last value (incorrect, it should stay as it was), and the other one gets the new date and time (correct).
+
+Expected Results:  
+The button clicked should not change, the other button should get the new date and time.
+
+HTML source:
+
+<%@ Page Language="C#" AutoEventWireup="true" CodeFile="ajaxtoolkit.aspx.cs" Inherits="test_ajaxtoolkit" %>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head runat="server">
+    <title>Untitled Page</title>
+</head>
+<body>
+    <form id="form1" runat="server">
+    <div>
+    <asp:ScriptManager runat="server" ID="SM" />
+    <asp:UpdatePanel runat="server" ID="UP1">
+      <ContentTemplate>
+        <asp:Button runat="server" ID="btn1" Text="Click me" OnClick="btn1_click" />
+      </ContentTemplate>
+    </asp:UpdatePanel>
+    <asp:UpdatePanel runat="server" ID="UP2">
+      <ContentTemplate>
+        <asp:Button runat="server" ID="btn2" Text="Click him" OnClick="btn2_click" />
+      </ContentTemplate>
+    </asp:UpdatePanel>
+    </div>
+    </form>
+</body>
+</html>
+
+ 
+
+Code source:
+
+using System;
+using System.Data;
+using System.Configuration;
+using System.Collections;
+using System.Web;
+using System.Web.Security;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Web.UI.WebControls.WebParts;
+using System.Web.UI.HtmlControls;
+
+public partial class test_ajaxtoolkit:System.Web.UI.Page
+{
+  protected void Page_Load( object sender, EventArgs e )
+  {
+
+  }
+
+  protected void btn1_click( object sender, EventArgs e )
+  {
+    btn2.Text = "1: " + DateTime.Now.ToString();
+  }
+
+  protected void btn2_click( object sender, EventArgs e )
+  {
+    btn1.Text = "2: " + DateTime.Now.ToString();
+  }
+}

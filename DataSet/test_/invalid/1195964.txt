@@ -1,0 +1,200 @@
+Answer changes mid for level, was sdparta_0 --> audio
+User Agent: Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.155 Safari/537.36
+
+Steps to reproduce:
+
+- Call from Firefox(40.0.2) --> Chrome (Version 44.0.2403.155 m)
+- User-Agent: JsSIP 0.7.3
+
+
+
+Actual results:
+
+It seems like:
+
+Firefox in INVITE adds ==> a=mid:sdparta_1
+Chrome in 200 OK adds ==> a=mid:audio
+
+Error:
+rtcninja:ERROR:RTCPeerConnection setRemoteDescription() | error: +2ms DOMException [InvalidSessionDescriptionError: "Answer changes mid for level, was 'sdparta_0', now 'audio'"
+code: 0
+
+However in Chrome2Firefox, firefox seems to send back what is requested, and works fine. 
+
+I need to understand who is the trouble maker in this, firefox for not translating mid:audio to sdparta_N or chrome not sending same " a=mid:sdparta_1" is answer.
+
+Is it possible to get some pointers on this issues's fix, or should I somehow manipulate SDP from server side?
+
+
+
+Invite and 200 OK Packets as follow:
+-------------------------- INVITE --------------------------
+
+INVITE sip:1001@213.X.X.X:5090 SIP/2.0
+Via: SIP/2.0/WS fkcg9rsjgsq4.invalid;branch=z9hG4bK9986254
+Max-Forwards: 69
+To: <sip:1001@213.X.X.X:5090>
+From: "1002" <sip:1002@213.X.X.X:5090>;tag=71mt3t1bh1
+Call-ID: c9371c4q9kjgkj79td9o
+CSeq: 1396 INVITE
+X-Can-Renegotiate: false
+Contact: <sip:qln1o4jl@fkcg9rsjgsq4.invalid;transport=ws;ob>
+Content-Type: application/sdp
+Session-Expires: 90
+Allow: INVITE,ACK,CANCEL,BYE,UPDATE,MESSAGE,OPTIONS,REFER
+Supported: timer,ice,replaces,outbound
+User-Agent: JsSIP 0.7.3
+Content-Length: 2310
+
+v=0
+o=mozilla...THIS_IS_SDPARTA-40.0.2 4294967295 0 IN IP4 0.0.0.0
+s=-
+t=0 0
+a=sendrecv
+a=fingerprint:sha-256 3E:BD:ED:EA:B5:51:BD:BB:72:74:4D:1E:6D:2A:51:A4:95:F0:FC:4C:BD:7F:B4:33:F5:35:90:E2:73:76:1C:CA
+a=group:BUNDLE sdparta_0 sdparta_1
+a=ice-options:trickle
+a=msid-semantic:WMS *
+m=audio 13148 RTP/SAVPF 109 9 0 8
+c=IN IP4 182.178.132.205
+a=candidate:0 1 UDP 2128609535 192.168.1.103 55488 typ host
+a=candidate:0 2 UDP 2128609534 192.168.1.103 55489 typ host
+a=candidate:1 1 UDP 1692467199 182.178.132.205 13148 typ srflx raddr 192.168.1.103 rport 55488
+a=candidate:1 2 UDP 1692467198 182.178.132.205 13149 typ srflx raddr 192.168.1.103 rport 55489
+a=sendrecv
+a=end-of-candidates
+a=extmap:1 urn:ietf:params:rtp-hdrext:ssrc-audio-level
+a=ice-pwd:4311f2c12c1640b27653980c9f48a585
+a=ice-ufrag:e02832a7
+a=mid:sdparta_0
+a=msid:{38dcd937-c3f6-4433-b248-359b43862cd4} {76aee036-eb9c-4510-9ffe-0446e6d62bdd}
+a=rtcp:13149 IN IP4 182.178.132.205
+a=rtcp-mux
+a=rtpmap:109 opus/48000/2
+a=rtpmap:9 G722/8000/1
+a=rtpmap:0 PCMU/8000
+a=rtpmap:8 PCMA/8000
+a=setup:actpass
+a=ssrc:2266640789 cname:{f95b118c-30cc-46bf-9ac7-75e39158f6ef}
+m=video 13150 RTP/SAVPF 120 126 97
+c=IN IP4 182.178.132.205
+a=candidate:0 1 UDP 2128609535 192.168.1.103 55490 typ host
+a=candidate:0 2 UDP 2128609534 192.168.1.103 55491 typ host
+a=candidate:1 1 UDP 1692467199 182.178.132.205 13150 typ srflx raddr 192.168.1.103 rport 55490
+a=candidate:1 2 UDP 1692467198 182.178.132.205 13151 typ srflx raddr 192.168.1.103 rport 55491
+a=sendrecv
+a=end-of-candidates
+a=fmtp:120 max-fs=12288;max-fr=60
+a=fmtp:126 profile-level-id=42e01f;level-asymmetry-allowed=1;packetization-mode=1
+a=fmtp:97 profile-level-id=42e01f;level-asymmetry-allowed=1
+a=ice-pwd:4311f2c12c1640b27653980c9f48a585
+a=ice-ufrag:e02832a7
+a=mid:sdparta_1
+a=msid:{38dcd937-c3f6-4433-b248-359b43862cd4} {4f813ed1-c399-458a-99e1-56495c3c042f}
+a=rtcp:13151 IN IP4 182.178.132.205
+a=rtcp-fb:120 nack
+a=rtcp-fb:120 nack pli
+a=rtcp-fb:120 ccm fir
+a=rtcp-fb:126 nack
+a=rtcp-fb:126 nack pli
+a=rtcp-fb:126 ccm fir
+a=rtcp-fb:97 nack
+a=rtcp-fb:97 nack pli
+a=rtcp-fb:97 ccm fir
+a=rtcp-mux
+a=rtpmap:120 VP8/90000
+a=rtpmap:126 H264/90000
+a=rtpmap:97 H264/90000
+a=setup:actpass
+a=ssrc:2558912892 cname:{f95b118c-30cc-46bf-9ac7-75e39158f6ef}
+
+-------------------------- 200 OK --------------------------
+
+ +262ms jssip.js:22409:8
+JsSIP:RTCSession receiveInviteResponse() +8ms jssip.js:22409:8
+JsSIP:Dialog new UAC dialog created with status EARLY +1ms jssip.js:22409:8
+JsSIP:RTCSession session progress +1ms jssip.js:22409:8
+JsSIP:Transport received WebSocket text message:
+
+SIP/2.0 200 OK
+Record-Route: <sip:213.X.X.X:5090;nat=yes;lr=on>
+Via: SIP/2.0/WS fkcg9rsjgsq4.invalid;rport=13134;received=182.178.132.205;branch=z9hG4bK9986254
+To: <sip:1001@213.X.X.X:5090>;tag=6cjarigli4
+From: "1002" <sip:1002@213.X.X.X:5090>;tag=71mt3t1bh1
+Call-ID: c9371c4q9kjgkj79td9o
+CSeq: 1396 INVITE
+Contact: <sip:b779gnjs@516a4dt29c6s.invalid;alias=182.178.132.205~13130~5;transport=ws>
+X-Can-Renegotiate: true
+Session-Expires: 90;refresher=uas
+Supported: timer,ice,replaces,outbound
+Content-Type: application/sdp
+Content-Length: 1575
+
+
+
+v=0
+o=- 8105806922071500469 2 IN IP4 213.X.X.X
+s=-
+t=0 0
+a=msid-semantic: WMS mWQjeFwKarEUYUb4DS18dC7ThfQB2dxqsS2r
+m=audio 38400 RTP/SAVPF 109 9 0 8
+c=IN IP4 213.X.X.X
+a=mid:audio
+a=rtpmap:109 opus/48000/2
+a=fmtp:109 minptime=10; useinbandfec=1
+a=rtpmap:9 G722/8000
+a=rtpmap:0 PCMU/8000
+a=rtpmap:8 PCMA/8000
+a=maxptime:60
+a=ssrc:1339483412 cname:/V8cy431P35D+FTv
+a=ssrc:1339483412 msid:mWQjeFwKarEUYUb4DS18dC7ThfQB2dxqsS2r eead7108-191d-4c83-8805-272ec789546f
+a=ssrc:1339483412 mslabel:mWQjeFwKarEUYUb4DS18dC7ThfQB2dxqsS2r
+a=ssrc:1339483412 label:eead7108-191d-4c83-8805-272ec789546f
+a=sendrecv
+a=rtcp:38400
+a=rtcp-mux
+a=setup:active
+a=fingerprint:sha-1 EA:BC:7A:E2:80:24:35:2D:0D:8F:BF:D9:6D:6E:F4:DD:DD:C1:A8:63
+a=ice-ufrag:zCceaUk1
+a=ice-pwd:zlbedLe7bd9DI3GziXGlazBHbL
+a=candidate:gMM0OmxTakxhxScV 1 UDP 2130706431 213.X.X.X 38400 typ host
+m=video 38430 RTP/SAVPF 120
+
+c=IN IP4 213.X.X.X
+a=mid:video
+a=rtpmap:120 VP8/90000
+a=rtcp-fb:120 ccm fir
+a=rtcp-fb:120 nack
+a=rtcp-fb:120 nack pli
+a=ssrc:1120673581 cname:/V8cy431P35D+FTv
+a=ssrc:1120673581 msid:mWQjeFwKarEUYUb4DS18dC7ThfQB2dxqsS2r ff932e7e-b6c8-4146-bb70-f78a4b2d485c
+a=ssrc:1120673581 mslabel:mWQjeFwKarEUYUb4DS18dC7ThfQB2dxqsS2r
+a=ssrc:1120673581 label:ff932e7e-b6c8-4146-bb70-f78a4b2d485c
+a=sendrecv
+a=rtcp:38430
+a=rtcp-mux
+a=setup:active
+a=fingerprint:sha-1 EA:BC:7A:E2:80:24:35:2D:0D:8F:BF:D9:6D:6E:F4:DD:DD:C1:A8:63
+a=ice-ufrag:MdEbWTPJ
+a=ice-pwd:iGHldG3iVJ1wylE3PxsD67LQin
+a=candidate:gMM0OmxTakxhxScV 1 UDP 2130706431 213.X.X.X 38430 typ host
+
+
+ +5s jssip.js:22409:8
+JsSIP:RTCSession receiveInviteResponse() +8ms jssip.js:22409:8
+JsSIP:Dialog dialog c9371c4q9kjgkj79td9o71mt3t1bh16cjarigli4  changed to CONFIRMED state +0ms jssip.js:22409:8
+rtcninja:RTCPeerConnection setRemoteDescription() +5s jssip.js:22409:8
+
+rtcninja:ERROR:RTCPeerConnection setRemoteDescription() | error: +2ms DOMException [InvalidSessionDescriptionError: "Answer changes mid for level, was 'sdparta_0', now 'audio'"
+code: 0
+
+nsresult: 0x0] jssip.js:22584:5
+JsSIP:RTCSession acceptAndTerminate() +4ms jssip.js:22409:8
+JsSIP:RTCSession sendRequest() +0ms jssip.js:22409:8
+JsSIP:RTCSession:Request new | ACK +0ms jssip.js:22409:8
+JsSIP:Transport sending WebSocket message:
+
+
+Expected results:
+
+Firefox to accept the 200 OK (answer) and complete handshake.

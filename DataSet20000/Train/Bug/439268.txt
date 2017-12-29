@@ -1,0 +1,28 @@
+Performance regressions vs. FF2
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.2; en-US; rv:1.8.1.9) Gecko/20071025 Firefox/2.0.0.9
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.2; en-US; rv:1.8.1.9) Gecko/20071025 Firefox/2.0.0.9
+
+(mostly copied from the list)
+
+With many (20+) tabs displayed (not just loaded), scrolling through tabs is visibly slower than FF2.
+
+The main culprit seems to be the smooth scrolling in the tabs; disabling toolkit.scrollbox.smoothScroll makes it a lot faster (though still slower than FF2).
+
+The rest of the time seems to be spent in gURLBar.value = value under browser.js onLocationChange's URLBarSetURI call.  Commenting out this call (in addition to having smooth scrolling off) makes tab switching look as fast as FF2.  I didn't dig down into further than that (to see if it's some event listener that's taking time or something).  This takes 60-80ms.
+
+I'm not sure this is all; it still doesn't seem as quick as FF2.  This should be compared less subjectively, but I'm not sure where to do that.
+
+For perspective, this is a visible performance drop, but not a catastrophic one: quickly scrolling the mouse wheel 6 stops in FF2 (with TMP) moves down 6 tabs; in FF3 it's slow enough that it misses some, and only moves 2-3.  (I navigate like this a lot, so this is very noticable.)
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+Set browser.tabs.tabMinWidth to a low value, load many tabs, and hold ctrl-pgdn.  (My actual case is vertical tabs with TabMixPlus, scrolling with the mouse wheel.)  It's slower and much less responsive than FF2.
+
+Note that to reproduce the URL bar part of this, consecutive tabs must have different URLs, or the gURLBar.value = value call seems to short circuit.
+
+
+
+
+XP64, Geforce 9600GT, Q9300

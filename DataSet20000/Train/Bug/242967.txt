@@ -1,0 +1,52 @@
+mail button is malformed
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.6) Gecko/20040206 Firefox/0.8
+Build Identifier: 
+
+the structure of the mail button is needlessly complex.  it contains two nested
+boxes, when none are needed, and also contains orientation attributes that break
+themes. the patch for bug 237959 was completely unecessary, and actually didn't
+fix the problem - it just changed the problem.  button orientation is handled by
+the theme.  using the standard menu-type toolbarbutton will greatly simplify
+things and fix these problems.
+
+at first, looking thru browser.xul, it's unclear where these extra boxes come
+from.  but with a little digging, it would appear the mail-button uses the
+"menu-orient" binding instead of the standard "menu".
+http://lxr.mozilla.org/mozilla/source/toolkit/content/widgets/toolbarbutton.xml#33
+
+current structure:
+toolbarbutton orient="vertical"
+  hbox
+    box
+      image/
+      label/
+    /box
+    dropmarker/
+  /hbox
+/toolbarbutton
+
+proposed structure:
+toolbarbutton
+  image/
+  label/
+  dropmarker/
+/toolbarbutton
+
+unless there's some yet-to-be-used functionality planned for the mail button
+which necessitates this structure, it should be changed to the regular "menu" type.
+
+precedent exists in the DOM Inspector panel buttons, the Web Developer
+extension's toolbar buttons, and even the regular old toolbar bookmark folders.
+
+
+Reproducible: Always
+Steps to Reproduce:
+
+
+
+
+this bug can also be a tracker for all mail button issues:
+bug 237959 - mail button label orientation
+bug 237900 - mail button needs icon
+
+see also the forum discussion at the attached url.

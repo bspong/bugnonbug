@@ -1,0 +1,21 @@
+Make the view directly communicate batch to the result
+Currently the view (through the controller) executes a bunch of operation using the bookmarking API. The old API in certain case wa starting a "batch" that basically consisted in sending 2 notification onBegin/EndBatch and grouping writes into a transaction.
+
+For the transaction, we'll try to provider more batchins APIs (like removeMany, insertMany...).
+For the batch notifications, it sound pointless for the view to use an API that sends a notification to the result, when it can directly communicate to the result. More specifically, the view know when it's about to do a large change, while the API doesn't know.
+
+Additionally, the new bookmarking API doesn't have the concept of batching, since in the async world it is a bit more challenging.
+
+The only thing using batch notification atm are:
+* nsNavHistoryResult: the view can directly talk with the result, no need to go through 2 layer of abstraction.
+* NewTabUtils.jsm: seems to do this for perf reasons, but it just doesn't work with the new history APIs, we'd better fix the APIs if there's a perf issue
+* nsPlacesExpiration.js: try to avoid expiring during a batch... off-hand we should rather move expiration to idle (bug 1376533 intended to do that but it failed to, will file a new bug). Not a big deal in general, wa just an overzealous thing with main-thread IO.
+* sync/modules/engines/bookmarks.js: Sync try to avoid bumping score during batches. Similar to NewTabUtils this is unlikely to work with the new APIs, and probably require a different approach.
+
+Considered all of the above, we should probably evaluate completely removing runInBatchMode and onBegin/EndUpdateBatch and make the view and result communicate batch directly between them.
+
+If we'd ever need a general notification to tell consumer some large IO is happening, we could probably use an "heavy-io-task" nsIObserver topic.
+
+I don't know if we'll do all of this here, potentially we could even just make the view invoke onBegin/EndUpdateBatch on the result and keep the rest for when async transaction ride the train, depending on the risk assessment of the above changes.
+
+Kit, do you oversee any possible issue with dropping batch handling in Sync?

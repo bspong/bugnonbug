@@ -1,0 +1,35 @@
+error thrown event listener never reach the error console
+User-Agent: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_5_8; en-us) AppleWebKit/531.9 (KHTML, like Gecko) Version/4.0.3 Safari/531.9
+Build Identifier: Firefox 3.5.2
+
+When the following code is run in Firefox < 3.5 the error show up in the console. when run in Firefox >3.5 the error never bubble up.
+
+element = document.createElement('div');
+var responder = function(){
+console.log('responder run');
+throw new Error('i never reach the console in FF3.5');
+}
+element.addEventListener("dataavailable", responder, false);
+
+event = document.createEvent('HTMLEvents');
+event.initEvent('dataavailable', true, true);
+element.dispatchEvent(event);
+
+Reproducible: Always
+
+Steps to Reproduce:
+element = document.createElement('div');
+var responder = function(){
+console.log('responder run');
+throw new Error('i never reach the console in FF3.5');
+}
+element.addEventListener("dataavailable", responder, false);
+
+event = document.createEvent('HTMLEvents');
+event.initEvent('dataavailable', true, true);
+element.dispatchEvent(event);
+Actual Results:
+console contains "responder run" but no error
+
+Expected Results:
+console to contain "responder run" and [Exception... "'Error: i never reach the console in FF3.5' when calling method: [nsIDOMEventListener::handleEvent]" nsresult: "0x8057001c (NS_ERROR_XPC_JS_THREW_JS_OBJECT)" location: "JS frame :: http://local.rupture.com/javascripts/application.js :: fire :: line 5155" data: no]

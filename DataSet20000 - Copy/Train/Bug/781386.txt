@@ -1,0 +1,10 @@
+MoTown shouldn't be loaded when running tests
+Causes all sorts of bad issues (tests hitting the network, leaks, etc. - see dependency list).
+
+To make this happen I made a couple of changes:
+a) add a social.skipLoadingProviders pref, that causes the SocialService to avoid loading providers from prefs. Set this pref in the test harness profile.
+b) adjust the shareButton test to avoid depending on the default provider, by making it use runSocialTestWithProvider
+c) remove the test-social-ui-ready code, and have runSocialTestWithProvider just unconditionally clobber Social.provider before it enables the social pref
+d) (not strictly necessary) adjust runSocialTestWithProvider to make it handle removing the added provider, by passing a callback to be invoked when the caller wants the tests to end
+
+c) means that the test harness now assumes that social is disabled by default. I don't think this is a problem, because I think that will always be true. It also means that during the test run, SocialUI_providerReady doesn't do any work, because Social.provider is not set on window load (there are no providers to load). Thankfully, the parts of SocialUI_providerReady that tests depend on are covered by the "social:pref-changed" handler, which is triggered by runSocialTestWithProvider setting the pref to true, so we're OK for the moment. In a followup, though, I'd like to consolidate these code paths, since the SocialUI_providerReady path is the path we take when normal users use the feature, and it is responsible for some initialization tasks that we should have tests for (like making sure that the "remove" menu item is initialized, etc.).

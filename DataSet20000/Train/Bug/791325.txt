@@ -1,0 +1,20 @@
+There's too much asyncness exposed by the debugger frontend
+I think part of the mess the frontend exposes now is caused by too much granularity exposed via events. An almost trivial (delicious) amount of re-engineering of this situation may have significant benefits.
+
+For instance, there's Debugger:Loaded and Debugger:Unloaded, both fired up only to signal DOM-related state (UI initialization readyness vs. UI invalidatednessness). These are of absolutely no benefit to any listener, since the state the frontend or client is in no way dependable, and easily mistaken for being reliable startup/shutdown events.
+
+There's also Debugger:Connecting, which is useless because it signals "I will start connecting now", information of no value to anyone (since there's no benefit/reason in stopping a connection from happening while the debugger starts up and while UI is standing by), but also easily mistaken for being a reliable "i can start doing stuff with the debugger now" event.
+
+We're also exposing multiple paths triggering (or asking for) for the same outcome. Consider Debugger:Close and the unload event (both listened by the parent DebuggerUI). This adds confusion. We could simply trigger a DebuggerClose event from the controller on unload, and avoid all this awkwardness.
+
+The effects of this granularity are first of all seen in tests (there are bundles of files that adopt one paradigm, and different ones follow a different path). Of course, not all tests are the same, but we're in a state now in which some tests wait for framesadded for absolutely no reason, and other tests rely on the completely wrong events (Debugger:Loaded and Debugger:Unloaded).
+
+By removing most of these events and carefully choosing which ones to expose, most racing conditions would be forever avoided in clients depending on the debugger frontend state (of course, there's still the issue of balance *inside* the frontend, but at least it'll "feel" solid from an outside perspective).
+
+My suggestion is: have only two reliable events exposing startup/shutdown, mimicking the InspectorUI. These would be:
+* "debugger-opened" - fired after all the UI is initialized and in standby, and after a connection succeeds, and after the initial resume
+* "debugger-closed" - fired after the UI is invalidated and removed from the DOM, and disconnecting finished
+
+Something tells me that this is everything the-outside-world needs to know about the debugger state regarding startup/shutdown. Of course, there's the current AfterScriptsAdded and AfterNewScript which are useful, so it's best to keep them.
+
+A closer analysis of the LoadSource and friends is in order after bug 755661 (and related) settle down. It's best to clearly separate what's needed for tests and what's exposed.

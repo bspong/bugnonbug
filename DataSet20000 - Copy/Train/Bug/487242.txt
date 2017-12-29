@@ -1,0 +1,84 @@
+Regression: in userChrome.css no longer possible to distinguish between unvisited tabs, visited tabs, and the selected tab
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.2a1pre) Gecko/20090406 Minefield/3.6a1pre
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.2a1pre) Gecko/20090406 Minefield/3.6a1pre
+
+It used to be possible to place code in userChrome.css to differentiate between the currently selected tab and tabs that have been visited and tabs that hadn't been visited (opened in the background).
+
+The current code makes this no longer possible.
+
+Reproducible: Always
+
+
+
+
+From: Bug 480813#c1 (dickvl)
+
+I would prefer the old code in toolkit.jar/content/global/bindings/tabbox.xml
+for the "selected" attribute to make it possible to see which tabs have been
+visited (selected="false").
+Convenient to see which tabs have been visited (e.g. forum threads) as posted
+in Bug 471921.
+
+Currently in Minefield (638):
+  if (val)
+    this.setAttribute("selected", "true");
+  else
+    this.removeAttribute("selected");
+
+Code used in Firefox 3.0.x (637):
+   this.setAttribute("selected", val);
+
+480813#c2(Dão Gottwald): (In reply to comment #1)
+I don't think it makes sense to add that hack back, especially as it didn't
+work reliably. We could add an attribute specifically for that use case,
+though. For that, please file a new bug.
+
+------
+I agree that it didn't work reliably and agree that adding a separate visited attribute would work better:
+
+  if (val) {
+    this.setAttribute("selected", "true");
+    this.setAttribute("visited", "true");
+  {
+  else
+    this.removeAttribute("selected");
+
+This version doesn't have the disadvantage that the other has.
+I've tested it and it makes it possible to use undo close tab or dragging a tab without having other tabs getting a selected attribute.
+
+It makes it easy to add code to userChrome.css to give visited tabs another color.
+This is some of the code that I currently use:
+
+.tabbrowser-tab {
+ -moz-appearance:none!important;
+ border:1px solid ThreeDShadow!important;
+ margin-left:0px!important;
+}
+
+/* Change color of not visited inactive tabs */
+.tabbrowser-tab:not([visited]) {
+ color:#c09!important; font-style:normal!important;
+ font-size:10pt!important;
+ font-weight:bold!important;
+}
+
+/* Change color of visited inactive tabs */
+.tabbrowser-tab[visited="true"] {
+ color:#03f!important;
+ font-style:normal!important;
+ font-size:10pt!important; font-weight:bold!important;
+}
+
+/* Change color of selected tab */
+.tabbrowser-tab[selected="true"] {
+ color:#000!important;
+ font-style:normal!important;
+ font-size:10pt!important; 
+}
+
+.tabbrowser-tab:not([busy]):not([visited])     {background-color:#9d6!important;}
+.tabbrowser-tab:not([busy])[visited="true"]   {background-color:#fcc!important;}
+.tabbrowser-tab:not([busy])[selected="true"] {background-color:#ff9!important;}
+
+.tabbrowser-tab[busy] {color:#ff0!important; background-color:#06c!important;}
+.tabbrowser-tab[busy][selected="true"] {color:#00f!important; background-color:#0cf!important;}

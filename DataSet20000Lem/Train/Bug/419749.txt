@@ -1,0 +1,13 @@
+Add/Update/Delete for item in query set do not seem to close transaction
+Created attachment 305878
+The "doesn't work" test
+
+While trying to write test for bug 384226, I came across this scenario. After much debugging, I can't seem to find anything wrong with my code. It appears that performing a batch update cause some sort of transaction to close, resulting in unbatched insert/update/delete operation to finalize and appear in a live query set.
+
+I am attaching two test to demonstrate the issue.
+
+You would expect that when adding/updating/deleting item in the query set, you would see the number of item in the query set change on completion of the operation. However, these number (and indeed the operations) do not seem to take effect until the batch update is run.
+
+In the -doesntwork test, you can see that from the do_equal_check that the number of item in the query set is not working. In this test, you can also see that the change to the query set fro the add and update are only applied once the update batch is run. The "deletion" from the query set is never taken into account.
+
+In the -works test, the delete is above the update batch call and you can see that all operation on the query set have succeeded once the update batch call have succeeded.

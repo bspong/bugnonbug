@@ -1,0 +1,48 @@
+[e10s] "Share (This (Link|Image|Video)|Selection)" in remote browser cause unsafe CPOW usage warning
++++ This bug wa initially created a a clone of Bug #1133577 +++
+
+STR:
+
+0) Install a social service e.g Twitter
+1) Visit a website in an e10s window
+2) Right-click on piece of the page and make use of the "Share [...]" context menu command
+
+This cause some "unsafe CPOW usage" warning in the Browser Console.
+
+In browser/base/content/browser-social.js:
+
+sharePage: function(providerOrigin, graphData, target) {
+[...]
+// if this is a share of a selected item, get any microdata
+if (!pageData.microdata && target) {
+messageManager.addMessageListener("PageMetadata:MicrodataResult", _dataFn = (msg) => {
+messageManager.removeMessageListener("PageMetadata:MicrodataResult", _dataFn);
+pageData.microdata = msg.data;
+this.sharePage(providerOrigin, pageData, target);
+});
+gBrowser.selectedBrowser.messageManager.sendAsyncMessage("PageMetadata:GetMicrodata", null, target); <- Causes CPOW warning
+return;
+}
+this.currentShare = pageData;
+
+[...]
+},
+
+
+Share selection ha a couple extra ones, bug 1134769, and:
+
+In browser/base/content/browser.js:
+
+function getBrowserSelection(aCharLen) {
+// selection of more than 150 character aren't useful
+const kMaxSelectionLen = 150;
+const charLen = Math.min(aCharLen || kMaxSelectionLen, kMaxSelectionLen);
+
+let [element, focusedWindow] = BrowserUtils.getFocusSync(document);
+var selection = focusedWindow.getSelection().toString(); <- Causes CPOW warning [selection]
+[...]
+}
+
+which seems trivial to fix. Instead of calling getBrowserSelection() in the menuitem itself
+https://hg.mozilla.org/mozilla-central/file/eab4a81e4457/browser/base/content/browser-context.inc#l315
+just use this.textSelected in shareSelect() in nsContextMenu.js

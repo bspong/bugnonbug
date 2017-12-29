@@ -1,0 +1,60 @@
+onclick handler invoked using .click() when it should not !
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.5) Gecko/20041107 Firefox/1.0
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.5) Gecko/20041107 Firefox/1.0
+
+.click() is invoking the "onClick" handler when it shouldn't (according to
+http://docs.sun.com/source/816-6408-10/submit.htm#1193782)
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Open the HTML below & click on the "Do it" button
+2. Cycle thru the alert's & see that the onclick handler is getting called &
+invoking the doit() method a second time!
+
+<html>
+
+<head>
+<SCRIPT language="JavaScript">
+var num=0;
+function doit(form2submit, btnName, btnValue){
+
+	alert("DOIT CALLED: " + (++num) + " time(s)");
+
+	var form = eval('document.' + form2submit);
+	var btn = form.elements[btnName];
+
+	for (i=0; i<btn.length; i++){
+		//alert('[' + btn[i].value + '] - [' + btnValue + ']');
+		if (btn[i].value == btnValue) {
+			//by definition calling .click() will not invoke the onClick handler
+			//http://docs.sun.com/source/816-6408-10/submit.htm#1193782
+			//but it seems to in FireFox 1.0 !
+			alert("CALLING CLICK!");
+			btn[i].click();
+			return true;
+		}
+	}					
+	
+	return false;
+}
+</script>
+</head>
+
+	<body>
+	<FORM name="formname" action="http://bugzilla.mozilla.org">
+		<INPUT type="submit" onclick="return doit('formname', 'check', 'Do it')"
+name="check" value="Do it" >
+		<INPUT type="submit" onclick="return doit('formname', 'check', 'Do it 2')"
+name="check" value="Do it 2" >
+	</FORM>
+	
+	</body>
+</html>
+
+
+Actual Results:  
+handler is invoked by the .click() function call
+
+Expected Results:  
+onclick hander should not be called, and button should act as if it was clicked

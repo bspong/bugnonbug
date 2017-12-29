@@ -1,0 +1,19 @@
+Bookmarks backup JSON file is not valid JSON (includes trailing commas)
+User-Agent: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.5; en-US; rv:1.9.2a1pre) Gecko/20090721 Minefield/3.6a1pre
+Build Identifier: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.5; en-US; rv:1.9.2a1pre) Gecko/20090721 Minefield/3.6a1pre
+
+The bookmark backup JSON file created daily in the profile directory is not valid JSON. It contains a trailing comma, which make JSON parser barf, including http://code.google.com/p/json-framework/ (Mac OS X/Cocoa) and http://www.jsonlint.com/ (Web). A similar bug wa reported for the built-in JSON serialization facility: https://bugzilla.mozilla.org/show_bug.cgi?id=426718 . That bug is no longer reproducible (i.e. fixed?) on the latest nightly. However the bookmark backup code still us manual JSON generation.
+
+The problem function appears to be serializeNodeAsJSONToOutputStream at mozilla/toolkit/components/places/src/utils.js:1490 . I believe that the offending comma is written by line 1626 of that file.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Create a new profile
+2. Remove all bookmark via the bookmark manager
+3. Choose "Backup" from the bookmark manager toolbar
+Actual Results:
+An invalid JSON file is produced. I will attempt (as I've never used bugzilla before) to attache this file to this report
+
+Expected Results:
+A valid JSON file is produced.

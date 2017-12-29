@@ -1,0 +1,61 @@
+XML parse error may be created by viewing a file:// directory with a file whose name contains 031char
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.1.6) Gecko/20091201 Firefox/3.5.6
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.1.6) Gecko/20091201 Firefox/3.5.6
+
+To demonstrate, do this:
+
+[23:08 ~]$ mkdir fftest
+[23:08 ~]$ cd fftest
+[23:08 ~/fftest]$ touch _$'\031'_
+[23:08 ~/fftest]$ l -l
+total 0
+-rw-r--r-- 1 bokr user 0 2009-12-26 23:08 _\031_
+[23:09 ~/fftest]$ firefox . &
+[3] 31934
+[23:09 ~/fftest]$
+[3] Done firefox .
+[23:10 ~/fftest]$ # what you get is a firefox error thus
+[23:11 ~/fftest]$ echo "$(xclip -o)"
+XML Parsing Error: not well-formed
+Location: file:///home/bokr/fftest/
+Line Number 210, Column 23: <td sortable-data="2__"><a class="file" href="_%19_"><img src="moz-icon://unknown?size=16" alt="File
+:" />__</a></td>
+----------------------^
+[23:11 ~/fftest]$
+
+This appeared after last update, looking at a local file directory of saved
+web page file whose name contained $'\031' for some reason -- but filtering
+that out of saved name when saved is not the right fix IMO, any legal unix
+file name.
+
+I am running
+[23:45 ~/fftest]$ uname -a
+Linux buffalo 2.6.21.5-smp-w2f1 #24 SMP Wed Mar 26 13:32:46 CET 2008 i686 Intel(R) Core(TM)2 Duo CPU T7250 @ 2.00GHz GenuineIntel GNU/Linux
+
+although I suspect you can duplicate the above test on any Linux platform
+running firefox 3.5.6
+should be representable and processable.
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Oops, see above
+2.
+3.
+Actual Results:
+See above
+
+Expected Results:
+Normal directory display
+(I invoked firefox from konsole, giving it '.' (current dir) a argument, in
+case the '.' wasn't visible above)
+
+But you could start firefox and put
+file:///home/bokr/fftest
+in the location (that's a directory) -- of course bokr to your home name.
+
+
+I selected Major severity because I consider that not being able to
+display a directory listing browsing your own hard disk just because
+a file ha garbage in it name is unacceptable.

@@ -1,0 +1,23 @@
+Some issues with tab separators
+User Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:57.0) Gecko/20100101 Firefox/57.0
+Build ID: 20170804193726
+
+Steps to reproduce:
+
+(Please ignore the 'steps to reproduce,' 'actual results,' 'expected results' headings, if any, on this bug)
+
+0) Switch to the Light theme because it makes the issues more noticeable.
+
+1) Hover over an unselected tab. This makes its separators (the 1px vertical pipes `|` on its either end) disappear. This doesn't look very good, and doesn't match the interactive mockup.
+
+2) Restore the window, make sure the menu bar is disabled and select any tab but the first one. This makes the drag-able space to the left of the first tab (the 40px padding) look like it's a part of the first tab. In the interactive mockup, this issue is solved by adding a left separator to the first tab. See screenshot for quick comparison: http://i.imgur.com/Ux7caFU.png.
+
+3) Restore the window and enable the menu bar. Now open a bunch of tabs so that the tabs now expand the width of the window (so in other words, open enough until they start shrinking). Now select any tab except the first and except the last one. The first tab doesn't have a left separator, but the last tab does have a right separator. I think it shouldn't.
+
+4) With the menu bar disabled again, maximize the window and select the first tab. This tab now has a left separator, which doesn't look good. Now enable the menu bar again, restore the window, open enough tabs for them to start shrinking and select the last tab. This tab now has a right separator, which again looks odd.
+
+5) According to the interactive mockup, the tab separators in Photon are supposed to expand the full-height of the tab strip (i.e. without the current `border-image` applied to `.tabbrowser-tab::after, .tabbrowser-tab::before`) at all times except for when the window is restored with the `Extra Drag Space` option checked. The Invision mockup shows this same design on some screens (e.g. https://mozilla.invisionapp.com/share/ZKBC94BPQ#/screens/229940646) while the Australis design on others (e.g. https://mozilla.invisionapp.com/share/ZKBC94BPQ#/screens/231292511). I think the full-height ones look sharper, but if the latter is indeed the goal, please ignore this point.
+
+6) Enable the menu bar. Now hover over a tab adjacent to the currently selected tab. The hovered tab looks 1px shorter, because there is a 1px solid border-top on the selected tab (only) when the menu bar is enabled, but a colour to the borders is only set for `.tab-background[selected=true]` (The interactive mockup has this behaviour too, so maybe this is intended?). If the menu bar is disabled, but toggled through the ALT key, this issue doesn't exist (as expected) and things look noticeably better.  I'm curious why the top border is needed when the menu bar is enabled, because the active tab is already visually separated from it because of the distinct `.tab-line`. Also, this border has the effect of making the `.tab-line` on the selected tab appear thicker than 2px (the 1px grey sort of merges with the 2px blue).
+
+7) I'm sorry if this isn't the place for this, but I'm curious why any borders were used for the selected tab. Because this means that tab separators are now implemented in 2 ways: the selected tab's separators are its own borders while all the other tabs are still using pseudo-elements for the same. This results in things like the issues (3) and (4) above requiring separate solutions, even though they appear to be the same on the surface.

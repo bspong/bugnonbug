@@ -1,0 +1,17 @@
+Console eval results capable of executing chrome-privileged code
+Current release and beta builds vulnerable (13 and 14).
+
+1. Open the attached POC
+2. In the Web Console, inspect the paragraph element:
+ > document.getElementById("p");
+
+HUDService.jsm plays it loose with (wrapperless) eval results.  JST_execute passes the eval result into formatResult, which allows the content-supplied object to override toSource or toString to return whatever it likes.  From there, it hits writeOutputJS and createMessageNode.  (Side note: for fun, starting with writeOutputJS, follow the call graph and check out all the places the unsafe aOutputObject can visit: <http://mxr.mozilla.org/mozilla-beta/source/browser/devtools/webconsole/HUDService.jsm#5059>.)
+
+If the toSource/toString override returned a DOM node, that node eventually gets inserted into the browser.xul document(!).  From there, we can do the ol' "exploit on* event attributes to run with chrome privileges".
+
+Plausible attack:
+Take something interesting, like a prouget demo, and insert a variation of this exploit.  Use Proxies (those are available to content, right?) to ensure that virtually any expression that the user enters will result in an object with a  malicious toSource/toString.
+
+This POC doesn't work with Aurora and nightly builds, due to the async console split (bug 673148) and further changes.  It's possible that HUDService-content.js is vulnerable, though; I simply haven't looked into it.
+
+Sorry for the drive-by and hurried comment.  It's late and I have early morning obligations.

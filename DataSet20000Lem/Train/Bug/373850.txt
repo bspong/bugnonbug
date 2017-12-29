@@ -1,0 +1,80 @@
+Fails to display page in tab mode after returning from self closing page with opener.focus().
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.2) Gecko/20070219 Firefox/2.0.0.2
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.2) Gecko/20070219 Firefox/2.0.0.2
+
+Firefox fails to display the next web page (Page 3) when Page 1 open Page 2 in a separate window, which set opener.focus() and close itself.
+
+It only fails in tab mode (i.e. "New page should be opened in a new tab"),
+but work fine in window mode (i.e. "New page should be opened in a new window").
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Screen1.htm
+<html>
+<head>
+<title>Test Firefox window management</title>
+</head>
+<frameset border=0 frameSpacing=0 frameBorder=0 cols=213,* >
+<frame id=frmbt_left name=frmbt_left src="Screen1a.htm" >
+</frameset>
+</html>
+2. Screen1a.htm
+<html>
+<head>
+<title>Test Firefox window management</title>
+</head>
+<body class=leftframe style="MARGIN: 0px">
+Screen 1a
+<br><br>
+<a href="Screen2.htm" target=_blank>Log in</a>
+</body>
+</html>
+3. Screen2.htm
+<html>
+<head>
+<title>Test Firefox window management</title>
+<script language=javascript>
+function sbmForm() { setTimeout('document.getElementById(\'frmLogin\').submit();',1);
+window.close(); opener.focus(); return true; }
+</script>
+<base target=_top>
+</head>
+<body class=leftframe style="MARGIN: 0px">
+Screen 2
+<br><br>
+<form id=frmLogin name=frmLogin onsubmit="return sbmForm()" action="Screen3.htm" method=post
+target=frmbt_left >
+<b> User ID: </b>
+<input id=WSUSR maxLength=10 size=10 name=WSUSR>
+<br>
+<input type=image src="submit.gif" border=0>
+</form>
+</body>
+</html>
+4. Screen3.htm
+<html>
+<head>
+<title>Test Firefox window management screen 3</title>
+</head>
+<body class=leftframe style="MARGIN: 0px">
+Screen 3
+</body>
+</html>
+
+Actual Results:
+1. In "open in a new tab", original window still show "Screen 1a"
+
+2. In "open in a new window", original window show "Screen 3"
+
+Expected Results:
+Window should always show "Screen 3"
+
+Internet Explorer display "Screen 3" whether or not "opener.focus()" is issued.
+
+Seems to be similar to the following Bugzilla problems, although none of them talk about the failure to display the subsequent web page:
+
+Bug 292314 – Window.prototype.focus() doesn't change focus to the tab containing the specified window
+Bug 370225 – child browser window opened via j cannot focus on parent via window.opener.focus
+Bug 357379 – opener.focus() doesn't focus the tab that opened the actual one

@@ -1,0 +1,70 @@
+firefox crashes when using the following html, maybe buffer overflow
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.2; en-US; rv:1.8b2) Gecko/20050508 Firefox/1.0+
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.2; en-US; rv:1.8b2) Gecko/20050508 Firefox/1.0+
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Strict//EN" >
+<html>
+  <head>
+    <script language="JavaScript" >
+
+/** test for moving & start */
+function _testMove(evtObj)
+{
+  window.event = evtObj;
+  window.event.srcElement = evtObj.target;
+ 
+} // _testMove
+
+document.addEventListener("mousedown", _testMove, false);
+
+// ----- end of utils.js -----
+
+</script>
+  </head>
+  <body>
+    <input id="inputField" style="width:200px" onkeyDown="KeyDown()">
+    <script language="javascript">
+<!--
+
+function KeyDown() {
+  inspectObj(window.event);
+}
+
+function inspectObj(obj) {
+  var s = "InspectObj:";
+  for (p in obj)
+    try {
+      s += "\n";
+      if (typeof(obj[p]) == "function") {
+        s += String(p) + " [function]";
+      } else {
+        s += String(p) + " [" + typeof(obj[p]) + "]: " + obj[p];
+      } // if
+    } catch (e) {}
+    alert(s);
+}
+
+//-->
+    </script>
+  </body>
+</html>
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. open the page
+2. click into the field
+3. press arrow-down
+
+Actual Results:  
+the alert box is displayed, but when closing it ff has an access violation when
+reading from location 0x000000000
+
+Expected Results:  
+NEVER CRASH !
+
+
+Hint:
+onclick: a event object is attached to the window.
+onkeydown: the old event object is accessed.

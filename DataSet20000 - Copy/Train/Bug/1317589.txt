@@ -1,0 +1,10 @@
+Sync reports a zero'd UID and no device ID on transient error renewing token
+From the sync pings we can often see a UID with all zeros. There are 2 main times we see this:
+
+a) When sync fails with a network error. My speculation here is that the token has expired normally, then sync fails trying to fetch a new token as part of the sync. At that point we've lost the hashed uid. This seems likely to happen when the PC appears to have been put to sleep during the sync - the laptop wakes, immediately notices the token expiry and tries to fetch a new one before the network has reconnected.
+
+b) Around 7% of syncs that fail with a shutdownerror also seem to have a zero'd UID. This is harder to guess about, but it may be the same basic issue - token has expired and fetching a new token fails. Another edge-case might be (a) user shuts down but one of various bugs causes shutdown to take a long time, (b) during this time the timer fires and we have an expired token, then fail to get one (bug 1317587)
+
+I think we should fix the underlying cause here by storing the hashed UID in memory and *not* discarding it on token expiry under the assumption we will get the same UID. We *will* discard it on sync reset, a new login, etc. That should almost certainly fix (a) and will hopefully fix (b) and we'll let telemetry tell us whether it did.
+
+Blocking bug 1301389, as otherwise that bug will cause a ping to be submitted in these transient cases which we don't want.

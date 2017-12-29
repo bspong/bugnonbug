@@ -1,0 +1,54 @@
+Should be able to create smart keywords for searches that use HTTP POST
+Currently we can only do %s substitution on keywords created using URLs that use
+HTTP GET via http://www.foo.com/bar.cgi?q=%s
+
+The number of HTTP POST search engines is fairly large significant and it'd be
+worthwhile supporting that too. This requires some modifications to bookmarks
+and the browser, specifically...
+
+Add a new field to bookmarks: 
+
+POSTDATA="prop1=val1<CRLF>prop2=val2<CRLF>prop3=%s<CRLF>"
+
+%s is used (again) to designate the section to be substituted by the user value.
+
+The code in browser's getShortcutOrURL is then structured like this:
+
+function getShortcutOrURL (aPostDataRef) 
+{
+  if (!bookmarks.resolveKeyword(aPotentialKeywordURL)) {
+    // look for " " in URL
+    // chop keyword off the start
+    var keywordURL = bookmarks.resolveKeyword(keyword);
+    if (keywordURL && userValue) {
+      if (bookmark has postdata)
+        aPostDataRef.value = getPostData(postdata, keyword);
+      else
+        // replace %s in keywordURL with keyword
+    }
+  }
+}
+
+function getPostData(aStringData, aKeyword)
+{
+  var dataStream = Components.classes["@mozilla.org/io/string-input-stream;1"]
+                            .createInstance(Components.interfaces.nsIStringStream);
+  // replace %s in aStringData with aKeyword
+  dataStream.setData(aStringData, aStringData.length);
+
+  var mimeStream = Components.classes["@mozilla.org/network/mime-input-stream;1"]
+                           
+.createInstance(Components.interfaces.nsIMIMEInputStream);
+  mimeStream.addHeader("Content-Type", "text/plain");
+  mimeStream.addContentLength = true;
+  mimeStream.setData(dataStream);
+  return mimeStream.QueryInterface(Components.interfaces.nsIInputStream);
+}
+
+The "Add Smart Keyword..." menu item can then be shown for the following cases:
+
+- method attribute unspecified
+- method="GET"
+- method="POST" and
+  - enctype attribute unspecified
+  - enctype="text/plain"

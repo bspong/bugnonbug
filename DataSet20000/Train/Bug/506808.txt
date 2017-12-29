@@ -1,0 +1,24 @@
+Returning 0 from NPP_WriteReady affects future streams?
+User-Agent:       Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 5.1; Trident/4.0; GTB5; .NET CLR 2.0.50727; .NET CLR 3.0.04506.648; .NET CLR 3.5.21022)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.1.1) Gecko/20090715 Firefox/3.5.1
+
+Returning 0 from NPP_WriteReady in my application changes how Firefox behaves in the future.
+
+Reproducible: Always
+
+Steps to Reproduce:
+In my application
+1. I open a stream to a url using NPN_GetURLNotify.
+2. As needed (my application does not need more data) I return 0 from NPP_WriteReady. This should make the browser to try again later to send the data. It seems to work as expected.
+3. However, when I press the Reload Current Page button in the browser, my application opens the a stream to same url as in 1, but this time the browser does not send me any data at all. It does not call NPP_Write.
+
+This only happens if I have returned 0 from NPP_WriteReady. If I return any other value, the stream keeps working after I have pressed Reload. So, somehow returning 0 in that function affects how Firefox behaves sometime in the future.
+
+Do you think this is possible?
+
+Another minor thing that I noticed is that if I return 1 from NPP_WriteReady my application seems to get stuck, because the browser keeps calling NPP_WriteReady and NPP_Write in a quite tight loop.
+Actual Results:  
+After pressing Reload, the browser does not call NPP_Write anymore.
+
+Expected Results:  
+The web page/application should work in the same way as before pressing Reload.

@@ -1,0 +1,83 @@
+referencing checkbox array using DOM
+User-Agent: Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.0.3705; .NET CLR 1.1.4322)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7) Gecko/20040707 Firefox/0.8
+
+The following work in IE but not Mozilla. The function is supposed to check
+that at least one checkbox/radio button is checked for the required form
+fields. But it fail for "ethnicity" which is defined "ethnicity[]" to allow
+for PHP to handle multiple values.
+
+In other words, whether ANY of the ethnicity box are checked, or not, the
+system report that there is no value for ethnicity.
+
+Here is a snippet of code:
+
+<script>
+var reqArr = new Array('ethnicity', 'education', 'exposure', 'care', 'gender');
+var reqTxt = new Array(
+'Ethnicity',
+'Highest Level of Education',
+'Recreational or Occupational Water Exposure',
+'Have Taken any Medications for More than Three (3) Weeks',
+'Gender (Sex)');
+function validate_form() {
+var reqArrLength=reqArr.length;
+for (i = 0; i < reqArrLength; i++ ) {
+var elmt=document.getElementsByName(reqArr[i]);
+var elml=elmt.length;
+var elmc=false;
+for (j = 0; j < elml; j++ ) {
+if (elmt[j].checked) { elmc=true; break; }
+}
+if ( !elmc ) {
+alert('You must give an answer to the question
+pertaining to ' + reqTxt[i]);
+eval('document.getElementById(\'sp'+reqArr[i]
++'\').style.color=\'red\'');
+eval('document.getElementsByName(\''+reqArr[i]+'\')
+[0].focus()');
+return false;
+}
+}
+return true;
+}
+...
+<td width="160px"><span id="spethnicity" name="spethnicity"><strong>1.
+Ethnicity:</strong><br />
+<em>(Please check all that apply)</em></span></td>
+<td width="160px" nowrap="nowrap" >
+<span class="iab">
+<input type="checkbox" name="ethnicnity[]" id="ethnicity" value="A" onclick="if
+(this.checked) { document.getElementById
+('spethnicity').style.color='black'; }" />
+African American<br />
+<input type="checkbox" name="enthnicity[]" id="ethnicity" value="S" onclick="if
+(this.checked) { document.getElementById
+('spethnicity').style.color='black'; }" />
+Asian/Pacific Islander<br />
+<input type="checkbox" name="ethnicnity[]" id="ethnicity" value="H" onclick="if
+(this.checked) { document.getElementById
+('spethnicity').style.color='black'; }" />
+Hispanic/Latino<br />
+<input type="checkbox" name="ethnicnity[]" id="ethnicity" value="W" onclick="if
+(this.checked) { document.getElementById
+('spethnicity').style.color='black'; }" />
+White<br />
+<input type="checkbox" name="ethnicnity[]" id="ethnicity" value="O" onclick="if
+(this.checked) { document.getElementById
+('spethnicity').style.color='black'; }" />
+Other</span>
+</td>
+
+Reproducible: Always
+Steps to Reproduce:
+1. Attempt to submit the form with any Ethnicity box checked
+2.
+3.
+
+Actual Results:
+Get an error that Ethnicity need to have a value
+
+Expected Results:
+Should only have flagged this error IF there were no value for ethnicity[]
+checked.

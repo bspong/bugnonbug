@@ -1,0 +1,166 @@
+CPU go up to 100% when the URL is loaded.
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; es-ES; rv:1.9.1) Gecko/20090624 Firefox/3.5
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; es-ES; rv:1.9.1) Gecko/20090624 Firefox/3.5
+
+The command line strace (traces of firefox call to the kernel) show an "infinite" loop like:
+
+poll([{fd=4, events=POLLIN}, {fd=3, events=POLLIN}, {fd=12, events=POLLIN|POLLPRI}, {fd=23, events=POLLIN|POLLPRI}, {fd=29, events=POLLIN|POLLPRI}, {fd=31, events=POLLIN|POLLPRI}, {fd=38, events=POLLIN}, {fd=14, events=POLLIN|POLLPRI}, {fd=60, events=POLLIN}, {fd=64, events=POLLIN}, {fd=39, events=POLLIN}], 11, 0) = 0 (Timeout)
+gettimeofday({1251201460, 837850}, NULL) = 0
+sched_yield() = 0
+time(NULL) = 1251201460
+read(3, 0xb5b57058, 4096) = -1 EAGAIN (Resource temporarily unavailable)
+gettimeofday({1251201460, 838116}, NULL) = 0
+poll([{fd=4, events=POLLIN}, {fd=3, events=POLLIN}, {fd=12, events=POLLIN|POLLPRI}, {fd=23, events=POLLIN|POLLPRI}, {fd=29, events=POLLIN|POLLPRI}, {fd=31, events=POLLIN|POLLPRI}, {fd=38, events=POLLIN}, {fd=14, events=POLLIN|POLLPRI}, {fd=60, events=POLLIN}, {fd=64, events=POLLIN}, {fd=39, events=POLLIN}], 11, 0) = 0 (Timeout)
+gettimeofday({1251201460, 838352}, NULL) = 0
+sched_yield() = 0
+time(NULL) = 1251201460
+read(3, 0xb5b57058, 4096) = -1 EAGAIN (Resource temporarily unavailable)
+gettimeofday({1251201460, 838602}, NULL) = 0
+poll([{fd=4, events=POLLIN}, {fd=3, events=POLLIN}, {fd=12, events=POLLIN|POLLPRI}, {fd=23, events=POLLIN|POLLPRI}, {fd=29, events=POLLIN|POLLPRI}, {fd=31, events=POLLIN|POLLPRI}, {fd=38, events=POLLIN}, {fd=14, events=POLLIN|POLLPRI}, {fd=60, events=POLLIN}, {fd=64, events=POLLIN}, {fd=39, events=POLLIN}], 11, 0) = 0 (Timeout)
+gettimeofday({1251201460, 838837}, NULL) = 0
+sched_yield() = 0
+
+
+the line:
+read(3, 0xb5b57058, 4096) = -1 EAGAIN (Resource temporarily unavailable)
+
+agrees with the output from the command line "lsof" (list open files) that show there are not file with id=3.
+
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Open the the URL (http://www.saturnpcb.com/pcb_toolkit.htm)
+
+Actual Results:
+CPU go to 100% of usage after page load.
+
+Expected Results:
+CPU go to 0% of usage after page load.
+
+firefox-bin is using the next list of system libraries:
+1 /lib/i686/libc-2.10.1.so
+2 /lib/i686/libm-2.10.1.so
+3 /lib/i686/libpthread-2.10.1.so
+4 /lib/i686/librt-2.10.1.so
+5 /lib/ld-2.10.1.so
+6 /lib/libacl.so.1.1.0
+7 /lib/libattr.so.1.1.0
+8 /lib/libdbus-1.so.3.4.0
+9 /lib/libdl-2.10.1.so
+10 /lib/libgcc_s-4.4.1.so.1
+11 /lib/libnsl-2.10.1.so
+12 /lib/libnss_dns-2.10.1.so
+13 /lib/libnss_files-2.10.1.so
+14 /lib/libnss_nis-2.10.1.so
+15 /lib/libpcre.so.0.0.1
+16 /lib/libresolv-2.10.1.so
+17 /lib/libutil-2.10.1.so
+18 /lib/libz.so.1.2.3
+19 /opt/firefox3.5/components/libbrowsercomps.so
+20 /opt/firefox3.5/components/libbrowserdirprovider.so
+21 /opt/firefox3.5/components/libdbusservice.so
+22 /opt/firefox3.5/components/libimgicon.so
+23 /opt/firefox3.5/components/libmozgnome.so
+24 /opt/firefox3.5/components/libnkgnomevfs.so
+25 /opt/firefox3.5/libfreebl3.so
+26 /opt/firefox3.5/libmozjs.so
+27 /opt/firefox3.5/libnspr4.so
+28 /opt/firefox3.5/libnss3.so
+29 /opt/firefox3.5/libnssckbi.so
+30 /opt/firefox3.5/libnssdbm3.so
+31 /opt/firefox3.5/libnssutil3.so
+32 /opt/firefox3.5/libplc4.so
+33 /opt/firefox3.5/libplds4.so
+34 /opt/firefox3.5/libsmime3.so
+35 /opt/firefox3.5/libsoftokn3.so
+36 /opt/firefox3.5/libsqlite3.so
+37 /opt/firefox3.5/libssl3.so
+38 /opt/firefox3.5/libxpcom.so
+39 /opt/firefox3.5/libxul.so
+40 /usr/lib/gconv/gconv-modules.cache
+41 /usr/lib/gconv/UTF-16.so
+42 /usr/lib/gio/modules/libgioremote-volume-monitor.so
+43 /usr/lib/gio/modules/libgvfsdbus.so
+44 /usr/lib/gnome-vfs-2.0/modules/libfile.so
+45 /usr/lib/gtk-2.0/2.10.0/engines/libmist.so
+46 /usr/lib/gtk-2.0/2.10.0/immodules/im-cedilla.so
+47 /usr/lib/gtk-2.0/2.10.0/loaders/libpixbufloader-png.so
+48 /usr/lib/gtk-2.0/2.10.0/loaders/svg_loader.so
+49 /usr/lib/gtk-2.0/modules/libcanberra-gtk-module.so
+50 /usr/lib/gtk-2.0/modules/libgnomebreakpad.so
+51 /usr/lib/jvm/java-1.6.0-openjdk-1.6.0.0/jre/lib/i386/IcedTeaPlugin.so
+52 /usr/lib/libart_lgpl_2.so.2.3.20
+53 /usr/lib/libasound.so.2.0.0
+54 /usr/lib/libatk-1.0.so.0.2609.1
+55 /usr/lib/libaudiofile.so.0.0.2
+56 /usr/lib/libavahi-client.so.3.2.5
+57 /usr/lib/libavahi-common.so.3.5.1
+58 /usr/lib/libavahi-glib.so.1.0.1
+59 /usr/lib/libbonobo-2.so.0.0.0
+60 /usr/lib/libbonobo-activation.so.4.0.0
+61 /usr/lib/libbonoboui-2.so.0.0.0
+62 /usr/lib/libcairo.so.2.10800.8
+63 /usr/lib/libcanberra-gtk.so.0.1.0
+64 /usr/lib/libcanberra.so.0.1.6
+65 /usr/lib/libcroco-0.6.so.3.0.1
+66 /usr/lib/libcrypto.so.0.9.8
+67 /usr/lib/libdbus-glib-1.so.2.1.0
+68 /usr/lib/libelf-0.141.so
+69 /usr/lib/libesd.so.0.2.39
+70 /usr/lib/libfam.so.0.0.0
+71 /usr/lib/libfontconfig.so.1.3.0
+72 /usr/lib/libfreetype.so.6.3.20
+73 /usr/lib/libgailutil.so.18.0.1
+74 /usr/lib/libgconf-2.so.4.1.5
+75 /usr/lib/libgdk_pixbuf-2.0.so.0.1705.0
+76 /usr/lib/libgdk-x11-2.0.so.0.1705.0
+77 /usr/lib/libgio-2.0.so.0.2104.0
+78 /usr/lib/libglib-2.0.so.0.2104.0
+79 /usr/lib/libgmodule-2.0.so.0.2104.0
+80 /usr/lib/libgnome-2.so.0.2600.0
+81 /usr/lib/libgnomecanvas-2.so.0.2600.0
+82 /usr/lib/libgnome-keyring.so.0.1.1
+83 /usr/lib/libgnomeui-2.so.0.2400.1
+84 /usr/lib/libgnomevfs-2.so.0.2400.1
+85 /usr/lib/libgobject-2.0.so.0.2104.0
+86 /usr/lib/libgsf-1.so.114.0.15
+87 /usr/lib/libgthread-2.0.so.0.2104.0
+88 /usr/lib/libgtk-x11-2.0.so.0.1705.0
+89 /usr/lib/libgvfscommon.so.0.0.0
+90 /usr/lib/libICE.so.6.3.0
+91 /usr/lib/libltdl.so.7.2.0
+92 /usr/lib/libogg.so.0.6.0
+93 /usr/lib/libORBit-2.so.0.1.0
+94 /usr/lib/libORBitCosNaming-2.so.0.1.0
+95 /usr/lib/libpango-1.0.so.0.2400.5
+96 /usr/lib/libpangocairo-1.0.so.0.2400.5
+97 /usr/lib/libpangoft2-1.0.so.0.2400.5
+98 /usr/lib/libpixman-1.so.0.15.18
+99 /usr/lib/libpng12.so.0.37.0
+100 /usr/lib/libpopt.so.0.0.0
+101 /usr/lib/librsvg-2.so.2.26.0
+102 /usr/lib/libSM.so.6.0.0
+103 /usr/lib/libssl.so.0.9.8
+104 /usr/lib/libstdc++.so.6.0.12
+105 /usr/lib/libvorbisfile.so.3.3.2
+106 /usr/lib/libvorbis.so.0.4.3
+107 /usr/lib/libX11.so.6.2.0
+108 /usr/lib/libXau.so.6.0.0
+109 /usr/lib/libxcb.so.1.1.0
+110 /usr/lib/libXcomposite.so.1.0.0
+111 /usr/lib/libXcursor.so.1.0.2
+112 /usr/lib/libXdamage.so.1.1.0
+113 /usr/lib/libXdmcp.so.6.0.0
+114 /usr/lib/libXext.so.6.4.0
+115 /usr/lib/libXfixes.so.3.1.0
+116 /usr/lib/libXinerama.so.1.0.0
+117 /usr/lib/libXi.so.6.0.0
+118 /usr/lib/libxml2.so.2.7.3
+119 /usr/lib/libXrandr.so.2.2.0
+120 /usr/lib/libXrender.so.1.3.0
+121 /usr/lib/libXss.so.1.0.0
+122 /usr/lib/libXt.so.6.0.0
+123 /usr/lib/pango/1.6.0/modules/pango-basic-fc.so

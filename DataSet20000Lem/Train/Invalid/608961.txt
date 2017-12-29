@@ -1,0 +1,59 @@
+Possible same origin policy breach
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.2.12) Gecko/20101026 Firefox/3.6.12
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.2.12) Gecko/20101026 Firefox/3.6.12
+
+According to https://developer.mozilla.org/En/Same_origin_policy_for_JavaScript "The same origin policy prevents ... or setting property of a document from another origin.". This filling is about breaching the mentioned clause.
+
+If we have a code like:
+
+<html>
+<head>
+<script language="JavaScript" type="Text/Javascript">
+function test()
+{
+
+if (window.XMLHttpRequest)
+{// code for IE7+, Firefox, Chrome, Opera, Safari
+xmlhttp=new XMLHttpRequest();
+}
+else
+{// code for IE6, IE5
+xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+}
+xmlhttp.open("GET","http://127.0.0.1:8080/apachedata.htm",false);
+xmlhttp.send();
+document.getElementById("div1").innerHTML = xmlhttp.responseText;
+xmlhttp.open("GET","http://localhost:90/aspsite/index.htm?unauthorizedvar1=75",false);
+xmlhttp.send();
+document.getElementById("div2").innerHTML = xmlhttp.responseText;
+}
+
+</script>
+</head>
+
+<body onload="test()">
+<div id="div1"></div>
+<div id="div2"></div>
+</body>
+</html>
+
+And we have loaded the page from http://127.0.0.1:8080/ the second call is about to set the other origin at port 90, this call will end up with an error in browser but will actually send the data to web server hosted at port 90.
+
+In my mind this breach what is mentioned in the definition of same origin policy and could be used to steal information for example in a possible cross site scripting.
+IE 6.0 give access denied on this and doe not request the page.
+
+I have tested this for different ports. Loading a file from hard disk to access a remote site ha the same problem.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Setup two different we server on port 90 and 8080.
+2. Create apachedata.htm, index.htm and save the script above in test.htm in proper directory
+3. Get the page above from the 8080 server
+4. Check the log of the webserver at 90, the index.htm page ha been request and unauthorizedvar1 value is present on the server
+
+Actual Results:
+The page which is not on the same origin should not be even requested
+
+Expected Results:
+The page which is not on the same origin is requested and it could some non authorized data

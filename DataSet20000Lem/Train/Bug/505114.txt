@@ -1,0 +1,55 @@
+hang opening Preference pane
+User-Agent: Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.1.1) Gecko/20090719 Firefox/3.5.1
+Build Identifier: Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.1.1) Gecko/20090719 Firefox/3.5.1
+
+Firefox 3.5.1 against Xulrunner 1.9.1.1 on a Multilib CLFS system 2.6.29.5 (running 64bit version). The Browser hang clicking Edit ---> Preferences. If I browse the file system it hang when I go into some directory (everytime the same ones, I think this ha to do with hidden file .* see log attached) and it hang on several webpage containing java, like gmail's inbox.
+
+Build xulrunner with --enable-debug
+On a session pressing Edit->Preferences, the relevant part in console is:
+
+++WEBSHELL 0x7f8ae0648400 == 6
+++DOMWINDOW == 10 (0x7f8ae0649458) [serial = 10] [outer = (nil)]
+++DOMWINDOW == 11 (0x7f8ae064b058) [serial = 11] [outer = 0x7f8ae0649400]
+WARNING: redundant multiplexed document?: 'docMapEntry->mString == nsnull', file /home/heluani/mozilla-1.9.1/xpcom/io/nsFastLoadFile.cpp, line 1404
+WARNING: recurring into frame construction: 'mPresContext->mLayoutPhaseCount[eLayoutPhase_FrameC] == 0', file /home/heluani/mozilla-1.9.1/layout/base/nsPresContext.h, line 1026
+WARNING: recurring into frame construction: 'mPresContext->mLayoutPhaseCount[eLayoutPhase_FrameC] == 0', file /home/heluani/mozilla-1.9.1/layout/base/nsPresContext.h, line 1026
+
+On a session browsing the file system and hanging the relevant part of console output is:
+++DOMWINDOW == 9 (0x7fec2a85c858) [serial = 10] [outer = 0x7fec2f3e1000]
+###!!! ASSERTION: Empty aExtension parameter!: '!aExtension.IsEmpty()', file /home/heluani/mozilla-1.9.1/uriloader/exthandler/nsExternalHelperAppService.cpp, line 2761
+++DOMWINDOW == 10 (0x7fec2a816058) [serial = 11] [outer = 0x7fec2f3e1000]
+++DOMWINDOW == 11 (0x7fec2bbb9458) [serial = 12] [outer = 0x7fec2f3e1000]
+###!!! ASSERTION: aFileExt shouldn't start with a dot: 'aFileExt[0] != '.'', file /home/heluani/mozilla-1.9.1/uriloader/exthandler/unix/nsGNOMERegistry.cpp, line 120
+###!!! ASSERTION: aFileExt shouldn't start with a dot: 'aFileExt[0] != '.'', file /home/heluani/mozilla-1.9.1/uriloader/exthandler/unix/nsGNOMERegistry.cpp, line 120
+###!!! ASSERTION: aFileExt shouldn't start with a dot: 'aFileExt[0] != '.'', file /home/heluani/mozilla-1.9.1/uriloader/exthandler/unix/nsGNOMERegistry.cpp, line 120
+###!!! ASSERTION: aFileExt shouldn't start with a dot: 'aFileExt[0] != '.'', file /home/heluani/mozilla-1.9.1/uriloader/exthandler/unix/nsGNOMERegistry.cpp, line 120
+###!!! ASSERTION: aFileExt shouldn't start with a dot: 'aFileExt[0] != '.'', file /home/heluani/mozilla-1.9.1/uriloader/exthandler/unix/nsGNOMERegistry.cpp, line 120
+###!!! ASSERTION: aFileExt shouldn't start with a dot: 'aFileExt[0] != '.'', file /home/heluani/mozilla-1.9.1/uriloader/exthandler/unix/nsGNOMERegistry.cpp, line 120
+###!!! ASSERTION: aFileExt shouldn't start with a dot: 'aFileExt[0] != '.'', file /home/heluani/mozilla-1.9.1/uriloader/exthandler/unix/nsGNOMERegistry.cpp, line 120
+###!!! ASSERTION: aFileExt shouldn't start with a dot: 'aFileExt[0] != '.'', file /home/heluani/mozilla-1.9.1/uriloader/exthandler/unix/nsGNOMERegistry.cpp, line 120
+###!!! ASSERTION: aFileExt shouldn't start with a dot: 'aFileExt[0] != '.'', file /home/heluani/mozilla-1.9.1/uriloader/exthandler/unix/nsGNOMERegistry.cpp, line 120
+###!!! ASSERTION: aFileExt shouldn't start with a dot: 'aFileExt[0] != '.'', file /home/heluani/mozilla-1.9.1/uriloader/exthandler/unix/nsGNOMERegistry.cpp, line 120
+###!!! ASSERTION: aFileExt shouldn't start with a dot: 'aFileExt[0] != '.'', file /home/heluani/mozilla-1.9.1/uriloader/exthandler/unix/nsGNOMERegistry.cpp, line 120
+
+Any help will be greatly appreciated.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.Launch Firefox
+2.Go to Edit--> Preferences
+3.
+Actual Results:
+Hang
+
+Expected Results:
+See Preference Pane
+
+This build is with --disable-javaxpcom
+same result with --enable-javaxpcom (against jdk 6_14)
+
+cannot build firefox with --enable-debug because it complains about not finding libxpcom_core, if I pas --disable-debug then I can compile (I found this quite strange)
+
+Same result with --safe-mode
+Same result with version 3.5 against xulrunner 1.9.1
+and version 3.0.11 against xul 1.9.0.4

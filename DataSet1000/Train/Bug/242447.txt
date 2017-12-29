@@ -1,0 +1,94 @@
+JavaScript: inconsistent handling of script defined object and its properties
+User-Agent:       Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0)
+Build Identifier: Gecko/20040206
+
+I work for the US Government and the code in question is on a non-public site.  
+I'll quite the sample script below.  This problem does not happen in NN7 or 
+IE5+.  I have not tested Mozilla.
+
+The problem is:  I am creating a var/object for a popup window, which is opened 
+either via an href link or automatically after 30 seconds.  I am also defining 
+a property for the window from the function that opens the window.  When the 
+function is called by the href tag (i.e. user clicks the link) all is well, but 
+when the function is called from within my countdown script, I get the error 
+message "popupWin has no properties".
+
+Here is the code (note popupWin.linkedFrom):
+
+<script type="text/javascript" language="JavaScript">
+<!--
+
+// This function defines a new window object for the Java applet anchor.
+// the variable appstart is first declared but not defined in the countdown
+// below.  When this function is called it defines appstart to a non-null value
+// to signal the countdown to terminate (lest we get two instances of the
+// the applet).  This function also created and sets the child window property
+// linkedFrom to notify the child window that it was opened by an authorized
+// opener (in lieu of http_referrer).
+
+function launch3d() {
+      popupwin = window.open('launch3d.html','open_launchpad'
+            'status=yes,width=500,height=25') ;
+      appstart = '1' ;
+      window.status = "Applet Anchor Started..." ;
+      popupWin.linkedFrom = document.URL ; // where FireFox throws error      
+setTimeout("window.close()",5000);
+}
+
+// -->
+</script>
+
+<script type="text/javascript" language="JavaScript">
+<!--
+
+// This is the countdown referenced above which automatically launches the
+// applet after a specified amount of time.  It will detect if the applet it
+// launched manually by detecting a value in the variable 'appstart' and exit.
+
+var appstart;
+var time="30";
+
+function countdown(){
+    if (appstart === undefined){
+         if (time==0){
+              launch3d();   // calls the function above but FireFox has issues
+              window.status="Applet started....";
+         }
+         else{
+              time-=1;
+              window.status="Applet will start in "+time+" seconds.";
+              setTimeout("countdown()",1000);
+         }
+    }
+}
+
+window.onlaod=countdown
+
+// -->
+</script>
+
+
+As you can see, this is a valid script, and all works fine, even in FireFox, 
+EXCEPT when the 'launch3d()' is called from the 'countdown()' function if it 
+reaches zero.  The countdown works fine oterwise, and the launch3d() function 
+executes flawlessly if called via a <A HREF="javascript:launch3d();"> link.  As 
+you can see, we are explicitly setting the linkedFrom property for popupWin, 
+but FF seems to be confused.
+
+Again, this works without fail in NN 4/6/7 and IE 5.5/6 in Windows NT based 
+systems.  I have not yet tried it in Red Hat.
+
+
+
+Reproducible: Always
+Steps to Reproduce:
+1.Make a page with the code mentioned above
+2.Start launch3d(); from a link, and it will work
+3.Start launch3d(); from within another function, and it will fail.
+
+Actual Results:  
+Ref Details....
+
+Expected Results:  
+It should have defined the linkedFrom property regardless of the method from 
+which the function was called.

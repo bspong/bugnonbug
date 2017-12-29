@@ -1,0 +1,20 @@
+session restore does not ensure restored windows are actually on-screen
+When Firefox restores a previous session, it tries to position the window(s) at the original screen location.
+
+However, it does not check that the resulting position is actually on-screen. This means that if the user had a window open on a large screen (or a multi-screen extended desktop), and then restores the session with just a single, perhaps much smaller display, windows that -were- fully visible on-screen may be restored to a position that is partially or even completely off-screen.
+
+STR, using FF20 on a single-display machine:
+
+1) Have the display set to its maximum resolution (i.e. pixel dimensions - NOT talking about the Windows "logical dpi" adjustments here). In my case, I have a 1920x1080 display on this laptop.
+
+2) Open Firefox, and ensure it is set to reload the previous session on startup. Make the window small, and position it in the lower right of the display. Quit Firefox.
+
+3) Re-launch Firefox, and confirm that Session Restore puts the window back in the same place at the lower right. Quit again.
+
+4) In the Windows Display control panel, reduce the resolution (e.g. to 1024x768, i.e. simulate swapping a large-screen display for a standard VGA monitor).
+
+5) Re-launch Firefox. Note that Session Restore moves the window to its "original" position, even though that is now completely off-screen due to the reduced amount of screen real-estate available.
+
+I think Session Restore should sanity-check the window position it's restoring, and ensure that the window is actually on-screen. (Entirely, or is partially on-screen sufficient?)
+
+This issue will be exacerbated by the transition to HiDPI support, currently in FF22, as this in effect reduces the available desktop space if the system is configured for a higher "logical DPI" - making everything on the screen bigger is equivalent to making the screen itself smaller, in terms of window placement.

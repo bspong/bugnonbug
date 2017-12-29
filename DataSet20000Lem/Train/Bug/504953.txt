@@ -1,0 +1,12 @@
+Clean up firefox branding in the build system
+The organization of the branding stuff irks me every time I touch it... The Firefox (release) bit are in /other-licenses/branding/firefox, and the generic (pre-release) branding is in /browser/branding/unofficial, but the nightly (Minefield) branding is scattered all over. This lead to a number of special case in the build for nightly v release/prerelease. And I'm always scared that make some change that work for nightly build but will explode in release builds.
+
+So, I've reorganized thing to make this simpler. There should be no difference in the bit user get; this is all just build-side changes.
+
+* All the scattered nightly bit move into /browser/branding/nightly (which is currently empty sans 1 file). This tree now becomes identical (in layout) to /other-licenses/branding/firefox and /browser/branding/unofficial.
+
+* MOZ_BRANDING_DIRECTORY is now always set. It default to /browser/branding/nightly. This also remove the need for the OFFICIAL_BRANDING and MOZ_USE_GENERIC_BRANDING hacks.
+
+* Simplify $MOZ_BRANDING_DIRECTORY/Makefile.in. All it really doe is copy file into $dist/branding/. There were a few case of file being renamed a they're copied, I've moved that into browser/app/Makefile.in (so it's done in one place instead of each branding flavor).
+
+* Fixed a few file permission that didn't need to be executable (their different color in my shell's l output wa irritating me).

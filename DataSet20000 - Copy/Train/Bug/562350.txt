@@ -1,0 +1,289 @@
+not view XMTL in Mcafee epolicy Orchestator
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 6.1; es-AR; rv:1.9.2.3) Gecko/20100401 Firefox/3.6.3 ( .NET CLR 3.5.30729)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 6.1; es-AR; rv:1.9.2.3) Gecko/20100401 Firefox/3.6.3 ( .NET CLR 3.5.30729)
+
+Error cargando la hoja de estilos: Falla en parseo de hoja de estilo XSLT
+
+<?xml version="1.0" encoding="UTF-8"?>
+ <xsl:stylesheet xmlns:xsl="http://www.w3.org/TR/WD-xsl" 
+     xmlns:html="http://www.w3.org/TR/REC-html40"
+     result-ns="">
+  <xsl:template match="/">
+    <HTML>
+      <HEAD>
+        <STYLE>
+          BODY {margin:0;}
+          .bg {font:8pt Arial; background-color:white; color:black; }
+          H1 {font:bold 14pt Arial; width:100%;}
+          .titleText {font:14pt Arial; padding-left:10px; color:white}
+          A {color:white}
+          .row {font:8pt tahoma;}
+          .header {font:bold 8pt tahoma; cursor:hand;}
+		  .Error    {background-color:#ffcccc; color:#000000}
+		  .Warning  {background-color:#ffcc99; color:#000000}
+          .Info   {background-color:#FFFFFF; color:#000000}
+          .Detail   {background-color:#ffffff; color:#999999}
+        </STYLE>
+      </HEAD>
+
+      <SCRIPT><xsl:comment><![CDATA[
+        function sort(field)
+        {
+          sortField.value = field;
+          <!-- set cursor to watch here? -->
+          listing.innerHTML = source.documentElement.transformNode(stylesheet);
+        }
+      ]]></xsl:comment></SCRIPT>
+
+      <SCRIPT for="window" event="onload"><xsl:comment><![CDATA[
+        stylesheet = document.XSLDocument;
+        source = document.XMLDocument;
+        sortField = document.XSLDocument.selectSingleNode("//@order-by");
+      ]]></xsl:comment></SCRIPT>
+
+      <BODY>
+
+        <TABLE width="100%" cellspacing="0" STYLE="background-color:#cc0033">
+          <TR>
+            <TD width="100%" align="left" valign="center" class="titleText"  style="border-bottom: 3px solid #000000; padding-bottom:8px">
+              McAfee Agent Activity Log<BR/>
+
+              <div class="row">
+              Version [<xsl:value-of select="//naLog/version"/>] 
+              Computer name [<xsl:value-of select="//naLog/ComputerName"/>] 
+              ePO server [<xsl:value-of select="//naLog/ePOServerName"/>]<BR/>
+              View debug logs: FrameSvc
+              <xsl:element name="A">
+                 <xsl:attribute name="HREF">
+                 Agent_<xsl:value-of select="//naLog/ComputerName"/>.log
+                 </xsl:attribute>current</xsl:element> /
+              <xsl:element name="A">
+
+                 <xsl:attribute name="HREF">
+                 Agent_<xsl:value-of select="//naLog/ComputerName"/>_backup.log
+                 </xsl:attribute>previous</xsl:element>,
+              NaPrdMgr
+              <xsl:element name="A">
+                 <xsl:attribute name="HREF">
+                 PrdMgr_<xsl:value-of select="//naLog/ComputerName"/>.log
+                 </xsl:attribute>current</xsl:element> /
+              <xsl:element name="A">
+
+                 <xsl:attribute name="HREF">
+                 PrdMgr_<xsl:value-of select="//naLog/ComputerName"/>_backup.log
+                 </xsl:attribute>previous</xsl:element>
+              </div>
+            </TD>
+          </TR>
+          <TR>
+            <TD class="bg" valign="top" colspan="2">
+
+              <DIV id="listing"><xsl:apply-templates match="naLog"/></DIV>
+            </TD>
+          </TR>
+        </TABLE>    
+      </BODY>
+    </HTML>
+  </xsl:template>
+
+  <xsl:template match="naLog">
+    <TABLE STYLE="background-color:white">
+
+      <THEAD>
+        <TD> <DIV class="header" onClick="sort('@time')"><u>Date and Time</u></DIV></TD>
+        <TD> <DIV class="header" onClick="sort('@type')"><u>Type</u></DIV></TD>
+        <TD> <DIV class="header" onClick="sort('@component')"><u>Component</u></DIV></TD>
+        <TD> <DIV class="header" onClick="sort('.')"><u>Message</u></DIV></TD>
+
+      </THEAD>
+
+      <xsl:for-each select="Log" order-by="@time">
+        <TR>
+
+            <xsl:choose>
+				<xsl:when test="@type[. = 1]">
+					<xsl:attribute name="class">Error</xsl:attribute>
+				</xsl:when>
+
+				<xsl:when test="@type[. ='2']">
+					<xsl:attribute name="class">Warning</xsl:attribute>
+				</xsl:when>
+
+				<xsl:when test="@type[. ='3']">
+					<xsl:attribute name="class">Info</xsl:attribute>
+				</xsl:when>
+
+				<xsl:when test="@type[. ='4']">
+					<xsl:attribute name="class">Detail</xsl:attribute>
+				</xsl:when>
+			</xsl:choose>
+
+
+          <TD><DIV class="row" STYLE="text-align:left"><xsl:apply-templates select="@time"/></DIV></TD>
+		  <TD valign="bottom"><DIV class="row" STYLE="text-align:left"><xsl:apply-templates select="@type"/></DIV></TD>
+  		  <TD valign="bottom"><DIV class="row" STYLE="text-align:left"><xsl:apply-templates select="@component"/></DIV></TD>
+
+		  <TD valign="bottom"><DIV class="row" STYLE="text-align:left"><xsl:value-of select="."/></DIV></TD>
+		</TR>
+      </xsl:for-each>
+    </TABLE>
+  </xsl:template>
+
+
+
+  <xsl:template match="@time">
+		<xsl:eval>MyGetDateTime();</xsl:eval>
+
+  </xsl:template>
+
+  <xsl:template match="@type">
+		<xsl:eval>GetType();</xsl:eval>
+  </xsl:template>
+
+  <xsl:template match="@component">
+		<xsl:eval>GetComponent();</xsl:eval>
+  </xsl:template>
+
+	
+  
+
+  <xsl:script language="JScript">
+	<![CDATA[
+	function GetType()
+	{
+		var StrRet;
+		switch ( this.Value )
+
+		{
+			case "1":
+				StrRet = "Error";
+				break;
+
+			case "2":
+				StrRet = "Warning";
+				break;
+
+			case "3":
+				StrRet = "Info";
+				break;
+
+			case "4":
+				StrRet = "Detail";
+				break;
+		}
+
+		return StrRet;
+
+	}
+
+	function GetComponent()
+	{
+		var StrRet;
+		switch ( this.Value )
+
+		{
+
+			case "1":
+				StrRet = "Logging";
+				break;
+
+			case "2":
+				StrRet = "Management";
+				break;
+
+			case "4":
+				StrRet = "Updater";
+				break;
+
+			case "8":
+				StrRet = "Script";
+				break;
+
+			case "16":
+				StrRet = "Internet Manager";
+				break;
+
+			case "32":
+				StrRet = "Test Harness";
+				break;
+
+			case "64":
+				StrRet = "Scheduler";
+				break;
+
+			case "128":
+				StrRet = "Policy Harness";
+				break;
+
+			case "256":
+				StrRet = "User Space Controller";
+				break;
+
+			case "512":
+				StrRet = "Framework Factory";
+				break;
+
+			case "1024":
+				StrRet = "Framework Service";
+				break;
+
+			case "2048":
+				StrRet = "Policy Manager";
+				break;
+
+			case "4096":
+				StrRet = "Product Manager";
+				break;
+
+			case "8192":
+				StrRet = "Agent";
+				break;
+
+			case "16384":
+				StrRet = "Listen Server";
+				break;
+
+			case "32768":
+				StrRet = "Framework Plugin";
+				break;
+
+			case "65536":
+				StrRet = "Site Manager";
+				break;
+		}
+
+		return StrRet;
+	}
+
+
+	function MyGetDateTime() 
+	{
+		var Strs;
+		var Str1;
+		var StrRet;
+		regExpression = /-|T|:/;
+		Str1 = this.nodeTypedValue;
+		d = new Date();
+		Strs = Str1.split(regExpression);
+
+		d.setFullYear (Strs[0]);
+
+		d.setMonth(Strs[1]-1);
+		d.setDate(Strs[2]);
+
+		d.setHours(Strs[3]);
+		d.setMinutes(Strs[4]);
+		d.setSeconds(Strs[5]);
+		
+		return d.toLocaleString();
+		
+	} ]]>
+ </xsl:script>
+
+
+
+</xsl:stylesheet>
+
+
+
+Reproducible: Always

@@ -1,0 +1,42 @@
+Taskbar registration id not getting updated by minor updates?
+<Callek> jimm: ping
+<jimm> Callek: pong
+<bc> smaug: no
+<Callek> jimm: Bug 587190 the issue is from *9* to *10* and the new update service is not used _everywhere_ (e.g. SeaMonkey)
+<Callek> but of course SM does not have panorama, so is a different issue there. [I haven't hit this in SM, but I also don't have it pinned to taskbar for SM)
+<jimm> Callek: was your issue in SeaMonkey?
+<Callek> jimm: SeaMonkey can't use that new update service yet (due to code signing requirement)
+<Callek> jimm: no, I hit the bug with my Firefox beta
+<jimm> Callek: so you lost your grouping? was that on a pave over install or a simple update?
+<Callek> jimm: and on upgrade from 9 to 10 beta's... and I did a pin-dance
+<Callek> jimm: simple update
+<Callek> jimm: and as mentioned in the bug, its essentially the same as a pave-over due to the way the updater works
+<jimm> Callek: haven't seen any reports of that, but we should probably file a bug and investigate. The update should be upgrading the id. 
+<Callek> jimm: my *theory* had to do with this panorama bug
+<jimm> I can easily test that to be sure it's working using build archives.
+<jimm> naa, doubt it.
+<Callek> jimm: since I had a panorama session, and have been hitting this since upgrading and never saw it before in my error console
+<Callek> jimm: either way, there have been reports of it (according to Cww's searching)
+<Callek> and thats way that bug in particular got any eyes/traction
+<jimm> Callek: of the js console error?
+<Callek> reports of it -- where it == the pin issue
+<Callek> nothing large-scale, yet
+<Callek> but extrapolating among our userbase,  vs our beta audience, I worry.
+<jimm> Callek: ok, i'll file a bug and test
+<Callek> jimm: and of course, I don't like the idea that SeaMonkey might break here because we're not using the updater service
+<Callek> (because we can't use the service without having signing infra/certs)
+<jimm> Callek: the installer has all the code in it to maintain that id. Although I think the patch for the sm installer hasn't landed yet. 
+<Callek> jimm: the issue is that the *installer* is NOT run on a "simple update"
+<Callek> and I do not want to tell people they need to run the manual installer every update to work around this issue
+<Callek> jimm: and of course, people can update to N from N-2/3 etc. as well in versions
+<jimm> Callek: Seamonkey doesn't it call into the updater code for a simple update?
+<Callek> jimm: neither does Firefox
+<Callek> jimm: updater.exe applies a mar directly
+<Callek> installer is NSIS
+<Callek> and isn't called by updater.exe afaict (and remember)
+<Callek> jimm: new update service is a different beast, and something I don't know too much about, because SeaMonkey cannot use it....
+<jimm> Callek: from my understanding, this is called after an update in Fx, and SM has similar code: http://mxr.mozilla.org/mozilla-central/source/browser/installer/windows/nsis/shared.nsh#37
+<Callek> jimm: again, that is not run on a "simple update" because we download a .mar file, and apply that; never touching NSIS
+<jimm> we should file a bug and get rstrong in on it, he knows this stuff better than anyone.
+<Callek> jimm: also of note, is the updater.exe that applies the mar, is from the previously installed build, not the new build; so if there is changes there, it won't apply until N+1
+<Callek> jimm: so, basically nothing in browser/instaler/windows/nsis/* is run on an update, unless someone downloads the installer .exe from the website/ftp and installs manually

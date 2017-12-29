@@ -1,0 +1,19 @@
+CAPS cannot disable access to Window.focus and Window.blur
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.12) Gecko/20080201 Firefox/2.0
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.12) Gecko/20080201 Firefox/2.0
+
+setting capability.policy.default.Window.blur or capability.policy.default.Window.focus to noAccess accomplishes nothing, and setting the corresponding capability.policy.default.* prefs does not disable the methods for Window objects.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. set capability.policy.default.Window.blur to noAccess.
+2. navigate to test URL and open popup window.
+3. click the "blur" button.
+Actual Results:  
+the popup window is sent back in the z-order
+
+Expected Results:  
+window remains where it is, and the failed request is logged to the error console
+
+After getting annoyed by "requested" (meaning I clicked somewhere on the page) pop-under windows for the umpteenth time, I decided to try to put an end to them once and for all.  First thing I did was make sure "allow javascript to raise and lower windows" was unchecked, but it was, so that pref seems to be broken (presumably by the fix for bug 355482 -- see bug 369306 for that particular issue).  I've used CAPS in the past to disable a number of web annoyances in the past with no problems whatsoever, so that seemed like the logical thing to try next.  I first tried setting the Window. prefs, and that did nothing at all.  when I set the *. prefs instead, I got interesting results -- it disables the blur and focus methods for other elements (HTMLInputElement, for example), but not for Window objects.

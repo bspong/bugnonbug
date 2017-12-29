@@ -1,0 +1,25 @@
+javascript quote bypass, filter's bug
+User-Agent:       Mozilla/5.0 (X11; U; FreeBSD i386; en-US; rv:1.8.1.12) Gecko/20080224 Firefox/2.0.0.12
+Build Identifier: Mozilla/5.0 (X11; U; FreeBSD i386; en-US; rv:1.8.1.12) Gecko/20080224 Firefox/2.0.0.12
+
+I've recently noticed that javascript filter has a bug.
+When you have a javascript variable defined in the HTML code like that:
+var query = "query";
+and the query is equal to:
+</script><script>alert(document.title);</script>
+For firefox javascript parser, </script> is a valid escape javascript string as " is.
+So after closing the string by using </script>, firefox interprets next chars as HTML entities.
+See steps to reproduce.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.Example of javascript code in a php page: var query = '<? echo addslashes($_GET["query"]); ?>';
+2. if my request is page.php?query=</script><script>alert(document.title);</script>
+3. It will print the title of the current HTML document into a javascript alert because ' is eqal to </script> for valid escape javascript string.
+
+
+Expected Results:  
+</script> is not a valid escape character into a javascript string defined.
+
+http://blog.shoesbox.org/firefox-javascript-quote-bypass.html

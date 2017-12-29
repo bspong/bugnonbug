@@ -1,0 +1,65 @@
+session restore makes pathological object graph, possibly when interrupted during restore
+Created attachment 305796
+the bad sessionstore.js file
+
+This is in a 2008021904 nightly.
+
+I can get a reproducible crash with OSX with the attached sessionstore.js, in the toronto office (which means bad network, so slow network loads).  The crash is eventually due to a stack overflow; while we're overflowing the stack, it looks like:
+
+(gdb) where
+#0  0x003507f1 in ToParticipant (s=0x12cb25b4, cp=0xbfdbaf28) at ../../../mozilla/xpcom/base/nsCycleCollector.cpp:1091
+#1  0x0035101f in nsCycleCollector::Suspect (this=0x54a000, n=0x1de21a4c) at ../../../mozilla/xpcom/base/nsCycleCollector.cpp:2045
+#2  0x00351102 in NS_CycleCollectorSuspect_P (n=0x1de21a4c) at ../../../mozilla/xpcom/base/nsCycleCollector.cpp:2771
+#3  0x1240b360 in nsCycleCollectingAutoRefCnt::decr (this=0x1de21a84, owner=0x1de21a4c) at nsISupportsImpl.h:153
+#4  0x128e00e8 in nsGlobalWindow::Release (this=0x1de21a20) at ../../../../mozilla/dom/src/base/nsGlobalWindow.cpp:952
+#5  0x0076f6dc in nsCOMPtr<nsIScriptObjectPrincipal>::~nsCOMPtr (this=0xbfdbb0b8) at nsCOMPtr.h:583
+#6  0x0076f6ef in nsCOMPtr<nsIScriptObjectPrincipal>::~nsCOMPtr (this=0xbfdbb0b8) at nsCOMPtr.h:583
+#7  0x00763117 in nsScriptSecurityManager::doGetObjectPrincipal (aObj=0x1d1db8a0, aAllowShortCircuit=0) at ../../../mozilla/caps/src/nsScriptSecurityManager.cpp:2400
+#8  0x007632bc in nsScriptSecurityManager::doGetObjectPrincipal (aObj=0x1d1db8a0, aAllowShortCircuit=1) at ../../../mozilla/caps/src/nsScriptSecurityManager.cpp:2438
+#9  0x0076332f in nsScriptSecurityManager::GetObjectPrincipal (this=0x655390, aCx=0x654ab0, aObj=0x1d1db8a0, result=0xbfdbb2d8) at ../../../mozilla/caps/src/nsScriptSecurityManager.cpp:2316
+#10 0x14e78490 in FindPrincipals (cx=0x654ab0, obj=0x1d1db8a0, objectPrincipal=0xbfdbb2d8, subjectPrincipal=0xbfdbb2dc, secMgr=0xbfdbb2d4) at ../../../../../mozilla/js/src/xpconnect/src/XPCSafeJSObjectWrapper.cpp:127
+#11 0x14e78d40 in CanCallerAccess (cx=0x654ab0, unsafeObj=0x1d1db8a0) at ../../../../../mozilla/js/src/xpconnect/src/XPCSafeJSObjectWrapper.cpp:143
+#12 0x14e79286 in XPC_SJOW_NewResolve (cx=0x654ab0, obj=0x21b3dc60, id=453942100, flags=1, objp=0xbfdbb3b4) at ../../../../../mozilla/js/src/xpconnect/src/XPCSafeJSObjectWrapper.cpp:645
+#13 0x001fb463 in js_LookupPropertyWithFlags (cx=0x654ab0, obj=0x21b3dc60, id=453942100, flags=1, objp=0xbfdbb47c, propp=0xbfdbb478) at ../../../mozilla/js/src/jsobj.c:3291
+#14 0x001fb054 in js_LookupProperty (cx=0x654ab0, obj=0x21b3dc60, id=453942100, objp=0xbfdbb47c, propp=0xbfdbb478) at ../../../mozilla/js/src/jsobj.c:3191
+#15 0x14e7d1f6 in XPCWrapper::Enumerate (cx=0x654ab0, wrapperObj=0x21b3dc60, innerObj=0x1d1db8a0) at ../../../../../mozilla/js/src/xpconnect/src/XPCWrapper.cpp:251
+#16 0x14e77d15 in XPC_SJOW_Enumerate (cx=0x654ab0, obj=0x21b3dc60) at ../../../../../mozilla/js/src/xpconnect/src/XPCSafeJSObjectWrapper.cpp:627
+#17 0x001fe712 in js_Enumerate (cx=0x654ab0, obj=0x21b3dc60, enum_op=JSENUMERATE_INIT, statep=0xbfdbb59c, idp=0xbfdbb598) at ../../../mozilla/js/src/jsobj.c:4145
+#18 0x001806e8 in JS_Enumerate (cx=0x654ab0, obj=0x21b3dc60) at ../../../mozilla/js/src/jsapi.c:3839
+#19 0x001f3382 in MarkSharpObjects (cx=0x654ab0, obj=0x21b3dc60, idap=0x0) at ../../../mozilla/js/src/jsobj.c:370
+#20 0x001f358b in MarkSharpObjects (cx=0x654ab0, obj=0x21b3d4c0, idap=0x0) at ../../../mozilla/js/src/jsobj.c:410
+#21 0x001f358b in MarkSharpObjects (cx=0x654ab0, obj=0x21b3ecc0, idap=0x0) at ../../../mozilla/js/src/jsobj.c:410
+...
+...
+#18485 0x001f358b in MarkSharpObjects (cx=0x654ab0, obj=0x1cffed60, idap=0x0) at ../../../mozilla/js/src/jsobj.c:410
+#18486 0x001f358b in MarkSharpObjects (cx=0x654ab0, obj=0x150fd0e0, idap=0x0) at ../../../mozilla/js/src/jsobj.c:410
+#18487 0x001f358b in MarkSharpObjects (cx=0x654ab0, obj=0x1cffc820, idap=0x0) at ../../../mozilla/js/src/jsobj.c:410
+#18488 0x001f358b in MarkSharpObjects (cx=0x654ab0, obj=0x150d89e0, idap=0x0) at ../../../mozilla/js/src/jsobj.c:410
+#18489 0x001f358b in MarkSharpObjects (cx=0x654ab0, obj=0x1b0d8ea0, idap=0xbfffc994) at ../../../mozilla/js/src/jsobj.c:410
+#18490 0x001f3752 in js_EnterSharpObject (cx=0x654ab0, obj=0x1b0d8ea0, idap=0xbfffcaec, sp=0xbfffcae8) at ../../../mozilla/js/src/jsobj.c:467
+#18491 0x001f3d06 in obj_toSource (cx=0x654ab0, argc=0, vp=0x66fce8) at ../../../mozilla/js/src/jsobj.c:636
+#18492 0x001ddf6e in js_Interpret (cx=0x654ab0, pc=0x151c4605 ":", result=0xbfffd278) at ../../../mozilla/js/src/jsinterp.c:4631
+#18493 0x001c8ad1 in js_Invoke (cx=0x654ab0, argc=3, vp=0x66fc00, flags=2) at ../../../mozilla/js/src/jsinterp.c:1430
+#18494 0x14e5c75c in nsXPCWrappedJSClass::CallMethod (this=0x153462f0, wrapper=0x1a8fa0d0, methodIndex=3, info=0x822670, nativeParams=0xbfffd6d4) at ../../../../../mozilla/js/src/xpconnect/src/xpcwrappedjsclass.cpp:1475
+#18495 0x14e546e7 in nsXPCWrappedJS::CallMethod (this=0x1a8fa0d0, methodIndex=3, info=0x822670, params=0xbfffd6d4) at ../../../../../mozilla/js/src/xpconnect/src/xpcwrappedjs.cpp:556
+#18496 0x00354b22 in PrepareAndDispatch (self=0x19e1f6b0, methodIndex=3, args=0xbfffd7f4) at ../../../../../../../mozilla/xpcom/reflect/xptcall/src/md/unix/xptcstubs_unixish_x86.cpp:93
+#18497 0x00354b81 in nsXPTCStubBase::Stub3 (this=0x19e1f6b0) at xptcstubsdef.inc:5
+#18498 0x0034110a in nsTimerImpl::Fire (this=0x1a8f9f90) at ../../../mozilla/xpcom/threads/nsTimerImpl.cpp:408
+#18499 0x003412f0 in nsTimerEvent::Run (this=0x1de35940) at ../../../mozilla/xpcom/threads/nsTimerImpl.cpp:488
+#18500 0x0033ab6a in nsThread::ProcessNextEvent (this=0x62aef0, mayWait=0, result=0xbfffd974) at ../../../mozilla/xpcom/threads/nsThread.cpp:510
+#18501 0x002cb4e6 in NS_ProcessPendingEvents_P (thread=0x62aef0, timeout=20) at nsThreadUtils.cpp:180
+#18502 0x14cece9b in nsBaseAppShell::NativeEventCallback (this=0x153469b0) at ../../../../mozilla/widget/src/xpwidgets/nsBaseAppShell.cpp:112
+#18503 0x14cb38e0 in nsAppShell::ProcessGeckoEvents (aInfo=0x153469b0) at ../../../../mozilla/widget/src/cocoa/nsAppShell.mm:305
+
+(gdb) p DumpJSStack()
+0 sss_saveState(aUpdateAll = undefined) ["file:///Users/vladimir/proj/mozilla-cvs/firefox/dist/MinefieldDebug.app/Contents/MacOS/components/nsSessionStore.js":1889]
+    oState = [object Object]
+    this = [object Object]
+1 sss_observe(aData = null, aTopic = "timer-callback", aSubject = [xpconnect wrapped nsITimer @ 0x1a8f9fd0 (native @ 0x1a8f9f90)]) ["file:///Users/vladimir/proj/mozilla-cvs/firefox/dist/MinefieldDebug.app/Contents/MacOS/components/nsSessionStore.js":360]
+    ix = undefined
+    win = undefined
+    _this = [object Object]
+    this = [object Object]
+$2 = void
+
+There's no cycle in the MarkSharpObjects calls, the obj pointer is different in each invocation.

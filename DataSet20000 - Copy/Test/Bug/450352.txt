@@ -1,0 +1,56 @@
+History lists out of order when redirects have occurred
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.1) Gecko/2008072820 Firefox/3.0.1
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.1a2pre) Gecko/20080812020515 Minefield/3.1a2pre
+
+When a URL is typed into the URL bar that results in a redirect, history lists show the pages in an incorrect order.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. I type google.com into the URL bar. This redirects to http://www.google.com, and since I live in Canada, redirects again to http://www.google.ca
+2. Look at either the history menu, the history sidebar (and select View->By Last Visited), or the library history (History->Show All History)
+Actual Results:  
+Pages appear in the all of the above mentioned lists in the following order:
+
+1. http://google.com
+2. http://www.google.ca
+3. http://www.google.com
+
+
+
+Expected Results:  
+They should appear in the correct chronological order:
+
+1. http://www.google.ca
+2. http://www.google.com
+3. http://google.com
+
+Maybe all 3 entries shouldn't even be shown; but if they are, the should appear in the correct order.
+
+I have verified that this problem also appears on Mac OS (3.0.1), but does not happen in Firefox 2.0.0.16 (Mac)
+
+I ran wget to see exactly how the redirect is happening:
+
+$ wget http://google.com
+--00:00:51--  http://google.com/
+           => `index.html'
+Resolving google.com... 72.14.207.99, 64.233.167.99, 64.233.187.99
+Connecting to google.com|72.14.207.99|:80... connected.
+HTTP request sent, awaiting response... 301 Moved Permanently
+Location: http://www.google.com/ [following]
+--00:00:51--  http://www.google.com/
+           => `index.html'
+Resolving www.google.com... 72.14.205.99, 72.14.205.103, 72.14.205.104, ...
+Connecting to www.google.com|72.14.205.99|:80... connected.
+HTTP request sent, awaiting response... 302 Found
+Location: http://www.google.ca/ [following]
+--00:00:51--  http://www.google.ca/
+           => `index.html'
+Resolving www.google.ca... 72.14.205.147, 72.14.205.99, 72.14.205.103, ...
+Reusing existing connection to www.google.com:80.
+HTTP request sent, awaiting response... 200 OK
+Length: unspecified [text/html]
+
+    [ <=>                                 ] 6,650         --.--K/s             
+
+00:00:51 (545.05 KB/s) - `index.html' saved [6650]

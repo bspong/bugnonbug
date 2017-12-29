@@ -1,0 +1,205 @@
+XML rendering using XSLT produces incorrect html styles, rendering incorrectly.
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9a8pre) Gecko/2007082805 Minefield/3.0a8pre
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9a8pre) Gecko/2007082805 Minefield/3.0a8pre
+
+When I Open an XML file which points to an XSLT stylesheet, the HTML output rendered does not match that styles being applied in the XSLT.  When you then do a save As, and save the HTML out to external file and then reopen in browser, the HTML is in fact rendered correctly.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.Create XML file with data
+2.Create simple XSLT with a stylesheet
+3.Point XML to include stylesheet
+4.Open XML in browser.  Observe applied styles
+5.Save browser window to HTML file and the open this.  Compare browser windows.
+Actual Results:  
+Incorrect style rendering when using XML/XSLT
+
+Expected Results:  
+Rendering of HTML styles should match those of XML and XSLT processing.
+
+To reproduce please save text below to disk:
+Sample XML:
+<?xml version="1.0" encoding="UTF-8" ?>
+<?xml-stylesheet type="text/xsl" href="my.xsl"?>
+<locations>
+	<package id="com.metavante.ceb.custsvc.customizeyouraccounts">
+		<test id="PageTest">
+			<file name="accountOverview.html" url="abc" level="0">
+				<description><![CDATA[abc.]]></description>
+			</file>
+			<file name="" url="def" level="0">
+				<description><![CDATA[def]]></description>
+			</file>
+		</test>
+	</package>
+</locations>
+
+Sample my.xsl:
+
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+<xsl:output method="html" version="1.0" encoding="UTF-8" indent="yes"/>
+
+<xsl:template match="/">
+<html>
+	<head><title>Test Cases</title>
+	
+	<style type="text/css">
+	
+	body {
+	    font:normal 68% verdana,arial,helvetica;
+	    color:#000000;
+	}
+	table tr td, table tr th {
+	    font-size: 68%;
+	}
+	table.details tr th{
+	    font-weight: bold;
+	    text-align:left;
+	    background:#a6caf0;
+	}
+	table.details tr {
+	    background:#eeeee0;
+	}
+
+	.pass {
+	    background:#00FF00;
+	}
+
+	.fail {
+	    background:#FF0000;
+	}
+	
+	p {
+	    line-height:1.5em;
+	    margin-top:0.5em; margin-bottom:1.0em;
+	}
+	h1 {
+	    margin: 0px 0px 5px; font: 165% verdana,arial,helvetica
+	}
+	h2 {
+	    margin-top: 1em; margin-bottom: 0.5em; font: bold 125% verdana,arial,helvetica
+	}
+	h3 {
+	    margin-bottom: 0.5em; font: bold 115% verdana,arial,helvetica
+	}
+	h4 {
+	    margin-bottom: 0.5em; font: bold 100% verdana,arial,helvetica
+	}
+	h5 {
+	    margin-bottom: 0.5em; font: bold 100% verdana,arial,helvetica
+	}
+	h6 {
+	    margin-bottom: 0.5em; font: bold 100% verdana,arial,helvetica
+	}
+	.Error {
+	    font-weight:bold; color:red;
+	}
+	.Failure {
+	    font-weight:bold; color:purple;
+	}
+	.Properties {
+	  text-align:right;
+	}
+	</style>
+	  
+	</head>
+	<body>
+		<table width="100%" cellspacing="2" cellpadding="5" border="0" class="details">
+		  <tr>
+		    <th align="left" colspan="3">Test Cases</th>
+		  </tr>
+		  <tr>
+			<table width="100%" BGColor="#FFFFFF" cellspacing="2" cellpadding="5" border="0" class="details">
+		    <xsl:for-each select="locations/package">
+          <tr>
+			    <th align="left">Package</th>
+			    <th align="left">Test</th>
+			    <th align="left">File</th>
+			    <th align="left">Description</th>
+			    <th align="left">Pass/Fail</th>
+          </tr>
+          <xsl:variable name="package-pos" select="position()"/>
+          <xsl:for-each select="test">
+            <xsl:variable name="test-pos" select="position()"/>
+		        <xsl:for-each select="file">
+              <xsl:variable name="file-pos" select="position()"/>
+		          <tr>
+		 			      <td valign="top">
+                  <xsl:choose>
+                    <xsl:when test="$test-pos=1 and $file-pos=1">
+                      <xsl:value-of select="../../@id"/>
+                    </xsl:when>
+                    <xsl:otherwise>
+                      <xsl:value-of select="''"/>
+                    </xsl:otherwise>
+                  </xsl:choose>
+					      </td>
+		 			      <td valign="top">
+                  <xsl:choose>
+                    <xsl:when test="$file-pos=1">
+                      <xsl:value-of select="../@id"/>
+                    </xsl:when>
+                    <xsl:otherwise>
+                      <xsl:value-of select="''"/>
+                    </xsl:otherwise>
+                  </xsl:choose>
+					      </td>
+		 			      <td valign="top">
+	                <a>
+  						      <!-- xsl:value-of select="$file-pos"/ -->
+				            <xsl:variable name="url" select="@url"/>
+				            <xsl:variable name="file-name" select="@name"/>
+							      <xsl:attribute name="href"><xsl:value-of select="$url"/></xsl:attribute>
+			    	        <xsl:value-of select="$file-name"/>
+	                </a>
+					      </td>
+		 			      <td valign="top">
+			            <xsl:variable name="descr" select="description/text()"/>
+			            <xsl:variable name="level" select="@level"/>
+                  <xsl:choose>
+                    <xsl:when test="$level=4">
+                      &#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#8226;&#160;<xsl:value-of select="$descr"/>
+                    </xsl:when>
+                    <xsl:when test="$level=3">
+                      <b>&#160;&#160;&#160;&#160;&#160;&#8226;&#160;<xsl:value-of select="$descr"/></b>
+                    </xsl:when>
+                    <xsl:when test="$level=2">
+                      &#160;&#160;&#160;&#160;&#160;&#8226;&#160;<xsl:value-of select="$descr"/>
+                    </xsl:when>
+                    <xsl:when test="$level=1">
+                      <b><xsl:value-of select="$descr"/></b>
+                    </xsl:when>
+                    <xsl:otherwise>
+		                  <xsl:value-of select="$descr"/>
+                    </xsl:otherwise>
+                  </xsl:choose>
+					      </td>
+		 			      <td valign="top">
+			            <xsl:variable name="level2" select="@level"/>
+                  <xsl:choose>
+                    <xsl:when test="$level2 >= 0 and $level2 &lt; 5">
+								      <xsl:attribute name="class">pass</xsl:attribute>
+                    	<xsl:text>Pass</xsl:text>
+                    </xsl:when>
+                    <xsl:when test="$level2 = 5">
+								      <xsl:attribute name="class">fail</xsl:attribute>
+                    	<xsl:text>Fail</xsl:text>
+                    </xsl:when>
+                    <xsl:otherwise>
+                    	<xsl:text>Invalid Level</xsl:text>
+                    </xsl:otherwise>
+                  </xsl:choose>
+					      </td>
+				      </tr>
+		 		    </xsl:for-each>
+		 		  </xsl:for-each>
+		 		</xsl:for-each>
+		  </table>
+			</tr>
+		</table>
+	</body>
+</html>
+</xsl:template>
+</xsl:stylesheet>

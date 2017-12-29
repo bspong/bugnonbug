@@ -1,0 +1,30 @@
+Mozilla should not rasterise JPEG file when printed a postscript
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.0.7) Gecko/20060909 Firefox/1.5.0.7
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.0.7) Gecko/20060909 Firefox/1.5.0.7
+
+When printing a 2M JPEG image to a postscript file on Windows XP, the resulting postscript file is 60M+ in size. This indicates JPEG file is rasterised and the raster bitmap used in the postscript. Even though Postscript support embedding JPEG.
+
+The odd thing is that examining the resulting postscript in a text editor show some postscript that look a if the file wa (going to be) embedded a a JPEG. So perhaps it wa re-jpg'ed with badly chosen setting that resulted in a very large file, and obviously with decreased quality compared with the original. This would be the worst thing that could happen.
+
+In fact, the correct behaviour, if you are going to do silent transformation to people's data, should be to JPEG any large bitmap file prior to embedding, not the other way around. But this would typically be provided a an explicite, configurable option which default to 'on' but which a user may switch off in the print dialogue with setting level such a 'DTP/high', 'print/mid', 'screen/low'.
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. using XP firefox 1.5.07, go to http://dimension100.com/camera/Northern_NSW_Australia_2005_January_Tweed_River_Bakers_Rd_Panorama.jpg
+2. file - print
+3. select a postscript printer. a colour printer driver will make a 64MB file, a b&w one will make 16MB
+4.
+in the dialogue, select print to file (or capture the print job some other way if you like)
+5. ...
+6. profit!
+
+Actual Results:
+I won't paste the postscript file here.
+
+Expected Results:
+a file around the 2MB mark, or lower if the option I suggested in the 'details' window were implemented allowing printing a 'low quality' postscript file (actually, who would want that, I only mention it because it is possible to do in a postscript-compliant way, and easy using ghostscript for example)
+
+You could use any jpeg I think, but this one show the dramatic effect of the problem. Perhaps you can say 'this is a problem with window GDI' or something, but I imagine it really mean you need to give your data to GDI in another way (eg perhaps providing already-processed postscript to it, if that's not being done?).

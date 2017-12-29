@@ -1,0 +1,30 @@
+“Close” Button on Tabs Reacts to Spacebar but Performs No Corresponding Action
+This bug originated in Ubuntu's tracker as Bug #779581 (https://bugs.launchpad.net/ubuntu/+source/firefox/+bug/779581).  The original issue was that if the close button on a tab is in focus and the spacebar is pressed, the tab does not close.  One might believe that the tab is suppose to close because the close button responds as though it is being pressed.  However, upon further investigation, it is apparent that the erronous behavior is that either the close button becomes in focus or that once the button is in focus it responds to the spacebar.  This behavior was tested in Mozilla Firefox for Ubuntu 3.6.18, Mozilla Firefox for Ubuntu 4.0.1, official Mozilla build of Firefox 5.0.1 for Linux and with some success on an official Mozilla build of Firefox 5.0.1 for Windows.
+
+In Windows the behavior is a little different.  Here you can get similar results by clicking and holding the close button (to bring focus to it), and then pressing spacebar (without releasing the mouse button).  Like the Ubuntu versions, the close button has the clicking animation but does not close the tab (until the mouse button is released).
+
+Thus far, no one has tested this issue in Mac OSX.
+
+I dug into the code in the http://hg.mozilla.org/releases/mozilla-2.0/ (63475:5216dd412535) repository to try to find the problem.  On line 20 of browser/base/content/tabbrowser.css there is an interesting comment:
+
+.tab-close-button[selected="true"] {
+  /* Make this button focusable so clicking on it will not focus the tab while
+     it's getting closed */
+  -moz-user-focus: normal;
+}
+
+Changing this value to 'none' or 'ignore' results in the tab getting focus when the close button is pressed.  It might be better to just let the tab have focus but this is a less than an optimal solution.  
+
+One might also want to look at line 3507 of browser/base/content/tabbrowser.xml:
+
+          <xul:toolbarbutton anonid="close-button"
+                             xbl:inherits="fadein,pinned,selected"
+                             tabindex="-1"
+                             clickthrough="never"
+                             class="tab-close-button"/>
+
+My knowledge of this codebase is not so great, so any futher guildance in resolving this issue will be appreciated.
+
+In my opinion, having a response to the keyboard that does not result in a useful action is not appropriate. (Of course, this situation is so hard to find that it may not be worth fixing.)  
+
+Please let me know if you need more information.  Thanks.

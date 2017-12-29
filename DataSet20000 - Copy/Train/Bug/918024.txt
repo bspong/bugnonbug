@@ -1,0 +1,41 @@
+[Session Restore] Remove synchronous start up fallback
+In order to stop writing state immediately after startup in Bug 887780, we must be able to detect crashes using the new CrashMonitor being introduced in Bug 888373. Since the Crash Monitor API is async only, we are not able to rely on it in the sync initialization fallback in nsiSessionStartup. Removing the fallback would also allow us to get rid of the sync reading in _SessionFile.
+
+The sync fallback was initially introduced in Bug 532150, and the reasons for needing it were discussed there. The places that might be invoking this fallback are the following:
+
+http://hg.mozilla.org/mozilla-central/file/c870b2803c2b/browser/components/downloads/src/DownloadsStartup.js#l127
+This should be fine, since it happens after "sessionstore-browser-state-restored"
+
+http://hg.mozilla.org/mozilla-central/file/c870b2803c2b/browser/components/nsBrowserGlue.js#l689
+This should be fine, since it happens after ""sessionstore-windows-restored"
+
+http://hg.mozilla.org/mozilla-central/file/c870b2803c2b/browser/components/nsBrowserContentHandler.js#l573
+This happens pretty early on startup, after the browser has been updated. This will trigger the synchronous fallback, in order to check if there is a session to restore. 
+
+The call to |doRestore| ends up looking at |_sessionType| to see if it is either |Ci.nsISessionStartup.RECOVER_SESSION| or |Ci.nsISessionStartup.RESUME_SESSION|. The code that actually sets |_sessionType| is the following:
+
+      let doResumeSessionOnce = Services.prefs.getBoolPref("browser.sessionstore.resume_session_once");
+      let doResumeSession = doResumeSessionOnce ||
+            Services.prefs.getIntPref("browser.startup.page") == 3;
+
+      let resumeFromCrash = Services.prefs.getBoolPref("browser.sessionstore.resume_from_crash");
+      let lastSessionCrashed =
+        this._initialState && this._initialState.session &&
+        this._initialState.session.state &&
+        this._initialState.session.state == STATE_RUNNING_STR;
+
+      ...
+
+      // set the startup type
+      if (lastSessionCrashed && resumeFromCrash)
+        this._sessionType = Ci.nsISessionStartup.RECOVER_SESSION;
+      else if (!lastSessionCrashed && doResumeSession)
+        this._sessionType = Ci.nsISessionStartup.RESUME_SESSION;
+      else if (this._initialState)
+        this._sessionType = Ci.nsISessionStartup.DEFER_SESSION;
+      else
+        this._initialState = null; // reset the state
+
+So we are unable to detect RECOVER_SESSION synchronously, but we could detect RESUME_SESSION without going to session store by reading the Pref. Using this would only change behavior if we were to crash right after an update has been applied.
+
+What's everyone think?

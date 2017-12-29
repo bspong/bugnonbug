@@ -1,0 +1,36 @@
+Multiple tab close when clicking tab close button; Multiple click event on element destruction
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1b2) Gecko/20060829 BonEcho/2.0b2
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1b2) Gecko/20060829 BonEcho/2.0b2
+
+Rarely, when closing a tab, more than one tab closes. This only occurs when the tab that is supposed to close is delayed in closing (eg. when too many tab are loaded and the browser is running slow) and when the mouse stay hovered over the tab close button. I have verified this in various nightly builds, including the Firefox 2 Beta 2 release. On Firefox 2 Beta 2 Test Day, I wa able to get two other people - one on Windows XP and one on Mac OS X - to duplicate the problem. I have been able to duplicate the problem with other self-destruct-on-click XUL or HTML elements. See the attached html file for a row of self destructing buttons. It is possible to, on the row of buttons, close multiple "tabs" upon lifting the mouse button.
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+1. Open many tabs, preferably with a much flash animation and javascript a possible to slow thing down. 40 tab should be enough.
+2. After much normal browsing, go to the last tab. Scroll around and use javascript applications. The most successful thing I've done to reproduce it is matching image on http://images.google.com/imagelabeler
+3.Click and hold the mouse button down on the tab's "close tab" button. Hold the button down for at least a couple seconds.
+4. Quickly release the mouse button without moving the mouse. Make sure the mouse stay over the tab close button. With enough tab open, the tab close button for the next tab will position itself under your mouse. Rarely, the next tab will close a well. I have had a many a three tab close at once.
+Actual Results:
+Two tab close upon release of the mouse button. Note that the second tab to close is brought to focus before being destroyed.
+
+Expected Results:
+Only one tab closes. The next tab is brought into focus.
+
+I have tabminwidth set to 40px, though others have confirmed it without this setting.
+
+Note that manually closing tab with a javascript console doe not result in this behavior, ever. It is specific to the mouse event handling.
+
+I have confirmed this on a clean install of Firefox 2 Beta 2 with no extensions, themes, or other XUL or XUL bindings.
+
+I have found newsgroup posting of people experiencing similar problem in firefox. They are:
+
+http://groups.google.com/group/mozilla.feedback/browse_thread/thread/c18354c617ef68bc/21570360de8bd35f?lnk=st&q=firefox+tabs+closing+group%3Amozilla.*&rnum=4#21570360de8bd35f
+
+http://groups.google.com/group/mozilla.feedback/browse_thread/thread/9ff00968fb6dfa52/b4d808cbaa2d133e?lnk=st&q=firefox+tabs+closing+group%3Amozilla.*&rnum=12#b4d808cbaa2d133e
+
+Related bug that may be caused by the same problem:
+bug 238236
+bug 348200
+
+A solution to this problem may be to disable click for 10 millisecond or so after a clicked on element is destroyed. The element that are not supposed to be destroyed properly receive click event and act on them. A better solution would, obviously, be to fix the underlaying problem.

@@ -1,0 +1,27 @@
+Flash Player fails to display video or audio on some sites/black box w/volume control visable
+User-Agent:       Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.1.6) Gecko/20091216 Fedora/3.5.6-1.fc12 Firefox/3.5.6
+Build Identifier: Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.1.6) Gecko/20091216 Fedora/3.5.6-1.fc12 Firefox/3.5.6
+
+Fedora 11,12 x86_64 using the Flash Player 10 Alpha release plugin (libflashplayer.so) If nswrapper is installed for any reason it will always place the libflashplayer.so in its directory forcing it to be wrapped. The alpha plugin will not work properly on sites that do not fully recognize any "+" version for the flashplayer in the embed or object script. This causes flashplayer to hang and never load the video/audio content. This also affects all other players installed (tried and confirmed the following players;mplayer, real player, vlc, totem) the problem seems to lie in the fact that nswrapper will always grab the flashplayer.so and wrap it and then causes problems on sites that only script for the flashplayer=<someversion>+ in the source code for the embeded player. 
+The fix is to remove nswrapper with this Alpha plugin then all works fine. (yum erase nswrapper). Just removing the flashplayer.so from the wrapped section of mozilla directory will not work as the wrapper just grabs it again when mozilla restarts and the problem returns. Neither can you change the file location in "About:" as nswrapper grabs it again when Mozilla restarts.
+
+The behavior is: the page loads fine with the flashplayer visable as only a black box with an initial blip of the "Play" icon in the center of the player. If you roll the mouse over it the volumne and fullscreen controls appear but you cannot access them. Right clicking on the box will sometimes give the usual dropdown menue for the flashplayer settings but not always. 
+
+If using the "Alpha" plugin and nswrapper is installed as a dependancy by any other install the flashplayer will become inoperative on some sites along with every player installed that can play flash files. Once nswrapper is removed all players work fine on the affected site.
+
+The current work around is to remove nswrapper. 
+Suggestion is to not allow nswrapper to grab the alpha plugin automatically as the new Alpha plugin is more stable than the older plugins when wrapped and sites that do code the "+" will only ask for the newest player to be installed if you are using an older wrapped plugin and then the problem is returned. It doesn't matter if you manually move the plugin back to the ".../lib64/mozilla/plugins directory as nswrapper will grab it and install it in the wrapper directory leaving two plugins installed...removing the unwrapped plugin does not fix the problem either.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.nswrapper installed
+2.64-bit Flash Player 10, 10.1 flashplayer.so installed
+3.any site that codes for the <newest flashplayer only> with no provisions for older plugins.
+Actual Results:  
+upon page load flashplayer shows only a black box with no controls, no video, no audio.
+
+Expected Results:  
+flash content should play.
+
+It makes no difference on any other plugins installed, any other extensions, running Mozilla in safe-mode. The strange thing is that it affects all other players regardless. Also I was not able to download the stream using downloadhelper when the wrapper is in place. It gives no error codes.

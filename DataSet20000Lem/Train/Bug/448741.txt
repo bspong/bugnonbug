@@ -1,0 +1,8 @@
+nsISessionStore us private method and is not extensible
+The @mozilla.org/browser/sessionstore;1 component is very difficult to extend because it us non-IDL published version of all it call internally. This make it impossible for an addon to easily alter it behavior by reimplementing a couple methods.
+
+In my particular case, I need to prevent the session store from writing out tab loaded during Tor mode in the Torbutton Firefox Extension (similar to the behavior planned in Bug 248970). Unfortunately, the component doe not publish the function it us to write the tab to disk via it IDL. Worse, none of the published method are used internally by the component itself, so reimplementing them by Contract ID hooking is not possible.
+
+The end result is that Torbutton ultimately ha to include a copy of the SessionStore for Firefox 2 and 3, keep it up to date, and determine the proper one to load at browser start. All of this for what amount to about a 5 line diff to the actual code itself.
+
+For further reference, the Torbutton bug filed by a developer encouraging me to explore alternative (and my rationale for not being able to use any of them) is here: https://bugs.torproject.org/flyspray/index.php?do=details&id=722

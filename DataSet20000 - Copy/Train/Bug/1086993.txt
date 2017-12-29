@@ -1,0 +1,50 @@
+File upload via FormData + $.ajax from within an extension content script is broken in Firefox 33
+Created attachment 8509040
+firefox-file-upload-repro.xpi
+
+User Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/38.0.2125.104 Safari/537.36
+
+Steps to reproduce:
+
+From the context of a Firefox extension content script, code to upload a file that worked prior to Firefox version 33 is now failing.
+
+1. Install the attached "firefox-file-upload-repro.xpi" extension.
+2. Browse to any page, notice that the extension injected a file input at the top of the page.
+3. While watching the developer console for results, select a file for upload.
+
+Alternatively, execute the following code (which uses jQuery) from within the context of an extension content script:
+
+        var formData = new FormData();
+        formData.append("name", <file input element>.files[0]);
+
+        $.ajax({
+            url: "http://example.com",
+            data: formData,
+            cache: false,
+            contentType: false,
+            processData: false,
+            type: 'POST'
+        })
+        .done(function(response) {
+            console.log("Success!");
+            console.log(response);
+        })
+        .fail(function(jqxhr, status) {
+            console.log("*sad trombone*");
+            console.log(jqxhr.statusText);
+        });
+
+
+
+Actual results:
+
+Since Firefox 33, the request fails *before* initiating a network connection with the following error:
+
+"[Exception... "JavaScript component does not have a method named: "available"'JavaScript component does not have a method named: "available"' when calling method: [nsIInputStream::available]"  nsresult: "0x80570030 (NS_ERROR_XPC_JSOBJECT_HAS_NO_FUNCTION_NAMED)"  location: "JS frame :: resource://gre/modules/addons/XPIProvider.jsm -> jar:file:///Users/dmills/Library/Application%20Support/Firefox/Profiles/z61gll4r.default/extensions/jid1-T5mdAATMX3urKA@jetpack.xpi!/bootstrap.js -> resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/commonjs/sdk/loader/sandbox.js -> resource://jid1-eemyweqy0j38aw-at-jetpack/firefox-file-upload-repro/data/jquery-1.11.1.js :: .send :: line 9631"  data: no]"
+
+
+Expected results:
+
+The request should successfully upload the selected file. Or, in the case on the "firefox-file-upload-repro.xpi" extension, it should fail with the following message:
+
+"Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at http://example.com/. This can be fixed by moving the resource to the same domain or enabling CORS."

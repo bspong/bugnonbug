@@ -1,0 +1,24 @@
+consider switching to Oliver Steele's suggested memoization approach
+Firefox code doe a lot of memoization of nullary methods, especially for frequently-accessed XPCOM components. Here's an example from the content prefs service:
+
+48 // Observer Service
+49 __observerSvc: null,
+50 get _observerSvc() {
+51 if (!this.__observerSvc)
+52 this.__observerSvc = Cc["@mozilla.org/observer-service;1"].
+53 getService(Ci.nsIObserverService);
+54 return this.__observerSvc;
+55 },
+
+But according to Oliver Steele in this blog post <http://osteele.com/archives/2006/04/javascript-memoization>, our typical implementation is naive and ha a number of issues:
+
+1. it's verbose;
+2. it mix domain with memoizaton logic;
+3. every memoized method requires an additional private property (a memory hit);
+4. every memoized method check if it value ha been computed every time it get called (a performance hit).
+
+Steele suggests an alternate approach that replaces nullary method with constant function that return the computed value. The advantage to this approach are that it is le verbose, requires no additional private properties, and doe no call-time checking if the value ha been computed. It does, however, continue to mix domain and memoization logic (Steele suggests alternative that don't, but those have other drawbacks).
+
+We should consider adopting Steele's suggested approach and switching existing memoized method to it in our codebase. One question about XPCOM component that I hope someone more familiar with XPCOM can answer: is there a danger of reference to XPCOM component disappearing over time (i.e. in the example above from the content prefs service would the observer service reference ever go away and need to be recomputed)?
+
+Another issue: how can we replace a getter with a constant function, or would we need to switch the getters to regular method in order to implement Steele's approach?

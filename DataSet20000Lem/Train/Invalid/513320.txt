@@ -1,0 +1,54 @@
+Cross-Site Scripting vulnerability in Mozilla Firefox
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.7) Gecko/20050414
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.7) Gecko/20050414
+
+Hello Mozilla!
+
+I want to warn you about Cross-Site Scripting vulnerability in Mozilla Firefox. I wrote about it at my site at 30.07.2009 and only now found time to inform you.
+
+It allows to bypass protection from executing of JavaScript code in location-header redirectors (by redirecting to javascript: URI).
+
+In Firefox at the sites, which use answer "302 Object moved" at request to location-header redirector with setting of JavaScript code, the browser will show "Object Moved" page, where there is this code in the link “here”. At click on which the code will execute. I.e. it is Strictly social XSS.
+
+XSS:
+
+With request to script at web site:
+
+http://site/script.php?param=javascript:alert(document.cookie)
+
+Which return in answer the Location header:
+
+HTTP/1.x 302 Object moved
+Location: javascript:alert%28document.cookie%29
+
+The browser will show "Object Moved" page. At click on the link "here" the code will execute in context of this site.
+
+Vulnerable version is Firefox 3.0.13 and previous version (and 3.5.x should be also vulnerable).
+
+Attend to security of all of yours web sites, web software, browser and to security-audit.
+
+I mentioned about this vulnerability at my site (http://websecurity.com.ua/3373/).
+
+P.S.
+
+There are example of web site with such redirectors in my article. Which can help you to test this vulnerability.
+
+You can read my article Cross-Site Scripting attack via redirectors
+(http://websecurity.com.ua/3386/), where I wrote about this and other XSS vulnerability in different Mozilla's browsers.
+
+Also I'll open new entry in bugzilla about vulnerability in new release of Firefox (Firefox 3.6 and Firefox 3.7).
+
+Best wish & regards,
+MustLive
+Administrator of Websecurity web site
+http://websecurity.com.ua
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Do in concordance with advisory and execute alert(document.cookie).
+Actual Results:
+Shows my cooky at the site with redirector.
+
+Expected Results:
+Must not show cooky and not even execute JavaScript code.

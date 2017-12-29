@@ -1,0 +1,102 @@
+Assertion failure: !cx->isExceptionPending(), at /home/ownhero/homes/mozilla/repos/mozilla-central-patches/js/src/jscntxtinlines.h:238
+The following testcase crashes on mozilla-central-patch revision 973e336b09d0 (build with --enable-optimize --enable-posix-nspr-emulation --enable-valgrind --enable-gczeal --disable-tests --enable-debug, run with --fuzzing-safe --no-threads --ion-extra-checks):
+
+oomTest(() => quit({
+}));
+
+
+Backtrace:
+
+Program terminated with signal SIGSEGV, Segmentation fault.
+#0  0x00000000009e7758 in js::CallJSNative (cx=0x7f99a0b06c00, native=
+    0x7c62c0 <GC(JSContext*, unsigned int, JS::Value*)>, args=...)
+    at /home/ownhero/homes/mozilla/repos/mozilla-central-patches/js/src/jscntxtinlines.h:238
+To enable execution of this file add
+	add-auto-load-safe-path /home/ubuntu/mozilla-central/js/src/debug64/dist/bin/js-gdb.py
+line to your configuration file "/home/ubuntu/.gdbinit".
+To completely disable this security protection add
+	set auto-load safe-path /
+line to your configuration file "/home/ubuntu/.gdbinit".
+For more information about this security protection see the
+"Auto-loading safe path" section in the GDB manual.  E.g., run from the shell:
+	info "(gdb)Auto-loading safe path"
+#0  0x00000000009e7758 in js::CallJSNative (cx=0x7f99a0b06c00, native=0x7c62c0 <GC(JSContext*, unsigned int, JS::Value*)>, args=...) at /home/ownhero/homes/mozilla/repos/mozilla-central-patches/js/src/jscntxtinlines.h:238
+#1  0x00000000009e3e20 in js::Invoke (cx=cx@entry=0x7f99a0b06c00, args=..., construct=construct@entry=js::NO_CONSTRUCT) at /home/ownhero/homes/mozilla/repos/mozilla-central-patches/js/src/vm/Interpreter.cpp:489
+#2  0x00000000009d5d93 in Interpret (cx=cx@entry=0x7f99a0b06c00, state=...) at /home/ownhero/homes/mozilla/repos/mozilla-central-patches/js/src/vm/Interpreter.cpp:2807
+#3  0x00000000009e3ba7 in js::RunScript (cx=cx@entry=0x7f99a0b06c00, state=...) at /home/ownhero/homes/mozilla/repos/mozilla-central-patches/js/src/vm/Interpreter.cpp:430
+#4  0x00000000009e3ef5 in js::Invoke (cx=cx@entry=0x7f99a0b06c00, args=..., construct=construct@entry=js::NO_CONSTRUCT) at /home/ownhero/homes/mozilla/repos/mozilla-central-patches/js/src/vm/Interpreter.cpp:507
+#5  0x00000000009e5275 in js::Invoke (cx=cx@entry=0x7f99a0b06c00, thisv=..., fval=..., argc=argc@entry=0, argv=argv@entry=0x0, rval=..., rval@entry=...) at /home/ownhero/homes/mozilla/repos/mozilla-central-patches/js/src/vm/Interpreter.cpp:542
+#6  0x000000000083f144 in JS_CallFunction (cx=cx@entry=0x7f99a0b06c00, obj=..., fun=..., fun@entry=..., args=..., rval=..., rval@entry=...) at /home/ownhero/homes/mozilla/repos/mozilla-central-patches/js/src/jsapi.cpp:2923
+#7  0x00000000007d5af9 in OOMTest (cx=0x7f99a0b06c00, argc=<optimized out>, vp=<optimized out>) at /home/ownhero/homes/mozilla/repos/mozilla-central-patches/js/src/builtin/TestingFunctions.cpp:1155
+#8  0x00000000009e75d2 in js::CallJSNative (cx=0x7f99a0b06c00, native=0x7d57c0 <OOMTest(JSContext*, unsigned int, JS::Value*)>, args=...) at /home/ownhero/homes/mozilla/repos/mozilla-central-patches/js/src/jscntxtinlines.h:235
+#9  0x00000000009e3e20 in js::Invoke (cx=cx@entry=0x7f99a0b06c00, args=..., construct=construct@entry=js::NO_CONSTRUCT) at /home/ownhero/homes/mozilla/repos/mozilla-central-patches/js/src/vm/Interpreter.cpp:489
+#10 0x00000000009d5d93 in Interpret (cx=cx@entry=0x7f99a0b06c00, state=...) at /home/ownhero/homes/mozilla/repos/mozilla-central-patches/js/src/vm/Interpreter.cpp:2807
+#11 0x00000000009e3ba7 in js::RunScript (cx=cx@entry=0x7f99a0b06c00, state=...) at /home/ownhero/homes/mozilla/repos/mozilla-central-patches/js/src/vm/Interpreter.cpp:430
+#12 0x00000000009e60cc in js::ExecuteKernel (cx=cx@entry=0x7f99a0b06c00, script=..., script@entry=..., scopeChainArg=..., thisv=..., newTargetValue=..., type=type@entry=js::EXECUTE_DIRECT_EVAL, evalInFrame=..., evalInFrame@entry=..., result=0x7fff8d661218) at /home/ownhero/homes/mozilla/repos/mozilla-central-patches/js/src/vm/Interpreter.cpp:703
+#13 0x00000000005ba965 in EvalKernel (cx=cx@entry=0x7f99a0b06c00, args=..., evalType=evalType@entry=DIRECT_EVAL, caller=..., scopeobj=..., scopeobj@entry=..., pc=<optimized out>) at /home/ownhero/homes/mozilla/repos/mozilla-central-patches/js/src/builtin/Eval.cpp:353
+#14 0x00000000005bb023 in js::DirectEval (cx=cx@entry=0x7f99a0b06c00, args=...) at /home/ownhero/homes/mozilla/repos/mozilla-central-patches/js/src/builtin/Eval.cpp:475
+#15 0x0000000000c2f83b in js::jit::DoCallFallback (cx=0x7f99a0b06c00, frame=0x7fff8d661268, stub_=<optimized out>, argc=<optimized out>, vp=0x7fff8d661218, res=...) at /home/ownhero/homes/mozilla/repos/mozilla-central-patches/js/src/jit/BaselineIC.cpp:9018
+#16 0x00007f99a2047f2f in ?? ()
+#17 0x00007fff8d661220 in ?? ()
+#18 0x00007fff8d6611d0 in ?? ()
+#19 0xfff9000000000000 in ?? ()
+#20 0x0000000001bdb8e0 in js::jit::DoSpreadCallFallbackInfo ()
+#21 0x00007f999fa56520 in ?? ()
+#22 0x00007f99a2051443 in ?? ()
+#23 0x0000000000000902 in ?? ()
+#24 0x00007fff8d661268 in ?? ()
+#25 0x00007f99a0b8d758 in ?? ()
+#26 0x0000000000000001 in ?? ()
+#27 0x00007fff8d661218 in ?? ()
+#28 0xfffc7f999fa639c0 in ?? ()
+#29 0xfff9000000000000 in ?? ()
+#30 0xfffaff999f530880 in ?? ()
+#31 0x00007fff8d6612a8 in ?? ()
+#32 0x00007f99a0b8d758 in ?? ()
+#33 0x00007f99a203e196 in ?? ()
+#34 0x0000000000000c01 in ?? ()
+#35 0xfffaff999f530880 in ?? ()
+#36 0xfff9000000000000 in ?? ()
+#37 0xfffc7f999fa639c0 in ?? ()
+#38 0x00007fff8d661750 in ?? ()
+#39 0x00007f999fa6ebc0 in ?? ()
+#40 0xfffaff9900000060 in ?? ()
+#41 0x00007f999f52b5e0 in ?? ()
+#42 0x00007fff8d661750 in ?? ()
+#43 0x00007f999f522240 in ?? ()
+#44 0x00007f999fa795c8 in ?? ()
+#45 0x000000148d661358 in ?? ()
+#46 0x00007fff8d6612e0 in ?? ()
+#47 0x00007f99a20541d4 in ?? ()
+#48 0x0000000000000402 in ?? ()
+#49 0x00007f999fa78e40 in ?? ()
+#50 0x0000000000000001 in ?? ()
+#51 0xfffc7f999fa60060 in ?? ()
+#52 0xfffaff999f530850 in ?? ()
+#53 0x00007fff8d661358 in ?? ()
+#54 0x00007f999f88ff70 in ?? ()
+#55 0x00007f99a203c4a3 in ?? ()
+#56 0x0000000000000c01 in ?? ()
+#57 0xfffaff999f530850 in ?? ()
+#58 0xfff9000000000000 in ?? ()
+#59 0xfffc7f999fa78e40 in ?? ()
+#60 0x0000000000000000 in ?? ()
+rax	0x0	0
+rbx	0x7f99a0b06c00	140297802640384
+rcx	0x7f99a0e9b870	140297806395504
+rdx	0x0	0
+rsi	0x7f99a11709d0	140297809365456
+rdi	0x7f99a116f1c0	140297809359296
+rbp	0x7fff8d65f060	140735565656160
+rsp	0x7fff8d65f000	140735565656064
+r8	0x7f99a21e0780	140297826600832
+r9	0x6568637461702d6c	7307199746910727532
+r10	0x7f99a116cbe0	140297809349600
+r11	0x246	582
+r12	0x7f999f843210	140297782964752
+r13	0x0	0
+r14	0x7fff8d65f020	140735565656096
+r15	0x7c62c0	8151744
+rip	0x9e7758 <js::CallJSNative(JSContext*, bool (*)(JSContext*, unsigned int, JS::Value*), JS::CallArgs const&)+680>
+=> 0x9e7758 <js::CallJSNative(JSContext*, bool (*)(JSContext*, unsigned int, JS::Value*), JS::CallArgs const&)+680>:	movl   $0xee,0x0
+   0x9e7763 <js::CallJSNative(JSContext*, bool (*)(JSContext*, unsigned int, JS::Value*), JS::CallArgs const&)+691>:	callq  0x4a5b00 <abort()>

@@ -1,0 +1,189 @@
+use-after-poison in nsCellMapColumnIterator::GetNextFrame
+The testcase crashes the latest asan build of Firefox (BuildID=20160617030217) as follows.
+
+<script>
+function start() {
+        o46=(new DOMParser()).parseFromString("<menu><li></li>a a",'text/html');
+        document.replaceChild(o46.documentElement,document.documentElement);
+        o66=document.createElement('form');
+        o100=document.createElement('table');
+        o119=document.createElement('iframe');
+        o66.appendChild(o119);
+        o135=document.createElement('tfoot');
+        o100.appendChild(o135);
+        document.body.appendChild(o100);
+        o66.style.display='grid';
+        o281=document.createElement('table');
+        o135.appendChild(o281);
+        o310=document.createTextNode("{ }");
+        o119.style.pageBreakBefore='left';
+        o418=document.createElement('th');
+        o100.appendChild(o310);
+        o281.appendChild(o418);
+        o135.style.display='table-row-group';
+        document.documentElement.style.MozColumnCount='59';
+        setTimeout(f2, 4);
+}
+function f2() {
+        o100.setAttribute('style'," transition-delay: 128ms; padding-right: 5rem");
+        o418.appendChild(o66);
+        setTimeout("location.reload()",800);
+}
+</script>
+<body onload="start()"></body>
+
+Asan ouput:
+
+=================================================================
+==6648==ERROR: AddressSanitizer: use-after-poison on address 0x6250002e43f0 at pc 0x7fd330aa8a6a bp 0x7fff6ed76000 sp 0x7fff6ed75ff8
+READ of size 8 at 0x6250002e43f0 thread T0 (Web Content)
+    #0 0x7fd330aa8a69 in nsCellMapColumnIterator::GetNextFrame(int*, int*) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/tables/nsCellMap.cpp:2704:18
+    #1 0x7fd330aa680b in BasicTableLayoutStrategy::ComputeColumnIntrinsicISizes(nsRenderingContext*) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/tables/BasicTableLayoutStrategy.cpp:325:29
+    #2 0x7fd330aa53a8 in BasicTableLayoutStrategy::ComputeIntrinsicISizes(nsRenderingContext*) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/tables/BasicTableLayoutStrategy.cpp:443:5
+    #3 0x7fd330aa5349 in BasicTableLayoutStrategy::GetMinISize(nsRenderingContext*) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/tables/BasicTableLayoutStrategy.cpp:48:9
+    #4 0x7fd330aef904 in TableShrinkISizeToFit /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/tables/nsTableFrame.cpp:1633:22
+    #5 0x7fd330aef904 in nsTableFrame::ComputeAutoSize(nsRenderingContext*, mozilla::WritingMode, mozilla::LogicalSize const&, int, mozilla::LogicalSize const&, mozilla::LogicalSize const&, mozilla::LogicalSize const&, bool) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/tables/nsTableFrame.cpp:1669
+    #6 0x7fd330810436 in nsFrame::ComputeSize(nsRenderingContext*, mozilla::WritingMode, mozilla::LogicalSize const&, int, mozilla::LogicalSize const&, mozilla::LogicalSize const&, mozilla::LogicalSize const&, nsIFrame::ComputeSizeFlags) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/generic/nsFrame.cpp:4649:24
+    #7 0x7fd330aef68c in nsTableFrame::ComputeSize(nsRenderingContext*, mozilla::WritingMode, mozilla::LogicalSize const&, int, mozilla::LogicalSize const&, mozilla::LogicalSize const&, mozilla::LogicalSize const&, nsIFrame::ComputeSizeFlags) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/tables/nsTableFrame.cpp:1600:5
+    #8 0x7fd330b46878 in ChildShrinkWrapISize(nsRenderingContext*, nsIFrame*, mozilla::WritingMode, mozilla::LogicalSize, int, int*) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/tables/nsTableWrapperFrame.cpp:387:5
+    #9 0x7fd330b45e4b in nsTableWrapperFrame::ComputeAutoSize(nsRenderingContext*, mozilla::WritingMode, mozilla::LogicalSize const&, int, mozilla::LogicalSize const&, mozilla::LogicalSize const&, mozilla::LogicalSize const&, bool) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/tables/nsTableWrapperFrame.cpp:420:18
+    #10 0x7fd330810436 in nsFrame::ComputeSize(nsRenderingContext*, mozilla::WritingMode, mozilla::LogicalSize const&, int, mozilla::LogicalSize const&, mozilla::LogicalSize const&, mozilla::LogicalSize const&, nsIFrame::ComputeSizeFlags) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/generic/nsFrame.cpp:4649:24
+    #11 0x7fd33091ff83 in nsHTMLReflowState::InitConstraints(nsPresContext*, mozilla::LogicalSize const&, nsMargin const*, nsMargin const*, nsIAtom*) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/generic/nsHTMLReflowState.cpp:2395:9
+    #12 0x7fd33091789f in nsHTMLReflowState::Init(nsPresContext*, mozilla::LogicalSize const*, nsMargin const*, nsMargin const*) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/generic/nsHTMLReflowState.cpp:406:3
+    #13 0x7fd3307aa5c2 in nsBlockFrame::ReflowBlockFrame(nsBlockReflowState&, nsLineList_iterator, bool*) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/generic/nsBlockFrame.cpp:3219:25
+    #14 0x7fd33079f190 in ReflowLine /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/generic/nsBlockFrame.cpp:2751:5
+    #15 0x7fd33079f190 in nsBlockFrame::ReflowDirtyLines(nsBlockReflowState&) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/generic/nsBlockFrame.cpp:2290
+    #16 0x7fd3307983b6 in nsBlockFrame::Reflow(nsPresContext*, nsHTMLReflowMetrics&, nsHTMLReflowState const&, unsigned int&) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/generic/nsBlockFrame.cpp:1171:3
+    #17 0x7fd3307b49bc in nsBlockReflowContext::ReflowBlock(mozilla::LogicalRect const&, bool, nsCollapsingMargin&, int, bool, nsLineBox*, nsHTMLReflowState&, unsigned int&, nsBlockReflowState&) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/generic/nsBlockReflowContext.cpp:306:3
+    #18 0x7fd3307ab196 in nsBlockFrame::ReflowBlockFrame(nsBlockReflowState&, nsLineList_iterator, bool*) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/generic/nsBlockFrame.cpp:3392:7
+    #19 0x7fd33079f190 in ReflowLine /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/generic/nsBlockFrame.cpp:2751:5
+    #20 0x7fd33079f190 in nsBlockFrame::ReflowDirtyLines(nsBlockReflowState&) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/generic/nsBlockFrame.cpp:2290
+    #21 0x7fd3307983b6 in nsBlockFrame::Reflow(nsPresContext*, nsHTMLReflowMetrics&, nsHTMLReflowState const&, unsigned int&) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/generic/nsBlockFrame.cpp:1171:3
+    #22 0x7fd3307f2948 in nsContainerFrame::ReflowChild(nsIFrame*, nsPresContext*, nsHTMLReflowMetrics&, nsHTMLReflowState const&, mozilla::WritingMode const&, mozilla::LogicalPoint const&, nsSize const&, unsigned int, unsigned int&, nsOverflowContinuationTracker*) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/generic/nsContainerFrame.cpp:1022:3
+    #23 0x7fd3307f910e in nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&, nsHTMLReflowState const&, unsigned int&, nsColumnSetFrame::ReflowConfig const&, bool, nsCollapsingMargin*, nsColumnSetFrame::ColumnBalanceData&) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/generic/nsColumnSetFrame.cpp:647:7
+    #24 0x7fd3307feddc in ReflowColumns /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/generic/nsColumnSetFrame.cpp:353:19
+    #25 0x7fd3307feddc in nsColumnSetFrame::Reflow(nsPresContext*, nsHTMLReflowMetrics&, nsHTMLReflowState const&, unsigned int&) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/generic/nsColumnSetFrame.cpp:1084
+    #26 0x7fd3307f2948 in nsContainerFrame::ReflowChild(nsIFrame*, nsPresContext*, nsHTMLReflowMetrics&, nsHTMLReflowState const&, mozilla::WritingMode const&, mozilla::LogicalPoint const&, nsSize const&, unsigned int, unsigned int&, nsOverflowContinuationTracker*) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/generic/nsContainerFrame.cpp:1022:3
+    #27 0x7fd3307f10c4 in nsCanvasFrame::Reflow(nsPresContext*, nsHTMLReflowMetrics&, nsHTMLReflowState const&, unsigned int&) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/generic/nsCanvasFrame.cpp:644:5
+    #28 0x7fd33088c335 in ReflowChild /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/generic/nsContainerFrame.cpp:1022:3
+    #29 0x7fd33088c335 in nsHTMLScrollFrame::ReflowScrolledFrame(ScrollReflowState*, bool, bool, nsHTMLReflowMetrics*, bool) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/generic/nsGfxScrollFrame.cpp:540
+    #30 0x7fd33088dadd in nsHTMLScrollFrame::ReflowContents(ScrollReflowState*, nsHTMLReflowMetrics const&) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/generic/nsGfxScrollFrame.cpp:652:3
+    #31 0x7fd33088fe70 in nsHTMLScrollFrame::Reflow(nsPresContext*, nsHTMLReflowMetrics&, nsHTMLReflowState const&, unsigned int&) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/generic/nsGfxScrollFrame.cpp:886:3
+    #32 0x7fd330807f6d in nsContainerFrame::ReflowChild(nsIFrame*, nsPresContext*, nsHTMLReflowMetrics&, nsHTMLReflowState const&, int, int, unsigned int, unsigned int&, nsOverflowContinuationTracker*) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/generic/nsContainerFrame.cpp:1065:3
+    #33 0x7fd330a2db7f in ViewportFrame::Reflow(nsPresContext*, nsHTMLReflowMetrics&, nsHTMLReflowState const&, unsigned int&) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/generic/nsViewportFrame.cpp:314:7
+    #34 0x7fd3306d73b9 in PresShell::DoReflow(nsIFrame*, bool) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsPresShell.cpp:9578:3
+    #35 0x7fd3306ea8f0 in PresShell::ProcessReflowCommands(bool) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsPresShell.cpp:9751:24
+    #36 0x7fd3306e9a83 in PresShell::FlushPendingNotifications(mozilla::ChangesToFlush) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsPresShell.cpp:4123:11
+    #37 0x7fd330412f45 in nsRefreshDriver::Tick(long, mozilla::TimeStamp) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsRefreshDriver.cpp:1797:9
+    #38 0x7fd33041f18c in mozilla::RefreshDriverTimer::TickRefreshDrivers(long, mozilla::TimeStamp, nsTArray<RefPtr<nsRefreshDriver> >&) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsRefreshDriver.cpp:251:7
+    #39 0x7fd33041ee59 in mozilla::RefreshDriverTimer::Tick(long, mozilla::TimeStamp) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsRefreshDriver.cpp:270:5
+    #40 0x7fd3304209a4 in mozilla::VsyncRefreshDriverTimer::RefreshDriverVsyncObserver::NotifyVsync(mozilla::TimeStamp) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsRefreshDriver.cpp:430:9
+    #41 0x7fd330d54a64 in mozilla::layout::VsyncChild::RecvNotify(mozilla::TimeStamp const&) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/ipc/VsyncChild.cpp:64:5
+    #42 0x7fd32a9fb92a in mozilla::layout::PVsyncChild::OnMessageReceived(IPC::Message const&) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/obj-firefox/ipc/ipdl/PVsyncChild.cpp:240:20
+    #43 0x7fd32a504d3d in mozilla::ipc::PBackgroundChild::OnMessageReceived(IPC::Message const&) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/obj-firefox/ipc/ipdl/PBackgroundChild.cpp:1963:16
+    #44 0x7fd32a44c627 in mozilla::ipc::MessageChannel::DispatchAsyncMessage(IPC::Message const&) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/ipc/glue/MessageChannel.cpp:1658:14
+    #45 0x7fd32a44942b in mozilla::ipc::MessageChannel::DispatchMessage(IPC::Message&&) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/ipc/glue/MessageChannel.cpp:1596:17
+    #46 0x7fd32a437137 in mozilla::ipc::MessageChannel::OnMaybeDequeueOne() /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/ipc/glue/MessageChannel.cpp:1563:5
+    #47 0x7fd32a467382 in applyImpl<mozilla::ipc::MessageChannel, bool (mozilla::ipc::MessageChannel::*)()> /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/obj-firefox/dist/include/nsThreadUtils.h:722:12
+    #48 0x7fd32a467382 in apply<mozilla::ipc::MessageChannel, bool (mozilla::ipc::MessageChannel::*)()> /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/obj-firefox/dist/include/nsThreadUtils.h:728
+    #49 0x7fd32a467382 in nsRunnableMethodImpl<bool (mozilla::ipc::MessageChannel::*)(), false, true>::Run() /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/obj-firefox/dist/include/nsThreadUtils.h:756
+    #50 0x7fd32a46692f in Run /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/obj-firefox/dist/include/mozilla/ipc/MessageChannel.h:476:22
+    #51 0x7fd32a46692f in mozilla::ipc::MessageChannel::DequeueTask::Run() /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/obj-firefox/dist/include/mozilla/ipc/MessageChannel.h:495
+    #52 0x7fd32966fe58 in nsThread::ProcessNextEvent(bool, bool*) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/xpcom/threads/nsThread.cpp:1029:7
+    #53 0x7fd3296ee67c in NS_ProcessNextEvent(nsIThread*, bool) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/xpcom/glue/nsThreadUtils.cpp:290:10
+    #54 0x7fd32a4539f4 in mozilla::ipc::MessagePump::Run(base::MessagePump::Delegate*) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/ipc/glue/MessagePump.cpp:132:5
+    #55 0x7fd32a3c1df8 in RunInternal /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/ipc/chromium/src/base/message_loop.cc:235:3
+    #56 0x7fd32a3c1df8 in RunHandler /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/ipc/chromium/src/base/message_loop.cc:228
+    #57 0x7fd32a3c1df8 in MessageLoop::Run() /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/ipc/chromium/src/base/message_loop.cc:208
+    #58 0x7fd32fd8d9af in nsBaseAppShell::Run() /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/widget/nsBaseAppShell.cpp:156:3
+    #59 0x7fd331e10bf7 in XRE_RunAppShell /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/toolkit/xre/nsEmbedFunctions.cpp:834:12
+    #60 0x7fd32a3c1df8 in RunInternal /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/ipc/chromium/src/base/message_loop.cc:235:3
+    #61 0x7fd32a3c1df8 in RunHandler /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/ipc/chromium/src/base/message_loop.cc:228
+    #62 0x7fd32a3c1df8 in MessageLoop::Run() /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/ipc/chromium/src/base/message_loop.cc:208
+    #63 0x7fd331e10262 in XRE_InitChildProcess /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/toolkit/xre/nsEmbedFunctions.cpp:664:7
+    #64 0x4e2bc5 in content_process_main(int, char**) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/ipc/app/../contentproc/plugin-container.cpp:224:19
+    #65 0x7fd32675a82f in __libc_start_main /build/glibc-GKVZIf/glibc-2.23/csu/../csu/libc-start.c:291
+    #66 0x41e778 in _start (/home/nils/fuzzer3/firefox/plugin-container+0x41e778)
+
+0x6250002e43f0 is located 752 bytes inside of 8192-byte region [0x6250002e4100,0x6250002e6100)
+allocated by thread T0 (Web Content) here:
+    #0 0x4b51eb in __interceptor_malloc /builds/slave/moz-toolchain/src/llvm/projects/compiler-rt/lib/asan/asan_malloc_linux.cc:52:3
+    #1 0x7fd33796ddd6 in PL_ArenaAllocate /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/nsprpub/lib/ds/plarena.c:210:27
+    #2 0x7fd33040a959 in nsPresArena::Allocate(unsigned int, unsigned long) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsPresArena.cpp:165:3
+    #3 0x7fd33033efbe in AllocateByObjectID /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsPresArena.h:65:12
+    #4 0x7fd33033efbe in AllocateByObjectID /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsIPresShell.h:250
+    #5 0x7fd33033efbe in operator new /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/style/nsRuleNode.h:88
+    #6 0x7fd33033efbe in SetStyle /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/style/nsStyleContext.cpp:572
+    #7 0x7fd33033efbe in nsRuleNode::ComputeDisplayData(void*, nsRuleData const*, nsStyleContext*, nsRuleNode*, nsRuleNode::RuleDetail, mozilla::RuleNodeCacheConditions) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/style/nsRuleNode.cpp:6392
+    #8 0x7fd33030a38e in nsRuleNode::WalkRuleTree(nsStyleStructID, nsStyleContext*) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/style/nsRuleNode.cpp:2491:10
+    #9 0x7fd3303fd51f in GetStyleDisplay<true> /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/obj-firefox/layout/style/nsStyleStructList.h:98:1
+    #10 0x7fd3303fd51f in nsStyleDisplay const* nsStyleContext::DoGetStyleDisplay<true>() /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/obj-firefox/layout/style/nsStyleStructList.h:98
+    #11 0x7fd330385cfb in StyleDisplay /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/obj-firefox/layout/style/nsStyleStructList.h:98:1
+    #12 0x7fd330385cfb in nsStyleContext::SetStyleBits() /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/style/nsStyleContext.cpp:687
+    #13 0x7fd330385a86 in FinishConstruction /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/style/nsStyleContext.cpp:163:3
+    #14 0x7fd330385a86 in nsStyleContext::nsStyleContext(nsStyleContext*, nsIAtom*, mozilla::CSSPseudoElementType, already_AddRefed<nsRuleNode>, bool) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/style/nsStyleContext.cpp:121
+    #15 0x7fd3303a8aec in NS_NewStyleContext(nsStyleContext*, nsIAtom*, mozilla::CSSPseudoElementType, nsRuleNode*, bool) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/style/nsStyleContext.cpp:1316:5
+    #16 0x7fd3303b42ae in nsStyleSet::GetContext(nsStyleContext*, nsRuleNode*, nsRuleNode*, nsIAtom*, mozilla::CSSPseudoElementType, mozilla::dom::Element*, unsigned int) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/style/nsStyleSet.cpp:918:14
+    #17 0x7fd3303b91b3 in nsStyleSet::ResolveStyleFor(mozilla::dom::Element*, nsStyleContext*, TreeMatchContext&) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/style/nsStyleSet.cpp:1366:10
+    #18 0x7fd33052c1b2 in ResolveStyleFor /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/obj-firefox/dist/include/mozilla/StyleSetHandleInlines.h:93:3
+    #19 0x7fd33052c1b2 in nsCSSFrameConstructor::ResolveStyleContext(nsStyleContext*, nsIContent*, nsFrameConstructorState*) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:4959
+    #20 0x7fd3305281d0 in ResolveStyleContext /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:4928:10
+    #21 0x7fd3305281d0 in ResolveStyleContext /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:4944
+    #22 0x7fd3305281d0 in nsCSSFrameConstructor::AddFrameConstructionItems(nsFrameConstructorState&, nsIContent*, bool, nsCSSFrameConstructor::InsertionPoint const&, nsCSSFrameConstructor::FrameConstructionItemList&) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:5574
+    #23 0x7fd33050edd3 in nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState&, nsIContent*, nsStyleContext*, nsContainerFrame*, bool, nsFrameItems&, bool, PendingBinding*, nsIFrame*) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:10685:9
+    #24 0x7fd33050d404 in nsCSSFrameConstructor::ConstructTable(nsFrameConstructorState&, nsCSSFrameConstructor::FrameConstructionItem&, nsContainerFrame*, nsStyleDisplay const*, nsFrameItems&) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:2130:5
+    #25 0x7fd330524a09 in nsCSSFrameConstructor::ConstructFrameFromItemInternal(nsCSSFrameConstructor::FrameConstructionItem&, nsFrameConstructorState&, nsContainerFrame*, nsFrameItems&) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:3857:7
+    #26 0x7fd3305313ec in nsCSSFrameConstructor::ConstructFramesFromItem(nsFrameConstructorState&, nsCSSFrameConstructor::FrameConstructionItemList::Iterator&, nsContainerFrame*, nsFrameItems&) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:6085:3
+    #27 0x7fd330512833 in ConstructFramesFromItemList /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:10502:5
+    #28 0x7fd330512833 in nsCSSFrameConstructor::ConstructTableCell(nsFrameConstructorState&, nsCSSFrameConstructor::FrameConstructionItem&, nsContainerFrame*, nsStyleDisplay const*, nsFrameItems&) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:2330
+    #29 0x7fd330524a09 in nsCSSFrameConstructor::ConstructFrameFromItemInternal(nsCSSFrameConstructor::FrameConstructionItem&, nsFrameConstructorState&, nsContainerFrame*, nsFrameItems&) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:3857:7
+    #30 0x7fd3305313ec in nsCSSFrameConstructor::ConstructFramesFromItem(nsFrameConstructorState&, nsCSSFrameConstructor::FrameConstructionItemList::Iterator&, nsContainerFrame*, nsFrameItems&) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:6085:3
+    #31 0x7fd330510da9 in ConstructFramesFromItemList /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:10502:5
+    #32 0x7fd330510da9 in nsCSSFrameConstructor::ConstructTableRowOrRowGroup(nsFrameConstructorState&, nsCSSFrameConstructor::FrameConstructionItem&, nsContainerFrame*, nsStyleDisplay const*, nsFrameItems&) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:2210
+    #33 0x7fd330524a09 in nsCSSFrameConstructor::ConstructFrameFromItemInternal(nsCSSFrameConstructor::FrameConstructionItem&, nsFrameConstructorState&, nsContainerFrame*, nsFrameItems&) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:3857:7
+    #34 0x7fd3305313ec in nsCSSFrameConstructor::ConstructFramesFromItem(nsFrameConstructorState&, nsCSSFrameConstructor::FrameConstructionItemList::Iterator&, nsContainerFrame*, nsFrameItems&) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:6085:3
+    #35 0x7fd33050f2b0 in ConstructFramesFromItemList /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:10502:5
+    #36 0x7fd33050f2b0 in nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState&, nsIContent*, nsStyleContext*, nsContainerFrame*, bool, nsFrameItems&, bool, PendingBinding*, nsIFrame*) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:10703
+    #37 0x7fd330510c8c in nsCSSFrameConstructor::ConstructTableRowOrRowGroup(nsFrameConstructorState&, nsCSSFrameConstructor::FrameConstructionItem&, nsContainerFrame*, nsStyleDisplay const*, nsFrameItems&) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:2213:5
+    #38 0x7fd330524a09 in nsCSSFrameConstructor::ConstructFrameFromItemInternal(nsCSSFrameConstructor::FrameConstructionItem&, nsFrameConstructorState&, nsContainerFrame*, nsFrameItems&) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:3857:7
+    #39 0x7fd3305313ec in nsCSSFrameConstructor::ConstructFramesFromItem(nsFrameConstructorState&, nsCSSFrameConstructor::FrameConstructionItemList::Iterator&, nsContainerFrame*, nsFrameItems&) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:6085:3
+    #40 0x7fd33050f2b0 in ConstructFramesFromItemList /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:10502:5
+    #41 0x7fd33050f2b0 in nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState&, nsIContent*, nsStyleContext*, nsContainerFrame*, bool, nsFrameItems&, bool, PendingBinding*, nsIFrame*) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:10703
+    #42 0x7fd33050d404 in nsCSSFrameConstructor::ConstructTable(nsFrameConstructorState&, nsCSSFrameConstructor::FrameConstructionItem&, nsContainerFrame*, nsStyleDisplay const*, nsFrameItems&) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:2130:5
+    #43 0x7fd330524a09 in nsCSSFrameConstructor::ConstructFrameFromItemInternal(nsCSSFrameConstructor::FrameConstructionItem&, nsFrameConstructorState&, nsContainerFrame*, nsFrameItems&) /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/base/nsCSSFrameConstructor.cpp:3857:7
+
+SUMMARY: AddressSanitizer: use-after-poison /builds/slave/m-cen-l64-asan-ntly-0000000000/build/src/layout/tables/nsCellMap.cpp:2704:18 in nsCellMapColumnIterator::GetNextFrame(int*, int*)
+Shadow bytes around the buggy address:
+  0x0c4a80054820: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x0c4a80054830: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x0c4a80054840: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x0c4a80054850: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x0c4a80054860: 00 00 00 00 00 00 00 00 00 00 00 f7 f7 f7 f7 f7
+=>0x0c4a80054870: f7 f7 f7 f7 f7 f7 f7 f7 f7 f7 f7 f7 f7 f7[f7]f7
+  0x0c4a80054880: f7 f7 f7 f7 f7 f7 f7 f7 f7 f7 f7 f7 f7 f7 f7 f7
+  0x0c4a80054890: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x0c4a800548a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x0c4a800548b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x0c4a800548c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+Shadow byte legend (one shadow byte represents 8 application bytes):
+  Addressable:           00
+  Partially addressable: 01 02 03 04 05 06 07 
+  Heap left redzone:       fa
+  Heap right redzone:      fb
+  Freed heap region:       fd
+  Stack left redzone:      f1
+  Stack mid redzone:       f2
+  Stack right redzone:     f3
+  Stack partial redzone:   f4
+  Stack after return:      f5
+  Stack use after scope:   f8
+  Global redzone:          f9
+  Global init order:       f6
+  Poisoned by user:        f7
+  Container overflow:      fc
+  Array cookie:            ac
+  Intra object redzone:    bb
+  ASan internal:           fe
+  Left alloca redzone:     ca
+  Right alloca redzone:    cb
+==6648==ABORTING

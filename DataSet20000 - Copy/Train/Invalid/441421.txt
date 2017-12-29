@@ -1,0 +1,47 @@
+XMLHttpRequest gives 403 error in POST mode
+User-Agent:       Mozilla/5.0 (Macintosh; U; PPC Mac OS X 10.4; en-US; rv:1.9) Gecko/2008061004 Firefox/3.0
+Build Identifier: Mozilla/5.0 (Macintosh; U; PPC Mac OS X 10.4; en-US; rv:1.9) Gecko/2008061004 Firefox/3.0
+
+Sending an XMLHttpRequest in POST mode - whether synchronous or asynchronous - is somehow triggering the server's 403 Forbidden error. Sending the request in GET mode works fine, so perhaps the browser is mangling the URL somehow.
+
+Reproducible: Always
+
+Steps to Reproduce:
+Code to reproduce:
+var callback = function(){alert(arguments[0]);};
+var xmlhttp = new XMLHttpRequest();
+function testAjax(params, async) {
+	if (async) {
+		xmlhttp.onreadystatechange = function() {
+			if (xmlhttp.readyState == 4) {
+				callback(xmlhttp.responseText);
+			}
+		};
+	}
+	var postUrl = 'http://gabrielgilder.com/test/test.php';
+	xmlhttp.open("POST", postUrl, async);
+	xmlhttp.send(params);
+	
+	if (!async) {
+		callback(xmlhttp.responseText);
+	}
+	return false;
+}
+Actual Results:  
+<HTML>
+<HEAD>
+<TITLE>403 Forbidden</TITLE>
+</HEAD>
+<BODY>
+<H1>Forbidden</H1>
+You do not have permission to access this document.
+<P>
+<HR>
+<ADDRESS>
+Web Server at gabrielgilder.com
+</ADDRESS>
+</BODY>
+</HTML>
+
+Expected Results:  
+Successful XMLHttpRequest to this script would simply return the parameters passed to it as plain text.

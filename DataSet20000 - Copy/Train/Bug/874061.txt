@@ -1,0 +1,23 @@
+Figure out private browsing and the browser console
+Private browsing behavior is undefined in the Browser and Web Consoles.
+
+Overview of the current state:
+
+- the DOM ConsoleAPI.js checks if the message comes from a private window. If yes, the console message is not stored in the console API cache.
+- the nsIScriptError has a private mode flag and messages end-up in the cache.
+- the Error Console skips all nsIScriptErrors that come from private windows, even if they are chrome messages.
+- the web console shows all nsIScriptErrors, irrespective of private mode. It also shows all of the console API messages. However, it doesn't show any console API messages before open (since they don't get in the cache).
+- the browser console shows all messages, like the web console.
+- we had private browsing tests but they got removed (when? why?). we need tests for both the browser console and the web console in private browsing.
+
+The above situation is not ideal.
+
+I propose the following changes:
+
+- I would like to add caching of window.console API messages in private browsing. I don't see why this was disabled - we remove the cache of messages every time each window is destroyed. We can't leak these messages.
+- I think there's value in showing cached messages in private browsing when one wants to debug a web app. It's also a matter of consistency.
+- thus I want the web console to show all incoming messages, irrespective of any private browsing flags. This is transient information that can and should be displayed.
+- when opened the browser console must not display *cached* script errors/warnings nor window.console API messages that come from private windows. However, if you do keep the browser console open I believe it makes sense for it to show errors/warnings/messages that are live. This would help with debugging chrome errors.
+- add tests for all of the mentioned cases.
+
+Any thoughts?

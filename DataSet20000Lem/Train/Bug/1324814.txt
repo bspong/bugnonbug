@@ -1,0 +1,35 @@
+devtools leak browser.xul window through _pingTelemetry, gDevTools, and TabTarget.onRemotenessChange
+I got a leaked browser.xul in FF52 dev edition today. The gc/gc log suggest it some devtools or e10s code keeping stuff alive here:
+
+bkelly@kosh /c/devel/tmp/cclogs/browserxul
+$ /c/devel/heapgraph/find_roots.py cc-edges.1424.1482251995.log 0000019283FEE000
+Parsing cc-edges.1424.1482251995.log. Done loading graph.
+
+0000019286897060 [JS Object (Window)]
+--[UnwrapDOMObject(obj)]--> 0000019283FEE000 [nsGlobalWindow # 112 inner chrome://browser/conten
+t/browser.xul]
+
+Root 0000019286897060 is a marked GC object.
+
+
+bkelly@kosh /c/devel/tmp/cclogs/browserxul
+$ /c/devel/heapgraph/find_roots.py gc-edges.1424.1482251995.log -bro 0000019286897060
+Parsing gc-edges.1424.1482251995.log. Done loading graph.
+
+via mCallback :
+000001928CB312A0 [Proxy <no private>]
+--[private]--> 0000019280969F60 [Object <no private>]
+--[_pingTelemetry]--> 0000019282D84640 [Function exports.gDevToolsBrowser._pingTelemetry]
+--[fun_environment]--> 00000192845D6640 [LexicalEnvironment <no private>]
+--[gDevTools]--> 0000019280969A60 [Object <no private>]
+--[emit]--> 0000019282DBAD30 [Function bound emit]
+--[fun_environment]--> 0000019282DC8100 [Call <no private>]
+--[thisArg]--> 0000019280969C40 [Object <no private>]
+--[_eventEmitterListeners]--> 00000192FCE82070 [Map 00000192833FDD60]
+--[value]--> 000001928CBC13A0 [Array <no private>]
+--[objectElements[1]]--> 000001928D8419C0 [Function TabTarget.prototype.onRemotenessChange/on]
+--[fun_environment]--> 0000019293D93C80 [LexicalEnvironment <no private>]
+--[tab]--> 00000192FE8BE4E0 [Proxy <no private>]
+--[private]--> 000001928D031A00 [XULElement <no private>]
+--[group]--> 000001928685CEB0 [object_group]
+--[group_global]--> 0000019286897060 [Window <no private>]

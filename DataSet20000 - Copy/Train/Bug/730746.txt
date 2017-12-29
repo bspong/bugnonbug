@@ -1,0 +1,16 @@
+Intermittent leak of 1 AsyncFetchAndSetIconFromNetwork and a lot more, including 2 domwindows opened by test_bug589543.html
+This feels awfully familiar, though I might be remembering the network hit and the decision to just wait until shutting off network access makes the feed preview page's requests for the favicons for feed readers just quickly and quietly fail. The intermittency is certainly extreme, since I landed the test a year and a half ago.
+
+https://tbpl.mozilla.org/php/getParsedLog.php?id=9646682&full=1&branch=mozilla-inbound
+Rev3 Fedora 12 mozilla-inbound debug test mochitests-1/5 on 2012-02-26 18:24:04 PST for push ef47598bb1e0
+
+nsTraceRefcntImpl::DumpStatistics: 1427 entries
+TEST-UNEXPECTED-FAIL | automationutils.processLeakLog() | leaked 1495315 bytes during test execution
+TEST-UNEXPECTED-FAIL | automationutils.processLeakLog() | leaked 1 instance of AsyncFetchAndSetIconFromNetwork with size 176 bytes
+TEST-UNEXPECTED-FAIL | automationutils.processLeakLog() | leaked 1 instance of AsyncStatement with size 48 bytes
+TEST-UNEXPECTED-FAIL | automationutils.processLeakLog() | leaked 1615 instances of AtomImpl with size 20 bytes each (32300 bytes total)
+TEST-UNEXPECTED-FAIL | automationutils.processLeakLog() | leaked 1 instance of BackstagePass with size 24 bytes
+TEST-UNEXPECTED-FAIL | automationutils.processLeakLog() | leaked 1 instance of BodyRule with size 16 bytes
+(etc. etc., all the things you get from leaking a window or two)
+
+The test loads the feed preview page, which we want to do in a test (bug 589543 was about a time when we totally broke it), and the feed preview page loads favicons async, which we want to do, and the existence of this leak probably means that the test can sometimes finish when the favicon load is in the wrong place to get finished off. If it's possible to know when all the favicon loads are done, I guess it could sit twiddling its thumbs until then, or, we could just wait for the network access block to solve it, and live with a leak once every 18 months.

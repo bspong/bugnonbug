@@ -1,0 +1,70 @@
+FireFox NPSWF32.dll Memory Corruption Vulnerability
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.0.7) Gecko/20060909 Firefox/1.5.0.7
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.0.7) Gecko/20060909 Firefox/1.5.0.7
+
+Last week I discovered an issue in ForeFox that cause a crash. it seems to be a race condition of sort and the result is exploitable memory corruption.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1) Download the attached file. It is the original page that made me start my research into this issue. It wa an AP.org page that crashed my browser, and I wanted to find out why :)
+
+2) Unzip the file, and run the extracted ffcrash.html
+
+3) Once the HTML page load a flash player dialog pop recursively (you must wait for the page to load completely!)
+
+3) once you try to click "X" or "Ok" to exit the crash is triggered
+Actual Results:
+Memory corruption occours and eventually EAX get filled with random user supplied data (in my example an xml file parsed by the .swf file)
+
+Expected Results:
+Not crashed
+
+In my research I used OllyDbg to figure out that EAX could get overwritten. I then Decompiled the flash file "three_square.swf" in the attached example to include my own .xml file. The result of that test are below.
+
+EAX 4141412F
+ECX 04325068 ASCII "/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA.jpg"
+EDX 00000000
+EBX 04312000
+ESP 0012F3A0
+EBP 0012F408
+ESI 04325068 ASCII "/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA.jpg"
+EDI 00000000
+EIP 3008FD9F NPSWF32.3008FD9F
+C 0 ES 0023 32bit 0(FFFFFFFF)
+P 1 CS 001B 32bit 0(FFFFFFFF)
+A 0 SS 0023 32bit 0(FFFFFFFF)
+Z 1 DS 0023 32bit 0(FFFFFFFF)
+S 0 FS 003B 32bit 7FFDF000(FFF)
+T 0 GS 0000 NULL
+D 0
+O 0 LastErr ERROR_SUCCESS (00000000)
+EFL 00210246 (NO,NB,E,BE,NS,PE,GE,LE)
+ST0 empty -??? FFFF 00D4D0C8 00D4D0C8
+ST1 empty -??? FFFF 00000000 00000000
+ST2 empty -??? FFFF 000000CE 00CA00C3
+ST3 empty -??? FFFF 000000D3 00CF00C7
+ST4 empty 0.0
+ST5 empty 0.0
+ST6 empty 18.000000000000000000
+ST7 empty 18.500000000000000000
+3 2 1 0 E S P U O Z D I
+FST 0000 Cond 0 0 0 0 Err 0 0 0 0 0 0 0 0 (GT)
+FCW 027F Prec NEAR,53 Mask 1 1 1 1 1 1
+
+
+It is very clear that EAX get overwritten in an exploitable manner. Below is the ASM of the actual function where the crash happens.
+
+3008FD80 50 PUSH EAX
+3008FD81 56 PUSH ESI
+3008FD82 53 PUSH EBX
+3008FD83 E8 A0FAFFFF CALL NPSWF32.3008F828
+3008FD88 83C4 10 ADD ESP,10
+3008FD8B 8D4D E4 LEA ECX,DWORD PTR SS:[EBP-1C]
+3008FD8E E8 42A1F9FF CALL NPSWF32.30029ED5
+3008FD93 807D 6F 00 CMP BYTE PTR SS:[EBP+6F],0
+3008FD97 75 08 JNZ SHORT NPSWF32.3008FDA1
+3008FD99 8B06 MOV EAX,DWORD PTR DS:[ESI] <-- EAX get overwritten
+3008FD9B 6A 01 PUSH 1
+3008FD9D 8BCE MOV ECX,ESI
+3008FD9F FF10 CALL DWORD PTR DS:[EAX] <-- Crash occours!

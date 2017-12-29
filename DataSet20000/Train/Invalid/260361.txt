@@ -1,0 +1,83 @@
+Firefox 1.0PR nsProfile.cpp compile failure
+User-Agent:       Mozilla/5.0 (X11; U; SunOS sun4u; en-US; rv:1.5) Gecko/20031026 Firebird/0.7
+Build Identifier: firefox-1.0PR
+
+nsProfile.cpp
+c++ -o nsProfile.o -c -DOSTYPE=\"SunOS5\" -DOSARCH=\"SunOS\"
+-I./../dirserviceprovider/src -I../../dist/include/xpcom
+-I../../dist/include/xpcom_obsolete -I../../dist/include/string
+-I../../dist/include/content -I../../dist/include/docshell
+-I../../dist/include/webbrwsr -I../../dist/include/dom -I../../dist/include/js
+-I../../dist/include/xpconnect -I../../dist/include/widget
+-I../../dist/include/necko -I../../dist/include/uriloader
+-I../../dist/include/intl -I../../dist/include/pref
+-I../../dist/include/prefmigr -I../../dist/include/appshell
+-I../../dist/include/uconv -I../../dist/include/windowwatcher
+-I../../dist/include/profdirserviceprovider -I../../dist/include/profile
+-I../../dist/include -I/space/gnu/web/firefox/mozilla/dist/include/nspr    
+-I/usr/openwin/include   -fPIC  -I/usr/openwin/include -fno-rtti -fno-exceptions
+-Wno-long-long -pedantic -fshort-wchar -pthreads  -DNDEBUG -DTRIMMED -O 
+-I/usr/openwin/include -DMOZILLA_CLIENT -include ../../mozilla-config.h
+-Wp,-MD,.deps/nsProfile.pp nsProfile.cpp
+nsProfile.cpp: In member function `virtual nsresult
+nsProfile::StartupWithArgs(nsICmdLineService*, PRBool)':
+nsProfile.cpp:414: error: 'class nsDerivedSafe<nsIXULChromeRegistry>' has no
+member named 'SelectLocaleForProfile'
+nsProfile.cpp:423: error: 'class nsDerivedSafe<nsIXULChromeRegistry>' has no
+member named 'SelectLocaleForProfile'
+nsProfile.cpp: In member function `virtual nsresult
+nsProfile::CreateNewProfileWithLocales(const PRUnichar*, const PRUnichar*, const
+PRUnichar*, const PRUnichar
+*, PRBool)':
+nsProfile.cpp:1724: error: 'class nsDerivedSafe<nsIXULChromeRegistry>' has no
+member named 'SelectLocaleForProfile'
+nsProfile.cpp:1736: error: 'class nsDerivedSafe<nsIXULChromeRegistry>' has no
+member named 'GetSelectedSkin'
+nsProfile.cpp:1738: error: 'class nsDerivedSafe<nsIXULChromeRegistry>' has no
+member named 'SelectSkinForProfile'
+nsProfile.cpp:1760: error: 'class nsDerivedSafe<nsIXULChromeRegistry>' has no
+member named 'SelectLocaleForProfile'
+gmake[4]: *** [nsProfile.o] Error 1
+gmake[4]: Leaving directory `/space/gnu/web/firefox/mozilla/profile/src'
+
+
+Reproducible: Always
+Steps to Reproduce:
+The following tools/libraries were used for compilation:
+    GCC 3.4.0
+    GNU Make 3.80
+    GTK 2.4.3
+
+The following commands were issued to check out and build the distribution:
+
+  $ bunzip2 -c firefox-1.0PR-source.tar.bz2 | gtar -xvf -
+  $ cd mozilla
+
+  $ ed .mozconfig or have a file located at $HOME/.mozconfig
+  a
+  ac_add_options --disable-tests
+  ac_add_options --disable-debug
+  ac_add_options --disable-ldap
+  ac_add_options --disable-mailnews
+  ac_add_options --enable-extensions=default,-inspector,-irc,-venkman,-content-p
+acks,-help
+  ac_add_options --with-xprint
+  ac_add_options --enable-x11-shm
+  ac_add_options --enable-optimize
+  ac_add_options --enable-crypto
+  ac_add_options --with-pthreads
+  ac_add_options --enable-js-ultrasparc
+  ac_add_options --enable-default-toolkit=gtk2
+  .
+  w
+  q
+  $ export MOZ_PHOENIX=1
+  $ export BUILD_OFFICIAL=1
+  $ LDFLAGS="-L/usr/local/lib -R/usr/local/lib" gmake -f client.mk build
+
+
+
+
+
+I was able to build Mozilla 1.7.3. Just to make sure I'm not using a bad config
+setup I moved my .mozconfig for mozilla that is in my $HOME directory.

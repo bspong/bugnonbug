@@ -1,0 +1,23 @@
+it is possible to trick a user to give away access credential by forcing a foreign tab/window to redirect to a malicious site after a successful authentication
+User-Agent: Mozilla/5.0 (X11; U; Linux x86_64; en-GB; rv:1.9.0.4) Gecko/2008111318 Ubuntu/8.04 (hardy) Firefox/3.0.4
+Build Identifier: Mozilla/5.0 (X11; U; Linux x86_64; en-GB; rv:1.9.0.4) Gecko/2008111318 Ubuntu/8.04 (hardy) Firefox/3.0.4
+
+Here is a simple example:
+
+var w = window.open('url1');
+setTimeout(function () {
+w.location = 'http://url2';
+}, 5000);
+
+Although this code doe not look too malicious, consider the following situation: The user click on a link which spawn a new tab (mimicking target="_blank"). The new tab present the user with a login form. Since this is the legitimate site, the SSL information will be correct and therefore the user will most likely type their credential in. In the background, the page which opened the tab wait until it detects that the user ha logged on successfully. There are several technique to do that. The check is performed a often a required. Once a true condition is reached, a w.location = 'http://evil stealing website' is fired which will force the newly authenticated/trusted tab to redirect to another site which is controlled by the attacker. This site contains similarly looking login page but with some error message which inform the user that the authenticate wa not successful. The user will most likely fill their access credential one more time. The credential will travel back to the attacker's controlled site where they will be recorded. The attacker can than redirect the user to the original site with a simple 302 redirect.
+
+The bad thing about this attack is that it feel like the typical authentication process many site currently offer and therefore a lot of user will be fooled to give away their credential with realizing what actually happens.
+
+The solution is very simple although I am not sure if it will break some part of the Web. We should simply disallow parent window to control the location parameter unless they are from the same origin.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.
+2.
+3.

@@ -1,0 +1,24 @@
+FUEL Window object create a large number of object until shutdown
++++ This bug wa initially created a a clone of Bug #750454 +++
+
+Every FUEL Window object that get created register itself a a listener on the tabbrowser for 4 different event ("TabOpen", "TabMove", "TabClose", and "TabSelect"). These event listener never get removed until shutdown. Also, each time one of those event is fired FUEL creates a new BrowserTab object.
+
+Of course, every Window and BrowserTab object get added to the gShutdown array.
+
+This make it really easy to write bloaty code. Consider something innocent like this:
+
+setInterval(function() {
+if (Application.activeWindow.activeTab.uri.spec == "myURL") {
+alert("Thanks for visiting my page!");
+}
+}, 5000);
+
+Now, the example is dumb, but imagine what happens. Each call to Application.activeWindow make a new FUEL Window object. Each one of those register a a "TabSelect" listener.
+
+The first time the the interval run we end up with 1 Window and 1 BrowserTab in our gShutdown array. If I select a tab I get one "TabSelect" handler running, which add another BrowserTab to the gShutdown array.
+
+The next time the interval run we have 2 Window object and now 3 BrowserTab objects. Then if I select a tab I have 2 "TabSelect" handler running, each of which add another BrowserTab object to the gShutdown array.
+
+And that's just after 10 seconds. Imagine letting this go all day, and having lot of tab changes, window creation, etc.
+
+This is a mess.

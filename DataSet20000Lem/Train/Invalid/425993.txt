@@ -1,0 +1,22 @@
+liferea built with xulrunner 1.9 dumping ton of places.sqlite-\d+.corrupt file
+liferea, built with xulrunner 1.9 is dumping ton of places.sqlite-\d+.corrupt files. Even with a fresh profile, all those ".corrupt" file appear at startup.
+This is 100% reproducible. A dump show they are not corrupted at all.
+
+It's a regression introduced when bug 415460 landed, between b3 and b4, and it's still there in 1.9pre.
+
+Those ".corrupt" file are created when InitDB() fails.
+I've traced it down to mDBGetTags:
+
+http://mxr.mozilla.org/mozilla/source/toolkit/components/places/src/nsNavHistory.cpp#1140
+
+1140 // mDBGetTags
+1141 rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+1142 "SELECT GROUP_CONCAT(t.title, ' ') "
+1143 "FROM moz_places h "
+1144 "JOIN moz_bookmarks b ON b.type = ") +
+1145 nsPrintfCString("%d", nsINavBookmarksService::TYPE_BOOKMARK) +
+1146 NS_LITERAL_CSTRING(" AND b.fk = h.id "
+1147 "JOIN moz_bookmarks t ON t.parent = ?1 AND t.id = b.parent "
+1148 "WHERE h.url = ?2"),
+1149 getter_AddRefs(mDBGetTags));
+1150 NS_ENSURE_SUCCESS(rv, rv);

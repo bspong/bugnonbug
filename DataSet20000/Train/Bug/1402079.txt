@@ -1,0 +1,31 @@
+browser/base/content/test/performance/browser_windowopen_reflows.js fails on windows 10 VM (not hardware)
+we are working to run our windows 10 browser-chrome tests on a virtual machine instead of hardware- we find that browser/base/content/test/performance/browser_windowopen_reflows.js is perma-failing:
+https://treeherder.mozilla.org/#/jobs?repo=try&revision=9bd0a7962475ed9b61b5581ba8923013a434f128&selectedJob=132496318
+
+with this in the log file:
+15:22:29    ERROR -  761 INFO TEST-UNEXPECTED-FAIL | browser/base/content/test/performance/browser_windowopen_reflows.js | unexpected uninterruptible reflow
+15:22:29     INFO -  [
+15:22:29     INFO -  	"handleEvent@chrome://browser/content/tabbrowser.xml:6864:19",
+15:22:29     INFO -  	"EventListener.handleEvent*tabbrowser-tabs_XBL_Constructor@chrome://browser/content/tabbrowser.xml:6282:11",
+15:22:29     INFO -  	""
+15:22:29     INFO -  ]
+15:22:29     INFO -   - false == true - JS frame :: chrome://mochitests/content/browser/browser/base/content/test/performance/head.js :: reflow :: line 122
+15:22:29     INFO -  Stack trace:
+15:22:29     INFO -  chrome://mochitests/content/browser/browser/base/content/test/performance/head.js:reflow:122
+15:22:29     INFO -  chrome://browser/content/tabbrowser.xml:handleEvent:6864
+15:22:29     INFO -  762 INFO TEST-PASS | browser/base/content/test/performance/browser_windowopen_reflows.js | expected uninterruptible reflow: '[
+15:22:29     INFO -  	"select@chrome://global/content/bindings/textbox.xml:115:11",
+15:22:29     INFO -  	"focusAndSelectUrlBar@chrome://browser/content/browser.js:2283:5",
+15:22:29     INFO -  	"_handleURIToLoad/<@chrome://browser/content/browser.js:1686:11",
+15:22:29     INFO -  	"promise callback*_handleURIToLoad@chrome://browser/content/browser.js:1684:5",
+15:22:29     INFO -  	"_delayedStartup@chrome://browser/content/browser.js:1456:5",
+15:22:29     INFO -  	"EventListener.handleEvent*onLoad@chrome://browser/content/browser.js:1401:5",
+15:22:29     INFO -  	"onload@chrome://browser/content/browser.xul:1:1",
+15:22:29     INFO -  	""
+15:22:29     INFO -  ]' - true == true -
+15:22:29     INFO -  763 INFO Leaving test bound
+
+I know we removed a reflow to get this working on windows10 hardware (bug 1397229):
+https://reviewboard.mozilla.org/r/178464/diff/3#index_header
+
+possibly we need to add that back.

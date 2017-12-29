@@ -1,0 +1,87 @@
+crash when trying to build firefox 1.5rc3 from source
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.12) Gecko/20051025 Firefox/1.0.7
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.12) Gecko/20051025 Firefox/1.0.7
+
+My .mozconfig : 
+. $topsrcdir/browser/config/mozconfig
+#
+# See http://www.mozilla.org/build/ for build instructions.
+#
+
+# Options for client.mk.
+mk_add_options MOZ_CO_PROJECT=browser
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-@CONFIG_GUESS@
+
+# Compilation flags
+export CHOST="i686-pc-linux-gnu"
+export CFLAGS="-O3 -march=prescott -pipe -mmmx -msse -msse2 -msse3 -mfpmath=sse"
+export CXXFLAGS="-O3 -march=prescott -pipe -mmmx -msse  -msse2 -msse3 -mfpmath=sse"
+export CPPFLAGS="-O3 -march=prescott -pipe  -mmmx -msse -msse2 -msse3 -mfpmath=sse"
+
+# Options for 'configure' (same as command-line options).
+ac_add_options --with-pthreads
+ac_add_options --enable-default-toolkit=gtk2
+ac_add_options --enable-application=browser
+ac_add_options --disable-mailnews
+ac_add_options --disable-calendar
+ac_add_options --disable-ctl
+ac_add_options --disable-ldap
+ac_add_options --disable-jsd
+ac_add_options --disable-freetype2
+ac_add_options --disable-postscript
+ac_add_options --disable-xprint
+ac_add_options --disable-gnomevfs
+ac_add_options --disable-gnomeui
+ac_add_options --disable-plugins
+ac_add_options --disable-oji
+ac_add_options --disable-accessibility
+ac_add_options --disable-xpfe-components
+ac_add_options --disable-printing
+ac_add_options --disable-composer
+ac_add_options --disable-xpcom-obsolete
+ac_add_options --disable-xtf
+ac_add_options --disable-mathml
+ac_add_options --disable-installer
+ac_add_options --disable-updater
+ac_add_options --disable-tests
+ac_add_options --disable-logging
+ac_add_options --enable-static
+ac_add_options --disable-shared
+ac_add_options --enable-single-profile
+ac_add_options --enable-optimize="-O3 -march=prescott -freorder-blocks -fno-reorder-functions -gstabs+ -msse -mmmx -msse2 -msse3 -mfpmath=sse"
+ac_add_options --enable-strip
+ac_add_options --disable-profilesharing
+ac_add_options --disable-profilelocking
+ac_add_options --disable-necko-disk-cache
+ac_add_options --disable-pedantic
+ac_add_options --disable-xinerama
+ac_add_options --enable-crypto
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.compile firefox 1.5rc3
+2.
+3.
+
+Actual Results:  
+gmake[3]: *** No rule to make target `../../dist/lib/components/libmozfind.a', needed by `firefox-bin'.  Stop.
+gmake[3]: *** Waiting for unfinished jobs....
+c++ -o nsBrowserApp.o -c -I../../dist/include/system_wrappers -include ../../config/gcc_hidden.h -DAB_CD=en-US -DMOZILLA_INTERNAL_API -DOSTYPE=\"Linux2.6\" -DOSARCH=\"Linux\" -DBUILD_ID=0000000000 -D_BUILD_STATIC_BIN=1 -DFIREFOX_ICO=\"../../dist/branding/firefox.ico\" -DDOCUMENT_ICO=\"../../dist/branding/document.ico\" -DAPP_VERSION="1.5" -I../../toolkit/xre -I../../config -I../../dist/include/xpcom -I../../dist/include/xpcom -I../../dist/include/string -I../../dist/include -I../../dist/include -I../../dist/include/nspr    -I/usr/X11R6/include     -O3 -march=prescott -pipe  -mmmx -msse -msse2 -msse3 -mfpmath=sse  -I/usr/X11R6/include -fno-rtti -fno-exceptions -Wall -Wconversion -Wpointer-arith -Wcast-align -Woverloaded-virtual -Wsynth -Wno-ctor-dtor-privacy -Wno-non-virtual-dtor -Wno-long-long -O3 -march=prescott -pipe -mmmx -msse -msse2 -msse3 -mfpmath=sse -fshort-wchar -pthread -pipe  -DNDEBUG -DTRIMMED -O3 -march=prescott -freorder-blocks -fno-reorder-functions -gstabs+ -msse -mmmx -msse2 -msse3 -mfpmath=sse  -O3 -march=prescott -pipe  -mmmx -msse -msse2 -msse3 -mfpmath=sse  -I/usr/X11R6/include -DMOZILLA_CLIENT -include ../../mozilla-config.h -Wp,-MD,.deps/nsBrowserApp.pp nsBrowserApp.cpp
+gmake[3]: *** Waiting for unfinished jobs....
+cat ../../config/nsStaticComponents.cpp.in | \
+sed -e "s|%MODULE_LIST%|MODULE(xpcomObsoleteModule) MODULE(xpconnect) MODULE(nsUConvModule) MODULE(nsI18nModule) MODULE(necko_core_and_primary_protocols) MODULE(necko_secondary_protocols) MODULE(nsJarModule) MODULE(nsPrefModule) MODULE(nsSecurityManagerModule) MODULE(nsRDFModule) MODULE(nsParserModule) MODULE(nsGfxGTKModule) MODULE(nsImageLib2Module) MODULE(nsWidgetGtk2Module) MODULE(nsLayoutModule) MODULE(docshell_provider) MODULE(embedcomponents) MODULE(Browser_Embedding_Module) MODULE(nsEditorModule) MODULE(nsTransactionManagerModule) MODULE(nsComposerModule) MODULE(appshell) MODULE(nsChromeModule) MODULE(nsMorkModule) MODULE(nsFindComponent) MODULE(application) MODULE(nsFileViewModule) MODULE(RemoteServiceModule) MODULE(CommandLineModule) MODULE(nsToolkitCompsModule) MODULE(Apprunner) MODULE(BOOT) MODULE(NSS) MODULE(PKI) MODULE(nsCookieModule) MODULE(nsXMLExtrasModule) MODULE(nsAutoConfigModule) MODULE(nsSystemPrefModule) MODULE(TransformiixModule) MODULE(nsUniversalCharDetModule) MODULE(nsWebServicesModule) MODULE(nsAuthModule) MODULE(nsPermissionsModule) MODULE(SearchServiceModule) MODULE(BrowserDirProvider) MODULE(nsBrowserCompsModule)|" \
+> nsStaticComponents.cpp
+gmake[3]: *** Waiting for unfinished jobs....
+gmake[3]: Leaving directory `/share2/mozilla/browser/app'
+gmake[2]: *** [libs] Error 2
+gmake[2]: Leaving directory `/share2/mozilla/browser'
+gmake[1]: *** [tier_99] Error 2
+gmake[1]: Leaving directory `/share2/mozilla'
+make: *** [default] Error 2
+
+
+Expected Results:  
+successful build.
+
+gcc version 4.0.1 20050727 (Red Hat 4.0.1-5)

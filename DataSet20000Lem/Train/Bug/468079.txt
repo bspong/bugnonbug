@@ -1,0 +1,32 @@
+DNS lookup when using proxy server in JavaScript engine
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.1b1) Gecko/20081007 Firefox/3.1b1
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.1b1) Gecko/20081007 Firefox/3.1b1
+
+Firefox (3.0.1-4 and 3.1b1-4) all freeze on website which have their DNS server incorrectly setup which going through a proxy server.
+
+Facebook doe not have it DNS record correctly set for AAAA and therefore return SERVFAIL but not instantly, but after 4-5 seconds. Firefox is trying to look up the domain's IPv6 address and hang while it is waiting.
+
+The bug is two-fold:
+
+1) The JavaScript engine should not be looking up the domain in the first place since it is using a proxy and therefore that will look it up itself.
+
+2) Firefox should not hang while doing DNS query such that none of the other tab are available and the window cannot be rendered.
+
+This doe not occur on the same network and version on Windows.
+
+Utilising gdb I have found the issue seems to be in the library libxul when it call pthread_wait_cond. But strace showed the lagging to occur during a DNS query.
+
+We have managed to stop the browser freezing by disabling IPv6 lookups, but it should not be looking the IP up anyway.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Have IPv6 lookup turned on (network.dns.disableIPv6 = false)
+2. Use a proxy server (preferably squid-based to resemble conditions)
+3. Navigate to www.facebook.com (from uk)
+4. Watch Firefox (3.0.1-3.0.4 and 3.1b1-4) freeze while it try to get the non-existent AAAA records.
+Actual Results:
+The browser freeze and the window doe not render. It also utilises 100% CPU.
+
+Expected Results:
+The browser should remain operable while the DNS query is executing.

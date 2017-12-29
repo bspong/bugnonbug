@@ -1,0 +1,24 @@
+incorrect object checking; testing against 0 (NULL) instead of nsnull
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9) Gecko/2008051202 Firefox/3.0
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9) Gecko/2008051202 Firefox/3.0
+
+In the code below, the first if-statement is never executed because mFrame
+is the opaque object 'nsnull'.  I'm not sure what do_CreateInstance
+returns in a failure case, but appears based on usage 'NULL'.
+
+There appear to be similar errors with mImageFrame in 
+    modules/libpr0n/decoders/gif/nsGIFDecoder2.cpp, there may be others.
+
+modules/libpr0n/decoders/jpeg/nsJPEGDecoder.cpp
+ 470     mImage->GetFrameAt(0, getter_AddRefs(mFrame));
+ 471 
+ 472     PRBool createNewFrame = PR_TRUE;
+ 473
+ 474     if (mFrame) {
+[...]
+ 485     } 
+[...]
+ 489       if (!mFrame) {
+
+
+Reproducible: Always

@@ -1,0 +1,21 @@
+Some default search engine should only be visible in specific country
+Created attachment 8647540
+Patch v1
+
+This is, per mconnor's last minute request, an extension to what we do with the absearch service.
+
+The goal is to ship more default engine than we would show in each locale, and to hide/show them based on the user's country.
+
+We need to have a local fallback in case we can't reach the server, and I remember localized prefs didn't work all that well when we launched Flare last year, because multi-locale build (on Linux distributions) ended up with all locale using the en-US prefs.
+
+Instead I've decided to add a :hidden suffix inside the list.txt file (which is in a localized folder) to annotate the engine that we ship, but don't show by default until the absearch server say so. I'm not fully set on the ':hidden' string, but it need to be something parsable by gmake so that we don't break l10n packaging.
+
+This ha the benefit that I can put the code checking if we received an engine list from the server in the same function a the code parsing the list.txt file, and this make the patch 'relatively self contained'.
+
+The attached patch already work (I only tested briefly, and haven't really tested the sync init code path).
+
+Some thing would need to be through through some more, eg:
+- what happens if the user attempt to install an engine that we already ship but hide
+- are there edge case related to distribution partner
+- I haven't looked at anything related to ordering.
+- This definitely need tests. I can try to write some tomorrow if the feedback I get tonight indicates this is the best way forward.

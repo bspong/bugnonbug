@@ -1,0 +1,40 @@
+Subresources of web page silently fail to render when document host's cert is trusted but the subresource's host's cert is not trusted
+User-Agent: Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.2.13) Gecko/20101209 Fedora/3.6.13-1.fc14 Firefox/3.6.13
+Build Identifier: Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.2.13) Gecko/20101209 Fedora/3.6.13-1.fc14 Firefox/3.6.13
+
+I am running Perspectives with all my CAs disabled. Normally Perspectives will find the cert and override the stop screen. http://www.cs.cmu.edu/~perspectives/firefox.html
+
+When trying to change my password or email on amazon.com, it normally replaces a spinning wait icon with a catchpa from https://images-na.ssl-images-amazon.com/ or similar (look through the page source) which I had not authenticated.
+
+Firefox did not load that image, which is good, but it gave no visible indication on the page, in a notification, or anywhere I could easily find that some content on the page wa blocked or that it did not load because of a bad certificate.
+
+I've disabled most of the CAs because many were like the Turkish government, and I wonder if you will enable thing from China. The moment these are recognized, EVERYTHING signed by them becomes valid. I don't want "mixed CA" content any more than mixed content on a secure page (at least unless I know what is going on).
+
+There may be other/better way of doing this, but Firefox should not merely change the main page if there is a CA problem, it should pop up something if ANYTHING loaded on the page ha an invalid cert and give me the option to view or bypass.
+
+With one of the response to firesheep being converting everything to https:// URLS - but NOT fixing the source (so you get X.s3.amazon.com, Y.s3.amazon.com, etc. with different certs), this becomes a problem. some javascript silently doesn't run. Images don't appear. But neither is there any indication that something ha been stripped out.
+
+If it is an IFRAME, I do see a tiny version of the certificate error page inside the small box allocated for the original.
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Disable CA for everything amazon.com.
+2. Try to change account password.
+3. You get the stop passport CA bad image, bypass that one.
+4. Password change appears, but is missing chunks.
+
+Alt:
+1. Disable s3.amazon.com signer CA,
+2. Go to github.com
+3. See a really junky page
+
+Show page source, type in each https://X.Y.amazon.com URL domain in the bar, get the stop, CA page, add exception. if you manage to get them all, the main page will reload correctly.
+Actual Results:
+Weird and broken page with gob of content (any signed css, javascript, image, etc.) missing with no easy way to detect this is happening, nor any easy way to correct it.
+
+Expected Results:
+Some security warning for any invalid CA for embedded content loaded by the page similar to the warning for the actual page, preferably with a way to override.
+
+I am not marking it a a security vulnerability, nor giving this a higher priority at the moment, but there might be a way to exploit this. And a much a I trust Mozilla, I don't necessarily trust every CA you have set to default, and then it is easy to quietly wiretap (a security now episode covered the topic). I expect google.com to be signed by Verisign or similar, not by some entity in another continent, nor should it change, which is what perspective detects. Or if someone ha added a self-signed CA for other reasons...

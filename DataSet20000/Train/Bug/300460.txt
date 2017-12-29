@@ -1,0 +1,62 @@
+tabbrowser.addTab("http://www.anyurl.com") doesn't load website; just sets tabtitle to url and shows javascript-error: document.getElementById("menu_closeWindow") has no properties
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.7) Gecko/20041107 Firefox/1.0.4
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.8) Gecko/20050511 Firefox/1.0.4
+
+A JavaScript error shows up when calling methods of a tabbrowser element which
+is part of a xul-document. The command
+mytabbrowserelement.addTab("http://www.anyurl.com") doesn't load the specified
+website; it just sets the tabtitle to the url and stops with showing
+javascript-error:
+
+Error: this.mTabBrowser.mProgressListeners has no properties
+Source File: chrome://global/content/bindings/tabbrowser.xml
+Line: 343
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. copy the following lines to a document called tabtest.xul
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<window id="yourwindow"
+xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<tabbox id="tbb" flex="1"><tabbrowser id="mytabbr" flex="1"/></tabbox>
+<toolbarbutton id="testbutton" label="loadtab"
+oncommand="document.getElementById('mytabbr').addTab('http://www.mozilla.org');"/>
+</window>
+
+2. register this file in the chrome-manager
+3. check that you have javascript.options.showInConsole set to true (in
+about:config)
+3. start firefox; enter the chrome-url to the xul-file in the adress bar
+(chrome://somepath/tabtest.xul); press enter
+4. klick the loadTab button on the bottom of the xul-window
+5. Open Tools - JavaScriptConsole and check the error messages
+Actual Results:  
+when clicking the "LoadTab" button a new sub-tab with the title of the requested
+website is added but the website is NOT loaded. the javascript console shows the
+following error:
+Error: this.mTabBrowser.mProgressListeners has no properties
+Source File: chrome://global/content/bindings/tabbrowser.xml
+Line: 343
+
+Expected Results:  
+add the sub-tab, load the requested website in this sub-tab and don't show this
+error
+
+This problem still exists in Firefox Deer Park Alpha 2.
+
+It also appears on a clean installation of Firefox without any extensions
+installed and with a totally clean user profile.
+
+Using Mozilla 1.7.8 the problem appears in a different way:
+The requested website is loaded in a new sub-tab but when switching between the
+sub-tabs  (which are sub-tabs of the browsertab with the xul-file) the same
+error shows up in the JavaScript console:
+Error: this.mProgressListeners has no properties
+Source File: chrome://global/content/bindings/tabbrowser.xml
+Line: 532
+
+
+Another description of this bug can be found here:
+http://mozdev.org/pipermail/project_owners/2004-October/003007.html

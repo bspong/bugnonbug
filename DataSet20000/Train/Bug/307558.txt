@@ -1,0 +1,70 @@
+customized toolbars are reset to default because of corrupt localstore.rdf after search plugin update check
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8b4) Gecko/20050908 Firefox/1.4
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8b4) Gecko/20050908 Firefox/1.4
+
+Sometimes when I restart Firefox, after extension installation or software
+update (for nightly 1.8 Branch), the costumization I did to the toolbars
+(removing the go button, adding buttons from extensions) is not remembered, and
+all is set back to what the toolbar looks like with a fresh profile. 
+
+When I open the Javascript Console the following message is displayed several
+times: 
+
+Error: duplicate attribute
+Source File: file:///<profile location>/localstore.rdf
+Line: 244, Column: 20
+Source Code:
+                   NS1:LastPingDate="1126176449" />-------------------^
+
+Where <profile location> is the path to my profile folder.
+I have set the following prefs to true, but I don't know if the error message
+appears when they are set to false:
+javascript.options.showInConsole
+javascript.options.strict
+
+The entry in localstore.rdf which this error messages is talking about looks
+like this:
+
+  <RDF:Description RDF:about="engine://<program
+folder>%5Csearchplugins%5Cgoogle.src"
+                   NS1:LastPingDate="1126011710"
+                   NS1:LastPingDate="1126176449" />
+
+where <program folder> is the path to the Firefox program directory.
+
+When I close Firefox and remove the first LastPingDate attribute and value, and
+then restart Firefox the toolbars are back again to how I costumized them.
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+1. Costumize the toolbars, drag toolbar buttons from the costumization window to
+any of the toolbars.
+2. Restart Firefox (I don't know if that's needed; I had costumized the toolbars
+several weeks before this bug hit me)
+3. Install an extension or do a software update
+4. Restart Firefox
+
+Actual Results:  
+The toolbars are layed out just as when you install firefox for the first time
+with a fresh profile, the icon in the search box shows a magnifying glass, and
+no other icons/search engines are listed in the drop down menu.
+The toolbar buttons I had put on the toolbar in a previous session are now all
+present in the Costumize Toolbar dialog, along with the other icons I had left
+there. The buttons/icons added by extensions are also present there.
+Costumizing the toolbar again helps only during the session, after a restart all
+is back to default iconset
+
+Expected Results:  
+Display the toolbars just as they were before Firefox was restarted.
+
+I have experienced this bug three times now: Two times after installing an
+extension, and just now after a software update. All three times, the same entry
+in localstore.rdf (about the google search plugin) contained a duplicate
+LastPingDate attribute. Removing one of those attributes solved this issue every
+time.
+
+So I guess a combination of trying to find an update for the google search
+plugin and installing an extension/update or a combination of finding an update
+for the google search plugin and restarting Firefox causes the addition of a
+LastPingDate attribute, where it should be replaced, in localstore.rdf.

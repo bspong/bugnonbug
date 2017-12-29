@@ -1,0 +1,45 @@
+Some place are permanently "stuck" in places.sqlite (negative parent values)
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9) Gecko/2008052906 Firefox/3.0
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9) Gecko/2008052906 Firefox/3.0
+
+Main symptom:
+Several sites, that are not currently bookmarks, cannot be cleared from autocomplete drop-down box in the location bar with Clear Private Data. They are not starred in the drop-down box, further indicative that they are not bookmarks. They also do not show up in the history. I admit, this sound similar to a lot of other bug posts, but seems a bit different. I definitely visited these sites, but perhaps I bookmarked them and then deleted them (I don't remember). That is, it may be more a bookmark deletion bug instead of a history bug. The only reason I say this is that I found them grouped together under "moz_bookmarks" in places.sqlite, which doe not seem to contain any other non-bookmark entry besides RSS stories, suggesting that I once bookmarked them.
+
+These site (only 5) got stuck early on (and are still stuck) right after I installed 3.0, but no more site have accumulated since then (several weeks), ie I have not been able to reproduce it. Possible reasons: Perhaps it wa because I wa still trying out different option and feature at first, but since then I've left thing alone (turned off history). I also had a lot of crash due to a FF+AVG7.5 virus scan bug which might have corrupted things, which I have also since disabled.
+
+More symptoms:
+I cannot bookmark these site with Ctrl-D or clicking on the star (no "Edit This Bookmark" dialog box appears). I can forcibly bookmark them by dragging it tab into the Library, but deleting them still leaf me with the original problem.
+
+My (small) debugging contribution:
+I installed the extension "SQLite Manager 0.3.4", and I found the stuck site grouped together in moz_bookmarks. I found something unique about all the stuck sites: they all had large negative "parent" values. They also had "NULL" for "lastModified", which only the RSS entry otherwise had.
+
+places.sqlite->moz_bookmarks:
+(title is truncated, typ=type, po=position, key=keyword_id, fol=folder_type, mod=lastModified)
+
+id typ fk parent po title key fol dateModified mod
+13510 1 3782 -9223372036854776000 0 NFL Fo NULL NULL 1214286317537425 NULL
+13511 1 3783 -9223372036854776000 1 bookma NULL NULL 1214286959360321 NULL
+13512 1 3784 -9223372036854776000 2 The to NULL NULL 1214287433371916 NULL
+13513 1 3785 -9223372036854776000 3 about:k NULL NULL 1214287520246836 NULL
+13536 1 3793 -9223372036854776000 4 Google NULL NULL 1214289559679396 NULL
+
+
+places.sqlite->moz_places
+(title is truncated, v=visit_count, h=hidden, t=typed, fav=favicon_id)
+
+id url title rev_host v h t fav frequency
+3782 http://www.sp NFL Football moc.enilstrops.www. 0 0 1 636 340
+3783 http://www.go bookmarkcurr moc.elgoog.www. 0 0 1 562 340
+3784 http://news.y The top news moc.oohay.swen. 0 0 1 674 340
+3785 about:blank NULL 0 0 0 NULL 140
+3793 http://www.go Google moc.elgoog.www. 0 0 1 562 340
+
+Hope that helps. I imagine I can delete these site from places.sqlite using SQLite Manager, but I will leave them in there for now for debugging purposes.
+
+
+Reproducible: Couldn't Reproduce
+
+Steps to Reproduce:
+1.
+2.
+3.

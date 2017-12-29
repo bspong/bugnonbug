@@ -1,0 +1,41 @@
+image caching us incorrect expiry time
+User-Agent: Mozilla/5.0 (X11; U; Linux i686 (x86_64); en-US; rv:1.9a9pre) Gecko/2007102004 Minefield/3.0a9pre
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686 (x86_64); en-US; rv:1.9a9pre) Gecko/2007102004 Minefield/3.0a9pre
+
+The www.openstreetmap.org site serf map image tile from the tile.openstreetmap.org server. These tile are updated dynamically and if you browse a tile which is old then the backend code return a tile with a 30 minute expiry time which give the server some time to re-render the tile.
+
+It seems that FF is not caching these tile with 30 minute expiry.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Browse map at http://www.openstreetmap.org in Minefield
+2. Zoom in to street level in some area of the map
+3. View page info and look through image in media.
+Actual Results:
+Some of the tile image are listed a 'not cached'.
+
+Expected Results:
+Every tile should get cached for at least 30 minutes.
+
+It appears that maybe the browser is confused because of DST which mean that the declared expiry time is < clock time in UK BST. An example tile retrieved from the server:-
+
+$ wget -O /dev/null -S http://b.tile.openstreetmap.org/15/16218/10769.png
+--19:45:12-- http://b.tile.openstreetmap.org/15/16218/10769.png
+=> `/dev/null'
+Resolving b.tile.openstreetmap.org... 128.40.58.201
+Connecting to b.tile.openstreetmap.org|128.40.58.201|:80... connected.
+HTTP request sent, awaiting response...
+HTTP/1.1 200 OK
+Date: Sun, 21 Oct 2007 18:45:12 GMT
+Server: Apache/2.0.55 (Ubuntu) mod_ruby/1.2.5 Ruby/1.8.4(2005-12-24)
+Expires: Sun, 21 Oct 2007 19:15:12 GMT
+Connection: close
+Content-Type: image/png
+Length: unspecified [image/png]
+
+[ Note: the specific URL above may well return other expiry time since it will get rendered at some point and then will get a 3 day expiry time set. ]
+
+Above the local wall time is 19:45 BST (Europe/London which is currently UTC+01:00 due to daylight saving) The server declares the tile to be served at 18:45 GMT with expiry at 19:15 GMT. The browser seems to treat this a uncacheable.
+
+If I tweak the backend server code to pas back +90 minute a the expiry then it get cached OK. It look like the browser is ignoring the timezone in the response date/time. Alternatively maybe the browser think GMT is the same a BST when daylight saving is in effect, but this is not true, GMT is effectively the same a UTC even during daylight saving.

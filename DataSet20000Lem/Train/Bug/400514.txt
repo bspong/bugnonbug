@@ -1,0 +1,102 @@
+xpath document.evaluate will not work correct if default namespaces are used with xhtml documents, while html document work fine
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.8.1.8) Gecko/20071008 Firefox/2.0.0.8
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.8.1.8) Gecko/20071008 Firefox/2.0.0.8
+
+Using an document with a default namespace like
+
+<html
+xmlns="http://www.w3.org/1999/xhtml"
+> ...
+
+and calling
+
+var heading = document.evaluate("//h1", document, null, XPathResult.ANY_TYPE,null);
+
+will not yield results, if the type of the document is xhtml (html work fine).
+
+Establishing a pseudo namespace for xhtml and searching for "//xhtml:h1" will work fine though, within xhtml.
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+Store xhtml document either a main.html or main.xhtml.
+Mouse click on the input control will start an document.evaluate.
+Results are correct, if stored a html, but not if
+
+<html
+xmlns="http://www.w3.org/1999/xhtml"
+xmlns:svg="http://www.w3.org/2000/svg"
+>
+<head>
+<title>xpath xhmtl default namespace problem</title>
+
+<script>
+/* <![CDATA[ */
+var context = {
+window : this,
+doc: this.document
+, rootURI: "http://localhost:8080/homepage.p/Um$wpQwe*t62!s.s/hw9ECTtYDOD.a/"
+, namespace : {
+xhtml : 'http://www.w3.org/1999/xhtml'
+, svg : 'http://www.w3.org/2000/svg'
+, sf : 'http://www.silktrail.org/xsd/2005/SilkForms'
+}
+};
+var doc = context.document;
+if( typeof(window.top.silk) != "undefined" ) {
+var silk = window.top.silk;
+} else {
+var silk = {
+bootloader : "http://localhost:8080/renderlib/ff20x/bootstrap.js"
+, rootURI : "http://localhost:8080/homepage.p/Um$wpQwe*t62!s.s/hw9ECTtYDOD.a/"
+, onLoadDefault : function(ev){ silk.loadMissingLibraries(); }
+, package : {}
+};
+}
+
+function simpleExample() {
+window.alert( document.evaluate("count(//div)", document, null, XPathResult.ANY_TYPE, null).numberValue );
+var expression = "//h1";
+var heading = document.evaluate(expression, document, null, XPathResult.ANY_TYPE,null);
+var thisHeading = headings.iterateNext();
+var alertText = "expression in this document are:\n"
+while (thisHeading) {
+alertText += thisHeading.textContent + "\n"
+thisHeading = headings.iterateNext();
+}
+alert(alertText);
+}
+
+silk.nsresolver = function (prefix) {
+if ( prefix ) return context.namespace[prefix] || null;
+return context.namespace[ 'default' ] || null;
+}
+
+silk.test = function( node ) {
+silk.xpathNodeList("//h1", node);
+return ( silk.xpathNodeList("//xhtml:h1", node) );
+}
+
+silk.xpathNodeList = function( xExpr, node ) {
+var xpathres = document.evaluate( xExpr, document, silk.nsresolver, XPathResult.ANY_TYPE, null);
+var runner = xpathres.iterateNext();
+if ( runner ) while ( runner ) {
+window.alert( "Expression " + xExpr + " retrieved " + runner.textContent );
+runner = xpathres.iterateNext();
+} else window.alert("Expression " + xExpr + "Did not found anything!");
+return true;
+}
+
+silk.booted = true;
+
+/* ]]> */
+</script>
+</head>
+
+
+Actual Results:
+Elements with a default namespace are not found in an xhtml document.
+
+Expected Results:
+Elements with the default namespace should be found in an xhtml document.

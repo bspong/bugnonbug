@@ -1,0 +1,13 @@
+Set NSDisablePersistence to prevent disk leak for non-Firefox branded build
+Created attachment 8370481
+Add plist property to always disable Saved Application State.
+
+In https://trac.torproject.org/projects/tor/ticket/8987, we discovered that Tor Browser's window title were leaking to the "~/Library/Saved Application State/org.mozilla.torbrowser.savedState/" directory. We ran some tests, and discovered that none of the other major browser were leaking in this way, even in their non-private modes.
+
+A pseudonymous contributor got to the bottom of this and found that Apple wa actually blacklisting all of the browser (including their own) from being written to this directory via hardcoded string in the AppKit SDK.
+
+Since we changed our branding string from org.mozilla.firefox to org.mozilla.torbrowser, we were not longer except from this, and our state got recorded.
+
+It turn out the fix is to add the key '<key>NSDisablePersistence</key><true/>' to the plist file in the source tree. This cause even non-Firefox branded build to be exempt from 'Saved Application State'.
+
+Presumably this issue would also apply to Nightly and Aurora builds, and possibly Beta a well, but perhaps some or all of those branding are also blacklisted by Apple.

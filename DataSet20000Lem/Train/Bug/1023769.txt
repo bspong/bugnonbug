@@ -1,0 +1,33 @@
+Can't access event object from bookmarklet
+User Agent: Mozilla/5.0 (Windows NT 6.1; rv:28.0) Gecko/20100101 Firefox/28.0 (Beta/Release)
+Build ID: 20140314220517
+
+Steps to reproduce:
+
+1. Create bookmark with this URL:
+javascript:var url='https://www.google.com/search?q=%s&sitesearch='+document.location.hostname; if(arguments[0].altKey) window.open(url); else document.location.href=url; void(0)
+2. Enter keyword: on
+3. Open any website
+4. In address bar enter: on test
+
+
+Actual results:
+
+ReferenceError: argument is not defined
+
+
+Expected results:
+
+Arguments have to be defined (current event object).
+It would be nice to have ability to imitate default browser behaviour in bookmarklets.
+
+I think that ability to detect event type (mouse or keyboard) also would be nice because different key modifier used for open new tabs: ctrl+click for mouse, but alt+enter for keyboard.
+
+As alternative I propose another solution for this problem. You can detect if bookmarklet returned an URL and open this URL with default browser behaviour (in a new or current tab according to current user settings). For example, this bookmarklet:
+javascript:return 'https://www.google.com/search?q=%s&sitesearch='+document.location.hostname;
+If user type "on test" and press alt+enter (if user didn't changed default keystroke), it have to open search result in a new tab. But if user type "on test" and press enter without modifiers, it have to open search result in current tab.
+
+In addition we also can do a clickable version of this bookmarklet:
+javascript:return 'https://www.google.com/search?q=' + ('%s' == ('%'+'s') ? prompt('Enter keywords') : '%s') + '&sitesearch='+document.location.hostname;
+
+Ctrl+click have to open search result on new tab, but simple click have to open search result in current tab.

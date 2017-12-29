@@ -1,0 +1,71 @@
+script block ignore after dynamic script loading in script block
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; ko; rv:1.8.0.9) Gecko/20061206 Firefox/1.5.0.9
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; ko; rv:1.8.0.9) Gecko/20061206 Firefox/1.5.0.9 & Mozilla/5.0 (Windows; U; Windows NT 5.1; ko; rv:1.8.1.1) Gecko/20061204 Firefox/2.0.0.1
+
+In my html source, I declared non-child tag. See below.
+<div id=result></div>
+
+After that, in script block I loaded other script file dynamically. See below.
+<script type=text/javascript>
+var script = document.createElement("script") ;
+script.type = "text/javascript", script.src = "result.html";
+document.getElementsByTagName('head')[0].appendChild(script) ;
+</script>
+
+In "result.html" I modify result tags's innerHtml attribute. See below.
+document.getElementById("result").innerHTML = "result";
+
+But, this operation didn't work.
+And after this code, all script code didn't work except for just next script block.
+
+Buf if in my html source I declare tag that ha child, it work well.
+Below is example.
+<div id=result>has child</div>
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. declare non-child tag.
+2. dynamic script loading
+3. in loaded script try to modify non-child tag's innerHtml attribute.
+Actual Results:
+It doesn't modify non-child tag's innerHtml attribute.
+And after dynamic script loading, all script code doesn't work except for just next script block.
+
+Expected Results:
+It modifies non-child tag's innerHtml attribute.
+And all script code work well.
+
+I saw firefox1.5.0.9 and firefox2.0.0.1 source file.
+And I found that "content/base/src/nsDocument.cpp" file changed.
+Especially "BeginUpdate()" and "EndUpdate()" function implementation code became larger.
+I restored these two function to previous version code.
+After this work, my html source work well.
+See blow. Comment block is that I restored.
+
+void
+nsDocument::BeginUpdate(nsUpdateType aUpdateType)
+{
+/*
+if (mScriptLoader) {
+NS_STATIC_CAST(nsScriptLoader*,
+NS_STATIC_CAST(nsIScriptLoader*,
+mScriptLoader))->AddExecuteBlocker();
+}
+*/
+NS_DOCUMENT_NOTIFY_OBSERVERS(BeginUpdate, (this, aUpdateType));
+}
+
+void
+nsDocument::EndUpdate(nsUpdateType aUpdateType)
+{
+NS_DOCUMENT_NOTIFY_OBSERVERS(EndUpdate, (this, aUpdateType));
+/*
+if (mScriptLoader) {
+NS_STATIC_CAST(nsScriptLoader*,
+NS_STATIC_CAST(nsIScriptLoader*,
+mScriptLoader))->RemoveExecuteBlocker();
+}
+*/
+}

@@ -1,0 +1,46 @@
+Attribute nodes returned by XPath Evaluator no longer have child nodes
+User Agent: Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/21.0.1180.60 Safari/537.1
+
+Steps to reproduce:
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>XPath Attribute Bug</title>
+    <script type="text/javascript">
+    var doc = document.implementation.createDocument (null, 'top', null);
+    var body = document.createElement('body');
+    body.setAttribute('id', 'abc');
+    doc.documentElement.appendChild(body);
+    var aNode = doc.getElementById('abc');
+    var aExpr = "@id";
+    var xpe = new XPathEvaluator();
+    var nsResolver = xpe.createNSResolver(doc.ownerDocument == null ? doc.documentElement : doc.ownerDocument.documentElement);
+    var result = xpe.evaluate(aExpr, aNode, nsResolver, 0, null);
+    var node = result.iterateNext();    
+    var nodetext = "";
+    for(var i = 0; i < node.childNodes.length; i++)
+        { 
+        if(node.childNodes[i].nodeValue != null)
+        {
+        nodetext += node.childNodes[i].nodeValue;
+        }
+        }
+    alert(nodetext);
+    </script>
+</head>
+<body>
+
+</body>
+</html>
+
+
+Actual results:
+
+The alert outputted nothing.
+
+
+Expected results:
+
+The alert should have outputted 'abc'.

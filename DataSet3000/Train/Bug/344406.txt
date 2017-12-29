@@ -1,0 +1,74 @@
+popup blocked notification contains a button which is not skinnable
+User-Agent:       Mozilla/5.0 (Windows; U; Win98; en-US; rv:1.8.1b1) Gecko/20060712 BonEcho/2.0b1
+Build Identifier: Mozilla/5.0 (Windows; U; Win98; en-US; rv:1.8.1b1) Gecko/20060712 BonEcho/2.0b1
+
+This bug applies to Bon Echo.
+
+If you surf to a page that triggers a blocked popup (like http://www.cnn.com) a notification appears across the top of the browser content area.  The "Options" button within the notification doesn't respond to any selector (as far as I can tell, having tried several) other than a CSS rule in button.css that selects all buttons everywhere. 
+
+This button has neither a DOM element id nor element class, contributing to the problem.
+
+To make this button selectable, add an DOM element id or class such as ".messageOptionsButton".
+
+current DOM structure
+
+notification
+  hbox.notification-inner .outset
+    hbox
+      image.messageImage
+      description.messageText
+        ...
+      spacer
+      button
+        ...
+      toolbarbutton.messageCloseButton
+    browser
+      ...
+      
+
+proposed DOM structure
+
+notification
+  hbox.notification-inner .outset
+    hbox
+      image.messageImage
+      description.messageText
+        ...
+      spacer
+      button.messageOptionsButton
+        ...
+      toolbarbutton.messageCloseButton
+    browser
+      ...
+      
+My particular goal is to change the button border color to darker for higher contrast. So far everything I've tried has failed EXCEPT setting it within button.css with the following rule:
+
+button {
+  border-color: red !important;
+  border: 1px solid red !important;
+}
+
+
+which of course is bad because it selects all buttons everywhere, when I only want to select this one.
+
+These selectors don't work:
+
+.notification-inner button {
+border-color: red !important;
+border: 1px solid red !important;
+}
+
+description.messageText + spacer + button {
+color: red !important;
+border: 1px solid red !important;
+}
+
+I can select the text that's next to it with this rule:
+
+description.messageText {
+color: red !important;
+border: 1px solid red !important;
+}
+
+
+Reproducible: Always

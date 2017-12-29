@@ -1,0 +1,19 @@
+Remove / fix remnants of the forwarddisabled attribute
+This can become confusing for stylesheets, for example after bug 997131 this won't work as expected:
+> /* these are so the identity box doesn't jump around when going back/forward in the tab history */
+> /* remove: these aren't needed in FF31 */
+> window:not([chromehidden~="toolbar"]) #urlbar-container[forwarddisabled] > #urlbar-wrapper > #urlbar > #notification-popup-box[hidden] + #identity-box > #page-proxy-favicon,
+> window:not([chromehidden~="toolbar"]) #urlbar-container[forwarddisabled][switchingtabs] + #urlbar-container > #urlbar > #notification-popup-box[hidden] + #identity-box > #page-proxy-favicon,
+> /* end remove */
+> window:not([chromehidden~="toolbar"]) #urlbar-wrapper > #forward-button[disabled] + #urlbar > #notification-popup-box[hidden] + #identity-box > #page-proxy-favicon {
+> 	-moz-margin-start: 0;
+> }
+
+That's because, even though the forwarddisabled attribute is no longer set or actually used, #urlbar-container is initialized with it:
+http://mxr.mozilla.org/mozilla-central/source/browser/base/content/browser.xul#642
+
+Also, a couple of leftovers that will be affected when removing that attribute:
+http://mxr.mozilla.org/mozilla-central/source/browser/themes/osx/browser.css#3382
+http://mxr.mozilla.org/mozilla-central/source/browser/themes/windows/browser.css#2277
+
+Dao, once again I'm CC'ing you directly because you were assigned bug 997131.

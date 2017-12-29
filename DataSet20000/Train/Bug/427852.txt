@@ -1,0 +1,75 @@
+embed and Play() function works in 2.0, not in 3.0 Beta 5
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.13) Gecko/20080311 Firefox/2.0.0.13
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.13) Gecko/20080311 Firefox/2.0.0.13 and 3.0 Beta 5
+
+We have a sound which plays every time the page reloads. It works in 2.0.0.13, but not in 3.0 Beta 5. I've written a short program which is included below. You will need to substitute your own .wav file in the embed statement. Any sound will do.
+
+Reproducible: Always
+
+Steps to Reproduce:
+load and run the following program (after first substituting a .wav file name and path (in the "embed" statement) that you have on your system):
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+	<head>
+	<title>Test Sound</title>
+
+	<SCRIPT LANGUAGE="JavaScript">
+
+        function setfocus() {
+
+            // see if this is a Firefox browser
+            var FIRE = navigator.userAgent.indexOf("Mozilla");
+
+            if(FIRE > -1) {
+
+                // the sound file is "embeded"
+			    var soundname = "sready";
+			    var sound = eval("document." + soundname);
+
+                // alert (sound.name);
+
+                try {
+                   sound.Stop();
+                   sound.Rewind();
+                } catch (e) {
+                   // A player that does not support Stop and Rewind
+                }
+
+                try {
+                      sound.DoPlay();
+                 } catch (e) {
+                      // If DoPlay does not work, call Play.
+                      // This works for all other audio plug-ins.
+                      sound.Play();
+                 }
+            }
+
+            return;
+        }
+
+    </script>
+
+	</head>
+	
+    <body bgcolor="white" onload="setfocus()">
+
+    Test sound.<P>
+
+    <embed src="blip.wav" width="0" height="0" autostart="false" name="sready" enablejavascript="true">
+	
+	</body>
+
+</html>
+
+
+An oddity:
+
+1. If you include an "alert" statement in the javascript (see commented statement above) - i.e. if you uncomment it, the sound plays after you click on the OK.
+Actual Results:  
+When I uncomment the "alert", the routine runs and the sound plays using the sound.Play() function. If I comment it again, or if I move the alert to a point after the sound.Play() function, the sound doesn't play.
+
+Expected Results:  
+When the page loads, the "onload" runs the Javascript function which plays the sound once. i.e. there is no "loop". Since the above program runs correctly in FF 2.0.0.13, I would expect it to run in FF 3 Beta 5, only it doesn't.  I also would not expect an alert, inserted ahead of the Play() to have any effect at all on the outcome.
+
+As noted, it should have played the sound 1 time since the "loop" is not specified.

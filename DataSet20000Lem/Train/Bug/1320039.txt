@@ -1,0 +1,19 @@
+Pocket extension unnecessarily expose it messaging interface to web page
+Created attachment 8814034
+Proof of concept webpage
+
+Note: I am reporting this issue here rather than to Pocket because Pocket is an integral part of Firefox and cannot be disabled or removed by regular means.
+
+The bubble displayed by the Pocket toolbar button is actually an <iframe> loading from either about:pocket-signup or about:pocket-saved. In order to communicate with that frame the Pocket extension register event listener on browser.xul's document, accepting untrusted events. The event listener don't do anything to verify the origin of the event so that event bubbling up from the browser's content area will be processed a well.
+
+Steps to reproduce (I tested with Firefox 53.0a1 nightly 2016-11-23 on macOS 10.12):
+
+1. Make sure that E10S is disabled (with E10S event from content won't bubble up to the browser).
+2. Click the Pocket button to make sure that the extension is initialized. It doesn't matter whether anything happens after that, you don't need to sign up with Pocket.
+3. Now open the attached webpage in Firefox and click the "Open about:preferences with Sync tab selected".
+
+This button will open about:preferences#sync page, something that web page normally cannot do. Pop-up blocker doesn't affect this, so website can open any number of pop-up at any time this way. Security check don't apply either so opening arbitrary file:///, chrome:// or about: URLs is possible.
+
+Note that this only abuse "openTabWithUrl" message that Pocket listens to. There is a number of other message listener which might also have abuse potential - e.g. "deleteItem" message allows deleting item from Pocket. Note also that the website can detect when it attack wa successful because the Pocket extension will remove the event target from the page.
+
+Also, this issue is completely avoidable. There is only one Pocket frame in the browser document, the event listener could be registered directly on that iframe element rather than on the document - this would make sure that no event from other source will be received.

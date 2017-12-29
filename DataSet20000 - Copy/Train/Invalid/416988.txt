@@ -1,0 +1,17 @@
+Backup of bookmarks to HTML on shutdown does too many queries
+During implementation of bug 385245 with logging of SQL statements turned on I have see thousands of queries to be performed on shutdown. This was slowing Firefox considerably. I have found that there are 3 to 4 queries made for each bookmark when saving it to the backup file:
+
+- Get favicon (mDBGetURL)
+- Get keyword (mDBGetKeywordForBookmark)
+- Has annotation (mDBGetAnnotationFromItemId) 
+- Get annotation (mDBGetAnnotationFromItemId)
+
+With very low effort it should be possible to avoid the duplicated call to mDBGetAnnotationFromItemId (one to check whether data is there and another to read the data). This means 3 queries per bookmark. Bookmarks are written recursively, this means that it should be possible to read the keywords, annotations and favicons from database for all items inside a folder and store them in a folder level cache.
+
+This means reduction from:
+  3*(select count(*) from moz_bookmarks)
+
+To:
+  3*(select count(distinct parent) from moz_bookmarks)
+
+With my real life bookmarks this means reduction down to 17% of the original number of queries. We could reduce it even down to 3 queries, but this would require to load all the favicons, keywords and annotations to memory. If we knew that the average number of bookmarks is not big, it would be worth doing. However, we should then decide about the level of the cache based on the number of bookmarks.

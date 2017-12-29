@@ -1,0 +1,8 @@
+social.reload-worker ha a race issue with reloading sidebar
+I'm not sure that I can safely use the 'social.reload-worker' function without breaking any currently loaded sidebar. When the worker reloads all the connection with the sidebar are lost (the port is closed). To remedy this I thought I'd either reload the sidebars, or tell them to reconnect, but there is no appropriate order in which that can be done safely.
+
+If I tell the sidebar to reload they will reload, but I can't control the order of that reload with respect to the worker reload. So I have no idea if they'll form an appropriate connection to the worker. The same thing happens if I merely send a message telling the sidebar to reload.
+
+Now, the work also can't fix the problem since it can't discover workers. It relies on the initial connection message to even know a sidebar exists. Thus when it reloads it ha no knowledge of the existing sidebars.
+
+As the 'social.reload-worker' is specified now I don't see any method by which I could alleviate potential race conditions. In my quick test I happen to get the right loading order, but there's nothing guaranteeing that. It would be better if I 'reload' would actually restart the provider completely, including the sidebars.

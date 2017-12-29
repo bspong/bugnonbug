@@ -1,0 +1,52 @@
+Crash? 62effdd4 77e8b1bd RPCRT4!I_RpcAsyncSetHandle+0xf1
+User-Agent:       Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; InfoPath.1; .NET CLR 2.0.50727; .NET CLR 3.0.04506.648; .NET CLR 3.5.21022)
+Build Identifier: Firefox 3 RC2
+
+My first time using WinDbg, with child monitoring. I'm not sure if the following is useful.
+I tried the 'd' command, which seemed to crash Firefox 3 RC 2:
+
+[...]
+  hFile: 2bc  base: 77dd0000
+  hFile: 2d4  base: 77e70000
+  hFile: 31c  base: 77f10000
+  hFile: 310  base: 77f60000
+  hFile: 584  base: 77fe0000
+  hFile: 288  base: 7c800000
+  hFile: 39c  base: 7c900000
+  hFile: 308  base: 7c9c0000
+*** Exit process
+Process exited: c98.bb8, code E06D7363
+eax=018be3a8 ebx=00000001 ecx=2b103240 edx=2b103170 esi=2b103240 edi=00000000
+eip=77e8a95b esp=62effdc4 ebp=62effdd4 iopl=0         nv up ei pl nz na po nc
+cs=001b  ss=0023  ds=0023  es=0023  fs=003b  gs=0000             efl=00010202
+RPCRT4!I_RpcAsyncSetHandle+0xf1:
+77e8a95b ff30            push    dword ptr [eax]      ds:0023:018be3a8=000006cc
+1:027> kp
+ChildEBP RetAddr  
+WARNING: Stack unwind information not available. Following frames may be wrong.
+62effdd4 77e8b1bd RPCRT4!I_RpcAsyncSetHandle+0xf1
+62effdec 77e7bb03 RPCRT4!I_RpcReceive+0x2ed
+62effe20 77e76784 RPCRT4!NdrConformantArrayFree+0x224
+62efff80 77e76c22 RPCRT4!I_RpcBCacheFree+0x14c
+62efff88 77e76a3b RPCRT4!I_RpcBCacheFree+0x5ea
+62efffa8 77e76c0a RPCRT4!I_RpcBCacheFree+0x403
+62efffb4 7c80b50b RPCRT4!I_RpcBCacheFree+0x5d2
+62efffec 00000000 kernel32+0xb50b
+1:027> !analyze -v
+Last event: c98.bb8: Exit process 1:c98, code e06d7363
+  debugger time: Tue Jun 24 08:21:14.207 2008 (GMT+2)
+
+
+Reproducible: Didn't try
+
+Steps to Reproduce:
+1. WinDbg Firefox 3 RC2
+2. Wait long time for big session to restore. (Using built-in session handler.)
+3. Check out 'd' in WinDbg 6.9
+Actual Results:  
+Firefox disappeared and even WinDbg looks confused about it.
+
+Expected Results:  
+No crash, i think..
+
+Feel free to close this bug if invalid. (And tell me why it is, please.)

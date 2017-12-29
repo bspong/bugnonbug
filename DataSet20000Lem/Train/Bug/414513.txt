@@ -1,0 +1,37 @@
+determine proper chunk size
+determine proper chunk size
+
+from faaborg's quoted research we know that 100 m is the max time we can not
+respond before people notice lag.
+
+sane plan:
+
+1) figure out an acceptable machine
+2) on that machine, figure out how many place we can get through in 100ms, using a search term that doesn't match anything, and where all place have bookmark (let's assume 1 bookmark, although multiple bookmark per place is valid.)
+
+use that a our default chunk size in our .js file.
+
+crazy plan #1:
+
+we can add timing code into the product that change the chunk size
+dynamically.
+
+haven't fully thought this out, but say on machine X we determine that
+AutoCompleteFullHistorySearch() with chunk size of 100 take me 10 ms. Clearly
+chunk size on that fast machine can be more.
+
+but on machine y, chunk size of 100 take me 250 ms. that would be bad times,
+and we need to do less.
+
+I'm suggesting we add the timing code (we have something with good enough
+precision, PR_Interval something right?), and keep track of the high water mark
+of how long AutoCompleteFullHistorySearch() take a member variable.
+
+then, the next time we call nsNavHistory::StartSearch(), if high water mark is
+> 100 ms, we decrease the pref for chunk size. if high mater mark < 100 ms, we
+increase it.
+
+le crazy plan #3:
+
+alternatively, there might be a way (through PR_SysInfo or something else?) to
+figure out the RAM / CPU of the machine, use that to determine if chunk size should be (for example) 50, 100 or 200.

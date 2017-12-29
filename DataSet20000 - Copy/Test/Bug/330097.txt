@@ -1,0 +1,86 @@
+Cannot call javascript function defined in child iframe when the function is called from parent window.
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.0.1) Gecko/20060111 Firefox/1.5.0.1
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.0.1) Gecko/20060111 Firefox/1.5.0.1
+
+When I try to call a javascript function defined in the child iframe from the parent window, the call fails and the javascript console indicates that the function "is not a function". However, it fails only when the javascript function is called from within <script></script> block within body of the parent window.
+
+This configuration does not work and the javascript console reports the function testfunc to be "not a function".
+
+Content parent.html:
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<script language="javascript">
+function callfunc()
+{
+	// Both of these supposedly work.
+	top.frames["child"].testfunc();
+	document.getElementById("child").contentWindow.testfunc();
+	return;
+}
+</script>
+</head>
+<body>
+	<iframe name="child" id="child" src="child.html"></iframe>
+	<script language="javascript">
+	//callfunc();
+	</script>
+</body>
+</html>
+</script>
+
+Content of child.html:
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<script language="javascript">
+function testfunc()
+{
+	alert("testfunc is called");
+}
+</script>
+</head>
+<body>
+	This is the content of iframe.
+</body>
+</html>
+
+However, this configuration works. Alert window "testfunc is called" is printed twice.
+
+Content of parent.html:
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<script language="javascript">
+function callfunc()
+{
+	// Both of these supposedly work.
+	top.frames["child"].testfunc();
+	document.getElementById("child").contentWindow.testfunc();
+	return;
+}
+</script>
+</head>
+<body onload="callfunc()">
+	<iframe name="child" id="child" src="child.html"></iframe>
+</body>
+</html>
+</script>
+
+Content of child.html: unchanged.
+
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.Recreate parent.html and child.html in the same directory.
+2.Load up parent.html in a Firefox browser.
+3.Open up javascript console to see the errors in the case of failure, or see two alert pop-up windows shown in the case of success.
+
+Actual Results:  
+In the case of failure, nothing happens and javascript console reports the called function "is not a function". In the case of success, alert windows are displayed twice.
+
+Expected Results:  
+Alert windows should always be displayed in either case.

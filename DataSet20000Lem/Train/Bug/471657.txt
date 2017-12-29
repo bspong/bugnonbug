@@ -1,0 +1,38 @@
+completely different behavior regarding certificate and trust
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; de-DE; rv:1.9.0.4) Gecko/2008111317 Ubuntu/8.04 (hardy) Firefox/3.0.4
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; de-DE; rv:1.9.0.4) Gecko/2008111317 Ubuntu/8.04 (hardy) Firefox/3.0.4
+
+A radical change in how the browser handle ssl-certificates, connection to ssl-enabled site and how the concept of trust in general should be handled and communicated to the user
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Try to visit a Website with a self-signed or otherwise unknown certificate
+
+Actual Results:
+It will throw a bunch of error message at me suggesting that the site is insecure and the owner of that site is somewhere between non-serious and criminal.
+
+Expected Results:
+Let me surf the site without *any* modal warning at all just a it would let me visit a http site without warning a long a it doesn't detect a *change* of the certificate from remembered previous visit or an invalidity of the certificate itself. Treat site with new untrusted certificate exactly like http site because they are in no way le insecue than http sites.
+
+As you might already know, the whole certificate trust model used in web browser today wa rendered completely useless, publicly announced yesterday afternoon (30.12.2008, 15:15 MEZ at the 25c3 in Berlin)
+
+I want to propose the following new and radically different behavior regarding the handling of ssl-enabled websites, certificate and trust and trustworthiness and the communication of the underlying concept and relationship via the UI and it behavior in their very natural meaning, stop calling built-in certificate chain trustworthy (because they obviously are not) and instead of making any usage of this disfunctinal automatic trust-machine give the user exactly two choices: Explicitely trust a given certificate by his very own will or just do nothing and treat the site like any other untrustworty site and let him use the site like he would use just any other http site.
+
+The new behavior would basically be the folloing:
+
+* The certificate store initially is completely empty, consequently NO built-in root CAs at all.
+
+* use any unknown http site just like if they were http sites, don't pop up any warning because although there there is no evidence that the site is valid there is also no evidence that the site is forged. I fact there is no evidence for anything at all, just like it is the case with http. So treat it like http.
+
+* store the hash of seen certificate with the domain name they belong to somewhere to be able to detect sudden changes.
+
+* If a previosly visited site change it certificate pop up a modal warning that explains this fact in clear understandable words.
+
+* If the certificate is invalid (expiration, domain name) pop up a modal warning that explains the fact in clear understandable words.
+
+* Dont put any possible interpretation or wild speculation into the warning messages, they are most likely wrong and misleading, just write the hard fact in clear and understandable words, the user will be able to draw his own conclusion if he is confronted with hard fact instead of wild speculations.
+
+* allow the user to OPTIONALLY trust the identity of a certain certificate, not to circumvent any error message a it is now but to gain additional security if he WANTS it. This will keep the number of certificate in the certificate store very small and the average user will now for the first time in is life have a chance to finally understand whats going on there and what this is all about.
+
+* Prominently give trusted site a different appearance in the address bar, but only distinguish between normal site (http and https) and trusted site (manually trusted cert) and nothing else.

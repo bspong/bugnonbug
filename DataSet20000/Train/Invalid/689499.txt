@@ -1,0 +1,40 @@
+CORS preflight doesn't send Cookie when setRequestHeader is used.
+User Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_1) AppleWebKit/535.1 (KHTML, like Gecko) Chrome/14.0.835.186 Safari/535.1
+
+Steps to reproduce:
+
+Step 1:
+Open the URL http://ucommbieber.unl.edu/CORS/cors.php
+
+In the JS console, set some cookie.
+
+Step 2:
+Go to www.google.com (or anything) and play with the following code:
+
+var invocation = new XMLHttpRequest();  
+var url = 'http://ucommbieber.unl.edu/CORS/cors.php';  
+invocation.open('POST', url, true);
+invocation.withCredentials = "true"; 
+//invocation.setRequestHeader('Content-Type', 'application/json');  // TOGGLE ME!!!!!
+invocation.send(); 
+
+
+
+Actual results:
+
+Notice that with setRequestHeader commented out, the call goes through and the cookie you set is sent along with the POST request and the OPTIONS preflight (granted this host just returns nothing)
+
+Now, uncomment the setRequestHeader line.
+
+The OPTIONS preflight is NOT sending the cookie you set.
+
+
+Expected results:
+
+This is a testcase of a problem I'm having in my app.
+
+I basically can't seem to get FF to do CORS withCredentials, sending the cookie along,  setRequestHeader is called (I know the spec calls for preflighting whenever a non-std header is set).
+
+In my personal app, I'm trying to send along a login cookie and when the OPTIONS preflight doesn't send that cookie, my app responds with a 302 to login. 
+
+Happy to help debug this with anyone =)

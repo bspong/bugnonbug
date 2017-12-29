@@ -1,0 +1,25 @@
+Intermittent browser-chrome leak of 1 nsCacheEntry and 1 nsStringBuffer
+Calling this front-end rather than netwerk because bz took a peek at the log, and was flabbergasted by how something browserly was hanging onto things so we would up with 500-odd domwindows to get rid of at shutdown, including apparently the one that was still desperately clinging to this nsCacheEntry
+
+http://tinderbox.mozilla.org/showlog.cgi?log=Firefox/1305941364.1305945463.28696.gz&fulltext=1
+Rev3 WINNT 5.1 mozilla-central debug test mochitest-other on 2011/05/20 18:29:24
+s: talos-r3-xp-013
+
+(toward the start of the shutdown spew)
+--DOCSHELL 07CFEBF8 == 11
+--DOCSHELL 033C9D10 == 10
+WARNING: DeactivateEntry: unable to bind active entry
+: file e:/builds/moz2_slave/cen-w32-dbg/build/netwerk/cache/nsCacheService.cpp, line 2264
+--DOCSHELL 03C361F0 == 9
+--DOCSHELL 19B5F098 == 8
+--DOCSHELL 037D8B90 == 7
+--DOCSHELL 23833698 == 6
+--DOCSHELL 235F9388 == 5
+--DOCSHELL 2277BD40 == 4
+--DOCSHELL 2316C4E0 == 3
+--DOCSHELL 23720630 == 2
+--DOMWINDOW == 528 (18121E78) [serial = 5997] [outer = 2143C460] [url = about:blank]
+...
+TEST-UNEXPECTED-FAIL | automationutils.processLeakLog() | leaked 104 bytes during test execution
+TEST-UNEXPECTED-FAIL | automationutils.processLeakLog() | leaked 1 instance of nsCacheEntry with size 96 bytes
+TEST-UNEXPECTED-FAIL | automationutils.processLeakLog() | leaked 1 instance of nsStringBuffer with size 8 bytes

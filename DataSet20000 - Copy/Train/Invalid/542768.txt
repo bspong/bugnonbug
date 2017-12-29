@@ -1,0 +1,23 @@
+Firefox hangs when dispatching events to threads on interval
+User-Agent:       Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; en-US; rv:1.9.1.7) Gecko/20091221 Firefox/3.5.7
+Build Identifier: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; en-US; rv:1.9.2) Gecko/20100115 Firefox/3.6
+
+We have an extension that does processing on an interval and we're using a thread pool (see https://developer.mozilla.org/en/The_Thread_Manager) to make sure our processing doesn't affect performance. Since the upgrade to Firefox 3.6, presence of Firebug alongside our extension causes deadlocks. 
+
+To isolate and reproduce the problem, we wrote a very small extension that lists in the browser error console, every 5 seconds, the files on your desktop with latest modifications time. That extension is available here: http://dokdok.com/threadExt.xpi
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Have an extension dispatch events to a thread in a setInterval (see submitted extension)
+2. Make sure that Firefox profile also has Firebug installed
+2. Browse, open tabs, scroll, play around with window size
+Actual Results:  
+Firefox hangs indefinitely. gdb shows a couple threads stuck at semaphore_wait_signal_trap and semaphore_timedwait_signal_trap. The browser UI is not responding anymore, the only thing to do is to force quit the Firefox process.
+
+Expected Results:  
+... keep running :)
+
+This was reproduced on Firefox 3.6 with Firebug 1.4 and Firebug 1.5 on Mac OS X 10.6 and Ubuntu 9.10 (less frequent). It doesn't happen with FF3.5 and disabling the new TraceMonkey for chrome scripts (javascript.options.jit.chrome config option) doesn't solve the issue. 
+
+Removing Firebug eliminates the problem. Logged http://code.google.com/p/fbug/issues/detail?id=2770 with discussion that lead to this bug request.

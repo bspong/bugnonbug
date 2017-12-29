@@ -1,0 +1,43 @@
+Firefox will not show a frame that ha 'ad' surrounded by number (i.e. 1ad1)
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7) Gecko/20040615 Firefox/0.9
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7) Gecko/20040615 Firefox/0.9
+
+I first noticed this when a phpMyAdmin (on one of the site I handle) wouldn't
+display the left frame. I thought it wa phpMyAdmin but couldn't find an
+answer. So I decided to copy the source and see if changing thing will work.
+I discovererd that the two culprite frame had an src of
+"left.php?something&amp;hash=ad0209ontblah". By deleting each character and
+reloading, the ad0 turned out to always cause the problem. So I created another
+page just to test this hypothesis:
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Frameset//EN"
+"http://www.w3.org/TR/html4/frameset.dtd">
+<html>
+<head>
+<title>phpMyAdmin 2.5.2-pl1 - www.ckiweb.com</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" >
+</head>
+<frameset cols="150, *">
+<frame src="1ad1.php" >
+<frame src="test2.php" >
+</frameset>
+</html>
+I verified that it wa valid HTML (phpMyAdmin us XHTML and I had that
+validated too). Running this page only show test2.php. 1ad1.php isn't even
+called from the server (LiveHTTPHeaders told me that). I have also changed that
+src to left.php?1ad1 and I get the same problem. The number can change and
+extra character can be added around the number but 'ad' ha to be surrounded
+by at least one number on each side. (I believe the error will occur with 'ad'
+surrounded by anything but character i.e. ?ad&)
+
+Another URL with XHTML and the 'ad' inside the GET is
+http://students.cs.byu.edu/~tdr32/test.php
+
+Reproducible: Always
+Steps to Reproduce:
+1. View Web Page.
+Actual Results:
+In test1.php, only the right frame load
+In test2.php, the left-top frame won't load
+
+Expected Results:
+All the frame should load

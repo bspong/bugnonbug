@@ -1,0 +1,61 @@
+New API: MarkupView customization
+I tried to extend/customize the existing MarkupView (used to render content of the Inspector panel) and append (as a test) an xpath tooltip for every element.
+
+There isn't currently a way how to do it properly and so here is a suggestion for new hooks.
+
+Use case:
+- Append a tooltip for ever element in the Inspector panel
+- modify/replace generated content that is used to render individual DOM node in the panel
+
+API:
+
+1) Firing an event when rendering happens
+Rendering of the MarkupView is done through MarkupView.template() method. This method get proper template from markup-view.xhtml, clone the DOM structure and fill it with passed data (using Templater.jsm)
+
+This method could fire an event that can be handled by extension to modify generated DOM structure. See an example:
+
+template: function(aName, aDest, aOptions={stack: "markup-view.xhtml"}) {
+let node = this.doc.getElementById("template-" + aName).cloneNode(true);
+node.removeAttribute("id");
+template(node, aDest, aOptions);
+
+// Fire a new event
+this._inspector.emit("render-node", node, aName, aDest, aOptions);
+
+return node;
+},
+
+It's fired through the InspectorPanel object, since it might be a bit more stable API to handle event on the panel than on object that represent it internal structure.
+
+
+2) Registering listener to the Inspector panel
+In order to handle the "render-node" event, extension need to register a listener to the InspectorPanel soon enough - before any rendering happens. Ideally just after the panel's constructor is executed and panel instance available.
+
+It isn't easy to handle this moment since panel are instantiated within Tool.build method and the reference is not even returned from this method. Return value of the method is a promise that might be resolved too late (it actually is resolved too late) and extension might miss some events.
+
+I can see the following scenario a a solution:
+
+1) The build method return directly a reference to the instantiated panel object.
+2) Toolbox.loadTool() fire an event and pass the panel object to it.
+3) Toolbox.loadTool() method call panel.open()
+
+See an example:
+
+let panel = definition.build(iframe.contentWindow, this);
+
+// Extensions can handle this event and register any
+// listener to created panel (or other initialization step that should
+// happen at the very beginning).
+this.emit(id + "-build", panel);
+
+let built = panel.open();
+promise.resolve(built).then((panel) => {
+...
+// An existing event, fired when panel's iframe is loaded.
+this.emit(id + "-ready", panel);
+...
+);
+
+
+Thoughts?
+Honza

@@ -1,0 +1,38 @@
+make "most visited" query not reporting unvisited bookmark
+Created attachment 302105
+patch
+
+Actually after a private clear data "most visited" query is still populated by unvisited bookmartks, that is because it rely on visit_count that is not always correcdt and is not resetted on cpd (Bug 416313).
+We can't use the real count(*) from moz_historyvisits since it would make the query too slow on large history (i'm testing with about 130000 entry at the moment).
+
+this query try to exclude at least item that don't have any visit.
+From my test we loose about 2-4ms, a more than acceptable timing, but we could make this faster (but le correct) removing the check for visit_type NOT IN (0,4).
+
+final query for timing test is:
+
+SELECT h.id, h.url, h.title, h.rev_host, h.visit_count,
+(SELECT visit_date FROM moz_historyvisits WHERE place_id = h.id
+AND visit_type NOT IN (0,4) ORDER BY visit_date DESC LIMIT 1)
+, f.url, null, null
+FROM moz_places h
+LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id WHERE
+h.id IN (SELECT p.id FROM moz_places p WHERE p.hidden <> 1
+AND EXISTS (SELECT id FROM moz_historyvisits WHERE
+place_id = p.id AND visit_type NOT IN(0,4) LIMIT 1)
+ORDER BY p.visit_count DESC LIMIT 10) ORDER BY h.visit_count DESC
+;
+
+or without visit_type check
+
+
+SELECT h.id, h.url, h.title, h.rev_host, h.visit_count,
+(SELECT visit_date FROM moz_historyvisits WHERE place_id = h.id
+AND visit_type NOT IN (0,4) ORDER BY visit_date DESC LIMIT 1)
+, f.url, null, null
+FROM moz_places h
+LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id WHERE
+h.id IN (SELECT p.id FROM moz_places p WHERE p.hidden <> 1
+AND EXISTS (SELECT id FROM moz_historyvisits WHERE
+place_id = p.id LIMIT 1)
+ORDER BY p.visit_count DESC LIMIT 10) ORDER BY h.visit_count DESC
+;

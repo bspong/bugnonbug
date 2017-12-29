@@ -1,0 +1,146 @@
+after a POST, server sends valid redirect but firefox spins, then show apache "Bad request" page. (enctype="multipart/form-data")
+User-Agent: Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0; SLCC1; .NET CLR 2.0.50727; Media Center PC 5.0; .NET CLR 3.0.04506; .NET CLR 1.1.4322)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.9.1b2pre) Gecko/20081028 Minefield/3.1b2pre
+
+(Sorry, I didn't specify a url because one must log into the site a an administrator to duplicate the problem.)
+After a multipart POST, the server sends a redirect message which other browser (like IE, Chrome, etc, and even Firefox 2) respond correctly to, and just redirect. However, firefox 3.0.3 (and minefield 3.1b2pre nightly, which I just downloaded today [10/28/2008]) appears to just spin (spinner is doing it thing) and hang(nothing happens). After a long wait (perhaps a full minute or two), I see a page come up that say "Bad Request\n Your browser sent a request that this server could not understand." I assume this is an apache error message.
+
+I have access to the site's code, so I tried both 301 and 302 requests, and get the same results.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Hit "Submit" in a multi part form
+2. Wait.
+
+Actual Results:
+Using Live HTTP headers, I grabbed the request AND response headers. I have pasted them here:
+
+http://bishops.sytes.net/d/node/6/import
+
+POST /d/node/6/import HTTP/1.1
+Host: bishops.sytes.net
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Accept-Language: en-us,en;q=0.8,en-ca;q=0.5,es-mx;q=0.3
+Accept-Encoding: gzip,deflate
+Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7
+Keep-Alive: 300
+Connection: keep-alive
+Referer: http://bishops.sytes.net/d/node/6/import
+Cookie: SESS493c9560383ccbcb12fdb4cb1dd4dd10=3bvbeqf7stcj9c8f3fs0i4re65
+Content-Type: multipart/form-data; boundary=---------------------------26679786429421
+Content-Length: 2737
+-----------------------------26679786429421
+Content-Disposition: form-data; name="taxonomy[2]"
+
+
+-----------------------------26679786429421
+Content-Disposition: form-data; name="parent[3]"
+
+4
+-----------------------------26679786429421
+Content-Disposition: form-data; name="files[acidfreeupload0]"; filename=""
+Content-Type: application/octet-stream
+
+
+-----------------------------26679786429421
+Content-Disposition: form-data; name="acidfreeupload0name"
+
+
+-----------------------------26679786429421
+Content-Disposition: form-data; name="files[acidfreeupload1]"; filename=""
+Content-Type: application/octet-stream
+
+
+-----------------------------26679786429421
+Content-Disposition: form-data; name="acidfreeupload1name"
+
+
+-----------------------------26679786429421
+Content-Disposition: form-data; name="files[acidfreeupload2]"; filename=""
+Content-Type: application/octet-stream
+
+
+-----------------------------26679786429421
+Content-Disposition: form-data; name="acidfreeupload2name"
+
+
+-----------------------------26679786429421
+Content-Disposition: form-data; name="files[acidfreeupload3]"; filename=""
+Content-Type: application/octet-stream
+
+
+-----------------------------26679786429421
+Content-Disposition: form-data; name="acidfreeupload3name"
+
+
+-----------------------------26679786429421
+Content-Disposition: form-data; name="files[acidfreeupload4]"; filename=""
+Content-Type: application/octet-stream
+
+
+-----------------------------26679786429421
+Content-Disposition: form-data; name="acidfreeupload4name"
+
+
+-----------------------------26679786429421
+Content-Disposition: form-data; name="serverpath"
+
+C:\Documents and Settings\Eddie\My Documents\My Pictures\##test_delete_me3
+-----------------------------26679786429421
+Content-Disposition: form-data; name="recursive"
+
+1
+-----------------------------26679786429421
+Content-Disposition: form-data; name="op"
+
+Import
+-----------------------------26679786429421
+Content-Disposition: form-data; name="form_token"
+
+62fa0417484f60f9703f86fa89fae687
+-----------------------------26679786429421
+Content-Disposition: form-data; name="form_id"
+
+acidfree_mass_import
+-----------------------------26679786429421
+Content-Disposition: form-data; name="pathauto_perform_alias"
+
+1
+-----------------------------26679786429421
+Content-Disposition: form-data; name="files[upload]"; filename=""
+Content-Type: application/octet-stream
+
+
+-----------------------------26679786429421
+Content-Disposition: form-data; name="attach-url"
+
+http://bishops.sytes.net/d/upload/js
+-----------------------------26679786429421
+Content-Disposition: form-data; name="vid"
+
+
+-----------------------------26679786429421--
+
+HTTP/1.x 301 Moved Permanently
+Date: Wed, 29 Oct 2008 04:29:34 GMT
+Server: Apache/2.2.4 (Win32) mod_ssl/2.2.4 OpenSSL/0.9.8d PHP/5.2.2
+X-Powered-By: PHP/5.2.2
+Expires: Sun, 19 Nov 1978 05:00:00 GMT
+Last-Modified: Wed, 29 Oct 2008 04:29:34 GMT
+Cache-Control: store, no-cache, must-revalidate, post-check=0, pre-check=0
+Location: http://bishops.sytes.net/d/pics
+Content-Length: 0
+Keep-Alive: timeout=5, max=100
+Connection: Keep-Alive
+Content-Type: text/html; charset=utf-8
+
+Expected Results:
+Just redirect to another page, like IE, Chrome, and Firefox 2 correctly do.
+
+I wa able to reproduce the bug when switching to a test profile that ha NO extension installed, a well a in my default profile which ha many extension installed.
+
+Reproducible in Firefox 3.0.3 and latest nightly, but NOT reproducible in Firefox 2.
+
+I'm actually not sure exactly what cause the bug. Similar redirects (but with no POST before hand) seem perfectly fine. The only thing different about this page load, a far a I can tell, is that it is preceeded by a multipart POST.

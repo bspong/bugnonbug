@@ -1,0 +1,43 @@
+firefox try to load incorrect url if urlbar autocomplete suggests first-two-letters-duplicated host when input url contains % encoded component
+Created attachment 8837222
+screencast firefox 51.0
+
+the first-two-letters-duplicated host bug ha already been described in bug 767364
+but it is even worse starting from 51.0
+
+
+Steps to Reproduce:
+0. start a local http server on port 80
+1. open firefox and load http://localhost/a=&6
+2. focus on urlbar and delete `&6`
+3. input `%266`
+4. delete `%266`
+5. input `&6`
+6. move input cursor between `&` and `6`
+7. delete `&`
+8. input `%2`
+9. press enter
+
+
+Expected Result:
+1. after 3rd step
+urlbar inline autocomplete show "localhost/a=&6"
+first entry in urlbar autocomplete dropdown list is "localhost/a=&6 - Visit"
+
+2. after 8th step
+first entry in urlbar autocomplete dropdown list is "localhost/a=&6 - Visit"
+
+3. after 9th step
+firefox load http://localhost/a=%26
+
+
+Actual Result:
+1. after 3rd step
+urlbar inline autocomplete show "lolocalhost/a=&6"
+first entry in urlbar autocomplete dropdown list is "lolocalhost/a=&6 - Visit"
+
+2. after 8th step
+first entry in urlbar autocomplete dropdown list is "lolocalhost/a=&6 - Visit"
+
+3. after 9th step
+firefox try to load http://lolocalhost/a=&6

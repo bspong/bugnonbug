@@ -1,0 +1,50 @@
+Browser lock up
+Hello,
+
+I wa browsing from a link in http://pensadoresbrasileiros.home.comcast.net/
+pointing to http://aletraescarlate.blig.ig.com.br/inicial.html
+and the browser froze up.
+
+I then fired up Visual Studio's debug and noticed the cpu wa trapped in the
+following loop:
+
+Point A:
+
+00627FF6 8B 4B 28 mov ecx,dword ptr [ebx+28h]
+00627FF9 8B 43 08 mov eax,dword ptr [ebx+8]
+00627FFC C1 E9 0C shr ecx,0Ch
+00627FFF EB 0A jmp 0062800B
+00628001 3B C6 cmp eax,esi
+00628003 74 12 je 00628017
+00628005 89 45 F4 mov dword ptr [ebp-0Ch],eax
+00628008 8B 40 20 mov eax,dword ptr [eax+20h]
+0062800B 49 dec ecx
+0062800C 79 F3 jns 00628001
+0062800E 8B 1B mov ebx,dword ptr [ebx]
+00628010 8D 47 38 lea eax,[edi+38h]
+00628013 3B D8 cmp ebx,eax
+00628015 75 DF jne 00627FF6
+
+at this point it went back to point A.
+
+Then I forced it to proceed to the code below instead of executing jne 00627FF6
+and I wa able to regain control of the browser and close it.
+
+00628017 8D 47 38 lea eax,[edi+38h]
+0062801A 3B D8 cmp ebx,eax
+0062801C 75 0A jne 00628028
+0062801E B8 05 40 00 80 mov eax,80004005h
+00628023 E9 76 01 00 00 jmp 0062819E
+00628028 8D 47 38 lea eax,[edi+38h]
+0062802B 3B D8 cmp ebx,eax
+0062802D 89 45 F0 mov dword ptr [ebp-10h],eax
+00628030 0F 84 2E 01 00 00 je 00628164
+
+After that, I wa able to switch to any of the other tab I had open (about 5)
+except the one that triggered the problem. It did not browse anymore or respond
+to other command such a bookmark/save page, so I closed the browser.
+
+Hope this helps.
+
+Regards,
+Fernando

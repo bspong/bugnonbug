@@ -1,0 +1,6 @@
+Display console API messages from shared or service workers to the web console
+Bug 1058644 enabled console API calls from shared and service workers. As these messages come from workers, they don't have any window ID associated with them. Web developers however, would expect to see them in the web console, as that is where they see all messages from their app.
+
+These worker messages come with the "SharedWorker" or "ServiceWorker" inner ID (like the "jsm" ID used by Console.jsm) and the filename of the worker as the outer ID. The idea is that the web console would show these messages iff the worker filename matches one of the scripts loaded in the page.
+
+That would require the web console to have some code that asks the debugger for the list of scripts, or obtain it directly from the thread actor. I think the first option is preferable. The console currently directly adds the content window as a debuggee in order to perform its own limited actions that require the Debugger API. This could be another instance of that pattern. The only caveat is that dbg.findScripts() is often slow and perhaps we wouldn't be able to do it for each worker message that arrives. Maybe findSources() (still unimplemented) would help here, or maybe we need to add a new query term to findScripts() to filter out non-worker scripts.

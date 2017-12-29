@@ -1,0 +1,47 @@
+Restored window not redrawn until clicked with TreeStyleTab
+http://hg.mozilla.org/releases/mozilla-aurora/rev/f9deba82d43b
+
+STR:
+- install tree style tab
+- have saved session with two windows, the first maximized and the second "restored", i.e. not in the maximized state
+- restart
+
+Actual:
+- the second window (that is not maximized and displays over the maximized one) doesn't redraw correctly
+- there is no treestyletab bar, but normal firefox tabs as usual
+- large gap at the bottom
+- clicking the title bar fixes it
+
+Expected
+- all draws correctly
+
+There were no update to TreeStyleTab AFAIK, I use current version 14.2012122901, just to Aurora, I think.
+Other symptoms are that TreeStyleTab doesn't reflect changes to setting of tree expand arrows (Add-on/TreeStyleTab/Options/Appearance/Tree Twisties) and leaves them at default [-] and [+] ugly buttons.
+
+
+In the error console I can see:
+
+Timestamp: 1/15/2013 5:34:29 PM
+Error: namedNodes.counter is null
+TSTBrowser_initTabContentsOrder@resource://treestyletab-modules/browser.js:1086
+@resource://treestyletab-modules/browser.js:1198
+Deferred.prototype._fire@resource://treestyletab-modules/lib/jsdeferred.js:68
+Deferred.prototype.call@resource://treestyletab-modules/lib/jsdeferred.js:48
+Deferred.next_default/id<@resource://treestyletab-modules/lib/jsdeferred.js:88
+
+Source File: resource://treestyletab-modules/base.js
+Line: 899
+
+From the code:
+namedNodes.counter is set to this.document.getAnonymousElementByAttribute(aTab, 'class', this.kCOUNTER_CONTAINER)
+
+Where |this| is TreeStyleTabBrowser and its document is taken from aWindowService.document in the constructor.  This seems to be something we are responsible to call for the extension.  However, I believe the document is correct.
+
+Looks like from some reason call to
+
+			counter = d.createElement('hbox');
+			counter.setAttribute('class', this.kCOUNTER_CONTAINER);
+
+at TSTBrowser_initTabContents to create the element is prevented.
+
+Going to investigate.

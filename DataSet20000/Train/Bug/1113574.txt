@@ -1,0 +1,29 @@
+UiTour: Hello FTE still thinks conversation view was open even after it is closed
+Created attachment 8539197
+hello-fte-wrong-state.png
+
+This bug is not reproducible every time, but I have hit it during testing enough times to figure out how to trigger it.
+
+Note: I am testing with the custom build linked here: https://bugzilla.mozilla.org/show_bug.cgi?id=1080953#c31
+
+STR:
+
+1.) Open the Hello FTE which is currently on demo2 [1]
+2.) When the hello panel is opened, click "Start a conversation"
+3.) When the conversation view opens, quickly click the "copy" button, and then close the conversation view (as quickly as you can) before the room has properly connected.
+4.) Close the Hello FTE tab
+5.) Paste the copied URL into another browser and click "Join the conversation" to start the video conversation.
+
+Expected results
+
+The Hello icon should turn blue and wait for the user to click the icon before re-opening the Hello FTE tab
+
+Actual results
+
+The FTE tab reopens automatically with the &incomingConversation=open param, resulting in the page displaying the incorrect state (see attachment).
+
+The page can also end up getting a 'Loop:IncomingConversation' event with `data.conversationOpen: true` at an incorrect time, if you follow the above steps but leave the FTE tab open.
+
+I think it might be some sort of race condition between a room opening and the conversation view being closed. I've triggered it accidentally a few times but can reproduce it quite frequently if I try the above steps :/
+
+[1] https://www-demo2.allizom.org/en-US/firefox/37.0a1/hello/start/?utm_source=firefox-browser&utm_medium=firefox-browser&utm_campaign=settings-menu

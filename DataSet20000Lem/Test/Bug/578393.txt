@@ -1,0 +1,17 @@
+Create a file with checksum for all build that we upload
+We would like to be able to verify that build artifact that we consume are valid. The best way to do this is to upload a checksum file along with the build artifacts. Some possible way that we could do this:
+1. generate a checksum file entry per build artifact in the make target that generates the artifact
+2. generate a single checksum file for all artifacts, appending to this file in each make target
+3. generate a single checksum file in the make upload step
+4. generate a single checksum file on stage
+5. checksum on the slave entirely in buildbot logic
+
+Option 1 and 2 both have the downside that they require modification in multiple location in the build system. Option 2 ha the added downside of being very complicated to track a) when the file should be created, b) when the file should be zeroed out and c) whether the current checksum file reflects the artifact in the dist dir.
+
+Option 4 seems like a non-option a we would be generating the checksum file a) on a different machine and b) after a data transmission ha already occured.
+
+Using option 5 alone doesn't seem like the best option a there is no historical record of the checksum for future reference.
+
+I propose that we initially implement option 3. Two approach to option 3 are a) generating a checksum file in the build/upload.py script and b) generate the checksum in a separate script and add the checksum file to the list of file to transfer.
+
+If there are no objections, I am going to implement option 3 b (generate in make upload using a second script)

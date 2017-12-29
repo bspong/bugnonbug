@@ -1,0 +1,30 @@
+Find out why UX branch regressed when bug 918613 landed
+Looking at Datazilla this morning, I see a slight up-tick on several Windows XP TART subtests - specifically:
+
+icon-open-DPI1.all.TART went from an average of 2.39 to 2.59
+icon-open-DPI1.half.TART went from an average of 2.04 to 2.19
+iconFade-open-DPI2.all.TART went from an average of 2.27 to 2.44
+iconFade-open-DPI2.half.TART went from an average of 2.43 to 2.59
+newtab-open-preload-no.all.TART went from an average of 2.97 to 3.09
+newtab-open-preload-no.half.TART went from an average of 2.13 to 2.26
+newtab-open-preload-yes.all.TART went from an average of 2.50 to 2.63
+newtab-open-preload-yes.half.TART went from an average of 2.13 to 2.26
+simple-open-DPI1.all.TART went from an average of 2.32 to 2.49
+simple-open-DPI1.half.TART went from an average of 2.03 to 2.18
+
+The spike is more obvious when looking at Datazilla graphs:
+
+https://datazilla.mozilla.org/?start=1377082034&stop=1380560215&product=Firefox&repository=Firefox-Non-PGO&os=win&os_version=5.1.2600&test=tart&compare_product=Firefox&compare_repository=UX-Non-PGO&project=talos
+
+Here are the changesets in that range:
+
+https://hg.mozilla.org/projects/ux/pushloghtml?startID=467&endID=468
+
+I'm immediately suspicious of:
+
+3287d7bbdc14 Bas Schouten — Bug 918613: Convert cairo path code to use cairo_path_t. r=jrmuizel
+
+Which just landed to fix bug 919656 (among other things). I've pushed a patch to try that back this out, and we'll see if these number go back down.
+
+UX Baseline: https://tbpl.mozilla.org/?tree=Try&rev=647db2708384
+UX + Backout: https://tbpl.mozilla.org/?tree=Try&rev=9a9e22855e71

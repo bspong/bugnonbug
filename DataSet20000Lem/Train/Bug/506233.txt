@@ -1,0 +1,43 @@
+nsIWebProgressListener on gBrowser also called for <xul:browser> widget in a chrome:// content document
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 6.1; de; rv:1.9.1.1) Gecko/20090715 Firefox/3.5.1 (.NET CLR 3.5.30729)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 6.1; de; rv:1.9.1.1) Gecko/20090715 Firefox/3.5.1 (.NET CLR 3.5.30729)
+
+When adding a nsIWebProgressListener via gBrowser.addTabsProgressListener(myListener), the listener will also be called for the browser-events of a xul-browser-widget that is inside the content document.
+
+
+Even worse, the given browser (aBrowser) is not the content-browser but the browser of the tab. The given URI (aLocation) is correct though.
+
+Reproducible: Always
+
+Steps to Reproduce:
+You can test it with the following simple xul-window that you load via the chrome-url (chrome://test/content/text.xul - or whatever):
+
+<?xml version="1.0"?>
+<!DOCTYPE window PUBLIC "-//MOZILLA//DTD XUL V1.0//EN" "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+
+<window id="browsertest"
+windowtype="browsertest"
+title="browsertest"
+xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+>
+
+<script>
+function changeLocation()
+{
+var browser = document.getElementById("aBrowser");
+browser.loadURI("http://google.com", null, null);
+}
+</script>
+<button label="Change location" oncommand="changeLocation();" />
+<browser id="aBrowser" type="content" flex="1" />
+</window>
+
+
+
+Actual Results:
+When you press the "ChangeLocation" button (which will change the location of the browser-widget inside the xul-window), the "onLocationChange" of the listener of the tabbrowser will be triggered.
+
+Expected Results:
+the "onLocationChange" of the listener should not be triggered a you did not add the listener to the browser-widget of the content-xul-window

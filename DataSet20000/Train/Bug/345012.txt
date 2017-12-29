@@ -1,0 +1,58 @@
+Session restore triggers lots of exceptions
+STEPS TO REPRODUCE:
+
+1)  Use my profiling firefox build
+2)  Start up
+3)  Open the Error Console
+
+ACTUAL RESULTS:  A whole bunch of
+
+Error: [Exception... "Component returned failure code: 0x80520001 (NS_ERROR_FILE_UNRECOGNIZED_PATH) [nsILocalFile.initWithPath]"  nsresult: "0x80520001 (NS_ERROR_FILE_UNRECOGNIZED_PATH)"  location: "JS frame :: file:///home/bzbarsky/mozilla/profile/obj-firefox/dist/bin/components/nsSessionStore.js :: anonymous :: line 2068"  data: no]
+Source File: file:///home/bzbarsky/mozilla/profile/obj-firefox/dist/bin/components/nsSessionStore.js
+Line: 2068
+
+EXPECTED RESULTS: no errors
+
+I have no idea how this build got in this state, so I'm not sure how to go about reproducing this in general...  I did modify the nsSessionStore.js code like so:
+
+@@ -2066,6 +2066,7 @@ AutoDownloader.prototype = {
+       var file =
+         Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
++      dump(this._filename + "\n");
+       file.initWithPath(this._filename);
+
+and the output I get is:
+
+  file:///tmp/gifmake.htm
+  file:///tmp/gifmake.htm
+  file:///tmp/gifmake.htm
+  file:///tmp/gifmake.htm
+  file:///tmp/gifmake.htm
+  file:///tmp/gifmake.htm
+  file:///tmp/gifmake.htm
+  file:///tmp/gifmake.htm
+  file:///tmp/gifmake.htm
+  file:///tmp/gifmake.htm
+  file:///tmp/gifmake.htm
+  file:///tmp/gifmake.htm
+  file:///tmp/gifmake.htm
+  file:///tmp/gifmake.htm
+  file:///tmp/gifmake.htm
+  file:///tmp/gifmake.htm
+  file:///tmp/gifmake.htm
+  file:///tmp/gifmake.htm
+  file:///tmp/gifmake.htm
+  file:///tmp/gifmake.htm
+  file:///tmp/gifmake.htm
+  file:///tmp/gifmake.htm
+  file:///tmp/gifmake.htm
+  file:///tmp/gifmake.htm
+  file:///tmp/gifmake.htm
+  file:///tmp/gifmake.htm
+  file:///home/bzbarsky/chapter-05.html
+  file:///home/bzbarsky/chapter-04.html
+  file:///home/bzbarsky/chapter-03.html
+  file:///home/bzbarsky/chapter-06.html
+  file:///home/bzbarsky/chapter-04.html
+
+All these are indeed not valid filenames.  More importantly, I have no idea where they're coming from.  Furthermore, this is happening even though I did NOT crash on the previous startup.  So I wouldn't even expect session-restore to be running...

@@ -1,0 +1,22 @@
+Cannot compile Firefox with Clang: hidden symbol `_Unwind_Backtrace' isn't defined
+It seems like I can't build Firefox anymore with Clang. The build failure I get is:
+
+../../xpcom/base/nsStackWalk.o: In function `NS_StackWalk':
+/home/decoder/LangFuzz/mozilla-central-llvm/xpcom/base/nsStackWalk.cpp:1647: undefined reference to `_Unwind_Backtrace'
+../../xpcom/base/nsStackWalk.o: In function `unwind_callback':
+/home/decoder/LangFuzz/mozilla-central-llvm/xpcom/base/nsStackWalk.cpp:1624: undefined reference to `_Unwind_GetIP'
+/usr/bin/ld.bfd.real: libxul.so: hidden symbol `_Unwind_Backtrace' isn't defined
+/usr/bin/ld.bfd.real: final link failed: Bad value
+clang: error: linker command failed with exit code 1 (use -v to see invocation)
+make[5]: *** [libxul.so] Error 1
+
+
+This seems to be related to this bug landing:
+
+changeset: 81203:c9a74f4ee1f7
+user: Rafael Ávila de Espíndola
+date: Fri Dec 02 19:26:04 2011 -0500
+summary: Bug 696376 - Change how we find critical range so that it work on 10.6 too. r=dbaron.
+
+
+Clang is a dependency of many static instrumentation tool (the most important one being address sanitizer), so it would be good if this could get fixed so I can continue working on Firefox+Asan.

@@ -1,0 +1,54 @@
+browser requests css with Accept: text/css,*/*;q=0.1, but doesn't handle reply properly if Content: not text/css
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.6) Gecko/2009011913 Firefox/3.0.6
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.6) Gecko/2009011913 Firefox/3.0.6
+
+The browser send the request for a css file with the string:
+Accept: text/css,*/*;q=0.1
+
+This should mean that text/css is preferred, but any (*/*) content type is acceptable.  However if a web server returns a css file but with any content type other then text/css the style sheet is not applied.
+
+The correct solution would be either specify the strict Accept as:
+Accept: text/css
+
+or honour matches to */*
+
+My preference is to tighten the Accept string.  I.E. Accepts the css file without checking, and it uses Accept: *.*
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1) Configure a web server to serve css files as type text/html (change mime types). 
+2) Use a web page with an external style sheet that has visible effects.
+3) Retrieve the web page.
+4) Compare with a page loaded as file:///
+Actual Results:  
+The web page is served, the css file is retrieved but the style sheet is not applied.
+
+Expected Results:  
+The web page should be served and the style sheet applied, or the Accept string sent to the server should have only specified text/css so the server could choose to send a 406 response.
+
+I have been using a demonstration web server written for teaching about security, and this showed up as not correctly following RFC2616.  I can make the web server available if it helps, but it is not a generally live system, and as it has deliberate security flaws I cannot leave it running live normally.  
+
+You will not see this error unless a server is configured incorrectly with css mime type, but the cause of the error is the incorrect Accept: string being sent.
+
+The pages I tested with are on a standard server at:
+http://www.protts.uk.eu.org 
+
+It is not likely to be a problem on many sites as it is triggered by an incorrect server configuration.  It would be a good idea to fix as it looks bad for the user, who is not able to work around it themselves.
+
+The problem is the same with Firefox:
+Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.6) Gecko/2009011913 Firefox/3.0.6
+
+and Seamonkey:
+Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.16) Gecko/20080716 SeaMonkey/1.1.11
+
+and iceweasel
+Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.5) Gecko/2008122011 Iceweasel/3.0.5 (Debian-3.0.5-1)
+
+
+The error is not seen with Apple Safari 3.2.1 (525.27.1) or Google Chrome 1.0.154.48.
+
+Thanks
+Mike

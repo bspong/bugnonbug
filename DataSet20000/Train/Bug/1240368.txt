@@ -1,0 +1,39 @@
+browser_profiler_tree-abstract-01.js & 02.js cause intermittent failures when run in same suite
+STRs :
+- pre : use optimized build
+- pre : use Linux 64 bits
+- pre : remember to run tests in e10s mode
+- run several times ./mach mochitest --e10s devtools/performance/test/browser_profiler_tree-abstract-0*
+
+
+Actual : intermittent failures in browser_profiler_tree-abstract-02.js :
+- "The root node is now focused. - Got null, expected [object XULElement]
+"
+- "The 'baz' node is now focused. - Got null, expected [object XULElement]
+"
+
+See https://treeherder.mozilla.org/#/jobs?repo=try&revision=9fa903f52c0d
+(the failure rate on try is ~75%, on a local computer it is much lower : ~10% on my VM)
+ 
+Expected : the tests should always pass.
+
+===========================================
+
+This issue was highlighted after landing Bug 1215955, which introduced a new mochitest. This reshuffled the way tests are split between the dt* test suites. tree-abstract-01.js and tree-abstract-02.js used to be run in two different test suites.
+
+===========================================
+
+Investigation :
+
+After running tree-abstract-01 the browser seems to be unable to move the focus to elements created in tree-abstract-02 right away when only calling "someNewElement.focus()". document.commandDispatcher.focusedElement remains null, no matter how long we wait after calling "focus()".
+
+Waiting for a bit _before_ calling "focus()" fixes the issue.
+
+Triggering a "mousedown" on the new container element created in tree-abstract-02 and waiting for document.commandDispatcher.focusedElement to be this container also fixes the issue.
+(illustrated by https://treeherder.mozilla.org/#/jobs?repo=try&revision=dda48223de4c)
+
+Interestingly, when starting the tests in e10s mode, document.commandDispatcher.focusedElement is normally NOT null when the test starts. However, it _may_ be null when tree-abstract-02 starts : in this case the intermittent failure will occur. 
+Sadly, we can not rely on this to wait for the test to be ready : in normal (non e10s) mode, document.commandDispatcher.focusedElement can be null when the test starts, without any consequence.
+
+tree-abstract-01 is moving the focus to an item which is removed when when the test ends.
+Calling (and waiting for) "blur()" on the focused element before ending tress-abstract-01 also seems to fix the problem locally (try push ongoing at https://treeherder.mozilla.org/#/jobs?repo=try&revision=3cea1af3373d)

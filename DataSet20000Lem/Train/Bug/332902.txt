@@ -1,0 +1,40 @@
+Global Printer Properties not Honored Until Set/Confirmed by User
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.0.1) Gecko/20060203 Fedora/1.5.0.1-1.1.fc4.nr Firefox/1.5.0.1
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.0.1) Gecko/20060203 Fedora/1.5.0.1-1.1.fc4.nr Firefox/1.5.0.1
+
+This started out because our header and footer tag were getting cut off (a la bug 130075). We globally changed the "Gap from Edge of Paper to Margin" setting from the default of .04 to .25 (in /usr/lib/firefox-1.5.0.1/greprefs/all.js). We then started Firefox using a new profile.
+
+Upon startup, the changed gap setting appear in the File / Print / [Printer] Properties dialog box, but they are not honored. If, for example, you "cancel" that dialog box and print, the header/footer are cut off. If you go back to the dialog box, and press "OK", then the new gap setting take effect.
+
+(note: This is not quite the same a bug 242134, where user reported having to change this setting each time the browser is started. When we apply the setting a described above, it remains in effect across browser sessions.)
+
+In both cases, about:config show the browser ha the following settings:
+
+print.print_edge_{top,bottom,left,right} 25
+
+On a browser where the gap setting have been applied, they show up in about:config a follows:
+
+print.printer_CUPS/InfoSvc.print_edge_{top,bottom,left,right} 25
+
+On a browser where the gap setting have not been applied, there is a series of config setting of the form:
+
+print.tmp.printerfeatures.CUPS/InfoSvc.paper.count
+
+(Where InfoSvc is the name of our printer), but no print_edge settings.
+
+Hope this make sense. Will be glad to provide more information / help with debugging. Thanks.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Change global edge setting
+2. Run Firefox with a clean profile
+3. Print a page
+4. Select File / Print / [Printer] Properties, and press OK
+5. Print a page
+
+Actual Results:
+Page from #3 doe not have global gap settings. Page from #5 does.
+
+Expected Results:
+Both #3 and #5 should have global gap settings.

@@ -1,0 +1,25 @@
+firefox and selinux
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8) Gecko/20051129 Fedora/1.5-1 Firefox/1.5
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8) Gecko/20051129 Fedora/1.5-1 Firefox/1.5
+
+I am sorry if this is not the correct area to post but none of the other option seemed to fit. Recent selinux 2.x policy have turned off allow_execmem, allow_execmod, allow_execheap for unconfined_t. This expose problem with application and make them more secure. See http://people.redhat.com/drepper/selinux-mem.html for the details. Since I started using the 2.x selinux policy I see the avcs in the audit.log:
+type=AVC msg=audit(1134344923.564:81): avc: denied { execmem } for pid=2468 comm="firefox-bin" scontext=root:system_r:unconfined_t:s0-s0:c0.c255 tcontext=root:system_r:unconfined_t:s0-s0:c0.c255 tclass=process
+type=SYSCALL msg=audit(1134344923.564:81): arch=40000003 syscall=125 success=no exit=-13 a0=bfcc0000 a1=1000 a2=1000007 a3=b93000 items=0 pid=2468 auid=0 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 comm="firefox-bin" exe="/usr/lib/firefox-1.5/firefox-bin"
+
+I see these message dozen of time when I am surfing. Firefox works, but it fill my audit.log. I am running Fedora Core 5 Test1 Just an FYI.
+
+Thanks,
+Jason
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. install recent 2.x selinux policy
+2. run firefox
+3. look in /var/log/audit/audit.log
+
+Actual Results:
+I see the avc message in my audit.log
+
+Expected Results:
+There should be no avcs from firefox.

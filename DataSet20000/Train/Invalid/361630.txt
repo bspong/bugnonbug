@@ -1,0 +1,103 @@
+Closing a tab or the entire browser causes BSOD with IRQL_NOT_LESS_OR_EQUAL or DRIVER_IRQL_NOT_LESS_OR_EQUAL error
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1) Gecko/20061010 Firefox/2.0
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1) Gecko/20061010 Firefox/2.0
+
+When a browser is open for a while and encounters a site that is not loading (the site just wont load up and browser never times out; in some instances the tab appears to be frozen and stop/refresh buttons do not work) closing a tab or the entire browser halts the system with IRQL_NOT_LESS_OR_EQUAL or DRIVER_IRQL_NOT_LESS_OR_EQUAL
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.Find a site that wont load. FF2 never times out, it continuously tries to load the page, but a page never shows
+2. Close the tab that is having a trouble or the entire browser
+3.BSOD appears with either IRQL_NOT_LESS_OR_EQUAL or DRIVER_IRQL_NOT_LESS_OR_EQUAL error
+
+Actual Results:  
+BSOD
+
+Expected Results:  
+the tab in trouble or the browser should close without causing an entire system halt
+
+I've used MS debugging tool to analyze a memory.dmp file:
+
+kd> !analyze -v
+*******************************************************************************
+* *
+* Bugcheck Analysis *
+* *
+*******************************************************************************
+
+IRQL_NOT_LESS_OR_EQUAL (a)
+An attempt was made to access a pageable (or completely invalid) address at an
+interrupt request level (IRQL) that is too high. This is usually
+caused by drivers using improper addresses.
+If a kernel debugger is available get the stack backtrace.
+Arguments:
+Arg1: 0030004c, memory referenced
+Arg2: 00000002, IRQL
+Arg3: 00000000, value 0 = read operation, 1 = write operation
+Arg4: 804f1322, address which referenced memory
+
+Debugging Details:
+------------------
+
+
+READ_ADDRESS: 0030004c
+
+CURRENT_IRQL: 2
+
+FAULTING_IP:
+nt!IoCancelIrp+60
+804f1322 ff7114 push dword ptr [ecx+14h]
+
+DEFAULT_BUCKET_ID: DRIVER_FAULT
+
+BUGCHECK_STR: 0xA
+
+PROCESS_NAME: firefox.exe
+
+TRAP_FRAME: 9c702bac -- (.trap ffffffff9c702bac)
+ErrCode = 00000000
+eax=00390061 ebx=884d1d00 ecx=00300038 edx=00000000 esi=884d1de0 edi=00000103
+eip=804f1322 esp=9c702c20 ebp=9c702c2c iopl=0 nv up ei ng nz ac pe cy
+cs=0008 ss=0010 ds=0023 es=0023 fs=0030 gs=0000 efl=00010297
+nt!IoCancelIrp+0x60:
+804f1322 ff7114 push dword ptr [ecx+14h] ds:0023:0030004c=????????
+Resetting default scope
+
+LAST_CONTROL_TRANSFER: from 804f1322 to 805436d0
+
+STACK_TEXT:
+9c702bac 804f1322 badb0d00 00000000 9c702bd4 nt!KiTrap0E+0x238
+9c702c2c 8057c93a 884d1de0 00000000 884d1de0 nt!IoCancelIrp+0x60
+9c702c48 8057e701 887045dc 884d1de0 884d1ebc nt!IopCancelAlertedRequest+0x28
+9c702c64 8057f4e3 89b97420 00000103 88704580 nt!IopSynchronousServiceTail+0xe1
+9c702d00 80578038 00001300 000011c0 00000000 nt!IopXxxControlFile+0x5c5
+9c702d34 8054060c 00001300 000011c0 00000000 nt!NtDeviceIoControlFile+0x2a
+9c702d34 7c90eb94 00001300 000011c0 00000000 nt!KiFastCallEntry+0xfc
+WARNING: Frame IP not in any known module. Following frames may be wrong.
+041af518 00000000 00000000 00000000 00000000 0x7c90eb94
+
+
+STACK_COMMAND: kb
+
+FOLLOWUP_IP:
+nt!IoCancelIrp+60
+804f1322 ff7114 push dword ptr [ecx+14h]
+
+SYMBOL_STACK_INDEX: 1
+
+FOLLOWUP_NAME: MachineOwner
+
+MODULE_NAME: nt
+
+IMAGE_NAME: ntkrpamp.exe
+
+DEBUG_FLR_IMAGE_TIMESTAMP: 42250a1e
+
+SYMBOL_NAME: nt!IoCancelIrp+60
+
+FAILURE_BUCKET_ID: 0xA_nt!IoCancelIrp+60
+
+BUCKET_ID: 0xA_nt!IoCancelIrp+60
+
+Followup: MachineOwner

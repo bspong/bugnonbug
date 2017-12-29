@@ -1,0 +1,59 @@
+Stack overflow; cyclic infinite recursion in js3250.dll
+User-Agent:       Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0; SLCC1; .NET CLR 2.0.50727; Media Center PC 5.0; InfoPath.2; .NET CLR 3.5.21022; .NET CLR 3.0.04506)
+Build Identifier:  Minefield 2008030607
+
+The main thread dies throwing a stack overflow. This most often happens on a restore, but has also been observed when coming back to session left open overnight. Second try works. Repros on 3b3, Minefield 2008030605 as well. I'll try and capture another instance with debugging symbols available; this one happened before I had found the documentation explaining where to get symbol files. I apologize for the less than complete report.
+
+js3250.dll!6be12081() 	
+ 	[Frames below may be incorrect and/or missing, no symbols loaded for js3250.dll]	
+ 	js3250.dll!6be12723() 	
+ 	js3250.dll!6be121a7() 	
+ 	js3250.dll!6be12723() 	
+ 	js3250.dll!6be1205c() 	
+ 	js3250.dll!6be122cf() 	
+ 	js3250.dll!6be12723() 	
+ 	js3250.dll!6be1205c() 	
+ 	js3250.dll!6be122cf() 	
+ 	js3250.dll!6be12723() 	
+ 	js3250.dll!6be1205c() 	
+ 	js3250.dll!6be122cf() 	these three repeated to the limits of my stack trace window, guessing at least 500 times.
+
+The actual failure happens @ 6BE12070  mov         edi,dword ptr [esp+18h] 
+6BE12074  mov         eax,dword ptr [edi] 
+6BE12076  test        eax,eax 
+6BE12078  mov         ebx,dword ptr [esp+14h] 
+6BE1207C  je          6BE1208A 
+6BE1207E  push        0    
+6BE12080  push        eax  
+6BE12081  push        ebx  
+
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+1. Restart browser after crash or upgrade
+2. Pages start loading, cookies demanded, etc
+3. Lockup
+
+Or:
+1) Leave browser alone for 8 hours
+2) return
+3) discover crash.
+Actual Results:  
+Browser becomes non-responsive. Eventually windows pops up dialog 'this application has crashed, debug, close'
+
+Expected Results:  
+Obviously, I expected it to restore cleanly. 
+
+First of all, I'm able to repeat this often enought to try various experiements. I'll definitely be trying to track this down in more detail, and will hopefully submit a followup with symbol information. Suggestions are very welcome; I don't know the infrastructure here.
+
+Right now I'm going to try and prune my sessionstore.js to see if I can narrow down the culprit to a subset of the billion tabs I had open.
+
+I had a lot of tabs open, can attach sessionstore.js if helpful
+Pretty clean prefs.js, can also attach if helpful. Minimal active extensions, because so few run unmodified on minefield builds. AdBlock2, ScriptBlock. FireBug. Will turn off extensions to see if repro still happens.
+
+I've looked at similar bugs, and I don't think they overlap. There were two PDFs in two different tabs, similar to 345626. But they were being blocked fom loading by scriptblock. I was also working on editing a Wikipedia entry, perhaps triggering Bug 340717. It wasn't that long; a screenful of text, max. And the actual failure mode of stack overflow matches neither.
+
+Big 417101/417115 happens on exit; my bug seems to happen on startup. But the stack overflow doesn't seem to be happening the same library, and it was marked resolved-fixed already.
+
+Thanks for any help you can give me on tracking this one down.

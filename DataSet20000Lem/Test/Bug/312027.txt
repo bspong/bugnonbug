@@ -1,0 +1,69 @@
+Firefox 1.5b2: HTML Validator extension hang when trying to read cached page during pageShow event if page ha inline script that redirects
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.8b5) Gecko/20051001 Firefox/1.4.1
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.8b5) Gecko/20051001 Firefox/1.4.1
+
+The extension HTML Validator based on Tidy hang with Firefox 1.5 B2 after
+having enabled the BF Cache trigger.
+
+(I am the extension author)
+
+The extension home page is this if you want some info:
+> http://users.skynet.be/mgueury/mozilla/index.html
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Download the HTML validator 0.73 (with the issue) in Firefox 1.5 b2
+windows: http://htmlvalidator.sourceforge.net/mozilla/tidy_firefox_win_073.xpi
+linux: http://htmlvalidator.sourceforge.net/mozilla/tidy_firefox_linux_073.xpi
+2. Restart Firefox, check the validation work by going to www.google.com for
+example.
+3. go here:
+> http://remik.org/test.html
+Press OK.
+It hang in the BF cache pageShow trigger during reading of the HTML cache
+of the browser. This is the bug.
+
+Actual Results:
+The problem is this:
+- In Firefox 1.5 B2, the LOAD trigger is not fired when an user do a back or
+forward in the browser. This is described here:
+> http://developer.mozilla.org/en/docs/Using_Firefox_1.5_caching
+- So, I followed this document and added the trigger "pageShow".
+- It work in most case except when the page contains an onload trigger doing a
+redirect, like this :
+
+----------------------------------------------------------------------
+<script type="text/javascript">
+alert("click ok!");
+document.location.href="http://mozilla.org";
+</script>
+----------------------------------------------------------------------
+
+In such case,
+- in place that the LOAD trigger is fired when rendering the page
+- the pageShow trigger is fired first
+- then the program try to read the HTML from the cache of the page
+to validate it, but Firefox hangs.
+
+My problem is that I am not able to fix it.
+1) If I disable the BF cache trigger (pageShow). It doe not hang anymore
+but I am not able to detect the back and forward change in the browser.
+The result is that the icon doe not change when the user do a back or
+forward in the history
+
+2) If I enable it, back and forward validation works. But it hang in the
+case above. My concern is that I am unable to distinguish between a back
+or forward and a potential hanging situation.
+
+
+Expected Results:
+Not hang. For ex, give an exception so that I can handle it.
+
+Any idea or work-around to fix it is welcome.
+And/or a fix in the Firefox code that cause the hanging.
+
+Thanks by advance
+
+Marc

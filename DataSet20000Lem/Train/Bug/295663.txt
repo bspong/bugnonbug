@@ -1,0 +1,34 @@
+Remove unused preference update.app.* update.extensions.*
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8b2) Gecko/20050520 Firefox/1.0+
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8b2) Gecko/20050520 Firefox/1.0+
+
+The prefs update.app.* and update.extensions.* are unused (the one in use are
+app.update.* and extensions.update.* instead). This appears to be fallout from
+aviary landing [1]. The only exception is update.extensions.enabled, which is
+written in [2] but never read from. (The corresponding pref,
+extensions.update.enabled, is read from but never written to - but it look like
+it may be a hidden pref. [3] [4])
+
+[1]
+http://bonsai.mozilla.org/cvsview2.cgi?diff_mode=context&whitespace_mode=show&root=/cvsroot&subdir=mozilla/toolkit/mozapps/update/content&command=DIFF_FRAMESET&file=update.js&rev2=1.23&rev1=1.22
+[2]
+http://lxr.mozilla.org/mozilla/source/toolkit/mozapps/update/content/update.js#155
+[3] http://lxr.mozilla.org/mozilla/search?string=extensions.update.enabled
+[4] http://lxr.mozilla.org/mozilla/search?string=PREF_UPDATE_EXTENSIONS_ENABLE
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. open about:config
+2. see update.app.* and update.extensions.* preference
+3. check LXR for usage
+Actual Results:
+Prefs exist, but are never written to / read from.
+
+Expected Results:
+Prefs used, or non-existent.
+
+Tried looking for getBranch call a well, nothing turned up.
+
+update.js should be referencing either extensions.update.enabled or
+extensions.update.autoUpdateEnabled.

@@ -1,0 +1,94 @@
+crash on opening new tab (after delay) when permit cooky is installed
+The repro step are somewhat dodgy, so please give it a couple of try before
+giving up. A backtrace follows.
+
+1. Start a fresh firefox (new window wasn't enough for me).
+
+2. Go to http://www.pctex.com/help.html. Not much special about this site, it's
+happened on plenty others.
+
+3. Open a second tab, point it to, say, www.google.com. This is somewhat
+optional, but it seems to help.
+
+4. Go back to the first tab. Make sure you don't submit garbage request to
+these guys, it's not their fault that page is a convenient test case. Now, fill
+in form say, like so:
+
+name: arg
+e-mail: arg@arg.com
+question: here, you type stuff like:
+asdjkla d/.as d.kjas. .asdj kas.jkasd .kasjd .asdk .asd kjkadsjsda .ks ajksadk
+j.ksad jksadk. kasdjkladsl .asd jljlk. kj jasdklasdkladskladslk ,as dm.askd
+jaks.djpiewifj.dsflkj
+for about a MINUTE, continuously. Use the arrow key and edit your text a little
+too, seems to help. Feel free to quote Shakespeare, or other text instead. It
+seems to be important that you type stuff (or in general, use this tab -- i.e.
+i've seen it happen by searching bugzilla in a single-tab window, and then
+opening another tab) for a while. Otherwise the crash doesn't happen.
+
+5. When you've had enough typing, hit Ctrl-T to open a new tab, and type, say
+"g" in the location bar. This is usually enough for it to crash. I have "g"
+keyworded to search google, but that doesn't seem to be relevant. My location
+history doe have stuff that come up on "g".
+
+In the 20 or so time I've reproduced this, the backtrace is always the same:
+
+#0 0x4ee09651 in kill () from /lib/libc.so.6
+#1 0x4f0876fd in pthread_kill () from /lib/libpthread.so.0
+#2 0x4f087a51 in raise () from /lib/libpthread.so.0
+#3 0x0805596b in nsProfileLock::FatalSignalHandler ()
+#4 0x4f08a361 in __pthread_sighandler () from /lib/libpthread.so.0
+#5 <signal handler called>
+#6 0x40f0f6a2 in NSGetModule ()
+from /usr/lib/MozillaFirefox/components/libcookie.so
+#7 0x40f0d94e in NSGetModule ()
+from /usr/lib/MozillaFirefox/components/libcookie.so
+#8 0x40110abd in XPTC_InvokeByIndex ()
+from /usr/lib/MozillaFirefox/libxpcom.so
+#9 0x40660898 in NSGetModule ()
+from /usr/lib/MozillaFirefox/components/libxpconnect.so
+#10 0x40667407 in NSGetModule ()
+from /usr/lib/MozillaFirefox/components/libxpconnect.so
+#11 0x4003918c in js_Invoke () from /usr/lib/MozillaFirefox/libmozjs.so
+#12 0x40042f27 in js_Interpret () from /usr/lib/MozillaFirefox/libmozjs.so
+#13 0x4003925f in js_Invoke () from /usr/lib/MozillaFirefox/libmozjs.so
+#14 0x40039529 in js_InternalInvoke () from /usr/lib/MozillaFirefox/libmozjs.so
+#15 0x40016812 in JS_CallFunctionValue ()
+from /usr/lib/MozillaFirefox/libmozjs.so
+#16 0x40d80e61 in nsJSContext::CallEventHandler ()
+from /usr/lib/MozillaFirefox/components/libgklayout.so
+#17 0x40d925bd in GlobalWindowImpl::RunTimeout ()
+from /usr/lib/MozillaFirefox/components/libgklayout.so
+#18 0x40d92af8 in GlobalWindowImpl::TimerCallback ()
+from /usr/lib/MozillaFirefox/components/libgklayout.so
+#19 0x400fb3bb in nsTimerImpl::Fire () from /usr/lib/MozillaFirefox/libxpcom.so
+#20 0x400fb426 in handleTimerEvent () from /usr/lib/MozillaFirefox/libxpcom.so
+#21 0x400f72b7 in PL_HandleEvent () from /usr/lib/MozillaFirefox/libxpcom.so
+#22 0x400f71fb in PL_ProcessPendingEvents ()
+from /usr/lib/MozillaFirefox/libxpcom.so
+#23 0x400f8c33 in nsEventQueueImpl::NotifyObservers ()
+from /usr/lib/MozillaFirefox/libxpcom.so
+#24 0x405d03d1 in nsBaseWidget::FreeNativeData ()
+from /usr/lib/MozillaFirefox/components/libwidget_gtk2.so
+#25 0x4e76b89b in g_vasprintf () from /usr/lib/libglib-2.0.so.0
+#26 0x4e748f72 in unblock_source () from /usr/lib/libglib-2.0.so.0
+#27 0x4e749f89 in g_main_context_dispatch () from /usr/lib/libglib-2.0.so.0
+#28 0x4e74a2a6 in g_main_context_dispatch () from /usr/lib/libglib-2.0.so.0
+#29 0x4e74a87c in g_main_loop_run () from /usr/lib/libglib-2.0.so.0
+#30 0x4e9da3e7 in gtk_main () from /usr/lib/libgtk-x11-2.0.so.0
+#31 0x405d07a0 in nsAppShell::ReleaseGlobals ()
+from /usr/lib/MozillaFirefox/components/libwidget_gtk2.so
+#32 0x4050428c in ?? ()
+from /usr/lib/MozillaFirefox/components/libnsappshell.so
+#33 0x08098128 in ?? ()
+#34 0x0805800c in data_start ()
+#35 0xbffff678 in ?? ()
+#36 0x08050c6a in xre_main ()
+Previous frame identical to this frame (corrupt stack?)
+
+My extension list: DOM Inspector, Flashblock, Permit Cookies
+Plugins: Flash 7.0 r25, DjVuLibre-3.5.12
+
+Unfortunately, I'm not in a position to make a debug build and give very
+detailed info, or track down the bug. However, I can test patch on release
+builds.

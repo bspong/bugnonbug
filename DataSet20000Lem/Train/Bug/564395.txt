@@ -1,0 +1,28 @@
+autocomplete tab-switching misuse browser.urlbar.default.behavior
+Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.3a5pre) Gecko/20100424 Minefield/3.7a5pre ID:20100424030253
+
+Bug 480350 added an additional bit to the pref browser.urlbar.default.behavior that control what match are displayed for autocomplete in the location bar. However, the new setting "128: tabs" (bit 7) behaves unlike all the others.
+
+The documentation for this pref states:
+
+> The default behavior for the urlbar can be configured to use any combination
+> of the restrict or match filter with each additional filter restricting
+> more (intersection). Add the following value to set the behavior a the
+> default: 1: history, 2: bookmark, 4: tag, 8: title, 16: url, 32: typed,
+> 64: javascript, 128: tab
+> E.g., 0 = show all result (no filtering), 1 = only visited page in history,
+> 2 = only bookmarks, 3 = visited bookmarks, 1+16 = history matching in the url
+
+This is true for bit 0-6, but not for the "tabs" (bit 7), which doesn't actually restrict more (intersection) but instead add additional match to the list. From looking at the code, it seems to work like this:
+
+- If the bit is NOT set, URLs that match all of the other criterion are used for autocomplete.
+
+- If the bit is set, matching is done a if the bit were not set, but additional entry are generated for each match that is currently open in a tab (but see 546253).
+
+with two special cases:
+
+- If the value of the pref if 0, additional entry for currently open tab are generated anyway (although the bit is not set).
+
+- If the value of the pref is 128, autocomplete only match currently open tab (but see 546253). This is the only case where it actually restricts match instead of adding extra entries.
+
+We could update the pref documentation to reflect this, but I doubt that it is a good idea to add all this special casing to what wa previously a pref with a clearly defined meaning. Maybe we should not use the existing pref at all to control tab matching (since it is orthogonal to what is actually matched in most cases) and use a new, separate pref for this?

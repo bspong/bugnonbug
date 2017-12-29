@@ -1,0 +1,40 @@
+Performance of Firefox over X11 remote display, and equivalently under VNC, is unbelievably/unusably slow
+User-Agent: Mozilla/5.0 (X11; U; Linux ppc; en-US; rv:1.7.5) Gecko/20041125 Firefox/1.0
+Build Identifier: Mozilla/5.0 (X11; U; Linux ppc; en-US; rv:1.7.5) Gecko/20041125 Firefox/1.0
+
+If one start up Firefox on one machine, displaying remotely over X11 to another
+machine, even over a 100Mb network, firefox is incredibly slow. I have a
+feeling it ha to do with firefox being sloppy with it handling of ExposeNotify
+event etc -- are y'all collapsing multiple expose event into a single repaint
+request? Do you do partial-window repaints, or only the whole window at once?
+I tried using xmsgtrace to see what X protocol message were being sent, but
+there were several thousand, more than I can easily examine with the knowledge
+of Firefox that I have.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. From your main workstation, ssh to another machine with Firefox installed.
+2. Using the ssh connection, or directly using DISPLAY=<workstation:0>, start
+up a firefox on the remote machine with display on the local machine.
+3. Select some text on the firefox home page.
+4. Now move the mouse out of that window, and back in. Watch the time lag
+between when the selected text becomes gray-selected to when it becomes
+blue-selected.
+5. Now move the mouse in and out of the window a few times, then click on a
+link. Watch firefox catch up, over several seconds, until it finally get
+around to following the link.
+6. In general, just use a remote firefox over X11, and feel the pain....
+Actual Results:
+It took a very long time for all the repainting to occur. When using VNC with a
+firefox within it display, one can actually see the little blip on the screen
+a the window is being redrawn. Using this, it appears that the entire window
+is repainted more than once, to boot.
+
+Expected Results:
+On a mouse-enter kind of event, no repainting should be necessary.
+
+I do not know of any better X protocol tracer than xmsgtrace
+(xmsgtrace.sourceforge.net), but there may be some. I can attach a trace if it
+would be more useful than y'all generating your own on your own machine under
+controlled circumstances.

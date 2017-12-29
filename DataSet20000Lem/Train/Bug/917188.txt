@@ -1,0 +1,10 @@
+Use a more deterministic way to write the browser_webconsole_view_source.js test
+This test make sure that when we click on a source link in the web console that corresponds to a script that ha been garbage-collected, view-source will open instead of the debugger. Since the behavior and the test are GC-dependent, bug 916995 added a Cu.forceGC() call to make it more explicit and le prone to oranges. As discussed with Jim on IRC, we should be writing the test in a way that would guarantee it will pas regardless of whether the garbage collector decides to kick at some particular time.
+
+Jim's idea wa to make the ThreadActor configurable from test so that it can lie about a script being present in the debuggee. Since this is a browser chrome test, we need a way to get to the thread actor from the client. Luckily we already have such a method via the _serverConnection property in the client transport object:
+
+http://mxr.mozilla.org/mozilla-central/source/toolkit/devtools/server/main.js#482
+
+I propose we add an _ignoreScripts flag on the thread actor and have the test set it to true, so that the onSources() request handler can consult it and return an empty source list for this test.
+
+I'm filing this bug in the debugger component a most of the necessary change need to be made to the script.js file.

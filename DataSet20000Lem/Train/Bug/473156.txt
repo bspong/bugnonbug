@@ -1,0 +1,58 @@
+FUEL: fuelIEvents.removeListener remove all listener for an event.
+User-Agent: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.5; en-US; rv:1.9.0.5) Gecko/2008120121 Firefox/3.0.5
+Build Identifier: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.5; en-US; rv:1.9.0.5) Gecko/2008120121 Firefox/3.0.5
+
+fuelIEvents.removeListener remove all listener for an event.
+For example, if i add two different listener of same event, and then try to remove one of them, second listener will be removed too.
+
+Reproducible: Always
+
+Steps to Reproduce:
+I wrote example code:
+
+var listener1 = {
+handleEvent: function(event) {
+Application.console.log('1: ' + event.type + ' - ' + event.data);
+}
+};
+var listener2 = {
+handleEvent: function(event) {
+Application.console.log('2: ' + event.type + ' - ' + event.data);
+}
+};
+
+Application.prefs.events.addListener('change', listener1);
+Application.prefs.setValue('test_pref', 'true');
+Application.prefs.events.addListener('change', listener2);
+Application.prefs.setValue('test_pref', 'false');
+Application.prefs.events.removeListener('change', listener1);
+Application.prefs.setValue('test_pref', 'true');
+Application.prefs.events.removeListener('change', listener2);
+Actual Results:
+After running this code I see in console three lines:
+
+1: change - test_pref
+----------
+1: change - test_pref
+----------
+2: change - test_pref
+
+Expected Results:
+But I expected to see four lines, last from listener 2:
+
+1: change - test_pref
+----------
+1: change - test_pref
+----------
+2: change - test_pref
+----------
+2: change - test_pref
+
+I think problem is in filter function in removeListener method.
+This function:
+
+function hasFilter(element) {
+return element.event != aEvent && element.listener != aListener;
+}
+
+in fuelApplication.js will be return false for all listener of aEvent.

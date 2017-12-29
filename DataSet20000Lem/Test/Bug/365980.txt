@@ -1,0 +1,89 @@
+Using "Show only this frame" or "Open frame in new window" to display an IFrame's content reinvokes the IFrame's source page without reposting the argument to the source page.
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.2; en-US; rv:1.8.1.1) Gecko/20061204 Firefox/2.0.0.1
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.2; en-US; rv:1.8.1.1) Gecko/20061204 Firefox/2.0.0.1
+
+I'm using the following Javascript code to pas data to a asp routine that display it an Iframe (for later printing), the Iframe a you can see is 50x20 so that I can find it, ultimately it will be 1x1. Since it is still small I tried to use "Show only this frame" and then "Open frame in new window" to display it's content.
+
+The problem is that although the new window (re)displays the Iframe content a provided by the source page it doesn't "repost" the original argument passed to the source page. Consequently if these argument are used to build the Iframe display content, the new window doe not reflect what is actually in the original Iframe.
+
+====================================================================
+
+Iframe setup:
+
+<form name = "Print_Form" action = "/asp-bin/Print_Ticket.asp"
+target = "Print_Area" method = POST>
+
+<input type = text name = "Ticket_ID" value = "12345" style = "display:none">
+<input type = text name = "Caller" value = "C101" style = "display:none">
+
+</form>
+
+<iFrame name = "Print_Area" src = "/Blank.htm"
+framespacing = 0 frameborder = 0
+width = 50 height = 20
+scrolling = no
+vspace = 0 hspace = 0
+marginwidth = 0 marginheight = 0>
+</iFrame>
+
+====================================================================
+
+Routine called by form submit:
+
+<%@ language = JavaScript%>
+<%
+
+var foo;
+
+foo = Request.Form();
+%>
+<html>
+<head><title>TEMPORARY Display Request object</title></head>
+<body">
+TEMPORARY................
+<br><br>
+foo =<br>
+<% Response.Write (foo); %>
+<br><br>
+</body>
+</html>
+
+====================================================================
+
+Results if Iframe is displayed via "Show only this frame"
+or "Open frame in new window":
+
+
+TEMPORARY................
+
+foo =
+
+====================================================================
+
+Results if "select all" is used to copy Iframe content to notepad:
+
+TEMPORARY................
+
+foo =
+Ticket_ID=12345&Caller=C101
+
+====================================================================
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.create an I frame
+2.populate the Iframe with dynamic content based on argument passed to an asp module
+3.use "Show only this frame" and then "Open frame in new window" to display it's content.
+Actual Results:
+TEMPORARY................
+
+foo =
+
+
+Expected Results:
+TEMPORARY................
+
+foo =
+Ticket_ID=12345&Caller=C101

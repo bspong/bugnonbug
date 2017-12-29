@@ -1,0 +1,54 @@
+CustomizableUI.jsm throwing "Node not found" but it need more info I can't figure out the problem
+User Agent: Mozilla/5.0 (Windows NT 5.1; rv:32.0) Gecko/20100101 Firefox/32.0 (Beta/Release)
+Build ID: 20140731191115
+
+Steps to reproduce:
+
+I'm getting this real weird error:
+
+"[CustomizableUI]" "NotFoundError: Node wa not found -- :1029"
+
+The line it is pointing to is `aContainer.insertBefore(aNode, aNextNode);` in CustomizableUI.jsm here:
+
+
+insertWidgetBefore: function(aNode, aNextNode, aContainer, aArea) {
+this.notifyListeners("onWidgetBeforeDOMChange", aNode, aNextNode, aContainer);
+this.setLocationAttributes(aNode, aArea);
+aContainer.insertBefore(aNode, aNextNode);
+
+
+The code I use is this:
+
+CustomizableUI.createWidget({ //must run createWidget before windowListener.register because the register function need the button added first
+id: 'throbber-restored',
+type: 'custom',
+defaultArea: CustomizableUI.AREA_NAVBAR,
+onBuild: function(aDocument) {
+var toolbaritem = aDocument.createElementNS('http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul', 'toolbaritem');
+var image = aDocument.createElementNS('http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul', 'image');
+
+var prop = {
+id: 'throbber-restored',
+title: 'Activity Indicator',
+align: 'center',
+pack: 'center',
+mousethrough: 'always',
+removable: 'true',
+sdkstylewidget: 'true',
+overflows: false
+};
+for (var p in props) {
+toolbaritem.setAttribute(p, props[p]);
+}
+
+toolbaritem.appendChild(image);
+return toolbaritem;
+}
+});
+
+
+The bug is real hard to replicate. I can't actually replicate this bug on my profile, the user that reported it send me a copy of their profile folder and when I run this code it throw this error. To fix the error in the guy profile I changed `id: 'throbber-restored',` to `id: 'navigator-throbber',` in both instance above. I have no idea why that fix it. Any ideas?
+
+Heres the link to the bug if it helps: https://github.com/Noitidart/Throbber-Restored/issues/11#issuecomment-50984864
+
+Thanks!

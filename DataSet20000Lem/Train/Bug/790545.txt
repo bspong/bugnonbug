@@ -1,0 +1,10 @@
+cache toolbar notification icon for faster rendering at startup?
+In an email, Asa suggested we could cache the toolbar notification icon so they can be displayed immediately at startup rather than waiting for the provider to provide them. IIUC, the main issue with the current state is one of perception - that the current implementation made startup seem slow. This bug is to track that idea and either implement it, or reject it!
+
+This should be feasible - the biggest issue is probably that the data will be stale at startup. eg:
+
+1) the icon may indicate (say) unread messages, but they are no longer unread - so the state of the button will not immediately match the state of the content in the panel.
+
+2) the panel URL may be specific to the "current state". Eg, imagine the provider specifies a URL like ".../show_messages.html?msg_ids=5,12,18", but these message have been deleted - the panel may end up showing an error state, be blank or otherwise not be what the user expects.
+
+Note that for at least one of our providers, (2) isn't a problem in practice - the URL they send for the content panel is the same regardless of the state of the icon (ie, the same URL is specified whether there are unread message or not). Also, in both cases, we can expect the "correct" state to be reflected fairly quickly - ie, the incorrect state will only persist for a long a there are *no* icon currently.

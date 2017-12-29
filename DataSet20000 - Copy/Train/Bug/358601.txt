@@ -1,0 +1,63 @@
+problem document.onmousemove event with clientX & clientY
+User-Agent:       Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.1.4322; .NET CLR 2.0.50727)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1) Gecko/20061010 Firefox/2.0
+
+clientY & clientX propeties for the document.onmousemove event always returns 0
+(works just fine with firefox 1.5.0.7)
+use the following HTML to reproduce :
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>
+    <title>Untitled Page</title>
+</head>
+<body>
+    <div id="dvOutput" style="background-color:Aqua;position:absolute;left:200px;top:350px;width:100px;height:100px;"></div>
+        <script type="text/javascript">
+        var ieForDrag = document.all
+        var nsForDrag = document.getElementById && !ieForDrag
+        
+        function DragDivByClassName(e) 
+        {         
+            var fobj = nsForDrag ? e.target : event.srcElement;    
+
+            var containerObject = fobj;                
+            var ev=e||event; 	
+            var offsetx=ev.clientX-containerObject.offsetLeft;
+            var offsety=ev.clientY-containerObject.offsetTop;
+            document.onmousemove=function() 
+            {  		     
+                if (containerObject.style.left == "")
+	                containerObject.style.right=(document.documentElement.clientWidth-containerObject.clientWidth-(ev.clientX-offsetx))+"px";
+	            else
+	                containerObject.style.left=(ev.clientX-offsetx)+"px";
+	            containerObject.style.top=(ev.clientY-offsety)+"px";
+	            document.getElementById("dvOutput").innerHTML  = "left: " + containerObject.style.left + ",top:" + containerObject.style.top + "<br>" + ev.clientY +"-"+offsety+"<br>target:"+ev.target;
+	            return false;
+            }
+            fobj.onmouseup=function() 
+            {
+ 	            document.onmousemove=null;
+            }
+        }
+
+        document.onmousedown=DragDivByClassName;
+    </script>
+
+</body>
+</html>
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.get the attached html code
+2.load it in firefox 2.0
+3.try to drag the div box and notice it always returns 0 for clientX & clientY
+4.check in firefox 1.5.0.7 to see how it working perfectly
+
+Actual Results:  
+div cant be drag well
+
+Expected Results:  
+div can be drag

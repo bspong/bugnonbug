@@ -1,0 +1,39 @@
+memory corruption of strings
+Created attachment 632598
+test case (same as URL specified in description), must be in directory with dojo
+
+ User Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_6_8) AppleWebKit/536.5 (KHTML, like Gecko) Chrome/19.0.1084.54 Safari/536.5
+
+Steps to reproduce:
+
+1. Load http://bill.dojotoolkit.org/1.7/ffMemoryCorruption.html.   (I will also attach the test case, but it requires dojo to run, so the URL is simpler.)
+
+2. Click the "add another tab" button repeatedly until the tabs overflow and a down arrow button appears on the upper right of the TabContainer.
+
+3. Repeatedly click the down arrow button to display a menu of tabs, and click choices on the menu to navigate between tabs.
+
+
+
+
+Actual results:
+
+Eventually the menu tab navigation will stop working (usually after two or three times). 
+
+In console (firebug or builtin web console) do this to see the root of the problem:
+
+  contentTabs.getChildren().map(function(f){ return f.id; }).join(", ")
+
+It shows corruption in the ids:
+
+[17:15:15.289] "acceptProposedCo,    D   x00 x00 #      x06,    x00 x00 x00 x00 x00 x00 A x00 x00 x00 x00  x04,      x04 x00 x00 x00   x00 x00   x00 x00,  x00 x00 x00 x00 x00 x00 x01 x00 x02 x00 x03 x00 x04 x00 x05 x00"
+
+
+Note: occurs on both mac and windows, from version 8 to 14 and possibly earlier versions too.
+
+
+
+Expected results:
+
+The ids should not change, they should be plain english strings:
+
+[17:27:56.750] "NeweditorLayout1, NeweditorLayout2, NeweditorLayout3"

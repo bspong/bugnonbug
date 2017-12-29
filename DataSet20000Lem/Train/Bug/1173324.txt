@@ -1,0 +1,36 @@
+Storage Inspector: Simplify the process of parent / child communication
+toolkit/devtools/server/actors/storage.js
+
+> @@ +722,5 @@
+> > + };
+> > + this.removeCookieObservers = () => {
+> > + Services.obs.removeObserver(this, "cookie-changed", false);
+> > + Services.obs.removeObserver(this, "http-on-response-set-cookie", false);
+> > + };
+>
+> That look so hacky to define method like this...
+> I'm wondering if instead of doing that...
+> we were just calling cookieHelpers directly.
+> But. We would define cookieHelpers conditonally.
+>
+> let cookieHelpers = {
+> // existing cookieHelpers definition
+> };
+> if (DebuggerServer.isInChildProcess) {
+> const { sendSyncMessage, addMessageListener } =
+> DebuggerServer.parentMessageManager;
+> cookieHelper = {
+> getCookiesFromHost: callParentProcess...,
+> addObservers: ...,
+> removeObservers: ...
+> };
+> // you would need to register the message listener in addObservers.
+> }
+> }
+> }
+>
+> Note that you could get rid of maybeSetupChildProcess if you prefer. Or you
+> could define this.cookieHelper instead of overriding the cookieHelper global.
+>
+
+I have spent a day playing around with this and other method turn out just a hacky due to having to bind and manipulate contexts. This bug is a reminder to look into our option here.

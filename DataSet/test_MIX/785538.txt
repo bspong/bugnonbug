@@ -1,0 +1,100 @@
+Infinite loop on destroyQueueTail in nsRuleNode::DestroyInternal
+What I did (I don't know how well that reproduces)
+ - start loading http://lemonde.fr
+ - when it's already largely displayed, but still loading, close that tab
+
+Result: browser is frozen, infinite loop over a linked list where a 'next' pointer points to self.
+
+stack and little GDB session:
+
+Program received signal SIGINT, Interrupt.
+0x00007ffff332c854 in nsRuleNode::DestroyInternal (this=0x7fffd03eebf0, aDestroyQueueTail=0x7fffffff8588) at /hack/mozilla-central/layout/style/nsRuleNode.cpp:1197
+1197        do {
+(gdb) bt
+#0  0x00007ffff332c854 in nsRuleNode::DestroyInternal (this=0x7fffd03eebf0, aDestroyQueueTail=0x7fffffff8588) at /hack/mozilla-central/layout/style/nsRuleNode.cpp:1197
+#1  0x00007ffff332c8ec in nsRuleNode::DestroyInternal (this=0x7fffdd8eb620, aDestroyQueueTail=0x0) at /hack/mozilla-central/layout/style/nsRuleNode.cpp:1216
+#2  0x00007ffff331f4b7 in nsRuleNode::Destroy (this=0x7fffdd8eb620) at /hack/mozilla-central/layout/style/nsRuleNode.h:391
+#3  0x00007ffff3363f17 in nsStyleSet::Shutdown (this=0x7fffcda41228, aPresContext=0x7fffd0ebe5a8) at /hack/mozilla-central/layout/style/nsStyleSet.cpp:1259
+#4  0x00007ffff314e1b3 in PresShell::Destroy (this=0x7fffce8a2628) at /hack/mozilla-central/layout/base/nsPresShell.cpp:1082
+#5  0x00007ffff3119e4d in DocumentViewerImpl::DestroyPresShell (this=0x7fffdd6f79a8) at /hack/mozilla-central/layout/base/nsDocumentViewer.cpp:4333
+#6  0x00007ffff3111694 in DocumentViewerImpl::Hide (this=0x7fffdd6f79a8) at /hack/mozilla-central/layout/base/nsDocumentViewer.cpp:2065
+#7  0x00007ffff3f87e94 in nsDocShell::SetVisibility (this=0x7fffce697028, aVisibility=false) at /hack/mozilla-central/docshell/base/nsDocShell.cpp:5119
+#8  0x00007ffff34d376a in nsFrameLoader::Hide (this=0x7fffd1bff088) at /hack/mozilla-central/content/base/src/nsFrameLoader.cpp:958
+#9  0x00007ffff3252dad in nsSubDocumentFrame::HideViewer (this=0x7fffd201c5b0) at /hack/mozilla-central/layout/generic/nsSubDocumentFrame.cpp:778
+#10 0x00007ffff3252d37 in nsSubDocumentFrame::DestroyFrom (this=0x7fffd201c5b0, aDestructRoot=0x7fffd201c470) at /hack/mozilla-central/layout/generic/nsSubDocumentFrame.cpp:769
+#11 0x00007ffff31f2f45 in nsFrameList::DestroyFramesFrom (this=0x7fffd201c570, aDestructRoot=0x7fffd201c470) at /hack/mozilla-central/layout/generic/nsFrameList.cpp:61
+#12 0x00007ffff31c9b50 in nsContainerFrame::DestroyFrom (this=0x7fffd201c510, aDestructRoot=0x7fffd201c470) at /hack/mozilla-central/layout/generic/nsContainerFrame.cpp:217
+#13 0x00007ffff33bba57 in nsBoxFrame::DestroyFrom (this=0x7fffd201c510, aDestructRoot=0x7fffd201c470) at /hack/mozilla-central/layout/xul/base/src/nsBoxFrame.cpp:956
+#14 0x00007ffff31f2f45 in nsFrameList::DestroyFramesFrom (this=0x7fffd201c4d0, aDestructRoot=0x7fffd201c470) at /hack/mozilla-central/layout/generic/nsFrameList.cpp:61
+#15 0x00007ffff31c9b50 in nsContainerFrame::DestroyFrom (this=0x7fffd201c470, aDestructRoot=0x7fffd201c470) at /hack/mozilla-central/layout/generic/nsContainerFrame.cpp:217
+#16 0x00007ffff33bba57 in nsBoxFrame::DestroyFrom (this=0x7fffd201c470, aDestructRoot=0x7fffd201c470) at /hack/mozilla-central/layout/xul/base/src/nsBoxFrame.cpp:956
+#17 0x00007ffff30aeb42 in nsIFrame::Destroy (this=0x7fffd201c470) at /hack/mozilla-central/layout/base/../generic/nsIFrame.h:578
+#18 0x00007ffff33bbc40 in nsBoxFrame::RemoveFrame (this=0x7fffd201c2e0, aListID=mozilla::layout::kPrincipalList, aOldFrame=0x7fffd201c470) at /hack/mozilla-central/layout/xul/base/src/nsBoxFrame.cpp:1019
+#19 0x00007ffff312104c in nsFrameManager::RemoveFrame (this=0x7ffff6b43828, aListID=mozilla::layout::kPrincipalList, aOldFrame=0x7fffd201c470, aInvalidate=true) at /hack/mozilla-central/layout/base/nsFrameManager.cpp:499
+#20 0x00007ffff30c2e9f in nsCSSFrameConstructor::ContentRemoved (this=0x7ffff6b43828, aContainer=0x7fffd230aae8, aChild=0x7fffd2309ee8, aOldNextSibling=0x0, aFlags=nsCSSFrameConstructor::REMOVE_CONTENT, aDidReconstruct=0x7fffffff8b6f)
+    at /hack/mozilla-central/layout/base/nsCSSFrameConstructor.cpp:7581
+#21 0x00007ffff31577ac in PresShell::ContentRemoved (this=0x7fffdd6dbe28, aDocument=0x7ffff6bc5528, aContainer=0x7fffd230aae8, aChild=0x7fffd2309ee8, aIndexInContainer=0, aPreviousSibling=0x0)
+    at /hack/mozilla-central/layout/base/nsPresShell.cpp:4137
+#22 0x00007ffff3509a8b in nsNodeUtils::ContentRemoved (aContainer=0x7fffd230aae8, aChild=0x7fffd2309ee8, aIndexInContainer=0, aPreviousSibling=0x0) at /hack/mozilla-central/content/base/src/nsNodeUtils.cpp:177
+#23 0x00007ffff34f7a9a in nsINode::doRemoveChildAt (this=0x7fffd230aae8, aIndex=0, aNotify=true, aKid=0x7fffd2309ee8, aChildArray=...) at /hack/mozilla-central/content/base/src/nsINode.cpp:1363
+#24 0x00007ffff356bdab in mozilla::dom::FragmentOrElement::RemoveChildAt (this=0x7fffd230aae8, aIndex=0, aNotify=true) at /hack/mozilla-central/content/base/src/FragmentOrElement.cpp:1049
+#25 0x00007ffff3c95432 in nsXULElement::RemoveChildAt (this=0x7fffd230aae8, aIndex=0, aNotify=true) at /hack/mozilla-central/content/xul/content/src/nsXULElement.cpp:814
+#26 0x00007ffff34f47ba in nsINode::RemoveChild (this=0x7fffd230aae8, aOldChild=0x7fffd2309ee8) at /hack/mozilla-central/content/base/src/nsINode.cpp:454
+#27 0x00007ffff3e9a815 in nsIDOMNode_RemoveChild (cx=0x7fffdd6db428, argc=1, vp=0x7fffdf8ff1d0) at /hack/mozilla-central/obj-firefox-debug/js/xpconnect/src/dom_quickstubs.cpp:5491
+#28 0x00007ffff518f6ea in js::CallJSNative (cx=0x7fffdd6db428, native=0x7ffff3e9a632 <nsIDOMNode_RemoveChild(JSContext*, unsigned int, jsval*)>, args=...) at /hack/mozilla-central/js/src/jscntxtinlines.h:389
+#29 0x00007ffff5197824 in js::InvokeKernel (cx=0x7fffdd6db428, args=..., construct=js::NO_CONSTRUCT) at /hack/mozilla-central/js/src/jsinterp.cpp:351
+#30 0x00007ffff51a497e in js::Interpret (cx=0x7fffdd6db428, entryFrame=0x7fffdf8ff0a8, interpMode=js::JSINTERP_NORMAL) at /hack/mozilla-central/js/src/jsinterp.cpp:2423
+#31 0x00007ffff5197386 in js::RunScript (cx=0x7fffdd6db428, script=0x7fffd2bce6a0, fp=0x7fffdf8ff0a8) at /hack/mozilla-central/js/src/jsinterp.cpp:308
+#32 0x00007ffff51978e7 in js::InvokeKernel (cx=0x7fffdd6db428, args=..., construct=js::NO_CONSTRUCT) at /hack/mozilla-central/js/src/jsinterp.cpp:362
+#33 0x00007ffff50e6726 in js::Invoke (cx=0x7fffdd6db428, args=..., construct=js::NO_CONSTRUCT) at /hack/mozilla-central/js/src/jsinterp.h:119
+#34 0x00007ffff5197b07 in js::Invoke (cx=0x7fffdd6db428, thisv=..., fval=..., argc=1, argv=0x7fffffffa800, rval=0x7fffffffa790) at /hack/mozilla-central/js/src/jsinterp.cpp:394
+#35 0x00007ffff50d7a8c in JS_CallFunctionValue (cx=0x7fffdd6db428, objArg=0x7fffd3140d60, fval=..., argc=1, argv=0x7fffffffa800, rval=0x7fffffffa790) at /hack/mozilla-central/js/src/jsapi.cpp:5890
+#36 0x00007ffff386ed5c in nsJSContext::CallEventHandler (this=0x7fffd52fe2c8, aTarget=0x7fffd3253628, aScope=0x7fffd553b060, aHandler=0x7fffc660fc00, aargv=0x7fffca66b9a8, arv=0x7fffffffaa70)
+    at /hack/mozilla-central/dom/base/nsJSEnvironment.cpp:1921
+#37 0x00007ffff398deea in nsJSEventListener::HandleEvent (this=0x7fffc8ff9348, aEvent=0x7fffc8fa0128) at /hack/mozilla-central/dom/src/events/nsJSEventListener.cpp:188
+#38 0x00007ffff381a818 in nsXBLPrototypeHandler::ExecuteHandler (this=0x7fffd29bfbe8, aTarget=0x7fffd3253628, aEvent=0x7fffc8fa0128) at /hack/mozilla-central/content/xbl/src/nsXBLPrototypeHandler.cpp:306
+#39 0x00007ffff38166a8 in nsXBLEventHandler::HandleEvent (this=0x7fffd29acee8, aEvent=0x7fffc8fa0128) at /hack/mozilla-central/content/xbl/src/nsXBLEventHandler.cpp:47
+#40 0x00007ffff3645ac4 in nsEventListenerManager::HandleEventSubType (this=0x7fffd29a5e68, aListenerStruct=0x7fffd24f8950, aListener=0x7fffd29acee8, aDOMEvent=0x7fffc8fa0128, aCurrentTarget=0x7fffd3253628, aPhaseFlags=2, 
+    aPusher=0x7fffffffb030) at /hack/mozilla-central/content/events/src/nsEventListenerManager.cpp:793
+#41 0x00007ffff3645d7a in nsEventListenerManager::HandleEventInternal (this=0x7fffd29a5e68, aPresContext=0x7ffff6b43428, aEvent=0x7fffc7a4dca0, aDOMEvent=0x7fffffffb010, aCurrentTarget=0x7fffd3253628, aFlags=2, 
+    aEventStatus=0x7fffffffb018, aPusher=0x7fffffffb030) at /hack/mozilla-central/content/events/src/nsEventListenerManager.cpp:866
+#42 0x00007ffff367379c in nsEventListenerManager::HandleEvent (this=0x7fffd29a5e68, aPresContext=0x7ffff6b43428, aEvent=0x7fffc7a4dca0, aDOMEvent=0x7fffffffb010, aCurrentTarget=0x7fffd3253628, aFlags=2, aEventStatus=0x7fffffffb018, 
+    aPusher=0x7fffffffb030) at /hack/mozilla-central/content/events/src/nsEventListenerManager.h:143
+#43 0x00007ffff3673ccc in nsEventTargetChainItem::HandleEvent (this=0x7fffdd0a5920, aVisitor=..., aFlags=2, aMayHaveNewListenerManagers=false, aPusher=0x7fffffffb030) at /hack/mozilla-central/content/events/src/nsEventDispatcher.cpp:185
+#44 0x00007ffff36742e7 in nsEventTargetChainItem::HandleEventTargetChain (this=0x7fffdd0a55a0, aVisitor=..., aFlags=6, aCallback=0x0, aMayHaveNewListenerManagers=false, aPusher=0x7fffffffb030)
+    at /hack/mozilla-central/content/events/src/nsEventDispatcher.cpp:340
+#45 0x00007ffff36752b7 in nsEventDispatcher::Dispatch (aTarget=0x7fffd04b4ae8, aPresContext=0x7ffff6b43428, aEvent=0x7fffc7a4dca0, aDOMEvent=0x0, aEventStatus=0x0, aCallback=0x0, aTargets=0x0)
+    at /hack/mozilla-central/content/events/src/nsEventDispatcher.cpp:640
+#46 0x00007ffff337535e in nsTransitionManager::WillRefresh (this=0x7fffd48c86a8, aTime=...) at /hack/mozilla-central/layout/style/nsTransitionManager.cpp:787
+#47 0x00007ffff316e359 in nsRefreshDriver::Notify (this=0x7fffd4ab1128, aTimer=0x7fffd27176c8) at /hack/mozilla-central/layout/base/nsRefreshDriver.cpp:339
+#48 0x00007ffff46fca2b in nsTimerImpl::Fire (this=0x7fffd27176c8) at /hack/mozilla-central/xpcom/threads/nsTimerImpl.cpp:476
+#49 0x00007ffff46fce11 in nsTimerEvent::Run (this=0x7fffe99192d0) at /hack/mozilla-central/xpcom/threads/nsTimerImpl.cpp:556
+#50 0x00007ffff46f54f6 in nsThread::ProcessNextEvent (this=0x7fffe9abd628, mayWait=false, result=0x7fffffffb60f) at /hack/mozilla-central/xpcom/threads/nsThread.cpp:624
+#51 0x00007ffff46897ae in NS_ProcessNextEvent_P (thread=0x7fffe9abd628, mayWait=false) at /hack/mozilla-central/obj-firefox-debug/xpcom/build/nsThreadUtils.cpp:220
+#52 0x00007ffff44abd90 in mozilla::ipc::MessagePump::Run (this=0x7fffe9ac6828, aDelegate=0x7ffff6b7e6e8) at /hack/mozilla-central/ipc/glue/MessagePump.cpp:82
+#53 0x00007ffff47439c1 in MessageLoop::RunInternal (this=0x7ffff6b7e6e8) at /hack/mozilla-central/ipc/chromium/src/base/message_loop.cc:208
+#54 0x00007ffff4743952 in MessageLoop::RunHandler (this=0x7ffff6b7e6e8) at /hack/mozilla-central/ipc/chromium/src/base/message_loop.cc:201
+#55 0x00007ffff474392b in MessageLoop::Run (this=0x7ffff6b7e6e8) at /hack/mozilla-central/ipc/chromium/src/base/message_loop.cc:175
+#56 0x00007ffff432f982 in nsBaseAppShell::Run (this=0x7fffe39f8588) at /hack/mozilla-central/widget/xpwidgets/nsBaseAppShell.cpp:163
+---Type <return> to continue, or q <return> to quit---
+#57 0x00007ffff40707f8 in nsAppStartup::Run (this=0x7fffe39b19a8) at /hack/mozilla-central/toolkit/components/startup/nsAppStartup.cpp:271
+#58 0x00007ffff2dab9b4 in XREMain::XRE_mainRun (this=0x7fffffffbae0) at /hack/mozilla-central/toolkit/xre/nsAppRunner.cpp:3800
+#59 0x00007ffff2dabc9a in XREMain::XRE_main (this=0x7fffffffbae0, argc=4, argv=0x7fffffffdf48, aAppData=0x453760) at /hack/mozilla-central/toolkit/xre/nsAppRunner.cpp:3877
+#60 0x00007ffff2dabee3 in XRE_main (argc=4, argv=0x7fffffffdf48, aAppData=0x453760, aFlags=0) at /hack/mozilla-central/toolkit/xre/nsAppRunner.cpp:3953
+#61 0x0000000000402bfe in do_main (argc=4, argv=0x7fffffffdf48) at /hack/mozilla-central/browser/app/nsBrowserApp.cpp:174
+#62 0x0000000000402ea5 in main (argc=4, argv=0x7fffffffdf48) at /hack/mozilla-central/browser/app/nsBrowserApp.cpp:279
+(gdb) l
+1192                               &destroyQueueTail);
+1193        *destroyQueueTail = nullptr; // ensure null-termination
+1194        PL_DHashTableDestroy(children);
+1195      } else if (HaveChildren()) {
+1196        *destroyQueueTail = ChildrenList();
+1197        do {
+1198          destroyQueueTail = &(*destroyQueueTail)->mNextSibling;
+1199        } while (*destroyQueueTail);
+1200      }
+1201      mChildren.asVoid = nullptr;
+(gdb) p destroyQueueTail
+$1 = (nsRuleNode **) 0x7fffdd2b2398
+(gdb) p &(*destroyQueueTail)->mNextSibling
+$2 = (nsRuleNode **) 0x7fffdd2b2398

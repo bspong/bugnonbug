@@ -1,0 +1,48 @@
+security.fileuri.strict_origin_policy can prevent some desktop web apps from working
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.2) Gecko/20100105 Firefox/3.6
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.2) Gecko/20100105 Firefox/3.6
+
+security.fileuri.strict_origin_policy doe not differentiate between HTML file the user trust and file the user doe not, even though Firefox already support a mechanism for this on Windows.
+
+Reproducible: Always
+
+Steps to Reproduce:
+Known and intended feature of security.fileuri.strict_origin_policy, no need to reproduce.
+Actual Results:
+Access to the local filesystem is blocked from an app the user desire to run.
+
+Expected Results:
+Files trusted by the user, not marked a
+
+I'm on a team working on a desktop web app targeting IE7, but we also want to try to be cross-browser compatible should our client desire it. We are having problem with Firefox, unfortunately.
+
+Firefox 3.0 introduced security.fileuri.strict_origin_policy = true a a default for new profiles. This is a problem because our web app is laid out like this:
+
+index.html // This file launch a new window with shell/shell.html
+shell/shell.html // The main app
+shell/scripts/includedfiles.js
+someincludedfiles/etc.js
+
+And so on.
+
+Anyone familiar with security.fileuri.strict_origin_policy will realize that including the file in "someincludedfiles" will not work.
+
+Note that we load XML using XMLHttpRequest and JavaScript using document.createElement to build a script tag and inject it into the document, if it make a difference.
+
+In addition our app us iframes in a few place and security.fileuri.strict_origin_policy place restriction on those too. Even if we correct the original problem and move shell.html into the root there could be other similar problem to correct for each iframe. Our project consists of dozen of HTML files, making this a daunting task.
+
+I can understand the reasoning behind this feature; to protect ignorant user who will download and open any html file from themselves. However this break our app and could potentially break other apps that use similar directory structures. In addition, this doe not appear to be any sort of standard, making it likely apps will be developed in the future that also run into this problem and will require another browser.
+
+So I have tried to figure out an alternative solution:
+
+Currently, Firefox, IE, and Chrome for Windows all "mark" downloaded file a coming from the Internet using NTFS alternate data streams. This could be used to allow a bit of relaxation on security.fileuri.strict_origin_policy by only applying the policy to file marked a coming from the Internet. Files not marked a from the Internet would not be restricted, or would have lighter restrictions. This would allow file that come on CD or distributed over a network (network file would still be limited to the same domain... that is, the computer they're on) to work a designed no matter what crazy stuff they do. ;)
+
+Pre-emptive Possible Con: HTML file encased in archive could work around this restriction since they would have no ADS attached.
+
+Counter-argument: The malicious individual distributing the ZIP file could probably enclose an EXE a long a they've got the user downloading the ZIP. At the very least, the presence of the ZIP itself could alert the user, and would also resemble e-mail-distributed malware that us encrypted ZIPs to slip past virus scanner which the user may already know to spot.
+
+Pre-emptive Con: Won't work on non-NTFS filesystems or not-Wnidows.
+
+Counter-argument: OK so keep the current behavior for them. :)
+
+I am sure there are other solution for this problem a well, this is just my idea.

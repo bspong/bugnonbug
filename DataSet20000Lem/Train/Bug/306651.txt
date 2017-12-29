@@ -1,0 +1,83 @@
+incompatibility of registry entry with java control panel, cause error if you select applet tag support for Mozilla
+User-Agent: Mozilla/5.0 (Windows; U; Win98; en-US; rv:1.7.10) Gecko/20050716 Firefox/1.0.6
+Build Identifier: Mozilla/5.0 (Windows; U; Win98; en-US; rv:1.7.10) Gecko/20050716 Firefox/1.0.6
+
+after an independent installation the java control panel searches:
+[HKEY_LOCAL_MACHINE\Software\mozilla.org\Mozilla]
+"CurrentVersion"="1.7.10"
+
+and try to find:
+[HKEY_LOCAL_MACHINE\Software\mozilla.org\Mozilla\1.7.10\Main]
+"Install Directory"="C:\\TOOLS\\internet\\firefox\\"
+
+but firefox installation writes:
+[HKEY_LOCAL_MACHINE\Software\Mozilla\Mozilla Firefox\1.0.6 (en-US)\Main]
+"Install Directory"="C:\\TOOLS\\internet\\firefox\\"
+
+so java isn't working in firefox when installed independently.
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. install java a for example "jre-1_5_0_04-windows-i586-p.exe"
+2. start java control panel
+3. try to enable
+"Erweitert"/"Einstellungen"/"<applet>-tag-Unterstützung"/"Mozilla und Netscape"
+(sorry - i havn't ordered "german" but a well didn't find an option for
+language selection)
+
+Verify: The same procedure with "Regmon.exe" started.
+
+Actual Results:
+The Java control panel report an incorrectly installed browser or insufficient
+admin rights.
+
+Expected Results:
+Either Firefox installer writes a redundant copy of his "Install Directory" to
+the location where the Java control panel expects it, or (maybe better for
+future versions) the firefox team synchronizes it development in this
+interfacing detail with the java development team.
+
+The entry "http://www.mozilla.org/support/firefox/faq#q2.2" should be adopted to
+this general problem:
+
+Index: mozilla-org/html/support/firefox/faq.html
+===================================================================
+RCS file: /cvsroot/mozilla-org/html/support/firefox/faq.html,v
+retrieving revision 1.19
+diff -u -r1.19 faq.html
+--- mozilla-org/html/support/firefox/faq.html 22 Mar 2005 21:40:14 -0000 1.19
++++ mozilla-org/html/support/firefox/faq.html 1 Sep 2005 01:51:00 -0000
+@@ -370,13 +370,16 @@
+<a href="http://seb.mozdev.org/firebird">Unofficial Installer</a>, then <a
+href="http://java.sun.com/getjava/manual.html">install Java using
+XPInstall</a>.</p>
+
+- <p>If you have already downloaded Firefox a a ZIP file, you can add the
+- registry information that JRE 1.4.2 and later require by hand. To do this,
+- save <a
+href="http://plugindoc.mozdev.org/resources/firebird-jre142-fix.reg">this
+registry file</a>
+- to your desktop, and double-click to import it. If you are asked if you want
+- to add the information to the Windows registry, click <span
+- class="button">Yes</span>. After this is done, you can install JRE 1.4.2 if
+- required, then restart Firefox and use Java.</p>
++ <p>Java and Firefox may be installed separately and independently.
++ The Java installer search the registry for:<br>
++ <code>[HKLM\Software\mozilla.org\Mozilla]<i>CurrentVersion</i></code><br>
++ The value there is expected a the next level subkey,
++ where it search for (assuming "1.7.10" a "CurrentVersion"):<br>
++ <code>[HKEY_LOCAL_MACHINE\Software\mozilla.org\Mozilla\1.7.10\Main]<i>Install
+Directory</i></code><br>
++ These key are not placed under
+<code>[HKLM\Software\mozilla.org\Mozilla]</code> by Firefox,
++ but instead under (for example) <code>[HKLM\Software\Mozilla\Mozilla
+Firefox\1.0.6 (en-US)\Main]</code>.<br>
++ That must be corrected by hand at the moment, with the appropriate number
+used.<br>
++ Without it, the Java control panel will report an incorrectly installed
+Mozilla.</p>
+
+<p>If neither of the above solution work, you can use <a
+href="http://java.sun.com/j2se/1.4.1/download.html">JRE 1.4.1_05</a> until the

@@ -1,0 +1,42 @@
+[meta] Get e10s running for Windows XP user
+It is possible that XP + e10s ha higher crash rate than non-e10s, this bug track the work to figure out if this is in fact the case, and if so what we need to do to address it. Once those issue are address we'll enable e10s for XP user on release channels.
+
+Currently we don't have strong evidence of a crash problem under XP with e10s on Nightly/Aurora, but we don't have a lot of data either. Most XP user are on release channel where e10s is explicitly disabled for those users.)
+
+https://crash-stats.mozilla.com/search/?product=Firefox&dom_ipc_enabled=%21__null__&platform_pretty_version=Windows%20XP&version=51.0a1&version=50.0a2&version=50.0a1&_sort=-date&_facets=signature&_columns=date&_columns=signature&_columns=product&_columns=version&_columns=build_id&_columns=platform#facet-signature
+
+
+Historical summary of XP + e10s changes:
+
+1) a rendering issue while scrolling wa seen on a lab device (bug 1237769) with gfx acceleration.
+
+2016-01-17 checkin:
+
+We disabled acceleration (D3D9) and use basic composition instead when e10s is enabled.
+
+- Bug 1237770 - Disable acceleration (D3D9) when e10s is enabled
+- https://hg.mozilla.org/mozilla-central/rev/269ad7540a30
+
+2) It wa found that the above fix caused severe video performance issue on XP due to perf issue with unaccelerated video. (These isues have since been addressed in other work by the gfx team.)
+
+- https://bugzilla.mozilla.org/show_bug.cgi?id=1237769#c12
+
+We decided to disable e10s on XP in general. This reverted the previous change, and tied e10s to acceleration prefs.
+
+- https://bugzilla.mozilla.org/show_bug.cgi?id=1237769#c18
+- https://bugzilla.mozilla.org/show_bug.cgi?id=1237769#c22
+
+2016-04-07 checkin:
+- https://hg.mozilla.org/mozilla-central/rev/a3f8a4e83cdd
+
+At this point, having
+layers.acceleration.disabled = false or
+layers.acceleration.force-enabled = true
+disables e10s on Windows XP.
+
+3) We found that XP + e10s wa crashy on beta, so we disable e10s for Windows XP on release channels:
+
+- Bug 1275039 - [e10s] Block e10s on Windows XP
+
+2016-05-26 checkin:
+- https://hg.mozilla.org/mozilla-central/rev/e3977905475d

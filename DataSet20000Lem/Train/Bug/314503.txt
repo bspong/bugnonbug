@@ -1,0 +1,61 @@
+Firefox run very slow after visit an ASP page with stream operation
+User-Agent: Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.2; SV1; Maxthon; .NET CLR 1.1.4322)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.2; zh-CN; rv:1.7.12) Gecko/20050919 Firefox/1.0.7
+
+I am writing an ASP page for downloading some files, such a jpg, doc
+which are known MIME types. I want to force user save these file through
+a "file download" dialog. I search the Internet and found the best way to do it is by using stream. The following is my code for the download.asp. I tested it in IE, everything is fine. The problem of Firefox is when I click the link to download.asp, I found the system become slower and slower, it seems the CPU usage become very high.
+
+Server.ScriptTimeOut=999999
+'--declare variable
+Dim strAbsFile
+Dim strFileExtension
+Dim objFSO
+Dim objFile
+Dim objStream
+'-- set absolute file location
+strAbsFile = Server.MapPath(sPath)
+'-- create FSO object to check if file exists and get
+property
+Set objFSO = Server.CreateObject("Scripting.FileSystemObject")
+'-- check to see if the file exists
+If objFSO.FileExists(strAbsFile) Then
+Set objFile = objFSO.GetFile(strAbsFile)
+'-- first clear the response, and then set the
+appropriate header
+Response.Clear
+'-- the filename you give it will be the one that is
+shown
+' to the user by default when they save
+Response.AddHeader "Content-Disposition", "attachment;
+filename=" + objFile.name
+Response.AddHeader "Content-Length", objFile.Size
+Response.ContentType = "application/octet-stream"
+Set objStream = Server.CreateObject("ADODB.Stream")
+objStream.Open
+'-- set a binary
+objStream.Type = 1
+Response.CharSet = "UTF-8"
+'-- load into the stream the file
+objStream.LoadFromFile(strAbsFile)
+'-- send the stream in the response
+binData = objStream.Read
+Response.BinaryWrite(binData)
+Response.Flush
+objStream.Close
+Set objStream = Nothing
+Set objFile = Nothing
+Else 'objFSO.FileExists(strAbsFile)
+Response.Clear
+Response.Write("File doe not exist!")
+End If
+Set objFSO = Nothing
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.runs the asp page including the code I provide
+2.download a file use the asp page
+
+Actual Results:
+the Firefox run very slow

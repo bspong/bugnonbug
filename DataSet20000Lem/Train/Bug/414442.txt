@@ -1,0 +1,23 @@
+content tree in place organizer (library) is reloaded unnecessarily
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9b3pre) Gecko/2008012804 Minefield/3.0b3pre
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9b3pre) Gecko/2008012804 Minefield/3.0b3pre
+
+The content tree is reloaded with the current bookmark multiple time when toggling place in the left tree and when double clicking in the content tree to open a new folder. This might also occur in other situations.
+
+When toggling the folder open or closed in the left tree which are closer to the top, the content bookmark are refreshed. This seems to be because both containerOpened and containerClosed in the tree view call invalidateContainer... which eventually set rowCountChanged, which call onselect, which call onPlaceSelected, which reloads the tree based on the current selection, even though the selected folder never really changed. Since the currently viewed folder is reloaded this isn't very noticeable.
+
+Double clicking on the content tree seems to cause this because it call the left tree's selectItems method. In the embedded findNodes method, opening and closing certain container seems to again call invalidateContainer, rowCountChanged, then onPlaceSelected, which reloads the content tree just like toggling a tree open or closed in the ui does. Since in these case the selected location hasn't changed yet, the same set of bookmark is still reloaded. After the findNodes method finish the current node is finally selected and the right bookmark list is loaded.
+
+I don't really know what the best way to fix this would be. Stopping onselect from being sent when the selected index is modified because something wa inserted or removed above it would fix it, but I suppose it still make sense to be called since the actual selected index doe change.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Add a dump or breakpoint in the constructor of PlacesTreeView (since that is created each load)
+2. Double click on a folder, make it the 'Bookmarks Menu' folder if you want. You might need to have some tag added to a couple bookmark so the Tags folder isn't empty
+3. Look at how many time the content tree wa loaded
+Actual Results:
+The content tree is reloaded at least once with the old bookmark before loading the correct set. There is no visual indication that this happens though.
+
+Expected Results:
+The content tree should only load once

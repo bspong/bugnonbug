@@ -1,0 +1,49 @@
+ralloc segment fault when loading a WebGL Game Page
+User Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.21 (KHTML, like Gecko) konqueror/4.14.11 Safari/537.21
+
+Steps to reproduce:
+
+Loading a WebGL game page: http://www.playkeepout.com/
+When you click the Play Now, firefox crashed.
+
+
+
+Actual results:
+
+
+Debugging in gdb, it shows segment fault.
+gdb debug info:
+Continuing.
+
+Program received signal SIGSEGV, Segmentation fault.
+unlink_block (info=0xffffffffffffffda) at ralloc.c:225
+225	   if (info->parent != NULL) {
+#0  0x00007f2767aa0590 in unlink_block (info=0xffffffffffffffda) at ralloc.c:225
+#1  0x00007f2767aa0948 in ralloc_steal (new_ctx=<optimized out>, ptr=<optimized out>) at ralloc.c:269
+#2  0x00007f2767aee9ee in sweep_src_indirect (src=<optimized out>, nir=<optimized out>) at nir/nir_sweep.c:47
+#3  0x00007f2767acd3ab in nir_foreach_src (instr=instr@entry=0x7f27860fd318, cb=cb@entry=0x7f2767aee9d0 <sweep_src_indirect>, state=state@entry=0x7f2781b67328)
+    at nir/nir.c:1068
+#4  0x00007f2767aee8bd in sweep_block (nir=0x7f2781b67328, block=<optimized out>) at nir/nir_sweep.c:69
+#5  0x00007f2767aee989 in sweep_cf_node (nir=nir@entry=0x7f2781b67328, cf_node=cf_node@entry=0x7f2781917a68) at nir/nir_sweep.c:103
+#6  0x00007f2767aee94b in sweep_cf_node (iff=0x7f27815a3ef8, nir=0x7f2781b67328) at nir/nir_sweep.c:80
+#7  0x00007f2767aee94b in sweep_cf_node (nir=nir@entry=0x7f2781b67328, cf_node=cf_node@entry=0x7f27815a3ef8) at nir/nir_sweep.c:106
+#8  0x00007f2767aeebdb in nir_sweep (impl=0x7f277ffc6fe8, nir=0x7f2781b67328) at nir/nir_sweep.c:127
+#9  0x00007f2767aeebdb in nir_sweep (f=0x7f279afaba68, nir=0x7f2781b67328) at nir/nir_sweep.c:145
+#10 0x00007f2767aeebdb in nir_sweep (nir=0x7f2781b67328) at nir/nir_sweep.c:167
+#11 0x00007f2767bb8b1b in brw_create_nir (brw=brw@entry=0x7f2775f4a028, shader_prog=shader_prog@entry=0x7f27790f0928, prog=prog@entry=0x7f27861a8800, stage=stage@entry=MESA_SHADER_VERTEX, is_scalar=<optimized out>) at brw_nir.c:213
+#12 0x00007f2767bc45e3 in brw_link_shader(gl_context*, gl_shader_program*) (ctx=0x7f2775f4a028, shProg=0x7f27790f0928) at brw_shader.cpp:406
+#13 0x00007f2767a05d1a in _mesa_glsl_link_shader(gl_context*, gl_shader_program*) (ctx=ctx@entry=0x7f2775f4a028, prog=prog@entry=0x7f27790f0928)
+    at program/ir_to_mesa.cpp:2983
+#14 0x00007f276791d31a in link_program (ctx=0x7f2775f4a028, program=<optimized out>) at main/shaderapi.c:1037
+#15 0x00007f27b2e50560 in mozilla::WebGLProgram::LinkAndUpdate() () at /usr/lib64/firefox/libxul.so
+#16 0x00007f27b2e50835 in mozilla::WebGLProgram::LinkProgram() () at /usr/lib64/firefox/libxul.so
+#17 0x00007f27b2e2ff39 in mozilla::WebGLContext::LinkProgram(mozilla::WebGLProgram*) () at /usr/lib64/firefox/libxul.so
+#18 0x00007f27b2c48ca9 in mozilla::dom::WebGLRenderingContextBinding::linkProgram(JSContext*, JS::Handle<JSObject*>, mozilla::WebGLContext*, JSJitMethodCallArgs const&) () at /usr/lib64/firefox/libxul.so
+#19 0x00007f27b2dee240 in mozilla::dom::GenericBindingMethod(JSContext*, unsigned int, JS::Value*) () at /usr/lib64/firefox/libxul.so
+#20 0x00007f279ef99a4d in  ()
+#21 0x0000000000000000 in  ()
+
+
+Expected results:
+
+No crash, no segment fault.

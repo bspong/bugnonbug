@@ -1,0 +1,25 @@
+nsINavBookmarksService.createFolder and insertBookmark fails when called from worker thread
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.1b2) Gecko/20081201 Firefox/3.1b2
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.1b2) Gecko/20081201 Firefox/3.1b2
+
+I'm not sure if this is related to bug 462379. If it is, please excuse the dup.
+
+When calling nsINavBookmarksService.createFolder or nsINavBookmarksService.insertBookmark from a worker thread, the following message is dumped to the error console: -
+
+[JavaScript Error: "uncaught exception: [Exception... "Component returned failure code: 0x8000ffff (NS_ERROR_UNEXPECTED) [nsIObserverService.notifyObservers]"  nsresult: "0x8000ffff (NS_ERROR_UNEXPECTED)"  location: "JS frame :: file:///C:/Program%20Files/Mozilla%20Firefox%203.1%20Beta%202/components/nsPlacesDBFlush.js :: DBFlush_handleCompletion :: line 198"  data: no]"]
+
+The problem seems to occur intermittently. After a fresh restart, everything works fine, but after running the code a few times, the errors start to occur.
+
+I have experimented with and without runInBatchMode. Using runInBatchMode seems to generate less errors, but errors are still dumped to the console.
+
+The most worrying part is that Firefox abends after a while.
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+1. Create a worker that adds a few folders and bookmarks using nsINavBookmarksService.createFolder and nsINavBookmarksService.insertBookmark
+Actual Results:  
+Dumps errors to console and sometimes causes Firefox to abend
+
+Expected Results:  
+Folders and bookmarks should be added without errors being dumped or Firefox abending.

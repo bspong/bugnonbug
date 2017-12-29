@@ -1,0 +1,30 @@
+firefox doesn't properly handle certificate type in SSL/TLS client authentication
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.7.10) Gecko/20050811 Firefox/1.0.6
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.7.10) Gecko/20050811 Firefox/1.0.6
+
+When an SSL/TLS server request client authentication it sends a list of
+certificate type which the client should use in selecting a client certificate.
+Firefox allows the user to pick any available client certificate, regardless a
+to whether the certificate is a valid choice based on the server's certificate
+types.
+
+For example, if the server sends a CertificateRequest message with only RSA_sign
+a a valid certificate type, the client should only be able to pick client
+certificate that contain RSA public key signed with RSA signatures. However,
+Firefox let the user pick a certificate with a DSS key which may cause
+authentication failures.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. find a SSL/TLS server that support client authentication using only RSA_sign
+2. Connect to the server with http
+3. When the client certificate selection dialog is shown, pick a non-RSA
+certificate such a a DSS certificate
+
+Actual Results:
+In test with my server the SSL/TLS handshake fails
+
+Expected Results:
+Limit the set of possible client certificate to those that match the server's
+certificate type in the CertificateRequest message.

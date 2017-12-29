@@ -1,0 +1,31 @@
+Scrollbar position not always restored after recovering from crash
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.8) Gecko/20071008 Firefox/2.0.0.8
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.8) Gecko/20071008 Firefox/2.0.0.8
+
+Someone reported a Session Manager bug that Session Manager wasn't restoring the scroll position when recovery a crash, but that Firefox did. See https://www.mozdev.org/bugs/show_bug.cgi?id=17987
+
+Upon researching this I determined that even without any extension installed Firefox 2.0.0.8 (and Minefield 2007102504) would not always restore the scroll position when recovering from a crash.
+
+It appears to depend on how long it take the page to start loading. If it load quickly the scroll bar position is restored, if not the scroll bar position is not restored.
+
+As far a I can tell this only affect crashes. I could not reproduce the problem when setting the "Show my window and tab from last time" feature in Firefox.
+
+Based on the bug report I received, this appears to be a regression since he stated the problem started in 2.0.0.8.
+
+I'll attach a sessionstore.js file that seems to trigger it pretty reliably (though that could change if the mozdev site speed up).
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+1. Open a few http and http page and scroll part way down the page. Try and pick at least one page that take a while to start loading.
+2. Wait 10 second and kill the Firefox.exe process.
+3. Start Firefox and choose recover.
+Actual Results:
+Sometimes the scroll position on page is not restored.
+
+Expected Results:
+The scroll position should be restored in all cases.
+
+This is tricky to reproduce since it doesn't seem to depend on how fast the page actually loads, but how fast it start to load. In my test I used https://www.mozdev.org/bugs/show_bug.cgi?id=17987 which sat at "loading..." for about 5 second before the page started to load. Any le than that and the scroll position will be restore.
+
+As I mentioned this only seems to be an issue when restoring a crash, not when restoring window and tab from last time.

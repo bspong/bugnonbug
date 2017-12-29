@@ -1,0 +1,47 @@
+nsIDOMKeyEvent.type JS error on maps.yahoo.com
+User-Agent: Mozilla/5.0 (Windows; compatible; U; Windows NT 5.0; en-US; rv:1.7) Gecko/20040729 Firefox/0.9.1+
+Build Identifier: Mozilla/5.0 (Windows; compatible; U; Windows NT 5.0; en-US; rv:1.7) Gecko/20040804 Firefox/0.9.1+
+
+When clicking on the "Make Map Larger" link on the page, nothing happens. The
+JS console show the following error:
+
+Error: uncaught exception: [Exception... "Component returned failure code:
+0x80004005 (NS_ERROR_FAILURE) [nsIDOMKeyEvent.type]" nsresult: "0x80004005
+(NS_ERROR_FAILURE)" location: "JS frame :: http://maps.yahoo.com/engine.js ::
+mpoi_handler :: line 634" data: no]
+
+The function in question is here:
+function mpoi_handler(evt) {
+evt = (evt) ? evt : ((window.event) ? window.event : "");
+if (evt) {
+var o = getTargetObj(evt);
+switch(evt.type) {
+case "mouseover": o.src = o.src.replace("nrm", "sel"); break;
+case "mouseout": o.src = o.src.replace("sel", "nrm"); break;
+case "click":
+if (o.id == 'ymaprsz') {
+submitMapForm(o);
+return false;
+break;
+}
+if (o.parentNode.id == 'ymaprszic') { //resize icon
+submitMapForm(o.parentNode);
+return false;
+break;
+}
+}
+}
+}
+
+I'm not sure if this is a FF bug or an evangelism issue, but it seems that
+something is going wrong in FF itself with an error like I'm seeing.
+
+Reproducible: Always
+Steps to Reproduce:
+1. Open a map on maps.yahoo.com
+2. Click on "Make Map Larger" link
+Actual Results:
+Nothing happens, and the error appears in the JS console
+
+Expected Results:
+The map should be made larger, and no error should appear.

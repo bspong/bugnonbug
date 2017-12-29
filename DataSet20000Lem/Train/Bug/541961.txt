@@ -1,0 +1,47 @@
+onmouseout in a link link from http to http break certificat
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; fr; rv:1.9.2) Gecko/20100115 Firefox/3.6
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; fr; rv:1.9.2) Gecko/20100115 Firefox/3.6
+
+Hello,
+
+When going from HTTP to HTTPS, with a normal link all is ok.
+
+But if this link got an mouseout javascript event and this mouseout change the img.src and this img.src is on HTTP, firefox randomly say on the HTTPS page that not all the content is secured.
+
+I think firefox behave like this:
+- you click the link
+- firefox load the new HTTPS page
+- in the sametime the mouseout is triggered (it souldn't!) looking for image on HTTP
+- firefox detect that image is on HTTP, but we are now on HTTPS zone
+- so firefox trigger the alerte and put a red "!" on the certificat icon.
+
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+1. URL is HTTP
+2. You click a link
+3. This link got image wich change onmouseout
+4. The link forward to an HTTPS URL
+
+Link could be:
+<a href="https://secure.mysite.com"><img src="/images/myimage.gif" onmouseout="this.src='http:www.mysite.com/images/myimageout.gif'"/></a>
+Actual Results:
+Randomly (it can happen only one time on 20), when you arrive in the HTTPS section with a valide certifiact, there is a red "!" on the ssl icon and a pop-up said that some content of the page ha not been encrypted.
+
+Expected Results:
+Normally all should be ok a the certificat is valid.
+
+I found how to correct the problem for my case:
+Link should have a mouseout on HTTPS web site.
+
+I think the bug come from firefox wich run in the same time the javascript mouseout event and go on the new HTTPS page.
+So a the mouseout look for an image on the HTTP site, in the same time firefox arrive on the HTTPS page, it warn the problem about not all the content being secured.
+
+I think firefox got a deep problem in that javascript event is not well separated (or stopped from execute) before going to the new page.
+
+I test on various navigators: Chrome/Opera/IE/Safari all haven't this problem.
+
+I test on Firefox PC and MAC and the problem is there for booth (it is le random an MAC, it seems so better for debugging the problem I think).
+
+I give "severity" major a it break my valid verisign Certificat, and SSL certification is a major feature.

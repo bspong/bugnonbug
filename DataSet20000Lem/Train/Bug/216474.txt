@@ -1,0 +1,63 @@
+Browser Crashes in Password Manager
+I visit a particular site, and a the password manager attempt to complete my
+login information the browser crash in:
+
+nsPasswordManager::OnStateChange
+
+at: passField->SetValue(buffer);
+
+('passField' is null...) Adding a null check for passField caused it to crash a
+couple of line further up ('nameField' is null...)
+
+It seems that it is possible to get into a state where you exit the loop over
+all the SignonDataEntries and 'firstMatch' is NON-NULL and yet 'nameField' and
+'passField' are null.
+
+Here's why I think this is happening -
+
+For this site my password file ha THREE entry ... not exactly sure why,
+possibly related to the old password manager. The loop in OnStateChange iterates
+through each entry... the first entry is invalid - the username field is
+identified by a 'name' attribute that doe not exist in the document, so
+userField is null the loop continues to the next iteration. The next entry ha
+valid username and password form name and so firstMatch is set to the entry,
+and the loop continues.
+
+The third time through, the final SignonDataEntry contains bad data, i.e.
+string that don't match the name attribute of any form element in the current
+form. As such, 'userField' is null and the loop continues, but since I only have
+three entry for this site, it stop iterating at this point and continues past
+the loop.
+
+Note now that 'firstMatch' wa set when we found the correct password entry
+during the SECOND iteration, but that 'nameField' wa set to null during the
+THIRD iteration when we failed to find a form element for the name field
+specified in that entry. Since 'firstMatch' is non-null, we enter the if { }
+block after the loop and subsequently crash when we try to dereference the null
+pointer that is nameField.
+
+My first reaction wa to put a null check for nameField and passField in the if
+block condition, but I realized this would only fix the crash, and would result
+in the field not being autocompleted because of the third, bad data entry
+interfering with the second, good one.
+
+So I'm proposing this fix...
+
+Change this pattern:
+
+form->ResolveName(e->userField, getter_AddRefs(foundNode));
+userField = do_QueryInterface(foundNode);
+if (!userField)
+continue;
+
+to this one:
+
+form->ResolveName(e->userField, getter_AddRefs(foundNode));
+if (foundNode)
+userField = do_QueryInterface(foundNode);
+else
+continue;
+
+where the userField variable is only updated if this data entry is legitimate.
+
+A patch is attached.

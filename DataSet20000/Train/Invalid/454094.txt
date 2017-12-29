@@ -1,0 +1,21 @@
+Iframes expose cookies on any site when the page runs malicious javascript
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.1) Gecko/2008070208 Firefox/3.0.1
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.1) Gecko/2008070208 Firefox/3.0.1
+
+An iframe can be created with an src of any page, even off domain page. This is not inherently a problem, though it can be. When the page is loaded it exposes the cookies, for use via the page itself or via a sidejacking attack.
+I would be foolish to think that this has never been noticed, however there is a simple way to fix this that may have not been intuitive.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Create an iframe on page you want to use cookies from (e.g. https://mail.google.com)
+2. Use the session information in those cookies to do something nefarious (e.g. Send some spam from an innocent gmail account)
+3. upload the session information for use off site after the user has navigated away from the page, until the site hosting the attacked user notices, or a new session is started.
+Actual Results:  
+Cookies can be read and used cross domain
+
+Expected Results:  
+Cookies should depend on not only the domain of the iframe, but on the root domain of the page. That is to say, not simply the iframe and it's parent, but they iframe and the root document, in case iframes are nested. This would be easy to accomplish by simple concatenation in the form iframe.domain.root.domain.
+Since the cookies would be in a different name space than the site's cookies should be, there will be no session information to find there, but if a site uses a mashup of some sort that calls an external site, it can still use the cookies for that site, but only if the user enters their information again. Thus we do not lose functionality. 
+
+Another bit of security I think would be good would be to allow the website to set a cookie to "root document only", so that if a malicious website lured a user into using a full window iframe to log into their, for example, bank the cookie would not be set since it was set from an iframe. That way the user could not login to the site and the phishing attack would be thwarted. There are, of course, other phishing attacks that will still work, but those are beyond the scope of this bug.

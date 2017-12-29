@@ -1,0 +1,64 @@
+segfault after media.autoplay.enable change
+User Agent: Mozilla/5.0 (X11; Linux x86_64; rv:39.0) Gecko/20100101 Firefox/39.0
+Build ID: 20150709123822
+
+Steps to reproduce:
+
+repro:
+1) open http://www.nytimes.com/2015/07/28/world/a-renegade-trawler-hunted-for-10000-miles-by-vigilantes.html?_r=0
+2) scroll to first video (which autoplays)
+3) open about:config
+4) change media.autoplay.enable (it just need to change, value doesnt matter)
+5) refresh http://www.nytimes.com/2015/07/28/world/a-renegade-trawler-hunted-for-10000-miles-by-vigilantes.html?_r=0
+6) scroll to first video
+7) segfault
+
+backgrace from gdb
+
+Program received signal SIGSEGV, Segmentation fault.
+[Switching to Thread 0x7fffd25fe700 (LWP 8489)]
+0x00007ffff44cfd02 in ?? () from /usr/lib64/firefox/libxul.so
+(gdb) trace
+Tracepoint 1 at 0x7ffff44cfd02
+(gdb) backtrace
+#0 0x00007ffff44cfd02 in ?? () from /usr/lib64/firefox/libxul.so
+#1 0x00007ffff44d03ff in ?? () from /usr/lib64/firefox/libxul.so
+#2 0x00007ffff44d07fd in ?? () from /usr/lib64/firefox/libxul.so
+#3 0x00007ffff4448ae4 in ?? () from /usr/lib64/firefox/libxul.so
+#4 0x00007ffff445051f in ?? () from /usr/lib64/firefox/libxul.so
+#5 0x00007ffff445ef96 in ?? () from /usr/lib64/firefox/libxul.so
+#6 0x00007ffff4447126 in ?? () from /usr/lib64/firefox/libxul.so
+#7 0x00007ffff3682655 in ?? () from /usr/lib64/firefox/libxul.so
+#8 0x00007ffff3681d70 in ?? () from /usr/lib64/firefox/libxul.so
+#9 0x00007ffff3696726 in ?? () from /usr/lib64/firefox/libxul.so
+#10 0x00007ffff3853f5e in ?? () from /usr/lib64/firefox/libxul.so
+#11 0x00007ffff3837c9d in ?? () from /usr/lib64/firefox/libxul.so
+#12 0x00007ffff36844b7 in ?? () from /usr/lib64/firefox/libxul.so
+#13 0x00007ffff1c8b4ec in ?? () from /usr/lib64/libnspr4.so
+#14 0x00007ffff7bc93a4 in start_thread () from /lib64/libpthread.so.0
+#15 0x00007ffff710686d in clone () from /lib64/libc.so.6
+
+output from firefox into the shell
+console.error:
+[CustomizableUI]
+Custom widget with id loop-button doe not return a valid node
+console.error:
+[CustomizableUI]
+Custom widget with id loop-button doe not return a valid node
+ASSERT: Giving up waiting for the tab closing animation to finish (bug 608589)
+Stack Trace:
+0:([object XULElement],[object XULElement])
+
+firefox info:
+39.0 build on gentoo from source from www-client/firefox using firefox-39.0.ebuild
+
+
+
+Actual results:
+
+segfault
+
+
+Expected results:
+
+nothing (well, the video shouldn't autoplay but that is because NYT website doe evil thing with javascript)

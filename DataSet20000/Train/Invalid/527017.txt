@@ -1,0 +1,30 @@
+window.onhashchange = app.locationHashChanged;   :  inside app.locationHashChanged, this == window
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.2b1) Gecko/20091029 Firefox/3.6b1 (.NET CLR 3.5.30729)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.2b1) Gecko/20091029 Firefox/3.6b1 (.NET CLR 3.5.30729)
+
+Firefox 3.6b1 ONLY bug
+
+The following code alerts on 3.6b1 "It doesn't work...".
+Other browsers (firefox 3.5.x too) work fine because execute other piece of code.
+
+var app = {
+	func : function() { alert('It works!'); },
+	locationHashChanged : function() { if (this == window) alert("It doesn't work..."); else this.func(); }
+};
+
+// for Firefox 3.6 only
+if ("onhashchange" in window)
+	window.onhashchange = app.locationHashChanged;
+// for assholes only
+else {
+	var currentHash = location.hash;
+	setInterval('if (currentHash != location.hash) { currentHash = location.hash; app.locationHashChanged(); }', 100);
+}
+
+Reproducible: Always
+
+Actual Results:  
+this inside locationHashChanged function is this == window
+
+Expected Results:  
+this inside locationHashChanged function must be this == app

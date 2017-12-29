@@ -1,0 +1,31 @@
+Wrong coordinates in absolute positioned server side imagemap
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; fi; rv:1.8.0.1) Gecko/20060111 Firefox/1.5.0.1
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; fi; rv:1.8.0.1) Gecko/20060111 Firefox/1.5.0.1
+
+Wrong coordinates get sent to the server when clicking server side imagemap which is positioned with CSS absolute positioning. The coordinates should be relative to the top-left corner of the image, but Firefox uses the top-left corner of the parent element. So if the image is positioned with CSS definition "position:absolute;left:140px;top:30px", and you click the image on the position (10,10) the coordinates which get sent to the server are (150,40) while they suppose to be (10,10).
+
+This happens at least in the following Firefox versions:
+- Firefox 1.5.0.1 for Windows
+- Firefox 1.5.0.2 for Mac OS X
+- Firefox 1.5.0.3 for Mac OS X
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Put these lines to some html document:
+---snip---
+<a href="something.php">
+<img src='someimage.png' style='position:absolute;left:150px;top:40px' ismap>
+</a>
+---snip---
+
+2. Load the page to Firefox and place the cursor to the top-left corner of the image
+
+3. Look at the browser status line
+
+Actual Results:  
+The status line shows the URL with the coordinates appended to it. The coordinates are relative to the container element of the image (to the background, if there's no other element in the file) , not the image itself.
+
+Expected Results:  
+The coordinates should be relative to the image, which is the actual imagemap.

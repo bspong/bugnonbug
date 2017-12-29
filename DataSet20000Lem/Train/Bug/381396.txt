@@ -1,0 +1,53 @@
+with a new profile (or a new livemark) the first time we check the expired time, we get a warning
+with a new profile (or a new livemark) the first time we check the expired time we assert.
+
+WARNING: NS_ENSURE_TRUE(NS_SUCCEEDED(rv)) failed: file c:/builds/trunk-no-places
+/mozilla/toolkit/components/places/src/nsAnnotationService.cpp, line 753
+
+this is a trivial bug, but when there isn't a problem, we shouldn't warn or assert.
+
+What's going on is:
+
+nsAnnotationService::GetPageAnnotationInt64() call StartGetAnnotationFromURI(); with livemark/expiration, but that annotation isn't in the db yet, so StartGetAnnotationFromURI() return NS_ERROR_NOT_AVAILABLE (because hasResult is false).
+
+Then in GetPageAnnotationInt64 we have NS_ENSURE_SUCCESS(rv,rv);
+
+Note, the livemark service wrap it's call with try / catch, and in the catch:
+
+"// This livemark ha never been loaded, since it ha no expire time."
+
+in nsAnnotationService, other caller to StartGetAnnotationFromURI() just do:
+
+if NS_FAILED(rv))
+return rv;
+
+Perhaps we should do the same, but in StartGetAnnotationFromURI() if mDBGetAnnotationFromURI->ExecuteStep() fails, then we assert (but not if we just don't have any results).
+
+here's a stack:
+
+> places.dll!nsAnnotationService::GetPageAnnotationInt64(nsIURI * aURI=0x03cbe528, const nsACString_internal & aName={...}, __int64 * _retval=0x0012e5a0) Line 751 + 0x16 byte C++
+xpcom_core.dll!NS_InvokeByIndex_P(nsISupports * that=0x03d4e778, unsigned int methodIndex=0x00000011, unsigned int paramCount=0x00000003, nsXPTCVariant * params=0x0012e580) Line 102 C++
+xpc3250.dll!XPCWrappedNative::CallMethod(XPCCallContext & ccx={...}, XPCWrappedNative::CallMode mode=CALL_METHOD) Line 2245 + 0x1e byte C++
+xpc3250.dll!XPC_WN_CallMethod(JSContext * cx=0x03ded740, JSObject * obj=0x00e4ec20, unsigned int argc=0x00000002, long * argv=0x048d800c, long * vp=0x0012e828) Line 1467 + 0xe byte C++
+js3250.dll!js_Invoke(JSContext * cx=0x03ded740, unsigned int argc=0x00000002, unsigned int flags=0x00000000) Line 1332 + 0x20 byte C
+js3250.dll!js_Interpret(JSContext * cx=0x03ded740, unsigned char * pc=0x03bb223a, long * result=0x0012eee0) Line 4025 + 0xf byte C
+js3250.dll!js_Invoke(JSContext * cx=0x03ded740, unsigned int argc=0x00000000, unsigned int flags=0x00000006) Line 1351 + 0x13 byte C
+js3250.dll!fun_apply(JSContext * cx=0x03ded740, JSObject * obj=0x00e36740, unsigned int argc=0x00000000, long * argv=0x048d7f2c, long * rval=0x0012efa4) Line 1703 + 0xf byte C
+js3250.dll!js_Invoke(JSContext * cx=0x03ded740, unsigned int argc=0x00000002, unsigned int flags=0x00000000) Line 1332 + 0x20 byte C
+js3250.dll!js_Interpret(JSContext * cx=0x03ded740, unsigned char * pc=0x03ba6a21, long * result=0x0012f65c) Line 4025 + 0xf byte C
+js3250.dll!js_Invoke(JSContext * cx=0x03ded740, unsigned int argc=0x00000001, unsigned int flags=0x00000002) Line 1351 + 0x13 byte C
+xpc3250.dll!nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS * wrapper=0x03ccfa38, unsigned short methodIndex=0x0003, const XPTMethodDescriptor * info=0x03dc06b8, nsXPTCMiniVariant * nativeParams=0x0012f9c4) Line 1419 + 0x14 byte C++
+xpc3250.dll!nsXPCWrappedJS::CallMethod(unsigned short methodIndex=0x0003, const XPTMethodDescriptor * info=0x03dc06b8, nsXPTCMiniVariant * params=0x0012f9c4) Line 566 C++
+xpcom_core.dll!PrepareAndDispatch(nsXPTCStubBase * self=0x03caba00, unsigned int methodIndex=0x00000003, unsigned int * args=0x0012fa84, unsigned int * stackBytesToPop=0x0012fa74) Line 114 + 0x21 byte C++
+xpcom_core.dll!SharedStub() Line 142 C++
+xpcom_core.dll!nsTimerImpl::Fire() Line 387 C++
+xpcom_core.dll!nsTimerEvent::Run() Line 458 C++
+xpcom_core.dll!nsThread::ProcessNextEvent(int mayWait=0x00000001, int * result=0x0012fb28) Line 483 C++
+xpcom_core.dll!NS_ProcessNextEvent_P(nsIThread * thread=0x00bad510, int mayWait=0x00000001) Line 227 + 0x16 byte C++
+gkwidget.dll!nsBaseAppShell::Run() Line 154 + 0xc byte C++
+tkitcmps.dll!nsAppStartup::Run() Line 171 + 0x1c byte C++
+xul.dll!XRE_main(int argc=0x00000003, char * * argv=0x00ba9830, const nsXREAppData * aAppData=0x004036e0) Line 2824 + 0x25 byte C++
+firefox.exe!main(int argc=0x00000003, char * * argv=0x00ba9830) Line 65 + 0x13 byte C++
+firefox.exe!__tmainCRTStartup() Line 586 + 0x19 byte C
+firefox.exe!mainCRTStartup() Line 403 C
+kernel32.dll!7c816fd7()

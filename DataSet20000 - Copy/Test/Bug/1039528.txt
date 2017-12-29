@@ -1,0 +1,30 @@
+[e10s] "Inspect Element" page contextual menu doesn't work with e10s
+STR:
+- Open a new e10s window
+- On any page, right-click a specific element
+- Choose "Inspect Element"
+
+=> Expected: the inspector opens and the element is selected
+=> Actual: The inspector opens and the <body> element (default selection) is selected
+
+See http://dxr.mozilla.org/mozilla-central/source/browser/base/content/nsContextMenu.js#488 :
+
+  inspectNode: function CM_inspectNode() {
+    let {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+    let gBrowser = this.browser.ownerDocument.defaultView.gBrowser;
+    let tt = devtools.TargetFactory.forTab(gBrowser.selectedTab);
+    return gDevTools.showToolbox(tt, "inspector").then(function(toolbox) {
+      let inspector = toolbox.getCurrentPanel();
+      inspector.selection.setNode(this.target, "browser-context-menu");
+    }.bind(this));
+  },
+
+There are 2 problems with this:
+- this.target is a CPOW in e10s mode, not the real DOM node,
+- and anyway, this method uses inspector.selection.setNode which isn't remote-safe at all
+
+It should be using inspector.selection.setNodeFront instead, but to do that, it needs to get a reference to the NodeFront that corresponds to this.target.
+
+I can't see a way to do this yet though. Loading a frame script in the content process would help get the real node, but from that, there won't be any way of getting the NodeFront.
+
+This is a major problem with switching to E10S since this contextual-menu item probably represents the majority of use cases when inspecting a node.

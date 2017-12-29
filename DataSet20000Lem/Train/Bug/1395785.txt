@@ -1,0 +1,26 @@
+browser_586068-apptabs_ondemand.js, browser_unrestored_crashedTabs.js, and browser_bug1303838.js are going to permafail on Linux when Gecko 57 merges to Beta on 2017-09-20
+[Tracking Requested - why for this release]: Permafailing Linux test on the next merge day.
+
+Linux-only from what I can tell. Bug 1373814 look suspicious by virtue of it being the only thing to touch SessionStore.jsm recently, but I'll try to bisect it to a real culprit before setting deps and needinfoing people.
+
+Interestingly, the browser_bug1303838.js failure are also consistently showing up in all the failing logs.
+
+https://treeherder.mozilla.org/logviewer.html#?job_id=127569911&repo=try
+
+TEST-UNEXPECTED-FAIL | browser/components/sessionstore/test/browser_586068-apptabs_ondemand.js | uncaught exception - TypeError: url is undefined at prepareConnectionToHost@resource:///modules/sessionstore/SessionStore.jsm:3443:9
+speculativeConnectOnTabHover@resource:///modules/sessionstore/SessionStore.jsm:3463:22
+speculativeConnectOnTabHover@resource:///modules/sessionstore/SessionStore.jsm:346:5
+_mouseenter@chrome://browser/content/tabbrowser.xml:7689:11
+onxblmouseover@chrome://browser/content/tabbrowser.xml:7840:9
+
+TEST-PASS | dom/base/test/browser_bug1303838.js | check tabs.length -
+TEST-PASS | dom/base/test/browser_bug1303838.js | check selectedTab -
+Waiting for 1 LocationChange
+Buffered message logged at 23:10:15
+Clicking #frame-link-3
+LocationChange: data:text/html;charset=utf-8,ibaz
+TEST-PASS | dom/base/test/browser_bug1303838.js | check tabs.length -
+TEST-PASS | dom/base/test/browser_bug1303838.js | check selectedTab -
+Leaving test bound
+Buffered message finished
+TEST-UNEXPECTED-FAIL | dom/base/test/browser_bug1303838.js | This test exceeded the timeout threshold. It should be rewritten or split up. If that's not possible, use requestLongerTimeout(N), but only a a last resort.

@@ -1,0 +1,17 @@
+requestAnimationFrame-based WebGL animation periodically stutters in Firefox.
+Visit either of these links: 
+
+https://dl.dropboxusercontent.com/u/40949268/emcc/Pong/Pong.html
+https://dl.dropboxusercontent.com/u/40949268/emcc/VSyncTest/VSyncTest.html
+
+Both pages are Emscripten-based applications that use requestAnimationFrame() as the mechanism to update animation. In the first link, the update function does a time-independent fixed update of the ball at 6 pixels per frame. In the second link, a vertical bar traces through the screen at a fixed rate that can be controlled with left&right keyboard buttons.
+
+The profiler at the bottom of the screen shows how much time is spent in the update function requestAnimationFrame() calls. The bottom bright green/yellow/red part of the graph represents the time spent in the requestAnimationFrame() function itself (which is typically very small < 1msec), whereas the darker green/yellow/red part stacked on top of the bright part shows the time spent between two subsequent requestAnimationFrame() calls. Each column of pixels represents a single call to requestAnimationFrame().
+
+In all tested browsers (Chrome 30, FF24, IE11 Release Preview, Opera 17) on my Windows laptop, the profiler graph at the bottom shows good frametimes of around ~16 msecs, so it looks like requestAnimationFrame() is called at good intervals to reach the 60fps vsync target of my laptop.
+
+On Firefox however, visually estimating the motion of the white ball and the vertical bar looks good at times, but at other times the motion is jumpy, or stuttering. In Chrome, IE11 Release Preview and Opera the motion does not exhibit this kind of jumpiness but is much smoother.
+
+I am not sure whether this is attributable to tearing in the lack of vsync - in the second link it looks like the vsync tear artifact, i.e. the horizontal "cut" line dividing the previous and current frame does not seem to be present. Does Firefox enforce vsync on when requestAnimationFrame is used?
+
+Expected: the animation in both examples should be pleasingly smooth, since the application requires only ~1msec to update, which should be plenty of time to hit the 60fps vsync animation rate.

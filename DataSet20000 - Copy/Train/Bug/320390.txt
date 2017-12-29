@@ -1,0 +1,42 @@
+Pressing escape to close menu doesn't return focus properly
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9a1) Gecko/20051214 Firefox/1.6a1
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9a1) Gecko/20051214 Firefox/1.6a1
+
+When you use keyboard traversal to open a menu (e.g., the File menu) and you then press escape to close the menu, the accessible focus doesn't return to the object that had focus.  Instead, the AT-SPI implementation emits an event saying the frame has focus.
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1) Run the attached test case in an xterm
+2) Run Firefox
+3) Press Tab to give something focus
+4) Press Alt+F to bring up the file menu
+5) Press Esc to dismiss the file menu
+6) Observe the output in the xterm
+Actual Results:  
+You will see the following output:
+
+focus: 0 0 <CORBA.any of type 'IDL:omg.org/CORBA/Null:1.0'>
+  name=None role='panel' state='ENABLED FOCUSABLE FOCUSED SENSITIVE SHOWING VISIBLE'
+keystroke type=%d hw_code=%d modifiers=%d event_string=(%s) is_text=%s
+keystroke type=%d hw_code=%d modifiers=%d event_string=(%s) is_text=%s
+focus: 0 0 <CORBA.any of type 'IDL:omg.org/CORBA/Null:1.0'>
+  name='File' role='menu' state='ENABLED FOCUSABLE FOCUSED SENSITIVE SHOWING VISIBLE'
+focus: 0 0 <CORBA.any of type 'IDL:omg.org/CORBA/Null:1.0'>
+  name='New Window' role='menu item' state='ENABLED FOCUSABLE FOCUSED SENSITIVE
+SHOWING VISIBLE'
+keystroke type=%d hw_code=%d modifiers=%d event_string=(%s) is_text=%s
+keystroke type=%d hw_code=%d modifiers=%d event_string=(%s) is_text=%s
+keystroke type=%d hw_code=%d modifiers=%d event_string=(%s) is_text=%s
+focus: 0 0 <CORBA.any of type 'IDL:omg.org/CORBA/Null:1.0'>
+  name='Google - Deer Park Alpha 2' role='frame' state='ACTIVE ENABLED FOCUSABLE FOCUSED SENSITIVE SHOWING VISIBLE'
+keystroke type=%d hw_code=%d modifiers=%d event_string=(%s) is_text=%s
+
+You'll see that the focus has ended up on the top level frame
+and not where it started prior to the Alt+F.  Actually, the "real" focus does end up at the right spot (I think), but the AT-SPI event doesn't tell us this - it gives it to the frame.
+
+
+
+Expected Results:  
+An AT-SPI event should be issued to say which component really has focus when the menu goes away.

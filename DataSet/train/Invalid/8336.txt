@@ -1,0 +1,112 @@
+Attempting to access profile directory prior to the existence of profile(s)
+Gagan,
+
+I have noticed that the following calls from cookies (stack trace at the bottom)
+are requesting for a current profile directory. No profiles are created at that
+point. In the past (prior to latest John McMullen's checkins) prefs service on
+initializtion used to create a profile "default" and nsCookie.cpp used to get
+that value. Prefs is not creating that folder anymore and it is not legal for
+others to create that folder. So, I'm wondering whether you can make you code to
+query for number of profiles available on the machine before requesting the
+cookie_ProfileDirectory. You should execute tht method only when when the number
+of profiles is 1 or more. Down in the main profile wizard/manager ultimately
+creates profiles (but only no attempts are made to find profile dir prior to
+that point).
+
+If you are not the rightful owner of this file, please reassign the bug to the
+actual owner. If you don't know who it is I will start searching for the
+rightful owner.
+
+You can obtain the profile service and get number of profiles by :
+( Note : Need to declare profile CID)
+
+        nsresult rv = nsServiceManager::GetService(
+            kProfileCID,
+            nsIProfile::GetIID(),
+            (nsISupports **)&profileService);
+
+        if (NS_SUCCEEDED(rv))
+        {
+            profileService->Startup(nsnull);
+            int numProfiles = 0;
+            profileService->GetProfileCount(&numProfiles);
+            if (numProfiles >= 1)
+            {
+                 /** do your stuff **/
+            }
+            else
+            {
+                 /** return error probably **/
+            }
+       }
+
+Here is the stack trace for all the accesses that are made by nsCookie.cpp for
+getting profile directory.
+
+Access #1 :
+
+GetProfileDirectory(nsFileSpec & {...}) line 124
+nsSpecialFileSpec::operator=(nsSpecialFileSpec::Type App_UserProfileDirectory50)
+line 281 + 9 bytes
+nsFileLocator::GetFileLocation(nsFileLocator * const 0x00bc71e0, unsigned int
+65548, nsIFileSpec * * 0x0012fa38) line 432
+NS_LocateFileOrDirectory(unsigned int 65548) line 51 + 20 bytes
+cookie_ProfileDirectory(nsFileSpec & {...}) line 192 + 10 bytes
+net_ReadCookiePermissions() line 1844 + 9 bytes
+net_ReadCookies() line 2015
+NET_ReadCookies(char * 0x0037ca0c) line 2568
+nsNetlibThread::Start() line 192 + 10 bytes
+nsNetlibService::nsNetlibService() line 166
+NS_InitINetService() line 1370 + 27 bytes
+nsNetFactory::CreateInstance(nsNetFactory * const 0x00c7e270, nsISupports *
+0x00000000, const nsID & {...}, void * * 0x0012fd7c) line 136 + 5 bytes
+nsComponentManagerImpl::CreateInstance(nsComponentManagerImpl * const
+0x00bc4760, const nsID & {...}, nsISupports * 0x00000000, const nsID & {...},
+void * * 0x0012fd7c) line 1054 + 24 bytes
+nsComponentManager::CreateInstance(const nsID & {...}, nsISupports * 0x00000000,
+const nsID & {...}, void * * 0x0012fd7c) line 68
+nsServiceManagerImpl::GetService(nsServiceManagerImpl * const 0x00bc4900, const
+nsID & {...}, const nsID & {...}, nsISupports * * 0x0012fddc,
+nsIShutdownListener * 0x00000000) line 243 + 19 bytes
+nsServiceManager::GetService(const nsID & {...}, const nsID & {...}, nsISupports
+* * 0x0012fddc, nsIShutdownListener * 0x00000000) line 446
+NS_NewURL(nsIURL * * 0x0012ff58, const nsString & {...}, const nsIURL *
+0x00000000, nsISupports * 0x00000000, nsIURLGroup * 0x00000000) line 1130 + 22
+bytes
+main(int 1, char * * 0x00bc1620) line 475 + 43 bytes
+mainCRTStartup() line 338 + 17 bytes
+KERNEL32! 77f1b304()
+
+
+Access #2 :
+
+GetProfileDirectory(nsFileSpec & {...}) line 124
+nsSpecialFileSpec::operator=(nsSpecialFileSpec::Type App_UserProfileDirectory50)
+line 281 + 9 bytes
+nsFileLocator::GetFileLocation(nsFileLocator * const 0x00bc71e0, unsigned int
+65548, nsIFileSpec * * 0x0012fad4) line 432
+NS_LocateFileOrDirectory(unsigned int 65548) line 51 + 20 bytes
+cookie_ProfileDirectory(nsFileSpec & {...}) line 192 + 10 bytes
+net_ReadCookies() line 2016 + 9 bytes
+NET_ReadCookies(char * 0x0037ca0c) line 2568
+nsNetlibThread::Start() line 192 + 10 bytes
+nsNetlibService::nsNetlibService() line 166
+NS_InitINetService() line 1370 + 27 bytes
+nsNetFactory::CreateInstance(nsNetFactory * const 0x00c7e270, nsISupports *
+0x00000000, const nsID & {...}, void * * 0x0012fd7c) line 136 + 5 bytes
+nsComponentManagerImpl::CreateInstance(nsComponentManagerImpl * const
+0x00bc4760, const nsID & {...}, nsISupports * 0x00000000, const nsID & {...},
+void * * 0x0012fd7c) line 1054 + 24 bytes
+nsComponentManager::CreateInstance(const nsID & {...}, nsISupports * 0x00000000,
+const nsID & {...}, void * * 0x0012fd7c) line 68
+nsServiceManagerImpl::GetService(nsServiceManagerImpl * const 0x00bc4900, const
+nsID & {...}, const nsID & {...}, nsISupports * * 0x0012fddc,
+nsIShutdownListener * 0x00000000) line 243 + 19 bytes
+nsServiceManager::GetService(const nsID & {...}, const nsID & {...}, nsISupports
+* * 0x0012fddc, nsIShutdownListener * 0x00000000) line 446
+NS_NewURL(nsIURL * * 0x0012ff58, const nsString & {...}, const nsIURL *
+0x00000000, nsISupports * 0x00000000, nsIURLGroup * 0x00000000) line 1130 + 22
+bytes
+main(int 1, char * * 0x00bc1620) line 475 + 43 bytes
+mainCRTStartup() line 338 + 17 bytes
+KERNEL32! 77f1b304()

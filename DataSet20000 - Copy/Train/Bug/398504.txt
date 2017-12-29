@@ -1,0 +1,50 @@
+New preference to always restore session if not resuming from a crash
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.6) Gecko/20061201 Firefox/2.0.0.6 (Ubuntu-feisty)
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.6) Gecko/20061201 Firefox/2.0.0.6 (Ubuntu-feisty)
+
+This patch adds a new preference that allows power users to disable the "restore session" dialog and have it always automatically restore the previous session.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.
+2.
+3.
+
+
+
+diff -Naur ./components/nsSessionStartup.js ../new/components/nsSessionStartup.js
+--- ./components/nsSessionStartup.js    2007-10-03 21:17:51.000000000 -0500
++++ ../new/components/nsSessionStartup.js       2007-10-03 21:00:39.000000000 -0500
+@@ -85,6 +85,9 @@
+ // resume the current session at startup if it had previously crashed
+ const DEFAULT_RESUME_FROM_CRASH = true;
+
++// resume the current session at startup without prompting
++const DEFAULT_RESUME_SESSION_AUTOMATICALLY = false;
++
+ function debug(aMsg) {
+   aMsg = ("SessionStartup: " + aMsg).replace(/\S{80}/g, "$&\n");
+   Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService)
+@@ -258,6 +261,10 @@
+     if (!this._getPref("sessionstore.resume_from_crash", DEFAULT_RESUME_FROM_CRASH))  
+       return false;
+
++    // Just resume, do not prompt if not post-crash and requested
++    if (this._getPref("sessionstore.resume_session_automatically", DEFAULT_RESUME_SESSION_AUTOMATICALLY))
++      return true;
++
+     // if the prompt fails, recover anyway
+     var recover = true;
+     // allow extensions to hook in a more elaborate restore prompt
+diff -Naur ./defaults/pref/firefox.js ../new/defaults/pref/firefox.js
+--- ./defaults/pref/firefox.js  2007-10-03 20:55:37.000000000 -0500
++++ ../new/defaults/pref/firefox.js     2007-10-03 21:01:41.000000000 -0500
+@@ -509,6 +509,7 @@
+ pref("browser.sessionstore.enabled", true);
+ pref("browser.sessionstore.resume_from_crash", true);
+ pref("browser.sessionstore.resume_session_once", false);
++pref("browser.sessionstore.resume_session_automatically", false);
+
+ // minimal interval between two save operations in milliseconds
+ pref("browser.sessionstore.interval", 10000);

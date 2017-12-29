@@ -1,0 +1,43 @@
+Menu remains highlighted after being dismissed by middle-click
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.9b2) Gecko/2007121120 Firefox/3.0b2
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.9b3pre) Gecko/2008010612 Minefield/3.0b3pre
+
+I found this bug when I wa working on bug 349913...
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Go to any page which provides more than one feed (such a <http://www.mozilla.org/>).
+2. From the Bookmarks menu, under Subscribe to This Page, middle-click on one of the feeds. The feed open in a new tab.
+3. Switch to the original tab.
+4. Click on the Bookmarks menu, and be careful not to hover any of it menu items.
+Actual Results:
+The Subscribe to This Page menu item is highlighted.
+
+Expected Results:
+None of the menu item should be highlighted.
+
+This happens both in beta 2 and the latest nightly.
+
+I checked the window using DOM Inspector, and I figured that menu item ha the "open" and "_moz-menuactive" attribute after the menu is dismissed by the middle-click.
+
+Relevant code to check out:
+<http://bonsai.mozilla.org/cvsblame.cgi?file=/mozilla/browser/base/content/utilityOverlay.js&rev=1.58&mark=240,258,263-272#240>
+
+I suspect there's something wrong with the closeMenus implementation, because if the test case is followed only by clicking with the left button (which dismisses the menu through XUL widget code) everything work a it should...
+
+
+
+about:buildconfig
+
+Build platform
+target
+i686-pc-mingw32
+
+Build tool
+Compiler Version Compiler flag
+cl 14.00.50727 -TC -nologo -W3 -Gy -Fd$(PDBFILE)
+cl 14.00.50727 -GR- -TP -nologo -Zc:wchar_t- -W3 -Gy -Fd$(PDBFILE)
+
+Configure argument
+--enable-application=browser --enable-debugger-info-modules=yes

@@ -1,0 +1,124 @@
+browser_522545.js tests for wrong things in its "load a lot of tabs" test
+(In reply to :Gijs Kruitbosch from  bug 1241085 comment #16)
+> This hasn't landed yet because the sessionstore test I'm modifying is
+> breaking with these changes, and I have not yet succeeded in reproducing any
+> of the varied breakage listed locally. :-\
+
+Right... I managed to reproduce this locally in the end. As far as I can tell it's because the test's assumptions are thoroughly busted already, and my changes push it over the edge, as it were. Here's what I think is going on...
+
+Preliminary: the test actually tests some 5 different things, and it expects to reset the window's state between those different things using session restore here:
+
+https://dxr.mozilla.org/mozilla-central/rev/0a25833062a880f369e6f9f622413a94cc671bf4/browser/components/sessionstore/test/browser_522545.js#248-259
+
+The issues start in the middle of the set of tests, here:
+
+https://dxr.mozilla.org/mozilla-central/rev/0a25833062a880f369e6f9f622413a94cc671bf4/browser/components/sessionstore/test/browser_522545.js#119-135
+
+    waitForBrowserState(state, function() {
+      let browser = gBrowser.selectedBrowser;
+      is(browser.currentURI.spec, "about:mozilla",
+         "browser.currentURI set to current entry in SH");
+      is(browser.userTypedValue, "example.org",
+         "userTypedValue was correctly restored");
+      is(browser.userTypedClear, 0,
+         "userTypeClear restored as expected");
+      is(gURLBar.value, "example.org",
+         "Address bar's value correctly restored to userTypedValue");
+      runNextTest();
+    });
+  }
+
+  // This test simulates lots of tabs opening at once and then quitting/crashing.
+  function test_getBrowserState_lotsOfTabsOpening() {
+    gBrowser.stop();
+
+Right. Because of the default state restoring that I mentioned initially, there is now one tab in the browser, which has "about:blank" loaded and because we call stop(), that ends up in the session history entries we will collect later on. Without my patches, at this stage browser.userTypedValue is blank.
+
+Now we try to load a lot of tabs:
+
+    let uris = [];
+    for (let i = 0; i < 25; i++)
+      uris.push("http://example.com/" + i);
+...
+    gBrowser.loadTabs(uris);
+
+We then wait for an onLocationChange to fire, indicating one of the tabs should have opened and become selected (the comment says it will have loaded, which looking at the code is misleading). Specifically:
+
+    // We're waiting for the first location change, which should indicate
+    // one of the tabs has loaded and the others haven't. So one should
+    // be in a non-userTypedValue case, while others should still have
+    // userTypedValue and userTypedClear set.
+
+but the code does:
+
+      onLocationChange: function (aBrowser) {
+        if (uris.indexOf(aBrowser.currentURI.spec) > -1) {
+          gBrowser.removeTabsProgressListener(this);
+          firstLocationChange();
+        }
+      }
+
+and inside firstLocationChange:
+
+      BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(firstLoad);
+
+- clearly that tab is not yet loaded...
+
+Anyway. Backtracking slightly: that comment claims that it's looking for the situation where one tab has loaded and the others haven't. So one of them should not have a userTypedValue and should have a non-0-length list of entries with a valid URI in it and all, and the others should have userTypedValue and userTypedClear still set. It checks the latter part before waiting for the load to finish (ie in the onLocationChange handler):
+
+      let hasUTV = state.windows[0].tabs.some(function(aTab) {
+        return aTab.userTypedValue && aTab.userTypedClear && !aTab.entries.length;
+      });
+
+      ok(hasUTV, "At least one tab has a userTypedValue with userTypedClear with no loaded URL");
+
+So far so good: if I dump the contents of the JSON 'state' object, both pre- and post- patch, all the tabs have the userTypedValue and userTypedClear set.
+
+The unfortunate bit is the next test, when this browser finishes loading:
+
+      let state = JSON.parse(ss.getBrowserState());
+      let hasSH = state.windows[0].tabs.some(function(aTab) {
+        return !("userTypedValue" in aTab) && aTab.entries[0].url;
+      });
+
+      ok(hasSH, "At least one tab has its entry in SH");
+
+At this point, pre-test, the state looks like this (shortened slightly):
+{
+   "windows":[
+      {
+         "tabs":[
+            {
+               "entries":[
+                  {
+                     "url":"about:blank",
+                     "charset":"",
+                     "ID":16,
+                     "docshellID":0,
+                     "docIdentifier":16,
+                     "persist":true
+                  }
+               ],
+               "index":1,
+            },
+            {
+               "entries":[],
+            },
+            {
+               "entries":[],
+            },
+...
+         ]
+      }
+   ]
+}
+
+Unfortunately, that first entry *isn't* the initial, newly created tab with example.com/0 in it. It's the tab that we loaded in the previous test, and then replaced with about:blank, and then stopped (leaving about:blank in the entries list for that tab).
+
+I don't really know why the entries list for those other tabs is blank (suspicion: all the URLs result in 404s, and perhaps sessionstore reacts differently to those), but the test is clearly not testing what it wants to test, because the 'reset' of the session state still leaves that one empty tab with a session history entry...
+
+The reason it then actually breaks with the patches in bug 1241085 is to do with the changes the patch makes to sessionstore setting userTypedValue: if the browser you're assigning session state to already has a userTypedValue, we don't overwrite that. That seems like correct behaviour to me; the test is implicitly relying on the browser's userTypedValue and userTypedClear state and so on being reset by the assigning of browser state.
+
+So I think the fix for the broken assumptions here is to do all the testing in a new window each time. Unfortunately, that will break the "load a bunch of tabs" test, because the test is "secretly" already broken, except nobody noticed. :-(
+
+Mike, does this story sound cogent to you and/or do you have suggestions on how to unbreak the test? (I'll test locally if using something other than 404'ing URIs fixes the lack of history entries created... maybe it also has to do with e10s (I tested with e10s enabled at all times)? Not sure...)

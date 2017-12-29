@@ -1,0 +1,20 @@
+Nightly build being lumped together with integration build in perfherder
+Android nightly build have different characteristic than integration build (e.g. they have multiple locales) but are being lumped in with the integration build by perfherder for the apk size measurement:
+
+https://treeherder.mozilla.org/perf.html#/graphs?timerange=604800&series=%5Bmozilla-aurora,7601f68563dc6dad10bc630a38bb80e7b78fe5b1,1,2%5D
+
+(it's hard to select item currently because of bug 1334527, please ignore that)
+
+We should add "nightly" to extra_options in the log for these build to distinguish them. I.e.
+
+PERFHERDER_DATA: {"framework": {"name": "build_metrics"}, "suites": [{"subtests": [{"name": "libxul.so", "value": 17957868}, {"name": "classes.dex", "value": 6861832}, {"name": "omni.ja", "value": 10430384}], "name": "installer size", "value": 38131527, "alertThreshold": 0.25}, ...
+
+should be:
+
+PERFHERDER_DATA: {"framework": {"name": "build_metrics"}, "suites": [{"subtests": [{"name": "libxul.so", "value": 17957868}, {"name": "classes.dex", "value": 6861832}, {"name": "omni.ja", "value": 10430384}], "name": "installer size", "value": 38131527, "alertThreshold": 0.25, "extraOptions": ["nightly"]}, ...
+
+(we may also want to flag these build differently for build times)
+
+Chris, Callek suggested on irc that you'd be a good person to fix this. If you're not, hopefully you know someone who would be...
+
+Some more irc discussion here: http://logs.glob.uno/?c=mozilla%23mobile#c615321

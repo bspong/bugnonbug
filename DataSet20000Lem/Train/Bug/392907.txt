@@ -1,0 +1,37 @@
+RSS feed throw error and fail to load when IPv6 nameservers listed in /etc/resolv.conf
+User-Agent: Mozilla/5.0 (X11; U; Linux i686 (x86_64); en-US; rv:1.9a8pre) Gecko/2007080704 Minefield/3.0a8pre
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686 (x86_64); en-US; rv:1.9a8pre) Gecko/2007080704 Minefield/3.0a8pre
+
+We're slowly working on rolling out IPv6 here, and one thing that needed testing wa DNS-over-IPv6. So I put in my /etc/resolv.conf:
+
+nameserver 2001:468:c80:6101:213:72ff:fefc:d5cc
+
+(One of our internal nameservers with an IPv6 address) - and that work for most stuff.
+
+However, this give many of Firefox's RSS feed indigestion, and they fail to load/update. The error console show many duplicate of the following 2 errors:
+
+Error: [Exception... "Component returned failure code: 0x80004002 (NS_NOINTERFACE) [nsISAXXMLReader.onDataAvailable]" nsresult: "0x80004002 (NS_NOINTERFACE)" location: "JS frame :: file:///usr/local/firefox/components/FeedProcessor.js :: FP_onDataAvailable :: line 1320" data: no]
+Source File: file:///usr/local/firefox/components/FeedProcessor.js
+Line: 1320
+
+
+Error: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsINavBookmarksService.runInBatchMode]" nsresult: "0x80004005 (NS_ERROR_FAILURE)" location: "JS frame :: file:///usr/local/firefox/components/nsLivemarkService.js :: LLL_handleResult :: line 845" data: no]
+Source File: file:///usr/local/firefox/components/nsLivemarkService.js
+Line: 845
+
+After this, most, but not all, RSS feed eventually show up, but some remain stuck for days/weeks. If I comment out the IPv6 nameservers, the update show up within seconds. Note that 98% of the *rest* of Firefox seems perfectly happy in doing DNS over IPv6 - following links, bookmarks, and so on all work fine.
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. List an IPv6 nameserver in resolv.conf
+2. Watch RSS feed fail to update (Ed Felten's www.freedom-to-tinker.com wa particularly noticable in failing to update)
+3.
+
+
+
+Apparently although Fedora's glibc is able to deal with IPv6 nameservers, there's some subtle IPv4 assumption in the RSS code (though why the RSS code care whether a reply came from an IPv4 or IPv6 DNS server, when 99% of the rest of Firefox doesn't seem to care in the slightest, escape me totally).
+
+The bug ha been in trunk since at least June 24 or so, when I first tried adding an IPv6 nameserver (it took me quite some time to correlate cause and effect for this one).

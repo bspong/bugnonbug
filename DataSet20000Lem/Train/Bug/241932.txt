@@ -1,0 +1,43 @@
+incorrect order of javascript event process associated with object in a Form
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.6) Gecko/20040206 Firefox/0.8
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.6) Gecko/20040206 Firefox/0.8
+
+Having a Form with onsubmit event associated with it and a onkeyup event
+associated with an input type text object to validate the user input.
+The function associated with the input object check if the user press Return key
+and in that case return "false", but the onsubmit event and\or the form itself
+take precedence in the detect of the Return key and execute the POST.
+The beavhior is different in IE where the function associated with the object
+in the form take the precedence over The Form.
+
+
+Reproducible: Always
+Steps to Reproduce:
+1. function checkInt(ObjectName,e) {
+if(ie) {
+key = event.keyCode;
+} else key = e.which;
+
+if (( key < 48 || key > 58 ) && (key != 8 && key != 9)) {
+if(!ie) {
+ObjectName.value = ObjectName.value.substr(0, ObjectName.value.length-1);
+}
+return false;
+}
+}
+
+2. <form name="MyForm" action="main.html" method="post" target="_self"
+onsubmit="return verifyBlank();" >
+---
+<input name="Number" type="text" value="" onkeyup="return checkInt(this, event);" >
+---
+<input type="submit" value="Send" name="submit" >
+
+3. Type some numeric and char in the input field, then press return
+
+Actual Results:
+The function verifyBlank() will be execute and the form submited
+
+Expected Results:
+The Form will not be submited if the focus is in the text field and the key
+pressed wa Return

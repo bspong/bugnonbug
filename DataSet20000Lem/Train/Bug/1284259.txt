@@ -1,0 +1,27 @@
+EventDetailsTooltip intermittent error in EventTooltip.destroy
+Follow up to Bug 1267403. Below, the relevant discussion.
+
+(In reply to Alexandre Poirot [:ochameau] from comment #14)
+> Comment on attachment 8764562
+> Bug 1267403 - HTMLTooltip: add useXulWrapper option when displayed in a XUL
+> document;
+>
+> https://reviewboard.mozilla.org/r/60360/#review58422
+>
+> Tested with color,cubic,filter tooltips work great.
+> Also looked at event detail and images. Is there any others?
+>
+> Note that while testing event detail I've seen various weird exception.
+> But I don't think it is related to this patch:
+> TypeError: can't convert undefined to object:
+> EventTooltip.prototype.destroy@resource://gre/modules/commonjs/toolkit/
+> loader.js ->
+> resource://devtools/client/shared/widgets/tooltip/EventTooltipHelper.js:293:
+> 24
+> It happens when clicking outside the tooltip to dismiss it. It is
+> intermittent and doesn't always throws...
+>
+
+Indeed thanks for the head up. There is a race condition which can lead to erase the tooltip content before having destroyed the previous tooltip. Comes from two reasons:
+- calling "hide" on a Tooltip not yet visible is not triggering the "hidden" event (early return in the hide() method)
+- in markup.js, on event bubble click handler, we hide() the tooltip, then fetch the event info asynchronously and then show() the tooltip. We should hide() right before calling show() otherwise we are exposed to race condition

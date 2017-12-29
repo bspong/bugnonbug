@@ -1,0 +1,34 @@
+Recent TraceMonkey merge break build with gold linker on Linux
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:7.0a1) Gecko/20100101 Firefox/7.0a1
+Build Identifier:
+
+I get the following error when I use "gold" a my linker:
+
+c++ -o jsworkers.o -c -I../../../dist/system_wrappers_js -include /var/tmp/mozilla-central/js/src/config/gcc_hidden.h -DEXPORT_JS_API -DOSTYPE=\"Linux3.0\" -DOSARCH=Linux -I/var/tmp/mozilla-central/js/src -I.. -I/var/tmp/mozilla-central/js/src/shell -I. -I../../../dist/include -I../../../dist/include/nsprpub -I/var/tmp/mozilla-central/moz-build-dir/dist/include/nspr -fPIC -fno-rtti -fno-exceptions -Wall -Wpointer-arith -Woverloaded-virtual -Wsynth -Wno-ctor-dtor-privacy -Wno-non-virtual-dtor -Wcast-align -Wno-invalid-offsetof -Wno-variadic-macros -Werror=return-type -pedantic -Wno-long-long -march=native -fno-strict-aliasing -pthread -pipe -DNDEBUG -DTRIMMED -fprofile-generate -O3 -DMOZILLA_CLIENT -include ../js-confdefs.h -MD -MF .deps/jsworkers.pp /var/tmp/mozilla-central/js/src/shell/jsworkers.cpp
+/var/tmp/mozilla-central/js/src/shell/jsworkers.cpp: In member function ‘void js::workers::MainQueue::destroy(JSContext*)’:
+/var/tmp/mozilla-central/js/src/shell/jsworkers.cpp:371:16: warning: deleting object of polymorphic class type ‘js::workers::MainQueue’ which ha non-virtual destructor might cause undefined behaviour [-Wdelete-non-virtual-dtor]
+/var/tmp/mozilla-central/js/src/shell/jsworkers.cpp: In member function ‘bool js::workers::ThreadPool::start(JSContext*)’:
+/var/tmp/mozilla-central/js/src/shell/jsworkers.cpp:511:20: warning: deleting object of polymorphic class type ‘js::workers::WorkerQueue’ which ha non-virtual destructor might cause undefined behaviour [-Wdelete-non-virtual-dtor]
+/var/tmp/mozilla-central/js/src/shell/jsworkers.cpp: In member function ‘void js::workers::ThreadPool::shutdown(JSContext*)’:
+/var/tmp/mozilla-central/js/src/shell/jsworkers.cpp:548:16: warning: deleting object of polymorphic class type ‘js::workers::WorkerQueue’ which ha non-virtual destructor might cause undefined behaviour [-Wdelete-non-virtual-dtor]
+/var/tmp/mozilla-central/js/src/shell/jsworkers.cpp: In static member function ‘static void js::workers::Worker::jsFinalize(JSContext*, JSObject*)’:
+/var/tmp/mozilla-central/js/src/shell/jsworkers.cpp:690:20: warning: deleting object of polymorphic class type ‘js::workers::Worker’ which ha non-virtual destructor might cause undefined behaviour [-Wdelete-non-virtual-dtor]
+/var/tmp/mozilla-central/js/src/shell/jsworkers.cpp: In static member function ‘static js::workers::Worker* js::workers::Worker::create(JSContext*, js::workers::WorkerParent*, JSString*, JSObject*)’:
+/var/tmp/mozilla-central/js/src/shell/jsworkers.cpp:1073:16: warning: deleting object of polymorphic class type ‘js::workers::Worker’ which ha non-virtual destructor might cause undefined behaviour [-Wdelete-non-virtual-dtor]
+In file included from /var/tmp/mozilla-central/js/src/shell/js.cpp:97:0:
+/var/tmp/mozilla-central/js/src/jsobjinlines.h: In member function ‘void JSObject::setArrayLength(uint32)’:
+/var/tmp/mozilla-central/js/src/jsobjinlines.h:367:24: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
+/usr/bin/python2.7 /var/tmp/mozilla-central/js/src/config/pythonpath.py -I../config /var/tmp/mozilla-central/js/src/config/expandlibs_exec.py --uselist -- c++ -o j -fno-rtti -fno-exceptions -Wall -Wpointer-arith -Woverloaded-virtual -Wsynth -Wno-ctor-dtor-privacy -Wno-non-virtual-dtor -Wcast-align -Wno-invalid-offsetof -Wno-variadic-macros -Werror=return-type -pedantic -Wno-long-long -march=native -fno-strict-aliasing -pthread -pipe -DNDEBUG -DTRIMMED -fprofile-generate -O3 js.o jsworkers.o -lpthread -Wl,-O1,--hash-style=gnu,--no-keep-memory -fprofile-generate -Wl,-rpath-link,/bin -Wl,-rpath-link,/var/tmp/mozilla-central/moz-build-dir/dist/lib -L../../../dist/bin -L../../../dist/lib -L/var/tmp/mozilla-central/moz-build-dir/dist/lib -lplds4 -lplc4 -lnspr4 -lpthread -ldl ../editline/libeditline.a ../libjs_static.a -ldl
+/var/tmp/mozilla-central/moz-build-dir/js/src/shell/jsworkers.o:jsworkers.cpp:function js::workers::Worker::processOneEvent(): warning: relocation refers to discarded section
+/usr/lib/gcc/x86_64-pc-linux-gnu/4.7.0/../../../../x86_64-pc-linux-gnu/bin/ld: error: hidden symbol 'JSAutoRequest::~JSAutoRequest()' is not defined locally
+/var/tmp/mozilla-central/moz-build-dir/js/src/shell/jsworkers.o:jsworkers.cpp:function js::workers::ThreadPool::start(JSContext*): warning: relocation refers to discarded section
+/usr/lib/gcc/x86_64-pc-linux-gnu/4.7.0/../../../../x86_64-pc-linux-gnu/bin/ld: error: hidden symbol 'JSAutoSuspendRequest::JSAutoSuspendRequest(JSContext*)' is not defined locally
+../libjs_static.a(jsapi.o):jsapi.cpp:function StopRequest(JSContext*): warning: relocation refers to discarded section
+/usr/lib/gcc/x86_64-pc-linux-gnu/4.7.0/../../../../x86_64-pc-linux-gnu/bin/ld: error: hidden symbol 'js::AutoLockGC::~AutoLockGC()' is not defined locally
+../libjs_static.a(jsapi.o):jsapi.cpp:function JS_ConvertArgumentsVA: warning: relocation refers to discarded section
+/usr/lib/gcc/x86_64-pc-linux-gnu/4.7.0/../../../../x86_64-pc-linux-gnu/bin/ld: error: hidden symbol 'JSAutoByteString::~JSAutoByteString()' is not defined locally
+...
+
+The bfd linker work fine.
+
+Reproducible: Always

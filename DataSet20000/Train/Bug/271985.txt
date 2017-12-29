@@ -1,0 +1,73 @@
+firefox / seamonkey starts more than 10 processes of timidity via mozplugger
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; de-AT; rv:1.7.3) Gecko/20041007 Debian/1.7.3-5
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; de-DE; rv:1.7.5) Gecko/20041111 Firefox/1.0 (Debian package 1.0-2) amd Mozilla/5.0 (X11; U; Linux i686; de-AT; rv:1.7.3) Gecko/20041007 Debian/1.7.3-5
+
+Visiting a page containing embedded midi as
+http://www1.bluemountain.com/display.pd?bfrom=1&prodnum=3032370&path=35069
+source code:
+<noembed><bgsound
+src="http://ak.imgag.com/imgag/product/full/ap/3032370/music.mid" 
+loop=infinite></noembed>
+
+<embed src="http://ak.imgag.com/imgag/product/full/ap/3032370/music.mid" 
+width=2 height=0 autostart=true loop=true HIDDEN=TRUE></embed> 
+
+in the URL above, firefox 1.0 and mozilla 1.7.3 start (linux system, tested with
+Debian testing and unstable) more than 10 processes of timidity via mozplugger.
+Opera and Konqueror are ok, they only start one process with the same entry in
+the "mozpluggerrc" file. Mozpluggerrc contains:
+##################
+### Audio      ###
+##################
+
+audio/mid: midi,mid: MIDI audio file
+audio/x-mid: midi,mid: MIDI audio file
+audio/midi: midi,mid: MIDI audio file
+audio/x-midi: midi,mid: MIDI audio file
+        controls noisy: timidity -OR "$file"
+        controls: playmidi "$file"
+
+The timidity processes occupy nearly 100% CPU load and lead to horrible sound.
+
+
+Reproducible: Always
+Steps to Reproduce:
+1. Install mozilla or firefox, timidity and mozplugger on Debian testing or
+unstable (linux).
+2. Start mozilla 1.7.3 or firefox 1.0
+3. Start "top" in a console
+4. Load one of the electronic greeting cards of www.bluemountain.com, see "URL".
+5. Look at your "top" output and see -> Actual Results
+
+Actual Results:  
+Tasks: 133 total,  27 running, 105 sleeping,   0 stopped,   1 zombie
+Cpu(s): 75.3% us,  8.7% sy,  0.0% ni,  0.0% id, 16.0% wa,  0.0% hi,  0.0% si
+Mem:    516432k total,   192952k used,   323480k free,     2992k buffers
+Swap:  1020088k total,   135192k used,   884896k free,    58332k cached
+
+  PID USER      PR  NI  VIRT  RES  SHR S %CPU %MEM    TIME+  COMMAND
+ 2799 dieter    15   0  123m  39m  31m S 15.2  7.8   1:07.85 mozilla-bin
+ 2630 root      16   0  165m 8288 139m S 10.9  1.6   2:19.36 XFree86
+ 5810 dieter    18   0 14644 5028  12m R  4.3  1.0   0:00.13 timidity
+ 5805 dieter    18   0 14644 4780  12m R  4.0  0.9   0:00.12 timidity
+ 5811 dieter    18   0 14644 4804  12m R  3.6  0.9   0:00.11 timidity
+ 5802 dieter    18   0 14644 4608  12m R  3.3  0.9   0:00.10 timidity
+ 5803 dieter    18   0 14644 4516  12m R  3.3  0.9   0:00.10 timidity
+ 5806 dieter    18   0 14644 4624  12m R  3.3  0.9   0:00.10 timidity
+ 5807 dieter    18   0 14644 4516  12m R  3.3  0.9   0:00.10 timidity
+ 5812 dieter    18   0 14644 4528  12m R  3.3  0.9   0:00.10 timidity
+ 5813 dieter    18   0 14644 4516  12m R  3.3  0.9   0:00.10 timidity
+ 5804 dieter    18   0 14644 4508  12m R  3.0  0.9   0:00.09 timidity
+ 5809 dieter    18   0 14644 4512  12m R  3.0  0.9   0:00.09 timidity
+ 5814 dieter    17   0 14644 4208  12m R  2.6  0.8   0:00.08 timidity
+ 5775 dieter    20   0  9984 2660 8136 R  1.3  0.5   0:00.04 timidity
+ 5787 dieter    20   0  9984 2652 8136 R  1.3  0.5   0:00.04 timidity
+ 5788 dieter    20   0  9984 2672 8136 R  1.3  0.5   0:00.04 timidity
+
+
+Expected Results:  
+Only one process of timidity should be started.
+
+
+Tested with localized German versions of firefox and mozilla (Debian packages
+"locale-de" installed).

@@ -1,0 +1,20 @@
+Need a container for Developer Tools boxes
+Some background: Currently our developer tools are misplaced. When we open the Page Inspector and Web Console together, the Console is "Inside" the Page Inspector. This is particularly noticeable if you place the Console at the bottom of the window and it appears above the Inspector's toolbar.
+
+This will be compounded with the Debugger.
+
+Currently the console and debugger live inside the browser's notification box area. This has some nice properties, the UI is tied to the tab and we don't have to deconstruct those containers on tab switch. The browser DOM handles all of that for us.
+
+We're considering options to deal with proper nesting.
+
+a) Create another XBL layer outside the notification box inside each tab. We'd nest the notification box inside this layer. This lets us keep notifications near the content where they belong and gives us more control over what we do with the content area. Adding an extra level could break some extensions that rely on the current arrangement.
+
+b) Move everything into browser.xul and manage the state of each tool using some form of tab watcher the same way we do it with the Inspector. This feels messy, we have to track a lot of state ourselves. (I'm only mentioning this for completeness, I don't think we want to do this).
+
+c) we could stash *all* of our tools inside the notification box with the noted exception of our sidebar which needs a vbox which doesn't exist at that level.
+
+d) reimplement the notification box to give us what we need. Could create a sidebar here, and a bottom box to stash our panels in.
+
+Our current favorite option is (a) - create a new XBL container for our developer tools. This gets us outside of the notification area, allows us adjust the position and size of content if needed (for a mobile screen size for example) and allows us to control the contents of this layer without affecting anything beneath it.
+
+I fully expect this bug to become a meta bug for individual pieces of work.

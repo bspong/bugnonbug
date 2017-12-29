@@ -1,0 +1,43 @@
+clicking on link doesn't wait javascript to finish onClick()
+User-Agent:       Mozilla/5.0 (X11; U; FreeBSD i386; en-US; rv:1.8.0.1) Gecko/20060206 Firefox/1.5.0.1
+Build Identifier: Mozilla/5.0 (X11; U; FreeBSD i386; en-US; rv:1.8.0.1) Gecko/20060206 Firefox/1.5.0.1
+
+I made a simple links' counter with javascript on a webpage so that on clicking a link, a feedback is sent to a webpage with onClick().
+
+The problem is that Firefox seems to follow the link before finishing execution of onClick().
+
+Reproducible: Always
+
+Steps to Reproduce:
+function count(id) { 
+    var url = "http://my.webserver/counter.php?hit=" + id; 
+    var xmlhttp; 
+ 
+    // code for Mozilla, etc. 
+    if (window.XMLHttpRequest) { 
+       xmlhttp=new XMLHttpRequest(); 
+       //xmlhttp.onreadystatechange=xmlhttpChange; 
+       xmlhttp.open("GET",url,true); 
+       xmlhttp.send(null); 
+    } 
+    // code for IE 
+    else if (window.ActiveXObject) { 
+       xmlhttp=new ActiveXObject("Microsoft.XMLHTTP"); 
+       if (xmlhttp) { 
+          //xmlhttp.onreadystatechange=xmlhttpChange; 
+          xmlhttp.open("GET",url,true); 
+          xmlhttp.send(); 
+       } 
+    } 
+ }
+
+<a href="http://www.google.com" onClick="javascript:count(10);">www.google.com</a>
+Actual Results:  
+clicking on link doesn't wait javascript to complete its request to remote server
+
+Expected Results:  
+Firefox waits the javascript to finish its request to remote server and then follows the link
+
+On other browsers (Konqueror, IE, Opera) it works nicely every time, but Gecko-based browsers (Firefox, Epiphany) don't send the request to my URL.
+
+The problem isn't that they leave the current page before executing onClick(), because when I add some alert() after count() (onClick="javascript:count(10); alert('bla')"), count() seems to finish its job while I'm staring at the alert-box.

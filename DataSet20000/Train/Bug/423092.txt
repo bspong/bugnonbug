@@ -1,0 +1,47 @@
+Firefox does not follow the FTP protocol standard command PASV correctly
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.12) Gecko/20080201 Firefox/2.0.0.12
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.12) Gecko/20080201 Firefox/2.0.0.12
+
+When the client is behind a non-transparent proxy, FTP should still work.  But it does not on Firefox.
+
+Firefox uses the PASV command for FTP, the received response from the PASV command is an IP and port.  Firefox ignores this IP and uses the one in the address bar.  This is normally fine 99% of the time, but if the user was behind a non-transparent proxy, then it will fail since Firefox did not follow the FTP protocol.  Firefox should have connected to the IP return from the PASV command.
+
+Here's an example, as I don't have a non-transparent proxy to give you.
+
+I have a custom software that forwards requests from port 12344 to a ftp server.
+
+So, in Firefox to connect to the FTP, I use ftp://localhost:12344
+
+Here's a snip of the FTP commands...
+
+(blah blah blah, connect, send user, send password, blah blah blah)
+
+Sent to FTP server via proxy:
+PASV
+
+Received:
+227 Entering Passive Mode (204,152,189,167,235,131).
+
+Firefox ignores that IP and tries to connect to localhost:60291, what is should have is connect to 204.152.189.167:60291.
+
+I know this is what Firefox does, since I used a real FTP client, and it had no issue connecting to the FTP via my proxy.
+
+To be clear, what I mean by a non-transparent proxy is a server that accepts a connection on a port and forwards it to another host.
+
+Reproducible: Always
+
+Steps to Reproduce:
+Well, its going to hard for you to reproduce this bug.  But here's the steps anyway!
+
+1. Use a non-transparent proxy to forward data from a port to an ftp server
+2. Connect to the ftp server via the proxy
+
+Actual Results:  
+nothing will be displayed
+
+Expected Results:  
+contents of ftp server to be displayed
+
+Firefox needs to use the IP in the result of the PASV command
+
+There's no work-around for this, so there's bound to be people out there cursing at you guys for "not having ftp support"

@@ -1,0 +1,49 @@
+1.5b1 look for -bin file based on symlink name, not symlink target's name.
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8b4) Gecko/20050908 Firefox/1.4
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8b4) Gecko/20050908 Firefox/1.4
+
+Symlink exists a follows:
+/pkgs/mozilla/bin/firefox-1.5b1 -> ../firefox-1.5b1/firefox
+
+$ /pkgs/mozilla/bin/firefox-1.5b1
+run-mozilla.sh: Cannot execute /pkgs/mozilla/firefox-1.5b1/firefox-1.5b1-bin
+
+The intended -bin file is /pkgs/mozilla/firefox-1.5b1/firefox-bin, without the
+-1.5b1- present in the filename itself (as opposed to the path). Released
+version of both Firefox and Mozilla do not have this issue -- making a symlink
+named by the version of the browser being invoked work correctly, without
+requiring one to also modify the browser directory to have a new -bin file.
+
+The following patch (which is certainly not portable enough for inclusion)
+solves the problem for me:
+
+--- firefox~ 2005-09-08 08:18:33.265535512 -0500
++++ firefox 2005-09-09 15:53:53.743766154 -0500
+@@ -99,6 +99,11 @@
+# If not, then start resolving symlinks until we find run-mozilla.sh
+found=0
+progname="$0"
++
++if [ -L "$progname" ] ; then
++ progname=`readlink -f $progname`
++fi
++
+curdir=`dirname "$progname"`
+progbase=`basename "$progname"`
+run_moz="$curdir/run-mozilla.sh"
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Create a symlink to the "firefox" launcher script with a name other than
+"firefox"; say, "firefox-beta".
+2. Attempt to invoke Firefox via the symlink.
+
+
+Actual Results:
+Launch script try and fails to find an application binary with it name based
+on the symlink itself, rather than the symlink's target
+
+Expected Results:
+Launch script should have looked for a -bin file based on the target of the
+symlink, rather than the name of the symlink itself.

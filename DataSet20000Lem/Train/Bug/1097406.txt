@@ -1,0 +1,18 @@
+Add telemetry for sync migration progress.
+As part of migrating user to Fxa sync we want to capture some metrics. Bug 1019395 is the meta bug for all such metric (ie, including those that can be captured by the various servers). For this bug I want to focus just on telemetry in the client.
+
+For background: The migration will be driven by a state machine. The state are, eg:
+* waiting for the server to advertise a migration offer (ie, server sends "EOL" notifications)
+* waiting for the user to create an FxA account.
+* waiting for the user to click on the verification email for their account.
+* waiting for an existing sync to finish
+* waiting for u to write a migration sentinel
+* aaand, we are done.
+
+The UI will help the user through these state (eg, open about:accounts at the right time, etc), and in edge-cases the state may move backwards (eg, user log out of their FxA account before they verify it).
+
+I'd like to capture the progress of these state via telemetry. Eg, "how many user saw the offer to upgrade but never made an account", or "how many didn't get past the 'verify your account' state, etc.
+
+gps, benjamin: I'm looking for advice on how to best measure this in telemetry. Eg, should I have one new probe name per state and count how many time we enter it? Or maybe assign a number to each state and record the max number we reach? Or something else entirely?
+
+Note we have existing probe for "is this using legacy sync", and "are they using the default servers" - so we'd also like to be able to determine how many user with legacy sync saw that offer to upgrade (which once this is unthrottled, should be everyone using legacy sync against the default server) - I assume we can make these correlation - is that correct?

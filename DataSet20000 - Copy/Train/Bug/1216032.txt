@@ -1,0 +1,24 @@
+"FindBar Tweak" addon disables the "layout.word_select.stop_at_punctuation" pref, breaking double-click text selection on OS X
+Enabling the "FindBar Tweak" add-on now disables the "layout.word_select.stop_at_punctuation" pref, breaking double-click text selection on OS X.
+
+STR:
+1. Install FindBar Tweak addon:
+https://addons.mozilla.org/en-US/firefox/addon/findbar-tweak/
+2. Double-click a word in the address bar URL.
+
+RESULT:
+The entire URL is selected instead of just the word double-clicked. Other FindBar Tweak functionality seems to have stopped working recently and may be related to this problem.
+
+I bisected this regression to the following pushlog, which backs out three billm bugs. So backing out these bugs seems to have *caused* this FindBar Tweak problem?!
+
+https://hg.mozilla.org/integration/mozilla-inbound/pushloghtml?fromchange=2499a66d5b37595ec35063b0a6c3d7ed1a9cf154&tochange=b268160e8919390c1a9f61a75d3f3b3c79491f77
+
+Back out bug 1191143 - Cancel CPOWs from both sides
+Back out bug 1191145 - Stop blocking scripts in CPOW IPCs
+Back out bug 967873 - Make browser_relatedTabs.js not race in e10s
+Back out bug 967873 - Start TabView when starting tests that might lazily load it
+Back out bug 967873 - Test changes for async removeTab
+Back out bug 967873 - Allow RemotePrompt to be closed while it's being opened
+Back out bug 967873 - browser_onbeforeunload_navigation.js fix for e10s
+Back out bug 967873 - Ignore content process DOMWillOpenModalDialog event in e10s
+Back out bug 967873 - Proxy nsDocumentViewer::PermitUnload to the child process

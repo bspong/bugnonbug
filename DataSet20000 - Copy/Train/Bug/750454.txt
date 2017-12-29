@@ -1,0 +1,27 @@
+FUEL causes lots of leaks until shutdown, can also cause 10+minute shutdown times
+Short story: We should nuke the gShutdown mechanism entirely. FUEL adds a bunch of closures to the gShutdown array, and those closures keep their respective FUEL objects alive until shutdown. For things like pref observers this should be unnecessary (since they request to be used as weak observers). Other things (Window, BrowserTab) should figure out some other way to clean up in a more timely fashion.
+
+Longer story: One of my favorite addons does this: 
+
+  for(var window_index in Application.windows){
+    if(Application.windows.hasOwnProperty(window_index)){
+      var window = Application.windows[window_index];
+      for(var tab_index in window.tabs){
+        if(window.tabs.hasOwnProperty(tab_index)){
+          var tab = window.tabs[tab_index]
+  ...
+
+I tend to keep a lot of tabs open (though not loaded) and every time this function runs I have 2N+1 calls to Application.windows (where N is number of windows). Then for every window I have 2M+1 calls to Window.tabs (where M is the number of tabs). Every Window object created adds an item to the gShutdown array, as does every BrowserTab object.
+
+This quickly gets out of control if you have a large number of tabs. On a very short browsing session this array contained > 600k entries.
+
+And then those closures just... sit there... forever... until shutdown. DOM windows cannot be cleaned up, so they hang around, get included in the CC graph, etc.
+
+And then it gets even worse. At shutdown, we run this code:
+
+  while (gShutdown.length) {
+    gShutdown.shift()();
+
+This pulls one item out of the array and then memmove's everything else, for every iteration (quadratic in number of elements according to bz). This is causing me to experience 10+ minute shutdown times, and I have a very zippy machine.
+
+We _really_ need to fix this. Any addon using FUEL to access windows or tabs are going to hit this, as are preference observers, extension inspectors, etc.

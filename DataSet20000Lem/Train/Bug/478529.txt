@@ -1,0 +1,28 @@
+XPCNativeWrapper doe not support expando property
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.6) Gecko/2009020911 Ubuntu/8.04 (hardy) Firefox/3.0.6
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.6) Gecko/2009020911 Ubuntu/8.04 (hardy) Firefox/3.0.6
+
+https://developer.mozilla.org/es/XPCNativeWrapper#Setting_.22expando.22_properties_on_XPCNativeWrapper state that:
+
+"It is possible to set "expando" property (properties with name that don't correspond to IDL-defined properties) on XPCNativeWrapper objects. If this is done, then chrome will be able to see these expando properties"
+
+This doe not appear to be true.
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Visit any webpage
+2. Open the Console with Ctrl-Shift-J
+3. Copy and paste the following line:
+
+var safewin = new XPCNativeWrapper(window); var sandbox = new Components.utils.Sandbox(safewin); sandbox.window = safewin; sandbox.document = safewin.document; var code = "document.expando = 'Hello'; document.body.expando = 'World'; window.alert(document.expando + ' ' + document.body.expando);"; Components.utils.evalInSandbox(code, sandbox);
+
+4. Hit "Evaluate"
+Actual Results:
+"Hello undefined"
+
+Expected Results:
+"Hello World"
+
+This problem make it impossible to use any JavaScript library (such a jQuery!) that us 'expando' property within a Sandbox in which window is XPCNative-wrapper, thus preventing the use of jQuery in Greasemonkey and other extension that manipulate the DOM.

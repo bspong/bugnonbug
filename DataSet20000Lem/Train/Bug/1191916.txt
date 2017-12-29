@@ -1,0 +1,42 @@
+Can't reopen toolbox after manually pausing and then stepping in the debugger
+STR:
+
+1. Open browser, load any page that ha JS
+2. Go to a JS source file and prettify it
+3. Set a breakpoint somewhere
+4. Click on pause, then step over
+5. Close the toolbox
+6. Can't reopen the toolbox
+
+--
+
+Error in local build during #4:
+
+onPacket threw an exception: Error: Server did not specify an actor, dropping packet: {"error":"unknownError","message":"error occurred while processing 'resume: TypeError: generatedSourceActor is null\nStack: TabSources.prototype.getOriginalLocation@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/actors/utils/TabSources.js:571:9\nThreadActor.prototype._handleResumeLimit@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/actors/script.js:903:12\nThreadActor.prototype.onResume@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/actors/script.js:1009:28\nDSC_onPacket@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/main.js:1593:15\nChildDebuggerTransport.prototype.receiveMessage@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/transport/transport.js:742:5\nEventLoop.prototype.enter@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/actors/script.js:339:5\nThreadActor.prototype._pushThreadPause@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/actors/script.js:534:5\nThreadActor.prototype.onInterrupt@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/actors/script.js:1370:7\nDSC_onPacket@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/main.js:1593:15\nChildDebuggerTransport.prototype.receiveMessage@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/transport/transport.js:742:5\nLine: 571, column: 9"}
+Stack: DebuggerClient.prototype.onPacket@resource://gre/modules/devtools/dbg-client.jsm:969:1
+LocalDebuggerTransport.prototype.send/<@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/transport/transport.js:569:11
+makeInfallible/<@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/DevToolsUtils.js:83:14
+makeInfallible/<@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/DevToolsUtils.js:83:14
+
+---
+
+Error in local build during attempt to reopen the toolbox in #6:
+
+*************************
+A coding exception wa thrown in a Promise resolution callback.
+See https://developer.mozilla.org/Mozilla/JavaScript_code_modules/Promise.jsm/Promise
+
+Full message: TypeError: this.doc is undefined
+Full stack: Toolbox.prototype.selectTool@resource://gre/modules/commonjs/toolkit/loader.js -> resource:///modules/devtools/framework/toolbox.js:1233:9
+DevTools.prototype.showToolbox/hostPromise<@resource:///modules/devtools/gDevTools.jsm:386:18
+Handler.prototype.process@resource://gre/modules/Promise.jsm -> resource://gre/modules/Promise-backend.js:922:23
+this.PromiseWalker.walkerLoop@resource://gre/modules/Promise.jsm -> resource://gre/modules/Promise-backend.js:801:7
+this.PromiseWalker.scheduleWalkerLoop/<@resource://gre/modules/Promise.jsm -> resource://gre/modules/Promise-backend.js:740:39
+Promise*this.PromiseWalker.scheduleWalkerLoop@resource://gre/modules/Promise.jsm -> resource://gre/modules/Promise-backend.js:740:7
+this.PromiseWalker.schedulePromise@resource://gre/modules/Promise.jsm -> resource://gre/modules/Promise-backend.js:764:7
+Promise.prototype.then@resource://gre/modules/Promise.jsm -> resource://gre/modules/Promise-backend.js:447:5
+DevTools.prototype.showToolbox@resource:///modules/devtools/gDevTools.jsm:385:23
+gDevToolsBrowser.selectToolCommand@resource:///modules/devtools/gDevTools.jsm:670:7
+oncommand@chrome://browser/content/browser.xul:1:1
+
+*************************

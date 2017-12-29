@@ -1,0 +1,13 @@
+Registering arbitrary web protocol handlers doesn't work on OS/2
+Mozilla/5.0 (OS/2; U; Warp 4.5; en-US; rv:1.9b3pre) Gecko/2007123119 Minefield/3.0b3pre
+
+While testing the links "PDF protocol handler" and "Webcal protocol handler" on <http://people.mozilla.com/~ctalbert/> I see the following exception on the error console:
+
+Error: uncaught exception: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIExternalProtocolService.getProtocolHandlerInfo]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: file:///<path>/components/WebContentConverter.js :: WCCR_protocolHandlerRegistered :: line 348"  data: no]
+
+As this is a Firefox debug build I see a bit more of info in the shell directly before the error output:
+
+*** registerProtocolHandler(pdf,http://view.samurajdata.se/ps.php?url=%s,PDF Viewer)
+WARNING: GetApplicationAndParametersFromINI(): unsupported protocol scheme: file X:/trunk/mozilla/uriloader/exthandler/os2/nsOSHelperAppService.cpp, line 1780
+
+Seems like on OS/2 a function gets called for web handlers that shouldn't get called, we only support the usual web protocols like http/https, ftp, mailto, in our system config (the mailto testcase links on the same URL work with Firefox). But I think we should not quit trying to register a web protocol handler for other protocols, although I don't understand the details how this is done on the other platforms.

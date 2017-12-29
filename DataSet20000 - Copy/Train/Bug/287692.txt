@@ -1,0 +1,70 @@
+Multiple proxy dialog boxes
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.6) Gecko/20050317 Firefox/1.0.2
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.6) Gecko/20050317 Firefox/1.0.2
+
+Each morning when I first unlock my computer to resume using it from the night
+before, I notice that the FireFox process in the Windows task area is wildly
+flickering, and that FireFox has a proxy dialog box open -- pressing filling in
+the information and pressing OK or just pressing Cancel seems to do nothing. 
+*This is a symptom and not the problem.*  Either FireFox has to be killed from
+the task manager, or I have to click Cancel dozens of times before FireFox
+returns to normal operations.  Sound familiar to bug 253632?  That bug is a
+symptom of this bug.
+
+The environment which this surfaces is where I use a proxy and have the
+ForecastFox 0.5.9 extension installed.  Note, this is not an extension bug.
+
+When I leave my machine at night, without shutting down FireFox nor logging out,
+ForecastFox continues to request pages to display the weather in the status bar.
+ However, after a certain amount of time, our corporate proxy server times out
+my session and asks me to reauthenticate, only I'm not around to do it, and the
+dialog box pops up.
+
+More time passes, and ForecastFox requests another web update, and again another
+proxy dialog box pops up.
+
+This happens all throughout the night, and when I return in the morning, unlock
+the machine, I see what looks like a proxy timeout dialog.  What I'm really
+seeing is a bunch of proxy dialog boxes stacked perfectly on top of one another.
+
+As I respond to a dialog box, filling it out or pressing cancel, it clears that
+dialog box, showing me the one under it, giving me the illusion nothing has
+happened.  
+
+As such, I either terminate FireFox prematurely in frustration, or repeatedly
+click Cancel until I clear out the dialog pile, "mysteriously" returning FireFox
+to normality.
+
+How could FireFix prevent this problem?  Two ways.
+
+1) Each time the proxy dialog box is displayed, rather than centering it,
+provide some slight random offset (10 or 20 pixels) off center.  Visually, it
+won't be noticable unless there are several dialog boxes stacked -- then users
+would know what's going on, and the actual problem would have been reported
+sooner and accurately.
+
+2) The real solution, however, is to have FireFox keep track if it has presented
+the dialog box already.  If it has, it should not present another one.  This
+way, despite being non-modal in nature, the user only has one dialog box to ever
+contend with.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Use an authenticating proxy server 
+2. Install ForecastFox
+3. Let the proxy server time out the authentication and a dialog box appears.
+4. Let ForecastFox continue requesting pages, which make more dialog boxes.
+Actual Results:  
+You get a stack of proxy authentication dialog boxes at the same coordinates,
+giving the illusion of one dialog box.  The resulting interface is confusing for
+the user to resolve.  
+
+Expected Results:  
+FireFix should show one -and only one- proxy authentication dialog box at a
+time, if it's already presented, bring it to the top and give it focus, do not
+create additional ones.
+
+The work around is to simply hit Cancel a zillion times, or
+remove the ForecastFox extension (or any others that auto-load pages), or
+stop using an authenticating proxy.

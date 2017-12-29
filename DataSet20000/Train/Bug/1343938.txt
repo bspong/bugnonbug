@@ -1,0 +1,26 @@
+Firefox doesn't prompt to become default browser (for first profile created after installing)
+Latest 54.0a1 to 51.0b1, likely also before. Windows 8.1 64-bit
+
+The first profile created after installing Firefox doesn't prompt for setting it as the default browser.
+
+Steps to reproduce (Nightly and Developer Edition will prompt on second launch, browser on first, release likely similar, but I haven't tested):
+1. Installed Nightly into the old custom install directory (but any custom install directory should work).
+2. Launched it from the console with firefox.exe -no-remote -P
+3. Create a new profile.
+4. Launch the profile.
+5. Close the profile.
+6. Launch the profile.
+7. Close the profile.
+Actual result: Not prompted to set it as default browser.
+8. Launched it from the console with firefox.exe -no-remote -P
+9. Create a new profile.
+10. Launch the profile.
+6. Launch the profile.
+7. Close the profile.
+Actual & Expected result: Prompted to set it as default browser.
+
+The first profile which won't show the prompt has browser.shell.checkDefaultBrowser automatically set to the custom value false.
+
+This gets sets at https://dxr.mozilla.org/mozilla-central/rev/e91de6fb2b3dce9c932428265b0fdb630ea470d7/browser/components/shell/ShellService.jsm#52-74 because DefaultBrowserOptOut in the registry is True and gets deleted, so it won't get set for profiles created later.
+
+The code for setting the registry key is at https://dxr.mozilla.org/mozilla-central/rev/e91de6fb2b3dce9c932428265b0fdb630ea470d7/browser/installer/windows/nsis/installer.nsi#1025

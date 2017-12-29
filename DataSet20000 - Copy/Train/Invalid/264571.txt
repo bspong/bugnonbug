@@ -1,0 +1,13 @@
+new items created above currently selected item, instead of below
+This is a bug that's been filed before, but there was an attempted fix.  The
+patch that'll be attached here is the bandaid that will ship with 1.0, that will
+bring things back to the previously broken state -- bookmarks will be created
+above the currently selected item, instead of below.
+
+The reason for this is that we use the RDF Container InsertElementAt interface
+here -- which, when given an index to insert at that's already occcupied, shifts
+the old element forward, instead of putting this item after it.  This is a
+bummer.  I tried to do some magic where the index was pre-incremented, but
+InsertElementAt bails if you pass it an index that's greater than the number of
+items in the container.   In either case, we have to know the item's exact
+index, so that we can undo.  It's a huge pain in the ass.

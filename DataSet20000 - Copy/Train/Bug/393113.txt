@@ -1,0 +1,37 @@
+Shutdown event order inconsistenty in Firefox 3.0a8
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9a8pre) Gecko/2007081505 Minefield/3.0a8pre
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9a8pre) Gecko/2007081505 Minefield/3.0a8pre
+
+In Firefox 2.0 the shutdown event order is always as follows:
+quit-application-granted
+window unload event
+quit-application
+
+This is true even if the "X" is used to close out the last visible window.
+In Firefox 3.0a8pre, the above sequence occurs when the File->Exit menu is used to quit the browser, but when the "X" is used to close out the last visible window in which case the order goes:
+window onunload
+quit-application-granted
+quit-application
+
+Granted the window is technically closed by clicking "X", but it also initiates browser shutdown.  I looked for a bug changing the shutdown order, but could not find one.
+
+My extension listens for the "quit-application-granted" to run certain processing.  It also unregisters the "quit-application-granted" observer in the onunload handler because if it didn't it would cause memory leaks when windows are closed.  It works fine in Firefox 2.0, but in 3.0 the the "quit-application-granted" observer is removed when the last window is closed manually before it has a chance to fire.  
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Observe quit-application-granted and quit-application
+2. Listen for window unload event.
+2. Close Firefox 3.0 using "X" on window
+
+Actual Results:  
+Fire order:
+window unload event
+quit-application-granted
+quit-application
+
+Expected Results:  
+Fire order:
+quit-application-granted
+window unload event
+quit-application

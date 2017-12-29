@@ -1,0 +1,41 @@
+When closing a tab (but not when closing a window), form-submit inside of window.onunload is ignored
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.0.7) Gecko/20060909 Firefox/1.5.0.7
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.0.7) Gecko/20060909 Firefox/1.5.0.7
+
+On a test page (startme.html), there is a HTML-Form which is submitted from within of the "window.onunload" handler. 
+
+Without tabbed browsing this works as expected and the form gets submitted anytime such document is being reloaded or when the browser window is being closed.
+
+However, when the same document is opened in tabbed browsing as one of the tabs, and this tab is then being closed [->Close Tab], the firefox ignores submit such form, no corresponding HTTP-request is sent. 
+
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Download testfiles  (startme.html, final.html) and store them to the same directory on the webserver
+2. Disable popup blocker for the startme.html
+3. Open 3 browser tabs (CTRL-T) and on each run then "startme.html"
+4. Reload one tab 
+5. Close one tab
+6. Close the whole window (confirm a dialog for 2 remaining tabs)
+
+
+Actual Results:  
+In the step 4.: the form-submit for reloaded document happens as expected
+
+In the step 5.: there is no form-submit performed, no new window will be opened, no POST-Request is visible in HTTP-Traffic.  
+
+In the step 6. After you confirm to close 2 remaining tabs, you will get form-submit for each of them (2 new windows, 2 new requests visible in HTTP traffic).
+
+In contrary, in the step 5., after you confirm you want to close remaining 2 tabs, the forms for each of them are submitted, 2 new windows will be opened and 2 HTTP-Post requests are visible in network traffic.
+
+Expected Results:  
+No matter whether reloading a single tab, closing a single tab or closing the whole window with several tabs, the onunload-handling has to behave consistently in the same way.  
+
+Thus in the step 5. we expect that the form-submit gets performed in exactly same way as in the steps 4. or 6., allowing to submit a form inside  of the onunload-handler.
+
+* Same behavior reproducible also with Firefox 2.0b1  and Mozilla 1.7.13
+* The "Tamper Data" plugin was used to check the network traffic.
+* Happens for both POST and GET methods when submitting a form

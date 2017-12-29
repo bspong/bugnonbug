@@ -1,0 +1,78 @@
+Image does not appear from Java servlet output, using content-type=text/html and PrintWriter.
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.7.12) Gecko/20050915 Firefox/1.0.7
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.7.12) Gecko/20050915 Firefox/1.0.7
+
+I have a Java servlet which writes some simple HTML and a GIF image, in the doPost() method.  The HTML renders fine, but the image does not appear on the page, even with the content type set to "text/html".  The browser should display the image correctly, provided the image location is correct.  **Note that in the code below, this is not the problem - I'm using the ServletContext object to find the correct path to the image in the WAR.  
+
+Interestingly, **cough**, Internet Explorer does not have this problem, and correctly renders the image, and all HTML, with no problem!  
+
+Here is some simple code from the doPost() method...   
+
+String[] arData = request.getParameterValues("ids");
+
+StringBuffer sb = new StringBuffer("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0 Transitional //EN\">\n");
+
+sb.append("<HTML>\n");
+sb.append("<HEAD>\n");
+sb.append("<TITLE>Test Servlet</TITLE>\n");
+sb.append("<META http-equiv=Content-Type content=\"text/html; charset=windows-1252\">\n");
+
+sb.append("<script language=\"Javascript\">\n");
+sb.append("\tfunction printThis()\n");
+sb.append("\t{\n");
+sb.append("\t\tparent.focus();\n");
+sb.append("\t\tparent.print();\n");
+sb.append("\t}\n");
+sb.append("</script>\n");
+
+sb.append("</HEAD>\n");
+sb.append("<BODY>\n");
+sb.append("This is a test, no database connectivity or framework...<BR>\n");
+
+for (int i = 0; i < arData.length; i++)
+{
+	sb.append(arData[i] + "<BR>\n");
+}
+
+ServletContext sc = getServletContext();
+String sImageLocation = sc.getRealPath("images/Print.gif");
+
+sb.append("<a href=\"javascript:void(0)\" onClick=\"printThis()\">");
+sb.append("<img border=\"0\" src=\"" + sImageLocation + "\">");
+sb.append("print");
+sb.append("</a>\n");
+
+sb.append("<BR>\n");
+
+sb.append("</BODY>\n");
+sb.append("</HTML>");
+
+//set content type first, before getting a PrintWriter...
+response.setContentType("text/html");
+
+PrintWriter out = response.getWriter();
+
+if (arData.length < 1)
+{
+	//throw an exception/error
+}
+else
+{
+	out.println(sb.toString());
+}
+
+Reproducible: Always
+
+Steps to Reproduce:
+Included with the detailed description of the bug above, is some very simple Java source...  
+
+1. Create an 'images' folder on the root of a Java project, and put a small GIF image in that folder (I'm using a printer image in this case).  
+2. Paste the code above into the doPost() or doGet() methods of a simple Java servlet, then compile and deploy onto -any- Java application container.  
+3. Then, request the above servlet from that container (specify the URL to the servlet), and pass a parameter called 'ids' to the servlet.  
+Actual Results:  
+HTML from the servlet output renders fine, but the image does not appear, although(!) the correct reference to that image does appear when you look at the source code for the page (do a "View Page Source" within Firefox).  
+
+Expected Results:  
+HTML from the Java servlet, and any images in the web archive or project, should appear.  
+
+Even though the content-type is set to "text/html", when Firefox sees the <img> tag, it should probably fire-off a separate request for that image, then switch the content-type to a binary type, like "image/gif", or "image/jpg".

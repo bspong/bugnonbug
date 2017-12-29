@@ -1,0 +1,99 @@
+Firefox crash on startup with SIGILL in libxpcom new(unsigned) on RH8
+User-Agent: Opera/7.23 (X11; Linux i586; U) [en]
+Build Identifier: http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/0.8/firefox-0.8-i686-pc-linux-gnu.tar.gz
+
+Firefox crash on startup with SIGILL in libxpcom new(unsigned) on RH8.0 when I
+try to run it after initial install. Mozilla-1.0.1 run ok on this machine.
+
+Reproducible: Always
+Steps to Reproduce:
+cd /dist
+wget http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/0.8/firefox-0.
+8-i686-pc-linux-gnu.tar.gz
+cd /usr/local/src
+mkdir firefox
+cd firefox
+tar zxvf /dist/firefox-0.8-i686-pc-linux-gnu.tar.gz
+mv firefox v0.8
+# a normal user:
+./run-mozilla.sh -g ./firefox-bin
+MOZILLA_FIVE_HOME=.
+LD_LIBRARY_PATH=.:./plugins:.:/usr/local/geda/lib:/usr/local/geda/lib:
+/usr/local/geda/lib:/usr/local/geda/lib:/usr/local/geda/lib:/usr/local/geda/lib:
+DISPLAY=:0
+DYLD_LIBRARY_PATH=.:.
+LIBRARY_PATH=.:./components:.
+SHLIB_PATH=.:.
+LIBPATH=.:.
+ADDON_PATH=.
+MOZ_PROGRAM=./firefox-bin
+MOZ_TOOLKIT=
+moz_debug=1
+moz_debugger=
+/usr/bin/ddd --debugger "gdb -x /tmp/mozargs3995" ./firefox-bin
+GNU DDD 3.3.1 (i686-pc-linux-gnu), by Dorothea L
+(no debugging symbol found)...(gdb) Undefined command: "GNU". Try "help".
+(gdb) run
+Starting program: /usr/local/src/firefox/v0.8/firefox-bin
+(no debugging symbol found)...(no debugging symbol found)...(no debugging
+symbol found)...(no debugging symbol found)...(no debugging symbol found)...
+(no debugging symbol found)...[New Thread 16384 (LWP 4004)]
+(no debugging symbol found)...
+Program received signal SIGILL, Illegal instruction.
+[Switching to Thread 16384 (LWP 4004)]
+0x4013baa3 in operator new(unsigned) () from ./libxpcom.so
+(gdb) Quit
+(gdb) where
+#0 0x4013baa3 in operator new(unsigned) () from ./libxpcom.so
+#1 0xbfffdd34 in ?? ()
+#2 0x4013bb31 in operator new[](unsigned) () from ./libxpcom.so
+#3 0x08bc075c in RgnRectMemoryAllocator::RgnRectMemoryAllocator(unsigned) ()
+#4 0x08bc32ce in nsRegion::MoveBy(int, int) ()
+#5 0x08bc331d in nsRegion::MoveBy(int, int) ()
+#6 0x08be5ae5 in operator new(unsigned, std::nothrow_t const&) ()
+#7 0x084b59c2 in _init ()
+#8 0x40678497 in __libc_start_main () from /lib/libc.so.6
+(gdb)
+
+Actual Results:
+Program Crashed
+
+
+Linux cervantes.freelabs.com 2.4.18-27.8.0 #1 Fri Mar 14 05:45:24 EST 2003 i586
+i586 i386 GNU/Linux
+Red Hat Linux release 8.0 (Psyche)
+XFree86-libs-4.2.0-72
+
+Existing mozilla install: mozilla-1.0.1-26
+System ha 512MB swap most of it free, memory availibility is not the problem.
+
+strace ./firefox-bin
+[...]
+open("mmx/libICE.so.6", O_RDONLY) = -1 ENOENT (No such file or directory)
+open("libICE.so.6", O_RDONLY) = -1 ENOENT (No such file or directory)
+open("/usr/X11R6/lib/libICE.so.6", O_RDONLY) = 3
+read(3, "\177ELF\1\1\1\0\0\0\0\0\0\0\0\0\3\0\3\0\1\0\0\0@5\0\000"..., 512) =
+512fstat64(3, {st_mode=S_IFREG|0755, st_size=82160, ...}) = 0
+old_mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) =
+0x40796000
+old_mmap(NULL, 92528, PROT_READ|PROT_EXEC, MAP_PRIVATE, 3, 0) = 0x40797000
+old_mmap(0x407ab000, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED, 3,
+0x13000) = 0x407ab000
+old_mmap(0x407ac000, 6512, PROT_READ|PROT_WRITE,
+MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x407ac000
+close(3) = 0
+old_mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) =
+0x407ae000
+mprotect(0x4007d000, 843776, PROT_READ|PROT_WRITE) = 0
+mprotect(0x4007d000, 843776, PROT_READ|PROT_EXEC) = 0
+munmap(0x40189000, 112691) = 0
+getrlimit(0x3, 0xbfffd984) = 0
+setrlimit(RLIMIT_STACK, {rlim_cur=2044*1024, rlim_max=RLIM_INFINITY}) = 0
+getpid() = 4210
+rt_sigaction(SIGRTMIN, {0x401ade84, [], SA_RESTORER, 0x40689cb8}, NULL, 8) = 0
+rt_sigaction(SIGRT_1, {0x401add6c, [], SA_RESTORER, 0x40689cb8}, NULL, 8) = 0
+rt_sigaction(SIGRT_2, {0x401adf0c, [], SA_RESTORER, 0x40689cb8}, NULL, 8) = 0
+rt_sigprocmask(SIG_BLOCK, [RTMIN], NULL, 8) = 0
+_sysctl({{CTL_KERN, KERN_VERSION}, 2, 0xbfffd98c, 31, (nil), 0}) = 0
+--- SIGILL (Illegal instruction) ---
++++ killed by SIGILL +++

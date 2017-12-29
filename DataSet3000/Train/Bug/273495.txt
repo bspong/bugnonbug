@@ -1,0 +1,121 @@
+Listbox cannot be programmatically scrolled with the "selectedIndex" property when the "disabled" property is turned on and off before the line setting the "selectedIndex" property to the saved location is executed.
+User-Agent:       Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0; .NET CLR 1.1.4322)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.7.5) Gecko/20041107 Firefox/1.0
+
+A listbox containing N>2 items and having the property SIZE>0 set so that the 
+subset of viewable items is sufficiently small for there to be hidden items, 
+then upon capturing the position of a user selected item in the listbox, and 
+the user scrolls up the list using the scrollbar (the selected item moves down 
+and becomes hidden), it is not possible to use the "selectedIndex" to scroll 
+back to the user selected possition, if the "disabled" property is turned ON 
+and then OFF (setting to true, to prevent another click event while a bit of 
+code executes, and then to false to allow click events) before the line 
+containing the "selectedIndex" property.
+
+
+Reproducible: Always
+Steps to Reproduce:
+<HTML>
+<TITLE>Title</TITLE>
+<SCRIPT type="text/javascript">
+function setPos()
+   {
+   var obj = document.frmObj;
+   var pos = obj.m_select.selectedIndex;
+   obj.m_text.value = pos;
+   if (obj.m_select.length > 0)
+      {
+      if (obj.m_select.selectedIndex > 0)
+         {
+         obj.m_select.selectedIndex = 0;   
+         obj.m_select.selectedIndex = pos;
+         }
+      else
+         obj.m_select.selectedIndex = 0;
+      }
+   }
+
+function doScroll()
+   {
+   var obj = document.frmObj;
+   var pos = obj.m_select.selectedIndex;
+   if (obj.m_select && obj.m_select.length > 0)
+      {
+      obj.m_select.selectedIndex = 0;
+      obj.m_select.selectedIndex = pos;
+      obj.m_text.value = obj.m_select.selectedIndex;
+      }
+   }
+
+function doDisableScroll()
+   {
+   var obj = document.frmObj;
+   obj.m_select.disabled = true;
+   //some necessary code in between, that requires the disabling of the listbox
+   alert("Lisbox is disabled at this point and will be turned back on again.");
+   obj.m_select.disabled = false;
+   doScroll();
+   }
+
+</SCRIPT>
+<BODY>
+<FORM NAME=frmObj>
+<TABLE BORDER=1 style=width:200px">
+<TR><TD>OUTSTANDING MOZILLA & FIREFOX BUG:<BR>
+        </BR>Click on the 2nd to last element, scroll up so that the 
+highlighted element remains hidden, and then click on the button below to 
+demonstrate "Failure of Auto-Scrolling To First Element And Back To Selected 
+Element using 'selectedIndex' and 'disabled' is set to 'true' and 'false'".</TD>
+    <TD>NOT A BUG: when disabled is not used.</TD>
+</TR>
+<TR><TD>
+<SELECT SIZE=2 NAME=m_select onClick="setPos()">
+<OPTION>A</OPTION>
+<OPTION>B</OPTION>
+<OPTION>C</OPTION>
+<OPTION>D</OPTION>
+<OPTION>E</OPTION>
+<OPTION>F</OPTION>
+<OPTION>G</OPTION>
+<OPTION>H</OPTION>
+<OPTION>I</OPTION>
+<OPTION>J</OPTION>
+<OPTION>K</OPTION>
+<OPTION>L</OPTION>
+<OPTION>M</OPTION>
+<OPTION>N</OPTION>
+</SELECT>
+
+<INPUT TYPE=BUTTON VALUE="Re-Scroll-With-Disable" onClick="doDisableScroll
+()"></TD>
+<TD><INPUT TYPE=BUTTON VALUE="Re-Scroll" onClick="doScroll()"></TD>
+</TR>
+<TR><TD COLSPAN=3>Report Position:<INPUT TYPE=TEXT NAME=m_text 
+VALUE=""></TD></TR>
+</TABLE>
+
+
+
+</FORM>
+</BODY>
+</HTML>
+
+Actual Results:  
+The listbox fails to scroll when the disabled property is set to true, The 
+enclosed sample HTML/javascript code demonstrates the problem.  You will need 
+to copy and paste it into a file.
+
+Expected Results:  
+One needs to allow the listbox to be disabled, to prevent onClick events from 
+being triggered by an impatient user clicking away on the listbox, while an 
+intensive asynchronous bit of code is executing.  However, when the disabled 
+property is turned off, and the listbox is active again, other bits of code 
+should be able to scroll the listbox. Without this ability, the listbox is 
+severely limited in its application to complex problems.  Besides, fixing this 
+feature makes Firefox/Mozilla browsers competitive browsers that have all the 
+necessary features to run our ERM platform, and this makes it possible for us 
+to promote the browsers on equal (or better) terms as with any other browsers 
+out there.  Firefox is a darn good browser.
+
+This bug exists in the other Mozilla browsers.  By the way, IE doesn't have 
+this problem.

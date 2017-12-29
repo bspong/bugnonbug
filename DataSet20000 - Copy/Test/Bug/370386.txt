@@ -1,0 +1,70 @@
+Cannot view or change download actions due to lack of extensions
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; cs-CZ; rv:1.8.0.9) Gecko/20070213 Fedora/1.0.7-0.6.0.1.fc5 SeaMonkey/1.0.7
+Build Identifier: Fedora/firefox-1.5.0.9-2.fc6
+
+Note: this is a dupe of https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=227372
+
+If a user checks the "Do this automatically from now on" box when opening
+a downloaded file with a helper application, there is no apparent way to
+ever reverse that decision. The indicated action does not appear when
+you click "View/Edit Actions" in the Downloads preferences -- indeed, that
+list is always empty.
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+Steps to Reproduce:
+1. Start with default firefox configuration on a new Fedora Core installation
+(make sure user does not have a preexisting mimeTypes.rdf file).
+2. Click on a link to a pdf file.
+3. Select a helper application.
+4. Check the "Do this automatically from now on" box.
+5. Complete the download.
+6. Go to Edit->Preferences, select Downloads tab, and click on View/Edit Actions.
+Actual Results:  
+You see an empty list, with no way to undo or reverse the selection of
+automatically using that helper application for pdf files.
+
+Expected Results:  
+You should see a list containing your selected helper application for pdf files,
+with the option to edit or remove that automatic action.
+
+
+
+The reason is because GNOME has now deprecated all functions that return
+extensions for MIME types, and firefox is configured by default to hide all
+actions for MIME types without extensions.
+
+Firefox calls gnome_vfs_mime_get_extensions_list (in 
+mozilla/uriloader/exthandler/unix/nsGNOMERegistry.cpp) to get the list of
+extensions for a MIME type. However, in current versions of GNOME that function
+is hardcoded to always return NULL, so all MIME types now have an empty
+extension list in firefox (except for ones left over in a user's mimeTypes.rdf
+file from running previous versions of firefox with earlier versions of GNOME).
+
+The firefox configuration by default sets the
+"browser.download.hide_plugins_without_extensions" preference (which applies to
+helper apps as well as to plugins). Therefore, all actions are hidden and the
+user cannot reverse or undo the action.
+
+I have attached a patch which alleviates the problem by removing the default
+setting of browser.download.hide_plugins_without_extensions, as well as
+removing the "Extensions" column from the initial view of the action list
+(though the user can add it back again using the column picker) and using the
+file type description instead of extension as the primary field.
+
+This won't solve the problem for anyone who has explicitly set
+browser.download.hide_plugins_without_extensions in their user preferences file,
+so the real solution is probably to change the code to ignore that setting.
+
+Alternatively, one could come up with an alternative method for getting a list
+of extensions, but presumably GNOME made a deliberate choice to remove this
+functionality so there is presumably a good reason for it and it is probably
+better to adapt firefox-for-unix to no longer rely on extensions. Of course,
+firefox for windows will still need them, so any patch will have to be
+unix-specific (or maybe even linux-specific) with appropriate #ifdef's if
+pushed into the upstream firefox tree. I don't know enough about firefox
+development to know what those #ifdefs should be, so have not attempted such a
+patch.

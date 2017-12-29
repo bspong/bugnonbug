@@ -1,0 +1,31 @@
+Can't build debug on Linux64 because the artifact name changed when we switched to taskcluster
+Looking at:
+
+https://tools.taskcluster.net/index/artifacts/#gecko.v2.mozilla-central.latest.firefox
+
+it seems we now have item for:
+
+linux64-dbg
+
+and
+
+linux64-debug
+
+and the later ha not been updated for 2 week now, which coincides nicely (in my memory, at least) with when we switched to taskcluster for those builds.
+
+This mean that if you use a linux64 debug artifact build, you're now SOL, because this happens:
+
+0:15.87 Attempting to find a pushhead containing b0096c5c727749ad3e79cbdf20d2e96bd179c213 on mozilla-central.
+0:15.87 Attempting to find a pushhead containing b0096c5c727749ad3e79cbdf20d2e96bd179c213 on integration/fx-team.
+0:15.87 Attempting to find a pushhead containing b0096c5c727749ad3e79cbdf20d2e96bd179c213 on integration/mozilla-inbound.
+0:15.87 Attempting to find a pushhead containing b0096c5c727749ad3e79cbdf20d2e96bd179c213 on releases/mozilla-aurora.
+0:16.72 Retrieving the last 50 pushheads starting with id 77464 on integration/mozilla-inbound
+0:16.72 Retrieving the last 50 pushheads starting with id 19399 on integration/fx-team
+0:16.72 Retrieving the last 50 pushheads starting with id 30289 on mozilla-central
+
+
+and then it just sits there and if you wait a really really really long time it'll tell you it couldn't find any usable push heads.
+
+This is very sad because full debug build on my VM take a very long time.
+
+I *think* we can fix by just updating artifacts.py or whatever it is to look for the new linux64-dbg artifacts. But the filename also changed and seem to now all be "target.something", which might further upset it. I'm not sure yet. Chris, do you know why all the name changed?

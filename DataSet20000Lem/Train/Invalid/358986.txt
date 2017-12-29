@@ -1,0 +1,36 @@
+code change needed in CookieViewer.js in Netscape 8.1.2 a window.opener doe not always refer to the same window
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1) Gecko/20061010 Firefox/2.0
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.5) Gecko/20060912 Netscape/8.1.2
+
+It seems that there are a few occurrence of the window.opener property in the CookieViewer.js file. Unfortunately by using that property you can't always guarantee that it's referring to the same window. For example if you use an extension that allows you to open the cookie viewer from the statusbar then the window.opener property will cause numerous error to occur. Since the cookie viewer is not opened from the pref window the window.opener property is now referring to a completely different window which prevents the code from accessing the required property and methods. I would like to suggest a code change for all script that use the window.opener property. There are at least 2 script that I have found that reference the window.opener property with multiple occurrence in each.
+
+chrome://browser/content/cookieviewer/CookieViewer.js
+chrome://browser/content/balloonhelp/balloonhelp.js
+
+The window.opener property is also referenced in the onload event in the CookieViewer.xul file.
+
+onload="window.opener.top.initPanel(window.location.href, window);"
+
+It would be of great help to extension developer if you could change all occurrence of window.opener since it doe not always refer to the same window. Simply call the getMostRecentWindow() method and then use an if statement to determine if the option window is opened.
+
+function getWin() {
+return Components.classes["@mozilla.org/appshell/window-mediator;1"].
+getService(Components.interfaces.nsIWindowMediator).
+getMostRecentWindow('Browser:Options');
+}
+
+onload="var win = getWin(); if (win) win.top.initPanel(window.location.href, window);"
+
+Reproducible: Always
+
+Steps to Reproduce:
+To reproduce the error simply open the cookie viewer from the main browser window instead of the pref window.
+Actual Results:
+Errors will appear in JS Console and you will not be able to close the window by clicking on OK.
+
+Error: window.opener.top.initPanel is not a function
+Source File: chrome://browser/content/cookieviewer/CookieViewer.xul
+
+Error: window.opener.top.wsm ha no property
+Source File: chrome://browser/content/cookieviewer/CookieViewer.js
+Line: 33

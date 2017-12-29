@@ -1,0 +1,17 @@
+Replace box-shadow fog effect with static image
+(Quoting Bas Schouten (:bas.schouten) from bug 902024 comment 10)
+> We seem to be spending about twice a much time in
+> ContainerState::ProcessDisplayItems, which seems to be a result of simply
+> having more displayitems/layers. However, this only account for about 2% of
+> the difference. We seem to be spending 10% v 6% on EndTransaction which is
+> the actual 'gfx part' of this. Some non-insignificant portion of that is
+> spent doing background colors, probably a little bit more than in the m-c
+> case because of having more displayitems (and possibly layers, but without a
+> Moz2D recording or a layer tree dump it's hard to be sure), but by far the
+> largest contribution is box shadow calculation (at ~3%). And that's also
+> the main difference I find in the profile for gfx related things. So
+> shadow seem to be contributing most significantly to the difference.
+
+The profile in question wa on Windows 7 with Aero Glass. This would likely point to the full-width box-shadow for the Aero Glass fog behind the tabstrip being a large portion of the box-shadow cost.
+
+I'll do a quick test of the cost of commenting out the glass fog to see how much of an improvement it gives. We can figure out how to make this faster afterwards.

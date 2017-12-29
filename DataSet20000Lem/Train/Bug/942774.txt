@@ -1,0 +1,13 @@
+Files loaded into scratchpad should be recognized a “saved”
+Currently, when loading a file into Scratchpad, the file is immediately marked a “not saved” (visible by the star prepended to the file name in the title). Thus, when closing Scratchpad without actually changing the file, I still get a prompt to save it.
+
+This is obviously not necessary for file that were just loaded but never changed.
+
+The behavior is triggered by `self.setText(content);` in the `SP_importFromFile` function [1]. Setting the text will raise the `textChanged` event which in turn will put the Scratchpad editor in an unsaved state.
+
+It seems that the `textChanged` event is only being listened to when the file wa saved until the first change. I would suggest solving this similarly to how it’s done in the initialization by calling `onTextSaved` after the text ha been loaded from the file [3]. In addition this would require removing the listener first before starting to load the file.
+
+
+[1] https://hg.mozilla.org/mozilla-central/file/94a04fd2568d/browser/devtools/scratchpad/scratchpad.js#l578
+[2] https://hg.mozilla.org/mozilla-central/file/94a04fd2568d/browser/devtools/scratchpad/scratchpad.js#l882
+[3] https://hg.mozilla.org/mozilla-central/file/94a04fd2568d/browser/devtools/scratchpad/scratchpad.js#l792

@@ -1,0 +1,27 @@
+browser.loadURI() (and thus switchToTabHavingURI) doesn't work correctly on yet-to-be-restored tab
+Created attachment 8523668
+0009-Bug-XXXXXXX-prevent-SessionStore-from-clobbering-the.patch
+
+STR:
+
+* Open about:accounts and some other tab. Leave the other tab selected and restart the browser.
+* From a "browser" scratchpad execute:
+Services.wm.getMostRecentWindow("navigator:browser").switchToTabHavingURI("about:accounts?b=c", true, {ignoreFragment: true, replaceQueryString: true});
+
+(Note you can use any other URLs you like, so long a different query string or fragment are used)
+
+The browser switch to the background tab, but keep about:accounts loaded - the requested URL isn't loaded.
+
+The problem is that switchToTabHavingURI call loadURI *before* the session restore attempt to restore the tab contents. This also explains part of bug 1025719 - it us the same function.
+
+This is a problem for Sync, which us this function to open various about:accounts variations, causing the user to see the an unexpected page that doesn't let them do what they expect (eg, they click a button to "reauthenticate", but a page open that doesn't actually allow them to reauth)
+
+To prove this is actually the case, the attached patch fix the above repro. It:
+
+* Changes browser.js to call loadURI before selecting the tab to be current.
+* Changes tabbrowser.xml so that loadURIWithFlags() call SessionStore.resetLocalTabRestoringState with the tab so SessionStore no longer attempt to restore state for the tab.
+* Makes SessionStore.resetLocalTabRestoringState() a global, delegating to the existing internal _resetLocalTabRestoringState() function.
+
+SessionStore.resetLocalTabRestoringState probably isn't a great public name (maybe resetTabState is better?) or there might be another way to approach this.
+
+Requesting feedback from Paolo and Tim a I'm not sure who ha the bandwidth to look into this.

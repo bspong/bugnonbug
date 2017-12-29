@@ -1,0 +1,48 @@
+hung after entering bugzilla query, with zero cpu
+Created attachment 534727
+stacktrace FF hang on bugzilla query
+
+hung after entering bugzilla query. iirc, I had edited a query that had worked, and clicked search. xref my other hang bugs: bug 642202, bug 658248, bug 630054
+
+
+FAULTING_THREAD: 00000019
+BLOCKING_THREAD: 00001d74
+
+19 Id: 1630.1218 Suspend: 1 Teb: fff58000 Unfrozen
+ChildEBP RetAddr
+0d1ef9ac 76d50962 ntdll!NtWaitForMultipleObjects+0x15
+0d1efa48 75e91a2c KERNELBASE!WaitForMultipleObjectsEx+0x100
+0d1efa90 75e94238 kernel32!WaitForMultipleObjectsExImplementation+0xe0
+0d1efaac 697b959b kernel32!WaitForMultipleObjects+0x18
+0d1efadc 693a2c28 xul!nsDownloadScannerWatchdog::WatchdogThread(void * p = 0xffffffff)+0x3f [e:\builds\moz2_slave\aurora-w32-ntly\build\toolkit\components\downloads\nsdownloadscanner.cpp @ 704]
+0d1efb14 693a2cb6 MOZCRT19!_callthreadstartex(void)+0x48 [e:\builds\moz2_slave\aurora-w32-ntly\build\obj-firefox\memory\jemalloc\crtsrc\threadex.c @ 348]
+0d1efb1c 75e933ca MOZCRT19!_threadstartex(void * ptd = 0x77469ed2)+0x66 [e:\builds\moz2_slave\aurora-w32-ntly\build\obj-firefox\memory\jemalloc\crtsrc\threadex.c @ 326]
+0d1efb28 77469ed2 kernel32!BaseThreadInitThunk+0xe
+0d1efb68 77469ea5 ntdll!__RtlUserThreadStart+0x70
+0d1efb80 00000000 ntdll!_RtlUserThreadStart+0x1b
+
+
+25 Id: 1630.1d74 Suspend: 1 Teb: fff7c000 Unfrozen
+ChildEBP RetAddr
+a87ff0b0 76d50816 ntdll!ZwWaitForSingleObject+0x15
+a87ff11c 75e91194 KERNELBASE!WaitForSingleObjectEx+0x98
+a87ff134 75e91148 kernel32!WaitForSingleObjectExImplementation+0x75
+a87ff148 6916f3f9 kernel32!WaitForSingleObject+0x12
+a87ff16c 6916af28 nspr4!_PR_MD_WAIT_CV(struct _MDCVar * cv = 0xc7db94e4, struct _MDLock * lock = 0xc7db93fc, unsigned int timeout = 0xffffffff)+0xc9 [e:\builds\moz2_slave\aurora-w32-ntly\build\nsprpub\pr\src\md\windows\w95cv.c @ 282]
+a87ff18c 6916ab31 nspr4!_PR_WaitCondVar(struct PRThread * thread = 0x0000025c, struct PRCondVar * cvar = 0x00000000, struct PRLock * lock = 0x00000000, unsigned int timeout = 0xffffffff)+0x58 [e:\builds\moz2_slave\aurora-w32-ntly\build\nsprpub\pr\src\threads\combined\prucv.c @ 205]
+a87ff1a8 695fdf3d nspr4!PR_Wait(struct PRMonitor * mon = 0xa4356920, unsigned int tick = 0xffffffff)+0x51 [e:\builds\moz2_slave\aurora-w32-ntly\build\nsprpub\pr\src\threads\prmon.c @ 186]
+a87ff1d0 695d256e xul!nsThread::ProcessNextEvent(int mayWait = <Memory access error>, int * result = <Memory access error>)+0x31d [e:\builds\moz2_slave\aurora-w32-ntly\build\xpcom\threads\nsthread.cpp @ 601]
+a87ff270 696fcc7b xul!nsRefPtr<nsIRunnable>::~nsRefPtr<nsIRunnable>(void)+0xe [e:\builds\moz2_slave\aurora-w32-ntly\build\obj-firefox\dist\include\nsautoptr.h @ 970]
+a87ff2b0 697476b5 xul!nsProxyObjectManager::GetProxyForObject(class nsIEventTarget * aTarget = 0x00000001, struct nsID * aIID = 0x00000004, class nsISupports * aObj = 0x00000000, int proxyType = -1468009924, void ** aProxyObject = 0x00000000)+0x194 [e:\builds\moz2_slave\aurora-w32-ntly\build\xpcom\proxy\src\nsproxyobjectmanager.cpp @ 262]
+a87ff2f8 69e440cd xul!NS_GetProxyForObject(class nsIEventTarget * target = 0x6a07b7bc, struct nsID * aIID = 0xa87ff344, class nsISupports * aObj = 0x69e440cd, int proxyType = -1540003568, void ** aProxyObject = 0xa87ff344)+0x48 [e:\builds\moz2_slave\aurora-w32-ntly\build\xpcom\proxy\src\nsproxyobjectmanager.cpp @ 350]
+*** WARNING: Unable to verify checksum for C:\Program Files (x86)\mozilla.org\MF 5.0a 20110502 aurora\nss3.dll
+a87ff310 69012799 xul!nsNSSSocketInfo::EnsureDocShellDependentStuffKnown(void)+0x66 [e:\builds\moz2_slave\aurora-w32-ntly\build\security\manager\ssl\src\nsnssiolayer.cpp @ 387]
+*** WARNING: Unable to verify checksum for C:\Program Files (x86)\mozilla.org\MF 5.0a 20110502 aurora\nssutil3.dll
+a87ff38c 68fc7502 nss3!nssCertificate_Destroy(struct NSSCertificateStr * c = 0x6a1204d4)+0xeb [e:\builds\moz2_slave\aurora-w32-ntly\build\security\nss\lib\pki\certificate.c @ 170]
+a87ff430 76106f79 nssutil3!PORT_ZFree_Util(void * ptr = 0x1221ec98, unsigned int len = 1)+0x20 [e:\builds\moz2_slave\aurora-w32-ntly\build\security\nss\lib\util\secport.c @ 160]
+a87ff478 6916f820 WS2_32!send+0x86
+a87ff4a0 69169062 nspr4!_PR_MD_SEND(struct PRFileDesc * fd = 0x53b241c0, void * buf = 0x00000001, int amount = 6357091, int flag = -1468009276, unsigned int timeout = 0)+0x30 [e:\builds\moz2_slave\aurora-w32-ntly\build\nsprpub\pr\src\md\windows\w95sock.c @ 357]
+a87ff4c4 68f8d3cd nspr4!SocketSend(struct PRFileDesc * fd = 0x53b241c0, void * buf = 0xdb2f7000, int amount = 47, int flag = 0, unsigned int timeout = 0)+0xf2 [e:\builds\moz2_slave\aurora-w32-ntly\build\nsprpub\pr\src\io\prsocket.c @ 681]
+a87ff4ec 00010011 ssl3!ssl_DefSend(struct sslSocketStr * s = 0x0000003f, unsigned char * buf = 0xa87ff4fc "A", int len = 7667777, int flag = 6815860)+0x2b [e:\builds\moz2_slave\aurora-w32-ntly\build\security\nss\lib\ssl\ssldef.c @ 128]
+WARNING: Frame IP not in any known module. Following frame may be wrong.
+a87ff53c 68f8699f 0x10011

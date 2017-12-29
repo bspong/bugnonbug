@@ -1,0 +1,86 @@
+no cookie info sent with Quick Search keyword
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.7) Gecko/20050414 Firefox/1.0.3
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.7) Gecko/20050414 Firefox/1.0.3
+
+When using a Quick Search keyword, cookie information for the relevant domain is
+not sent in the header of the request. For example, "my" correctly make a
+request for "http://my.yahoo.com", but because no cookie info is sent in the
+request, a 302 sends the user to "http://my.yahoo.com/s/guest-promo.php".
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Go to http://my.yahoo.com/ and create an account if needed.
+2. Enter "my" in the address bar.
+
+
+Actual Results:
+Browser open "http://my.yahoo.com/s/guest-promo.php"
+
+Expected Results:
+Browser should have gone to the logged in user's My Yahoo page.
+
+Ethereal trace for "http://my.yahoo.com":
+================================
+GET / HTTP/1.1
+
+Host: my.yahoo.com
+
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.7) Gecko/20050414
+Firefox/1.0.3
+
+Accept:
+text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
+
+Accept-Language: en-us,en;q=0.5
+
+Accept-Encoding: gzip,deflate
+
+Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7
+
+Keep-Alive: 300
+
+Connection: keep-alive
+
+Cookie: Y=v=1&n=9d1coo
+<rest of cookie info deleted>
+
+
+HTTP/1.1 200 OK
+<rest of response deleted>
+===========================
+
+Ethereal trace for "my":
+===========================
+GET / HTTP/1.1
+
+Host: my.yahoo.com
+
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.7) Gecko/20050414
+Firefox/1.0.3
+
+Accept:
+text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
+
+Accept-Language: en-us,en;q=0.5
+
+Accept-Encoding: gzip,deflate
+
+Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7
+
+Keep-Alive: 300
+
+Connection: keep-alive
+
+
+
+HTTP/1.0 302 Found
+
+Date: Tue, 12 Jul 2005 16:28:32 GMT
+
+P3P: policyref="http://p3p.yahoo.com/w3c/p3p.xml", CP="CAO DSP COR CUR ADM DEV
+TAI PSA PSD IVAi IVDi CONi TELo OTPi OUR DELi SAMi OTRi UNRi PUBi IND PHY ONL
+UNI PUR FIN COM NAV INT DEM CNT STA POL HEA PRE GOV"
+
+Location: http://my.yahoo.com/s/guest-promo.php
+=========================

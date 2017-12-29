@@ -1,0 +1,18 @@
+Android Nightlies fail to build due to missing /services/sync/locales/Makefile
+The moz.build transition broke Android Nightlies:
+
+14:38:37 ERROR - make: *** ../../services/sync/locales: No such file or directory. Stop.
+14:38:37 ERROR - make[1]: *** [chrome-cs] Error 2
+14:38:37 ERROR - Return code: 2
+14:38:37 ERROR - Failed to add locale cs!
+14:38:39 ERROR - make: *** ../../services/sync/locales: No such file or directory. Stop.
+14:38:39 ERROR - make[1]: *** [chrome-da] Error 2
+14:38:39 ERROR - Return code: 2
+
+The reason is https://mxr.mozilla.org/mozilla-central/source/mobile/locales/Makefile.in#165 reference /services/sync/locales/Makefile. Since MOZ_SERVICES_SYNC isn't enabled on Android, /services/sync doesn't get included in the build configuration and thus /services/sync/locales/Makefile doe not get built.
+
+We need to first ass which mobile product need /services/sync/locales and then change the build system to include it for those products. Perhaps this mean moving the offending line in the Makefile.in into a per-app directory instead of the shared /mobile/locales/Makefile.in. But, I'm not really sure how all this stuff work in mobile land, so I dunno.
+
+We have about 12 hour to fix this bug before tomorrow doesn't get a new Nightly and people start yelling.
+
+Over to rnewman to figure out what mobile product use Sync's locale files. Please reassign a appropriate.

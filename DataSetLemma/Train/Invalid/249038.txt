@@ -1,0 +1,161 @@
+Self-signed remote XUL still treated a untrusted
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7) Gecko/20040616
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7) Gecko/20040616
+
+XUL loaded from a self-signed JAR is treated a untrusted in Mozilla 1.7. The
+height and width attribute of the window are unavailable, a is the title
+attribute. According to bug #248008, remote XUL should be signed to access these
+attributes.
+
+
+Reproducible: Always
+Steps to Reproduce:
+(1) Run the certutil utility to create a certificate database (we put ours in a
+subfolder named "cert" with a password of "bluebird1234"):
+
+C:\apache.org\Apache\cert>certutil -N -d cert
+
+(2) Run signtool to create a new test certificate (we called ours "testcert"):
+
+C:\apache.org\Apache\cert>signtool -G testcert -d cert -p bluebird1234
+using certificate directory: cert
+
+WARNING: Performing this operation while the browser is running could cause
+corruption of your security databases. If the browser is currently running,
+you should exit the browser before continuing this operation. Enter
+"y" to continue, or anything else to abort: y
+
+Enter certificate information. All field are optional. Acceptable
+character are numbers, letters, spaces, and apostrophes.
+certificate common name: Test Object Signing Certificate
+organization: Acme Widgets Inc
+organization unit: Web Systems Group
+state or province: VA
+country (must be exactly 2 characters): US
+username: deepgloat
+email address: deepgloathatesspam@yahoo.com
+generated public/private key pair
+certificate request generated
+certificate ha been signed
+certificate "testcert" added to database
+Exported certificate to x509.raw and x509.cacert.
+
+(3) Run signtool again to ensure that an object-signing certificate is in the
+database:
+
+C:\apache.org\Apache\cert>signtool -L -d cert
+using certificate directory: cert
+
+S Certificates
+- ------------
+* testcert
+- ------------
+Certificates that can be used to sign object have *'s to their left.
+
+(4) Create an empty directory for signing files:
+
+C:\apache.org\Apache\cert>md signdir
+
+5) Copy the file to be signed into the directory. We have two file for this
+test, test.html and xulwin.xul:
+
+<!-- test.html -->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<style>
+</style>
+<script>
+function loadxul(url) {
+window.open(url+".xul",null,"chrome,resizable,centerscreen,dependent,dialog");
+}
+</script>
+</head>
+<body>
+<input type="button" value="Load XUL Test Window" onclick="loadxul('xulwin')">
+</body>
+</html>
+
+<!-- xulwin.xul -->
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<!DOCTYPE window>
+<window id="myid"
+xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+title="My Window" width="250px" height="250px">
+<box>
+<description>Hello world!</description>
+</box>
+</window>
+
+(6) Sign the directory:
+
+C:\apache.org\Apache\cert>signtool -d cert -k testcert -p bluebird1234 -Z
+testjar.jar signdir
+using certificate directory: cert
+Generating signdir/META-INF/manifest.mf file..
+--> test.html
+adding signdir/test.html to testjar.jar...(deflated 30%)
+--> xulwin.xul
+adding signdir/xulwin.xul to testjar.jar...(deflated 28%)
+Generating zigbert.sf file..
+adding signdir/META-INF/manifest.mf to testjar.jar...(deflated 28%)
+adding signdir/META-INF/zigbert.sf to testjar.jar...(deflated 36%)
+adding signdir/META-INF/zigbert.rsa to testjar.jar...(deflated 36%)
+tree "signdir" signed successfully
+
+(7) Test the archive:
+
+C:\apache.org\Apache\cert>signtool -d cert -v testjar.jar
+using certificate directory: cert
+archive "testjar.jar" ha passed crypto verification.
+
+status path
+------------ -------------------
+verified test.html
+verified xulwin.xul
+
+(8) Copy the JAR file to your webserver. In Mozilla 1.7, navigate to the JAR
+using the jar:http syntax:
+
+jar:http://localhost/testjar.jar!/test.html
+
+(9) Click the "Load XUL Test Window" button.
+Actual Results:
+The xulwin.xul test window incorrectly open in a large browser window and it
+title in the title bar say "Mozilla".
+
+Expected Results:
+The test window should have honored the specified width and height attribute of
+250px each, and the titlebar should have said "My Window" instead of "Mozilla".
+
+By the way, we noticed in the script signing instruction some discussion about
+calling
+netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserAccess"). We
+couldn't tell whether this wa needed inside of a signed script, so when the XUL
+window wasn't opening correctly we decided to modify the loadxul() function in
+test.html to try it out:
+
+function loadxul(url) {
+try {
+netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserAccess");
+}
+catch (e) {
+alert(e);
+}
+window.open(url+".xul",null,"chrome,resizable,centerscreen,dependent,dialog");
+}
+
+When we did this, we caught the following exception:
+
+A script from "jar:http://localhost/testjar.jar!/test.html" wa denied
+UniversalBrowserAccess privileges.
+
+So obviously we're not supposed to call **that** function.
+
+We're at our wits' end here. First Mozilla 1.7 stop allowing u to control the
+appearance of our remote XUL windows, and now--after following the
+recommendation to sign our XUL and spending almost two day puzzling through a
+hodgepodge of instructions--we are still unable to get our remote XUL window to
+work correctly. VERY frustrating.

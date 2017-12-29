@@ -1,0 +1,22 @@
+Setting default browser should never prompt for UAC on Windows 8
+When we set the default browser, depending on what was the default browser before us, we sometimes prompt for UAC.
+
+This has been bothering me for a while but I didn't fully understand what was going on until now.
+
+Inside shared.nsh Function SetAsDfaultAppUser we are making a wrong assumption:
+
+> ; It is only possible to set this installation of the application as the
+> ; StartMenuInternet handler if it was added to the HKLM StartMenuInternet
+> ; registry keys.
+> ; http://support.microsoft.com/kb/297878
+
+The reason for the confusion is this line in the linked article: "Applications which register as Start Menu Internet Applications do so across the entire system (per-machine)" but then it goes on to explain that you can also set HKCU after that.
+The start menu internet handler can be set for HKCU and it will be used by default.  If you set HKLM as well then it'll be used for users who don't have an HKCU value set. 
+
+What we should do:
+------------------
+- When installing we should set both HKLM and HKCU.
+- If the user sets the default browser and they are elevated, then we should set HKLM and HKCU
+- If the user is not elevated, then we should only set HKCU
+
+This is especially important in Windows 8 when if you have both a UAC prompt and a Windows popup to select your browser, it's a really bad experience.

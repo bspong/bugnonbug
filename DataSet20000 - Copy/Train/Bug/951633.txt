@@ -1,0 +1,19 @@
+Drop the <xul:menulist> support for WidgetMethods
+Created attachment 8349360
+widget-no-label.patch
+
+Keeping this around is a pain in the ass. There's literally no benefit from doing so, and we're not using it for anything except a potential ChromeGlobals view which isn't even implemented yet and is only for the browser debugger.
+
+Removing this support (and, inherently not expecting strings anymore when pushing an item into a widget) will significantly reduce code complexity. It will also allow us to grow the API without worrying about breaking <xul:menulist>s.
+
+Here's a patch. It does the following:
+* makes Items always expect an nsIDOMNode
+* makes WidgetMethods's push() always expect an nsIDOMNode
+* removes the idea of "labels" and "descriptions"; Items are only identified by a "value" and a single nsIDOMNode; the use of "labels" and "descriptions" was removed from everywhere
+* removes the idea of "relaxed" pushes; you can't push an item anymore that doesn't have a corresponding node; values are still optional, and it doesn't matter anymore whether they're supplied or not
+* adds ensureElementIsVisible() as an optional widget method, called when appropriate
+* consolidates the "headerText" and "emptyText" widget setters, sharing their implementation
+* moves the debugger's ListWidget in /shared, renaming it to SimpleListWidget
+* removes the ChromeGlobals view
+* removes unused code
+* updates documentation

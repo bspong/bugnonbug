@@ -1,0 +1,26 @@
+Ctrl+W should close the window only if it ha only one about:blank tab
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1) Gecko/20061010 Firefox/2.0
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1) Gecko/20061010 Firefox/2.0
+
+Note: I know this issue ha been previously reported - see my comment at the end.
+
+Like many others that have reported this a a bug, I wa surprised by the change introduced in bug 236721, "ctrl-w on last tab close firefox". Initially I wa quite upset with the change, a I'm very use to using Ctrl-W to close whatever I'm working on, but after reading through the numerous bug file about this I understand the argument coming from both sides. The argument are pretty thoroughly covered in bug 236721 and 341067, so I won't rehash them here (unless asked :-).
+
+However, I still feel that there are some very valid reason for allowing Ctrl-W to close the window, even when browser.tabs.autoHide is set to false. Ideally, I think there should be a separate preference for this; it doesn't even need a GUI. Since the pro-MDI side is against this idea, though, I believe I've come up with an alternative that should appease both sides.
+
+The attached patch retains Firefox's current behavior of clearing the last tab when Ctrl-W is pressed. However, it will also check to see what the URL is of that tab. If the URL is about:blank (meaning the tab ha already been cleared), it will then close the window instead of clearing the tab again. So, if I attempt to close the last tab without meaning to, the window will clear ed rather than closed, just a Firefox 2.0 doe by default. If I really do want to close the window, I can hit Ctrl-W one more time to do so.
+
+I think this should satisfy the need to prevent user from accidentally closing the window, while also allowing those that have a need to close the window to do so.
+
+As I said at the beginning, I know that this issue ha already been reported multiple times. However, all of them have been closed a either DUPLICATE or WONTFIX (except for 348031, which is Mac-specific). Since I'm providing a patch and proposing a new method of dealing with the issue, I think a new bug report is more appropriate than appending this to the bottom of an already-closed bug. If you do feel this is a dupe, though, please direct me to the correct bug and I'll post the patch there.
+
+Thanks.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Apply patch to browser.js
+2. Open multiple tab
+3. Close all tab with Ctrl-W
+4. On the last tab, Ctrl-W will clear the page
+5. After the page ha been cleared, and additional Ctrl-W will close the window

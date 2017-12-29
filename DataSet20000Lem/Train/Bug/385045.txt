@@ -1,0 +1,30 @@
+Memory leak when closing firefox using a new profile for the first time
+Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.9a6pre) Gecko/20070619 Minefield/3.0a6pre ID:2007061904
+
+1. New profile, launch firefox.exe -profilemanager
+2. Make a new profile ("mlktest"), but don't launch firefox with it. Quit Profile Manager.
+3. Launch firefox with:
+- set NSPR_LOG_MODULES=DOMLeak:5,DocumentLeak:5,nsDocShellLeak:5
+- set NSPR_LOG_FILE=nspr.log
+- start firefox.exe -p mlktest
+4. Close firefox
+5. A dialog appears when closing, choose 'Quit'.
+6. perl leak-gauge.pl nspr.log
+
+Leaked document at address 1a42e18.
+... with URI "jar:file:///C:/Documents%20and%20Settings/Ste/Desktop/Firefox%20T
+runk%20(PLACES)/firefox/chrome/toolkit.jar!/content/global/bindings/scrollbar.xm
+l".
+... with URI "chrome://global/content/bindings/scrollbar.xml".
+Leaked document at address 1b2adb8.
+... with URI "resource://gre/res/hiddenWindow.html".
+... with URI "file:///C:/Documents%20and%20Settings/Ste/Desktop/Firefox%20Trunk
+%20(PLACES)/firefox/res/hiddenWindow.html".
+Leaked docshell at address 199f608.
+... which loaded URI "resource://gre/res/hiddenWindow.html".
+Summary:
+Leaked 0 out of 12 DOM Windows
+Leaked 2 out of 44 document
+Leaked 1 out of 5 docshells
+
+If i start up firefox with leak-logging enabled with the same profile, and quit it again (no dialog show up this time) I get no reported leaks; so this only appears to happen when first using a virgin profile.

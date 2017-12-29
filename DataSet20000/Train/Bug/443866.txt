@@ -1,0 +1,74 @@
+XUL window fails to fire the onload event
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.15) Gecko/20080625 Ubuntu/7.10 (gutsy) Firefox/2.0.0.15 FirePHP/0.1.0
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.15) Gecko/20080625 Ubuntu/7.10 (gutsy) Firefox/2.0.0.15 FirePHP/0.1.0
+
+I've created an extension that needs to prevent the display of the default window (browser.xul) and instead display a custom replacement window. Based upon the choices the user makes within this window, I then either show the browser with a preset URL or display different custom windows.
+
+To achieve this, I am using a component that implements nsICommandLineHandler. The code for this is taken from:
+
+        http://developer.mozilla.org/en/docs/Chrome:_Command_Line
+
+The only changes I have made is to make it load my chrome URL and the Javascript console. I am not currently preventing the default action as I'm still developing.
+
+In order to initialise the custom replacement window, I've added an onload attribute to the window element. The problem I have is that after I install the extension and click 'Restart Firefox', the onload event is executed, but when I start Firefox normally it is not. I've also tried adding "load" event listeners in the associated Javascript file with the following combinations:
+
+        window.addEventListener (capture: false)
+        window.addEventListener (capture: true)
+
+        document.addEventListener (capture: false)
+        document.addEventListener (capture: true)
+
+        window.document.addEventListener (capture: false)
+        window.document.addEventListener (capture: true)
+
+In testing this I used the following versions (all Ubuntu Gutsy Linux) with the following results: 
+
+        1.5.0.7 - "load" fires every time
+        1.5.0.8 - "load" only fires on XPI install or after compatibility check
+        1.5.0.12 - "load" only fires on XPI install or after compatibility check
+        2.0.0.14 - "load" only fires on XPI install or after compatibility check
+        3.0 - "load" only fires on XPI install or after compatibility check
+
+So according to this, either the behaviour was incorrect for < 1.5.0.8 or one of the bug fixes broke this behaviour - or I've made a mistake somewhere :)
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+To reproduce the problem I'm having (using 3.0 on Ubuntu Gutsy), I use the following steps:
+
+    1. From within the un-tarred directory execute:
+
+          ./firefox -profilemanager
+
+    2. Create a new profile - say "onload.test.3.0"
+
+    3. Accept the license, disable "Default Browser" checking when
+prompted, and select "No" to make Firefox my default browser
+
+    4. Change the "javascript.options.showInConsole" preference to "true"
+
+    5. Install the extension attached to this ticket and click "Restart Firefox"
+
+At this stage everything is ok as the errors created by the extension (using CU.reportError) appear in the error console after Firefox restarts. Next:
+
+    6. Close Firefox
+
+    7. From with the un-tarred directory execute:
+
+          ./firefox -P onload.test.3.0
+
+This is where the problem occurs - there is nothing within the error
+console! Running the profile manager and selecting the new profile
+causes the same error, as does starting Firefox with the new profile set
+as the default.
+
+Actual Results:  
+The onload event is only fired after the initial XPI installation or a compatibility check.
+
+Expected Results:  
+The onload event should fire every time the XUL window is loaded.
+
+Original mozilla.dev.apps.firefox thread:
+
+http://groups.google.com.au/group/mozilla.dev.apps.firefox/browse_thread/thread/fa7be02f14f149ca/b23918b7364f8486

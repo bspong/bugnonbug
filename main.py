@@ -1,11 +1,12 @@
 import readFile
-import preProcess
+#import preProcess
 #import loadDataScikit
-from sklearn.feature_extraction.text import CountVectorizer
+#from sklearn.feature_extraction.text import CountVectorizer
 import loadData
 import tokenVec
 import weighting
-import ModelSelection
+import modeling
+#import ModelSelection
 #import bm25_
 
 #from sklearn.feature_extraction import DictVextorzier
@@ -13,7 +14,9 @@ import ModelSelection
 #bugContent = []
 
 # pathFile = 'DataSet/Bug/'
-pathFile = 'DataSet'
+#pathFile = 'datasetSmall'
+pathTrain = 'DataSet/train'
+pathTest = 'DataSet/test_'
 stopWord = 'english'
 # #readFile.ReadAllinDir(pathFile)
 # # bugContent = readFile.ReadAllinDir(pathFile)
@@ -31,17 +34,50 @@ stopWord = 'english'
 # scount_vect = CountVectorizer() 
 # #training = count_vect.fit()
 print ('######################################################')
-contentVec = loadData.loadData(pathFile)
-print('DataSet : ' + str(len(contentVec.data)) + ' Report')
+#contentVec = loadData.loadData(pathFile)
+conTrain = loadData.loadData(pathTrain)
+conTest = loadData.loadData(pathTest)
+#print (contentVec.taget)
+#print(type(contentVec))
+print('TrainSet : ' + str(len(conTrain.data)) + ' Report')
+print('TrainSet : ' + str(len(conTest.data)) + ' Report')
 # x = contentVec.toarray()
 # print (x)
 
 #print('#####################2################################')
 
-vecContent = tokenVec.countVector(contentVec,stopWord)
+#vecContent = tokenVec.countVector(contentVec,stopWord)
+print ('###### Train ######')
+vecTrain = tokenVec.countVector(conTrain,stopWord)
+print ('###### Test ######')
+vecTest = tokenVec.countVector(conTest,stopWord)
+print ('vecContent ==> OK')
+#tokenVec.dictVector(contentVec, stopWord)
+#tokenVec.nlktToken(contentVec,stopWord)
+#print ('tokenVec ==> OK')
 #bm25_.BM25Score(vecContent)
 
-vecWeighted = weighting.tf_idf_Weigth(vecContent)
+#vecWeighted = weighting.tf_idf_Weigth(vecContent)
+vecWTrain = weighting.tf_idf_Weigth(vecTrain)
+vecWTest = weighting.tf_idf_Weigth(vecTest)
+print ('vecWeighted ==> OK')
+
+#x_train = vecWeighted.data
+#y_train = contentVec.target
+#######################################
+x_train = vecWTrain.data
+y_train = conTrain.target
+
+x_test = vecWTest.data
+y_test = conTest.target
+print(x_train)
+print (y_train)
+print(x_test)
+print (y_test)
+
+modeling.bNB(x_train,y_train,x_test,y_test)
+
+
 #ModelSelection.cv(vecWeighted, classifier, 5)
 # x = vecWeighted.toarray()
 # print(x)

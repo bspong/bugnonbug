@@ -1,0 +1,43 @@
+Firefox 64-bit fails to link using VS 2015: "fallible.obj : error LNK2038: mismatch detected for 'RuntimeLibrary': value 'MD_DynamicRelease' doesn't match value 'MT_StaticRelease' in nsBrowserApp.obj"
+User Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:38.0) Gecko/20100101 Firefox/38.0
+Build ID: 20150222030206
+
+Steps to reproduce:
+
+Build 64-bit Firefox from trunk using VS 2015 CTP5. I have applied the patch from Bug 1119072 (Part 7 and the NOT for checkin one) and Bug 1119776 (Part 8) in order to make it compile.
+
+
+Actual results:
+
+firefox.exe could not be linked and out came this error:
+
+1:22.35 nsBrowserApp.obj
+1:23.20 nsBrowserApp.cpp
+1:23.21 firefox.exe
+1:23.33 Executing: link -NOLOGO -OUT:firefox.exe -PDB:firefox.pdb -ENTRY:wmainC
+RTStartup -SUBSYSTEM:WINDOWS,6.01 -STACK:2097152 -LARGEADDRESSAWARE -NXCOMPAT -D
+YNAMICBASE /HEAP:0x40000 -DELAYLOAD:mozglue.dll @h:\mozilla-inbound\obj\browser\
+app\tmposlr_y.list module.res ../../xpcom/glue/standalone/staticruntime/xpcomglu
+e_staticruntime.lib ../../mozglue/build/mozglue.lib kernel32.lib user32.lib gdi3
+2.lib winmm.lib wsock32.lib advapi32.lib secur32.lib netapi32.lib delayimp.lib
+1:23.33 h:\mozilla-inbound\obj\browser\app\tmposlr_y.list:
+1:23.33 nsBrowserApp.obj
+1:23.33 ..\..\memory\fallible\fallible.obj
+1:23.33
+1:23.33 fallible.obj : error LNK2038: mismatch detected for 'RuntimeLibrary': v
+alue 'MD_DynamicRelease' doesn't match value 'MT_StaticRelease' in nsBrowserApp.
+obj
+1:23.33
+1:23.33 firefox.exe : fatal error LNK1319: 1 mismatch detected
+1:23.33
+1:23.34 h:/mozilla-inbound/config/rules.mk:658: recipe for target 'firefox.exe'
+failed
+1:23.34 mozmake.EXE[5]: *** [firefox.exe] Error 1319
+1:23.34 h:/mozilla-inbound/config/recurse.mk:74: recipe for target 'browser/app
+/target' failed
+1:23.34 mozmake.EXE[4]: *** [browser/app/target] Error 2
+
+
+Expected results:
+
+It should have built successfully.

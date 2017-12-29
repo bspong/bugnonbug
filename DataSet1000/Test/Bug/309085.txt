@@ -1,0 +1,32 @@
+False positives from FeedHandler.harvestFeeds hide distinct feeds
+FeedHandler.harvestFeeds() tries too hard to hide "the same feed content in
+different feed formats" listings, and as a result hides feeds with different
+content, when the distribution of number of feeds in each type happens to be equal.
+
+http://plasmastrum.org has autodiscovery links for two feeds:
+
+<link rel="alternate" type="application/atom+xml" href="/syn/" title="Full text" />
+<link rel="alternate" type="application/rss+xml"
+href="http://del.icio.us/rss/ap/!log" title="Link log" />
+
+Anyone trying to subscribe to the "Link log" feed will need to copy the URL out
+of the source, open the Bookmark Manager, find the Add Live Bookmark item in the
+File menu, and paste it in.
+
+Suggested alternate algorithm:
+
+1. strip (case-insensitively) "rss" and "atom" and all numbers from link titles
+2. if all the titles in each type are also in the other types, return just the
+first type (or, a preferred type if we actually have a reason to prefer one).
+
+e.g., for
+
+<link rel="alternate" type="application/rss+xml" title="Entries in RSS 2.0">
+<link rel="alternate" type="application/atom+xml" title="Entries in Atom 1.0">
+<link rel="alternate" type="application/rss+xml" title="Comments in RSS 2.0">
+<link rel="alternate" type="application/atom+xml" title="Comments in Atom 1.0">
+
+once the titles are stripped down to where
+feedHash["application/rss+xml"][0].title is "Entries in ", every title in
+feedHash["application/rss+xml"] is also in feedHash["application/atom+xml"], and
+we can (more) safely assume they only differ in format.

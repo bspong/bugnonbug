@@ -1,0 +1,19 @@
+Use simple joins for redirect queries in bookmarks service
+Created attachment 319378
+patch
+
+I saw this while looking at possible favicons interactions with redirect transitions.
+Queries for redirects are doing a LEFT JOIN against moz_historyvisits, and then they are checking for visit_type = a_redirect_type.
+This works, but does not make sense, we are including useless records in the resultset and then filtering them out, let's simply do a JOIN since we need to check a visit_type.
+
+The same in fillbookmarkhash, left join does not make sense when we select h.id, we would got a useless null entry
+
+Plus, we are doing
+-      "WHERE b.fk IS NOT NULL AND b.type = ?1 "
+-      "AND v2.visit_type = 5 OR v2.visit_type = 6 " // perm. or temp. RDRs
+
+IIRC in sqlite AND should have precedence over OR so this becomes
+WHERE (b.fk IS NOT NULL AND b.type = 1 AND v2.visit_type = 5 ) OR v2.visit_type = 6
+while should be
+WHERE b.fk IS NOT NULL AND b.type = 1 AND (v2.visit_type = 5 OR v2.visit_type = 6)
+(and checking for b.fk not null is quite useless for bookmarks type bookmark when we check for a visit_type)

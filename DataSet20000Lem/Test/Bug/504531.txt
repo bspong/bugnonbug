@@ -1,0 +1,41 @@
+default namespace is dropped when using setAttribute('xmlns', 'http://mynamespace')
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.9.1) Gecko/20090624 Firefox/3.5 (.NET CLR 3.5.30729)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.9.1) Gecko/20090624 Firefox/3.5 (.NET CLR 3.5.30729)
+
+The following code doesn't produce the desired xml after Firefox 3 (3.5 also).
+
+doc = document.implementation.createDocument("", "", null);
+root = doc.createElement("root");
+root.setAttribute("xmlns", "http://mynamespace/");
+doc.appendChild(root);
+serializer = new XMLSerializer();
+alert(serializer.serializeToString(doc));
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+The following javascript code work fine in IE, Chrome, Firefox 1.x, Firefox 2.x but not in Firefox 3.x.
+
+<html>
+<body>
+<script language="javascript" type="text/javascript">
+doc = document.all ? new ActiveXObject("MSXML.DOMDocument") : document.implementation.createDocument("", "", null);
+root = doc.createElement("root");
+root.setAttribute("xmlns", "http://mynamespace/");
+root.appendChild(doc.createTextNode('test'));
+doc.appendChild(root);
+if (document.all) {
+alert(root.xml);
+} else {
+var serializer = new XMLSerializer();
+alert(serializer.serializeToString(doc));
+}
+</script>
+</body>
+</html>
+Actual Results:
+<root>test</root>
+
+Expected Results:
+<root xmlns="http://mynamespace/">test</root>

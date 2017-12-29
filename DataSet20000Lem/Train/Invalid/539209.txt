@@ -1,0 +1,22 @@
+copyPrefOverride directory_service Component returned failure code nsIProperties.get 0x80004005
+i'm using https://build.mozilla.org/tryserver-builds/timeless@mozdev.org-try-e4e2c2bd2b64/try-e4e2c2bd2b64-win32.zip
+which is fairly close to a normal firefox, most extension are disabled or neutralized (by the change included)
+
+steps:
+1. run minefield
+2. open error console
+3. look for interesting thing at the bottom
+
+Error: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIProperties.get]" nsresult: "0x80004005 (NS_ERROR_FAILURE)" location: "JS frame :: file:///C:/Users/timeless/Desktop/try-signed/firefox/components/nsBrowserContentHandler.js :: copyPrefOverride :: line 125" data: no]
+Source File: file:///C:/Users/timeless/Desktop/try-signed/firefox/components/nsBrowserContentHandler.js
+Line: 147
+
+This exception is thrown by this:
+var prefOverride = fileLocator.get(NS_APP_EXISTING_PREF_OVERRIDE,
+Components.interfaces.nsIFile);
+so instead of reaching this:
+if (!prefOverride.exists())
+return; // nothing to do
+
+we reach this:
+Components.utils.reportError(ex);

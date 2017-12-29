@@ -1,0 +1,173 @@
+CPU Utilization of Trivial Flash/AS3 App is 10X greater on FF3 than on IE 6
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.2) Gecko/2008091620 Firefox/3.0.2
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.2) Gecko/2008091620 Firefox/3.0.2
+
+I wrote a simple 1,222 byte AS3 app that generates an oscilloscope-like effect.
+
+I launched the .html file, which launched this AS3 app, on both FF 3.0.2 and IE6.
+
+Two big differences:
+
+
+IE6 FF 3.0.2
+------- --------
+CPU Utilization 2% 20%
+Memory Consumption 23,768K 67,812K
+
+FF3 used almost three time the memory and 10 time the CPU.
+
+The system is a dual core T7200 2GHz CPU with 2G of RAM.
+
+Any idea why there is such a difference in both CPU and memory usage ?
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. In FF3.0.2, launch RandomLines.html
+2. Watch CPU utilization in Task Manager
+3. Do same for IE6
+Actual Results:
+IE6 CPU utilization wa 2%
+FF 3.0.2 CPU utilization wa 20%
+
+nb. The CPU discrepancy is so great that I believe it warrant a "NORMAL" severity rating.
+
+Expected Results:
+FF3 CPU utilization should be near that of IE6.
+
+As well FF3 memory utilization is 2.5 time greater; I'm not sure if that's due to the Flash issue or something else.
+
+If you're having trouble with what's below, I can email you the SWF file and a screen capture of the results.
+
+Here's the AS3 app:
+-------------------------------
+package {
+
+import flash.display.*;
+import flash.utils.*;
+import flash.events.*;
+
+// Like RandomLines1 but draw directly on itself instead of a child Shape object.
+
+public class RandomLines2 extends Sprite
+{
+
+public function RandomLines2 ( )
+{
+addEventListener(Event.ENTER_FRAME, enterFrameListener);
+stage.frameRate = 30;
+stage.scaleMode = StageScaleMode.NO_SCALE;
+stage.align = StageAlign.TOP_LEFT;
+/*
+stage.stageHeight = 768;
+stage.stageWidth = 1024;
+*/
+trace ("Hello");
+
+for (var i:int = 0; i < 100; ++i) {
+xs[i] = 200;
+}
+}
+
+private var xs:Array = new Array (100);
+
+private function enterFrameListener (e:Event):void
+{
+trace (transform.matrix.toString ());
+trace (transform.pixelBounds.toString ());
+graphics.clear( );
+
+graphics.lineStyle (2, 0x00ff00);
+graphics.moveTo (1, 1);
+graphics.lineTo (959, 1);
+graphics.lineTo (959, 479);
+graphics.lineTo (1, 479);
+graphics.lineTo (1, 1);
+
+graphics.lineStyle(2, 0x0080ff);
+
+for (var i:int = 0; i < 100; ++i) {
+var x:int = i * 10;
+
+xs[i] += random (-10, 10);
+xs[i] = Math.max (Math.min (xs[i], 400), 0);
+
+if (i == 0) {
+graphics.moveTo (x, xs[i]);
+} else {
+graphics.lineTo (x, xs[i]);
+}
+}
+}
+
+
+// Returns a number in the range of minVal to maxVal, inclusive
+
+public function random (minVal:int, maxVal:int):int
+{
+return minVal + Math.floor(Math.random( ) * (maxVal + 1 - minVal));
+}
+
+}
+
+}
+
+-------------------------------
+
+
+Here's the HTML file (which invokes the AS3 app):
+
+-------------------------------
+<html>
+
+<head>
+</head>
+
+<body>
+
+<object
+classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000"
+codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=6,0,40,0"
+WIDTH="960"
+HEIGHT="480"
+id="myMovieName">
+
+<PARAM
+NAME=movie
+VALUE="RandomLines2.swf">
+<PARAM
+NAME=quality
+VALUE=high>
+<PARAM
+NAME=bgcolor
+VALUE=#000000>
+<EMBED
+src="RandomLines2.swf"
+quality=high
+bgcolor=#000000
+WIDTH="960"
+HEIGHT="480"
+NAME="myMovieName"
+ALIGN=""
+TYPE="application/x-shockwave-flash"
+PLUGINSPAGE="http://www.macromedia.com/go/getflashplayer">
+</EMBED>
+</object>
+
+<!--
+<object
+data="RandomLines2.swf"
+type="application/x-shockwave-flash"
+width="960"
+height="480">
+<param
+name="movie"
+value="RandomLines2.swf" />
+</object>
+-->
+
+</body>
+</html>
+
+-------------------------------

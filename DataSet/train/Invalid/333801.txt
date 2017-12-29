@@ -1,0 +1,436 @@
+Crash trying to load plugin on Intel Mac (example NetscapeMoviePlugin project)
+User-Agent:       Mozilla/5.0 (Macintosh; U; PPC Mac OS X; en) AppleWebKit/418 (KHTML, like Gecko) Safari/417.9.2
+Build Identifier: Mozilla/5.0 (Macintosh; U; Intel Mac OS X; en-US; rv:1.8.0.2) Gecko/20060328 Firefox/1.5.0.2
+
+A plugin I'm working on exhibits the same problem, but I've been able to isolate it to the sample code included on an OS X 10.4 Tiger development system at:
+
+/Developer/Examples/WebKit/NetscapeMoviePlugin/
+
+I built the sample as a universal binary and dropped the resulting plugin into /Library/Internet\ Plugins. I've included the crash log.
+
+Running in rosetta, I see a different crash. I have also included that crash log.
+
+I see that bug 333282 implies that I should not trust the "Link (dyld) error" seen in the i386 crash log.
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Build /Developer/Examples/WebKit/NetscapeMoviePlugin/ as universal binary
+2. Put resulting plug-in into /Library/Internet Plugins.
+3. Run Firefox, open NetscapeMoviePlugin's movie.html
+
+Actual Results:  
+crasharama
+
+Expected Results:  
+same thing sans crasharama
+
+Two crash logs here: i386 and ppc
+
+===============
+i386 crash log:
+===============
+
+Date/Time:      2006-04-12 17:58:00.469 -0700
+OS Version:     10.4.6 (Build 8I1119)
+Report Version: 4
+
+Command: firefox-bin
+Path:    /Applications/Firefox.app/Contents/MacOS/firefox-bin
+Parent:  WindowServer [91]
+
+Version: 1.5.0.2 (1.5.0.2)
+
+PID:    3322
+Thread: Unknown
+
+Link (dyld) error:
+
+no suitable image found.  Did find:
+	/Library/Internet Plug-Ins/iPhotoPhotocast.plugin: not a file
+Model: iMac4,1, BootROM IM41.0039.B00, 2 processors, Intel Core Duo, 1.83 GHz, 512 MB
+Graphics: ATI Radeon X1600, ATY,RadeonX1600, PCIe, 128 MB
+Memory Module: DIMM1/BANK 1, 512 MB, DDR2 SDRAM, 667 MHz
+AirPort: spairport_wireless_card_type_airport_extreme (0x14E4, 0x89), 103.2 (3.120.28.3)
+Bluetooth: Version 1.7.3f4, 2 service, 1 devices, 1 incoming serial ports
+Network Service: Built-in Ethernet, Ethernet, en0
+Serial ATA Device: Maxtor 6L160M0, 152.67 GB
+Parallel ATA Device: MATSHITADVD-R   UJ-846
+USB Device: Built-in iSight, Micron, Up to 480 Mb/sec, 500 mA
+USB Device: Hub in Apple Pro Keyboard, Mitsumi Electric, Up to 12 Mb/sec, 500 mA
+USB Device: Microsoft 3-Button Mouse with IntelliEye(TM), Microsoft, Up to 1.5 Mb/sec, 100 mA
+USB Device: Apple Pro Keyboard, Mitsumi Electric, Up to 12 Mb/sec, 250 mA
+USB Device: Bluetooth HCI, Up to 12 Mb/sec, 500 mA
+USB Device: IR Receiver, Apple Computer, Inc., Up to 12 Mb/sec, 500 mA
+
+
+
+
+
+==============
+ppc crash log:
+==============
+
+
+
+Date/Time:      2006-04-12 18:30:58.342 -0700
+OS Version:     10.4.6 (Build 8I1119)
+Report Version: 4
+
+Command: firefox-bin
+Path:    /Applications/Firefox.app/Contents/MacOS/firefox-bin
+Parent:  WindowServer [91]
+Rosetta: Yes
+
+Version: 1.5.0.2 (1.5.0.2)
+
+PID:    3345
+Thread: 0
+
+Exception:  EXC_BAD_ACCESS (0x0001)
+Codes:      KERN_PROTECTION_FAILURE (0x0002) at 0x00000000
+
+Thread 0 Crashed:
+0   org.mozilla.firefox 	0xb807b139 0xb8000000 + 504121
+1   org.mozilla.firefox 	0xb808f47a 0xb8000000 + 586874
+2   org.mozilla.firefox 	0xb80e4742 spin_lock_wrapper + 5140
+
+Thread 1:
+0   org.mozilla.firefox 	0xb81f2deb strchr + 72
+1   org.mozilla.firefox 	0xb818e52a pthread_cond_wait + 3114
+2   org.mozilla.firefox 	0xb812a9b0 catch_exception_raise_state_identity + 320
+3   org.mozilla.firefox 	0xb8129eda CallPPCFunctionAtAddressInt + 174780
+4   org.mozilla.firefox 	0xb8129dd1 CallPPCFunctionAtAddressInt + 174515
+5   org.mozilla.firefox 	0xb812aaae catch_exception_raise_state_identity + 574
+6   org.mozilla.firefox 	0xb81c3f0c pthread_create + 1124
+
+Thread 2:
+0   org.mozilla.firefox 	0xb80f8159 spin_lock_wrapper + 85547
+1   org.mozilla.firefox 	0xb8106d5a CallPPCFunctionAtAddressInt + 31036
+2   org.mozilla.firefox 	0xb808192e 0xb8000000 + 530734
+3   org.mozilla.firefox 	0xb807b116 0xb8000000 + 504086
+4   org.mozilla.firefox 	0xb808f47a 0xb8000000 + 586874
+5   org.mozilla.firefox 	0xb80e4742 spin_lock_wrapper + 5140
+
+Thread 3:
+0   org.mozilla.firefox 	0xb80f7e12 spin_lock_wrapper + 84708
+1   org.mozilla.firefox 	0xb8110e74 CallPPCFunctionAtAddressInt + 72278
+2   org.mozilla.firefox 	0xb808192e 0xb8000000 + 530734
+3   org.mozilla.firefox 	0xb807b116 0xb8000000 + 504086
+4   org.mozilla.firefox 	0xb808f47a 0xb8000000 + 586874
+5   org.mozilla.firefox 	0xb80e3e1d spin_lock_wrapper + 2799
+
+Thread 4:
+0   org.mozilla.firefox 	0xb80f7e12 spin_lock_wrapper + 84708
+1   org.mozilla.firefox 	0xb8110e74 CallPPCFunctionAtAddressInt + 72278
+2   org.mozilla.firefox 	0xb808192e 0xb8000000 + 530734
+3   org.mozilla.firefox 	0xb807b116 0xb8000000 + 504086
+4   org.mozilla.firefox 	0xb808f47a 0xb8000000 + 586874
+5   org.mozilla.firefox 	0xb80e3e1d spin_lock_wrapper + 2799
+
+Thread 5:
+0   org.mozilla.firefox 	0xb80f7e12 spin_lock_wrapper + 84708
+1   org.mozilla.firefox 	0xb8110e74 CallPPCFunctionAtAddressInt + 72278
+2   org.mozilla.firefox 	0xb808192e 0xb8000000 + 530734
+3   org.mozilla.firefox 	0xb807b116 0xb8000000 + 504086
+4   org.mozilla.firefox 	0xb808f47a 0xb8000000 + 586874
+5   org.mozilla.firefox 	0xb80e3e1d spin_lock_wrapper + 2799
+
+Thread 0 crashed with i386 Thread State:
+eax: 0x00000004    ebx: 0xb807ae88 ecx:0x80d12650 edx: 0x00000000
+edi: 0x80d12650    esi: 0x00000000 ebp:0xb7fffa68 esp: 0xb7fffa10
+ ss: 0x0000002f    efl: 0x00010246 eip:0xb807b139  cs: 0x00000027
+ ds: 0x0000002f     es: 0x0000002f  fs:0x00000000  gs: 0x00000037
+
+Binary Images Description:
+    0x1000 -   0x9dafff org.mozilla.firefox 1.5.0.2	/Applications/Firefox.app/Contents/MacOS/firefox-bin
+ 0x1c1f000 -  0x1c28fff libqfaservices.dylib 	/Applications/Firefox.app/Contents/MacOS/extensions/talkback@mozilla.org/components/libqfaservices.dylib
+ 0x1db6000 -  0x1db8fff com.apple.textencoding.unicode 2.1	/System/Library/TextEncodings/Unicode Encodings.bundle/Contents/MacOS/Unicode Encodings
+ 0x1f57000 -  0x1f82fff libnssckbi.dylib 	/Applications/Firefox.app/Contents/MacOS/libnssckbi.dylib
+ 0x1fd3000 -  0x1fd5fff com.apple.netscapemovieplugin 1.0	/Library/Internet Plug-Ins/NetscapeMoviePlugIn.plugin/Contents/MacOS/NetscapeMoviePlugIn
+ 0x3000000 -  0x3032fff libnspr4.dylib 	/Applications/Firefox.app/Contents/MacOS/libnspr4.dylib
+ 0x4000000 -  0x400dfff libplds4.dylib 	/Applications/Firefox.app/Contents/MacOS/libplds4.dylib
+ 0x5000000 -  0x500efff libplc4.dylib 	/Applications/Firefox.app/Contents/MacOS/libplc4.dylib
+ 0x6000000 -  0x6084fff libmozjs.dylib 	/Applications/Firefox.app/Contents/MacOS/libmozjs.dylib
+ 0x7000000 -  0x7000fff libxpcom.dylib 	/Applications/Firefox.app/Contents/MacOS/libxpcom.dylib
+ 0x8000000 -  0x801bfff libssl3.dylib 	/Applications/Firefox.app/Contents/MacOS/libssl3.dylib
+ 0x9000000 -  0x9060fff libnss3.dylib 	/Applications/Firefox.app/Contents/MacOS/libnss3.dylib
+ 0xa000000 -  0xa01dfff libsmime3.dylib 	/Applications/Firefox.app/Contents/MacOS/libsmime3.dylib
+ 0xb000000 -  0xb07afff libsoftokn3.dylib 	/Applications/Firefox.app/Contents/MacOS/libsoftokn3.dylib
+ 0xc000000 -  0xc018fff libxpcom_compat.dylib 	/Applications/Firefox.app/Contents/MacOS/libxpcom_compat.dylib
+0x10000000 - 0x10085fff libxpcom_core.dylib 	/Applications/Firefox.app/Contents/MacOS/libxpcom_core.dylib
+0x8fc00000 - 0x8fc52fff dyld 44.17	/usr/lib/dyld
+0x8fe00000 - 0x8fe4bfff dyld 44.17	/usr/lib/dyld
+0x90000000 - 0x901bbfff libSystem.B.dylib 	/usr/lib/libSystem.B.dylib
+0x90213000 - 0x90218fff libmathCommon.A.dylib 	/usr/lib/system/libmathCommon.A.dylib
+0x9021a000 - 0x9025cfff com.apple.CoreText 1.1.0 (???)	/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/CoreText.framework/Versions/A/CoreText
+0x90284000 - 0x90361fff ATS 	/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/ATS.framework/Versions/A/ATS
+0x9038a000 - 0x9072ffff com.apple.CoreGraphics 1.258.27 (???)	/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/CoreGraphics.framework/Versions/A/CoreGraphics
+0x907be000 - 0x90894fff com.apple.CoreFoundation 6.4.5 (368.26)	/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation
+0x908db000 - 0x908dbfff com.apple.CoreServices 10.4 (???)	/System/Library/Frameworks/CoreServices.framework/Versions/A/CoreServices
+0x908dd000 - 0x909e3fff libicucore.A.dylib 	/usr/lib/libicucore.A.dylib
+0x90a34000 - 0x90ab7fff libobjc.A.dylib 	/usr/lib/libobjc.A.dylib
+0x90ae0000 - 0x90b51fff libstdc++.6.dylib 	/usr/lib/libstdc++.6.dylib
+0x90bc4000 - 0x90bcffff libgcc_s.1.dylib 	/usr/lib/libgcc_s.1.dylib
+0x90bd4000 - 0x90c46fff com.apple.framework.IOKit 1.4.2 (???)	/System/Library/Frameworks/IOKit.framework/Versions/A/IOKit
+0x90c5c000 - 0x90c6efff libauto.dylib 	/usr/lib/libauto.dylib
+0x90c74000 - 0x90f3cfff com.apple.CoreServices.CarbonCore 682.10 (679)	/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/CarbonCore.framework/Versions/A/CarbonCore
+0x90f99000 - 0x91012fff com.apple.CoreServices.OSServices 4.1	/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/OSServices.framework/Versions/A/OSServices
+0x91054000 - 0x91093fff com.apple.CFNetwork 129.13	/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/CFNetwork.framework/Versions/A/CFNetwork
+0x910a7000 - 0x910bafff com.apple.WebServices 1.1.3 (1.1.0)	/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/WebServicesCore.framework/Versions/A/WebServicesCore
+0x910c6000 - 0x9114cfff com.apple.SearchKit 1.0.5	/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/SearchKit.framework/Versions/A/SearchKit
+0x91182000 - 0x911a2fff com.apple.Metadata 10.4.4 (121.36)	/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Metadata
+0x911af000 - 0x911befff libz.1.dylib 	/usr/lib/libz.1.dylib
+0x911c1000 - 0x9138bfff com.apple.security 4.2.1 (24989)	/System/Library/Frameworks/Security.framework/Versions/A/Security
+0x9147a000 - 0x91483fff com.apple.DiskArbitration 2.1	/System/Library/Frameworks/DiskArbitration.framework/Versions/A/DiskArbitration
+0x9148a000 - 0x914b2fff com.apple.SystemConfiguration 1.8.5	/System/Library/Frameworks/SystemConfiguration.framework/Versions/A/SystemConfiguration
+0x914c4000 - 0x914ccfff libbsm.dylib 	/usr/lib/libbsm.dylib
+0x914d0000 - 0x9154dfff com.apple.audio.CoreAudio 3.0.3	/System/Library/Frameworks/CoreAudio.framework/Versions/A/CoreAudio
+0x91594000 - 0x91594fff com.apple.ApplicationServices 10.4 (???)	/System/Library/Frameworks/ApplicationServices.framework/Versions/A/ApplicationServices
+0x91596000 - 0x915c8fff com.apple.AE 314 (313)	/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/AE.framework/Versions/A/AE
+0x915de000 - 0x916b8fff com.apple.ColorSync 4.4.6	/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/ColorSync.framework/Versions/A/ColorSync
+0x916f5000 - 0x91782fff com.apple.print.framework.PrintCore 4.5 (177.10)	/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/PrintCore.framework/Versions/A/PrintCore
+0x917be000 - 0x9186ffff com.apple.QD 3.10.8 (???)	/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/QD.framework/Versions/A/QD
+0x918a4000 - 0x918fafff com.apple.HIServices 1.5.2 (???)	/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/HIServices.framework/Versions/A/HIServices
+0x91922000 - 0x9193bfff com.apple.LangAnalysis 1.6.3	/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/LangAnalysis.framework/Versions/A/LangAnalysis
+0x91949000 - 0x91966fff com.apple.FindByContent 1.5	/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/FindByContent.framework/Versions/A/FindByContent
+0x91972000 - 0x919aefff com.apple.LaunchServices 176	/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/LaunchServices.framework/Versions/A/LaunchServices
+0x919c6000 - 0x919d3fff com.apple.speech.synthesis.framework 3.4	/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/SpeechSynthesis.framework/Versions/A/SpeechSynthesis
+0x919db000 - 0x91a12fff com.apple.ImageIO.framework 1.4.6	/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/ImageIO.framework/Versions/A/ImageIO
+0x91a25000 - 0x91ae7fff libcrypto.0.9.7.dylib 	/usr/lib/libcrypto.0.9.7.dylib
+0x91b32000 - 0x91b47fff libcups.2.dylib 	/usr/lib/libcups.2.dylib
+0x91b4c000 - 0x91b6afff libJPEG.dylib 	/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/ImageIO.framework/Versions/A/Resources/libJPEG.dylib
+0x91b6f000 - 0x91bcdfff libJP2.dylib 	/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/ImageIO.framework/Versions/A/Resources/libJP2.dylib
+0x91bdd000 - 0x91be1fff libGIF.dylib 	/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/ImageIO.framework/Versions/A/Resources/libGIF.dylib
+0x91be3000 - 0x91c31fff libRaw.dylib 	/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/ImageIO.framework/Versions/A/Resources/libRaw.dylib
+0x91c35000 - 0x91c74fff libTIFF.dylib 	/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/ImageIO.framework/Versions/A/Resources/libTIFF.dylib
+0x91c7a000 - 0x91c94fff libPng.dylib 	/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/ImageIO.framework/Versions/A/Resources/libPng.dylib
+0x91c99000 - 0x91c9bfff libRadiance.dylib 	/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/ImageIO.framework/Versions/A/Resources/libRadiance.dylib
+0x91c9d000 - 0x91c9dfff com.apple.Accelerate 1.2.1 (Accelerate 1.2.1)	/System/Library/Frameworks/Accelerate.framework/Versions/A/Accelerate
+0x91c9f000 - 0x91d81fff com.apple.vImage 2.3	/System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vImage.framework/Versions/A/vImage
+0x91d89000 - 0x91da8fff com.apple.Accelerate.vecLib 3.2.1 (vecLib 3.2.1)	/System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vecLib.framework/Versions/A/vecLib
+0x91e14000 - 0x91e82fff libvMisc.dylib 	/System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vecLib.framework/Versions/A/libvMisc.dylib
+0x91e8d000 - 0x91f21fff libvDSP.dylib 	/System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vecLib.framework/Versions/A/libvDSP.dylib
+0x91f3b000 - 0x924c3fff libBLAS.dylib 	/System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vecLib.framework/Versions/A/libBLAS.dylib
+0x924f6000 - 0x92821fff libLAPACK.dylib 	/System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vecLib.framework/Versions/A/libLAPACK.dylib
+0x92851000 - 0x928ddfff com.apple.DesktopServices 1.3.3	/System/Library/PrivateFrameworks/DesktopServicesPriv.framework/Versions/A/DesktopServicesPriv
+0x9291a000 - 0x92b50fff com.apple.Foundation 6.4.5 (567.26)	/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation
+0x92c65000 - 0x92d53fff libxml2.2.dylib 	/usr/lib/libxml2.2.dylib
+0x92d72000 - 0x92e61fff libiconv.2.dylib 	/usr/lib/libiconv.2.dylib
+0x92e72000 - 0x92e91fff libGL.dylib 	/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib
+0x92e9c000 - 0x92ef1fff libGLU.dylib 	/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGLU.dylib
+0x92f07000 - 0x92f07fff com.apple.Carbon 10.4 (???)	/System/Library/Frameworks/Carbon.framework/Versions/A/Carbon
+0x92f09000 - 0x92f1cfff com.apple.ImageCapture 3.0.3	/System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/ImageCapture.framework/Versions/A/ImageCapture
+0x92f2c000 - 0x92f36fff com.apple.speech.recognition.framework 3.5	/System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/SpeechRecognition.framework/Versions/A/SpeechRecognition
+0x92f3e000 - 0x92f46fff com.apple.securityhi 2.0.1 (24742)	/System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/SecurityHI.framework/Versions/A/SecurityHI
+0x92f4d000 - 0x92fd7fff com.apple.ink.framework 101.2.1 (71)	/System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/Ink.framework/Versions/A/Ink
+0x92fec000 - 0x92ff0fff com.apple.help 1.0.3 (32.1)	/System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/Help.framework/Versions/A/Help
+0x92ff4000 - 0x93015fff com.apple.openscripting 1.2.5 (???)	/System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/OpenScripting.framework/Versions/A/OpenScripting
+0x93028000 - 0x93030fff com.apple.print.framework.Print 5.1 (192.3)	/System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/Print.framework/Versions/A/Print
+0x93037000 - 0x9309efff com.apple.htmlrendering 66.1 (1.1.3)	/System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/HTMLRendering.framework/Versions/A/HTMLRendering
+0x930c4000 - 0x9310bfff com.apple.NavigationServices 3.4.4 (3.4.3)	/System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/NavigationServices.framework/Versions/A/NavigationServices
+0x93135000 - 0x93145fff com.apple.audio.SoundManager 3.9.1	/System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/CarbonSound.framework/Versions/A/CarbonSound
+0x9314e000 - 0x93154fff com.apple.CommonPanels 1.2.3 (73)	/System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/CommonPanels.framework/Versions/A/CommonPanels
+0x9315a000 - 0x93478fff com.apple.HIToolbox 1.4.6 (???)	/System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/HIToolbox.framework/Versions/A/HIToolbox
+0x935ad000 - 0x935b9fff com.apple.opengl 1.4.9	/System/Library/Frameworks/OpenGL.framework/Versions/A/OpenGL
+0x93646000 - 0x93646fff com.apple.Cocoa 6.4 (???)	/System/Library/Frameworks/Cocoa.framework/Versions/A/Cocoa
+0x93648000 - 0x93c9ffff com.apple.AppKit 6.4.5 (824.35)	/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit
+0x94027000 - 0x9409afff com.apple.CoreData 90	/System/Library/Frameworks/CoreData.framework/Versions/A/CoreData
+0x940d3000 - 0x9419dfff com.apple.audio.toolbox.AudioToolbox 1.4.2	/System/Library/Frameworks/AudioToolbox.framework/Versions/A/AudioToolbox
+0x941de000 - 0x941defff com.apple.audio.units.AudioUnit 1.4.2	/System/Library/Frameworks/AudioUnit.framework/Versions/A/AudioUnit
+0x941e0000 - 0x94385fff com.apple.QuartzCore 1.4.7	/System/Library/Frameworks/QuartzCore.framework/Versions/A/QuartzCore
+0x943d6000 - 0x94416fff libsqlite3.0.dylib 	/usr/lib/libsqlite3.0.dylib
+0x9441e000 - 0x9446ffff libGLImage.dylib 	/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGLImage.dylib
+0x945f3000 - 0x94603fff libCGATS.A.dylib 	/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/CoreGraphics.framework/Versions/A/Resources/libCGATS.A.dylib
+0x9460a000 - 0x94616fff libCSync.A.dylib 	/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/CoreGraphics.framework/Versions/A/Resources/libCSync.A.dylib
+0x94665000 - 0x9467efff libRIP.A.dylib 	/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/CoreGraphics.framework/Versions/A/Resources/libRIP.A.dylib
+0x94685000 - 0x94933fff com.apple.QuickTime 7.0.4	/System/Library/Frameworks/QuickTime.framework/Versions/A/QuickTime
+0xb8000000 - 0xb827bfff org.mozilla.firefox 1.5.0.2	/Applications/Firefox.app/Contents/MacOS/firefox-bin
+
+Translated Code Information:
+
+Rosetta Version:  14.07
+Args:  	/Applications/Firefox.app/Contents/MacOS/firefox-bin -psn_0_30277633 
+Exception: EXC_BAD_ACCESS (0x0001)
+
+Thread 0: (0xb029dd40, 0xb80f7e12)
+0x90054ee0: /usr/lib/libSystem.B.dylib : _pthread_cond_timedwait + 0x260 
+0x03017c68: No symbol
+0x03017ecc: No symbol
+0x006f4e3c: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN14nsHostResolver15GetHostToLookupEPP12nsHostRecord + 0x84 
+0x006f5190: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN14nsHostResolver10ThreadFuncEPv + 0xb8 
+0x0301cd80: No symbol
+0x9002bd28: /usr/lib/libSystem.B.dylib : __pthread_body + 0x60 
+0x00000000: /Applications/Firefox.app/Contents/MacOS/firefox-bin :  + 0x0 
+
+PPC Thread State
+srr0: 0x00000000	srr1: 0x00000000		             vrsave: 0x00000000
+cr:  0xXXXXXXXX		xer: 0x20000000		 lr: 0x90054f24		ctr: 0x900550c0
+r00: 0xffffffd9 	r01: 0xf0284bc0 	r02: 0x00000001 	r03: 0x00002f03 	
+r04: 0x00003003 	r05: 0x0000003b 	r06: 0x3b9a83b0 	r07: 0x00000000 	
+r08: 0x00000000 	r09: 0xa0001fcc 	r10: 0x2e5e1248 	r11: 0xa0006bf4 	
+r12: 0x900550c0 	r13: 0x00000000 	r14: 0x00000000 	r15: 0x00000000 	
+r16: 0x00000000 	r17: 0x00000000 	r18: 0x00000000 	r19: 0x00000000 	
+r20: 0x00000000 	r21: 0x00000000 	r22: 0x00000000 	r23: 0x00000000 	
+r24: 0x00000000 	r25: 0xa0004ca0 	r26: 0x01b14090 	r27: 0x01b14104 	
+r28: 0xa0001fcc 	r29: 0x3b9a83b0 	r30: 0x0000003b 	r31: 0x90054ca0 	
+
+Thread 1: (0xb0099b9c, 0xb80f8159)
+0x03019410: No symbol
+0x0301b8f4: No symbol
+0x00422d38: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN24nsSocketTransportService4PollEPj + 0x74 
+0x00423484: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN24nsSocketTransportService3RunEv + 0x1b0 
+0x10049480: No symbol
+0x0301cd80: No symbol
+0x9002bd28: /usr/lib/libSystem.B.dylib : __pthread_body + 0x60 
+0xbfffe6c0: No symbol
+
+PPC Thread State
+srr0: 0x00000000	srr1: 0x00000000		             vrsave: 0x00000000
+cr:  0xXXXXXXXX		xer: 0x00000000		 lr: 0x0301f140		ctr: 0x9001f8c0
+r00: 0x0000005d 	r01: 0xf0080820 	r02: 0x00000000 	r03: 0x00000007 	
+r04: 0xf0080860 	r05: 0xf00808e0 	r06: 0xf0080960 	r07: 0x00000000 	
+r08: 0x00000001 	r09: 0x00000040 	r10: 0x00000001 	r11: 0x03033bc4 	
+r12: 0x9001f8c0 	r13: 0x00000f3d 	r14: 0x00000000 	r15: 0x01000000 	
+r16: 0x00000000 	r17: 0x0187b000 	r18: 0x00000000 	r19: 0x00000000 	
+r20: 0x00000001 	r21: 0xffffffff 	r22: 0xf0080a50 	r23: 0x020358e8 	
+r24: 0x00000000 	r25: 0xf00808e0 	r26: 0x00000001 	r27: 0xf0080a50 	
+r28: 0xf0080960 	r29: 0xf0080860 	r30: 0x00000001 	r31: 0x020358e8 	
+
+Thread 2: Crashed (0xb7fffa10, 0xb807b139)
+0x8fc153d8: /usr/lib/dyld : _stub_binding_helper_interface + 0x38 
+0x007e04fc: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN18ns4xPluginInstance16InitializePluginEP21nsIPluginInstancePeer + 0x27c 
+0x002ac6f8: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN16nsPluginHostImpl22TrySetUpPluginInstanceEPKcP6nsIURIP22nsIPluginInstanceOwner + 0x4dc 
+0x002ac0f0: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN16nsPluginHostImpl19SetUpPluginInstanceEPKcP6nsIURIP22nsIPluginInstanceOwner + 0x30 
+0x002ab2b4: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN16nsPluginHostImpl25InstantiateEmbeddedPluginEPKcP6nsIURIP22nsIPluginInstanceOwner + 0x6c4 
+0x005c5864: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN13nsObjectFrame17InstantiatePluginEP13nsPresContextR19nsHTMLReflowMetricsRK17nsHTMLReflowStateP13nsIPluginHostPKcP6nsIURI + 0x38c 
+0x005c50cc: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN13nsObjectFrame6ReflowEP13nsPresContextR19nsHTMLReflowMetricsRK17nsHTMLReflowStateRj + 0xa8c 
+0x007a479c: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN12nsLineLayout11ReflowFrameEP8nsIFrameRjP19nsHTMLReflowMetricsRi + 0x428 
+0x005a9f6c: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN12nsBlockFrame17ReflowInlineFrameER18nsBlockReflowStateR12nsLineLayout19nsLineList_iteratorP8nsIFramePh + 0x78 
+0x005a9c94: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN12nsBlockFrame20DoReflowInlineFramesER18nsBlockReflowStateR12nsLineLayout19nsLineList_iteratorPiPhii + 0x1c4 
+0x005a9a10: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN12nsBlockFrame18ReflowInlineFramesER18nsBlockReflowState19nsLineList_iteratorPiii + 0x94 
+0x005a842c: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN12nsBlockFrame10ReflowLineER18nsBlockReflowState19nsLineList_iteratorPii + 0x3cc 
+0x005a7958: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN12nsBlockFrame16ReflowDirtyLinesER18nsBlockReflowStatei + 0x308 
+0x005a6094: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN12nsBlockFrame6ReflowEP13nsPresContextR19nsHTMLReflowMetricsRK17nsHTMLReflowStateRj + 0x3f8 
+0x007adc50: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN20nsBlockReflowContext11ReflowBlockERK6nsRectiR18nsCollapsingMarginiiR8nsMarginR17nsHTMLReflowStateRj + 0x49c 
+0x005a941c: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN12nsBlockFrame16ReflowBlockFrameER18nsBlockReflowState19nsLineList_iteratorPi + 0x4d0 
+0x005a8100: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN12nsBlockFrame10ReflowLineER18nsBlockReflowState19nsLineList_iteratorPii + 0xa0 
+0x005a7958: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN12nsBlockFrame16ReflowDirtyLinesER18nsBlockReflowStatei + 0x308 
+0x005a6094: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN12nsBlockFrame6ReflowEP13nsPresContextR19nsHTMLReflowMetricsRK17nsHTMLReflowStateRj + 0x3f8 
+0x007adc50: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN20nsBlockReflowContext11ReflowBlockERK6nsRectiR18nsCollapsingMarginiiR8nsMarginR17nsHTMLReflowStateRj + 0x49c 
+0x005a941c: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN12nsBlockFrame16ReflowBlockFrameER18nsBlockReflowState19nsLineList_iteratorPi + 0x4d0 
+0x005a8100: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN12nsBlockFrame10ReflowLineER18nsBlockReflowState19nsLineList_iteratorPii + 0xa0 
+0x005a7958: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN12nsBlockFrame16ReflowDirtyLinesER18nsBlockReflowStatei + 0x308 
+0x005a6094: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN12nsBlockFrame6ReflowEP13nsPresContextR19nsHTMLReflowMetricsRK17nsHTMLReflowStateRj + 0x3f8 
+0x004fc918: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN16nsContainerFrame11ReflowChildEP8nsIFrameP13nsPresContextR19nsHTMLReflowMetricsRK17nsHTMLReflowStateiijRj + 0x94 
+0x005bffb4: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN11CanvasFrame6ReflowEP13nsPresContextR19nsHTMLReflowMetricsRK17nsHTMLReflowStateRj + 0x164 
+0x004fc918: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN16nsContainerFrame11ReflowChildEP8nsIFrameP13nsPresContextR19nsHTMLReflowMetricsRK17nsHTMLReflowStateiijRj + 0x94 
+0x00602998: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN17nsHTMLScrollFrame19ReflowScrolledFrameERK17ScrollReflowStateiiP19nsHTMLReflowMetricsi + 0x190 
+0x00602af0: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN17nsHTMLScrollFrame14ReflowContentsEP17ScrollReflowStateRK19nsHTMLReflowMetrics + 0xe8 
+0x00603228: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN17nsHTMLScrollFrame6ReflowEP13nsPresContextR19nsHTMLReflowMetricsRK17nsHTMLReflowStateRj + 0x2e0 
+0x004fc918: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN16nsContainerFrame11ReflowChildEP8nsIFrameP13nsPresContextR19nsHTMLReflowMetricsRK17nsHTMLReflowStateiijRj + 0x94 
+0x005fa93c: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN13ViewportFrame6ReflowEP13nsPresContextR19nsHTMLReflowMetricsRK17nsHTMLReflowStateRj + 0x12c 
+0x0014607c: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN9PresShell12ResizeReflowEii + 0x1cc 
+0x002048d4: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN13nsViewManager19SetWindowDimensionsEii + 0x15c 
+0x00207c74: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN13nsViewManager13DispatchEventEP10nsGUIEventP13nsEventStatus + 0x230 
+0x0050ca74: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN11ViewWrapper12GetInterfaceERK4nsIDPPv + 0x1d4 
+0x0069e05c: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN8nsWindow13DispatchEventEP10nsGUIEventR13nsEventStatus + 0xac 
+0x0069e0e8: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN8nsWindow19DispatchWindowEventER10nsGUIEvent + 0x20 
+0x0069e4a4: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN8nsWindow15ReportSizeEventEv + 0x98 
+0x0069c9cc: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN8nsWindow6ResizeEiii + 0x70 
+0x0069ca68: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN8nsWindow6ResizeEiiiii + 0x50 
+0x00186a2c: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN18DocumentViewerImpl9SetBoundsERK6nsRect + 0x5c 
+0x0067c868: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN10nsDocShell18SetPositionAndSizeEiiiii + 0x40 
+0x006242c8: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN18nsSubDocumentFrame6ReflowEP13nsPresContextR19nsHTMLReflowMetricsRK17nsHTMLReflowStateRj + 0x420 
+0x001daac0: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN7nsFrame9BoxReflowER16nsBoxLayoutStateP13nsPresContextR19nsHTMLReflowMetricsRK17nsHTMLReflowStateRjiiiii + 0x3b4 
+0x001da548: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN7nsFrame8DoLayoutER16nsBoxLayoutState + 0xf4 
+0x00289e08: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN8nsIFrame6LayoutER16nsBoxLayoutState + 0x34 
+0x0024bd80: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN16nsSprocketLayout6LayoutEP8nsIFrameR16nsBoxLayoutState + 0x82c 
+0x0058d37c: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN10nsBoxFrame8DoLayoutER16nsBoxLayoutState + 0x44 
+0x00289e08: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN8nsIFrame6LayoutER16nsBoxLayoutState + 0x34 
+0x00203adc: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN13nsStackLayout6LayoutEP8nsIFrameR16nsBoxLayoutState + 0x290 
+0x0058d37c: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN10nsBoxFrame8DoLayoutER16nsBoxLayoutState + 0x44 
+0x0059462c: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN11nsDeckFrame8DoLayoutER16nsBoxLayoutState + 0x2c 
+0x00289e08: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN8nsIFrame6LayoutER16nsBoxLayoutState + 0x34 
+0x0024bd80: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN16nsSprocketLayout6LayoutEP8nsIFrameR16nsBoxLayoutState + 0x82c 
+0x0058d37c: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN10nsBoxFrame8DoLayoutER16nsBoxLayoutState + 0x44 
+0x00289e08: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN8nsIFrame6LayoutER16nsBoxLayoutState + 0x34 
+0x0024bd80: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN16nsSprocketLayout6LayoutEP8nsIFrameR16nsBoxLayoutState + 0x82c 
+0x0058d37c: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN10nsBoxFrame8DoLayoutER16nsBoxLayoutState + 0x44 
+0x00289e08: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN8nsIFrame6LayoutER16nsBoxLayoutState + 0x34 
+0x0024bd80: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN16nsSprocketLayout6LayoutEP8nsIFrameR16nsBoxLayoutState + 0x82c 
+0x0058d37c: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN10nsBoxFrame8DoLayoutER16nsBoxLayoutState + 0x44 
+0x00289e08: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN8nsIFrame6LayoutER16nsBoxLayoutState + 0x34 
+
+PPC Thread State
+srr0: 0x00000000	srr1: 0x00000000		             vrsave: 0x00000000
+cr:  0xXXXXXXXX		xer: 0x00000000		 lr: 0x01fd43b8		ctr: 0x00000000
+r00: 0x01fd6070 	r01: 0xbfff8740 	r02: 0x01fd5678 	r03: 0x0439d2b8 	
+r04: 0x01fd6070 	r05: 0x00000001 	r06: 0x00000005 	r07: 0x0439e020 	
+r08: 0x0439e040 	r09: 0x00000000 	r10: 0x01fd5678 	r11: 0x009f8498 	
+r12: 0x00000000 	r13: 0x00a00000 	r14: 0xbfff8b80 	r15: 0xbfff8bc0 	
+r16: 0x009e0000 	r17: 0xbfff88e0 	r18: 0xbfff8860 	r19: 0x00a00000 	
+r20: 0xbfff88c0 	r21: 0xbfff88d0 	r22: 0x0439c520 	r23: 0x04362c60 	
+r24: 0xbfff8950 	r25: 0x0436d210 	r26: 0xbfff8960 	r27: 0xbfff87d0 	
+r28: 0x0439d2a0 	r29: 0x00000000 	r30: 0xbfff8740 	r31: 0x01fd4348 	
+
+Thread 3: (0xb019bd40, 0xb80f7e12)
+0x90054ee0: /usr/lib/libSystem.B.dylib : _pthread_cond_timedwait + 0x260 
+0x03017c68: No symbol
+0x03017ecc: No symbol
+0x003e0b50: /Applications/Firefox.app/Contents/MacOS/firefox-bin : __ZN14nsIOThreadPool10ThreadFuncEPv + 0x74 
+0x0301cd80: No symbol
+0x9002bd28: /usr/lib/libSystem.B.dylib : __pthread_body + 0x60 
+0xbfffced0: No symbol
+
+PPC Thread State
+srr0: 0x00000000	srr1: 0x00000000		             vrsave: 0x00000000
+cr:  0xXXXXXXXX		xer: 0x20000000		 lr: 0x90054f24		ctr: 0x900550c0
+r00: 0xffffffd9 	r01: 0xf0182c20 	r02: 0x00000001 	r03: 0x00002e03 	
+r04: 0x00002c03 	r05: 0x0000003b 	r06: 0x3b9ab290 	r07: 0x00000000 	
+r08: 0x00000000 	r09: 0xa0001fcc 	r10: 0x2fc45908 	r11: 0xa0006bf4 	
+r12: 0x900550c0 	r13: 0xbfffd000 	r14: 0xbfffce80 	r15: 0xbfffcee0 	
+r16: 0x01b12d40 	r17: 0x00000000 	r18: 0xbfffd1e0 	r19: 0xbfffd0c0 	
+r20: 0xbfffcf10 	r21: 0xbfffd1e0 	r22: 0xbfffd0c0 	r23: 0x01b1d320 	
+r24: 0x00000000 	r25: 0xa0004ca0 	r26: 0x041a1820 	r27: 0x041a1894 	
+r28: 0xa0001fcc 	r29: 0x3b9ab290 	r30: 0x0000003b 	r31: 0x90054ca0 	
+
+Thread 4: (0xb011ad40, 0xb80f7e12)
+0x90054ee0: /usr/lib/libSystem.B.dylib : _pthread_cond_timedwait + 0x260 
+0x03017c68: No symbol
+0x03017ecc: No symbol
+0x1004c068: No symbol
+0x10049480: No symbol
+0x0301cd80: No symbol
+0x9002bd28: /usr/lib/libSystem.B.dylib : __pthread_body + 0x60 
+0x00000003: /Applications/Firefox.app/Contents/MacOS/firefox-bin :  + 0x3 
+
+PPC Thread State
+srr0: 0x00000000	srr1: 0x00000000		             vrsave: 0x00000000
+cr:  0xXXXXXXXX		xer: 0x20000000		 lr: 0x90054f24		ctr: 0x900550c0
+r00: 0xffffffd9 	r01: 0xf0101bc0 	r02: 0x00000001 	r03: 0x00002b03 	
+r04: 0x00002d03 	r05: 0x00000002 	r06: 0x26617850 	r07: 0x257c590a 	
+r08: 0x00000000 	r09: 0xa0001fcc 	r10: 0x1e84d208 	r11: 0xa0006bf4 	
+r12: 0x900550c0 	r13: 0xbfffd630 	r14: 0x00000000 	r15: 0x0215a950 	
+r16: 0x00000000 	r17: 0x02168378 	r18: 0x00000000 	r19: 0x00000000 	
+r20: 0x00000000 	r21: 0x00000000 	r22: 0x00000000 	r23: 0x80000000 	
+r24: 0x00000000 	r25: 0xa0004ca0 	r26: 0x01b0bb00 	r27: 0x01b0bb74 	
+r28: 0xa0001fcc 	r29: 0x26617850 	r30: 0x00000002 	r31: 0x90054ca0 	
+
+
+Model: iMac4,1, BootROM IM41.0039.B00, 2 processors, Intel Core Duo, 1.83 GHz, 512 MB
+Graphics: ATI Radeon X1600, ATY,RadeonX1600, PCIe, 128 MB
+Memory Module: DIMM1/BANK 1, 512 MB, DDR2 SDRAM, 667 MHz
+AirPort: spairport_wireless_card_type_airport_extreme (0x14E4, 0x89), 103.2 (3.120.28.3)
+Bluetooth: Version 1.7.3f4, 2 service, 1 devices, 1 incoming serial ports
+Network Service: Built-in Ethernet, Ethernet, en0
+Serial ATA Device: Maxtor 6L160M0, 152.67 GB
+Parallel ATA Device: MATSHITADVD-R   UJ-846
+USB Device: Built-in iSight, Micron, Up to 480 Mb/sec, 500 mA
+USB Device: Hub in Apple Pro Keyboard, Mitsumi Electric, Up to 12 Mb/sec, 500 mA
+USB Device: Microsoft 3-Button Mouse with IntelliEye(TM), Microsoft, Up to 1.5 Mb/sec, 100 mA
+USB Device: Apple Pro Keyboard, Mitsumi Electric, Up to 12 Mb/sec, 250 mA
+USB Device: Bluetooth HCI, Up to 12 Mb/sec, 500 mA
+USB Device: IR Receiver, Apple Computer, Inc., Up to 12 Mb/sec, 500 mA

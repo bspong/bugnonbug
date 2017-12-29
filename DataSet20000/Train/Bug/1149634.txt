@@ -1,0 +1,12 @@
+Netmonitor Modularization
+Pull out everything into something else. This was an attempt to break apart the netmonitor into several different components, with options to swap out table rendering for react, and to more easily reason about the different view components. Here are my notes when I was working on it:
+
+* Have a RequestCollections containing request models and emitting events on actions (add, update, reset, etc).
+* All filtering and sorting logic are also in this collection model, and just emits ‘sort’ and ‘filtered’ events.
+* Models now do most of the heavy lifting — like `model.toCurlString()`, and renderers (fancy templates, mostly) do all the DOM stuff, with our views becoming just event bindings to the DOM mapped to actions.
+* Pulled out many individual views to solely handling actions within their jurisdiction. Almost all views just respond to RequestCollection events, and minimizing the amount they have to communicate with each other. This isn’t perfect yet, but should be moved to event-based actions between views.
+* TableRenderer is a component used by the RequestsMenu view to just handle the rendering of the tables. This’ll make it easier to swap in a different kind of rendering system (TableWidget? React?), as it just has to hook into the RequestCollection events, and provide some exposed API (like react to refreshing the waterfall view, etc), and these are all documented. TableRenderer is using Widgets under the hood to interact with the collection, where it assumes the model is the `attachment` property on an item. If we swap this out, each item should just be the model, so there are some wrappers implemented for this, that can easily be removed if we have a new renderer.
+* There’s also a SummaryRenderer to handle rendering of the summary, that’s pretty small.
+* Many things pulled out of RequestsView into a general NetMonitorView as they were global-ish, or the controller, if appropriate, or pulled into different views.
+
+* Custom Requests: Rather than adding this into the view immediately, and removing it if the user cancels, this just toggles a new custom request window, and if and only if the user sends the custom request, does everything else fall into place. The monitor handles it and the custom request closes, and selects the new request when available.

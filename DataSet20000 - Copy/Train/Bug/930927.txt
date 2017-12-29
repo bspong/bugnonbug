@@ -1,0 +1,71 @@
+css namespace didnt apply by dynamic load content
+Created attachment 822224
+bug.zip - include all example files
+
+User Agent: Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/30.0.1599.101 Safari/537.36
+
+Steps to reproduce:
+
+I have two xhtml files:
+first (include.xhtml): 
+----------------------------
+
+<html 
+xmlns="http://www.w3.org/1999/xhtml" 
+xmlns:myspace="http://www.mynamespace.com/"
+>
+<head>
+<style type="text/css">
+	@namespace myspace "http://www.mynamespace.com/";
+	body {
+		background-color: cyan;
+	}
+	*[myspace|indf='someelement'] {
+		background-color: red;
+	}
+</style>
+</head>
+<body>
+	Lorem ipsum dolor sit amet, <span myspace:indf="someelement">consectetur adipisicing elit</span>, sed do eiusmod tempor incididunt ut labore
+</body>
+</html>
+
+----------------
+second (index_dom.xhtml):
+----------------
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script  type="text/javascript">
+	function load(){
+		var xhr = new XMLHttpRequest();
+		xhr.open('GET', "./include.xhtml", true);
+		xhr.onload = function(e) {
+			myFrame.document.write(this.response);
+	 		myFrame.document.close();
+		};
+		xhr.send();
+	}
+</script>
+</head>
+<body onload="load()">
+	<iframe id="myFrame"/>
+</body>
+
+</html>
+
+----------------------
+I open index_dom.xhtml
+
+
+
+Actual results:
+
+css style *[myspace|indf='someelement']  does not apply for <span> element after include.xhtml has been loaded to iframe. But another styles were applied.
+
+
+Expected results:
+
+css style *[myspace|indf='someelement']   must be applied for element inside iframe.
+
+if I use iframe.src = "./include.xhtml" instead dynamic content load all styles works fine.

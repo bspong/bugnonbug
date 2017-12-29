@@ -1,0 +1,49 @@
+upload bugs (http post) are tcp problems ?
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.5) Gecko/20041107 Firefox/1.0
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.5) Gecko/20041107 Firefox/1.0
+
+I have massive problems using FireFox to upload pictures via http post to
+different webservers. Very often the upload stalls after some kilobytes.
+
+I sniffed the network traffic with ethereal to see what is exactly happening. If
+you inspect the packet flow while the upload stalls you will almost see the same
+happening:
+
+- The server sends multiple (>50) duplicate TCP ACK packets
+:loop
+- wait 10
+- The client is retransmitting
+- wait 10 seconds
+- The client is retransmitting
+- wait 20 seconds
+- The client is retransmitting
+- wait 40 seconds
+- The client is retransmitting
+- wait 40 seconds
+- The client is retransmitting
+- wait 20 seconds
+- The server sends a FIN to close the connection 
+- goto loop
+
+Hint: To find the interesting packets add this ethereal filter: "tcp.analysis.flags"
+
+The problem only occurs on my internet connection (128kbit upstream via a DLINK
+router). I couldnt reproduce it on my webserver in my lan.
+
+Here is the interesting part. If i upload data via ftp or ssh it sometimes
+stalls too. But it stalls for very short time only. Normally the server sends 2
+duplicate ACK packets and almost immediately the upload resumes with full speed.
+Where is the difference to FF?
+
+Is FF using some kind of "special" TCP sockets ?
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+1. upload a file via http post
+
+Actual Results:  
+transmission stalls
+
+Expected Results:  
+transmission should complete

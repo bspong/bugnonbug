@@ -1,0 +1,27 @@
+_handleNewTab should only be called once even if a tab's max-width is later modified
+User-Agent: Mozilla/5.0 (Windows NT 5.1; rv:2.0b8pre) Gecko/20101023 Firefox/4.0b8pre
+Build Identifier: Mozilla/5.0 (Windows NT 5.1; rv:2.0b8pre) Gecko/20101023 Firefox/4.0b8pre
+
+When implementing a "don't resize tab until mouse leaf the tab bar when closing tab repeatedly" feature, I need to change the max-width of the remaining tab programmaticly. Then I find the tab animation will lead to some unwanted behavior. gBrowser.mTabContainer._handleNewTab is unnecessarily invoked after the transition end of max-width.
+
+In tabbrowser.xml:
+<handler event="transitionend"><![CDATA[
+if (event.propertyName != "max-width")
+return;
+
+var tab = event.target;
+
+if (tab.getAttribute("fadein") == "true")
+this._handleNewTab(tab);
+else if (this.tabbrowser._removingTabs.indexOf(tab) > -1)
+this.tabbrowser._endRemoveTab(tab);
+]]></handler>
+
+The tab with a "fadein" attribute is not necessarily a New Tab when transitionend event happens.
+
+Reproducible: Always
+
+
+
+Expected Results:
+We set a "fading" attribute when a new tab is created, and remove it after the transition ends.

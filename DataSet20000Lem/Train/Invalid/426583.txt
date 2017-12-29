@@ -1,0 +1,44 @@
+CSS Inheritance Bug: Margins inherited by child
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.13) Gecko/20080311 Firefox/2.0.0.13
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.13) Gecko/20080311 Firefox/2.0.0.13
+
+First a little bit about CSS Inheritance for those who don't know:
+
+Each element in an HTML document is part of a tree, and every element except the initial <html> element ha a parent element that encloses it. Whatever style are applied to that parent element can be applied to the element enclosed in it if the property are inherited.
+
+For example, this HTML ha an H1 tag enclosing an EM tag:
+
+<h1>This is a <em>Big</em> Headline</h1>
+
+The EM element is a child of the H1 element, and any style on the H1 that are inherited will be passed on to the EM text a well. For example:
+
+h1 { font-size: 120%; }
+
+Since the font-size property is inherited, the "Big" text will be 120% in size a well a the rest of the H1.
+
+Not all property are inherited, but every CSS property includes the value "inherit". This tell the Web browser, that even if the property would not normally be inherited, it should have the same value a the parent. If you set a style such a "margin" that is not inherited, you can use the inherit value on subsequent property to give them the same margin a the parent. For example:
+
+body { margin: 1em; }
+p { margin: inherit; }
+
+However, and here's the bug, Firefox doe not need you to type "margin: inherit", the margin are already automatically inherited.
+
+I've prepared two very short and sweet document with the bare minimum style necessary to show the problem. In the first document I use the style ".center *" and that make EVERY child (regardless of depth) of the "center" class inherit it margin, and in the second document I use ".center > *" which correctly ONLY set the margin on the first child and leaf every grandchild and further alone.
+
+Document 1 ".center *", showing the bug:
+http://www.pulseforce.com/node/center.htm
+
+Document 2 ".center > *", showing how FORCING the selector make it work correctly:
+http://www.pulseforce.com/node/center-force1stchild.htm
+
+This is a bug unless I am doing something wrong or the CSS specification ha been changed to make margin inherited.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. View the two sample pages.
+Actual Results:
+CSS Margins are inherited by child regardless of depth.
+
+Expected Results:
+"Margin" is not a property that is supposed to be inherited.

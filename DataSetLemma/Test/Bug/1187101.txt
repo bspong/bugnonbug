@@ -1,0 +1,152 @@
+[gtk3] AddressSanitizer: global-buffer-overflow /builds/slave/try-l64-asan-00000000000000000/build/src/js/src/ctypes/CTypes.cpp:1874 InitTypeClasses
+When switching ASAN build to Gtk+3, this is what happens on all tests:
+
+04:41:16 INFO - =================================================================
+04:41:16 INFO - ==2045==ERROR: AddressSanitizer: global-buffer-overflow on address 0x7f35d03fee28 at pc 0x7f35cb739dce bp 0x7fffb72371f0 sp 0x7fffb72371e8
+04:41:16 INFO - READ of size 2 at 0x7f35d03fee28 thread T0
+04:41:17 INFO - #0 0x7f35cb739dcd in InitTypeClasses /builds/slave/try-l64-asan-00000000000000000/build/src/js/src/ctypes/CTypes.cpp:1874
+04:41:17 INFO - #1 0x7f35cb739dcd in JS_InitCTypesClass(JSContext*, JS::Handle<JSObject*>) /builds/slave/try-l64-asan-00000000000000000/build/src/js/src/ctypes/CTypes.cpp:1972
+04:41:17 INFO - #2 0x7f35ca3351e3 in InitAndSealCTypesClass /builds/slave/try-l64-asan-00000000000000000/build/src/toolkit/components/ctypes/ctypes.cpp:91
+04:41:17 INFO - #3 0x7f35ca3351e3 in mozilla::ctypes::Module::Call(nsIXPConnectWrappedNative*, JSContext*, JSObject*, JS::CallArgs const&, bool*) /builds/slave/try-l64-asan-00000000000000000/build/src/toolkit/components/ctypes/ctypes.cpp:127
+04:41:17 INFO - #4 0x7f35c430ca00 in XPC_WN_Helper_Call(JSContext*, unsigned int, JS::Value*) /builds/slave/try-l64-asan-00000000000000000/build/src/js/xpconnect/src/XPCWrappedNativeJSOps.cpp:792
+04:41:17 INFO - #5 0x7f35cbb6bfc2 in CallJSNative /builds/slave/try-l64-asan-00000000000000000/build/src/js/src/jscntxtinlines.h:235
+04:41:17 INFO - #6 0x7f35cbb6bfc2 in js::Invoke(JSContext*, JS::CallArgs, js::MaybeConstruct) /builds/slave/try-l64-asan-00000000000000000/build/src/js/src/vm/Interpreter.cpp:708
+04:41:17 INFO - #7 0x7f35cbbaac6a in Interpret(JSContext*, js::RunState&) /builds/slave/try-l64-asan-00000000000000000/build/src/js/src/vm/Interpreter.cpp:2972
+04:41:17 INFO - #8 0x7f35cbb8b054 in js::RunScript(JSContext*, js::RunState&) /builds/slave/try-l64-asan-00000000000000000/build/src/js/src/vm/Interpreter.cpp:661
+04:41:17 INFO - #9 0x7f35cbbbdba8 in js::ExecuteKernel(JSContext*, JS::Handle<JSScript*>, JSObject&, JS::Value const&, JS::Value const&, js::ExecuteType, js::AbstractFramePtr, JS::Value*) /builds/slave/try-l64-asan-00000000000000000/build/src/js/src/vm/Interpreter.cpp:902
+04:41:17 INFO - #10 0x7f35cbbbe208 in js::Execute(JSContext*, JS::Handle<JSScript*>, JSObject&, JS::Value*) /builds/slave/try-l64-asan-00000000000000000/build/src/js/src/vm/Interpreter.cpp:935
+04:41:17 INFO - #11 0x7f35cc6444d9 in ExecuteScript(JSContext*, JS::Handle<JSObject*>, JS::Handle<JSScript*>, JS::Value*) /builds/slave/try-l64-asan-00000000000000000/build/src/js/src/jsapi.cpp:4334
+04:41:17 INFO - #12 0x7f35c41fca4a in mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo&, nsIFile*, JS::MutableHandle<JSObject*>, JS::MutableHandle<JSScript*>, char**, bool, JS::MutableHandle<JS::Value>) /builds/slave/try-l64-asan-00000000000000000/build/src/js/xpconnect/loader/mozJSComponentLoader.cpp:921
+04:41:17 INFO - #13 0x7f35c4201f77 in mozJSComponentLoader::ImportInto(nsACString_internal const&, JS::Handle<JSObject*>, JSContext*, JS::MutableHandle<JSObject*>) /builds/slave/try-l64-asan-00000000000000000/build/src/js/xpconnect/loader/mozJSComponentLoader.cpp:1138
+04:41:17 INFO - #14 0x7f35c4200506 in mozJSComponentLoader::Import(nsACString_internal const&, JS::Handle<JS::Value>, JSContext*, unsigned char, JS::MutableHandle<JS::Value>) /builds/slave/try-l64-asan-00000000000000000/build/src/js/xpconnect/loader/mozJSComponentLoader.cpp:1027
+04:41:17 INFO - #15 0x7f35c42317a3 in nsXPCComponents_Utils::Import(nsACString_internal const&, JS::Handle<JS::Value>, JSContext*, unsigned char, JS::MutableHandle<JS::Value>) /builds/slave/try-l64-asan-00000000000000000/build/src/js/xpconnect/src/XPCComponents.cpp:2578
+04:41:17 INFO - #16 0x7f35c2fe0c11 in NS_InvokeByIndex /builds/slave/try-l64-asan-00000000000000000/build/src/xpcom/reflect/xptcall/md/unix/xptcinvoke_x86_64_unix.cpp:174
+04:41:17 INFO - #17 0x7f35c42fa52e in Invoke /builds/slave/try-l64-asan-00000000000000000/build/src/js/xpconnect/src/XPCWrappedNative.cpp:2095
+04:41:17 INFO - #18 0x7f35c42fa52e in CallMethodHelper /builds/slave/try-l64-asan-00000000000000000/build/src/js/xpconnect/src/XPCWrappedNative.cpp:1415
+04:41:17 INFO - #19 0x7f35c42fa52e in XPCWrappedNative::CallMethod(XPCCallContext&, XPCWrappedNative::CallMode) /builds/slave/try-l64-asan-00000000000000000/build/src/js/xpconnect/src/XPCWrappedNative.cpp:1382
+04:41:17 INFO - #20 0x7f35c4300b3f in XPC_WN_CallMethod(JSContext*, unsigned int, JS::Value*) /builds/slave/try-l64-asan-00000000000000000/build/src/js/xpconnect/src/XPCWrappedNativeJSOps.cpp:1144
+04:41:17 INFO - #21 0x7f35cbb6bc13 in CallJSNative /builds/slave/try-l64-asan-00000000000000000/build/src/js/src/jscntxtinlines.h:235
+04:41:17 INFO - #22 0x7f35cbb6bc13 in js::Invoke(JSContext*, JS::CallArgs, js::MaybeConstruct) /builds/slave/try-l64-asan-00000000000000000/build/src/js/src/vm/Interpreter.cpp:720
+04:41:17 INFO - #23 0x7f35cbbaac6a in Interpret(JSContext*, js::RunState&) /builds/slave/try-l64-asan-00000000000000000/build/src/js/src/vm/Interpreter.cpp:2972
+04:41:17 INFO - #24 0x7f35cbb8b054 in js::RunScript(JSContext*, js::RunState&) /builds/slave/try-l64-asan-00000000000000000/build/src/js/src/vm/Interpreter.cpp:661
+04:41:17 INFO - #25 0x7f35cbbbdba8 in js::ExecuteKernel(JSContext*, JS::Handle<JSScript*>, JSObject&, JS::Value const&, JS::Value const&, js::ExecuteType, js::AbstractFramePtr, JS::Value*) /builds/slave/try-l64-asan-00000000000000000/build/src/js/src/vm/Interpreter.cpp:902
+04:41:17 INFO - #26 0x7f35cbbbe208 in js::Execute(JSContext*, JS::Handle<JSScript*>, JSObject&, JS::Value*) /builds/slave/try-l64-asan-00000000000000000/build/src/js/src/vm/Interpreter.cpp:935
+04:41:17 INFO - #27 0x7f35cc6444d9 in ExecuteScript(JSContext*, JS::Handle<JSObject*>, JS::Handle<JSScript*>, JS::Value*) /builds/slave/try-l64-asan-00000000000000000/build/src/js/src/jsapi.cpp:4334
+04:41:17 INFO - #28 0x7f35c41fca4a in mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo&, nsIFile*, JS::MutableHandle<JSObject*>, JS::MutableHandle<JSScript*>, char**, bool, JS::MutableHandle<JS::Value>) /builds/slave/try-l64-asan-00000000000000000/build/src/js/xpconnect/loader/mozJSComponentLoader.cpp:921
+04:41:17 INFO - #29 0x7f35c4201f77 in mozJSComponentLoader::ImportInto(nsACString_internal const&, JS::Handle<JSObject*>, JSContext*, JS::MutableHandle<JSObject*>) /builds/slave/try-l64-asan-00000000000000000/build/src/js/xpconnect/loader/mozJSComponentLoader.cpp:1138
+04:41:17 INFO - #30 0x7f35c4200506 in mozJSComponentLoader::Import(nsACString_internal const&, JS::Handle<JS::Value>, JSContext*, unsigned char, JS::MutableHandle<JS::Value>) /builds/slave/try-l64-asan-00000000000000000/build/src/js/xpconnect/loader/mozJSComponentLoader.cpp:1027
+04:41:17 INFO - #31 0x7f35c42317a3 in nsXPCComponents_Utils::Import(nsACString_internal const&, JS::Handle<JS::Value>, JSContext*, unsigned char, JS::MutableHandle<JS::Value>) /builds/slave/try-l64-asan-00000000000000000/build/src/js/xpconnect/src/XPCComponents.cpp:2578
+04:41:17 INFO - #32 0x7f35c2fe0c11 in NS_InvokeByIndex /builds/slave/try-l64-asan-00000000000000000/build/src/xpcom/reflect/xptcall/md/unix/xptcinvoke_x86_64_unix.cpp:174
+04:41:17 INFO - #33 0x7f35c42fa52e in Invoke /builds/slave/try-l64-asan-00000000000000000/build/src/js/xpconnect/src/XPCWrappedNative.cpp:2095
+04:41:17 INFO - #34 0x7f35c42fa52e in CallMethodHelper /builds/slave/try-l64-asan-00000000000000000/build/src/js/xpconnect/src/XPCWrappedNative.cpp:1415
+04:41:17 INFO - #35 0x7f35c42fa52e in XPCWrappedNative::CallMethod(XPCCallContext&, XPCWrappedNative::CallMode) /builds/slave/try-l64-asan-00000000000000000/build/src/js/xpconnect/src/XPCWrappedNative.cpp:1382
+04:41:17 INFO - #36 0x7f35c4300b3f in XPC_WN_CallMethod(JSContext*, unsigned int, JS::Value*) /builds/slave/try-l64-asan-00000000000000000/build/src/js/xpconnect/src/XPCWrappedNativeJSOps.cpp:1144
+04:41:17 INFO - #37 0x7f35cbb6bc13 in CallJSNative /builds/slave/try-l64-asan-00000000000000000/build/src/js/src/jscntxtinlines.h:235
+04:41:17 INFO - #38 0x7f35cbb6bc13 in js::Invoke(JSContext*, JS::CallArgs, js::MaybeConstruct) /builds/slave/try-l64-asan-00000000000000000/build/src/js/src/vm/Interpreter.cpp:720
+04:41:17 INFO - #39 0x7f35cbbaac6a in Interpret(JSContext*, js::RunState&) /builds/slave/try-l64-asan-00000000000000000/build/src/js/src/vm/Interpreter.cpp:2972
+04:41:17 INFO - #40 0x7f35cbb8b054 in js::RunScript(JSContext*, js::RunState&) /builds/slave/try-l64-asan-00000000000000000/build/src/js/src/vm/Interpreter.cpp:661
+04:41:17 INFO - #41 0x7f35cbbbdba8 in js::ExecuteKernel(JSContext*, JS::Handle<JSScript*>, JSObject&, JS::Value const&, JS::Value const&, js::ExecuteType, js::AbstractFramePtr, JS::Value*) /builds/slave/try-l64-asan-00000000000000000/build/src/js/src/vm/Interpreter.cpp:902
+04:41:17 INFO - #42 0x7f35cbbbe208 in js::Execute(JSContext*, JS::Handle<JSScript*>, JSObject&, JS::Value*) /builds/slave/try-l64-asan-00000000000000000/build/src/js/src/vm/Interpreter.cpp:935
+04:41:17 INFO - #43 0x7f35cc6444d9 in ExecuteScript(JSContext*, JS::Handle<JSObject*>, JS::Handle<JSScript*>, JS::Value*) /builds/slave/try-l64-asan-00000000000000000/build/src/js/src/jsapi.cpp:4334
+04:41:17 INFO - #44 0x7f35c41fca4a in mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo&, nsIFile*, JS::MutableHandle<JSObject*>, JS::MutableHandle<JSScript*>, char**, bool, JS::MutableHandle<JS::Value>) /builds/slave/try-l64-asan-00000000000000000/build/src/js/xpconnect/loader/mozJSComponentLoader.cpp:921
+04:41:17 INFO - #45 0x7f35c4201f77 in mozJSComponentLoader::ImportInto(nsACString_internal const&, JS::Handle<JSObject*>, JSContext*, JS::MutableHandle<JSObject*>) /builds/slave/try-l64-asan-00000000000000000/build/src/js/xpconnect/loader/mozJSComponentLoader.cpp:1138
+04:41:17 INFO - #46 0x7f35c4200506 in mozJSComponentLoader::Import(nsACString_internal const&, JS::Handle<JS::Value>, JSContext*, unsigned char, JS::MutableHandle<JS::Value>) /builds/slave/try-l64-asan-00000000000000000/build/src/js/xpconnect/loader/mozJSComponentLoader.cpp:1027
+04:41:17 INFO - #47 0x7f35c42317a3 in nsXPCComponents_Utils::Import(nsACString_internal const&, JS::Handle<JS::Value>, JSContext*, unsigned char, JS::MutableHandle<JS::Value>) /builds/slave/try-l64-asan-00000000000000000/build/src/js/xpconnect/src/XPCComponents.cpp:2578
+04:41:17 INFO - #48 0x7f35c2fe0c11 in NS_InvokeByIndex /builds/slave/try-l64-asan-00000000000000000/build/src/xpcom/reflect/xptcall/md/unix/xptcinvoke_x86_64_unix.cpp:174
+04:41:17 INFO - #49 0x7f35c42fa52e in Invoke /builds/slave/try-l64-asan-00000000000000000/build/src/js/xpconnect/src/XPCWrappedNative.cpp:2095
+04:41:17 INFO - #50 0x7f35c42fa52e in CallMethodHelper /builds/slave/try-l64-asan-00000000000000000/build/src/js/xpconnect/src/XPCWrappedNative.cpp:1415
+04:41:17 INFO - #51 0x7f35c42fa52e in XPCWrappedNative::CallMethod(XPCCallContext&, XPCWrappedNative::CallMode) /builds/slave/try-l64-asan-00000000000000000/build/src/js/xpconnect/src/XPCWrappedNative.cpp:1382
+04:41:17 INFO - #52 0x7f35c4300b3f in XPC_WN_CallMethod(JSContext*, unsigned int, JS::Value*) /builds/slave/try-l64-asan-00000000000000000/build/src/js/xpconnect/src/XPCWrappedNativeJSOps.cpp:1144
+04:41:17 INFO - #53 0x7f35cbb6bc13 in CallJSNative /builds/slave/try-l64-asan-00000000000000000/build/src/js/src/jscntxtinlines.h:235
+04:41:17 INFO - #54 0x7f35cbb6bc13 in js::Invoke(JSContext*, JS::CallArgs, js::MaybeConstruct) /builds/slave/try-l64-asan-00000000000000000/build/src/js/src/vm/Interpreter.cpp:720
+04:41:17 INFO - #55 0x7f35cbbaac6a in Interpret(JSContext*, js::RunState&) /builds/slave/try-l64-asan-00000000000000000/build/src/js/src/vm/Interpreter.cpp:2972
+04:41:17 INFO - #56 0x7f35cbb8b054 in js::RunScript(JSContext*, js::RunState&) /builds/slave/try-l64-asan-00000000000000000/build/src/js/src/vm/Interpreter.cpp:661
+04:41:17 INFO - #57 0x7f35cbbbdba8 in js::ExecuteKernel(JSContext*, JS::Handle<JSScript*>, JSObject&, JS::Value const&, JS::Value const&, js::ExecuteType, js::AbstractFramePtr, JS::Value*) /builds/slave/try-l64-asan-00000000000000000/build/src/js/src/vm/Interpreter.cpp:902
+04:41:17 INFO - #58 0x7f35cbbbe208 in js::Execute(JSContext*, JS::Handle<JSScript*>, JSObject&, JS::Value*) /builds/slave/try-l64-asan-00000000000000000/build/src/js/src/vm/Interpreter.cpp:935
+04:41:17 INFO - #59 0x7f35cc6444d9 in ExecuteScript(JSContext*, JS::Handle<JSObject*>, JS::Handle<JSScript*>, JS::Value*) /builds/slave/try-l64-asan-00000000000000000/build/src/js/src/jsapi.cpp:4334
+04:41:17 INFO - #60 0x7f35c41fca4a in mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo&, nsIFile*, JS::MutableHandle<JSObject*>, JS::MutableHandle<JSScript*>, char**, bool, JS::MutableHandle<JS::Value>) /builds/slave/try-l64-asan-00000000000000000/build/src/js/xpconnect/loader/mozJSComponentLoader.cpp:921
+04:41:17 INFO - #61 0x7f35c4201f77 in mozJSComponentLoader::ImportInto(nsACString_internal const&, JS::Handle<JSObject*>, JSContext*, JS::MutableHandle<JSObject*>) /builds/slave/try-l64-asan-00000000000000000/build/src/js/xpconnect/loader/mozJSComponentLoader.cpp:1138
+04:41:17 INFO - #62 0x7f35c4200506 in mozJSComponentLoader::Import(nsACString_internal const&, JS::Handle<JS::Value>, JSContext*, unsigned char, JS::MutableHandle<JS::Value>) /builds/slave/try-l64-asan-00000000000000000/build/src/js/xpconnect/loader/mozJSComponentLoader.cpp:1027
+04:41:17 INFO - #63 0x7f35c42317a3 in nsXPCComponents_Utils::Import(nsACString_internal const&, JS::Handle<JS::Value>, JSContext*, unsigned char, JS::MutableHandle<JS::Value>) /builds/slave/try-l64-asan-00000000000000000/build/src/js/xpconnect/src/XPCComponents.cpp:2578
+04:41:17 INFO - #64 0x7f35c2fe0c11 in NS_InvokeByIndex /builds/slave/try-l64-asan-00000000000000000/build/src/xpcom/reflect/xptcall/md/unix/xptcinvoke_x86_64_unix.cpp:174
+04:41:17 INFO - #65 0x7f35c42fa52e in Invoke /builds/slave/try-l64-asan-00000000000000000/build/src/js/xpconnect/src/XPCWrappedNative.cpp:2095
+04:41:17 INFO - #66 0x7f35c42fa52e in CallMethodHelper /builds/slave/try-l64-asan-00000000000000000/build/src/js/xpconnect/src/XPCWrappedNative.cpp:1415
+04:41:17 INFO - #67 0x7f35c42fa52e in XPCWrappedNative::CallMethod(XPCCallContext&, XPCWrappedNative::CallMode) /builds/slave/try-l64-asan-00000000000000000/build/src/js/xpconnect/src/XPCWrappedNative.cpp:1382
+04:41:17 INFO - #68 0x7f35c4300b3f in XPC_WN_CallMethod(JSContext*, unsigned int, JS::Value*) /builds/slave/try-l64-asan-00000000000000000/build/src/js/xpconnect/src/XPCWrappedNativeJSOps.cpp:1144
+04:41:17 INFO - #69 0x7f35cbb6bc13 in CallJSNative /builds/slave/try-l64-asan-00000000000000000/build/src/js/src/jscntxtinlines.h:235
+04:41:17 INFO - #70 0x7f35cbb6bc13 in js::Invoke(JSContext*, JS::CallArgs, js::MaybeConstruct) /builds/slave/try-l64-asan-00000000000000000/build/src/js/src/vm/Interpreter.cpp:720
+04:41:17 INFO - #71 0x7f35cbbaac6a in Interpret(JSContext*, js::RunState&) /builds/slave/try-l64-asan-00000000000000000/build/src/js/src/vm/Interpreter.cpp:2972
+04:41:17 INFO - #72 0x7f35cbb8b054 in js::RunScript(JSContext*, js::RunState&) /builds/slave/try-l64-asan-00000000000000000/build/src/js/src/vm/Interpreter.cpp:661
+04:41:17 INFO - #73 0x7f35cbbbdba8 in js::ExecuteKernel(JSContext*, JS::Handle<JSScript*>, JSObject&, JS::Value const&, JS::Value const&, js::ExecuteType, js::AbstractFramePtr, JS::Value*) /builds/slave/try-l64-asan-00000000000000000/build/src/js/src/vm/Interpreter.cpp:902
+04:41:17 INFO - #74 0x7f35cbbbe208 in js::Execute(JSContext*, JS::Handle<JSScript*>, JSObject&, JS::Value*) /builds/slave/try-l64-asan-00000000000000000/build/src/js/src/vm/Interpreter.cpp:935
+04:41:17 INFO - #75 0x7f35cc6444d9 in ExecuteScript(JSContext*, JS::Handle<JSObject*>, JS::Handle<JSScript*>, JS::Value*) /builds/slave/try-l64-asan-00000000000000000/build/src/js/src/jsapi.cpp:4334
+04:41:17 INFO - #76 0x7f35c41fca4a in mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo&, nsIFile*, JS::MutableHandle<JSObject*>, JS::MutableHandle<JSScript*>, char**, bool, JS::MutableHandle<JS::Value>) /builds/slave/try-l64-asan-00000000000000000/build/src/js/xpconnect/loader/mozJSComponentLoader.cpp:921
+04:41:17 INFO - #77 0x7f35c4201f77 in mozJSComponentLoader::ImportInto(nsACString_internal const&, JS::Handle<JSObject*>, JSContext*, JS::MutableHandle<JSObject*>) /builds/slave/try-l64-asan-00000000000000000/build/src/js/xpconnect/loader/mozJSComponentLoader.cpp:1138
+04:41:17 INFO - #78 0x7f35c4200506 in mozJSComponentLoader::Import(nsACString_internal const&, JS::Handle<JS::Value>, JSContext*, unsigned char, JS::MutableHandle<JS::Value>) /builds/slave/try-l64-asan-00000000000000000/build/src/js/xpconnect/loader/mozJSComponentLoader.cpp:1027
+04:41:17 INFO - #79 0x7f35c42317a3 in nsXPCComponents_Utils::Import(nsACString_internal const&, JS::Handle<JS::Value>, JSContext*, unsigned char, JS::MutableHandle<JS::Value>) /builds/slave/try-l64-asan-00000000000000000/build/src/js/xpconnect/src/XPCComponents.cpp:2578
+04:41:17 INFO - #80 0x7f35c2fe0c11 in NS_InvokeByIndex /builds/slave/try-l64-asan-00000000000000000/build/src/xpcom/reflect/xptcall/md/unix/xptcinvoke_x86_64_unix.cpp:174
+04:41:17 INFO - #81 0x7f35c42fa52e in Invoke /builds/slave/try-l64-asan-00000000000000000/build/src/js/xpconnect/src/XPCWrappedNative.cpp:2095
+04:41:17 INFO - #82 0x7f35c42fa52e in CallMethodHelper /builds/slave/try-l64-asan-00000000000000000/build/src/js/xpconnect/src/XPCWrappedNative.cpp:1415
+04:41:17 INFO - #83 0x7f35c42fa52e in XPCWrappedNative::CallMethod(XPCCallContext&, XPCWrappedNative::CallMode) /builds/slave/try-l64-asan-00000000000000000/build/src/js/xpconnect/src/XPCWrappedNative.cpp:1382
+04:41:17 INFO - #84 0x7f35c4300b3f in XPC_WN_CallMethod(JSContext*, unsigned int, JS::Value*) /builds/slave/try-l64-asan-00000000000000000/build/src/js/xpconnect/src/XPCWrappedNativeJSOps.cpp:1144
+04:41:17 INFO - #85 0x7f35cbb6bc13 in CallJSNative /builds/slave/try-l64-asan-00000000000000000/build/src/js/src/jscntxtinlines.h:235
+04:41:17 INFO - #86 0x7f35cbb6bc13 in js::Invoke(JSContext*, JS::CallArgs, js::MaybeConstruct) /builds/slave/try-l64-asan-00000000000000000/build/src/js/src/vm/Interpreter.cpp:720
+04:41:17 INFO - #87 0x7f35cbbaac6a in Interpret(JSContext*, js::RunState&) /builds/slave/try-l64-asan-00000000000000000/build/src/js/src/vm/Interpreter.cpp:2972
+04:41:17 INFO - #88 0x7f35cbb8b054 in js::RunScript(JSContext*, js::RunState&) /builds/slave/try-l64-asan-00000000000000000/build/src/js/src/vm/Interpreter.cpp:661
+04:41:17 INFO - #89 0x7f35cbbbdba8 in js::ExecuteKernel(JSContext*, JS::Handle<JSScript*>, JSObject&, JS::Value const&, JS::Value const&, js::ExecuteType, js::AbstractFramePtr, JS::Value*) /builds/slave/try-l64-asan-00000000000000000/build/src/js/src/vm/Interpreter.cpp:902
+04:41:17 INFO - #90 0x7f35cbbbe208 in js::Execute(JSContext*, JS::Handle<JSScript*>, JSObject&, JS::Value*) /builds/slave/try-l64-asan-00000000000000000/build/src/js/src/vm/Interpreter.cpp:935
+04:41:17 INFO - #91 0x7f35cc6444d9 in ExecuteScript(JSContext*, JS::Handle<JSObject*>, JS::Handle<JSScript*>, JS::Value*) /builds/slave/try-l64-asan-00000000000000000/build/src/js/src/jsapi.cpp:4334
+04:41:17 INFO - #92 0x7f35c41fca4a in mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo&, nsIFile*, JS::MutableHandle<JSObject*>, JS::MutableHandle<JSScript*>, char**, bool, JS::MutableHandle<JS::Value>) /builds/slave/try-l64-asan-00000000000000000/build/src/js/xpconnect/loader/mozJSComponentLoader.cpp:921
+04:41:17 INFO - #93 0x7f35c41f9db1 in mozJSComponentLoader::LoadModule(mozilla::FileLocation&) /builds/slave/try-l64-asan-00000000000000000/build/src/js/xpconnect/loader/mozJSComponentLoader.cpp:355
+04:41:17 INFO - #94 0x7f35c2f9d847 in Load /builds/slave/try-l64-asan-00000000000000000/build/src/xpcom/components/nsComponentManager.cpp:877
+04:41:17 INFO - #95 0x7f35c2f9d847 in nsFactoryEntry::GetFactory() /builds/slave/try-l64-asan-00000000000000000/build/src/xpcom/components/nsComponentManager.cpp:1927
+04:41:17 INFO - #96 0x7f35c2f9eb11 in nsComponentManagerImpl::CreateInstanceByContractID(char const*, nsISupports*, nsID const&, void**) /builds/slave/try-l64-asan-00000000000000000/build/src/xpcom/components/nsComponentManager.cpp:1220
+04:41:17 INFO - #97 0x7f35c2f9618a in nsComponentManagerImpl::GetServiceByContractID(char const*, nsID const&, void**) /builds/slave/try-l64-asan-00000000000000000/build/src/xpcom/components/nsComponentManager.cpp:1579
+04:41:17 INFO - #98 0x7f35c30243c6 in CallGetService /builds/slave/try-l64-asan-00000000000000000/build/src/xpcom/glue/nsComponentManagerUtils.cpp:67
+04:41:17 INFO - #99 0x7f35c30243c6 in nsGetServiceByContractIDWithError::operator()(nsID const&, void**) const /builds/slave/try-l64-asan-00000000000000000/build/src/xpcom/glue/nsComponentManagerUtils.cpp:292
+04:41:17 INFO - #100 0x7f35c30197ce in nsCOMPtr_base::assign_from_gs_contractid_with_error(nsGetServiceByContractIDWithError const&, nsID const&) /builds/slave/try-l64-asan-00000000000000000/build/src/xpcom/glue/nsCOMPtr.cpp:114
+04:41:17 INFO - #101 0x7f35c9ad5916 in get /builds/slave/try-l64-asan-00000000000000000/build/src/obj-firefox/embedding/components/appstartup/../../../dist/include/nsCOMPtr.h:914
+04:41:17 INFO - #102 0x7f35c9ad5916 in nsAppStartupNotifier::Observe(nsISupports*, char const*, char16_t const*) /builds/slave/try-l64-asan-00000000000000000/build/src/embedding/components/appstartup/nsAppStartupNotifier.cpp:62
+04:41:17 INFO - #103 0x7f35ca3f69ed in XREMain::XRE_mainRun() /builds/slave/try-l64-asan-00000000000000000/build/src/toolkit/xre/nsAppRunner.cpp:4098
+04:41:17 INFO - #104 0x7f35ca3f9456 in XREMain::XRE_main(int, char**, nsXREAppData const*) /builds/slave/try-l64-asan-00000000000000000/build/src/toolkit/xre/nsAppRunner.cpp:4385
+04:41:17 INFO - #105 0x7f35ca3fa2c5 in XRE_main /builds/slave/try-l64-asan-00000000000000000/build/src/toolkit/xre/nsAppRunner.cpp:4474
+04:41:17 INFO - #106 0x48a6e4 in do_main /builds/slave/try-l64-asan-00000000000000000/build/src/browser/app/nsBrowserApp.cpp:212
+04:41:17 INFO - #107 0x48a6e4 in main /builds/slave/try-l64-asan-00000000000000000/build/src/browser/app/nsBrowserApp.cpp:399
+04:41:17 INFO - #108 0x7f35dfdfc76c (/lib/x86_64-linux-gnu/libc.so.6+0x2176c)
+04:41:17 INFO - #109 0x489c5c in _start (/builds/slave/test/build/application/firefox/firefox+0x489c5c)
+04:41:17 INFO - 0x7f35d03fee28 is located 16 byte to the right of global variable 'ffi_type_sint8' from '/builds/slave/try-l64-asan-00000000000000000/build/src/js/src/ctypes/libffi/src/types.c' (0x7f35d03fee00) of size 24
+04:41:17 INFO - 0x7f35d03fee28 is located 8 byte inside of global variable 'ffi_type_uint8' from '/builds/slave/try-l64-asan-00000000000000000/build/src/js/src/ctypes/libffi/src/types.c' (0x7f35d03fee20) of size 24
+04:41:17 INFO - 0x7f35d03fee28 is located 24 byte to the left of global variable 'ffi_type_void' from '/builds/slave/try-l64-asan-00000000000000000/build/src/js/src/ctypes/libffi/src/types.c' (0x7f35d03fee40) of size 24
+04:41:17 INFO - SUMMARY: AddressSanitizer: global-buffer-overflow /builds/slave/try-l64-asan-00000000000000000/build/src/js/src/ctypes/CTypes.cpp:1874 InitTypeClasses
+04:41:17 INFO - Shadow byte around the buggy address:
+04:41:17 INFO - 0x0fe73a077d70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+04:41:17 INFO - 0x0fe73a077d80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+04:41:17 INFO - 0x0fe73a077d90: 00 00 00 00 00 00 00 00 00 00 00 f9 f9 f9 f9 f9
+04:41:17 INFO - 0x0fe73a077da0: f9 f9 f9 f9 f9 f9 f9 f9 f9 f9 f9 f9 f9 f9 f9 f9
+04:41:17 INFO - 0x0fe73a077db0: f9 f9 f9 f9 f9 f9 f9 f9 f9 f9 f9 f9 f9 f9 f9 f9
+04:41:17 INFO - =>0x0fe73a077dc0: f9 f9 f9 f9 f9[f9]f9 f9 f9 f9 f9 f9 f9 f9 f9 f9
+04:41:17 INFO - 0x0fe73a077dd0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+04:41:17 INFO - 0x0fe73a077de0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+04:41:17 INFO - 0x0fe73a077df0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+04:41:17 INFO - 0x0fe73a077e00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+04:41:17 INFO - 0x0fe73a077e10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+04:41:17 INFO - Shadow byte legend (one shadow byte represents 8 application bytes):
+04:41:17 INFO - Addressable: 00
+04:41:17 INFO - Partially addressable: 01 02 03 04 05 06 07
+04:41:17 INFO - Heap left redzone: fa
+04:41:17 INFO - Heap right redzone: fb
+04:41:17 INFO - Freed heap region: fd
+04:41:17 INFO - Stack left redzone: f1
+04:41:17 INFO - Stack mid redzone: f2
+04:41:17 INFO - Stack right redzone: f3
+04:41:17 INFO - Stack partial redzone: f4
+04:41:17 INFO - Stack after return: f5
+04:41:17 INFO - Stack use after scope: f8
+04:41:17 INFO - Global redzone: f9
+04:41:17 INFO - Global init order: f6
+04:41:17 INFO - Poisoned by user: f7
+04:41:17 INFO - Contiguous container OOB:fc
+04:41:17 INFO - ASan internal: fe
+04:41:17 INFO - ==2045==ABORTING
+
+Yeah, I'm lost a to how switching to Gtk+3 can have an effect on CTypes...

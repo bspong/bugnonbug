@@ -1,0 +1,15 @@
+PDF Viewer show notdef instead of apostrophe for WinAnsiEncoded string using substitute font
+Created attachment 8477630
+Small test file that demonstrates the issue
+
+1. I opened the attached PDF in Firefox 31.0. I'd created the PDF using OS font Helvetica Neue Light, with InDesign CC 2014 (or CC 2013, or CS6) on Mac OS 10.9.4.
+
+Observe that PDF.js reject the embedded Helvetica Neue Light font used for the first two line and us a substitute font instead (looks like it us Helvetica Neue Regular on Mac, and Arial on Win -- note that the different, identity-encoded subset font is correctly used for the 3rd and 4th lines). It shouldn't have rejected the embedded font for the first two lines, and this is being tracked in https://github.com/mozilla/pdf.js/issues/5231. But the bug you're reading right now assumes issue 5231 hasn't been fixed, so read on.
+
+2. Actual: Observe that the apostrophe on the 2nd line show a a a notdef box.
+
+3. Expected: The apostrophe on the 2nd line show up a an apostrophe, even if a substitute font is being used instead of the embedded font.
+
+This may be happening because the first 2 line are encoded in the PDF a WinAnsiEncoding, and the non-ASCII-range apostrophe character isn't being translated to Unicode (or whatever) correctly.
+
+For a detailed analysis of this PDF, read Sairus Patel's message in the Adobe forum thread https://forums.adobe.com/message/6642223.

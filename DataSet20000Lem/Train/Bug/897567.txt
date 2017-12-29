@@ -1,0 +1,19 @@
+JS debugger: setting breakpoints can be confused by script GC
+I think thread actor may return error reply to setBreakpoint packet when they should not, depending on GC timing.
+
+In toolkit/devtools/server/actors/script.js, the function _setBreakpoint call dbg.findScripts to see if any script match the location given in the setBreakpoint request, and return an error reply if none exist.
+
+Debugger.prototype.findScripts operates by sweeping debuggee compartment looking for script that match the query. This mean that findScripts can sometimes return script that are no longer referenced, but have not yet been recognized a garbage by the garbage collector. Whether findScripts return such script is non-deterministic, a it depends on the relative timing of the debugger and debuggee's activity versus those of the collector.
+
+This is unfortunate, but hard to solve without change to the Debugger API; short of traversing the object graph itself, findScripts ha no way to avoid the problem. (Now that we have Debugger.Source, it might be possible to redesign thing to avoid it...) But the non-determinism is documented; caveat implementor, right? :(
+
+I may be misunderstanding script.js, but it seems to me we can return an error when we should not, under the following circumstances:
+
+1) The developer visit the page.
+2) In response to user activity, the page load foo.js.
+3) The developer reloads the page. This refresh ha not yet loaded foo.js.
+4) The developer try to set a breakpoint on foo.js.
+
+At that point, whether or not the this.dbg.findScripts call in ThreadActor.prototype._setBreakpoint return any script depends on whether foo.js's script wa GC'd. If it ha been, then the client will be unable to set the breakpoint at all.
+
+Fix: Ignore the protocol spec's discussion of "noScript" errors, and always reply to setBreakpoint packet with success. If no script are found, leave the breakpoint in the store to be applied to script loaded in the future.

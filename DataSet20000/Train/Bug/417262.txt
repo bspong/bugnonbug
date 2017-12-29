@@ -1,0 +1,29 @@
+History sidebar slow for "By Most Visited" and "By Last Visited"
+Bug 385245 complained about slow history sidebar. The latest patch in this bug solves performance problem of "By Site", "By Date" and "By Date and Site". However, it does not improve "By Most Visited" and "By Last Visited". As the number of days in history has increased from 9 to 180, the amount of data increased too.
+
+While we could probably get some speed improvements in the javascript code to slightly improve the performance, with many sites it would be still slow. A solution would be to introduce some kind of grouping.
+
+By Last Visited
+---------------
+We should group max visits in the same way as "By Date" groups all visits. However, instead of sorting by title inside of the date range, we would sort by last visit descending.
+
+By Most Visited
+---------------
+We should group by the number of visits. I suggest something like this:
+
+Top Visited Pages 
+  - p(v) > 99th percentile
+Most Visited Pages 
+  - 99th percentile >= p(v) > 95th percentile
+Commonly Visited Pages
+  - 95th percentile >= p(v) > 50th percentile
+Rarely Visited Pages
+  - p(v) <= 50th percentile
+Never Visited Pages
+  - this could be imported but never visited bookmarks
+
+Where "v" is number of visits. "p(v)" is the percentile - what is the percentage of places having "v" number of visits and less. Most likely users would only click on "Top Visited Pages" what would load quickly as there is only 1% of places.
+
+This grouping will only be shown if you have more than 100 places.
+
+Both can be implemented very easily on top of bug 385245. No changes on UI are required (apart of the new strings).

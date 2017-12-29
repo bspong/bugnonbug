@@ -1,0 +1,35 @@
+Firefox's data: URIs handler should support MIME parameter
+User-Agent: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; en-US; rv:1.9.1.5) Gecko/20091102 Firefox/3.5.5
+Build Identifier: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; en-US; rv:1.9.1.5) Gecko/20091102 Firefox/3.5.5
+
+http://tools.ietf.org/html/rfc2397 describes data: scheme:
+
+---8<----------------
+dataurl := "data:" [ mediatype ] [ ";base64" ] "," data
+mediatype := [ type "/" subtype ] *( ";" parameter )
+data := *urlchar
+parameter := attribute "=" value
+
+where "urlchar" is imported from [RFC2396], and "type", "subtype",
+"attribute" and "value" are the corresponding token from [RFC2045],
+represented using URL escaped encoding of [RFC2396] a necessary.
+---8<----------------
+
+RFC2045 in turn, describes MIME parameter in more details. It would be useful to use 'content-disposition' and 'filename' parameter to influence FF's handling of such data: URI.
+
+Example:
+Entering this URL in location bar:
+data:text/html;base64,VGhpcyBpcyBhIHRlc3QK
+should result in displaying a page with 'This is a test'.
+
+Entering:
+data:text/html;content-disposition=attachment;base64,VGhpcyBpcyBhIHRlc3QK
+should result in FF downloading a file containing the above content
+
+and entering:
+data:text/html;filename=yay.txt;content-disposition=attachment;base64,VGhpcyBpcyBhIHRlc3QK
+should result in FF downloading a file called 'yay.txt', containing the above content.
+
+Is there any reason not to support at least those two parameters? Libraries like jsPDF would be much more useful with that.
+
+Reproducible: Always

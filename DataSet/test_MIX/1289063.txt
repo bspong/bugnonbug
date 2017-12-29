@@ -1,0 +1,277 @@
+Firefox 47 crashes in XGetInputFocus when trying to show PDF in Adobe Reader plugin
+User Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.63 Safari/537.36
+
+Steps to reproduce:
+
+When opening a PDF file in FF 47 on Ubuntu 14.04 using the Adobe Reader Plugin 9.4, only the first time succeeds. E.g. https://www.einfach-fuer-alle.de/download/ , trying to show the EfA-Kalender2007.pdf PDF file. 
+
+
+Actual results:
+
+If I close the first tab and try to re-open the same PDF again, Firefox segfaults in XGetInputFocus.
+
+
+Expected results:
+
+FF should not have segfaulted.
+
+
+
+Somehow FF didn't collect a crash report even though the option is enabled. So I collected a back trace manually:
+
+
+Program received signal SIGSEGV, Segmentation fault.
+XGetInputFocus (dpy=0x0, focus=0x7fffffffc0b8, revert_to=0x7fffffffc0b4) at ../../src/GetIFocus.c:40
+40	../../src/GetIFocus.c: No such file or directory.
+(gdb) bt f
+#0  XGetInputFocus (dpy=0x0, focus=0x7fffffffc0b8, revert_to=0x7fffffffc0b4) at ../../src/GetIFocus.c:40
+        rep = {type = 134 '\206', revertTo = 204 '\314', sequenceNumber = 62636, length = 32767, 
+          focus = 4139688000, pad1 = 32767, pad2 = 0, pad3 = 0, pad4 = 4138835968, pad5 = 32767}
+#1  0x00007fffeaeea27a in nsWindow::LoseNonXEmbedPluginFocus (this=0x7fffaffb8800)
+    at /build/firefox-sKY334/firefox-47.0+build3/widget/gtk/nsWindow.cpp:4840
+        curFocusWindow = 136
+        focusState = 32767
+        this = 0x7fffaffb8800
+#2  0x00007fffeaeee8f2 in nsWindow::SetNonXEmbedPluginFocus (this=0x7fffb29ef400)
+    at /build/firefox-sKY334/firefox-47.0+build3/widget/gtk/nsWindow.cpp:4772
+        kungFuDeathGrip = {mRawPtr = 0x7fffaffb8800}
+        curFocusWindow = 140736145885184
+        gdkDisplay = <optimized out>
+        focusState = 0
+        toplevel = <optimized out>
+        gdkfocuswin = <optimized out>
+#3  0x00007fffeaeeeabf in plugin_window_filter_func (gdk_xevent=0x7fffffffc1a0, event=<optimized out>, 
+    data=<optimized out>) at /build/firefox-sKY334/firefox-47.0+build3/widget/gtk/nsWindow.cpp:5825
+        xevent = 0x7fffffffc1a0
+        xeventWindow = <optimized out>
+        return_val = GDK_FILTER_CONTINUE
+        plugin_window = <optimized out>
+        nswindow = {mRawPtr = 0x7fffb29ef400}
+#4  0x00007ffff4ab0b91 in gdk_event_apply_filters (xevent=xevent@entry=0x7fffffffc1a0, 
+    event=event@entry=0x7fffb4968ce0, window=window@entry=0x7fffb11c7090)
+    at /build/gtk+3.0-3sSotQ/gtk+3.0-3.10.8/./gdk/x11/gdkeventsource.c:81
+        filter = 0x7fffafb47420
+        node = <optimized out>
+        tmp_list = 0x7fffafb474e0
+        result = <optimized out>
+#5  0x00007ffff4ab0e43 in gdk_event_source_translate_event (xevent=0x7fffffffc1a0, event_source=0x7ffff6bebd80)
+    at /build/gtk+3.0-3sSotQ/gtk+3.0-3.10.8/./gdk/x11/gdkeventsource.c:202
+        dpy = 0x7ffff6bf6000
+        event = 0x7fffb4968ce0
+        result = <optimized out>
+        event_translator = <optimized out>
+#6  _gdk_x11_display_queue_events (display=0x7ffff6b4d460)
+    at /build/gtk+3.0-3sSotQ/gtk+3.0-3.10.8/./gdk/x11/gdkeventsource.c:338
+---Type <return> to continue, or q <return> to quit---
+        xevent = {type = 7, xany = {type = 7, serial = 7928, send_event = 0, display = 0x7ffff6bf6000, 
+            window = 102760569}, xkey = {type = 7, serial = 7928, send_event = 0, display = 0x7ffff6bf6000, 
+            window = 102760569, root = 216, subwindow = 0, time = 885405858, x = 491, y = 418, x_root = 556, 
+            y_root = 442, state = 0, keycode = 3, same_screen = 1}, xbutton = {type = 7, serial = 7928, 
+            send_event = 0, display = 0x7ffff6bf6000, window = 102760569, root = 216, subwindow = 0, 
+            time = 885405858, x = 491, y = 418, x_root = 556, y_root = 442, state = 0, button = 3, 
+            same_screen = 1}, xmotion = {type = 7, serial = 7928, send_event = 0, display = 0x7ffff6bf6000, 
+            window = 102760569, root = 216, subwindow = 0, time = 885405858, x = 491, y = 418, x_root = 556, 
+            y_root = 442, state = 0, is_hint = 3 '\003', same_screen = 1}, xcrossing = {type = 7, serial = 7928, 
+            send_event = 0, display = 0x7ffff6bf6000, window = 102760569, root = 216, subwindow = 0, 
+            time = 885405858, x = 491, y = 418, x_root = 556, y_root = 442, mode = 0, detail = 3, 
+            same_screen = 1, focus = 0, state = 0}, xfocus = {type = 7, serial = 7928, send_event = 0, 
+            display = 0x7ffff6bf6000, window = 102760569, mode = 216, detail = 0}, xexpose = {type = 7, 
+            serial = 7928, send_event = 0, display = 0x7ffff6bf6000, window = 102760569, x = 216, y = 0, 
+            width = 0, height = 0, count = 885405858}, xgraphicsexpose = {type = 7, serial = 7928, 
+            send_event = 0, display = 0x7ffff6bf6000, drawable = 102760569, x = 216, y = 0, width = 0, 
+            height = 0, count = 885405858, major_code = 0, minor_code = 491}, xnoexpose = {type = 7, 
+            serial = 7928, send_event = 0, display = 0x7ffff6bf6000, drawable = 102760569, major_code = 216, 
+            minor_code = 0}, xvisibility = {type = 7, serial = 7928, send_event = 0, display = 0x7ffff6bf6000, 
+            window = 102760569, state = 216}, xcreatewindow = {type = 7, serial = 7928, send_event = 0, 
+            display = 0x7ffff6bf6000, parent = 102760569, window = 216, x = 0, y = 0, width = 885405858, 
+            height = 0, border_width = 491, override_redirect = 418}, xdestroywindow = {type = 7, serial = 7928, 
+            send_event = 0, display = 0x7ffff6bf6000, event = 102760569, window = 216}, xunmap = {type = 7, 
+            serial = 7928, send_event = 0, display = 0x7ffff6bf6000, event = 102760569, window = 216, 
+            from_configure = 0}, xmap = {type = 7, serial = 7928, send_event = 0, display = 0x7ffff6bf6000, 
+            event = 102760569, window = 216, override_redirect = 0}, xmaprequest = {type = 7, serial = 7928, 
+            send_event = 0, display = 0x7ffff6bf6000, parent = 102760569, window = 216}, xreparent = {type = 7, 
+            serial = 7928, send_event = 0, display = 0x7ffff6bf6000, event = 102760569, window = 216, parent = 0, 
+            x = 885405858, y = 0, override_redirect = 491}, xconfigure = {type = 7, serial = 7928, 
+            send_event = 0, display = 0x7ffff6bf6000, event = 102760569, window = 216, x = 0, y = 0, 
+            width = 885405858, height = 0, border_width = 491, above = 1898375545388, override_redirect = 0}, 
+          xgravity = {type = 7, serial = 7928, send_event = 0, display = 0x7ffff6bf6000, event = 102760569, 
+            window = 216, x = 0, y = 0}, xresizerequest = {type = 7, serial = 7928, send_event = 0, 
+            display = 0x7ffff6bf6000, window = 102760569, width = 216, height = 0}, xconfigurerequest = {
+            type = 7, serial = 7928, send_event = 0, display = 0x7ffff6bf6000, parent = 102760569, window = 216, 
+            x = 0, y = 0, width = 885405858, height = 0, border_width = 491, above = 1898375545388, detail = 0, 
+            value_mask = 1}, xcirculate = {type = 7, serial = 7928, send_event = 0, display = 0x7ffff6bf6000, 
+            event = 102760569, window = 216, place = 0}, xcirculaterequest = {type = 7, serial = 7928, 
+---Type <return> to continue, or q <return> to quit---
+            send_event = 0, display = 0x7ffff6bf6000, parent = 102760569, window = 216, place = 0}, xproperty = {
+            type = 7, serial = 7928, send_event = 0, display = 0x7ffff6bf6000, window = 102760569, atom = 216, 
+            time = 0, state = 885405858}, xselectionclear = {type = 7, serial = 7928, send_event = 0, 
+            display = 0x7ffff6bf6000, window = 102760569, selection = 216, time = 0}, xselectionrequest = {
+            type = 7, serial = 7928, send_event = 0, display = 0x7ffff6bf6000, owner = 102760569, 
+            requestor = 216, selection = 0, target = 885405858, property = 1795296330219, time = 1898375545388}, 
+          xselection = {type = 7, serial = 7928, send_event = 0, display = 0x7ffff6bf6000, requestor = 102760569, 
+            selection = 216, target = 0, property = 885405858, time = 1795296330219}, xcolormap = {type = 7, 
+            serial = 7928, send_event = 0, display = 0x7ffff6bf6000, window = 102760569, colormap = 216, new = 0, 
+            state = 0}, xclient = {type = 7, serial = 7928, send_event = 0, display = 0x7ffff6bf6000, 
+            window = 102760569, message_type = 216, format = 0, data = {
+              b = "\242\070\306\064\000\000\000\000\353\001\000\000\242\001\000\000,\002\000", s = {14498, 13510, 
+                0, 0, 491, 0, 418, 0, 556, 0}, l = {885405858, 1795296330219, 1898375545388, 12884901888, 1}}}, 
+          xmapping = {type = 7, serial = 7928, send_event = 0, display = 0x7ffff6bf6000, window = 102760569, 
+            request = 216, first_keycode = 0, count = 0}, xerror = {type = 7, display = 0x1ef8, 
+            resourceid = 16565899576062509056, serial = 140737333125120, error_code = 121 'y', 
+            request_code = 0 '\000', minor_code = 32 ' '}, xkeymap = {type = 7, serial = 7928, send_event = 0, 
+            display = 0x7ffff6bf6000, window = 102760569, 
+            key_vector = "\330", '\000' <repeats 15 times>, "\242\070\306\064\000\000\000\000\353\001\000\000\242\001\000"}, xgeneric = {type = 7, serial = 7928, send_event = 0, display = 0x7ffff6bf6000, extension = 102760569, 
+            evtype = 0}, xcookie = {type = 7, serial = 7928, send_event = 0, display = 0x7ffff6bf6000, 
+            extension = 102760569, evtype = 0, cookie = 216, data = 0x0}, pad = {-1880844497647042553, 7928, 
+            -1880844497647042560, 140737333125120, 102760569, 216, 0, 885405858, 1795296330219, 1898375545388, 
+            12884901888, 1, -1880844497647042560, -1880844493789993499 <repeats 11 times>}}
+        xdisplay = 0x7ffff6bf6000
+        event_source = 0x7ffff6bebd80
+        display_x11 = 0x7ffff6b4d460
+#7  0x00007ffff4a888e8 in gdk_display_get_event (display=display@entry=0x7ffff6b4d460)
+    at /build/gtk+3.0-3sSotQ/gtk+3.0-3.10.8/./gdk/gdkdisplay.c:327
+        __FUNCTION__ = "gdk_display_get_event"
+#8  0x00007ffff4ab0c12 in gdk_event_source_dispatch (source=<optimized out>, callback=<optimized out>, 
+    user_data=<optimized out>) at /build/gtk+3.0-3sSotQ/gtk+3.0-3.10.8/./gdk/x11/gdkeventsource.c:360
+        display = 0x7ffff6b4d460
+        event = <optimized out>
+#9  0x00007ffff2463e14 in g_main_context_dispatch () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#10 0x00007ffff2464058 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+---Type <return> to continue, or q <return> to quit---
+#11 0x00007ffff24640fc in g_main_context_iteration () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#12 0x00007fffeaef3008 in nsAppShell::ProcessNextNativeEvent (this=<optimized out>, mayWait=<optimized out>)
+    at /build/firefox-sKY334/firefox-47.0+build3/widget/gtk/nsAppShell.cpp:270
+No locals.
+#13 0x00007fffeaed58a9 in nsBaseAppShell::DoProcessNextNativeEvent (this=this@entry=0x7fffdd325520, 
+    mayWait=mayWait@entry=false) at /build/firefox-sKY334/firefox-47.0+build3/widget/nsBaseAppShell.cpp:138
+        prevVal = nsBaseAppShell::eEventloopNone
+        result = 255
+#14 0x00007fffeaed6c14 in nsBaseAppShell::OnProcessNextEvent (this=0x7fffdd325520, thr=0x7ffff6bb8120, 
+    mayWait=false) at /build/firefox-sKY334/firefox-47.0+build3/widget/nsBaseAppShell.cpp:271
+        now = <optimized out>
+        keepGoing = <optimized out>
+        start = 885405866
+        limit = 10
+        oldBlockedWait = 0x0
+        needEvent = false
+#15 0x00007fffe9cf8a8a in nsThread::ProcessNextEvent (this=0x7ffff6bb8120, aMayWait=<optimized out>, 
+    aResult=0x7fffffffc4ff) at /build/firefox-sKY334/firefox-47.0+build3/xpcom/threads/nsThread.cpp:965
+        callScriptObserver = true
+        obs = {<nsCOMPtr_base> = {mRawPtr = 0x7fffdd325528}, <No data fields>}
+        rv = <optimized out>
+        aResult = 0x7fffffffc4ff
+        aMayWait = false
+        this = 0x7ffff6bb8120
+#16 0x00007fffe9d10c41 in NS_ProcessNextEvent (aThread=<optimized out>, aMayWait=aMayWait@entry=false)
+    at /build/firefox-sKY334/firefox-47.0+build3/xpcom/glue/nsThreadUtils.cpp:297
+        val = true
+#17 0x00007fffe9efdc06 in mozilla::ipc::MessagePump::Run (this=0x7fffe6981b80, aDelegate=0x7ffff6b673a0)
+    at /build/firefox-sKY334/firefox-47.0+build3/ipc/glue/MessagePump.cpp:95
+        did_work = <optimized out>
+#18 0x00007fffe9ee9d01 in RunHandler (this=0x7ffff6b673a0)
+    at /build/firefox-sKY334/firefox-47.0+build3/ipc/chromium/src/base/message_loop.cc:227
+No locals.
+#19 MessageLoop::Run (this=0x7ffff6b673a0)
+    at /build/firefox-sKY334/firefox-47.0+build3/ipc/chromium/src/base/message_loop.cc:201
+        save_state = {<MessageLoop::RunState> = {run_depth = 1, quit_received = false}, loop_ = 0x7ffff6b673a0, 
+          previous_state_ = 0x0}
+---Type <return> to continue, or q <return> to quit---
+#20 0x00007fffeaed3c99 in nsBaseAppShell::Run (this=0x7fffdd325520)
+    at /build/firefox-sKY334/firefox-47.0+build3/widget/nsBaseAppShell.cpp:156
+        thread = 0x7ffff6bb8120
+#21 0x00007fffeb48ca9a in nsAppStartup::Run (this=0x7fffdd31b060)
+    at /build/firefox-sKY334/firefox-47.0+build3/toolkit/components/startup/nsAppStartup.cpp:281
+        rv = <optimized out>
+        retval = <optimized out>
+#22 0x00007fffeb4c0804 in XREMain::XRE_mainRun (this=this@entry=0x7fffffffc778)
+    at /build/firefox-sKY334/firefox-47.0+build3/toolkit/xre/nsAppRunner.cpp:4337
+        rv = NS_OK
+        appStartup = {<nsCOMPtr_base> = {mRawPtr = 0x7fffdd31b060}, <No data fields>}
+        workingDir = {<nsCOMPtr_base> = {mRawPtr = 0x7fffd89df640}, <No data fields>}
+        prefs = {<nsCOMPtr_base> = {mRawPtr = 0x7fffe4f52cc0}, <No data fields>}
+        userAgentLocale = {<nsACString_internal> = {mData = 0x7fffd77efb38 "en-US", mLength = 5, 
+            mFlags = 5}, <No data fields>}
+        cmdLine = {<nsCOMPtr_base> = {mRawPtr = 0x7fffd724f5c0}, <No data fields>}
+#23 0x00007fffeb4c0abf in XREMain::XRE_main (this=this@entry=0x7fffffffc778, argc=argc@entry=1, 
+    argv=argv@entry=0x7fffffffdc78, aAppData=aAppData@entry=0x7fffffffc978)
+    at /build/firefox-sKY334/firefox-47.0+build3/toolkit/xre/nsAppRunner.cpp:4434
+        aLocal = 0 '\000'
+        rv = <optimized out>
+        exit = false
+        appInitiatedRestart = false
+        sampler_raii4388 = {mHandle = 0x7ffff6bcb000}
+        result = 0
+#24 0x00007fffeb4c0d23 in XRE_main (argc=1, argv=0x7fffffffdc78, aAppData=0x7fffffffc978, aFlags=<optimized out>)
+    at /build/firefox-sKY334/firefox-47.0+build3/toolkit/xre/nsAppRunner.cpp:4540
+        main = {mNativeApp = {<nsCOMPtr_base> = {mRawPtr = 0x7fffe697f240}, <No data fields>}, 
+          mProfileSvc = {<nsCOMPtr_base> = {mRawPtr = 0x7fffe697cd30}, <No data fields>}, 
+          mProfD = {<nsCOMPtr_base> = {mRawPtr = 0x7ffff6b5a580}, <No data fields>}, 
+          mProfLD = {<nsCOMPtr_base> = {mRawPtr = 0x7ffff6b5a640}, <No data fields>}, 
+          mProfileLock = {<nsCOMPtr_base> = {mRawPtr = 0x7fffe6966640}, <No data fields>}, 
+          mRemoteService = {<nsCOMPtr_base> = {mRawPtr = 0x7fffcd0c04e0}, <No data fields>}, mScopedXPCOM = {
+            mTuple = {<mozilla::detail::PairHelper<ScopedXPCOMStartup*, mozilla::DefaultDelete<ScopedXPCOMStartup>, (mozilla::detail::StorageType)1, (mozilla::detail::StorageType)0>> = {<mozilla::DefaultDelete<ScopedXPCOMStartup>> = {<No data fields>}, mFirstA = 0x7fffe69491f8}, <No data fields>}}, mAppData = {mRawPtr = 0x7ffff6b4b880}, 
+          mDirProvider = {<nsIDirectoryServiceProvider2> = {<nsIDirectoryServiceProvider> = {<nsISupports> = {
+                  _vptr.nsISupports = 0x7fffee0780b0 <vtable for nsXREDirProvider+16>}, <No data fields>}, <No data---Type <return> to continue, or q <return> to quit---
+ fields>}, <nsIProfileStartup> = {<nsISupports> = {
+                _vptr.nsISupports = 0x7fffee0780f8 <vtable for nsXREDirProvider+88>}, <No data fields>}, 
+            mAppProvider = {<nsCOMPtr_base> = {mRawPtr = 0x0}, <No data fields>}, mGREDir = {<nsCOMPtr_base> = {
+                mRawPtr = 0x7ffff6b58780}, <No data fields>}, mGREBinDir = {<nsCOMPtr_base> = {
+                mRawPtr = 0x7ffff6b58cc0}, <No data fields>}, mXULAppDir = {<nsCOMPtr_base> = {
+                mRawPtr = 0x7ffff6b58b40}, <No data fields>}, mProfileDir = {<nsCOMPtr_base> = {
+                mRawPtr = 0x7ffff6b5a580}, <No data fields>}, mProfileLocalDir = {<nsCOMPtr_base> = {
+                mRawPtr = 0x7ffff6b5a640}, <No data fields>}, mProfileNotified = true, 
+            mAppBundleDirectories = {<nsCOMArray_base> = {
+                mArray = {<nsTArray_Impl<nsISupports*, nsTArrayInfallibleAllocator>> = {<nsTArray_base<nsTArrayInfallibleAllocator, nsTArray_CopyWithMemutils>> = {
+                      mHdr = 0x7fffee165910 <nsTArrayHeader::sEmptyHdr>}, <nsTArray_TypedBase<nsISupports*, nsTArray_Impl<nsISupports*, nsTArrayInfallibleAllocator> >> = {<nsTArray_SafeElementAtHelper<nsISupports*, nsTArray_Impl<nsISupports*, nsTArrayInfallibleAllocator> >> = {<No data fields>}, <No data fields>}, 
+                    static NoIndex = <optimized out>}, <No data fields>}}, <No data fields>}, 
+            mExtensionDirectories = {<nsCOMArray_base> = {
+                mArray = {<nsTArray_Impl<nsISupports*, nsTArrayInfallibleAllocator>> = {<nsTArray_base<nsTArrayInfallibleAllocator, nsTArray_CopyWithMemutils>> = {
+                      mHdr = 0x7fffd895e120}, <nsTArray_TypedBase<nsISupports*, nsTArray_Impl<nsISupports*, nsTArrayInfallibleAllocator> >> = {<nsTArray_SafeElementAtHelper<nsISupports*, nsTArray_Impl<nsISupports*, nsTArrayInfallibleAllocator> >> = {<No data fields>}, <No data fields>}, 
+                    static NoIndex = <optimized out>}, <No data fields>}}, <No data fields>}, 
+            mThemeDirectories = {<nsCOMArray_base> = {
+                mArray = {<nsTArray_Impl<nsISupports*, nsTArrayInfallibleAllocator>> = {<nsTArray_base<nsTArrayInfallibleAllocator, nsTArray_CopyWithMemutils>> = {
+                      mHdr = 0x7fffd895e4d0}, <nsTArray_TypedBase<nsISupports*, nsTArray_Impl<nsISupports*, nsTArrayInfallibleAllocator> >> = {<nsTArray_SafeElementAtHelper<nsISupports*, nsTArray_Impl<nsISupports*, nsTArrayInfallibleAllocator> >> = {<No data fields>}, <No data fields>}, 
+                    static NoIndex = <optimized out>}, <No data fields>}}, <No data fields>}}, 
+          mProfileName = {<nsFixedCString> = {<nsCString> = {<nsACString_internal> = {
+                  mData = 0x7fffe697f258 "default", mLength = 7, mFlags = 65541}, <No data fields>}, 
+              mFixedCapacity = 63, mFixedBuf = 0x7fffffffc838 ""}, 
+            mStorage = "\000\310\377\377\377\177\000\000\277\310\377\377\377\177\000\000\270\310\377\377\377\177\000\000\277\310\377\377\377\177\000\000\277\310\377\377\377\177\000\000h\311\377\377\377\177\000\000\230\310\377\377\377\177\000\000@\213\265\366\377\177\000"}, 
+          mDesktopStartupID = {<nsFixedCString> = {<nsCString> = {<nsACString_internal> = {
+                  mData = 0x7fffffffc898 "compiz-2974-c469368-urxvt-1_TIME130584", mLength = 38, 
+                  mFlags = 65553}, <No data fields>}, mFixedCapacity = 63, 
+---Type <return> to continue, or q <return> to quit---
+              mFixedBuf = 0x7fffffffc898 "compiz-2974-c469368-urxvt-1_TIME130584"}, 
+            mStorage = "compiz-2974-c469368-urxvt-1_TIME130584\000\000`\311\377\377\377\177\000\000\265c\313\351\377\177\000\000\000\200\265\366\377\177\000"}, mStartOffline = false, mShuttingDown = false, 
+          mDisableRemote = false, mGdkDisplay = 0x7ffff6b4d460}
+        result = <optimized out>
+#25 0x00005555555590b6 in do_main (argc=1, argv=0x7fffffffdc78, envp=<optimized out>, xreDirectory=0x7ffff6b58780)
+    at /build/firefox-sKY334/firefox-47.0+build3/browser/app/nsBrowserApp.cpp:220
+        rv = <optimized out>
+        appDataFile = <optimized out>
+        appData = {<nsXREAppData> = {size = 128, directory = 0x7ffff6b58b40, vendor = 0x7ffff6b7b108 "Mozilla", 
+            name = 0x7ffff6b7b110 "Firefox", remotingName = 0x7ffff6b7b118 "firefox", 
+            version = 0x7ffff6b7b120 "47.0", buildID = 0x7ffff6b3b770 "20160606114208", 
+            ID = 0x7ffff6bb2100 "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}", copyright = 0x0, flags = 10, 
+            xreDirectory = 0x7ffff6b58780, minVersion = 0x7ffff6b7b128 "47.0", 
+            maxVersion = 0x7ffff6b7b130 "47.0", 
+            crashReporterURL = 0x7ffff6b4b600 "https://crash-reports.mozilla.com/submit?id={ec8030f7-c20a-464f-9b0e-13a3a9e97384}&version=47.0&buildid=20160606114208", profile = 0x0, UAName = 0x0}, <No data fields>}
+        appini = {<nsCOMPtr_base> = {mRawPtr = 0x0}, <No data fields>}
+        exeFile = {<nsCOMPtr_base> = {mRawPtr = 0x7ffff6b589c0}, <No data fields>}
+        greDir = {<nsCOMPtr_base> = {mRawPtr = 0x7ffff6b58a80}, <No data fields>}
+        appSubdir = {<nsCOMPtr_base> = {mRawPtr = 0x7ffff6b58b40}, <No data fields>}
+#26 0x00005555555587d2 in main (argc=1, argv=0x7fffffffdc78, envp=0x7fffffffdc88)
+    at /build/firefox-sKY334/firefox-47.0+build3/browser/app/nsBrowserApp.cpp:360
+        gotCounters = 1
+        initialRUsage = {ru_utime = {tv_sec = 0, tv_usec = 0}, ru_stime = {tv_sec = 0, tv_usec = 0}, {
+            ru_maxrss = 19136, __ru_maxrss_word = 19136}, {ru_ixrss = 0, __ru_ixrss_word = 0}, {ru_idrss = 0, 
+            __ru_idrss_word = 0}, {ru_isrss = 0, __ru_isrss_word = 0}, {ru_minflt = 231, __ru_minflt_word = 231}, 
+          {ru_majflt = 0, __ru_majflt_word = 0}, {ru_nswap = 0, __ru_nswap_word = 0}, {ru_inblock = 0, 
+            __ru_inblock_word = 0}, {ru_oublock = 0, __ru_oublock_word = 0}, {ru_msgsnd = 0, 
+            __ru_msgsnd_word = 0}, {ru_msgrcv = 0, __ru_msgrcv_word = 0}, {ru_nsignals = 0, 
+            __ru_nsignals_word = 0}, {ru_nvcsw = 6, __ru_nvcsw_word = 6}, {ru_nivcsw = 1, __ru_nivcsw_word = 1}}
+        xreDirectory = 0x7ffff6b58780
+        rv = <optimized out>
+        result = <optimized out>

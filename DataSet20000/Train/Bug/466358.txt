@@ -1,0 +1,31 @@
+Nested <object> tags seem to break the IcedTea plugin
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.2) Gecko/2008102718 Fedora/3.0.2-1.fc10 Firefox/3.0.2
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.2) Gecko/2008102718 Fedora/3.0.2-1.fc10 Firefox/3.0.2
+
+I'm not entirely sure if this is a FireFox bug or an IcedTea bug.  However, I don't see why IcedTea should ever get to see the actual DOM tree, so I'm going to assume it is a FireFox bug for now:
+
+If a web page has a Java applet which has been embedded with the <object> tag, nesting another <object> tag within it seems to prevent the IcedTea plugin from running the applet.  The following is reported on stderr:
+
+-----
+ICEDTEAPLUGIN_DEBUG = (null)
+Initializing JVM...
+NOT IMPLEMENTED: virtual nsresult IcedTeaPluginInstance::Start()
+Warning: <object> tag requires code attribute.
+-----
+
+(Note: The W3C do not specify the existence of a "code" attribute for the <object> tag).
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Visit http://www.nexusuk.org/~steve/panotest4.xhtml with the IcedTea plugin installed
+
+Actual Results:  
+Java applet remains a grey box and stderr reports "Warning: <object> tag requires code attribute."
+
+Expected Results:  
+Java applet should run.
+
+The following URI is an identical page, but with the nested <object> tag replaced with an <img> tag - this page works correctly and does not produce the "Warning: <object> tag requires code attribute." message:
+
+http://www.nexusuk.org/~steve/panotest5.xhtml

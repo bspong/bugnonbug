@@ -1,0 +1,48 @@
+URL autocompletion even when full URL specified
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.6b) Gecko/20031208 Firebird/0.7+ (Oxs G7 SSE optimized)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.6b) Gecko/20031208 Firebird/0.7+ (Oxs G7 SSE optimized)
+
+If I type a complete URL in the Firebird addressbar (e.g. http://test/) this is
+changed by adding a "www." prefix and a ".com" suffix (e.g.
+http://www.test.com/). This behaviour can cause "page not found" error and
+even the display of incorrect sites.
+
+For example, I have an intranet site called "ora1-dev". To access it, I type
+the url:
+
+http://ora1-dev:1532/pls/nims/xperweb.home
+
+This work in Internet Explorer. When I do the same in Firebird, however, the
+address is changed to:
+
+http://www.ora1-dev.com/
+
+Which doe not exist, causing the message:
+
+"The system detected an Unresolved Host Name while attempting to retrieve
+the URL: http://www.ora1-dev.com/."
+
+...to be displayed. Worse yet, the port number is stripped off and not
+reinserted. Even if I had an cname called www.ora1-dev.com pointing to the same
+host, my query would fail since the port number is gone.
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Type http://test (or http://test:12345 into the addressbar
+2. Hit enter
+3. Observe the result
+
+Actual Results:
+The URL in the addressbar is changed to http://www.test.com and that site is
+displayed, not the one I want. (Actually, in this test case, a "page not found"
+erroor messge should appear.
+
+Note: the port number (if specified) is stripped from the URL
+
+Expected Results:
+Firebird should have displayed the page at http://test
+
+Note: in my config, the value: "browser.fixup.alternate.enabled" is set to
+"false". The same failure occurs if I change this value to "true".

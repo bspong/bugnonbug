@@ -1,0 +1,25 @@
+Firefox startup crash je_free | je_free | PL_DHashTableFinish | nsTHashtable<nsBaseHashtableET<nsDepCharHashKey, nsAutoPtr<CategoryNode> > >::s_ClearEntry
+This bug was filed from the Socorro interface and is 
+report bp-541717c8-5dcf-498b-9305-3e8082120318 .
+============================================================= 
+
+Seen while looking at Firefox 11 crash stats. This signature has been present in other beta versions but has risen slightly in 11 so far so I think it warrants a bug to track it since it is a startup crash: https://crash-stats.mozilla.com/report/list?signature=je_free%20|%20je_free%20|%20PL_DHashTableFinish.
+
+I looked manually and there are no addon correlations for this signature. Will take a look at the module reports next.
+
+https://crash-stats.mozilla.com/report/index/541717c8-5dcf-498b-9305-3e8082120318
+
+Frame 	Module 	Signature [Expand] 	Source
+0 	mozglue.dll 	je_free 	memory/jemalloc/jemalloc.c:6580
+1 	mozglue.dll 	je_free 	memory/jemalloc/jemalloc.c:6580
+2 	xul.dll 	PL_DHashTableFinish 	obj-firefox/xpcom/build/pldhash.cpp:409
+3 	xul.dll 	nsTHashtable<nsBaseHashtableET<nsDepCharHashKey,nsAutoPtr<CategoryNode> > >::s_ClearEntry 	obj-firefox/dist/include/nsTHashtable.h:449
+4 	xul.dll 	PL_DHashTableRawRemove 	obj-firefox/xpcom/build/pldhash.cpp:723
+5 	xul.dll 	PL_DHashTableEnumerate 	obj-firefox/xpcom/build/pldhash.cpp:757
+6 	xul.dll 	nsPACMan::`scalar deleting destructor' 	
+7 	xul.dll 	nsDisplayOwnLayer::GetType 	layout/base/nsDisplayList.h:1801
+8 	xul.dll 	nsCategoryManager::~nsCategoryManager 	xpcom/components/nsCategoryManager.cpp:486
+9 	xul.dll 	nsCategoryManager::`scalar deleting destructor' 	
+10 	xul.dll 	mozilla::ShutdownXPCOM 	xpcom/build/nsXPComInit.cpp:721
+11 	xul.dll 	ScopedXPCOMStartup::~ScopedXPCOMStartup 	toolkit/xre/nsAppRunner.cpp:1113
+12 	xul.dll 	XRE_main

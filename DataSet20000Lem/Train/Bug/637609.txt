@@ -1,0 +1,31 @@
+.js file referenced by page contained in iframes not loaded from applicationCache
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 6.1; it; rv:1.9.2.13) Gecko/20101203 Firefox/3.6.13
+Build Identifier: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:2.0b12) Gecko/20100101 Firefox/4.0b12
+
+an application using applicationCache to be accessed offline doe not work correctly if it ha a j file included in an html file in turn included in the main application page through an iFrame: the j file is not correctly loaded from cache even if correctly referenced by the manifest of the application; instead FX4 always try to load it from the server.
+
+FX3.6, Chrome 9, Safari 5, Opera 11 don't try to reload the j file from the server (of course, unless the appcache file is changed)
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. open the test case
+2. accept the offline caching
+3. reload the page
+Actual Results:
+if you snoop the traffic on the reload you'll notice that script.js (the j file referenced in the html included in the iframe) is re-requested to the server.
+
+Expected Results:
+the script.js file is loaded from the application cache, not from the server
+
+if you don't want to snoop the traffic I'll attach the testcase: deploy it on a web server on your machine, load it with FX4 then shut down the server and reload the app; you'll notice that the "executed" alert is not shown.
+
+In those case I noticed that re-include the j file may convince FX4 to load it from cache (sometimes work sometimes not):
+if (!checkThatTheScriptWasLoadedCorrectly) {
+var scr = document.createElement("script");
+scr.src = "script.js";
+document.getElementsByTagName("HEAD")[0].appendChild(scr);
+}
+
+
+Also note that FX behave correctly if the j file is included directly by the main file: http://www.lightstreamer.com/temp/fx4_appcache/SIMPLE

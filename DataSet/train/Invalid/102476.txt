@@ -1,0 +1,264 @@
+dom.disable_open_during_load pref is incompatible with Outlook Web Access (OWA)
+From Bugzilla Helper:
+User-Agent: Mozilla/5.0 (Windows; U; WinNT4.0; en-US; rv:0.9.4+) Gecko/20010930
+BuildID:    2001093008
+
+I use Outlook Web Access all day, every day. Today I got the most recent
+nightly and decided to try it with user_pref("dom.disable_open_during_load",
+true); in my prefs.js .
+
+It turns out that this makes Outlook Web Access not work properly.
+
+When you open a message, it uses Javascript to pop up a window with
+the message in it. If you want to reply to this message, you click
+a 'Reply' link which closes your message and opens up a reply. Except
+with dom.disable_open_during_load - it closes the original message as
+it should, but (of course) doesn't open a reply.
+
+(OWA works fine without dom.disable_open_during_load switched on.)
+
+It may well not be possible to tweak dom.disable_open_during_load to
+allow OWA to work but cut out obnoxious advertising popups, thus making
+this an evangelism issue. But since I can guess how well evangelism of
+Microsoft to help Mozilla work better would go, I thought I'd at least
+ask :-)
+
+
+
+Reproducible: Always
+Steps to Reproduce:
+1. Enable dom.disable_open_during_load
+2. Open a message in OWA.
+3. Hit 'reply' on the message.
+
+Actual Results:  Original message closes, reply message doesn't open
+
+Expected Results:  Reply message should open
+
+
+Here is the source of the original message window. (I have deleted
+the title and message body as they contain proprietary info.)
+
+
+<script language="Javascript">
+
+function openNewWindow(fileName,windowName,theWidth,theHeight) {
+	if (windowName == "newMessageWindow") 
+	{
+		//generate random window ID
+
+		 windowName = new String(Math.round(Math.random() * 100000));
+
+	}
+	window.open(fileName,windowName,"toolbar=0,location=0,directories=0,status=1,menubar=1,scrollbars=1,resizable=1,width="+theWidth+",height="+theHeight)
+}
+
+</script>
+
+<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 3.2//EN\">
+
+
+<html>
+<head>
+<title>[... title deleted ...]</title>
+</head>
+<script language=javascript>
+
+
+function DoCommand(szCommand) {
+  
+    if (szCommand == "reply") {
+     
+window.location="commands.asp?command=reply&obj=0000000095FB7859CBB9D4119EA80008C7A4192507004B6BC00CD15FD2119E5F0008C7A419A500000CF7217600004B6BC00CD15FD2119E5F0008C7A419A500001309CB8C0000";
+       
+    }
+          
+    else if (szCommand == "delete"){
+     
+window.location="commands.asp?command=delete&obj=0000000095FB7859CBB9D4119EA80008C7A4192507004B6BC00CD15FD2119E5F0008C7A419A500000CF7217600004B6BC00CD15FD2119E5F0008C7A419A500001309CB8C0000";
+      
+    }
+     else if (szCommand == "replyall"){
+     
+window.location="commands.asp?command=replyall&obj=0000000095FB7859CBB9D4119EA80008C7A4192507004B6BC00CD15FD2119E5F0008C7A419A500000CF7217600004B6BC00CD15FD2119E5F0008C7A419A500001309CB8C0000";
+      
+    }
+     else if (szCommand == "forward"){
+     
+window.location="commands.asp?command=forward&obj=0000000095FB7859CBB9D4119EA80008C7A4192507004B6BC00CD15FD2119E5F0008C7A419A500000CF7217600004B6BC00CD15FD2119E5F0008C7A419A500001309CB8C0000";
+      
+    }
+     else if (szCommand == "replytofolder"){
+     
+window.location="commands.asp?command=replytofolder&obj=0000000095FB7859CBB9D4119EA80008C7A4192507004B6BC00CD15FD2119E5F0008C7A419A500000CF7217600004B6BC00CD15FD2119E5F0008C7A419A500001309CB8C0000";
+      
+    }    
+
+
+    else if (szCommand == "close"){
+       window.close();
+    }
+    else if (szCommand == "next"){
+      
+      window.location="/exchange/item.asp?action=next";
+    }
+     else if (szCommand == "previous"){
+      
+      window.location="/exchange/item.asp?action=prev";
+    }
+
+}
+
+</Script>
+
+<body TEXT=000000 BGCOLOR=#c0c0c0 TOPMARGIN=4 LEFTMARGIN=4 text=000000
+link=000000 vlink=000000 alink=000000>
+<!--- begin toolbar --------->
+<form>
+<table BORDER=0 bgcolor=#c0c0c0 CELLSPACING=0 CELLPADDING=0 WIDTH="100%">
+<tr>
+<td width=100%>
+<img src="/exchange/images/divider.gif" width=4 height=24 align="middle">
+
+
+
+<a href="JavaScript:DoCommand('reply')"> <img SRC="/exchange/forms/reply.gif"
+Alt="Reply to sender" align="middle" border=0></a>
+
+<img src="/exchange/images/divider.gif" width=4 height=24 align="middle">
+
+<a href="JavaScript:DoCommand('replyall')"> <img
+SRC="/exchange/forms/replyall.gif" Alt="Reply to all" align="middle" border=0></a>
+
+<img src="/exchange/images/divider.gif" width=4 height=24 align="middle">
+
+
+<a HREF="JavaScript:DoCommand('replytofolder')">
+<img SRC="/exchange/forms/ReplyFld.gif" alt='Reply to folder' align="middle"
+WIDTH=24 HEIGHT=24 BORDER=0></a>
+
+<img src="/exchange/images/divider.gif" width=4 height=24 align="middle">
+
+
+
+<a href="JavaScript:DoCommand('forward')"> <img
+SRC="/exchange/forms/forward.gif" Alt="Forward" align="middle" border=0
+height=24 width=24></a>
+
+<img src="/exchange/images/divider.gif" width=4 height=24 align="middle">
+
+<a
+href="JavaScript:parent.openNewWindow('/exchange/movcpy/root.asp?msgid=0000000095FB7859CBB9D4119EA80008C7A4192507004B6BC00CD15FD2119E5F0008C7A419A500000CF7217600004B6BC00CD15FD2119E5F0008C7A419A500001309CB8C0000&folderid=0000000095FB7859CBB9D4119EA80008C7A4192501004B6BC00CD15FD2119E5F0008C7A419A500000CF721760000&process=1','newMessageWindow',400,400)">
+<img SRC="/exchange/forms/movcpy.gif" align="middle" Alt="Move/Copy" border=0
+height=24 width=24></a>
+
+<img src="/exchange/images/divider.gif" width=4 height=24 align="middle">
+
+
+
+<a href="JavaScript:DoCommand('delete')"> <img SRC="/exchange/forms/delmark.gif"
+Alt='Delete' align="middle" border=0 height=24 width=24></a>
+
+<img src="/exchange/images/divider.gif" width=4 height=24 align="middle">
+
+
+
+<a href="JavaScript:DoCommand('previous')"> <img
+SRC="/exchange/forms/prevmsg.gif" Alt="Read previous item" align="middle"
+border=0 width=24 height=24></a>
+
+<a href="JavaScript:DoCommand('next')"> <img SRC="/exchange/forms/nextmsg.gif"
+Alt='Read next item' align="middle" border=0 width=24 height=24></a>
+
+<img src="/exchange/images/divider.gif" width=4 height=24 align="middle">
+
+
+
+<a
+href="JAVASCRIPT:openNewWindow('/exchange/help/READMSG.HTM','inlineHelpWindow',600,400)">
+<img SRC="/exchange/images/help.gif" alt="Get help information on the current
+window" align="middle" border=0 height=20 width=20></a>
+
+</td>
+
+<td align="right">
+<input type="button" value="Close" onClick="DoCommand('close')">
+</td>
+
+</tr>
+
+</table>
+</form>
+<!--<br>-->
+<!--- begin header --->
+
+<table border=0 cellpadding=3 cellspacing=0 width="100%" bgcolor=#c0c0c0>
+<tr> <td width=10% >
+<font size=2><b>From:</b></font>
+</td> <td ID=from colspan=3><font size=2>
+Jamie Flett
+                [SMTP:jamie.flett@ericsson.com.au]
+            
+            &nbsp;
+</font></td>
+</tr>
+
+<tr> <td>
+<font size=2><b>To:</b></font>
+</td> <td ID=to colspan=3>
+<font size=2>
+David Gerard (EPA)&nbsp;
+</font>
+</td>
+</tr>
+<tr>
+<td><font size=2><b>Cc:</b></font>
+</td> <td ID=cc colspan=3><font size=2>
+&nbsp;
+</font>
+</td>
+</tr>
+
+<tr>
+<td> </td>
+</tr>
+
+<tr>
+<td>
+<font size=2><b>Subject:</b></font>
+</td>
+<td ID=subject colspan=3>
+<font size=2>
+Re: Windows Terminal Server - volunteers needed for trial&nbsp;
+</font>
+</td>
+</tr>
+<tr>
+<td>
+<font size=2><nobr><b>Sent:</b></nobr>
+</td>
+<td ID=sent width=62% ><font size=2><nobr>
+10/1/01 2:58 PM&nbsp;</nobr></font><br>
+</td>
+<td align=right>
+<font size=2><nobr><b>Importance:</b></nobr>
+</td>
+<td ID=importance align=right><font size=2><nobr>
+Normal&nbsp;</nobr>
+</font>
+</td>
+</tr>
+
+</table>
+
+<!--- message text ----->
+<table width="100%" border=1 cellspacing=2 cellpadding=6>
+<tr ID=body>
+
+
+[... text deleted ...]
+
+
+</table>
+</body>
+</html>

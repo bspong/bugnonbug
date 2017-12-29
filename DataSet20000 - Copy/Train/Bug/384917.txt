@@ -1,0 +1,24 @@
+Excessive CPU and real time use converting between bookmarks.html and sqlite format
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.4) Gecko/20070609 Firefox/2.0.0.4
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.4) Gecko/20070609 Firefox/3.0a6pre
+
+It takes nearly 30 minutes to get into and exit from Firefox 3.0a6pre when it is used with an old 13MB bookmarks.html file.  On a 2.8 GHz Pentium IV, the CPU usage is pegged at 70+% for the better part of 20 minutes.  It appears to be ~12+ minutes getting in (the initial conversion of bookmarks.html) to the new database format and at least 8+ minutes exiting.
+
+The initial conversion time from the old bookmarks format to the new database format only seems to be required on the 1st time conversion.  Subsequent Firefox starts are immediate.  There should be some kind of progress meter during the conversion so people will know their system isn't hung or in some infinite loop.  The conversion time is *extremely* excessive as it takes seconds to copy a 13MB file -- I am wondering the conversion process is being done with indexes on the columns in the database.  The proper way to do a conversion is to insert all of the data from bookmarks.html into the database and then add the indexes only *after* all the insertions have been done.  If that isn't the problem then you have a *significant* problem using sqlite for large bookmark/history databases.
+
+The Firefox exit time does *not* go away after the database conversion process.  It always takes 8+ minutes for Firefox to completely exit (the window is closed immediately but Firefox sits around sucking up CPU time for a very long time).  It would appear that this may be due to converting the database back into a bookmarks.html file.  (If it takes 8 CPU minutes to read ~25,000 rows and convert them to HTML you have serious efficiency problems.)
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Find an old (large -- > 10MB) bookmarks.html file, perhaps a big history file as well.
+2. Install them in a firefox 2.0 profile directory.
+3. Startup firefox 3.0a6pre.
+Actual Results:  
+Extremely slow startup and shutdown times.
+Excessive CPU usage.
+
+Expected Results:  
+Many minutes of CPU time should not be required to convert, index and deconvert 10+MB of data from a database.  If Firefox cannot manage it efficiently, then external standalone utilities should be provided which can convert to *and* from the new database formats.  (This is highly desirable in *any* case.)
+
+It would be desirable for a general purpose database interface for bookmarks and history records be provided which could interface to system databases (e.g. mysql) which may be active, reside in memory and be much more efficient than standalone database libraries (e.g. sqlite) are.

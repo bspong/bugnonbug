@@ -1,0 +1,49 @@
+MozillaFirebird -remote 'Ping()' return incorrect value if thunderbird is running
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.5) Gecko/20031007 Firebird/0.7
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.5) Gecko/20031007 Firebird/0.7
+
+It seems that the -remote functionality doe not operate correctly (or atleast
+a expected) in an enviroment where Thunderbird is running. It seems to interact
+with Thunderbird, rather than correctly (or a expected) indicating that
+firebird is not running.
+
+Reproducible: Always
+
+Steps to Reproduce:
+------ If neither are running ------
+[adam@persephone adam]$ /usr/local/firebird/MozillaFirebird -remote 'Ping()'
+No running window found.
+[adam@persephone adam]$ echo $?
+2
+
+------ If just thunderbird is running ------
+[adam@persephone adam]$ /usr/local/thunderbird/thunderbird &
+[1] 26290
+[adam@persephone adam]$ /usr/local/firebird/MozillaFirebird -remote 'Ping()'
+[adam@persephone adam]$ echo $?
+0
+
+
+------ After thunderbird exit ------
+[1]+ Done /usr/local/thunderbird/thunderbird
+[adam@persephone adam]$ /usr/local/firebird/MozillaFirebird -remote 'Ping()'
+No running window found.
+[adam@persephone adam]$ echo $?
+2
+
+------ With Firebird running ------
+[adam@persephone adam]$ /usr/local/firebird/MozillaFirebird &
+[1] 26328
+[adam@persephone adam]$ /usr/local/firebird/MozillaFirebird -remote 'Ping()'
+[adam@persephone adam]$ echo $?
+0
+Actual Results:
+-remote 'Ping()' indicated firebird wa running when in fact it wa not, instead
+Thunderbird wa running.
+
+Expected Results:
+-remote 'Ping()' should not indicate Firebird is running when Thunderbird is
+running, only when firebird itself is running.
+
+This bug appears to be somewhat related to 170609. I'm sure they have the same
+root cause (though that bug discus it in the context of Mozilla and Firebird).

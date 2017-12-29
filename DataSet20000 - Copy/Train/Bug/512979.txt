@@ -1,0 +1,109 @@
+.NET 3.5 SP1 Range Validator throws javascript error in FireFox/Chrome
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US) AppleWebKit/532.0 (KHTML, like Gecko) Chrome/4.0.202.0 Safari/532.0
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.1.2) Gecko/20090729 Firefox/3.5.2 (.NET CLR 3.5.30729)
+
+Javascript error message: m[2] is not defined.
+
+Error occurs in last line of this block of code (pulled from ValidatorConvert function)
+
+else if (dataType == "Date") {
+        var yearFirstExp = new RegExp("^\\s*((\\d{4})|(\\d{2}))([-/]|\\. ?)(\\d{1,2})\\4(\\d{1,2})\\s*$");
+        m = op.match(yearFirstExp);
+        var day, month, year;
+        if (m != null && (m[2].length == 4 || val.dateorder == "ymd")) {
+
+
+I am hoping somebody might have some input on an issue I am seeing with our
+client-side .net validation.
+
+-------------------------------------------
+First a short description of the setup...
+-------------------------------------------
+
+The date is entered into a textbox. The form is submitted via a submit
+button.
+Valid dates are dates in a certain format within a certain range. And the
+date is required.
+
+The required format is 'mm/dd/yyyy'.
+The date range is 01/01/1900 to the present date.
+FYI: We are using .net 2.0.
+
+On the textbox control three validators are set: a requiredfield validator,
+a regularexpression validator and a range validator.
+
+-------------------------------------------
+The problem is...
+-------------------------------------------
+That the range validator is submitting a mis-formatted date in firefox and
+chrome browsers.
+
+On IE, the validators work correctly.
+
+When 01/31/09 is entered (post written on 1/23/09), this date is submitted
+in ff/chrome.
+
+When 01/31/2009 is entered, the validation works correctly and does not
+submit this value, instead posting a message in ff/chrome.
+
+I believe the code should catch the 01/31/09 future date in ff and chrome.
+
+-------------------------------------------------
+Range Validator code
+-------------------------------------------------
+
+var ctl08 = document.all ? document.all["ctl08"] :
+document.getElementById("ctl08");
+ctl08.controltovalidate = "AcctgDate";
+ctl08.errormessage = "<font color=\"red\">You must enter a valid date in the
+format mm/dd/yyyy.</font>";
+ctl08.type = "Date";
+ctl08.dateorder = "mdy";
+ctl08.cutoffyear = "2029";
+ctl08.century = "2000";
+ctl08.evaluationfunction = "RangeValidatorEvaluateIsValid";
+ctl08.maximumvalue = "01/23/2009";
+ctl08.minimumvalue = "01/01/1900";
+
+-------------------------------------------------
+General Observations
+-------------------------------------------------
+
+When enabling only the RegularExpression and RequiredField Validators
+(without Range Validator), '01/31/09' triggers the regular Expression
+validator. And '01/31/09' is NOT submitted.
+
+When enabling only the Range Validator (without RegularExpression and
+RequiredField), '01/31/09' or any future date of same format is submitted in
+FF and Chrome.
+
+When the REgularExpression, RequiredField and Range Validators are enabled
+simultaneously, '01/31/09' or any future date of same format is submitted in
+FF and Chrome.
+
+I've noticed that the fact that the RangeValidator seems to override the
+RegularExpression validator when both are enabled.
+
+Also, entering '01/31/09' and clicking submit, you'll notice the * displays.
+As though validation has been triggered. However, no message follows and
+the form gets submitted.
+
+Reproducible: Always
+
+Steps to Reproduce:
+Enable a text box with a range validator.
+Set a minimum date of 01/01/1900.
+Set a maximum date of 01/27/2009.
+Create a submit button.
+Set a click event for the submit button to write something affirming the click event happened.
+View page on Firefox.
+Enter '01/31/09' in the text box and click submit.
+Actual Results:  
+The validator seems to fire. But the form is submitted and the click event occurs.
+
+Expected Results:  
+I would expect the validator to fire and prevent form submission. So that the click event does not occur.
+
+Please look into this and at least let me know what is going on at:
+matt.sayers@hotmail.com
+msayers@teamdynamix.com

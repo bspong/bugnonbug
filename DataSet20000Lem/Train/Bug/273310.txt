@@ -1,0 +1,74 @@
+after firefox is running for many hours, it us 100% cpu for a few second before it load ANY page (calling gettimeofday() thousand of times)
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.5) Gecko/20041107 Firefox/1.0
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.5) Gecko/20041107 Firefox/1.0
+
+After many hour of running (currently - I've got it running for about ~10days,
+and it CPU time (of being actually scheduled) is almost 42 hours), firefox
+enters a weird state in which whenever I refresh the current page or go to a new
+URL, it take a few second (~20) to even get started, during this time the CPU
+go a high a 100%. Btw, I've seen this on 1.0PR and now on final 1.0, and a
+far a I recall on the older version I used (0.8) - it didn't happen.
+
+It doesn't seem to be any URL specific - when it starts, any URL will cause same
+behavior.
+
+I think sometimes closing some tabs/windows help, but now I've reproduced it
+with only 3 open tabs, one reading mail from yahoo, and two other that contain
+just some plain HTML (no flash, fancy scripts, etc.).
+
+Currently, it is using ~51MB virtual memory, of which ~45MB is resident (~34MB
+shared). It ha 4 open threads, but only one of them is going 100% - it is the
+first one (the owner of the others). My machine ha 320MB physical ram, with
+plenty more on swap (more than ~200MB free at the moment).
+
+Important - at the same the above is happening, I've got another firefox process
+open from a different user - it reached ~139MB virtual memory holding 13 tab on
+two windows, being alive for ~8 day but wa scheduled much more (~92hours cpu
+time), without ever showing the 100% cpu behavior, while the other firefox is
+still having that problem. Therefore I think the system state is "less" guilty
+(as both process live in the same system at the same time, and only one is
+showing the problem). In the past, I've had situation where both user had the
+100% cpu problem, but I didn't invetigate it then.
+
+I've run "strace" on the thread that reach 100% cpu, and found out it called
+gettimeofday() thousand of time each second (~9000 call per second, overall
+it called it 207367 time during 22 seconds) while normally it only call it
+~100-200 time a seconds.
+Here's the few line just before those ~20 second (the thread that go 100% is
+9315, it ha a child 9317 which itself ha 9318 and 9322 ha childs):
+
+** read(3, *** some data *** ..., 32) = 32
+** readv(3, [{ *** some data *** ..., 512}, {"", 0}], 2) = 512
+** write(3, *** some data ***..., 640) = 640
+** ioctl(3, FIONREAD, [0]) = 0
+** poll([{fd=3, events=POLLIN}, {fd=12, events=POLLIN}, {fd=16,
+events=POLLIN|POLLPRI}, {fd=10, events=POLLIN|POLLPRI}, {fd=11,
+events=POLLIN|POLLPRI}, {fd=18, events=POLLIN|POLLPRI}, {fd=19, events=POLLIN},
+{fd=4, events=POLLIN, revents=POLLIN}], 8, -1) = 1
+** gettimeofday({1102289757, 199436}, NULL) = 0
+** gettimeofday({1102289757, 199517}, NULL) = 0
+** gettimeofday({1102289757, 199617}, NULL) = 0
+** gettimeofday({1102289757, 199675}, NULL) = 0
+** kill(9322, SIGRTMIN) = 0
+** read(4, "\372", 1) = 1
+** ioctl(3, FIONREAD, [0]) = 0
+** poll([{fd=3, events=POLLIN}, {fd=12, events=POLLIN}, {fd=16,
+events=POLLIN|POLLPRI}, {fd=10, events=POLLIN|POLLPRI}, {fd=11,
+events=POLLIN|POLLPRI}, {fd=18, events=POLLIN|POLLPRI}, {fd=19, events=POLLIN},
+{fd=4, events=POLLIN, revents=POLLIN}], 8, -1) = 1
+** gettimeofday({1102289757, 207390}, NULL) = 0
+** gettimeofday({1102289757, 207545}, NULL) = 0
+** gettimeofday({1102289757, 208049}, NULL) = 0
+** gettimeofday({1102289757, 208376}, NULL) = 0
+** gettimeofday({1102289757, 211306}, NULL) = 0
+** gettimeofday({1102289757, 211537}, NULL) = 0
+** gettimeofday({1102289757, 211621}, NULL) = 0
+** gettimeofday({1102289757, 211680}, NULL) = 0
+** kill(9318, SIGRTMIN) = 0
+** gettimeofday({1102289757, 694520}, NULL) = 0
+***** -- starting here, we have only gettimeofday() calls, for ~22 seconds.
+
+Hope this helps...
+
+Reproducible: Sometimes
+Steps to Reproduce:

@@ -1,0 +1,32 @@
+Persisting CPU-load when clicking repeatedly on tab-bar's scroll buttons.
+When using the scroll buttons of the tab bar to browse through it by clicking multiple times in rapid succession, Fx begins to hog the processor without doing anything.
+Using three clicks lets the usage climb faster than double-clicking; spam-clicking lets it consume more the fastest.
+This happens even on a new, unmodified profile with tabs just showing about:newtab (opened by spam clicking the new-tab button).
+
+Reproducible: Always
+
+Steps to reproduce:
+1. Make sure many tabs are open, 89 were sufficient for me (didn’t try less), but having more seems to accelerate the process. (A freshly reloaded session works, too, they needn’t be freshly opened)
+2. Click rapidly on the arrows in the tab-bar until reaching the end in either direction, then repeat it in the other one.
+3. Do the clicking a few times to get a measurable increases.
+4. To be sure it’s not just temporary load, wait a few minutes, the CPU-usage should persist.
+
+#Important note#
+This bug can_not_ be triggered by using the mouse wheel or single clicks (admittedly not tested the whole way through)
+
+Actual result:
+Firefox starts to consume CPU power indefinitely in one thread which has the start address firefox.exe+0x1b85*^ (should be the main one), the amount varies by how often the buttons are clicked, but it can go as far as blocking one core completely (represented by 50% CPU-load caused by this thread).
+Typically, it ends up with around 25% CPU-load in average for the whole process.
+*given by ProcessExplorer (PE)
+^if I suspend it (using PE), Fx stops redrawing its windows (they get all white if forced to front)
+
+Expected result:
+Near to zero CPU-consumption after enough time to let the GC finish its work.
+
+Additional notes:
+-Restarting Fx works as expected and the load is near to zero again afterwards.
+-User agent: Mozilla/5.0 (Windows NT 6.0; rv:15.0) Gecko/20100101 Firefox/15.0
+-Tested it on three different profiles, my main profile, where I loaded a session on startup using Session Manager 0.7.9, my second one, using the built-in facility to restore the last session and a completely new one freshly created for the one and only purpose of investigating what causes this bug. I made sure for both already used profiles that the session I loaded there started with a tab showing just about:blank (disabled the about:newtab-feature using about:config); browser.sessionstore.restore_on_demand is also set to true on both.
+-Hardware info: Notebook, CPU: Intel T4200 (dual core, 2 GHz per core), graphics: Nvidia GeForce G 105M, 4GB of RAM
+-This problem probably dates back to version 6 or even earlier (5 or 4, but, most likely it didn’t occur in 3.5), at least I have CPU-hogging problemes since back then (but always attributed them to the GC or Flash Player and junk building up while browsing)
+-I remember some versions (though unfortunately I can’t tell which) being exceptionally bad and some being that good that I thought the problem had been fixed, but looking back, I probably just happened not to browse through the tab bar by using the buttons in some versions and often in others.

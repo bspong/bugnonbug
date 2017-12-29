@@ -1,0 +1,22 @@
+local files that link to remote XPIs don't show the "installation not allowed" prompt
+Issue
+
+Any addon, including older versions, can be prompted for installation to the user by referencing the addon via an iframe.
+
+Example:
+<iframe src="https://addons.mozilla.org/firefox/downloads/file/105368/f1_by_mozilla_labs-0.7.3-fx.xpi?src=version-history"></iframe>
+
+If the iframe is loaded via a file from the local machine (e.g. file:///Users/mcoates/Desktop/test.html) then the addon will automatically download and prompt the user for installation via the addon chrome message.
+
+If the iframe is loaded via any website then Firefox will display a message "Firefox prevented this site from asking you to install software on your computer" along with an override option.
+
+Root cause:
+The addon xpi files to include the x-frame-options : deny header. However, testing showed that this header is not recognized when the iframe src is referring to a file download. 
+
+
+
+Recommended Remediation:
+
+The largest concern is forcing a user to download a vulnerable addon. One solution is to modify the message within the chrome and provide a large warning that the addon being downloaded is not the most up to date version.
+
+We also may need to file a separate bug to identify if the x-frame-options header is failing in this scenario.

@@ -1,0 +1,32 @@
+[SessionStore] Add 'Recently Closed Windows'/'Undo Close Window' (or make API easier on extensions)
+It would be useful to have a 'Recently Closed Windows' menu that works as for 'Recently Closed Tabs' (and maybe an Undo Close Window keyboard shortcut too).
+
+While you're less likely to accidentally close a window than a tab, it can still be useful to go back to an earlier window, and it would be cheap to implement.
+
+Implementation
+--------------
+Bug 344642 removed the Undo Close Window API from the SessionStore API because it wasn't being used in Fx2 (and there wasn't time to test it).
+Reverting that would provide the necessary backend, and it would just need a menu and shortcut hooking up.
+
+Alternative
+-----------
+If this isn't implemented, then it'd be good to change the SessionStore API so extensions can at least do this themselves without horrific hacks. At the moment one would expect the following code to dump data on closed windows, but getWindowState throws an exception because in the nsSessionStore service's own "domwindowclosed" observer it voids the window data (dietrich confirmed the problem on IRC).
+
+Components
+.classes["@mozilla.org/observer-service;1"]
+.getService(Components.interfaces.nsIObserverService)
+.addObserver(
+    {
+        observe: function(aSubject, aTopic, aData) {
+            var state = Components
+                        .classes["@mozilla.org/browser/sessionstore;1"]
+                        .getService(Components.interfaces.nsISessionStore)
+                        .getWindowState(aSubject);
+            dump(state);
+        }
+    },
+    "domwindowclosed",
+    false
+);
+
+Note: the window state actually gets invalidated at http://lxr.mozilla.org/mozilla1.8/source/browser/components/sessionstore/src/nsSessionStore.js#481

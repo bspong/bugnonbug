@@ -1,0 +1,32 @@
+Return httprequest.status == 0 on broken connection
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; cs; rv:1.9.1.2) Gecko/20090729 Firefox/3.5.2
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; cs; rv:1.9.1.2) Gecko/20090729 Firefox/3.5.2
+
+We are using httprequest together with our connection management which tries to determine connection status by httprequest response checking.
+
+In FF 2.0, 3.0 the behavior was odd but still deterministic.
+request.abort() - caused request.status == 0
+broken connection (server down) caused js error:
+try{
+  request.status;
+}
+catch(e){
+  alert("offline");
+}
+
+FF 3.5.2 returns all the time request.status == 0, for both .abort() and offline. So we are not able to determine what happend.
+
+You should retund .status=404, .statusText="Not Found" instead of status=0(or JS error in older versions) and statusText causing JS Error in all versions.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. open asynchronous httprequest to invalid URL
+2. onreadystatechange() method will show request.status == 0 instead of 404 
+(or JS error in older FFox releases)
+
+Actual Results:  
+Latest FireFox returns the same status for aborted requests and unavailable server
+
+Expected Results:  
+There should be status = 404 for unavailable server (offline) and Status=0 for Aborted requests

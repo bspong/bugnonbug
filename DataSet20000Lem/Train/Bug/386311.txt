@@ -1,0 +1,26 @@
+autoscaled percentage of very large image (cf. URL) in the title bar becomes negative when you shrink the whole window too much
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.4) Gecko/20070629 BonEcho/2.0.0.4
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.4) Gecko/20070629 BonEcho/2.0.0.4
+
+When the autoscaled option is enabled and you open an image file containing a very large picture (for instance : http://www.bxlug.be/uploadfiles/156/image/tux_vectmap-02_inkscape-04.png ), in every version, from 1.8 up to 3alpha, trying to shrink the whole window (by clicking then dragging up the bottom-right-hand corner of it for instance), will make the rescaling percentage which can be seen in the title bar become negative if you keep shrinking the window after the image ha become invisible (down to -2% is the lowest I've happened to see).
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.Open a very large picture file.
+2.Drag a corner of the window to shrink it.
+3.Keep doing it slowly after the percentage in the title bar ha reached 0%.
+Actual Results:
+The "scaled" percentage in the title bar will become negative.
+
+Expected Results:
+It should remain = 0
+
+Actually, I think this value doe not remain equal to 0 to avoid a division by zero. Nevertheless, it's very easy to show 0 instead of the value when it get negative. Just apply the following patch :
+
+#patch mozilla/content/html/document/src/nsImageDocument.cpp autoscale.patch
+735c735,736
+< ratioStr.AppendInt(NSToCoordFloor(GetRatio() * 100));
+---
+> float lef=GetRatio();
+> ratioStr.AppendInt(NSToCoordFloor((lef >= 0) ? lef * 100 : 0));

@@ -1,0 +1,46 @@
+the web console can spend ridiculously long toString()ing content object
+str:
+1. open web console.
+2. open groovshark.com
+3. browser hangs.
+
+the C++ stack is a couple hundred frame of the jseng trying to toString() stuff. If you look at nsJSPrincipals::get(obj->compartment()->principals) for one of the object there you'll see it in a groovshark.com compartment.
+then if you look at the very bottom of the stack you'll see the event loop is running a nsIRunnable implemented in js.
+calling DumpJSStack() produce
+(gdb) call DumpJSStack()
+0 WCU_formatResult() ["resource://gre/modules/devtools/WebConsoleUtils.jsm":248]
+this = [object Object]
+1 WCU_getObjectGrip() ["resource://gre/modules/devtools/WebConsoleUtils.jsm":572]
+this = [object Object]
+2 WCOA_grip() ["chrome://global/content/devtools/dbg-webconsole-actors.js":793]
+this = [object Object]
+3 WCA_createObjectActor() ["chrome://global/content/devtools/dbg-webconsole-actors.js":225]
+this = [object Object]
+4 WCU_createValueGrip() ["resource://gre/modules/devtools/WebConsoleUtils.jsm":609]
+this = [object Object]
+5 WCA_createValueGrip() ["chrome://global/content/devtools/dbg-webconsole-actors.js":203]
+this = [object Object]
+6 anonymous() ["chrome://global/content/devtools/dbg-webconsole-actors.js":729]
+this = [object Object]
+7 map() ["self-hosted":376]
+this = k, logging via player,,c18,[object Object]
+8 map() ["self-hosted":392]
+this = function Array() {
+[native code]
+}
+9 WCA_prepareConsoleMessageForRemote() ["chrome://global/content/devtools/dbg-webconsole-actors.js":730]
+this = [object Object]
+10 anonymous() ["chrome://global/content/devtools/dbg-webconsole-actors.js":416]
+this = [object Object]
+11 forEach() ["self-hosted":342]
+this = [object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object]
+12 WCA_onGetCachedMessages() ["chrome://global/content/devtools/dbg-webconsole-actors.js":419]
+this = [object Object]
+13 DSC_onPacket() ["chrome://global/content/devtools/dbg-server.js":653]
+this = [object Object]
+14 anonymous() ["chrome://global/content/devtools/dbg-transport.js":224]
+this = [object Object]
+
+(gdb)
+
+you'll note the top frame is calling toString() on some object.

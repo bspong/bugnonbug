@@ -1,0 +1,151 @@
+Firefox-5.0 build on AIX failure
+User Agent: Mozilla/5.0 (Windows NT 5.1; rv:5.0) Gecko/20100101 Firefox/5.0
+Build ID: 20110615151330
+
+Steps to reproduce:
+
+Building Firefox-5.0 on AIX with 64bit pre-requisite rpms.
+
+
+Actual results:
+
+Firefox build fails with the below error, while Configuration :
+
+checking for GL/glx.h... no
+configure: error: Can't find header GL/glx.h for WebGL (install mesa-common-dev (Ubuntu), mesa-libGL-devel (Fedora), or Me
+sa-devel (openSUSE))
+*** Fix above error and then restart with "gmake -f client.mk build"
+gmake[2]: *** [configure] Error 1
+gmake[2]: Leaving directory `/home/firefox/ashish/firefox-5.0.1.source/mozilla-release'
+gmake[1]: *** [/home/firefox/ashish/firefox-5.0.1.source/mozilla-release/obj-opt/Makefile] Error 2
+gmake[1]: Leaving directory `/home/firefox/ashish/firefox-5.0.1.source/mozilla-release'
+gmake: *** [build] Error 2
+
+
+I have copied the file glx.h to the path : /usr/include/GL/glx.h
+
+have also checked the permission for the same file and there is no issue with the permission. But the build is still failing.
+
+# l -l /usr/include/GL/glx.h
+-r--r--r-- 1 firefox system 17170 Apr 20 04:12 /usr/include/GL/glx.h
+
+
+Dont know what could be the issue.
+
+Below is the list of rpm installed on the machine :
+
+
+# rpm -qa
+cdrecord-1.9-7
+mkisofs-1.13-4
+pixman-0.20.0-1
+m4-1.4.1-1
+autoconf-2.13-3
+autoconf213-2.13-1
+zlib-1.2.3-3
+zlib-devel-1.2.3-3
+cvs-1.11.17-3
+db-3.3.11-4
+gdbm-1.8.3-2
+libxml2-2.6.26-1
+make-3.80-1
+patch-2.5.4-4
+perl-5.8.2-1
+vnc-3.3.3r2-6
+readline-4.3-2
+renderproto-0.9.3-1
+xrender-0.9.1-3
+xcursor-1.1.7-3
+xcursor-devel-1.1.7-3
+pkg-config-0.19-2
+gettext-0.10.40-6
+pixman-devel-0.20.0-1
+glib2-2.14.6-1
+expat-2.0.1-1
+expat-devel-2.0.1-1
+libjpeg-6b-6
+libjpeg-devel-6b-6
+libtiff-3.8.2-1
+libtiff-devel-3.8.2-1
+libpng-1.2.32-2
+libpng-devel-1.2.32-2
+freetype2-2.3.9-1
+freetype2-devel-2.3.9-1
+fontconfig-2.4.2-1
+fontconfig-devel-2.4.2-1
+xft-2.1.6-5
+dbus-1.2.12-1
+dbus-devel-1.2.12-1
+dbus-glib-0.80-1
+dbus-glib-devel-0.80-1
+libIDL-0.8.6-3
+libIDL-devel-0.8.6-3
+atk-1.12.3-2
+atk-devel-1.12.3-2
+cairo-1.10.0-1
+pango-1.14.5-4
+cairo-devel-1.10.0-1
+glib2-devel-2.14.6-1
+pango-devel-1.14.5-4
+python-2.6.2-1
+python-devel-2.6.2-1
+zip-2.3-3
+unzip-5.51-1
+gtk2-2.10.6-4
+gtk2-devel-2.10.6-4
+AIX-rpm-5.3.7.0-6
+
+And, below is the .mozconfig file :
+
+
+# cat .mozconfig
+export MOZ_ENABLE_COREXFONTS=1
+ac_add_options --prefix=/usr/mozilla/firefox
+ac_add_options --bindir=/usr/mozilla/firefox
+ac_add_options --libdir=/usr/mozilla/firefox
+ac_add_options --datadir=/usr/mozilla/firefox
+mk_add_options MOZ_CO_PROJECT=browser
+ac_add_options --enable-application=browser
+ac_add_options --disable-tests
+ac_add_options --disable-auto-deps
+ac_add_options --enable-crypto
+ac_add_options --disable-gnomevfs
+
+ac_add_options --enable-extensions=default
+ac_add_options --enable-svg
+ac_add_options --enable-official-branding
+
+export FT2_CONFIG=/opt/freeware/bin/freetype-config
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-opt
+ac_add_options --enable-default-mozilla-five-home=/usr/mozilla/firefox
+mk_add_options MOZ_MAKE_FLAGS=-j4
+ac_add_options --enable-libxul
+ac_add_options --enable-system-cairo
+ac_add_options --disable-dbus
+ac_add_options --enable-default-toolkit=cairo-gtk2
+ac_add_options --enable-optimize="-O2 -qmaxmem=-1 -qalias=noansi -q64 -qlanglvl=stdc99 -bbigtoc"
+# XFT support is not available on AIX
+ac_add_options --disable-xft
+# Don't build against system JPEG because libjpeg.a conflict with Java 1.4's
+# version.
+# ac_add_options --with-system-jpeg
+ac_add_options --without-system-png
+ac_add_options --with-system-zlib
+ac_add_options --disable-libnotify
+ac_add_options --disable-necko-wifi
+ac_add_options --disable-ipc
+# Test
+ac_add_options --disable-angle
+
+PATH=/usr/bin:/usr/sbin:/usr/bin/X11:/sbin:/usr/vac/bin:/usr/vacpp/bin
+PERL=/usr/bin/perl
+CC=/usr/vac/bin/xlc_r
+CXX=/usr/vacpp/bin/xlC_r
+LANG=C
+LDFLAGS='-bh:5 -bbigtoc'
+
+
+
+Expected results:
+
+The build should have passed the configuration phase.

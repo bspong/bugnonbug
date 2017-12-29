@@ -1,0 +1,21 @@
+History can fill FF3 addressbar suggestions (awesomebar) with unwanted bookmarklets that look almost like real pages but execute in the current page's scope.
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9b4pre) Gecko/2008021404 Minefield/3.0b4pre
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9b4pre) Gecko/2008021404 Minefield/3.0b4pre
+
+javascript: urls that return a html page when visited currently produce a history entry just like normal urls... while this may be desired for the classical history view, it's very dangerous that these urls end up in the address bar suggestion list as these entries can be made to look just like the real page, including FavIcon, Title and a pseudo url that only differs from the real url in that http:// is replaced with javascript:'//. However opening the javascript: url will execute it in the scope of the currently viewed page, thereby exposing all sensitive data on the page to the javascript code. I think javascript: urls should only be viewed in the suggestion list when they actually are bookmarklets and the user has made a conscious effort to add them, not when he just happened to come by one (which he may not even has noticed, the javascript: url in the sample is opened by an onclick handler and redirects to the correct page).
+
+A simple filter for the suggestion box to not include history entries that start with javascript: should already be sufficient.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.Visit http://tapper-ware.net/devel/js/historypoisoning/
+2.Click on the link (http://www.news.com/8301-13578_3-9872464-38.html)
+3.Open a new tab and start typing "news" into the addressbar
+Actual Results:  
+The javascript url appears in the suggestion list as "[CNet Icon] news.com BitTorrent firms: Comc(...)" with url "javascript:'//www.news.com/8301-13578_3-9872464-38.html______(...)"
+
+Expected Results:  
+The real news.com page should be the only listed suggestion as the javascript url is not a location that can safely be visited.
+
+The favicon doesn't always work... I'm still trying to figure out when it does and when it doesn't but while it may be relevant to the practical severity of this bug, it doesn't change anything for the underlying flaw.

@@ -1,0 +1,42 @@
+"aNode is null" when calling method: [nsIController::isCommandEnabled]
+User-Agent:       Mozilla/5.0 (Windows NT 5.1; rv:2.0b8pre) Gecko/20101024 Firefox/4.0b8pre
+Build Identifier: Mozilla/5.0 (Windows NT 5.1; rv:2.0b8pre) Gecko/20101024 Firefox/4.0b8pre
+
+Error: '[JavaScript Error: "aNode is null" {file: "resource://gre/modules/PlacesUtils.jsm" line: 241}]' when calling method: [nsIController::isCommandEnabled] = NS_ERROR_XPC_JAVASCRIPT_ERROR_WITH_DETAILS
+Source file: chrome://browser/content/places/controller.js
+Line: 1610
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. execute the following in javascript shell:
+PlacesToolbarHelper.customizeStart();
+PlacesToolbarHelper._place = "place:folder=BOOKMARKS_MENU";
+PlacesToolbarHelper.customizeDone();
+
+2. right-click a bookmark item
+Actual Results:  
+The error is reported in Error Console, and state of the menuitems in the context menu is incorrect.
+
+
+In browserPlacesViews.js:
+
+function PlacesViewBase(aPlace) {
+  this.place = aPlace;
+  this._controller = new PlacesController(this);
+  this._viewElt.controllers.appendController(this._controller);
+}
+
+  uninit: function PVB_uninit() {
+    if (this._result) {
+      this._result.removeObserver(this);
+      this._resultNode.containerOpen = false;
+      this._resultNode = null;
+      this._result = null;
+    }
+
+    delete this._viewElt._placesView;
+  },
+
+The controller should be removed in the uninit function.

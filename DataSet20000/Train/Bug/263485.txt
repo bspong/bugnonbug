@@ -1,0 +1,53 @@
+firefox command line script aborts if parameters contain whitespace (blanks)
+User-Agent:       Mozilla/5.0 (X11; U; SunOS sun4u; rv:1.7.3) Gecko/20040916 Firefox/0.10
+Build Identifier: Mozilla/5.0 (X11; U; SunOS sun4u; rv:1.7.3) Gecko/20040916 Firefox/0.10
+
+firefox script aborts with 'test: unknown operator' if parameter contains
+blanks. The problem is missing quotes around shell variables in relative new
+code that sifts through arguments looking for a url.
+
+Reproducible: Always
+Steps to Reproduce:
+1. firefox -xrm '*workspaceList: ws0 ws12' http://www.mozilla.org
+(I know the -xrm argument is never honored, but it used to get passed down the
+line).
+Actual Results:  
+firefox -xrm '*workspaceList: ws0 ws12' http://www.mozilla.org
++ firefox -xrm *workspaceList: ws0 ws12 http://www.mozilla.org
+/home/tecslm1/bin/aps/firefox/firefox: test: unknown operator ws0
+--- and in detail:
+for i in "$@"; do
+        [ $i = ${_optLast} ] && break
+        _optOthers="${_optOthers} ${i}"
+done #others arg
++ [ -xrm = http://www.mozilla.org ]
+_optOthers= -xrm
++ [ *workspaceList: ws0 ws12 = http://www.mozilla.org ]
+/home/tecslm1/bin/aps/firefox/firefox: test: unknown operator ws0
+
+Expected Results:  
+Passed my arguments to run-mozilla.sh as it used to.
+
+I verified problem still exists in linux nightly build retrieved 8 October 2004.
+
+This fixes the problem:
+
+diff -cr firefox/firefox firefox-fixed/firefox
+*** firefox/firefox     Thu Sep 16 18:57:51 2004
+--- firefox-fixed/firefox       Thu Sep 30 07:26:25 2004
+***************
+*** 163,169 ****
+  done #last arg
+
+  for i in "$@"; do
+!       [ $i = ${_optLast} ] && break
+        _optOthers="${_optOthers} ${i}"
+  done #others arg
+
+--- 163,169 ----
+  done #last arg
+
+  for i in "$@"; do
+!       [ "$i" = "${_optLast}" ] && break
+        _optOthers="${_optOthers} ${i}"
+  done #others arg

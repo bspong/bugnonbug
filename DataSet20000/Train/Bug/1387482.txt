@@ -1,0 +1,28 @@
+Cleanup access to DevTools pref "devtools.inspector.enabled" by the context menu
+As devtools want to move to an addon, some of the devtools specific preferences might not be available anymore. 
+
+The preference devtools.inspector.enabled is currently used in 2 spots outside of devtools:
+- http://searchfox.org/mozilla-central/rev/30a47c4339bd397b937abdb2305f99d3bb537ba6/browser/base/content/test/general/contextmenu_common.js#318
+- http://searchfox.org/mozilla-central/rev/30a47c4339bd397b937abdb2305f99d3bb537ba6/browser/base/content/nsContextMenu.js#315-317
+
+The first one:
+
+> if (Services.prefs.getBoolPref("devtools.inspector.enabled")) {
+
+will throw if DevTools have never been started for the used profile. I say started here, because the default preferences are dynamically loaded by the first initialization of DevTools. Installing devtools is not enough.
+
+The second one:
+
+> DevToolsShim.isInstalled() && gPrefService.getBoolPref("devtools.inspector.enabled", false);
+
+Will never throw but will assume false when DevTools are not installed or if they never have been started.
+
+In any case, we should stop checking DevToolsShim.isInstalled() to decide if the menu item should be displayed. This is one of the entry points for DevTools that should remain available even if DevTools are not installed. We should only hide the menu entry if the user is a DevTools user and explicitly disabled the inspector.
+
+For accessing the preference, we have several options here:
+
+1 - Move the devtools.inspector.enabled preference to the devtools/shim preferences file. This file will remain loaded by Firefox, will be always available etc... The code can stay as it is today, but it's a bit weird to have this devtools.[tool].enabled preference in this file while all the other tools have their preference in another one.
+
+2 - Default to true if the pref is not defined: getBoolPref("devtools.inspector.enabled", true) (the preference is true by default for a new profile)
+
+3 - Stop checking this pref and always display the item. DevTools would be responsible for not crashing if inspectNode is called and the inspector is not enabled. I really wonder who benefits from checking this. The inspector is on by default, it can only be disabled through about:config

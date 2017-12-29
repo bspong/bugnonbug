@@ -1,0 +1,39 @@
+change ORGANIZER_ROOT_BOOKMARKS to exclude queries
+working on bug #369813, I ran into the following problem.
+
+For bug #369813, I'm modifying load() in tree.xml to open any containers that we persist as open.
+
+but for the bm manager dialog, findNode() is closing them because we are calling 
+
+from http://lxr.mozilla.org/seamonkey/source/browser/components/places/content/tree.xml#150
+
+150           function findNode(container, placeURI) {
+151             container.containerOpen = true;
+152             for (var i = 0; i < container.childCount; ++i) {
+153               var child = container.getChild(i);
+154               if (child.uri == placeURI)
+155                 return child;
+156               else if (PlacesUtils.nodeIsContainer(child)) {
+157                 var nested = findNode(asContainer(child), placeURI);
+158                 if (nested)
+159                   return nested;
+160               }
+161             }
+162             container.containerOpen = false;
+163             return null;
+164           }
+
+the reason is we fail to find the root, so we close all the containers.
+
+I can fix this by changing ORGANIZER_ROOT_BOOKMARKS to be "place:&folder=2&group=3&excludeItems=1&excludeQueries=1";
+
+in the code, asaf writes:
+
+http://lxr.mozilla.org/seamonkey/source/browser/components/places/content/places.js#195
+
+195     // Unset excludeQueries so incremental update is enabled for the content
+196     // pane.
+197     // XXXmano: remove that once we unset excludeQueries for the left pane.
+198     options.excludeQueries = false;
+
+I need to check if I've broken this for new subfolders.

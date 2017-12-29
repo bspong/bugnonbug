@@ -1,0 +1,33 @@
+Package correct Visual C++ CRT DLLs based on compiler version (fixes MSVCR100.dll error message on startup)
+Steps to reproduce:
+* Install ftp://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/latest-mozilla-central/firefox-3.7a5pre.en-US.win64-x86_64.zip on Windows 64-bit machine without VS2010 being installed
+* Run firefox.exe
+Expected results:
+* Firefox start
+Actual results:
+* A message saying that MSVCR100.dll is missing is raised
+
+NOTE: can someone please verify this? I am just filing what I have seen on the mailing lists.
+
+The following are comment from the mailing list:
+> I suspect that this is a packaging issue -- if we build with VC10,
+> then we have to redist the VC10 runtime, which ha a different name.
+...
+> Exactly.
+> If you don't have MSVC2010 (Express) installed you need to manually
+> install the 2010 redistributables. Link, I guess:
+> http://www.google.com/url?sa=D&q=http://www.microsoft.com/downloads/details.aspx%3Fdisplaylang%3Den%26FamilyID%3Dbd512d9e-43c8-4655-81bf-9350143d5867&usg=AFQjCNHqjaREpVPUahBpSs0NAxZlABVTEA
+> The reason the 32bit build don't require the 2008 redistributables is
+> that they don't use the real MS CRT but a custom build CRT
+> (mozcrt19.dll) that ha jemalloc patched in. Once jemalloc get ported
+> to WIN64 the msvcr100 dependency should go away.
+
+From IRC:
+> nthomas: armenzg_mtg: is the problem with user needing the MS runtime
+> redistributable that we don't have jemalloc w/ vs2010 yet, and the workaround
+> (http://hg.mozilla.org/mozilla-central/file/tip/browser/installer/package-manifest.in#l58)
+> doesn't support 2010 filename either ?
+> nthomas: if so, and we updated the manifest (with some #ifdef), and set
+> WIN32_REDIST_DIR pointing to the right path, then the build would just work
+> armenzg_mtg: I don't know the code myself I can point at the code tomorrow
+> and bringing it up at the meeting to see if people can look at it

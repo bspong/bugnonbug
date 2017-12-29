@@ -1,0 +1,36 @@
+Inline downloads now fail in Firefox 40.0
+User Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.9; rv:40.0) Gecko/20100101 Firefox/40.0
+Build ID: 20150807085045
+
+Steps to reproduce:
+
+Am able to reproduce problem in simple servlet:
+
+response.setContentType("application/pdf");
+InputStream is = [get input stream that contains byte array to be downloaded]
+byte[] content = Utilities.readFully(is);
+// verify that correct number of byte are found
+System.out.println("TestServlet.reportTest(): content.length: "+content.length);
+// write out to file to verify that file can be read from file system
+FileUtils.writeByteArrayToFile(new File("someFilePath/ReportTest.pdf"), content);
+response.setContentLength(content.length);
+// attempt to deliver content inline fails
+response.setHeader("Content-Disposition", "inline;filename=" + "ReportTest.pdf");
+// content delivery a attachment succeeds
+//response.setHeader("Content-Disposition", "attachment;filename=" + "ReportTest.pdf");
+OutputStream o = response.getOutputStream();
+os.write(content);
+os.flush();
+os.close();
+
+This code successfully delivers inline content in Chrome and Safari.
+
+
+Actual results:
+
+see above
+
+
+Expected results:
+
+see above

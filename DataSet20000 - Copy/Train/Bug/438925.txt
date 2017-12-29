@@ -1,0 +1,22 @@
+localized URL prefs in distribution.ini not being interpreted properly
+Created attachment 324852
+distribution.ini for testcase
+
+When localized pref URLs are used in the distribution.ini file, the value of the pref is reformatted  as "data:text/plain,pref.name=pref.value". As an example, if 
+
+startup.homepage_welcome_url="http://%locale%.www.mozilla.com/%locale%/add-ons/ebay/extension/firstrun" 
+
+is specified in the localized prefs section, the value of the pref startup.homepage_welcome appears in the en-US build of fx3 as data:text/plain,startup.homepage_welcome_url=http://en-US.www.mozilla.com/en-US/add-ons/ebay/extension/firstrun
+
+On startup, fx loads the entire pref value as the URL, not just the URL. Gavin mentioned that bug 386696 may be responsible for this.
+
+Steps to reproduce:
+
+- Create a "distribution" directory off the application directory
+- Copy the "distribution.ini for testcase" attachment to the distribution
+directory
+- Start Firefox3 with a new profile
+
+Expected results: Firefox 3 appearing with a customized firstrun page and start page
+
+Actual results: Firefox 3 appears with a tab that tries to load data:text/plain,startup.homepage_welcome_url=http://en-US.www.mozilla.com/en-US/add-ons/ebay/extension/firstrun as a URL and the start page (see attached fx3_startup image)

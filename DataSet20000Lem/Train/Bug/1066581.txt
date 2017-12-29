@@ -1,0 +1,46 @@
+console.log is slow (4x slower on desktop, 6x slower on B2G) when DevTools is turned on
+Consider the following code (See URL):
+
+var t = performance.now();
+var i = 10000; while (i--) {
+console.log(i);
+}
+console.log('timer', performance.now() - t);
+setTimeout(function() {
+console.log('timer', performance.now() - t);
+}, 0);
+
+STR1:
+1. Without turning on the DevTools, click on "test"
+2. Turn on the DevTools to see the output
+
+Outputs:
+"timer" 57.114508000000114
+"timeout timer" 107.51943000000006
+
+STR2:
+1. Turn on the DevTools
+2. Click on "test"
+
+Outputs:
+"timer" 69.80704200000037
+"timeout timer" 435.59202899999946
+
+Output on Flame w/ AppManager:
+"timer" 326.2022389999984
+"timeout timer" 3747.020102000006
+
+Note:
+
+1. So base on the above result, it seems that although console.log() doe not block the calling function, it block the main loop a lot.
+2. By reading
+
+http://dxr.mozilla.org/mozilla-central/source/dom/base/Console.cpp#802
+
+w/o understanding C++, it seems expected because we queue the call and notify the observer message in a timer.
+
+http://dxr.mozilla.org/mozilla-central/source/dom/base/Console.cpp#729
+
+and it seems that observer block the NotifyObservers(), thus block the main loop.
+
+I wonder if, instead of queue the console API method in a timer, if it's possible to send the work to another thread.

@@ -1,0 +1,22 @@
+It's possible to end up with two records on the server representing the same addon
+Created attachment 8885913
+test_addon_serverdupe.js
+
+It appears that the following case reliably reproduces an issue with a single profile on both mac and linux (haven't tried windows). I've attached a TPS test that reproduces the issue. It also causes `test_addon_nonrestartless_xpi.js` to fail in automation. (Note: I haven't tried to reproduce it outside of TPS)
+
+1. Install non-restartless addon
+2. Sync
+3. Restart
+4. Sync
+5. Disable addon installed in first step
+6. Sync
+
+The server should now have two records, one saying the addon should be enabled, the other saying it should be disabled, but they both have different GUIDs. This causes the addon validator to fail.
+
+It appears that when sync is starting up between steps 3 and 4 (after the restart), we hit http://searchfox.org/mozilla-central/source/services/sync/modules/addonsreconciler.js#467, and change the GUID of the already synced record (I'm not sure where the new GUID comes from).
+
+Then, when we disable the addon, we mark it as changed (with the new GUID), and upload the a record for the same addon, but with a different GUID and setting for `enabled`.
+
+[[I don't understand how this is intended to work, so it's possible this is either not a bug, or a known issue (If this is the case, the addon validator should be disabled for the tps test failing in automation)]]
+
+I haven't been able to repro with a restartless addon, but since I don't know what exactly is happening here, it's possible that it just has slightly different repro steps.

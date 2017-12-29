@@ -1,0 +1,28 @@
+Tab Counter extension: text in toolbar item display blurry box-shadow on dark developer edition theme
+>>>
+STR_1:
+0. Set dark devtools theme, which is set by default on Firefox Developer Edition
+1. Install https://addons.mozilla.org/en-US/firefox/addon/tab-counter/
+
+AR: Text in toolbaritem created by Tab Counter is blurred ("text-shadow" CSS property)
+ER: Text in toolbar item shouldn't be blurry, just like in built-in toolbar items, tabs, bookmarks.
+
+Note: (explanation and more detailed expectations)
+I decided to report this a a bug on Firefox side, because I think that here's at least 1 FF bug.
+Tab Counter simply creates <toolbaritem> and doesn't apply any style to it.
+"text-shadow" is applied by Firefox stylesheets - [1] and [2] (see below). Thus I expect:
+1) DARK devtools theme shouldn't set :-moz-lwtheme-darktext, because text isn't dark.
+2) [2] is used to work around [1] for dark theme (to remove text-shadow). It's applied to bookmarks,
+some toolbar item and even to label in findbar (such a huge workaround!). If there's really
+no way to avoid setting :-moz-lwtheme-darktext, then [2] should be applied to <toolbaritem>s.
+
+[1] ----chrome://global/skin/global.css
+:root:-moz-lwtheme-darktext {
+text-shadow: 0 -0.5px 1.5px white;
+}
+
+[2] ----chrome://browser/skin/devedition.css
+#navigator-toolbox .toolbarbutton-1, .browserContainer > findbar .findbar-button, #PlacesToolbar toolbarbutton.bookmark-item {
+color: var(--chrome-color);
+text-shadow: var(--toolbarbutton-text-shadow);
+}

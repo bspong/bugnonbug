@@ -1,0 +1,49 @@
+locking of preferences no longer possible
+User Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:34.0) Gecko/20100101 Firefox/34.0
+Build ID: 20141125180439
+
+Steps to reproduce:
+
+Updating from 33.1 to 34.0 (MacOS 10.10.1) broke preference-locking for me. My defaults/pref/local-settings.js was always stored under ../Firefox.app/Contents/MacOS/ but looking at http://kb.mozillazine.org/Locking_preferences suggests to store this file in Firefox.app/defaults/pref/local-settings.js. So here's what I did:
+
+* Downloaded & installed a fresh copy of "Firefox 34.0.5.dmg"
+* Install local-settings.js as per KB:Locking_preferences
+   $ cat /Applications/Firefox.app/defaults/pref/local-settings.js 
+   // Do not obscure the content with ROT-13
+   pref("general.config.obscure_value", 0);
+   pref("general.config.filename", "mozilla.cfg");
+
+* Create mozilla.cfg
+   $ cat /Applications/Firefox.app/mozilla.cfg 
+   lockPref("network.proxy.type", 0);
+
+* Start Firefox with a pristine (!) profile:
+   $  /Applications/Firefox.app/Contents/MacOS/firefox -no-remote -ProfileManager
+
+
+
+Actual results:
+
+Go to "about:config" => and "network.proxy.type" was set to "5", the default value.
+
+
+Expected results:
+
+"network.proxy.type" should have been set to "0", as specified in mozilla.cfg.
+
+This was working perfectly up to 33.1, where I had defaults/pref/local-settings.js stored in Firefox.app/Contents/MacOS - so I tried the same for v34.0.5:
+
+--------------------
+$ cat /Applications/Firefox.app/Contents/MacOS/defaults/pref/local-settings.js 
+// Do not obscure the content with ROT-13
+pref("general.config.obscure_value", 0);
+pref("general.config.filename", "mozilla.cfg");
+
+$ cat /Applications/Firefox.app/Contents/MacOS/mozilla.cfg 
+lockPref("network.proxy.type", 0);
+--------------------
+
+Start Firefox with a pristine (!) profile:
+   $  /Applications/Firefox.app/Contents/MacOS/firefox -no-remote -ProfileManager
+
+network.proxy.type is still "5", the default value :-\

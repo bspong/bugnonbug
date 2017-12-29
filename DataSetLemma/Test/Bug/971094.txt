@@ -1,0 +1,411 @@
+Nightly crashing on shutdown under js::jit::StopAllOffThreadCompilations
+My last three Nightly update have brought up Mac OS X "Nightly quit unexpectedly" reports, though the updated browser start up properly.
+
+Here's the report:
+
+Process: firefox [51593]
+Path: /Applications/FirefoxNightly.app/Contents/MacOS/firefox
+Identifier: org.mozilla.nightly
+Version: 30.0a1 (3014.2.10)
+Code Type: X86-64 (Native)
+Parent Process: ??? [1]
+User ID: 501
+
+Date/Time: 2014-02-11 12:57:43.066 -0500
+OS Version: Mac OS X 10.8.5 (12F45)
+Report Version: 10
+Sleep/Wake UUID: 733E5280-0499-44F8-9988-5E1323C265B6
+
+Interval Since Last Report: 39254 sec
+Crashes Since Last Report: 1
+Per-App Interval Since Last Report: 39230 sec
+Per-App Crashes Since Last Report: 1
+Anonymous UUID: 897C5300-2DBD-1EBF-695C-45E14DF340BB
+
+Crashed Thread: 0 Dispatch queue: com.apple.main-thread
+
+Exception Type: EXC_BAD_ACCESS (SIGSEGV)
+Exception Codes: KERN_INVALID_ADDRESS at 0x0000000000000038
+
+VM Regions Near 0x38:
+-->
+__TEXT 0000000100000000-0000000100006000 [ 24K] r-x/rwx SM=COW /Applications/FirefoxNightly.app/Contents.bak/MacOS/firefox [/Applications/FirefoxNightly.app/Contents/MacOS/firefox]
+
+Thread 0 Crashed:: Dispatch queue: com.apple.main-thread
+0 libnss3.dylib 0x0000000101113d48 pt_PostNotifies + 200
+1 libnss3.dylib 0x0000000101113c5e PR_Unlock + 78
+2 XUL 0x00000001036c8aa3 js::jit::StopAllOffThreadCompilations(JSCompartment*) + 35
+3 XUL 0x00000001036c8b58 js::jit::InvalidateAll(js::FreeOp*, JS::Zone*) + 56
+4 XUL 0x0000000103811c23 js::ReleaseAllJITCode(js::FreeOp*) + 115
+5 XUL 0x000000010390057f js::EnableRuntimeProfilingStack(JSRuntime*, bool) + 47
+6 XUL 0x0000000102e0c176 mozilla_sampler_stop() + 150
+7 XUL 0x0000000102e0bab3 mozilla_sampler_shutdown() + 483
+8 XUL 0x0000000102e9fbfc XREMain::XRE_main(int, char**, nsXREAppData const*) + 956
+9 XUL 0x0000000102e9fd17 XRE_main + 231
+10 org.mozilla.nightly 0x0000000100001dff main + 1519
+11 org.mozilla.nightly 0x00000001000014b4 start + 52
+
+Thread 1:: Dispatch queue: com.apple.libdispatch-manager
+0 libsystem_kernel.dylib 0x00007fff86830d16 kevent + 10
+1 libdispatch.dylib 0x00007fff9119bdea _dispatch_mgr_invoke + 883
+2 libdispatch.dylib 0x00007fff9119b9ee _dispatch_mgr_thread + 54
+
+Thread 2:: JS GC Helper
+0 libsystem_kernel.dylib 0x00007fff868300fa __psynch_cvwait + 10
+1 libsystem_c.dylib 0x00007fff86184fb9 _pthread_cond_wait + 869
+2 libnss3.dylib 0x0000000101113eb9 PR_WaitCondVar + 105
+3 XUL 0x000000010380f26b js::GCHelperThread::threadLoop() + 107
+4 libnss3.dylib 0x00000001011163ea _pt_root + 218
+5 libsystem_c.dylib 0x00007fff86180772 _pthread_start + 327
+6 libsystem_c.dylib 0x00007fff8616d1a1 thread_start + 13
+
+Thread 3:
+0 libsystem_kernel.dylib 0x00007fff8682e686 mach_msg_trap + 10
+1 libsystem_kernel.dylib 0x00007fff8682dc42 mach_msg + 70
+2 XUL 0x00000001036253b0 AsmJSMachExceptionHandlerThread(void*) + 528
+3 libnss3.dylib 0x00000001011163ea _pt_root + 218
+4 libsystem_c.dylib 0x00007fff86180772 _pthread_start + 327
+5 libsystem_c.dylib 0x00007fff8616d1a1 thread_start + 13
+
+Thread 4:: JS Watchdog
+0 libsystem_kernel.dylib 0x00007fff868300fa __psynch_cvwait + 10
+1 libsystem_c.dylib 0x00007fff86184fb9 _pthread_cond_wait + 869
+2 libnss3.dylib 0x0000000101113f4a PR_WaitCondVar + 250
+3 XUL 0x00000001021d2078 WatchdogMain(void*) + 168
+4 libnss3.dylib 0x00000001011163ea _pt_root + 218
+5 libsystem_c.dylib 0x00007fff86180772 _pthread_start + 327
+6 libsystem_c.dylib 0x00007fff8616d1a1 thread_start + 13
+
+Thread 5:
+0 libsystem_kernel.dylib 0x00007fff868306d6 __workq_kernreturn + 10
+1 libsystem_c.dylib 0x00007fff86182f1c _pthread_workq_return + 25
+2 libsystem_c.dylib 0x00007fff86182ce3 _pthread_wqthread + 412
+3 libsystem_c.dylib 0x00007fff8616d191 start_wqthread + 13
+
+Thread 6:
+0 libsystem_kernel.dylib 0x00007fff868306d6 __workq_kernreturn + 10
+1 libsystem_c.dylib 0x00007fff86182f1c _pthread_workq_return + 25
+2 libsystem_c.dylib 0x00007fff86182ce3 _pthread_wqthread + 412
+3 libsystem_c.dylib 0x00007fff8616d191 start_wqthread + 13
+
+Thread 7:
+0 libsystem_kernel.dylib 0x00007fff868306d6 __workq_kernreturn + 10
+1 libsystem_c.dylib 0x00007fff86182f1c _pthread_workq_return + 25
+2 libsystem_c.dylib 0x00007fff86182ce3 _pthread_wqthread + 412
+3 libsystem_c.dylib 0x00007fff8616d191 start_wqthread + 13
+
+Thread 0 crashed with X86 Thread State (64-bit):
+rax: 0x00000000ffffffff rbx: 0x00007fff5fbfea88 rcx: 0x00000000ffffffff rdx: 0x0000000000000000
+rdi: 0x0000000100527c80 rsi: 0x0000000000000016 rbp: 0x00007fff5fbfeb10 rsp: 0x00007fff5fbfea70
+r8: 0x0000000000000000 r9: 0x000000000000000e r10: 0x0000000000000003 r11: 0x0000000000000246
+r12: 0x0000000000000000 r13: 0x000000010d533f98 r14: 0x00007fff5fbfea78 r15: 0x0000000000000000
+rip: 0x0000000101113d48 rfl: 0x0000000000010246 cr2: 0x0000000000000038
+Logical CPU: 6
+
+Binary Images:
+0x100000000 - 0x100005fff +org.mozilla.nightly (30.0a1 - 3014.2.11) <57AB9BD9-E012-3B05-82CB-E38BAC08C5F1> /Applications/FirefoxNightly.app/Contents/MacOS/firefox
+0x10000f000 - 0x100011fff com.apple.ExceptionHandling (1.5 - 10) <7A487C6B-6E23-3059-84C7-8739399D4707> /System/Library/Frameworks/ExceptionHandling.framework/Versions/A/ExceptionHandling
+0x100016000 - 0x10002eff7 +libmozglue.dylib (1) <C782407D-4647-33C4-8FA6-BB159DEF4F34> /Applications/FirefoxNightly.app/Contents/MacOS/libmozglue.dylib
+0x1000cc000 - 0x1000ccff7 +libmozalloc.dylib (1) <C1601230-2EBB-3E8B-8539-9010524D5416> /Applications/FirefoxNightly.app/Contents/MacOS/libmozalloc.dylib
+0x101000000 - 0x101245fff +libnss3.dylib (1) <A9B8C5CB-893A-3A64-A67A-4F86997AAF30> /Applications/FirefoxNightly.app/Contents/MacOS/libnss3.dylib
+0x101377000 - 0x105157fdf +XUL (1) <BECD0D61-A9B1-3D03-AED1-031C369F5712> /Applications/FirefoxNightly.app/Contents/MacOS/XUL
+0x108498000 - 0x1084b1fff +libbrowsercomps.dylib (???) <3CE118AC-9F59-387F-B955-4726EA3EAB34> /Applications/FirefoxNightly.app/Contents/MacOS/browser/components/libbrowsercomps.dylib
+0x1084f5000 - 0x1084f6ffa +cl_kernels (???) <A614AD3F-5C2A-41E5-B4A3-BF940EDFD1BB> cl_kernels
+0x10aaa8000 - 0x10aae0ff7 +libsoftokn3.dylib (1) <C046A791-30A6-32AA-90B9-8ED3ECC48E23> /Applications/FirefoxNightly.app/Contents/MacOS/libsoftokn3.dylib
+0x10ae83000 - 0x10aea4ff7 +libnssdbm3.dylib (1) <3046386D-5741-3239-951B-1D8219DE2FEC> /Applications/FirefoxNightly.app/Contents/MacOS/libnssdbm3.dylib
+0x10b24e000 - 0x10b2b1ff7 +libfreebl3.dylib (1) <9273ABB6-A98B-335B-A5BD-9FE7ECBE9AF6> /Applications/FirefoxNightly.app/Contents/MacOS/libfreebl3.dylib
+0x10f0ef000 - 0x10f0f8fe7 libcldcpuengine.dylib (2.2.16) <B6E3B14B-1EAC-3FDD-8AED-87231A033BED> /System/Library/Frameworks/OpenCL.framework/Libraries/libcldcpuengine.dylib
+0x10f8ce000 - 0x10f8cfffb +cl_kernels (???) <F4EDDB56-C28A-47F9-BAD3-78D560D978F1> cl_kernels
+0x10f8d6000 - 0x10f8d7ffb +cl_kernels (???) <85F7018A-7A8C-4E92-8192-A5062B7174A1> cl_kernels
+0x10f8e2000 - 0x10f8e2ff9 +cl_kernels (???) <A76A3C39-98B6-4D50-8C62-6AC3ED9630EB> cl_kernels
+0x10f8fd000 - 0x10f8fdffc +cl_kernels (???) <5F6D962B-27D7-46D9-960B-C5D090C1951E> cl_kernels
+0x110bce000 - 0x110bceff7 +cl_kernels (???) <4FD1402F-F700-47BF-83D5-2575255FC4EE> cl_kernels
+0x110bd2000 - 0x110bd2ffc +cl_kernels (???) <5F6D962B-27D7-46D9-960B-C5D090C1951E> cl_kernels
+0x110bd7000 - 0x110bd7ffe +cl_kernels (???) <15BDEAD6-B5BD-44B9-9A22-C9088D6DE909> cl_kernels
+0x110bfc000 - 0x110bfcffb +cl_kernels (???) <E738FDC3-8773-4B96-AE48-E94CE0D0DFCB> cl_kernels
+0x1111df000 - 0x1111dfffd +cl_kernels (???) <EE105610-63D5-4336-83B5-84E6D63D18B1> cl_kernels
+0x1111e4000 - 0x1111e4ffd +cl_kernels (???) <FFE3CF3E-E59B-4C46-B38D-FB6A357E2052> cl_kernels
+0x1111ec000 - 0x1111ecffd +cl_kernels (???) <75E727E0-ECAF-4BE3-A8BE-4702E896F245> cl_kernels
+0x11ced5000 - 0x11cedcfff com.apple.URLMount.AFPPlugin (5.0 - 5.0) <1EC15ABF-4216-3869-A341-F27D5E55FCDC> /System/Library/Filesystems/NetFSPlugins/afp.bundle/Contents/MacOS/afp
+0x11cee3000 - 0x11ceedff7 com.apple.AppleSRP (5.0 - 1) <16B1431A-295A-386B-9159-A396877D6FE3> /System/Library/PrivateFrameworks/AppleSRP.framework/Versions/A/AppleSRP
+0x11d0b3000 - 0x11d0d7ff7 com.apple.security.csparser (3.0 - 55179.13) <B85553DE-708C-3C20-93D5-70DC80068CE3> /System/Library/Frameworks/Security.framework/PlugIns/csparser.bundle/Contents/MacOS/csparser
+0x1255ef000 - 0x125689ff7 unorm8_bgra.dylib (2.2.16) <5D62BED8-DF5D-3C51-94B4-57368FF10DDB> /System/Library/Frameworks/OpenCL.framework/Libraries/ImageFormats/unorm8_bgra.dylib
+0x125937000 - 0x12597ffff com.apple.AppleShareClientCore (3.0 - 3.0) <FC258BF0-F008-386F-AF57-597E18B02BFD> /System/Library/Frameworks/AppleShareClientCore.framework/Versions/A/AppleShareClientCore
+0x12882a000 - 0x128846ff7 libJapaneseConverter.dylib (61) <D0F762C2-5372-3AA2-BBA4-066B8E4B1F8E> /System/Library/CoreServices/Encodings/libJapaneseConverter.dylib
+0x145da1000 - 0x145e3aff7 unorm8_argb.dylib (2.2.16) <AC4A19D0-44A5-34CB-9248-20996ACA6B06> /System/Library/Frameworks/OpenCL.framework/Libraries/ImageFormats/unorm8_argb.dylib
+0x7fff69c32000 - 0x7fff69c6693f dyld (210.2.3) <36CAA36E-72BC-3E48-96D9-B96A2DF77730> /usr/lib/dyld
+0x7fff856b6000 - 0x7fff856c8ff7 libz.1.dylib (43) <2A1551E8-A272-3DE5-B692-955974FE1416> /usr/lib/libz.1.dylib
+0x7fff856c9000 - 0x7fff85b05fff com.apple.VideoToolbox (1.0 - 926.106) <B1185D9D-02AC-3D27-B894-21B1179F2AEF> /System/Library/Frameworks/VideoToolbox.framework/Versions/A/VideoToolbox
+0x7fff85b06000 - 0x7fff85b2dff7 com.apple.PerformanceAnalysis (1.16 - 16) <1BDA3662-18B7-3F38-94E5-9ACD477A7682> /System/Library/PrivateFrameworks/PerformanceAnalysis.framework/Versions/A/PerformanceAnalysis
+0x7fff85b2e000 - 0x7fff85b2efff libOpenScriptingUtil.dylib (148.3) <F8681222-0969-3B10-8BCE-C55A4B9C520C> /usr/lib/libOpenScriptingUtil.dylib
+0x7fff85b2f000 - 0x7fff85bd5ff7 com.apple.CoreServices.OSServices (557.6 - 557.6) <FFDDD2D8-690D-388F-A48F-4750A792D2CD> /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/OSServices.framework/Versions/A/OSServices
+0x7fff85c00000 - 0x7fff85c69fff libstdc++.6.dylib (56) <EAA2B53E-EADE-39CF-A0EF-FB9D4940672A> /usr/lib/libstdc++.6.dylib
+0x7fff85c6a000 - 0x7fff85d8afff com.apple.desktopservices (1.7.4 - 1.7.4) <ED3DA8C0-160F-3CDC-B537-BF2E766AB7C1> /System/Library/PrivateFrameworks/DesktopServicesPriv.framework/Versions/A/DesktopServicesPriv
+0x7fff85d8b000 - 0x7fff85deefff com.apple.audio.CoreAudio (4.1.2 - 4.1.2) <FEAB83AB-1DE5-3813-BA48-7A7F2374CCF0> /System/Library/Frameworks/CoreAudio.framework/Versions/A/CoreAudio
+0x7fff85e2e000 - 0x7fff85e39fff libsystem_notify.dylib (98.5) <C49275CC-835A-3207-AFBA-8C01374927B6> /usr/lib/system/libsystem_notify.dylib
+0x7fff85e3a000 - 0x7fff85e96ff7 com.apple.Symbolication (1.3 - 93) <D3AAB36A-D5EB-3044-BE9D-0B77E64C00FC> /System/Library/PrivateFrameworks/Symbolication.framework/Versions/A/Symbolication
+0x7fff85ee1000 - 0x7fff85f0dfff com.apple.quartzfilters (1.8.0 - 1.7.0) <CCF2C41D-93D0-3547-A2B1-D6A69932CADF> /System/Library/Frameworks/Quartz.framework/Versions/A/Frameworks/QuartzFilters.framework/Versions/A/QuartzFilters
+0x7fff85f0e000 - 0x7fff85f0fff7 libSystem.B.dylib (169.3) <92475A81-385C-32B9-9D6D-38E4BAC90996> /usr/lib/libSystem.B.dylib
+0x7fff85f10000 - 0x7fff8616bff7 com.apple.QuartzComposer (5.1 - 287.1) <D1DD68D1-05D5-3037-ABB6-BF6EB183C155> /System/Library/Frameworks/Quartz.framework/Versions/A/Frameworks/QuartzComposer.framework/Versions/A/QuartzComposer
+0x7fff8616c000 - 0x7fff86238ff7 libsystem_c.dylib (825.40.1) <543B05AE-CFA5-3EFE-8E58-77225411BA6B> /usr/lib/system/libsystem_c.dylib
+0x7fff86248000 - 0x7fff862d5ff7 com.apple.SearchKit (1.4.0 - 1.4.0) <54A8069C-E497-3B07-BEA7-D3BC9DB5B649> /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/SearchKit.framework/Versions/A/SearchKit
+0x7fff862d6000 - 0x7fff86316ff7 com.apple.MediaKit (14 - 687) <8AAA8CC3-3ACD-34A5-9E57-9B24AD8AFD4D> /System/Library/PrivateFrameworks/MediaKit.framework/Versions/A/MediaKit
+0x7fff86334000 - 0x7fff8633fff7 com.apple.bsd.ServiceManagement (2.0 - 2.0) <C12962D5-85FB-349E-AA56-64F4F487F219> /System/Library/Frameworks/ServiceManagement.framework/Versions/A/ServiceManagement
+0x7fff86340000 - 0x7fff8634eff7 libkxld.dylib (2050.48.12) <B8F7ED1F-CF84-3777-9183-0A1C513DF81F> /usr/lib/system/libkxld.dylib
+0x7fff8634f000 - 0x7fff86366fff com.apple.GenerationalStorage (1.1 - 132.3) <FD4A84B3-13A8-3C60-A59E-25A361447A17> /System/Library/PrivateFrameworks/GenerationalStorage.framework/Versions/A/GenerationalStorage
+0x7fff8636d000 - 0x7fff864bffff com.apple.audio.toolbox.AudioToolbox (1.9.2 - 1.9.2) <DC5F3D1B-036A-37DE-BC24-7636DC95EA1C> /System/Library/Frameworks/AudioToolbox.framework/Versions/A/AudioToolbox
+0x7fff864cd000 - 0x7fff864d1fff com.apple.IOSurface (86.0.4 - 86.0.4) <26F01CD4-B76B-37A3-989D-66E8140542B3> /System/Library/Frameworks/IOSurface.framework/Versions/A/IOSurface
+0x7fff864d2000 - 0x7fff86508ff7 libsystem_info.dylib (406.17) <C9BA1024-043C-3BD5-908F-AF709E05DEE4> /usr/lib/system/libsystem_info.dylib
+0x7fff86509000 - 0x7fff8660bfff libcrypto.0.9.8.dylib (47.2) <CF3BAB7E-4972-39FD-AF92-28ACAFF0873E> /usr/lib/libcrypto.0.9.8.dylib
+0x7fff8660c000 - 0x7fff86623fff com.apple.CFOpenDirectory (10.8 - 151.10) <10F41DA4-AD54-3F52-B898-588D9A117171> /System/Library/Frameworks/OpenDirectory.framework/Versions/A/Frameworks/CFOpenDirectory.framework/Versions/A/CFOpenDirectory
+0x7fff86624000 - 0x7fff86626fff libCVMSPluginSupport.dylib (8.10.1) <F0239392-E0CB-37D7-BFE2-D6F5D42F9196> /System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libCVMSPluginSupport.dylib
+0x7fff86627000 - 0x7fff86673ff7 libauto.dylib (185.4) <AD5A4CE7-CB53-313C-9FAE-673303CC2D35> /usr/lib/libauto.dylib
+0x7fff86674000 - 0x7fff86769fff libiconv.2.dylib (34) <FEE8B996-EB44-37FA-B96E-D379664DEFE1> /usr/lib/libiconv.2.dylib
+0x7fff8676a000 - 0x7fff86777fff com.apple.AppleFSCompression (49 - 1.0) <E616053D-D3C2-3600-B8DF-A5E0D9665634> /System/Library/PrivateFrameworks/AppleFSCompression.framework/Versions/A/AppleFSCompression
+0x7fff86778000 - 0x7fff86778fff com.apple.Carbon (154 - 155) <1B2846B1-384E-3D1C-8999-201215723349> /System/Library/Frameworks/Carbon.framework/Versions/A/Carbon
+0x7fff86779000 - 0x7fff867d3ff7 com.apple.opencl (2.2.19 - 2.2.19) <3C7DFB2C-B3F9-3447-A1FC-EAAA42181A6E> /System/Library/Frameworks/OpenCL.framework/Versions/A/OpenCL
+0x7fff8681c000 - 0x7fff8681dff7 libsystem_sandbox.dylib (220.3) <B739DA63-B675-387A-AD84-412A651143C0> /usr/lib/system/libsystem_sandbox.dylib
+0x7fff8681e000 - 0x7fff86839ff7 libsystem_kernel.dylib (2050.48.12) <4B7993C3-F62D-3AC1-AF92-414A0D6EED5E> /usr/lib/system/libsystem_kernel.dylib
+0x7fff8683a000 - 0x7fff8685fff7 libc++abi.dylib (26) <D86169F3-9F31-377A-9AF3-DB17142052E4> /usr/lib/libc++abi.dylib
+0x7fff86860000 - 0x7fff86862ff7 com.apple.print.framework.Print (8.0 - 258) <8F243E49-021F-3892-B555-3010A7F450A2> /System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/Print.framework/Versions/A/Print
+0x7fff86863000 - 0x7fff86866fff com.apple.help (1.3.2 - 42) <418A9A41-BCB4-32A2-97ED-3A388F69CA9D> /System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/Help.framework/Versions/A/Help
+0x7fff86867000 - 0x7fff86878ff7 libsasl2.2.dylib (166) <649CAE0E-8FFE-3C60-A849-BE6300E4B726> /usr/lib/libsasl2.2.dylib
+0x7fff86879000 - 0x7fff868b3ff7 com.apple.GSS (3.0 - 2.0) <423BDFCC-9187-3F3E-ABB0-D280003EB15E> /System/Library/Frameworks/GSS.framework/Versions/A/GSS
+0x7fff869df000 - 0x7fff86ab1ff7 com.apple.CoreText (260.0 - 275.17) <AB493289-E188-3CCA-8658-1E5039715F82> /System/Library/Frameworks/CoreText.framework/Versions/A/CoreText
+0x7fff86ab2000 - 0x7fff86aebff7 libssl.0.9.8.dylib (47.2) <46DF85DC-18FB-3108-91F6-52AE3EBF2347> /usr/lib/libssl.0.9.8.dylib
+0x7fff86b7d000 - 0x7fff86b84fff libcopyfile.dylib (89) <876573D0-E907-3566-A108-577EAD1B6182> /usr/lib/system/libcopyfile.dylib
+0x7fff86b85000 - 0x7fff86ba4ff7 libresolv.9.dylib (51) <0882DC2D-A892-31FF-AD8C-0BB518C48B23> /usr/lib/libresolv.9.dylib
+0x7fff86dee000 - 0x7fff86ea1ff7 com.apple.PDFKit (2.8.5 - 2.8.5) <EAAED40E-7B2C-3312-826E-26A9DEDBF0FC> /System/Library/Frameworks/Quartz.framework/Versions/A/Frameworks/PDFKit.framework/Versions/A/PDFKit
+0x7fff86fcf000 - 0x7fff86fd0ff7 libdnsinfo.dylib (453.19) <14202FFB-C3CA-3FCC-94B0-14611BF8692D> /usr/lib/system/libdnsinfo.dylib
+0x7fff86fd1000 - 0x7fff86ff0ff7 com.apple.ChunkingLibrary (2.0 - 133.3) <8BEC9AFB-DCAA-37E8-A5AB-24422B234ECF> /System/Library/PrivateFrameworks/ChunkingLibrary.framework/Versions/A/ChunkingLibrary
+0x7fff86ff1000 - 0x7fff87272fff com.apple.AOSKit (1.051 - 152.4) <01C09924-2603-3C1E-97F7-9484CBA35BC9> /System/Library/PrivateFrameworks/AOSKit.framework/Versions/A/AOSKit
+0x7fff87273000 - 0x7fff87276ff7 libdyld.dylib (210.2.3) <F59367C9-C110-382B-A695-9035A6DD387E> /usr/lib/system/libdyld.dylib
+0x7fff87277000 - 0x7fff87279fff com.apple.TrustEvaluationAgent (2.0 - 23) <A97D348B-32BF-3E52-8DF2-59BFAD21E1A3> /System/Library/PrivateFrameworks/TrustEvaluationAgent.framework/Versions/A/TrustEvaluationAgent
+0x7fff8727a000 - 0x7fff874afff7 com.apple.CoreData (106.1 - 407.7) <A676E1A4-2144-376B-92B8-B450DD1D78E5> /System/Library/Frameworks/CoreData.framework/Versions/A/CoreData
+0x7fff874b0000 - 0x7fff87754ff7 com.apple.CoreImage (8.4.0 - 1.0.1) <CC6DD22B-FFC6-310B-BE13-2397A02C79EF> /System/Library/Frameworks/QuartzCore.framework/Versions/A/Frameworks/CoreImage.framework/Versions/A/CoreImage
+0x7fff877ac000 - 0x7fff878c5fff com.apple.ImageIO.framework (3.2.2 - 851) <6552C673-9F29-3B31-A12E-C4391A950965> /System/Library/Frameworks/ImageIO.framework/Versions/A/ImageIO
+0x7fff878c6000 - 0x7fff88256627 com.apple.CoreGraphics (1.600.0 - 333.1) <C085C074-7260-3C3D-90C6-A65D3CB2BD41> /System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/CoreGraphics.framework/Versions/A/CoreGraphics
+0x7fff882d9000 - 0x7fff88590ff7 com.apple.MediaToolbox (1.0 - 926.106) <57043584-98E7-375A-89AE-F46480AA5D97> /System/Library/Frameworks/MediaToolbox.framework/Versions/A/MediaToolbox
+0x7fff88591000 - 0x7fff885edfff com.apple.QuickLookFramework (4.0 - 555.5) <8B9EAC35-98F3-3BF0-8B15-3A5FE39F150A> /System/Library/Frameworks/QuickLook.framework/Versions/A/QuickLook
+0x7fff8864c000 - 0x7fff886b9ff7 com.apple.datadetectorscore (4.1 - 269.3) <5775F0DB-87D6-310D-8B03-E2AD729EFB28> /System/Library/PrivateFrameworks/DataDetectorsCore.framework/Versions/A/DataDetectorsCore
+0x7fff88773000 - 0x7fff88773fff com.apple.AOSMigrate (1.0 - 1) <9E7A92DC-649D-3908-BB36-B7F445261F14> /System/Library/PrivateFrameworks/AOSMigrate.framework/Versions/A/AOSMigrate
+0x7fff88774000 - 0x7fff88b6bfff libLAPACK.dylib (1073.4) <D632EC8B-2BA0-3853-800A-20DA00A1091C> /System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vecLib.framework/Versions/A/libLAPACK.dylib
+0x7fff88b6c000 - 0x7fff88b74fff liblaunch.dylib (442.26.2) <2F71CAF8-6524-329E-AC56-C506658B4C0C> /usr/lib/system/liblaunch.dylib
+0x7fff88b76000 - 0x7fff88b76fff com.apple.Cocoa (6.7 - 19) <3CFC90D2-2BE9-3E5C-BFDB-5E161A2C2B29> /System/Library/Frameworks/Cocoa.framework/Versions/A/Cocoa
+0x7fff88b77000 - 0x7fff88ba1ff7 com.apple.CoreVideo (1.8 - 99.4) <E5082966-6D81-3973-A05A-38AA5B85F886> /System/Library/Frameworks/CoreVideo.framework/Versions/A/CoreVideo
+0x7fff88ba2000 - 0x7fff88bf3ff7 com.apple.SystemConfiguration (1.12.2 - 1.12.2) <581BF463-C15A-363B-999A-E830222FA925> /System/Library/Frameworks/SystemConfiguration.framework/Versions/A/SystemConfiguration
+0x7fff88bf4000 - 0x7fff88c4afff com.apple.HIServices (1.20 - 417) <BCD36950-013F-35C2-918E-05A93A47BE8C> /System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/HIServices.framework/Versions/A/HIServices
+0x7fff88c4b000 - 0x7fff88c4cfff liblangid.dylib (116) <864C409D-D56B-383E-9B44-A435A47F2346> /usr/lib/liblangid.dylib
+0x7fff88c4d000 - 0x7fff88ca6ff7 com.apple.ImageCaptureCore (5.0.4 - 5.0.4) <84F003C2-5758-3D0A-8644-F3A0BA4F22FC> /System/Library/Frameworks/ImageCaptureCore.framework/Versions/A/ImageCaptureCore
+0x7fff88ca7000 - 0x7fff88cfeff7 com.apple.ScalableUserInterface (1.0 - 1) <93C14595-6172-37E9-88F2-CBC80A1C54D0> /System/Library/Frameworks/QuartzCore.framework/Versions/A/Frameworks/ScalableUserInterface.framework/Versions/A/ScalableUserInterface
+0x7fff88cff000 - 0x7fff88df0ff7 com.apple.DiskImagesFramework (10.8.3 - 345) <5C56181F-1E9F-336A-B7BB-620565A8BD6E> /System/Library/PrivateFrameworks/DiskImages.framework/Versions/A/DiskImages
+0x7fff88df1000 - 0x7fff88dfffff com.apple.Librarian (1.1 - 1) <5AC28666-7642-395F-A923-C6F8A274BBBD> /System/Library/PrivateFrameworks/Librarian.framework/Versions/A/Librarian
+0x7fff88e00000 - 0x7fff88e21ff7 libCRFSuite.dylib (33) <B49DA255-A4D9-33AF-95AB-B319570CDF7B> /usr/lib/libCRFSuite.dylib
+0x7fff88e85000 - 0x7fff88e88fff libRadiance.dylib (851) <C317B2C7-CA3A-329F-B6DC-7CC33FE08C81> /System/Library/Frameworks/ImageIO.framework/Versions/A/Resources/libRadiance.dylib
+0x7fff88e89000 - 0x7fff88ec4fff com.apple.LDAPFramework (2.4.28 - 194.5) <7E4F2C08-0010-34AE-BC46-149B7EE8A0F5> /System/Library/Frameworks/LDAP.framework/Versions/A/LDAP
+0x7fff88ec7000 - 0x7fff88f84ff7 com.apple.ColorSync (4.8.0 - 4.8.0) <73BE495D-8985-3B88-A7D0-23DF0CB50304> /System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/ColorSync.framework/Versions/A/ColorSync
+0x7fff89000000 - 0x7fff8900cfff com.apple.CrashReporterSupport (10.8.3 - 418) <DE6AFE16-D97E-399D-82ED-3522C773C36E> /System/Library/PrivateFrameworks/CrashReporterSupport.framework/Versions/A/CrashReporterSupport
+0x7fff8900d000 - 0x7fff89016ff7 com.apple.CommerceCore (1.0 - 26.2) <AF35874A-6FA7-328E-BE30-8BBEF0B741A8> /System/Library/PrivateFrameworks/CommerceKit.framework/Versions/A/Frameworks/CommerceCore.framework/Versions/A/CommerceCore
+0x7fff89017000 - 0x7fff89022ff7 com.apple.ProtocolBuffer (2 - 104) <5BA49EB9-1361-3BFF-856C-C5F1D0486072> /System/Library/PrivateFrameworks/ProtocolBuffer.framework/Versions/A/ProtocolBuffer
+0x7fff89023000 - 0x7fff89024fff libDiagnosticMessagesClient.dylib (8) <8548E0DC-0D2F-30B6-B045-FE8A038E76D8> /usr/lib/libDiagnosticMessagesClient.dylib
+0x7fff89045000 - 0x7fff89045fff com.apple.ApplicationServices (45 - 45) <5302CC85-D534-3FE5-9E56-CA16762177F6> /System/Library/Frameworks/ApplicationServices.framework/Versions/A/ApplicationServices
+0x7fff89046000 - 0x7fff8904bfff com.apple.OpenDirectory (10.8 - 151.10) <1F47EC96-7403-3690-8D8D-C31D3B6FDA0A> /System/Library/Frameworks/OpenDirectory.framework/Versions/A/OpenDirectory
+0x7fff8904c000 - 0x7fff8909bff7 libFontRegistry.dylib (100) <F7EC0287-58E4-3ABE-A45E-B105A68EA76E> /System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/ATS.framework/Versions/A/Resources/libFontRegistry.dylib
+0x7fff8909c000 - 0x7fff8909efff com.apple.securityhi (4.0 - 55002) <26E6D477-EF61-351F-BA8C-67824AA231C6> /System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/SecurityHI.framework/Versions/A/SecurityHI
+0x7fff8909f000 - 0x7fff890a6fff com.apple.NetFS (5.0 - 4.0) <195D8EC9-72BB-3E04-A64D-E1A89B4850C1> /System/Library/Frameworks/NetFS.framework/Versions/A/NetFS
+0x7fff890ac000 - 0x7fff890c0fff com.apple.speech.synthesis.framework (4.1.12 - 4.1.12) <94EDF2AB-809C-3D15-BED5-7AD45B2A7C16> /System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/SpeechSynthesis.framework/Versions/A/SpeechSynthesis
+0x7fff890c1000 - 0x7fff890d8fff libGL.dylib (8.10.1) <F8BABA3C-7810-3A65-83FC-61945AA50E90> /System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib
+0x7fff890d9000 - 0x7fff89124fff com.apple.CoreMedia (1.0 - 926.106) <64467905-48DC-37F9-9F32-186768CF2640> /System/Library/Frameworks/CoreMedia.framework/Versions/A/CoreMedia
+0x7fff89125000 - 0x7fff89130ff7 com.apple.DisplayServicesFW (2.7.2 - 357) <8AE56B58-A521-3F29-AAE2-10ADADBD30EA> /System/Library/PrivateFrameworks/DisplayServices.framework/Versions/A/DisplayServices
+0x7fff89131000 - 0x7fff89139ff7 libsystem_dnssd.dylib (379.38.1) <BDCB8566-0189-34C0-9634-35ABD3EFE25B> /usr/lib/system/libsystem_dnssd.dylib
+0x7fff8913a000 - 0x7fff8913eff7 com.apple.TCC (1.0 - 1) <F2F3B753-FC73-3543-8BBE-859FDBB4D6A6> /System/Library/PrivateFrameworks/TCC.framework/Versions/A/TCC
+0x7fff8913f000 - 0x7fff894caff7 com.apple.FinderKit (1.1.3 - 1.1.3) <7956AB84-AB7A-3B00-A543-76E5CD708881> /System/Library/PrivateFrameworks/FinderKit.framework/Versions/A/FinderKit
+0x7fff894cb000 - 0x7fff894d1fff com.apple.DiskArbitration (2.5.2 - 2.5.2) <C713A35A-360E-36CE-AC0A-25C86A3F50CA> /System/Library/Frameworks/DiskArbitration.framework/Versions/A/DiskArbitration
+0x7fff894d2000 - 0x7fff89802fff com.apple.HIToolbox (2.0 - 626.1) <656D08C2-9068-3532-ABDD-32EC5057CCB2> /System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/HIToolbox.framework/Versions/A/HIToolbox
+0x7fff89803000 - 0x7fff89862fff com.apple.AE (645.6 - 645.6) <44F403C1-660A-3543-AB9C-3902E02F936F> /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/AE.framework/Versions/A/AE
+0x7fff89863000 - 0x7fff89afeff7 com.apple.JavaScriptCore (8536 - 8536.30) <FE3C5ADD-43D3-33C9-9150-8DCEFDA218E2> /System/Library/Frameworks/JavaScriptCore.framework/Versions/A/JavaScriptCore
+0x7fff89b76000 - 0x7fff89b77fff libsystem_blocks.dylib (59) <D92DCBC3-541C-37BD-AADE-ACC75A0C59C8> /usr/lib/system/libsystem_blocks.dylib
+0x7fff89b78000 - 0x7fff89ba0fff libJPEG.dylib (851) <64A3EB03-34FB-308C-817B-6106D1F4D80F> /System/Library/Frameworks/ImageIO.framework/Versions/A/Resources/libJPEG.dylib
+0x7fff89ba1000 - 0x7fff89c22fff com.apple.Metadata (10.7.0 - 707.12) <69E3EEF7-8B7B-3652-8320-B8E885370E56> /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Metadata
+0x7fff89c25000 - 0x7fff89d3ffff com.apple.coreavchd (5.6.0 - 5600.4.16) <85670361-96CA-3805-B981-B41B47E99A37> /System/Library/PrivateFrameworks/CoreAVCHD.framework/Versions/A/CoreAVCHD
+0x7fff89d40000 - 0x7fff89eeefff com.apple.QuartzCore (1.8 - 304.3) <F450F2DE-2F24-3557-98B6-310E05DAC17F> /System/Library/Frameworks/QuartzCore.framework/Versions/A/QuartzCore
+0x7fff89eef000 - 0x7fff89f49fff com.apple.Suggestions (2.0 - 102.1) <FB339DEE-9EB2-381E-89AC-1BADE2A1E43C> /System/Library/PrivateFrameworks/Suggestions.framework/Versions/A/Suggestions
+0x7fff89f4a000 - 0x7fff89f78ff7 libsystem_m.dylib (3022.6) <11B6081D-6212-3EAB-9975-BED6234BD6A5> /usr/lib/system/libsystem_m.dylib
+0x7fff89f79000 - 0x7fff8a2d8fff com.apple.Foundation (6.8 - 945.18) <1D7E58E6-FA3A-3CE8-AC85-B9D06B8C0AA0> /System/Library/Frameworks/Foundation.framework/Versions/C/Foundation
+0x7fff8a2d9000 - 0x7fff8a3d6fff libsqlite3.dylib (138.1) <ADE9CB98-D77D-300C-A32A-556B7440769F> /usr/lib/libsqlite3.dylib
+0x7fff8a3d7000 - 0x7fff8a4ef92f libobjc.A.dylib (532.2) <90D31928-F48D-3E37-874F-220A51FD9E37> /usr/lib/libobjc.A.dylib
+0x7fff8a4f0000 - 0x7fff8a676fff libBLAS.dylib (1073.4) <C102C0F6-8CB6-3B49-BA6B-2EB61F0B2784> /System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vecLib.framework/Versions/A/libBLAS.dylib
+0x7fff8a677000 - 0x7fff8a948ff7 com.apple.security (7.0 - 55179.13) <F428E306-C407-3B55-BA82-E58755E8A76F> /System/Library/Frameworks/Security.framework/Versions/A/Security
+0x7fff8a949000 - 0x7fff8a9b9fff com.apple.ISSupport (1.9.8 - 56) <19436666-D781-3C6A-B091-85BE7316E4B2> /System/Library/PrivateFrameworks/ISSupport.framework/Versions/A/ISSupport
+0x7fff8a9ec000 - 0x7fff8aa28fff com.apple.GeoServices (1.0 - 1) <DB382348-EBFA-3AD5-888B-7F4640F41834> /System/Library/PrivateFrameworks/GeoServices.framework/Versions/A/GeoServices
+0x7fff8aa29000 - 0x7fff8acd8fff com.apple.imageKit (2.2 - 673) <5F0504DA-7CE9-3D97-B2B5-3C5839AEBF1F> /System/Library/Frameworks/Quartz.framework/Versions/A/Frameworks/ImageKit.framework/Versions/A/ImageKit
+0x7fff8aea2000 - 0x7fff8aec9fff com.apple.framework.familycontrols (4.1 - 410) <50F5A52C-8FB6-300A-977D-5CFDE4D5796B> /System/Library/PrivateFrameworks/FamilyControls.framework/Versions/A/FamilyControls
+0x7fff8aeca000 - 0x7fff8b2e7fff FaceCoreLight (2.4.1) <DDAFFD7A-D312-3407-A010-5AEF3E17831B> /System/Library/PrivateFrameworks/FaceCoreLight.framework/Versions/A/FaceCoreLight
+0x7fff8b2f3000 - 0x7fff8b2f7fff libCoreVMClient.dylib (32.5) <DB009CD4-BB0E-3331-BBB4-A118781D193F> /System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libCoreVMClient.dylib
+0x7fff8b3ae000 - 0x7fff8b42dff7 com.apple.securityfoundation (6.0 - 55115.4) <8676E0DF-295F-3690-BDAA-6C9C1D210B88> /System/Library/Frameworks/SecurityFoundation.framework/Versions/A/SecurityFoundation
+0x7fff8b42e000 - 0x7fff8b43bfff com.apple.KerberosHelper (4.0 - 1.0) <A05BB5D6-4C56-36D5-9939-0B119535257F> /System/Library/PrivateFrameworks/KerberosHelper.framework/Versions/A/KerberosHelper
+0x7fff8b4d1000 - 0x7fff8b4d7fff libmacho.dylib (829) <BF332AD9-E89F-387E-92A4-6E1AB74BD4D9> /usr/lib/system/libmacho.dylib
+0x7fff8b4d8000 - 0x7fff8b4e6fff libcommonCrypto.dylib (60027) <BAAFE0C9-BB86-3CA7-88C0-E3CBA98DA06F> /usr/lib/system/libcommonCrypto.dylib
+0x7fff8b4e7000 - 0x7fff8b512fff libxslt.1.dylib (11.3) <441776B8-9130-3893-956F-39C85FFA644F> /usr/lib/libxslt.1.dylib
+0x7fff8b513000 - 0x7fff8b6aefef com.apple.vImage (6.0 - 6.0) <FAE13169-295A-33A5-8E6B-7C2CC1407FA7> /System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vImage.framework/Versions/A/vImage
+0x7fff8b7c9000 - 0x7fff8b7c9fff com.apple.quartzframework (1.5 - 1.5) <6403C982-0D45-37EE-A0F0-0EF8BCFEF440> /System/Library/Frameworks/Quartz.framework/Versions/A/Quartz
+0x7fff8b82a000 - 0x7fff8b892fff libvDSP.dylib (380.10) <3CA154A3-1BE5-3CF4-BE48-F0A719A963BB> /System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vecLib.framework/Versions/A/libvDSP.dylib
+0x7fff8b893000 - 0x7fff8b8c9fff com.apple.DebugSymbols (98 - 98) <7059F71D-9A82-3D32-99BB-E043DEDA6174> /System/Library/PrivateFrameworks/DebugSymbols.framework/Versions/A/DebugSymbols
+0x7fff8b8ca000 - 0x7fff8b97bfff com.apple.LaunchServices (539.9 - 539.9) <07FC6766-778E-3479-8F28-D2C9917E1DD1> /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/LaunchServices.framework/Versions/A/LaunchServices
+0x7fff8ba1c000 - 0x7fff8ba32fff com.apple.MultitouchSupport.framework (237.4 - 237.4) <0F7FEE29-161B-3D8E-BE91-308CBD354461> /System/Library/PrivateFrameworks/MultitouchSupport.framework/Versions/A/MultitouchSupport
+0x7fff8c219000 - 0x7fff8c270ff7 com.apple.AppleVAFramework (5.0.19 - 5.0.19) <541A7DBE-F8E4-3023-A3C0-8D5A2A550CFB> /System/Library/PrivateFrameworks/AppleVA.framework/Versions/A/AppleVA
+0x7fff8c271000 - 0x7fff8c271fff com.apple.Accelerate (1.8 - Accelerate 1.8) <878A6E7E-CB34-380F-8212-47FBF12C7C96> /System/Library/Frameworks/Accelerate.framework/Versions/A/Accelerate
+0x7fff8c272000 - 0x7fff8c34cfff com.apple.backup.framework (1.4.3 - 1.4.3) <6B65C44C-7777-3331-AD9D-438D10AAC777> /System/Library/PrivateFrameworks/Backup.framework/Versions/A/Backup
+0x7fff8c386000 - 0x7fff8c421fff com.apple.CoreSymbolication (3.0 - 117) <7D43ED93-BD81-338C-8076-6A932A1D19E8> /System/Library/PrivateFrameworks/CoreSymbolication.framework/Versions/A/CoreSymbolication
+0x7fff8c42b000 - 0x7fff8c44bfff libPng.dylib (851) <3466F35C-EC1A-3D1A-80DC-175857FA19D5> /System/Library/Frameworks/ImageIO.framework/Versions/A/Resources/libPng.dylib
+0x7fff8c4a7000 - 0x7fff8c4c8fff com.apple.Ubiquity (1.2 - 243.15) <C9A7EE77-B637-3676-B667-C0843BBB0409> /System/Library/PrivateFrameworks/Ubiquity.framework/Versions/A/Ubiquity
+0x7fff8c4c9000 - 0x7fff8c4ebff7 libxpc.dylib (140.43) <70BC645B-6952-3264-930C-C835010CCEF9> /usr/lib/system/libxpc.dylib
+0x7fff8c4ec000 - 0x7fff8c51afff com.apple.shortcut (2.2 - 2.2) <59F18E16-E3DC-3C8D-895D-A61A301BEA1D> /System/Library/PrivateFrameworks/Shortcut.framework/Versions/A/Shortcut
+0x7fff8c51b000 - 0x7fff8c51ffff libpam.2.dylib (20) <C8F45864-5B58-3237-87E1-2C258A1D73B8> /usr/lib/libpam.2.dylib
+0x7fff8c520000 - 0x7fff8c533ff7 libbsm.0.dylib (32) <F497D3CE-40D9-3551-84B4-3D5E39600737> /usr/lib/libbsm.0.dylib
+0x7fff8c534000 - 0x7fff8c551ff7 com.apple.openscripting (1.3.6 - 148.3) <C008F56A-1E01-3D4C-A9AF-97799D0FAE69> /System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/OpenScripting.framework/Versions/A/OpenScripting
+0x7fff8c5ac000 - 0x7fff8c5c6fff com.apple.CoreMediaAuthoring (2.1 - 914) <23F2B9D0-7B73-3C42-8EDC-8ADBF9C7B8C2> /System/Library/PrivateFrameworks/CoreMediaAuthoring.framework/Versions/A/CoreMediaAuthoring
+0x7fff8c5c7000 - 0x7fff8c5d4ff7 com.apple.HelpData (2.1.4 - 85) <EE68BDCC-AF2E-34D3-8E4F-87379E3A4D8E> /System/Library/PrivateFrameworks/HelpData.framework/Versions/A/HelpData
+0x7fff8c5d5000 - 0x7fff8c5e1ff7 com.apple.DirectoryService.Framework (10.8 - 151.10) <4F3284A9-EFD4-3A77-8B7F-D3D611D656A0> /System/Library/Frameworks/DirectoryService.framework/Versions/A/DirectoryService
+0x7fff8c5e2000 - 0x7fff8c61afff libtidy.A.dylib (15.10) <9009156B-84F5-3781-BFCB-B409B538CD18> /usr/lib/libtidy.A.dylib
+0x7fff8c61b000 - 0x7fff8c66aff7 libcorecrypto.dylib (106.2) <CE0C29A3-C420-339B-ADAA-52F4683233CC> /usr/lib/system/libcorecrypto.dylib
+0x7fff8c66b000 - 0x7fff8c730ff7 com.apple.coreui (2.0 - 181.1) <83D2C92D-6842-3C9D-9289-39D5B4554C3A> /System/Library/PrivateFrameworks/CoreUI.framework/Versions/A/CoreUI
+0x7fff8c731000 - 0x7fff8c731fff com.apple.Accelerate.vecLib (3.8 - vecLib 3.8) <F565B686-24E2-39F2-ACC3-C5E4084476BE> /System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vecLib.framework/Versions/A/vecLib
+0x7fff8c732000 - 0x7fff8c9f6fff com.apple.AddressBook.framework (7.1 - 1170) <A850809B-B087-3366-9FA0-1518C20831D3> /System/Library/Frameworks/AddressBook.framework/Versions/A/AddressBook
+0x7fff8cbda000 - 0x7fff8cc5cff7 com.apple.Heimdal (3.0 - 2.0) <ACF0C667-5ACC-382A-A998-61E85386C814> /System/Library/PrivateFrameworks/Heimdal.framework/Versions/A/Heimdal
+0x7fff8cee4000 - 0x7fff8cee9fff libcompiler_rt.dylib (30) <08F8731D-5961-39F1-AD00-4590321D24A9> /usr/lib/system/libcompiler_rt.dylib
+0x7fff8ceea000 - 0x7fff8cef0ff7 libunwind.dylib (35.1) <21703D36-2DAB-3D8B-8442-EAAB23C060D3> /usr/lib/system/libunwind.dylib
+0x7fff8cef1000 - 0x7fff8cf59ff7 libc++.1.dylib (65.1) <E5A0C88E-0837-3015-A987-F8C5A0D35DD6> /usr/lib/libc++.1.dylib
+0x7fff8cf5a000 - 0x7fff8cfa9fff com.apple.framework.CoreWiFi (1.3 - 130.13) <CCF3D8E3-CD1C-36CD-929A-C9972F833F24> /System/Library/Frameworks/CoreWiFi.framework/Versions/A/CoreWiFi
+0x7fff8cfaa000 - 0x7fff8d0b5fff libFontParser.dylib (84.6) <96C42E49-79A6-3475-B5E4-6A782599A6DA> /System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/ATS.framework/Versions/A/Resources/libFontParser.dylib
+0x7fff8d0b7000 - 0x7fff8d3ceff7 com.apple.CoreServices.CarbonCore (1037.6 - 1037.6) <1E567A52-677F-3168-979F-5FBB0818D52B> /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/CarbonCore.framework/Versions/A/CarbonCore
+0x7fff8d3cf000 - 0x7fff8d3fbff7 libRIP.A.dylib (333.1) <CC2A33EB-409C-3C4D-97D4-41F4A080F874> /System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/CoreGraphics.framework/Versions/A/Resources/libRIP.A.dylib
+0x7fff8d3fc000 - 0x7fff8d449fff com.apple.CoreMediaIO (309.0 - 4163.1) <8FD1C1A9-25C5-3B9E-A76D-BE813253B358> /System/Library/Frameworks/CoreMediaIO.framework/Versions/A/CoreMediaIO
+0x7fff8e40a000 - 0x7fff8f037fff com.apple.AppKit (6.8 - 1187.40) <F12CF463-6F88-32ED-9EBA-0FA2AD3CF576> /System/Library/Frameworks/AppKit.framework/Versions/C/AppKit
+0x7fff8f038000 - 0x7fff8f038fff libkeymgr.dylib (25) <CC9E3394-BE16-397F-926B-E579B60EE429> /usr/lib/system/libkeymgr.dylib
+0x7fff8f03c000 - 0x7fff8f05eff7 com.apple.Kerberos (2.0 - 1) <416543F5-E7AF-3269-843F-C8CDA8DD0FFA> /System/Library/Frameworks/Kerberos.framework/Versions/A/Kerberos
+0x7fff8f24c000 - 0x7fff8f24dff7 libremovefile.dylib (23.2) <6763BC8E-18B8-3AD9-8FFA-B43713A7264F> /usr/lib/system/libremovefile.dylib
+0x7fff8f24e000 - 0x7fff8f252ff7 com.apple.CommonPanels (1.2.5 - 94) <5F81D593-4B87-3DCC-B934-625D436B4CB1> /System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/CommonPanels.framework/Versions/A/CommonPanels
+0x7fff8f3b6000 - 0x7fff8f402fff com.apple.framework.CoreWLAN (3.4 - 340.18) <3735FB49-30C0-3B11-BE25-2ACDD96041B5> /System/Library/Frameworks/CoreWLAN.framework/Versions/A/CoreWLAN
+0x7fff8f41b000 - 0x7fff8f42eff7 com.apple.LangAnalysis (1.7.0 - 1.7.0) <023D909C-3AFA-3438-88EB-05D0BDA5AFFE> /System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/LangAnalysis.framework/Versions/A/LangAnalysis
+0x7fff8f481000 - 0x7fff8f4adfff com.apple.framework.Apple80211 (8.5 - 850.252) <73506CA1-CF76-3A98-A6F2-3DDAC10CB67A> /System/Library/PrivateFrameworks/Apple80211.framework/Versions/A/Apple80211
+0x7fff8f4ae000 - 0x7fff8f4bcff7 libsystem_network.dylib (77.10) <2AAA67A1-525E-38F0-8028-1D2B64716611> /usr/lib/system/libsystem_network.dylib
+0x7fff8f4bd000 - 0x7fff8f505fff libcurl.4.dylib (69.2) <EBDBF42D-E4A6-3D05-A76B-2817D79D59E2> /usr/lib/libcurl.4.dylib
+0x7fff8f570000 - 0x7fff8f58bff7 com.apple.frameworks.preferencepanes (15.1 - 15.1) <8A3CDC5B-9FA5-32EB-A066-F19874193B92> /System/Library/Frameworks/PreferencePanes.framework/Versions/A/PreferencePanes
+0x7fff8f58c000 - 0x7fff8f81dff7 com.apple.RawCamera.bundle (5.03 - 729) <DBA059CC-E78F-356F-B435-DA62A746F4D4> /System/Library/CoreServices/RawCamera.bundle/Contents/MacOS/RawCamera
+0x7fff8f82b000 - 0x7fff8f82dff7 libunc.dylib (25) <2FDC94A7-3039-3680-85F3-2164E63B464D> /usr/lib/system/libunc.dylib
+0x7fff8f82e000 - 0x7fff8f871ff7 com.apple.RemoteViewServices (2.0 - 80.6) <5CFA361D-4853-3ACC-9EFC-A2AC1F43BA4B> /System/Library/PrivateFrameworks/RemoteViewServices.framework/Versions/A/RemoteViewServices
+0x7fff90128000 - 0x7fff90137ff7 libxar.1.dylib (105) <B6A7C8AA-3E20-3A1D-A7BA-4FD0052FA508> /usr/lib/libxar.1.dylib
+0x7fff90138000 - 0x7fff90177ff7 com.apple.QD (3.42.1 - 285.1) <77A20C25-EBB5-341C-A05C-5D458B97AD5C> /System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/QD.framework/Versions/A/QD
+0x7fff90238000 - 0x7fff902d2fff libvMisc.dylib (380.10) <A7F12764-A94C-36EB-88E0-F826F5AF55B4> /System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vecLib.framework/Versions/A/libvMisc.dylib
+0x7fff902d3000 - 0x7fff90317fff libcups.2.dylib (327.7) <9F35B58A-F47E-348A-8E09-E235FA4B9270> /usr/lib/libcups.2.dylib
+0x7fff9035b000 - 0x7fff9038ffff com.apple.securityinterface (6.0 - 55024.4) <614C9B8E-2056-3A41-9A01-DAF74C97CC43> /System/Library/Frameworks/SecurityInterface.framework/Versions/A/SecurityInterface
+0x7fff90390000 - 0x7fff90410ff7 com.apple.ApplicationServices.ATS (332 - 341.1) <39B53565-FA31-3F61-B090-C787C983142E> /System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/ATS.framework/Versions/A/ATS
+0x7fff90411000 - 0x7fff90466ff7 libTIFF.dylib (851) <7706BB07-E7E8-38BE-A5F0-D8B63E3B9283> /System/Library/Frameworks/ImageIO.framework/Versions/A/Resources/libTIFF.dylib
+0x7fff904f8000 - 0x7fff906f8fff libicucore.A.dylib (491.11.3) <5783D305-04E8-3D17-94F7-1CEAFA975240> /usr/lib/libicucore.A.dylib
+0x7fff907a1000 - 0x7fff907b6fff com.apple.ImageCapture (8.0 - 8.0) <71B24609-DEE9-3927-9C82-62E72270299C> /System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/ImageCapture.framework/Versions/A/ImageCapture
+0x7fff907b7000 - 0x7fff907b7fff com.apple.vecLib (3.8 - vecLib 3.8) <6CBBFDC4-415C-3910-9558-B67176447789> /System/Library/Frameworks/vecLib.framework/Versions/A/vecLib
+0x7fff907b9000 - 0x7fff907c5fff libCSync.A.dylib (333.1) <319D3E83-8086-3990-8773-872F2E7C6EB3> /System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/CoreGraphics.framework/Versions/A/Resources/libCSync.A.dylib
+0x7fff907c6000 - 0x7fff907cbfff libcache.dylib (57) <65187C6E-3FBF-3EB8-A1AA-389445E2984D> /usr/lib/system/libcache.dylib
+0x7fff907cc000 - 0x7fff907ccffd com.apple.audio.units.AudioUnit (1.9.2 - 1.9.2) <6D314680-7409-3BC7-A807-36341411AF9A> /System/Library/Frameworks/AudioUnit.framework/Versions/A/AudioUnit
+0x7fff907f6000 - 0x7fff907fdfff libGFXShared.dylib (8.10.1) <B4AB9480-2CDB-34F8-8D6F-F5A2CFC221B0> /System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGFXShared.dylib
+0x7fff90923000 - 0x7fff909f6ff7 com.apple.DiscRecording (7.0 - 7000.2.4) <D62DA01B-5B60-3E99-9395-C11FB47E82E0> /System/Library/Frameworks/DiscRecording.framework/Versions/A/DiscRecording
+0x7fff909f7000 - 0x7fff90f67ff7 com.apple.CoreAUC (6.22.03 - 6.22.03) <A77BC97A-B695-3F7E-8696-5B2357C2726B> /System/Library/PrivateFrameworks/CoreAUC.framework/Versions/A/CoreAUC
+0x7fff90f68000 - 0x7fff910d9ff7 com.apple.QTKit (7.7.1 - 2599.41) <A645347D-3EEC-34A7-8051-A57AC60151EF> /System/Library/Frameworks/QTKit.framework/Versions/A/QTKit
+0x7fff910da000 - 0x7fff910dcfff libquarantine.dylib (52.1) <143B726E-DF47-37A8-90AA-F059CFD1A2E4> /usr/lib/system/libquarantine.dylib
+0x7fff910dd000 - 0x7fff910e1fff libGIF.dylib (851) <AD40D084-6E34-38CD-967D-705F94B188DA> /System/Library/Frameworks/ImageIO.framework/Versions/A/Resources/libGIF.dylib
+0x7fff910e2000 - 0x7fff910e5fff com.apple.AppleSystemInfo (2.0 - 2) <C9D7F3A6-F926-39F3-8F55-A3A137DDAE50> /System/Library/PrivateFrameworks/AppleSystemInfo.framework/Versions/A/AppleSystemInfo
+0x7fff910e6000 - 0x7fff9117aff7 com.apple.CorePDF (2.2 - 2.2) <F17D7D37-4190-38E2-9F43-DD4F87792390> /System/Library/PrivateFrameworks/CorePDF.framework/Versions/A/CorePDF
+0x7fff9117b000 - 0x7fff9118afff com.apple.opengl (1.8.10 - 1.8.10) <AD49CF56-B7C1-3598-8610-58532FC41345> /System/Library/Frameworks/OpenGL.framework/Versions/A/OpenGL
+0x7fff9118b000 - 0x7fff9118bfff com.apple.CoreServices (57 - 57) <45F1466A-8264-3BB7-B0EC-E5E5BFBED143> /System/Library/Frameworks/CoreServices.framework/Versions/A/CoreServices
+0x7fff9118c000 - 0x7fff91196fff com.apple.speech.recognition.framework (4.1.5 - 4.1.5) <5A4B532E-3428-3F0A-8032-B0AFFF72CA3D> /System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/SpeechRecognition.framework/Versions/A/SpeechRecognition
+0x7fff91197000 - 0x7fff911acff7 libdispatch.dylib (228.23) <D26996BF-FC57-39EB-8829-F63585561E09> /usr/lib/system/libdispatch.dylib
+0x7fff911fd000 - 0x7fff91257fff com.apple.print.framework.PrintCore (8.3 - 387.2) <5BA0CBED-4D80-386A-9646-F835C9805B71> /System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/PrintCore.framework/Versions/A/PrintCore
+0x7fff91258000 - 0x7fff91263ff7 com.apple.aps.framework (3.0 - 3.0) <DEF85257-2D1C-3524-88F8-CF70980726AE> /System/Library/PrivateFrameworks/ApplePushService.framework/Versions/A/ApplePushService
+0x7fff91264000 - 0x7fff91268fff libCGXType.A.dylib (333.1) <16625094-813E-39F8-9AFE-C1A24ED11749> /System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/CoreGraphics.framework/Versions/A/Resources/libCGXType.A.dylib
+0x7fff91771000 - 0x7fff9195bff7 com.apple.CoreFoundation (6.8 - 744.19) <0F7403CA-2CB8-3D0A-992B-679701DF27CA> /System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation
+0x7fff9195c000 - 0x7fff91996fff com.apple.framework.internetaccounts (2.1 - 210) <546769AA-C561-3C17-8E8E-4E65A700E2F1> /System/Library/PrivateFrameworks/InternetAccounts.framework/Versions/A/InternetAccounts
+0x7fff91997000 - 0x7fff91a35ff7 com.apple.ink.framework (10.8.2 - 150) <3D8D16A2-7E01-3EA1-B637-83A36D353308> /System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/Ink.framework/Versions/A/Ink
+0x7fff91a38000 - 0x7fff91a45ff7 com.apple.NetAuth (4.0 - 4.0) <A4A21A2F-B26A-3DC9-95E4-DAFA43A4A2C3> /System/Library/PrivateFrameworks/NetAuth.framework/Versions/A/NetAuth
+0x7fff91a46000 - 0x7fff91a89ff7 com.apple.bom (12.0 - 192) <0EFE0F2D-B6DE-3D1E-93C2-EED6D96F70A2> /System/Library/PrivateFrameworks/Bom.framework/Versions/A/Bom
+0x7fff91aa1000 - 0x7fff91aebff7 libGLU.dylib (8.10.1) <6699DEA6-9EEB-3B84-A57F-B25AE44EC584> /System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGLU.dylib
+0x7fff91aec000 - 0x7fff91c61ff7 com.apple.CFNetwork (596.5 - 596.5) <22372475-6EF4-3A04-83FC-C061FE4717B3> /System/Library/Frameworks/CFNetwork.framework/Versions/A/CFNetwork
+0x7fff91c62000 - 0x7fff91d5fff7 libxml2.2.dylib (22.3) <7FD09F53-83DA-3ECD-8DD9-870E1A2F0427> /usr/lib/libxml2.2.dylib
+0x7fff91d60000 - 0x7fff91d91ff7 com.apple.DictionaryServices (1.2 - 184.4) <FB0540FF-5034-3591-A28D-6887FBC220F7> /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/DictionaryServices.framework/Versions/A/DictionaryServices
+0x7fff91d92000 - 0x7fff91dcffef libGLImage.dylib (8.10.1) <91E31B9B-4141-36D5-ABDC-20F1D6D1D0CF> /System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGLImage.dylib
+0x7fff91dda000 - 0x7fff91de1fff com.apple.phonenumbers (1.1 - 47) <0EB01ED6-F8DD-3A72-89C6-BA3E7AD805C8> /System/Library/PrivateFrameworks/PhoneNumbers.framework/Versions/A/PhoneNumbers
+0x7fff91de2000 - 0x7fff91f40fef com.apple.MediaControlSender (1.7 - 170.20) <853BE89D-49B0-3922-9ED5-DDBDE9A97356> /System/Library/PrivateFrameworks/MediaControlSender.framework/Versions/A/MediaControlSender
+0x7fff91f41000 - 0x7fff91f4cfff com.apple.CommonAuth (3.0 - 2.0) <1CA95702-DDC7-3ADB-891E-7F037ABDDA14> /System/Library/PrivateFrameworks/CommonAuth.framework/Versions/A/CommonAuth
+0x7fff91f4d000 - 0x7fff91f7bfff com.apple.CoreServicesInternal (154.3 - 154.3) <F4E118E4-E327-3314-83D7-EA20B1717ED0> /System/Library/PrivateFrameworks/CoreServicesInternal.framework/Versions/A/CoreServicesInternal
+0x7fff91fa7000 - 0x7fff92003fff com.apple.corelocation (1239.40 - 1239.40) <2F743CD8-A9F5-3375-A3B0-BB0D756FC239> /System/Library/Frameworks/CoreLocation.framework/Versions/A/CoreLocation
+0x7fff92004000 - 0x7fff92106fff libJP2.dylib (851) <26FFBDBF-9CCE-33D7-A45B-0A31C98DA37E> /System/Library/Frameworks/ImageIO.framework/Versions/A/Resources/libJP2.dylib
+0x7fff9210b000 - 0x7fff92118fff libbz2.1.0.dylib (29) <CE9785E8-B535-3504-B392-82F0064D9AF2> /usr/lib/libbz2.1.0.dylib
+0x7fff92119000 - 0x7fff92187ff7 com.apple.framework.IOKit (2.0.1 - 755.42.1) <A90038ED-48F2-3CC9-A042-53A3D7985844> /System/Library/Frameworks/IOKit.framework/Versions/A/IOKit
+0x7fff9224c000 - 0x7fff9234afff com.apple.QuickLookUIFramework (4.0 - 555.5) <EE02B332-20F3-3226-A022-D71B808E1CC4> /System/Library/Frameworks/Quartz.framework/Versions/A/Frameworks/QuickLookUI.framework/Versions/A/QuickLookUI
+
+External Modification Summary:
+Calls made by other process targeting this process:
+task_for_pid: 15
+thread_create: 0
+thread_set_state: 0
+Calls made by this process:
+task_for_pid: 0
+thread_create: 0
+thread_set_state: 0
+Calls made by all process on this machine:
+task_for_pid: 5196
+thread_create: 1
+thread_set_state: 0
+
+VM Region Summary:
+ReadOnly portion of Libraries: Total=303.2M resident=212.8M(70%) swapped_out_or_unallocated=90.3M(30%)
+Writable regions: Total=1.7G written=1.2G(68%) resident=1.6G(92%) swapped_out=25.8M(1%) unallocated=142.5M(8%)
+
+REGION TYPE VIRTUAL
+=========== =======
+ATS (font support) 31.8M
+ATS (font support) (reserved) 8K reserved VM address space (unallocated)
+CG backing store 872K
+CG image 180K
+CG raster data 2380K
+CG shared image 224K
+CoreImage 12K
+CoreServices 2324K
+IOKit 4K
+MALLOC 43.5M
+MALLOC guard page 48K
+Memory tag=242 12K
+Memory tag=251 24K
+OpenCL 108K
+STACK GUARD 56.0M
+Stack 11.6M
+VM_ALLOCATE 1.7G
+__DATA 24.2M
+__IMAGE 528K
+__LINKEDIT 98.5M
+__TEXT 204.7M
+__UNICODE 544K
+mapped file 124.2M
+shared memory 7428K
+=========== =======
+TOTAL 2.2G
+TOTAL, minus reserved VM space 2.2G
+
+Model: MacBookPro10,1, BootROM MBP101.00EE.B03, 4 processors, Intel Core i7, 2.7 GHz, 16 GB, SMC 2.3f36
+Graphics: Intel HD Graphics 4000, Intel HD Graphics 4000, Built-In, 512 MB
+Graphics: NVIDIA GeForce GT 650M, NVIDIA GeForce GT 650M, PCIe, 1024 MB
+Memory Module: BANK 0/DIMM0, 8 GB, DDR3, 1600 MHz, 0x80AD, 0x484D5434314753364D465238432D50422020
+Memory Module: BANK 1/DIMM0, 8 GB, DDR3, 1600 MHz, 0x80AD, 0x484D5434314753364D465238432D50422020
+AirPort: spairport_wireless_card_type_airport_extreme (0x14E4, 0xEF), Broadcom BCM43xx 1.0 (5.106.98.100.17)
+Bluetooth: Version 4.1.7f4 12974, 3 service, 21 devices, 3 incoming serial port
+Network Service: Thunderbolt Ethernet, Ethernet, en1
+Network Service: Wi-Fi, AirPort, en0
+PCI Card: Apple 57762-A0, sppci_ethernet, Thunderbolt@10,0,0
+Serial ATA Device: APPLE SSD SD512E, 500.28 GB
+USB Device: hub_device, 0x8087 (Intel Corporation), 0x0024, 0x1a100000 / 2
+USB Device: FaceTime HD Camera (Built-in), apple_vendor_id, 0x8510, 0x1a110000 / 3
+USB Device: hub_device, 0x8087 (Intel Corporation), 0x0024, 0x1d100000 / 2
+USB Device: hub_device, 0x0424 (SMSC), 0x2512, 0x1d180000 / 3
+USB Device: BRCM20702 Hub, 0x0a5c (Broadcom Corp.), 0x4500, 0x1d181000 / 5
+USB Device: Bluetooth USB Host Controller, apple_vendor_id, 0x8286, 0x1d181300 / 7
+USB Device: Apple Internal Keyboard / Trackpad, apple_vendor_id, 0x0262, 0x1d182000 / 4

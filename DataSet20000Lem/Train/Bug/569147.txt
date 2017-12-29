@@ -1,0 +1,44 @@
+filename and lineno not useful in error event for syntax error hit while loading web worker
+User-Agent: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; en-US; rv:1.9.2.3) Gecko/20100401 Firefox/3.6.3
+Build Identifier: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; en-US; rv:1.9.2.3) Gecko/20100401 Firefox/3.6.3
+
+I create a web worker:
+worker_instance = new Worker('loader_worker');
+worker_instance.onmessage = readMessage;
+worker_instance.onerror = handleError;
+
+handlerError is:
+var handleError = function(event) {
+alert("Error " +
+event.message +
+" occurred in web worker at " +
+event.filename +
+":" +
+event.lineno);
+return false;
+};
+
+The "loader_worker.js" script ha a syntax error:
+
+big syntax error ;
+
+I catch the event, the event ha a filename and lineno attribute but filename is the empty string and lineno is 0.
+
+It would be nice if, at least, the lineno could be fixed. The filename can be deduced kinda/sorta.
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Create a web work via new Worker("path.js");
+2. In path.js have a syntax error
+3. Catch the error event in the onerror handler for the worker and examine the event.
+Actual Results:
+event.filename is "" and event.lineno is 0. event.message is set for me.
+
+
+Expected Results:
+event.filename should be "path.js" or something similar. event.lineno should be the line number that the syntax error wa detected.
+
+I tried this on the "last night build" and it still happened. I have firebug installed.

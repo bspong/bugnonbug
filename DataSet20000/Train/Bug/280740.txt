@@ -1,0 +1,99 @@
+Installer crashes in choose install components dialog
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.5) Gecko/20050201 Firefox/1.0
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.5) Gecko/20050201 Firefox/1.0
+
+I tried to build a custom firefox with pango patches on RedHat 8.0 (with glibc
+updates). The installer crashes in the componenet selection dialog. The bug
+seems straight forward to me and I am attaching the patch I used to fix the
+problem on my build. I can't explain why the official build does not crash the
+same way.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Start the firefox-installer
+2. Press 'Forward' to goto License screen
+3. 'Agree' the License to goto Choose setup Options screen.
+4. Select 'Custom' as install type and press 'Forward'.
+
+Actual Results:  
+The installer crashes.
+
+Expected Results:  
+The installer should show the choose componenets dialog.
+
+Messages on the Command Line:
+============================
+
+./firefox-installer: line 56:  1372 Segmentation fault      ./${BINNAME}-bin $@
+
+Stack Trace:
+===========
+
+#0  0xb7975fab in strlen () from /lib/tls/libc.so.6
+#1  0xb7b881ce in g_strdup () from /usr/lib/libglib-2.0.so.0
+#2  0xb7d75bcc in gtk_clist_set_shift () from /usr/lib/libgtk-x11-2.0.so.0
+#3  0xb7d765a5 in gtk_clist_clear () from /usr/lib/libgtk-x11-2.0.so.0
+#4  0xb7d760ed in gtk_clist_append () from /usr/lib/libgtk-x11-2.0.so.0
+#5  0x0805704c in nsComponentsDlg::Show ()
+#6  0x080549cf in nsSetupTypeDlg::Next ()
+#7  0xb7bf3121 in g_cclosure_marshal_VOID__VOID () from /usr/lib/libgobject-2.0.so.0
+#8  0xb7bdec20 in g_closure_invoke () from /usr/lib/libgobject-2.0.so.0
+#9  0xb7bf2c28 in g_signal_emit_by_name () from /usr/lib/libgobject-2.0.so.0
+#10 0xb7bf1be7 in g_signal_emit_valist () from /usr/lib/libgobject-2.0.so.0
+#11 0xb7bf1ee4 in g_signal_emit () from /usr/lib/libgobject-2.0.so.0
+#12 0xb7d5c2a5 in gtk_button_clicked () from /usr/lib/libgtk-x11-2.0.so.0
+#13 0xb7d5d2bb in _gtk_button_paint () from /usr/lib/libgtk-x11-2.0.so.0
+#14 0xb7bf3121 in g_cclosure_marshal_VOID__VOID () from /usr/lib/libgobject-2.0.so.0
+#15 0xb7bdefb7 in g_cclosure_new_swap () from /usr/lib/libgobject-2.0.so.0
+#16 0xb7bdec20 in g_closure_invoke () from /usr/lib/libgobject-2.0.so.0
+#17 0xb7bf2451 in g_signal_emit_by_name () from /usr/lib/libgobject-2.0.so.0
+#18 0xb7bf1be7 in g_signal_emit_valist () from /usr/lib/libgobject-2.0.so.0
+#19 0xb7bf1ee4 in g_signal_emit () from /usr/lib/libgobject-2.0.so.0
+#20 0xb7d5c1f5 in gtk_button_released () from /usr/lib/libgtk-x11-2.0.so.0
+#21 0xb7d5d13b in _gtk_button_paint () from /usr/lib/libgtk-x11-2.0.so.0
+#22 0xb7e1a0d4 in _gtk_marshal_BOOLEAN__BOXED () from /usr/lib/libgtk-x11-2.0.so.0
+#23 0xb7bdefb7 in g_cclosure_new_swap () from /usr/lib/libgobject-2.0.so.0
+#24 0xb7bdec20 in g_closure_invoke () from /usr/lib/libgobject-2.0.so.0
+#25 0xb7bf2655 in g_signal_emit_by_name () from /usr/lib/libgobject-2.0.so.0
+#26 0xb7bf19be in g_signal_emit_valist () from /usr/lib/libgobject-2.0.so.0
+#27 0xb7bf1ee4 in g_signal_emit () from /usr/lib/libgobject-2.0.so.0
+#28 0xb7f18f67 in gtk_widget_send_expose () from /usr/lib/libgtk-x11-2.0.so.0
+#29 0xb7e18672 in gtk_propagate_event () from /usr/lib/libgtk-x11-2.0.so.0
+#30 0xb7e173c6 in gtk_main_do_event () from /usr/lib/libgtk-x11-2.0.so.0
+#31 0xb7ccc1a5 in _gdk_events_queue () from /usr/lib/libgdk-x11-2.0.so.0
+#32 0xb7b72c02 in g_main_depth () from /usr/lib/libglib-2.0.so.0
+#33 0xb7b73cf8 in g_main_context_dispatch () from /usr/lib/libglib-2.0.so.0
+#34 0xb7b74030 in g_main_context_dispatch () from /usr/lib/libglib-2.0.so.0
+#35 0xb7b74673 in g_main_loop_run () from /usr/lib/libglib-2.0.so.0
+#36 0xb7e16c83 in gtk_main () from /usr/lib/libgtk-x11-2.0.so.0
+#37 0x0805bc82 in nsXInstaller::RunWizard ()
+#38 0x0805c261 in main ()
+
+Build Information:
+=================
+
+This is a custom build. I have applied the pango patch to firefox-1.0 source
+code and tried to build it
+
+Firefox Source : 1.0 + pango patches
+Pango : 1.5.2
+Glib : 2.5.7
+Glibc,common,devel rpms : 2.3.2-4.80 (from fedoralegacy.org)
+
+.mozconfig:
+==========
+
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/firefox_build
+
+. $topsrcdir/browser/config/mozconfig
+
+ac_add_options --enable-default-toolkit=gtk2
+ac_add_options --enable-pango
+ac_add_options --enable-xft
+ac_add_options --disable-tests
+ac_add_options --disable-debug
+ac_add_options --disable-jsd
+ac_add_options --enable-static
+ac_add_options --disable-shared
+ac_add_options --enable-optimize="-O3"

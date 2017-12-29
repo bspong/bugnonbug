@@ -1,0 +1,142 @@
+memory leak in long running multipart response
+User-Agent:       Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 5.2; WOW64; Trident/4.0; .NET CLR 1.1.4322; .NET CLR 2.0.50727; .NET CLR 3.0.04506.648; .NET CLR 3.5.21022; .NET CLR 3.0.4506.2152; .NET CLR 3.5.30729; .NET4.0C; .NET4.0E)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.2; en-US; rv:1.9.2.12) Gecko/20101026 Firefox/3.6.12 (.NET CLR 3.5.30729)
+
+If multipart response is used to push high volume of messages to the Firefox, the memory used by browser steadily increases causing machine to run out of memory.
+
+I have created a test to reproduce it: server sends about 1,000 messages per second to the Browser. If test runs for couple hours, Firefox would allocate several hundred thousand megabytes of memory - very large memory leak.
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+Run servlet in Tomcat. Tomcat 7 is required. Configure Tomcat to use Http11NioProtocol:
+    <Connector port="80" protocol="org.apache.coyote.http11.Http11NioProtocol" 
+               connectionTimeout="120000" 
+               redirectPort="8443" />
+
+Put client code below in HTML file and connect to the server:
+
+Client code:
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/1999/REC-html401-19991224/loose.dtd">
+<html>
+<head>
+    <title>test</title>
+    <script type="text/javascript" src="log4js.js"></script>
+</head>
+<body onload="initialize();">
+
+    <script type="text/javascript">
+        var api;
+        var log = new Log(Log.DEBUG, Log.popupLogger);
+        var messagesProcessed = 0;
+
+        function initialize() {
+            api = window.XMLHttpRequest ? new XMLHttpRequest : new ActiveXObject("Microsoft.XMLHTTP");
+            api.onreadystatechange = onreadystatechange;
+            api.onerror = onerror;
+
+            api.multipart = true;
+
+            api.open("GET", "http://localhost/Test/Controller", true);
+
+            api.send("");
+        }
+
+	    function onreadystatechange() {
+	        var readyState = api.readyState;
+
+	        switch (readyState) {
+	            case 3:
+	                change();
+	                break;
+	            case 4:
+	                disconnect();
+	                break;
+	        }
+	    }
+
+	    function change() {
+	        var objJson = eval('(' + api.responseText + ')');
+	        messagesProcessed++;
+	        if (messagesProcessed % 1000 == 0) {
+	            log.debug('Processed ' + messagesProcessed);
+	        }
+	    }
+
+	    function disconnect() {
+        }
+
+	    function onerror() {
+	    }
+
+    </script>
+
+</body>
+</html>
+
+
+And this is the Java server code:
+package test;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.catalina.comet.CometEvent;
+import org.apache.catalina.comet.CometProcessor;
+
+@SuppressWarnings("serial")
+public class WebFrameworkServlet extends HttpServlet implements CometProcessor {
+
+	@Override
+	public void event(CometEvent event) throws IOException, ServletException {
+		HttpServletRequest request = event.getHttpServletRequest();
+		HttpServletResponse response = event.getHttpServletResponse();
+		if (event.getEventType() == CometEvent.EventType.BEGIN) {
+			System.out.println("Begin for session: " + request.getSession(true).getId() + " " + response.getWriter());
+			
+			response.setHeader("pragma", "no-cache,no-store");
+			response.setHeader("cache-control", "no-cache,no-store,max-age=0,max-stale=0");
+			
+			response.setHeader("Content-Type", "multipart/x-mixed-replace;boundary=activ");
+			
+			event.setTimeout(Integer.MAX_VALUE);
+			PrintWriter out = response.getWriter();
+			
+			out.print("--activ\nContent-Type: text/json\n\n");
+			
+			int messagesSent = 0;
+			while (true) {
+				out.print("{\"messageType\":8448,\"requestId\":0,\"eventType\":1,\"symbolId\":[\"BAC.EA\",0],\"fields\":[{\"header\":0,\"type\":6,\"data\":[3993,2]},{\"header\":55,\"type\":6,\"data\":[1185,2]},{\"header\":54,\"type\":6,\"data\":[3218,2]},{\"header\":5,\"type\":6,\"data\":[6617,2]},{\"header\":52,\"type\":4,\"data\":[15]},{\"header\":12,\"type\":6,\"data\":[1700,2]}]}");
+				out.print("\n");
+				out.print("--activ\nContent-Type: text/json\n\n");
+				out.flush();
+				messagesSent++;
+				try {
+					if (messagesSent % 5 == 0) {
+						Thread.sleep(2);
+					}
+				} catch (InterruptedException e) {
+				}
+				if (messagesSent % 1000 == 0) {
+					System.out.println("Sent " + messagesSent);
+				}
+			}
+		}
+	}
+
+}
+
+
+Actual Results:  
+Running the test for couple hours will allocate several hundred thousand megabytes of memory in Firefox.
+
+Expected Results:  
+Did not expect to have memory leak.
+
+Be tested for memory leaks using test above or similar.

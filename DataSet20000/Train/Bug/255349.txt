@@ -1,0 +1,66 @@
+Fails to re-show object hidden by setting CSS rule in Javascript
+User-Agent:       Mozilla/5.0 (Windows; U; Win98; en-US; rv:1.7) Gecko/20040803 Firefox/0.9.3
+Build Identifier: Mozilla/5.0 (Windows; U; Win98; en-US; rv:1.7) Gecko/20040803 Firefox/0.9.3
+
+If I:
+* when page loaded, use Javascript to set a CSS rule to make object X
+visibility:hidden
+* after some Javascript processing, set object X visbility:visible
+Firefox 0.9.3 leaves X hidden.
+
+This process works fine in IE5+ and in NN 6.2.
+
+Sample:
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="myStyleSheet.css" type="text/css"></head>
+<body>
+<div id="content" style="border: solid 1px green">
+   <p>Can you see this DIV?</p>
+</div>
+<script type="text/javascript" language="javascript"><!--
+function createStylesheet {
+   if (document.all) return document.createStyleSheet();
+   else if document.getElementsByTagName("*") {
+         var ss = document.createElement('style');
+         var ha = document.getElementsByTagName('head');
+         var h = ha[ha.length - 1];
+         h.appendChild(ss);
+         ss = document.styleSheets[document.styleSheets.length - 1];
+         return ss;
+   }
+}
+function setCSSrule(selsp, rtxt) {
+   // Args: selsp = selector spec, rtxt = rule text.
+   var ss; // Will -> the style sheet.
+   var ds = document.styleSheets;
+   if (ds.length == 0) ss = createStylesheet();
+   else {
+   var ss = ds[ds.length - 1];
+   if (document.all) ss.addRule(selsp, rtxt);
+   else if document.getElementsByTagName("*")
+            ss.insertRule(selsp + ' {' + rtxt + '}', ss.length - 1);
+}
+setCSSrule ('#' + 'content', 'visibility: hidden');
+setCSSrule ('#' + 'content', 'visibility: visible');
+--></script>
+</body>
+</html>
+
+After all this code, DIV 'content' is hidden when it should be visible.
+Same happens if JS code is executed via window.onload
+
+
+
+Reproducible: Always
+Steps to Reproduce:
+1. Create HTML and JS as above.
+2. Load the page in Firefox
+3.
+
+Actual Results:  
+DIV 'content' remains hidden.
+
+Expected Results:  
+DIV 'content'should be visible.

@@ -1,0 +1,59 @@
+ObservableObject should not wrap a non-configurable, non-writable property.
+ObservableObject's Proxy handler violates the following Proxy invariant, for |prototype| property:
+
+http://www.ecma-international.org/ecma-262/6.0/#sec-invariants-of-the-essential-internal-methods
+> [[Get]] (P, Receiver)
+> * If P wa previously observed a a non-configurable, non-writable own data
+> property of the target with value v, then [[Get]] must return the
+> SameValue.
+
+
+Here's the detail:
+
+ObservableObject wrap passed object with a Proxy, that wrap property recursively, regardless of the property's descriptor.
+
+http://hg.mozilla.org/mozilla-central/file/35b211eaad1f/devtools/client/shared/observable-object.js#l35
+> function ObservableObject(object = {}) {
+> ...
+> let handler = new Handler(this);
+> this.object = new Proxy(object, handler);
+> ...
+> }
+> ...
+> Handler.prototype = {
+> ...
+> get: function(target, key) {
+> let value = target[key];
+> let [wrapped, path] = this.wrap(target, key, value);
+> this._emitter.emit("get", path, value);
+> return wrapped;
+> },
+
+
+It's used here:
+
+http://hg.mozilla.org/mozilla-central/file/35b211eaad1f/devtools/client/webide/modules/app-projects.js#l153
+> const store = new ObservableObject({ projects:[] });
+
+
+the array's map method is called here:
+
+http://hg.mozilla.org/mozilla-central/file/35b211eaad1f/devtools/client/webide/test/head.js#l97
+> let project = AppProjects.store.object.projects.map(p => p.location);
+
+
+bug 1165052 will implement Array[@@species] and related semantics in Array#map [1][2]. |projects.map(...)| access |projects.constructor[@@species]|, and the Proxy handler return a wrapped Array constructor. Then, the wrapped constructor is called, and |constructor.prototype| is accessed [3][4][5][6].
+
+There, |prototype| property is non-configurable and non-writable, so the Proxy handler should not wrap it.
+
+
+Here's a try run that fails with it (search "proxy must report the same value"):
+https://treeherder.mozilla.org/logviewer.html#?job_id=14846062&repo=try
+
+
+[1] http://www.ecma-international.org/ecma-262/6.0/#sec-array.prototype.map
+[2] http://www.ecma-international.org/ecma-262/6.0/#sec-arrayspeciescreate
+[3] http://www.ecma-international.org/ecma-262/6.0/#sec-construct
+[4] http://www.ecma-international.org/ecma-262/6.0/#sec-ecmascript-function-objects-construct-argumentslist-newtarget
+[5] http://www.ecma-international.org/ecma-262/6.0/#sec-ordinarycreatefromconstructor
+[6] http://www.ecma-international.org/ecma-262/6.0/#sec-getprototypefromconstructor

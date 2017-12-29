@@ -1,0 +1,36 @@
+Deadlock in AtomizeAndCopyChars with off-main-thread parsing
+While working on bug 1297558 I saw lot of reftest timeouts. These turned out to be a deadlock like this:
+
+Thread 1 (Thread 0x7f99fd92ab00 (LWP 27079)):
+
+#0 0x00007f99fd6ab2ad in __lll_lock_wait () at ../sysdeps/unix/sysv/linux/x86_64/lowlevellock.S:135
+#1 0x00007f99fd6a4dfd in __GI___pthread_mutex_lock (mutex=0x7f99e9995130) at ../nptl/pthread_mutex_lock.c:80
+#2 0x00007f99faf3f004 in js::Mutex::lock() (this=<optimised out>) at /home/jon/clone/dev/js/src/threading/posix/Mutex.cpp:70
+#3 0x00007f99faf399a3 in AtomizeAndCopyChars<unsigned char>(js::ExclusiveContext*, unsigned char const*, unsigned long, js::PinningBehavior) (rt=<optimised out>, this=<optimised out>)
+at /home/jon/clone/dev/js/src/jscntxt.h:787
+#4 0x00007f99faf399a3 in AtomizeAndCopyChars<unsigned char>(js::ExclusiveContext*, unsigned char const*, unsigned long, js::PinningBehavior) (cx=<optimised out>, this=<optimised out>, _notifier=<optimised out>) at /home/jon/clone/dev/js/src/jscntxt.h:799
+#5 0x00007f99faf399a3 in AtomizeAndCopyChars<unsigned char>(js::ExclusiveContext*, unsigned char const*, unsigned long, js::PinningBehavior) (cx=<optimised out>, tbchars=<optimised out>, length=<optimised out>, pin=<optimised out>) at /home/jon/clone/dev/js/src/jsatom.cpp:332
+#6 0x00007f99faf388f1 in js::Atomize(js::ExclusiveContext*, char const*, unsigned long, js::PinningBehavior) (cx=0x7f99ea7f4000, bytes=0x7f99e2484cbd "observe", length=7, pin=js::DoNotPinAtom)
+at /home/jon/clone/dev/js/src/jsatom.cpp:419
+#7 0x00007f99fb31f838 in JS_GetProperty(JSContext*, JS::Handle<JSObject*>, char const*, JS::MutableHandle<JS::Value>) (cx=0x7f99ea7f4000, obj=0x7f99da7c1600, name=0x7f99e2484cbd "observe", vp=$jsval(0x7f99da7c1600)) at /home/jon/clone/dev/js/src/jsapi.cpp:2547
+
+Thread 9 (Thread 0x7f99e68f9700 (LWP 27091)):
+
+#0 0x00007f99fd6a83a0 in pthread_cond_wait@@GLIBC_2.3.2 () at ../sysdeps/unix/sysv/linux/x86_64/pthread_cond_wait.S:185
+#1 0x00007f99fb940926 in js::ConditionVariable::wait(js::LockGuard<js::Mutex>&) (this=0x7f99eb3ed274, lock=...) at /home/jon/clone/dev/js/src/threading/posix/ConditionVariable.cpp:117
+#2 0x00007f99fb940a3e in js::ConditionVariable::wait_for(js::LockGuard<js::Mutex>&, mozilla::BaseTimeDuration<mozilla::TimeDurationValueCalculator> const&) (this=0x7f99eb3ed270, lock=..., a_rel_time=...)
+at /home/jon/clone/dev/js/src/threading/posix/ConditionVariable.cpp:133
+#3 0x00007f99fb5796aa in js::GlobalHelperThreadState::wait(js::AutoLockHelperThreadState&, js::GlobalHelperThreadState::CondVar, mozilla::BaseTimeDuration<mozilla::TimeDurationValueCalculator>) (this=<optimised out>, locked=..., which=<optimised out>, timeout=#4 0x00007f99fb85f83c in js::gc::GCRuntime::refillFreeListOffMainThread(js::ExclusiveContext*, js::gc::AllocKind) (cx=<optimised out>, thingKind=js::gc::AllocKind::STRING) at /home/jon/clone/dev/js/src/gc/Allocator.cpp:314
+#5 0x00007f99fb866339 in js::Allocate<JSString, (js::AllowGC)0>(js::ExclusiveContext*) (thingKind=js::gc::AllocKind::STRING, thingSize=24, cx=<optimised out>)
+at /home/jon/clone/dev/js/src/gc/Allocator.cpp:285
+#6 0x00007f99fb866339 in js::Allocate<JSString, (js::AllowGC)0>(js::ExclusiveContext*) (kind=js::gc::AllocKind::STRING, thingSize=24, cx=<optimised out>) at /home/jon/clone/dev/js/src/gc/Allocator.cpp:162
+#7 0x00007f99fb866339 in js::Allocate<JSString, (js::AllowGC)0>(js::ExclusiveContext*) (cx=0x7f99c5c24400) at /home/jon/clone/dev/js/src/gc/Allocator.cpp:143
+#8 0x00007f99fb677ca2 in NewStringDeflated<(js::AllowGC)0>(js::ExclusiveContext*, char16_t const*, unsigned long) (cx=<optimised out>) at /home/jon/clone/dev/js/src/vm/String-inl.h:250
+#9 0x00007f99fb677ca2 in NewStringDeflated<(js::AllowGC)0>(js::ExclusiveContext*, char16_t const*, unsigned long) (len=11, cx=<optimised out>, chars=<optimised out>)
+at /home/jon/clone/dev/js/src/vm/String-inl.h:30
+#10 0x00007f99fb677ca2 in NewStringDeflated<(js::AllowGC)0>(js::ExclusiveContext*, char16_t const*, unsigned long) (cx=<optimised out>, chars=...) at /home/jon/clone/dev/js/src/vm/String.cpp:1116
+#11 0x00007f99fb677ca2 in NewStringDeflated<(js::AllowGC)0>(js::ExclusiveContext*, char16_t const*, unsigned long) (cx=0x7f99c5c24400, s=<optimised out>, n=11)
+at /home/jon/clone/dev/js/src/vm/String.cpp:1154
+#12 0x00007f99faf39f63 in AtomizeAndCopyChars<char16_t>(js::ExclusiveContext*, char16_t const*, unsigned long, js::PinningBehavior) (cx=<optimised out>, tbchars=<optimised out>, length=<optimised out>, pin=<optimised out>) at /home/jon/clone/dev/js/src/jsatom.cpp:344
+
+This is because GCRuntime::refillFreeListOffMainThread is waiting for a signal to tell it that GC ha finished on the main thread but AtomizeAndCopyChars which ultimately call it is holding the exclusive access lock. The main thread isn't doing GC any more but ha entered AtomizeAndCopyChars and is waiting for the exclusive access lock itself.

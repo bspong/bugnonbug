@@ -1,0 +1,25 @@
+Could not query nsIDOMChromeWindow interface from root nsIDOMWindow.
+User-Agent:       Opera/9.64 (Windows NT 5.1; U; en) Presto/2.1.1
+Build Identifier: 20090715084055
+
+To use nsIBrowserDOMWindow->OpenURI() method in our C++ XPCOM (to navigate to some URL) we need to get nsIBrowserDOMWindow interface (this is a widespread technique described in the internet). It works fine for Firefox 3.0.11 but does not for Firefox 3.5.1.
+
+Reproducible: Always
+
+Steps to Reproduce:
+In your C++ code do the following:
+1. Get nsIDOMWindowInternal (through nsIWindowMediator->GetMostRecentWindow()).
+2. Get nsIWebNavigation (through nsIInterfaceRequestor->GetInterface()).
+3. Get nsIDocShellTreeItem (through nsIDocShellTreeItem->GetRootTreeItem()).
+4. Get nsIDOMWindow (through nsIInterfaceRequestor->GetInterface()).
+5. Try to get nsIDOMChromeWindow using do_QueryInterface() from nsIDOMWindow.
+
+Please see the attached source code.
+Actual Results:  
+do_QueryInterface() returns NULL.
+
+Expected Results:  
+do_QueryInterface() shoult return valid nsIDOMChromeWindow.
+
+Please see the attached source code. It fails at the following line (returns NULL):
+nsCOMPtr<nsIDOMChromeWindow> spRootDOMChromeWindow = do_QueryInterface(spRootDOMWindow);

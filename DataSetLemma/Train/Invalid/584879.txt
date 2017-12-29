@@ -1,0 +1,289 @@
+crash in nsDOMWorkerXHRState when multiple worker execute concurrently
+User-Agent: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_4; en-us) AppleWebKit/533.17.8 (KHTML, like Gecko) Version/5.0.1 Safari/533.17.8
+Build Identifier: xulrunner 1.9.2.8
+
+a crash ha occurred while several worker perform network intensive background task
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+the crash is random
+Actual Results:
+the application crashed
+
+Expected Results:
+the application shouldn't crash
+
+Exception Type: EXC_BAD_ACCESS (SIGSEGV)
+Exception Codes: 0x000000000000000d, 0x0000000000009800
+Crashed Thread: 9
+
+Thread 0: Dispatch queue: com.apple.main-thread
+0 libSystem.B.dylib 0xffff028f __spin_lock + 47
+1 libSystem.B.dylib 0x97d71ba8 free + 244
+2 XUL 0x01b80e37 nsAString_internal::~nsAString_internal() + 71 (nsTSubstring.cpp:212)
+3 XUL 0x0162b4d1 nsDOMWorkerXHRState::~nsDOMWorkerXHRState() + 49 (nsDOMWorkerEvents.h:276)
+4 XUL 0x016299b8 nsDOMWorkerXHRState::Release() + 40 (nsDOMWorkerEvents.cpp:449)
+5 XUL 0x016375fc nsDOMWorkerXHRProxy::Destroy() + 76 (nsAutoLock.h:224)
+6 XUL 0x01634a12 nsDOMWorkerXHR::~nsDOMWorkerXHR() + 674 (nsDOMWorkerXHR.cpp:352)
+7 XUL 0x01624bb5 nsDOMWorkerFeature::Release() + 53 (nsDOMWorker.cpp:995)
+8 XUL 0x01624bd7 nsDOMWorkerFeature::Release() + 87 (nsDOMWorker.cpp:995)
+9 XUL 0x01039741 XPCJSRuntime::GCCallback(JSContext*, JSGCStatus) + 1313 (nsTArray.h:66)
+10 XUL 0x015bd823 DOMGCCallback(JSContext*, JSGCStatus) + 51 (nsJSEnvironment.cpp:3807)
+11 libmozjs.dylib 0x004a8f57 js_GC + 3703 (jsgc.cpp:3825)
+12 libmozjs.dylib 0x004a9c18 js_NewGCString + 872 (jsgc.cpp:1858)
+13 libmozjs.dylib 0x0052bb18 js_NewString + 104 (jsstr.cpp:3070)
+14 libmozjs.dylib 0x0052fa59 js_ConcatStrings + 489 (jsstr.cpp:178)
+15 libmozjs.dylib 0x004b4761 js_Interpret + 37921 (jsops.cpp:986)
+16 libmozjs.dylib 0x004bdaf1 js_Invoke + 2273 (jsinterp.cpp:1368)
+17 XUL 0x010446fd nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS*, unsigned short, XPTMethodDescriptor const*, nsXPTCMiniVariant*) + 7245 (xpcwrappedjsclass.cpp:1696)
+18 XUL 0x0103dbf3 nsXPCWrappedJS::CallMethod(unsigned short, XPTMethodDescriptor const*, nsXPTCMiniVariant*) + 67 (xpcwrappedjs.cpp:571)
+19 XUL 0x01b6ece5 PrepareAndDispatch(nsXPTCStubBase*, unsigned int, unsigned int*) + 309 (xptcstubs_unixish_x86.cpp:93)
+20 XUL 0x01b6bd37 nsXPTCStubBase::Stub3() + 39 (xptcstubsdef.inc:1)
+21 XUL 0x0162d279 nsDOMWorkerMessageHandler::DispatchEvent(nsIDOMEvent*, int*) + 329 (nsDOMWorkerMessageHandler.cpp:341)
+22 XUL 0x01625a8e nsDOMWorker::DispatchEvent(nsIDOMEvent*, int*) + 78 (nsDOMWorker.cpp:2027)
+23 XUL 0x01628b7e nsDOMFireEventRunnable::Run() + 174 (nsDOMWorker.cpp:957)
+24 XUL 0x01b5bfec nsThread::ProcessNextEvent(int, int*) + 252 (nsThread.cpp:527)
+25 XUL 0x01b1a447 NS_ProcessPendingEvents_P(nsIThread*, unsigned int) + 87 (nsThreadUtils.cpp:200)
+26 XUL 0x01ab92f1 nsBaseAppShell::NativeEventCallback() + 97 (nsBaseAppShell.cpp:126)
+27 XUL 0x01a812b5 nsAppShell::ProcessGeckoEvents(void*) + 757 (nsAppShell.mm:426)
+28 com.apple.CoreFoundation 0x91ac00fb __CFRunLoopDoSources0 + 1563
+29 com.apple.CoreFoundation 0x91abdbbf __CFRunLoopRun + 1071
+30 com.apple.CoreFoundation 0x91abd094 CFRunLoopRunSpecific + 452
+31 com.apple.CoreFoundation 0x91abcec1 CFRunLoopRunInMode + 97
+32 com.apple.HIToolbox 0x98288f9c RunCurrentEventLoopInMode + 392
+33 com.apple.HIToolbox 0x98288c8d ReceiveNextEventCommon + 158
+34 com.apple.HIToolbox 0x98288bd6 BlockUntilNextEventMatchingListInMode + 81
+35 com.apple.AppKit 0x93430a89 _DPSNextEvent + 847
+36 com.apple.AppKit 0x934302ca -[NSApplication nextEventMatchingMask:untilDate:inMode:dequeue:] + 156
+37 XUL 0x01a80e01 nsAppShell::ProcessNextNativeEvent(int) + 1281 (nsAppShell.mm:707)
+38 XUL 0x01ab96a5 nsBaseAppShell::OnProcessNextEvent(nsIThreadInternal*, int, unsigned int) + 421 (nsBaseAppShell.cpp:156)
+39 XUL 0x01a804d5 nsAppShell::OnProcessNextEvent(nsIThreadInternal*, int, unsigned int) + 229 (nsAppShell.mm:863)
+40 XUL 0x01b5bf91 nsThread::ProcessNextEvent(int, int*) + 161 (nsThread.cpp:510)
+41 XUL 0x01b1a447 NS_ProcessPendingEvents_P(nsIThread*, unsigned int) + 87 (nsThreadUtils.cpp:200)
+42 XUL 0x01ab92f1 nsBaseAppShell::NativeEventCallback() + 97 (nsBaseAppShell.cpp:126)
+43 XUL 0x01a812b5 nsAppShell::ProcessGeckoEvents(void*) + 757 (nsAppShell.mm:426)
+44 com.apple.CoreFoundation 0x91ac00fb __CFRunLoopDoSources0 + 1563
+45 com.apple.CoreFoundation 0x91abdbbf __CFRunLoopRun + 1071
+46 com.apple.CoreFoundation 0x91abd094 CFRunLoopRunSpecific + 452
+47 com.apple.CoreFoundation 0x91abcec1 CFRunLoopRunInMode + 97
+48 com.apple.HIToolbox 0x98288f9c RunCurrentEventLoopInMode + 392
+49 com.apple.HIToolbox 0x98288d51 ReceiveNextEventCommon + 354
+50 com.apple.HIToolbox 0x98288bd6 BlockUntilNextEventMatchingListInMode + 81
+51 com.apple.AppKit 0x93430a89 _DPSNextEvent + 847
+52 com.apple.AppKit 0x934302ca -[NSApplication nextEventMatchingMask:untilDate:inMode:dequeue:] + 156
+53 com.apple.AppKit 0x933f255b -[NSApplication run] + 821
+54 XUL 0x01a8087a nsAppShell::Run() + 170 (nsAppShell.mm:778)
+55 XUL 0x0190f277 nsAppStartup::Run() + 71 (nsAppStartup.cpp:184)
+56 XUL 0x0100c785 XRE_main + 7973 (nsAppRunner.cpp:3483)
+57 org.gnucitizen.websecurify 0x000025b6 main + 598 (nsXULStub.cpp:583)
+58 org.gnucitizen.websecurify 0x000022f6 start + 54
+
+Thread 1: Dispatch queue: com.apple.libdispatch-manager
+0 libSystem.B.dylib 0x97d91942 kevent + 10
+1 libSystem.B.dylib 0x97d9205c _dispatch_mgr_invoke + 215
+2 libSystem.B.dylib 0x97d91519 _dispatch_queue_invoke + 163
+3 libSystem.B.dylib 0x97d912be _dispatch_worker_thread2 + 240
+4 libSystem.B.dylib 0x97d90d41 _pthread_wqthread + 390
+5 libSystem.B.dylib 0x97d90b86 start_wqthread + 30
+
+Thread 2:
+0 libSystem.B.dylib 0x97d8a086 select$DARWIN_EXTSN + 10
+1 libnspr4.dylib 0x0003ff9e poll + 446 (unix.c:3682)
+2 libnspr4.dylib 0x0003ac69 PR_Poll + 441 (ptio.c:3915)
+3 XUL 0x010cc5a0 nsSocketTransportService::Poll(int, unsigned int*) + 128 (nsSocketTransportService2.cpp:355)
+4 XUL 0x010cd3dc nsSocketTransportService::DoPollIteration(int) + 940 (nsSocketTransportService2.cpp:660)
+5 XUL 0x010cd9c0 nsSocketTransportService::OnProcessNextEvent(nsIThreadInternal*, int, unsigned int) + 96 (nsSocketTransportService2.cpp:538)
+6 XUL 0x01b5bf91 nsThread::ProcessNextEvent(int, int*) + 161 (nsThread.cpp:510)
+7 XUL 0x01b1a4ea NS_ProcessNextEvent_P(nsIThread*, int) + 42 (nsThreadUtils.cpp:250)
+8 XUL 0x010ccf3b nsSocketTransportService::Run() + 155 (nsSocketTransportService2.cpp:571)
+9 XUL 0x01b5bfec nsThread::ProcessNextEvent(int, int*) + 252 (nsThread.cpp:527)
+10 XUL 0x01b1a4ea NS_ProcessNextEvent_P(nsIThread*, int) + 42 (nsThreadUtils.cpp:250)
+11 XUL 0x01b5c130 nsThread::ThreadFunc(void*) + 144 (nsThread.cpp:253)
+12 libnspr4.dylib 0x0003eae2 _pt_root + 146 (ptthread.c:231)
+13 libSystem.B.dylib 0x97d9881d _pthread_start + 345
+14 libSystem.B.dylib 0x97d986a2 thread_start + 34
+
+Thread 3:
+0 libSystem.B.dylib 0x97da897a madvise + 10
+1 libSystem.B.dylib 0x97ddbc0d madvise_free_range + 65
+2 libSystem.B.dylib 0x97e6389c small_free_do_recirc_to_depot + 571
+3 libSystem.B.dylib 0x97d72cbe szone_free_definite_size + 3763
+4 libSystem.B.dylib 0x97d71ba8 free + 244
+5 libmozjs.dylib 0x004aa4da JSFreePointerListTask::run() + 42 (jsutil.h:202)
+6 libmozjs.dylib 0x0053a2b8 JSBackgroundThread::work() + 120 (jstask.cpp:97)
+7 libnspr4.dylib 0x0003eae2 _pt_root + 146 (ptthread.c:231)
+8 libSystem.B.dylib 0x97d9881d _pthread_start + 345
+9 libSystem.B.dylib 0x97d986a2 thread_start + 34
+
+Thread 4:
+0 libSystem.B.dylib 0x97d99066 __semwait_signal + 10
+1 libSystem.B.dylib 0x97d98d22 _pthread_cond_wait + 1191
+2 libSystem.B.dylib 0x97d98875 pthread_cond_timedwait$UNIX2003 + 72
+3 libnspr4.dylib 0x00038297 pt_TimedWait + 151 (ptsynch.c:299)
+4 libnspr4.dylib 0x00039007 PR_WaitCondVar + 87 (ptsynch.c:419)
+5 XUL 0x010385d1 XPCJSRuntime::WatchdogMain(void*) + 65 (xpcjsruntime.cpp:808)
+6 libnspr4.dylib 0x0003eae2 _pt_root + 146 (ptthread.c:231)
+7 libSystem.B.dylib 0x97d9881d _pthread_start + 345
+8 libSystem.B.dylib 0x97d986a2 thread_start + 34
+
+Thread 5:
+0 libSystem.B.dylib 0x97d99066 __semwait_signal + 10
+1 libSystem.B.dylib 0x97d98d22 _pthread_cond_wait + 1191
+2 libSystem.B.dylib 0x97d98875 pthread_cond_timedwait$UNIX2003 + 72
+3 libnspr4.dylib 0x00038297 pt_TimedWait + 151 (ptsynch.c:299)
+4 libnspr4.dylib 0x00039007 PR_WaitCondVar + 87 (ptsynch.c:419)
+5 XUL 0x01b605bf TimerThread::Run() + 79 (TimerThread.cpp:345)
+6 XUL 0x01b5bfec nsThread::ProcessNextEvent(int, int*) + 252 (nsThread.cpp:527)
+7 XUL 0x01b1a4ea NS_ProcessNextEvent_P(nsIThread*, int) + 42 (nsThreadUtils.cpp:250)
+8 XUL 0x01b5c130 nsThread::ThreadFunc(void*) + 144 (nsThread.cpp:253)
+9 libnspr4.dylib 0x0003eae2 _pt_root + 146 (ptthread.c:231)
+10 libSystem.B.dylib 0x97d9881d _pthread_start + 345
+11 libSystem.B.dylib 0x97d986a2 thread_start + 34
+
+Thread 6:
+0 libSystem.B.dylib 0x97d99066 __semwait_signal + 10
+1 libSystem.B.dylib 0x97d98d22 _pthread_cond_wait + 1191
+2 libSystem.B.dylib 0x97d9a9b8 pthread_cond_wait$UNIX2003 + 73
+3 libnspr4.dylib 0x000390a1 PR_WaitCondVar + 241 (ptsynch.c:417)
+4 XUL 0x01927bde nsSSLThread::Run() + 174 (nsSSLThread.cpp:965)
+5 libnspr4.dylib 0x0003eae2 _pt_root + 146 (ptthread.c:231)
+6 libSystem.B.dylib 0x97d9881d _pthread_start + 345
+7 libSystem.B.dylib 0x97d986a2 thread_start + 34
+
+Thread 7:
+0 libSystem.B.dylib 0x97d99066 __semwait_signal + 10
+1 libSystem.B.dylib 0x97d98d22 _pthread_cond_wait + 1191
+2 libSystem.B.dylib 0x97d9a9b8 pthread_cond_wait$UNIX2003 + 73
+3 libnspr4.dylib 0x000390a1 PR_WaitCondVar + 241 (ptsynch.c:417)
+4 XUL 0x01929293 nsCertVerificationThread::Run() + 83 (nsCertVerificationThread.cpp:135)
+5 libnspr4.dylib 0x0003eae2 _pt_root + 146 (ptthread.c:231)
+6 libSystem.B.dylib 0x97d9881d _pthread_start + 345
+7 libSystem.B.dylib 0x97d986a2 thread_start + 34
+
+Thread 8:
+0 libSystem.B.dylib 0x97d99066 __semwait_signal + 10
+1 libSystem.B.dylib 0x97d98d22 _pthread_cond_wait + 1191
+2 libSystem.B.dylib 0x97d98875 pthread_cond_timedwait$UNIX2003 + 72
+3 libnspr4.dylib 0x00038297 pt_TimedWait + 151 (ptsynch.c:299)
+4 libnspr4.dylib 0x00039007 PR_WaitCondVar + 87 (ptsynch.c:419)
+5 XUL 0x010d87ba nsHostResolver::GetHostToLookup(nsHostRecord**) + 154 (nsHostResolver.cpp:774)
+6 XUL 0x010d8e9c nsHostResolver::ThreadFunc(void*) + 76 (nsHostResolver.cpp:877)
+7 libnspr4.dylib 0x0003eae2 _pt_root + 146 (ptthread.c:231)
+8 libSystem.B.dylib 0x97d9881d _pthread_start + 345
+9 libSystem.B.dylib 0x97d986a2 thread_start + 34
+
+Thread 9 Crashed:
+0 ??? 0x196465c2 0 + 426010050
+1 libmozjs.dylib 0x004bdaf1 js_Invoke + 2273 (jsinterp.cpp:1368)
+2 XUL 0x010446fd nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS*, unsigned short, XPTMethodDescriptor const*, nsXPTCMiniVariant*) + 7245 (xpcwrappedjsclass.cpp:1696)
+3 XUL 0x0103dbf3 nsXPCWrappedJS::CallMethod(unsigned short, XPTMethodDescriptor const*, nsXPTCMiniVariant*) + 67 (xpcwrappedjs.cpp:571)
+4 XUL 0x01b6ece5 PrepareAndDispatch(nsXPTCStubBase*, unsigned int, unsigned int*) + 309 (xptcstubs_unixish_x86.cpp:93)
+5 XUL 0x01b6bd37 nsXPTCStubBase::Stub3() + 39 (xptcstubsdef.inc:1)
+6 XUL 0x0162d279 nsDOMWorkerMessageHandler::DispatchEvent(nsIDOMEvent*, int*) + 329 (nsDOMWorkerMessageHandler.cpp:341)
+7 XUL 0x01625a8e nsDOMWorker::DispatchEvent(nsIDOMEvent*, int*) + 78 (nsDOMWorker.cpp:2027)
+8 XUL 0x01628b7e nsDOMFireEventRunnable::Run() + 174 (nsDOMWorker.cpp:957)
+9 XUL 0x01622616 nsDOMWorkerRunnable::Run() + 166 (nsCOMPtr.h:469)
+10 XUL 0x01b5e14f nsThreadPool::Run() + 207 (nsCOMPtr.h:469)
+11 XUL 0x01b5bfec nsThread::ProcessNextEvent(int, int*) + 252 (nsThread.cpp:527)
+12 XUL 0x01b1a4ea NS_ProcessNextEvent_P(nsIThread*, int) + 42 (nsThreadUtils.cpp:250)
+13 XUL 0x01b5c130 nsThread::ThreadFunc(void*) + 144 (nsThread.cpp:253)
+14 libnspr4.dylib 0x0003eae2 _pt_root + 146 (ptthread.c:231)
+15 libSystem.B.dylib 0x97d9881d _pthread_start + 345
+16 libSystem.B.dylib 0x97d986a2 thread_start + 34
+
+Thread 10:
+0 libSystem.B.dylib 0x97d6b142 semaphore_wait_signal_trap + 10
+1 libSystem.B.dylib 0x97d70c06 pthread_mutex_lock + 490
+2 libnspr4.dylib 0x000391e2 PR_Lock + 18 (ptsynch.c:215)
+3 XUL 0x01625b5d nsDOMWorker::IsCanceled() + 29 (nsDOMWorker.cpp:1441)
+4 XUL 0x01638fc1 nsDOMWorkerXHRProxy::SetWithCredentials(int) + 465 (nsDOMWorkerXHRProxy.cpp:133)
+5 XUL 0x016330c8 nsDOMWorkerXHR::SetWithCredentials(int) + 40 (nsDOMWorkerXHR.cpp:929)
+6 XUL 0x01b6bcf8 NS_InvokeByIndex_P + 88 (xptcinvoke_unixish_x86.cpp:179)
+7 XUL 0x01049217 XPCWrappedNative::CallMethod(XPCCallContext&, XPCWrappedNative::CallMode) + 6935 (xpcwrappednative.cpp:2722)
+8 XUL 0x0104f7b0 XPC_WN_GetterSetter(JSContext*, JSObject*, unsigned int, long*, long*) + 608 (xpcprivate.h:2532)
+9 libmozjs.dylib 0x004bd668 js_Invoke + 1112 (jsinterp.cpp:1360)
+10 libmozjs.dylib 0x004bdf3f js_InternalInvoke + 143 (jsinterp.cpp:1423)
+11 libmozjs.dylib 0x004be1c0 js_InternalGetOrSet + 192 (jsinterp.cpp:1486)
+12 libmozjs.dylib 0x004cd64a js_SetPropertyHelper + 2234 (jsscope.h:625)
+13 libmozjs.dylib 0x004acb7d js_Interpret + 6205 (jsops.cpp:1854)
+14 libmozjs.dylib 0x004bdaf1 js_Invoke + 2273 (jsinterp.cpp:1368)
+15 XUL 0x010446fd nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS*, unsigned short, XPTMethodDescriptor const*, nsXPTCMiniVariant*) + 7245 (xpcwrappedjsclass.cpp:1696)
+16 XUL 0x0103dbf3 nsXPCWrappedJS::CallMethod(unsigned short, XPTMethodDescriptor const*, nsXPTCMiniVariant*) + 67 (xpcwrappedjs.cpp:571)
+17 XUL 0x01b6ece5 PrepareAndDispatch(nsXPTCStubBase*, unsigned int, unsigned int*) + 309 (xptcstubs_unixish_x86.cpp:93)
+18 XUL 0x01b6bd37 nsXPTCStubBase::Stub3() + 39 (xptcstubsdef.inc:1)
+19 XUL 0x0162d279 nsDOMWorkerMessageHandler::DispatchEvent(nsIDOMEvent*, int*) + 329 (nsDOMWorkerMessageHandler.cpp:341)
+20 XUL 0x01628b7e nsDOMFireEventRunnable::Run() + 174 (nsDOMWorker.cpp:957)
+21 XUL 0x01622616 nsDOMWorkerRunnable::Run() + 166 (nsCOMPtr.h:469)
+22 XUL 0x01b5e14f nsThreadPool::Run() + 207 (nsCOMPtr.h:469)
+23 XUL 0x01b5bfec nsThread::ProcessNextEvent(int, int*) + 252 (nsThread.cpp:527)
+24 XUL 0x01b1a4ea NS_ProcessNextEvent_P(nsIThread*, int) + 42 (nsThreadUtils.cpp:250)
+25 XUL 0x01b5c130 nsThread::ThreadFunc(void*) + 144 (nsThread.cpp:253)
+26 libnspr4.dylib 0x0003eae2 _pt_root + 146 (ptthread.c:231)
+27 libSystem.B.dylib 0x97d9881d _pthread_start + 345
+28 libSystem.B.dylib 0x97d986a2 thread_start + 34
+
+Thread 11:
+0 libSystem.B.dylib 0x97d99066 __semwait_signal + 10
+1 libSystem.B.dylib 0x97d98d22 _pthread_cond_wait + 1191
+2 libSystem.B.dylib 0x97d9a9b8 pthread_cond_wait$UNIX2003 + 73
+3 libnspr4.dylib 0x000390a1 PR_WaitCondVar + 241 (ptsynch.c:417)
+4 libnspr4.dylib 0x000390f9 PR_Wait + 57 (ptsynch.c:604)
+5 XUL 0x01b5b1da nsEventQueue::GetEvent(int, nsIRunnable**) + 90 (nsEventQueue.h:93)
+6 XUL 0x01b5bfcb nsThread::ProcessNextEvent(int, int*) + 219 (nsThread.cpp:523)
+7 XUL 0x01b1a4ea NS_ProcessNextEvent_P(nsIThread*, int) + 42 (nsThreadUtils.cpp:250)
+8 XUL 0x01637aaa nsDOMWorkerXHRProxy::Send(nsIVariant*) + 986 (nsDOMWorkerXHRProxy.cpp:1117)
+9 XUL 0x016335c7 nsDOMWorkerXHR::Send(nsIVariant*) + 71 (nsDOMWorkerXHR.cpp:708)
+10 XUL 0x01b6bcf8 NS_InvokeByIndex_P + 88 (xptcinvoke_unixish_x86.cpp:179)
+11 XUL 0x01049217 XPCWrappedNative::CallMethod(XPCCallContext&, XPCWrappedNative::CallMode) + 6935 (xpcwrappednative.cpp:2722)
+12 XUL 0x0104f9b4 XPC_WN_CallMethod(JSContext*, JSObject*, unsigned int, long*, long*) + 452 (xpcwrappednativejsops.cpp:1740)
+13 libmozjs.dylib 0x004bd668 js_Invoke + 1112 (jsinterp.cpp:1360)
+14 libmozjs.dylib 0x004abc24 js_Interpret + 2276 (jsops.cpp:2241)
+15 libmozjs.dylib 0x004bdaf1 js_Invoke + 2273 (jsinterp.cpp:1368)
+16 XUL 0x010446fd nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS*, unsigned short, XPTMethodDescriptor const*, nsXPTCMiniVariant*) + 7245 (xpcwrappedjsclass.cpp:1696)
+17 XUL 0x0103dbf3 nsXPCWrappedJS::CallMethod(unsigned short, XPTMethodDescriptor const*, nsXPTCMiniVariant*) + 67 (xpcwrappedjs.cpp:571)
+18 XUL 0x01b6ece5 PrepareAndDispatch(nsXPTCStubBase*, unsigned int, unsigned int*) + 309 (xptcstubs_unixish_x86.cpp:93)
+19 XUL 0x01b6bd37 nsXPTCStubBase::Stub3() + 39 (xptcstubsdef.inc:1)
+20 XUL 0x0162d279 nsDOMWorkerMessageHandler::DispatchEvent(nsIDOMEvent*, int*) + 329 (nsDOMWorkerMessageHandler.cpp:341)
+21 XUL 0x01628b7e nsDOMFireEventRunnable::Run() + 174 (nsDOMWorker.cpp:957)
+22 XUL 0x01622616 nsDOMWorkerRunnable::Run() + 166 (nsCOMPtr.h:469)
+23 XUL 0x01b5e14f nsThreadPool::Run() + 207 (nsCOMPtr.h:469)
+24 XUL 0x01b5bfec nsThread::ProcessNextEvent(int, int*) + 252 (nsThread.cpp:527)
+25 XUL 0x01b1a4ea NS_ProcessNextEvent_P(nsIThread*, int) + 42 (nsThreadUtils.cpp:250)
+26 XUL 0x01b5c130 nsThread::ThreadFunc(void*) + 144 (nsThread.cpp:253)
+27 libnspr4.dylib 0x0003eae2 _pt_root + 146 (ptthread.c:231)
+28 libSystem.B.dylib 0x97d9881d _pthread_start + 345
+29 libSystem.B.dylib 0x97d986a2 thread_start + 34
+
+Thread 12:
+0 libSystem.B.dylib 0x97d99066 __semwait_signal + 10
+1 libSystem.B.dylib 0x97d98d22 _pthread_cond_wait + 1191
+2 libSystem.B.dylib 0x97d98875 pthread_cond_timedwait$UNIX2003 + 72
+3 libnspr4.dylib 0x00038297 pt_TimedWait + 151 (ptsynch.c:299)
+4 libnspr4.dylib 0x00039007 PR_WaitCondVar + 87 (ptsynch.c:419)
+5 XUL 0x010d87ba nsHostResolver::GetHostToLookup(nsHostRecord**) + 154 (nsHostResolver.cpp:774)
+6 XUL 0x010d8e9c nsHostResolver::ThreadFunc(void*) + 76 (nsHostResolver.cpp:877)
+7 libnspr4.dylib 0x0003eae2 _pt_root + 146 (ptthread.c:231)
+8 libSystem.B.dylib 0x97d9881d _pthread_start + 345
+9 libSystem.B.dylib 0x97d986a2 thread_start + 34
+
+Thread 13:
+0 libSystem.B.dylib 0x97d99066 __semwait_signal + 10
+1 libSystem.B.dylib 0x97d98d22 _pthread_cond_wait + 1191
+2 libSystem.B.dylib 0x97d9a9b8 pthread_cond_wait$UNIX2003 + 73
+3 libnspr4.dylib 0x000390a1 PR_WaitCondVar + 241 (ptsynch.c:417)
+4 libnspr4.dylib 0x000390f9 PR_Wait + 57 (ptsynch.c:604)
+5 XUL 0x01b5b1da nsEventQueue::GetEvent(int, nsIRunnable**) + 90 (nsEventQueue.h:93)
+6 XUL 0x01b5bfcb nsThread::ProcessNextEvent(int, int*) + 219 (nsThread.cpp:523)
+7 XUL 0x01b1a4ea NS_ProcessNextEvent_P(nsIThread*, int) + 42 (nsThreadUtils.cpp:250)
+8 XUL 0x01b5c130 nsThread::ThreadFunc(void*) + 144 (nsThread.cpp:253)
+9 libnspr4.dylib 0x0003eae2 _pt_root + 146 (ptthread.c:231)
+10 libSystem.B.dylib 0x97d9881d _pthread_start + 345
+11 libSystem.B.dylib 0x97d986a2 thread_start + 34
+
+Thread 9 crashed with X86 Thread State (32-bit):
+eax: 0xb051258d ebx: 0x004ab351 ecx: 0x1c67566b edx: 0x18116580
+edi: 0x03019800 esi: 0x18116520 ebp: 0xb0512618 esp: 0xb05122ac
+ss: 0x0000001f efl: 0x00010202 eip: 0x196465c2 cs: 0x00000017
+ds: 0x0000001f es: 0x0000001f fs: 0x0000001f gs: 0x00000037
+cr2: 0x1b079e10

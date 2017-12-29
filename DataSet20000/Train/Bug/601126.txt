@@ -1,0 +1,15 @@
+Time elapsed in console log doesn't always match time in net request inspector
+When we log network requests to the console, we append the time elapsed once the request is complete - that is sexy hot. In most cases, if I click on the hyperlinked entry and pop up the network request inspector, the time reported in the "Response Headers" section matches the log entry, but in some cases it does not.
+
+These STR are pretty consistent for me:
+
+- Open console
+- Load https://wiki.mozilla.org/Firefox/4/Triage
+- Find the log entry for /images/header_tab.gif . The time elapsed for this image is typically 500-800ms for me.
+- Click the log entry to open the net panel, and notice that the response headers section reports a time that is ~100ms shorter.
+
+I'm willing to believe that these might be different timestamps - maybe the console logs "time to complete request", but the response headers entry in the inspector is "time until response started." If so, I'll own just misunderstanding it, but I think that those being the only two timestamps present, and having similar-but-not-identical meanings (as well as often being identical) will lead to confusion.
+
+Or maybe they really are supposed to be the same measure, and we just have a bug.
+
+Nominating for blocking particularly in case it's the second thing and we're just getting it wrong. If it's the first thing, I don't know what we can do to disambiguate. Maybe quoting the "time to response start" as a fraction of the total response time (e.g "700ms/856ms")?

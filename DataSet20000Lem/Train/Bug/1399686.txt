@@ -1,0 +1,22 @@
+`make package` broken on macOS after landing of bug 1399226
+Symlinks are being created inside Nightly.app to file that no longer exist a of bug 1399226, such a amazon-ca@2x.png. There appears to be at least one more problematic symlink to a non-existing amazon-com@2x.png. Executing `make package` in the objdir result in the following error:
+
+[...]
+Traceback (most recent call last):
+File "/Users/spohl/Documents/mozilla-central/toolkit/mozapps/installer/packager.py", line 333, in <module>
+main()
+File "/Users/spohl/Documents/mozilla-central/toolkit/mozapps/installer/packager.py", line 327, in main
+copier.copy(args.destination)
+File "/Users/spohl/Documents/mozilla-central/python/mozbuild/mozpack/copier.py", line 431, in copy
+copy_results.append((destfile, f.copy(destfile, skip_if_older)))
+File "/Users/spohl/Documents/mozilla-central/python/mozbuild/mozpack/copier.py", line 604, in copy
+file.copy(deflater, skip_if_older)
+File "/Users/spohl/Documents/mozilla-central/python/mozbuild/mozpack/files.py", line 189, in copy
+shutil.copyfileobj(self.open(), dest)
+File "/Users/spohl/Documents/mozilla-central/python/mozbuild/mozpack/files.py", line 217, in open
+return open(self.path, 'rb')
+IOError: [Errno 2] No such file or directory: '../../dist/Nightly.app/Contents/Resources/browser/features/activity-stream@mozilla.org/chrome/content/data/content/tippytop/images/amazon-ca@2x.png'
+make[3]: *** [stage-package] Error 1
+make[2]: *** [make-package] Error 2
+make[1]: *** [default] Error 2
+make: *** [package] Error 2

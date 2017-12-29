@@ -1,0 +1,86 @@
+Investigate TART ".error" regressions on UX branch on OS X 10.8
+mconley recently noticed a regression where some TART .error values on OS X 10.8 on the UX branch are considerably higher than the m-c ones (reminder: the .error values indicate target vs actual animation duration, e.g. if the animation should last 200ms but in practice lasts 207, then .error is 7):
+
+http://compare-talos.mattn.ca/breakdown.html?oldTestIds=31243565,31252017,31252031,31252075,31252083,31252091,31252101,31252127,31252135,31252145&newTestIds=31242563,31252259,31252363,31252409,31252547,31252555,31252567,31252593,31252601,31252629&testName=tart&osName=Mac%2010.8&server=graphs.mozilla.org
+
+The most meaningful ones are (highest %/absolute regressions):
+- simple-close-DPI1.error where m-c is 0.77 while UX is 7.19 (830%)
+- icon-open-DPI1.error    where m-c is 19.7 while UX is 34.7 (15ms)
+
+
+Initially we thought they've been there all along and we somehow dismissed them, but looking at a similar comparison from Aug-25 shows that the regressions were considerably smaller two months ago - and they were indeed dismissible:
+
+http://compare-talos.mattn.ca/breakdown.html?oldTestIds=29935085,29943989,29944011,29944037,29944043,29944049,29944065,29944073,29944079,29944143&newTestIds=29935065,29944097,29944113,29944119,29944125,29944149,29944155,29944161,29944167,29944191&testName=tart&osName=Mac%2010.8&server=graphs.mozilla.org
+
+Where:
+- simple-close-DPI1.error where m-c is 4.7  while UX is 6.4
+- icon-open-DPI1.error    where m-c is 33.3 while UX is 34.5
+
+
+Datazilla shows this (the graph starts on Sep): https://datazilla.mozilla.org/?start=1379500722&stop=1383236782&product=Firefox&repository=Firefox&os=mac&os_version=OS%20X%2010.8&test=tart&compare_product=Firefox&compare_repository=UX&project=talos
+
+The .error results are very noisy and hard to read/interpret, but:
+- We didn't notice a meaningful change over time of the .error values on UX/m-c.
+- Of the above two .error values, _maybe_ UX is worse than m-c despite the noise - about twice as high - but it could be just the way datazilla overlays the two sets one over the other. Hard to tell.
+
+
+So the question is what causes the higher .error regressions in recent builds compared to two months ago - as indicated by the above compare-talos links, and possibly also by datazilla.
+
+Jeff suggested that it might be noise from +1 frame to complete the animation due to some recent gfx changes, since the first high regression is about 7ms, which is similar to a single frame duration of that animation. Such regression would be acceptable IMO.
+
+It could also be due to the relatively high noise of the .error values.
+
+However, considering that each talos TART run executes each test 25 times, and both comparisons supposedly include 10 talos TART runs (the links do seem to indicate this), then if there's a 1-frame noise, it should average over so many executions, and not show up. But it seems it does show.
+
+
+So step one is to verify/reproduce the results locally. I executed TART locally on a 2010 MBA (OS X 10.8.4). I've used official UX and m-c nightlies from 2013-11-07 with clean profiles. I installed the TART v1.5 addon from bug 848358, and set the prefs to make it similar to the talos setup (ASAP mode, OMTC off).
+
+Here are my results of the tests which showed the highest regression on compare talos (I ran the tests more than once, restarted the browser in between, with different number of repetitions etc, and all the results/runs were in the same ballpark):
+
+m-c 2013-11-07 (30 runs):
+-------------------------
+simple-close-DPI1.half.TART    Average (30): 8.44  stddev: 2.97
+simple-close-DPI1.all.TART     Average (30): 10.55 stddev: 3.72
+simple-close-DPI1.error.TART   Average (30): 9.63  stddev: 6.90 <--
+
+icon-open-DPI1.half.TART       Average (30): 10.45 stddev: 2.05
+icon-open-DPI1.all.TART        Average (30): 13.85 stddev: 2.35
+icon-open-DPI1.error.TART      Average (30): 36.03 stddev: 5.92 <--
+
+
+UX 2013-11-07 (30 runs):
+------------------------
+simple-close-DPI1.half.TART    Average (30): 7.75  stddev: 3.33
+simple-close-DPI1.all.TART     Average (30): 8.94  stddev: 3.60
+simple-close-DPI1.error.TART   Average (30): 11.18 stddev: 5.17 <--
+
+icon-open-DPI1.half.TART       Average (30): 10.31 stddev: 1.34
+icon-open-DPI1.all.TART        Average (30): 11.96 stddev: 1.23
+icon-open-DPI1.error.TART      Average (30): 37.16 stddev: 7.67 <--
+
+
+While the .error were slightly worse on UX on my local runs, it's nowhere near the indications we've had initially (highest of those is ~1.5ms = ~15%). Also, roughly, the stddev of the .error values is ~70% of 1 frame interval of that animation - which sounds reasonable considering that the number of frames might differ by 1 between runs.
+
+
+Since the local results were relatively consistent, then maybe:
+
+1. Compare talos doesn't average all the runs properly.
+
+2. One/some of the builds which the compare-talos links used were not representative.
+
+3. When Datazilla overlays two sets of results onto the same graph, it first draws one set, then the other on top of it, which may lead to incorrect interpretation of the graphs.
+
+4. Maybe the noise is between builds (rather than between runs), and the two UX/mc builds which I tested just happen to perform similarly.
+
+5. There is a consistent UX regression (on average) which, for some reason, didn't show on my local runs.
+  
+6. Other ideas?
+
+
+I think we should:
+1. Check the values which compare-talos used for those links.
+2. Get the datazilla values and calculate the stats manually.
+
+If we're lucky and the values from these two sets indicate results similar to my local runs, then we're good (1.5ms .error regression on average is negligible/not a blocker), but it'd still be nice to fix compare-talos and think what to do about datazilla's display.
+
+Otherwise, we'll need to investigate if there's a between-builds noise (so datazilla's interpretation is correct, my local run was lucky builds, and compare-talos was unlucky builds), and possibly the source of the regression-on-average.

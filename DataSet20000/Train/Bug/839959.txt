@@ -1,0 +1,39 @@
+Support devtools and debugger for social components
+It would be great for potential providers to have access to Fx devtools.
+
+Sadly, it appears the tools aren't really setup for this.  What I've discovered is:
+
+* If you create a "browser" sandbox with the following code, running the sandbox toggles a new devtools toolbox such that the inspector and profiler are targeting the sidebar.
+
+"""
+let w = document.getElementById("social-sidebar-browser").contentWindow;
+// let w = document.getElementById("social-flyout-panel").firstChild.contentWindow
+
+XPCOMUtils.defineLazyModuleGetter(this, "Toolbox",
+  "resource:///modules/devtools/Toolbox.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "TargetFactory",
+  "resource:///modules/devtools/Target.jsm");
+let target = TargetFactory.forWindow(w);
+let toolbox = gDevTools.getToolbox(target);
+toolbox ? toolbox.destroy() : gDevTools.showToolbox(target, undefined, "window");
+"""
+
+Sadly it doesn't also allow the debugger to work.  The best I've come up with here is to manually patch the devtools code.  Hacking dbg-browser-actors.js's onListTabs function to include the following code:
+
+"""
+      // Social hacks.
+      let browser = win.document.getElementById("social-sidebar-browser");
+      let actor = this._tabActors.get(browser);
+      if (!actor) {
+        actor = new BrowserTabActor(this.conn, browser);
+        actor.parentID = this.actorID;
+        this._tabActors.set(browser, actor);
+      }
+      actorPool.addActor(actor);
+      selected = tabActorList.length; // pretend the sidebar is selected.
+      tabActorList.push(actor);
+"""
+
+Does make this work, but obviously it is very hacky, and there isn't a clear way of extending things sanely without patching the code.  Writing an entire new "actor" also seems problematic as the use of the dbg-browser-actor is hard-coded.
+
+I'm not sure how sane any of the above is, but I'm opening this bug to (a) capture the general requirement and (b) keep a note of how far I got before asking for further help :)

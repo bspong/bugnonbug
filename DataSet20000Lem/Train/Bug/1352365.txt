@@ -1,0 +1,20 @@
+Remove duplicate PrivacyLevel check in SessionCookies.jsm
+PrivacyLevel check currently allow to disable storing secure cooky and any cooky belonging to an HTTPS host, or completely disable storing cookies. We call PrivacyLevel.canSave() for every host found in the shistory of a given window's tabs. We then call it again for every cookie when retrieving all cooky stored for a given host.
+
+The two different privacy check exist because in the past an HTTP site could send a secure cookie too. Since Firefox 52 this isn’t possible anymore, only HTTPS site can send secure cookies. So a soon a nsICookie.isSecure=true we know the site wa loaded over TLS.
+
+That mean there are the following scenarios:
+
+[PRIVACY_LEVEL=NONE] (default)
+We store all cookies.
+
+[PRIVACY_LEVEL=FULL]
+We store no cooky at all.
+
+[PRIVACY_LEVEL=ENCRYPTED]
+HTTP site sends cookie: Store.
+HTTP site sends secure cookie: Can't happen since Fx52
+HTTPS site sends cookie: Store. The site is HTTPS but we should store the cookie anyway because the "Secure" directive is missing. That mean the site want u to send it for HTTP request too.
+HTTPS site sends secure cookie: Don't store.
+
+This allows u to simplify the code and remove the per-host PrivacyLevel checks. Checking nsICookie.isSecure is enough to tell whether we want to keep a cookie or not.

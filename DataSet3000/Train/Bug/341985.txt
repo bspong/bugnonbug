@@ -1,0 +1,53 @@
+places/src/nsNavHistory.cpp triggers printf "pldhash: for the table at address 0x21a616fc, the given entrySize of 48 probably favors chaining over double hashing."
+During startup I see "pldhash: for the table at address 0x21a616fc, the given entrySize of 48 probably favors chaining over double hashing."
+
+Here's a stack trace:
+
+Breakpoint 1, PL_DHashTableInit (table=0x21a616fc, ops=0x4f23e9c, data=0x0, entrySize=48, capacity=128) at pldhash.c:224
+224             fprintf(stderr,
+(gdb) bt
+#0  PL_DHashTableInit (table=0x21a616fc, ops=0x4f23e9c, data=0x0, entrySize=48, capacity=128) at pldhash.c:224
+#1  0x04ef4abc in nsTHashtable<nsBaseHashtableET<nsCStringHashKey, nsNavHistory::RedirectInfo> >::Init (this=0x21a616fc, initSize=128) at ../../../../dist/include/xpcom/nsTHashtable.h:346
+#2  0x04ef4b3c in nsBaseHashtable<nsCStringHashKey, nsNavHistory::RedirectInfo, nsNavHistory::RedirectInfo>::Init (this=0x21a616fc, initSize=128) at ../../../../dist/include/xpcom/nsBaseHashtable.h:99
+#3  0x04e57ec8 in nsNavHistory::Init (this=0x21a615d0) at /Users/admin/trunk-clean/mozilla/browser/components/places/src/nsNavHistory.cpp:355
+#4  0x04e13a9c in nsNavHistoryConstructor (aOuter=0x0, aIID=@0x4f1ac94, aResult=0xbfffc630) at /Users/admin/trunk-clean/mozilla/browser/components/build/nsModule.cpp:90
+#5  0x0130f89c in nsGenericFactory::CreateInstance (this=0x21a613c0, aOuter=0x0, aIID=@0x4f1ac94, aResult=0xbfffc630) at nsGenericFactory.cpp:80
+#6  0x01388e48 in nsComponentManagerImpl::CreateInstanceByContractID (this=0x2914e90, aContractID=0x4ec5898 "@mozilla.org/browser/nav-history-service;1", aDelegate=0x0, aIID=@0x4f1ac94, aResult=0xbfffc630) at /Users/admin/trunk-clean/mozilla/xpcom/components/nsComponentManager.cpp:1806
+#7  0x01381910 in nsComponentManagerImpl::GetServiceByContractID (this=0x2914e90, aContractID=0x4ec5898 "@mozilla.org/browser/nav-history-service;1", aIID=@0x4f1ac94, result=0xbfffc748) at /Users/admin/trunk-clean/mozilla/xpcom/components/nsComponentManager.cpp:2231
+#8  0x013033cc in CallGetService (aContractID=0x4ec5898 "@mozilla.org/browser/nav-history-service;1", aIID=@0x4f1ac94, aResult=0xbfffc748) at nsComponentManagerUtils.cpp:94
+#9  0x01303bf8 in nsGetServiceByContractIDWithError::operator() (this=0xbfffc7f8, aIID=@0x4f1ac94, aInstancePtr=0xbfffc748) at nsComponentManagerUtils.cpp:288
+#10 0x04ee7100 in nsCOMPtr<nsINavHistoryService>::assign_from_gs_contractid_with_error (this=0xbfffc804, gs=@0xbfffc7f8, aIID=@0x4f1ac94) at ../../../../dist/include/xpcom/nsCOMPtr.h:1282
+#11 0x04ee7190 in nsCOMPtr<nsINavHistoryService>::nsCOMPtr (this=0xbfffc804, gs=@0xbfffc7f8) at ../../../../dist/include/xpcom/nsCOMPtr.h:685
+#12 0x04ee7210 in nsNavHistory::GetHistoryService () at /Users/admin/trunk-clean/mozilla/browser/components/places/src/nsNavHistory.h:132
+#13 0x04eeac44 in nsNavBookmarks::History (this=0x21a61330) at /Users/admin/trunk-clean/mozilla/browser/components/places/src/nsNavBookmarks.h:128
+#14 0x04e8586c in nsNavBookmarks::Init (this=0x21a61330) at /Users/admin/trunk-clean/mozilla/browser/components/places/src/nsNavBookmarks.cpp:92
+#15 0x04e13f84 in nsNavBookmarksConstructor (aOuter=0x0, aIID=@0xbfffcd94, aResult=0xbfffcce8) at /Users/admin/trunk-clean/mozilla/browser/components/build/nsModule.cpp:94
+#16 0x0130f89c in nsGenericFactory::CreateInstance (this=0x21a61310, aOuter=0x0, aIID=@0xbfffcd94, aResult=0xbfffcce8) at nsGenericFactory.cpp:80
+#17 0x01389034 in nsComponentManagerImpl::CreateInstance (this=0x2914e90, aClass=@0x21a5f45c, aDelegate=0x0, aIID=@0xbfffcd94, aResult=0xbfffcce8) at /Users/admin/trunk-clean/mozilla/xpcom/components/nsComponentManager.cpp:1724
+#18 0x01381cc0 in nsComponentManagerImpl::GetService (this=0x2914e90, aClass=@0x21a5f45c, aIID=@0xbfffcd94, result=0xbfffcda8) at /Users/admin/trunk-clean/mozilla/xpcom/components/nsComponentManager.cpp:1928
+#19 0x02a35d68 in nsJSCID::GetService (this=0x21a5f440, _retval=0xbfffd078) at /Users/admin/trunk-clean/mozilla/js/src/xpconnect/src/xpcjsid.cpp:897
+#20 0x013ab018 in _XPTC_InvokeByIndex () at ../../../../../../dist/include/xpcom/xptcstubsdef.inc:256
+#21 0x013aa6d0 in XPTC_InvokeByIndex (that=0x21a5f440, methodIndex=11, paramCount=1, params=0xbfffd078) at /Users/admin/trunk-clean/mozilla/xpcom/reflect/xptcall/src/md/unix/xptcinvoke_ppc_rhapsody.cpp:144
+#22 0x02a55560 in XPCWrappedNative::CallMethod (ccx=@0xbfffd318, mode=CALL_METHOD) at /Users/admin/trunk-clean/mozilla/js/src/xpconnect/src/xpcwrappednative.cpp:2154
+#23 0x02a5f050 in XPC_WN_CallMethod (cx=0xc211400, obj=0x21d8748, argc=1, argv=0x21eea4c, vp=0xbfffd464) at /Users/admin/trunk-clean/mozilla/js/src/xpconnect/src/xpcwrappednativejsops.cpp:1450
+#24 0x0106884c in js_Invoke (cx=0xc211400, argc=1, flags=0) at /Users/admin/trunk-clean/mozilla/js/src/jsinterp.c:1328
+#25 0x0107de24 in js_Interpret (cx=0xc211400, pc=0x22521f8 ":", result=0xbfffe340) at /Users/admin/trunk-clean/mozilla/js/src/jsinterp.c:4021
+#26 0x01069694 in js_Execute (cx=0xc211400, chain=0x20ce140, script=0x2251e00, down=0x0, flags=0, result=0xbfffe46c) at /Users/admin/trunk-clean/mozilla/js/src/jsinterp.c:1573
+#27 0x0101a328 in JS_ExecuteScript (cx=0xc211400, obj=0x20ce140, script=0x2251e00, rval=0xbfffe46c) at /Users/admin/trunk-clean/mozilla/js/src/jsapi.c:4185
+#28 0x0d355a64 in nsJSContext::ExecuteScript (this=0xc211370, aScriptObject=0x21d7e68, aScopeObject=0x20ce140, aRetValue=0x0, aIsUndefined=0x0) at /Users/admin/trunk-clean/mozilla/dom/src/base/nsJSEnvironment.cpp:1366
+#29 0x0d31fa14 in nsXULDocument::ExecuteScript (this=0x2161800, aContext=0xc211370, aScriptObject=0x21d7e68) at /Users/admin/trunk-clean/mozilla/content/xul/document/src/nsXULDocument.cpp:3215
+#30 0x0d31fc6c in nsXULDocument::ExecuteScript (this=0x2161800, aScript=0xc2f6230) at /Users/admin/trunk-clean/mozilla/content/xul/document/src/nsXULDocument.cpp:3237
+#31 0x0d32cc64 in nsXULDocument::OnStreamComplete (this=0x2161800, aLoader=0x21a19e30, context=0x0, aStatus=0, stringLen=95856, string=0x2191c008 "/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */\n/* ***** BEGIN LICENSE BLOCK *****\n * Version: MPL 1.1/GPL 2.0/LGPL 2.1\n *\n * The contents of this file are subject to t"...) at /Users/admin/trunk-clean/mozilla/content/xul/document/src/nsXULDocument.cpp:3108
+#32 0x03828e80 in nsStreamLoader::OnStopRequest (this=0x21a19e30, request=0x21a264b0, ctxt=0x0, aStatus=0) at /Users/admin/trunk-clean/mozilla/netwerk/base/src/nsStreamLoader.cpp:114
+#33 0x05f8b9e8 in nsJARChannel::OnStopRequest (this=0x21a264b0, req=0x21a267b0, ctx=0x0, status=0) at /Users/admin/trunk-clean/mozilla/modules/libjar/nsJARChannel.cpp:749
+#34 0x037f7fd0 in nsInputStreamPump::OnStateStop (this=0x21a267b0) at /Users/admin/trunk-clean/mozilla/netwerk/base/src/nsInputStreamPump.cpp:566
+#35 0x037f8170 in nsInputStreamPump::OnInputStreamReady (this=0x21a267b0, stream=0x21a2684c) at /Users/admin/trunk-clean/mozilla/netwerk/base/src/nsInputStreamPump.cpp:391
+#36 0x0142b898 in nsInputStreamReadyEvent::Run (this=0x21a45ff0) at /Users/admin/trunk-clean/mozilla/xpcom/io/nsStreamUtils.cpp:111
+#37 0x01391354 in nsThread::ProcessNextEvent (this=0x2914b40, mayWait=1, result=0xbfffe928) at /Users/admin/trunk-clean/mozilla/xpcom/threads/nsThread.cpp:482
+#38 0x0130eb44 in NS_ProcessNextEvent_P (thread=0x2914b40, mayWait=1) at nsThreadUtils.cpp:225
+#39 0x061b13ac in nsBaseAppShell::Run (this=0x2928ef0) at /Users/admin/trunk-clean/mozilla/widget/src/xpwidgets/nsBaseAppShell.cpp:153
+#40 0x06d2a4e8 in nsAppStartup::Run (this=0x2941140) at /Users/admin/trunk-clean/mozilla/toolkit/components/startup/src/nsAppStartup.cpp:171
+#41 0x0020ff5c in XRE_main (argc=1, argv=0xbfffee5c, aAppData=0x3070) at /Users/admin/trunk-clean/mozilla/toolkit/xre/nsAppRunner.cpp:2349
+#42 0x00002c78 in main (argc=1, argv=0xbfffee5c) at /Users/admin/trunk-clean/mozilla/browser/app/nsBrowserApp.cpp:61
+
+Bug 128861 has some background.

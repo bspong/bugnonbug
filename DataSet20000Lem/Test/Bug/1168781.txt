@@ -1,0 +1,47 @@
+WebCrypto callback occur during synchronous XHR
+User Agent: Mozilla/5.0 (X11; Fedora; Linux x86_64; rv:38.0) Gecko/20100101 Firefox/38.0
+Build ID: 20150511091651
+
+Steps to reproduce:
+
+With synchronous XHR requests, the main JS thread is blocked, and other callback do not occur while execution is blocking inside the `send()` method.
+
+Unfortunately, WebCrypto promise are resolved during blocking XHR requests, rather than deferred to the next run of the event loop after the XHR completes.
+
+To reproduce, run the following in a console:
+
+window.testRequest = function() { var req = new XMLHttpRequest(); req.open("GET", "http://start.fedoraproject.org/", false); req.onload = function() { console.log("request loaded") }; return req }
+
+crypto.subtle.generateKey({name: "AES-GCM", length: 128}, false, ["encrypt"]).then(function(rv) { window.aesKey = rv; })
+
+window.testEnc = function() { crypto.subtle.encrypt({name: "AES-GCM", iv: new Uint8Array(16), tagLength: 128}, window.aesKey, new Uint8Array([1,2,3])).then(function(rv) { console.log("got encryption result: "+rv) });}
+
+// Key line: kick off WebCrypto and XHR, WebCrypto callback occurs *inside* send
+window.testEnc(); window.testRequest().send(); console.log("send done")
+
+// For comparison: timer *are* deferred during XHR send
+setTimeout(function(){ console.log("timer fired") }, 0); window.testRequest().send(); console.log("send done")
+
+
+Actual results:
+
+We see the following in the console:
+
+"got encryption result: [object ArrayBuffer]"
+"request loaded"
+"send done"
+"request loaded"
+"send done"
+"timer fired"
+
+
+Expected results:
+
+Should have seen the following in the console, a occurs in Chrome:
+
+"request loaded"
+"send done"
+"got encryption result: [object ArrayBuffer]"
+"request loaded"
+"send done"
+"timer fired"

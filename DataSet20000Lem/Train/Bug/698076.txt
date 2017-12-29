@@ -1,0 +1,40 @@
+Browser hang during session restore (in BasicLayerManager code?)
+I loaded up Firefox after earlier closing it successfully, with many tab in the session (about 30).
+
+Instead of loading all my tab a expected, Firefox show all the tab along the top but hang with 100% CPU usage when trying to load them.
+
+The interface is entirely unresponsive, including min/max/close buttons. It is apparently not handling Windows message a right-clicking on it in the taskbar and choosing Close immediately brings up the dialog saying that the app is unresponsive.
+
+No data appears to be lost, per-se; if I close Firefox this way and re-open it, I get the "this is embarrassing" session restore prompt with all tab listed a expected.
+
+This problem appears to be new, only occurring to me in the last few days. Firefox report itself a being version 8.00.0000.4309, which I received on the 22nd of October. I have just now updated to 8.00.0000.4316 which exhibit the same problem.
+
+Process Explorer suggests that it is just Firefox's main thread that is using all the CPU, and report variation on the following call-stacks (presumably missing lot of info or even just incorrect due to lack of debugging information):
+
+-- 8.00.0000.4309 --
+ntkrnlpa.exe!NtBuildNumber+0xef
+xul.dll!gfxContext::Rectangle+0x10d50
+xul.dll!mozilla::layers::BasicLayerManager::PushGroupWithCachedSurface+0x5de
+xul.dll!gfxFont::SetupGlyphExtents+0x5122
+xul.dll!mozilla::layers::LayerManagerOGL::`vftable'+0x82658
+xul.dll!NS_InvokeByIndex_P+0x1666b
+
+-- 8.00.0000.4316 --
+ntkrnlpa.exe!NtBuildNumber+0xef
+xul.dll!gfxFontUtils::GetPrefsFontList+0x4433
+xul.dll!gfxCachedTempSurface::Get+0x84b5
+xul.dll!mozilla::layers::Layer::Release+0x227b
+xul.dll!gfxASurface::SurfaceDestroyFunc+0x2f3e
+xul.dll!gfxFontGroup::FontResolverProc+0x4e2
+xul.dll!gfxAlphaBoxBlur::Init+0x98a6
+xul.dll!gfxTextRunCache::ReleaseTextRun+0xeea
+xul.dll!gfxWindowsNativeDrawing::PaintToContext+0x4cdf
+xul.dll!gfxWindowsNativeDrawing::PaintToContext+0xa447
+xul.dll!gfxMatrix::Reset+0x45c1
+xul.dll!gfxMatrix::Reset+0x4468
+xul.dll!NS_NewLocalFile_P+0xc17
+xul.dll!NS_NewLocalFile_P+0xac4
+xul.dll!gfxAlphaBoxBlur::Init+0x6490
+xul.dll!gfxFontUtils::ReadCMAPTableFormat4+0x4495
+
+I expect they are a bit bogus but both seem to be related to layout code so it is probably not a coincidence.

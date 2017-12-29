@@ -1,0 +1,47 @@
+static build fails with Xft enabled
+I wanted to build FB today, my .mozconfig is
+ac_add_options --disable-composer
+ac_add_options --disable-debug
+ac_add_options --disable-ldap
+ac_add_options --disable-mailnews
+ac_add_options --disable-shared
+ac_add_options --disable-tests
+ac_add_options --enable-crypto
+ac_add_options
+--enable-extensions=default,-inspector,-irc,-venkman,-content-packs,-help
+ac_add_options --enable-optimize
+ac_add_options --enable-static
+ac_add_options --enable-xft
+export MOZ_PHOENIX=1
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-@CONFIG_GUESS@-firebird
+mk_add_options MOZ_PHOENIX=1
+
+But when i compiled, it throwed out many error about missing function (Xft*
+and Font*, sorry dont remember exact names). In the end i found out that in this
+command for linking the binary
+c++ -o MozillaFirebird-bin -I/usr/X11R6/include -fno-rtti -fno-exceptions -Wall
+-Wconversion -Wpointer-arith -Wcast-align -Woverloaded-virtual -Wsynth
+-Wno-ctor-dtor-privacy -Wno-long-long -pedantic -fshort-wchar -pthread -pipe
+-DNDEBUG -DTRIMMED -O nsBrowserApp.o nsStaticComponents.o -L../../dist/bin
+-L../../dist/lib -L../../dist/lib/components -lxpcom_compat_c -lxpconnect
+-luconv -lucvmath -li18n -loji -lipcdc -lnecko -lnecko2 -lpref -lcaps -lrdf
+-lhtmlpars -lgfxps -lgfxxprint -lgfx_gtk -limglib2 -lgkplugin -ljsdom
+-lwidget_gtk -lxremote_client -lgklayout -lmork -ldocshell -lprofile
+-lfontconfig -lnsprefm -lembedcomponents -lwebbrwsr -leditor -ltxmgr -lcomposer
+-lnsappshell -lchrome -laccessibility -lpipboot -lpipnss -lpippki -lfileview
+-lmozfind -lxremoteservice -lappcomps -ltoolkitcomps -lcookie -lwallet
+-lwalletviewers -lxmlextras -lp3p -lautoconfig -ltransformiix -luniversalchardet
+-ltypeaheadfind -lwebsrvcs -lbrowsercomps -lunicharutil_s -lucvutil_s -ljsj
+-lgtksuperwin -lgtkxtbin -lgfxshared_s -lgfxft2_s -lxlibrgb -lxprintutil -lgkgfx
+-lxulapp_s ../../dist/lib/libxulapp_s.a -L../../dist/bin -lmozjs
+-L../../dist/bin -lxpcom
+-L/mozilla2/mozilla/obj-i686-pc-linux-gnu-firebird/dist/lib -lplds4 -lplc4
+-lnspr4 -lpthread -ldl -L/usr/lib -L/usr/X11R6/lib -lgtk -lgdk -rdynamic
+-lgmodule -lglib -ldl -lXi -lXext -lX11 -lm -ldl -lm
+-L../../dist/lib/components -L../../dist/lib -lmozpng -L../../dist/lib -lmozjpeg
+-L../../dist/lib -lmozz -L../../dist/bin -L../../dist/lib
+../../dist/lib/libcrmf.a -lsmime3 -lssl3 -lnss3 -lsoftokn3 -L/usr/X11R6/lib
+-lXt -L/usr/X11R6/lib -lXp -lXext -lX11 -L../../dist/lib -lxpcom_compat
+
+-lfontconfig and -lXft were missing. Adding these option made building firebird
+successful.

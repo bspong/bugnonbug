@@ -1,0 +1,11 @@
+Avoid using the persisted clusterURL (mainly by not persisting it!)
+Created attachment 8744163
+0001-Don-t-persist-clusterURL-to-preferences.patch
+
+There are some bugs we are investigating where the user is not ending up on the correct storageURL, even after restarting the browser. Sync expects the value to be stored in preferences, and when it needs the value it reads it from preferences. However, since the move to FxA the cluster URL is obtained from the tokenserver, and this is requested at each startup.
+
+The problem with the current approach is that it is not immediately obvious that Sync is always asking the token server for the cluster URL and it isn't accidentally reusing the clusterURL from a previous run. This makes it difficult to say with certainly that the client is not at fault in the cases where the wrong cluster URL is being used after startup.
+
+So we should just not store it there :) This is another nail in the coffin for the "legacy identity provider", but that's OK - it's already dead, just not yet buried.
+
+The only non-obvious thing in this patch is what Weave.js uses this preference as an additional flag to indicate that Sync really is configured. However, this doesn't seem necessary and may even lead to false-negatives - when a user if first signing in to Sync they aren't going to yet have a cluster URL, but Sync is certainly configured at that point. So Weave.js just checks if the username is stored (and as the function in question states, "It does *not* perform a robust check to see if the client is working" - it's just a clue that it's probably safe to load Sync-proper and find out more.) Requesting feedback from rnewman on just this part - I'll find someone with more time for the real review (but obviously a real review would be welcome - the patch isn't very big)

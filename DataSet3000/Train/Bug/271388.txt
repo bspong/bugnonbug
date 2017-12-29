@@ -1,0 +1,61 @@
+window.prompt failure in bookmarklet script
+User-Agent:       Mozilla/5.0 (Windows; U; WinNT4.0; en-US; rv:1.8a5) Gecko/20041122 Firefox/0.9.1+
+Build Identifier: Mozilla/5.0 (Windows; U; WinNT4.0; en-US; rv:1.8a5) Gecko/20041122 Firefox/0.9.1+
+
+I have been using a self-made bookmarklet for Dictionary.com for several years
+now, and with the latest update to the nightly/latest-trunk (11/22/2004) this
+bookmarklet has broken:
+
+original code:
+javascript:function dict()
+{if(document.getSelection){selText=document.getSelection();}else{selText=document.selection.createRange().text;}
+if(!selText){selText=prompt('Enter word to look up at
+Dictionary.com:','');}if(selText){selText='search?q=' + escape(selText);
+mgl=window.open('http://www.dictionary.com/' +
+selText,'MGL','width=800,height=600,top=0,left=0,resizable,scrollbars');
+to=setTimeout('mgl.focus()', 100);}} dict();
+
+with this code, i was given an error in the JavaScript console that said that
+document.getSelection was deprecated in favor of window.getSelection. in the
+process of attempting to rewrite this code, i've discovered that window.prompt
+apparently is broken.
+
+here's the revised code (still in progress, as window.prompt is broken):
+
+javascript:function dict() {var selText = '';if (window.getSelection){selText =
+window.getSelection();} else if (document.getSelection){selText =
+document.getSelection();} else if (document.selection){selText =
+document.selection.createRange().text;} if ((selText=='')||(selText<'')) {
+selText = window.prompt('Enter word to look up at
+Dictionary.com:');alert('selText='+selText+'A');}if
+(selText>''){selText='search?q=' +
+escape(selText);mgl=window.open('http://www.dictionary.com/' +
+selText,'MGL','width=800,height=600,top=0,left=0,resizable,scrollbars');to=setTimeout('mgl.focus()',
+100);}}dict();
+
+it will correctly ask for input (show the prompt) if no text is selected, but
+then the alert (debug code to show value of selText) doesn't fire, and no pop-up
+window is created. as everything works up to and including the prompt, i must
+assume that the prompt functionality (setting the variable to the user's input)
+must be broken in some way.
+
+
+
+Reproducible: Always
+Steps to Reproduce:
+1. install provided code as a bookmarklet (plug the code into the location of a
+bookmark)
+2. click it.
+3. enter a search term
+4. click ok
+
+Actual Results:  
+nothing.
+
+Expected Results:  
+text that was input should have been alerted, and new window should have opened
+with Dictionary.com search for the input text
+
+as i said, i was using the original code (listed above) for years, and used it
+as recently as *last night*, but now it is broken with the 11/22/2004
+nightly/latest-trunk/

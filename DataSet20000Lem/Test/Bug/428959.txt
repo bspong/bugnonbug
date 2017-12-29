@@ -1,0 +1,46 @@
+Extension development: Dynamically created SCRIPT tag inserted in onload handler are not evaluated
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.13) Gecko/20080325 Ubuntu/7.10 (gutsy) Firefox/2.0.0.13
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.13) Gecko/20080325 Ubuntu/7.10 (gutsy) Firefox/2.0.0.13
+
+Don't know if it's a bug or expected behaviour but here's what I wa trying to do:
+
+-- overlay.xul
+<?xml version="1.0"?>
+
+<overlay id="my-overlay"
+xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<script type='text/javascript'>
+window.addEventListener("load", function(event) {
+var script = document.createElement("script");
+script.setAttribute("type", "text/javascript");
+script.setAttribute("src", "foo.js");
+document.getElementsByTagName("script")[0].parentNode.appendChild(script);
+}, false);
+</script>
+
+<!-- XUL go here -->
+
+</overlay>
+
+-- foo.js
+alert('loaded')
+
+I expect to see an alert but do not. Dumping the document confirms that the SCRIPT tag is added, just not evaluated.
+
+Instead of setting the src attribute you can also try
+
+script.textContent = "alert('FOO!')";
+
+but again it isn't run despite appearing in the resulting DOM.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Create a simple extension with the above XUL
+2. Install and open FF
+Actual Results:
+No alert
+
+Expected Results:
+Alert

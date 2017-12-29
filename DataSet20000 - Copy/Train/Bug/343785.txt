@@ -1,0 +1,70 @@
+Fix for 320504 broke copying of NSS files during install
+For bug 320504, a patch for Bug 307296 was checked in as well. This change removed these sections from config.it:
+
+-;Copy the uninstaller to the [Setup Path]\uninstall folder.
+-;This copy is to be used when the user installed on a system with
+-;restricted access.
+-[Copy File0]
+-Timing=post smartupdate
+-Source=[WINDIR]\$UninstallFile$
+-Destination=[SETUP PATH]\uninstall
+-Fail If Exists=FALSE
+-Do Not Uninstall=FALSE
+-
+-[Copy File1]
+-Timing=post smartupdate
+-Source=[XPI PATH]\$UninstallFile$
+-Destination=[WINDIR]
+-Fail If Exists=FALSE
+-Do Not Uninstall=TRUE
+
+The installer "Copy File" code is sequential, so by removing these, none of the subsequent code is executed:
+
+618 [Copy File2]
+619 Timing=post smartupdate
+620 Source=[$GRE_INSTALL_DIR]\nss3.dll
+621 Destination=[SETUP PATH]
+622 Fail If Exists=FALSE
+623 Do Not Uninstall=FALSE
+624 
+625 [Copy File3]
+626 Timing=post smartupdate
+627 Source=[$GRE_INSTALL_DIR]\softokn3.dll
+628 Destination=[SETUP PATH]
+629 Fail If Exists=FALSE
+630 Do Not Uninstall=FALSE
+631 
+632 [Copy File4]
+633 Timing=post smartupdate
+634 Source=[$GRE_INSTALL_DIR]\softokn3.chk
+635 Destination=[SETUP PATH]
+636 Fail If Exists=FALSE
+637 Do Not Uninstall=FALSE
+638 
+639 [Copy File5]
+640 Timing=post smartupdate
+641 Source=[$GRE_INSTALL_DIR]\ssl3.dll
+642 Destination=[SETUP PATH]
+643 Fail If Exists=FALSE
+644 Do Not Uninstall=FALSE
+645 
+646 [Copy File6]
+647 Timing=post smartupdate
+648 Source=[$GRE_INSTALL_DIR]\smime3.dll
+649 Destination=[SETUP PATH]
+650 Fail If Exists=FALSE
+651 Do Not Uninstall=FALSE
+652 
+653 [Copy File7]
+654 Timing=post smartupdate
+655 Source=[$GRE_INSTALL_DIR]\freebl3.dll
+656 Destination=[SETUP PATH]
+657 Fail If Exists=FALSE
+658 Do Not Uninstall=FALSE
+659 
+660 [Copy File8]
+661 Timing=post smartupdate
+662 Source=[$GRE_INSTALL_DIR]\freebl3.chk
+663 Destination=[SETUP PATH]
+664 Fail If Exists=FALSE
+665 Do Not Uninstall=FALSE

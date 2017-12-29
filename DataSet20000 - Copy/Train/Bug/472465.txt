@@ -1,0 +1,65 @@
+Dynamic change of frame content via javascript broken (offline)
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; fr; rv:1.9.0.5) Gecko/2008120122 Firefox/3.0.5
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; fr; rv:1.9.0.5) Gecko/2008120122 Firefox/3.0.5
+
+I found a specific case when a frame window reference is lost after having dynamically changed by javascript the content source of the frame. This makes impossible further access to the frame's content with javascript (it becomes an "undefined" object).
+The problem occurs only with computer-local files (accessed by file://), it does not happen online (when files are accessed through a web server).
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+Here is a minimal example to reproduce the problem:
+
+1. Write on your local disk a simple test.html page with 2 frames as following:
+
+<html>
+<head><title>Test broken frame</title></head>
+<frameset rows="*,300">
+  <frame name="frame1" src="frame1.html">
+  <frame name="frame2" src="frame2.html">
+</frameset>
+</html>
+
+
+2. In frame1.html, we include the following code to dynamically change the content of frame2:
+
+<html>
+<head>
+<script type="text/javascript"><!--
+  var bool = true;
+  function toggleFrame() {
+    if(bool) {
+        var foo = parent.frame2.document; // this is were the bug happens
+        parent.frame2.location.href = "test1.html";
+    }
+    else {
+        parent.frame2.location.href = "../test2.html";
+    }
+    bool = !bool;
+  }
+// -->
+</script>
+</head>
+<body>
+<h1>Frame 1</h1>
+<a href="#" onclick="toggleFrame()">Change frame2</a>
+</body>
+</html>
+
+
+3. Create frame2.html, test1.html and test2.html with any content. test2.html should be located on the parent directory of the other files on disk.
+
+4. Load the file:///<your_path>/test.html page in firefox, then click on the "Change" link several times.
+Actual Results:  
+At first click, test1.html is correctly displayed in frame2.
+At second click, test2.html is correctly displayed in frame2.
+Any further click does not change frame2's content, and the javascript console reports an error on the line:
+   var foo = parent.frame2.document;
+saying it is not allowed to access the "window.document" property of this object.
+
+But, if we move test2.html in the same directory as the other files or in a sub-directory (and of course we change accordingly the path in the javascript code), everything works well. The problem happens only when loading a file from some upper directory, and it happens both with relative and absolute paths.
+
+Expected Results:  
+It should work wherever the content source of the frame is located.

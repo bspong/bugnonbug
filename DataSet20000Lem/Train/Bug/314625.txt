@@ -1,0 +1,40 @@
+localized char passed in HTTP GET are not displayed correctly in a HTML form
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.12) Gecko/20050915 Firefox/1.0.7 (ax)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.12) Gecko/20050915 Firefox/1.0.7 (ax)
+
+We have a web application where it's possible to pre-fill HTML form by passing their value a argument with HTTP GET.
+
+To get an idea what's going on
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+For instance the based URL is: http://extranet-test2.cpoj.cz/pwb/pwb_apo_ea.do?
+and it must be followed by the name of reguested form template followed by fixed count of parameter separated by ; (semi-colon). If no value is needed to pass, it is just ommited and 2 ;; (semi-colons) folows.
+
+And thouse value represents just typical personal data like First, Sure name, address, etc. And of-course they may contain localized char like &#283;š&#269;&#345;žýáíé,etc.
+~~~~end of "To get idea..."~~~~~~~~~~
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+
+Actual Results:
+So, the URL is then costucted like following:
+http://extranet-test2.cpoj.cz/pwb/pwb_apo_ea.do?TC88982001011;123456789;Roman;Wenzigová;20;12000;Praha;Jožko%20Mrkvi&#269;ka;7603090770;987654321;15.8.2006;1224;2224;3224;4224;2;4234813827
+Mozilla correctly translate those Czech char to hexa chars, that the URL looks:
+http://extranet-test2.cpoj.cz/pwb/pwb_apo_ea.do?TC88982001011;123456789;Roman;Wenzigov%E1;20;12000;Praha;Jo%9Eko%20Mrkvi%E8ka;7603090770;987654321;15.8.2006;1224;2224;3224;4224;2;4234813827
+MSIE doe the same.
+
+But in the form those values:
+Wenzigov%E1
+Jo%9Eko%20Mrkvi%E8ka
+
+are not displayed a the should be:
+Wenzigová
+Jožko Mrkvi&#269;ka
+because the revert transformation is not done in Mozilla.
+But MSIE doe it.
+
+
+Expected Results:
+hexa code in URL which are passed by HTTP GET should be converted to localized char in the field of the form (where they are used)

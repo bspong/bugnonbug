@@ -1,0 +1,34 @@
+Tools->Options->Main->Manage Add-ons should use more succinct code
+<http://mxr.mozilla.org/mozilla-central/source/browser/components/preferences/main.js#463>
+
+  showAddonsMgr: function ()
+  {
+    const EMTYPE = "Extension:Manager";
+    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                       .getService(Components.interfaces.nsIWindowMediator);
+    var theEM = wm.getMostRecentWindow(EMTYPE);
+    if (theEM) {
+      theEM.focus();
+      theEM.showView("extensions");
+      return;
+    }
+
+    const EMURL = "chrome://mozapps/content/extensions/extensions.xul";
+    const EMFEATURES = "chrome,menubar,extra-chrome,toolbar,dialog=no,resizable";
+    window.openDialog(EMURL, "", EMFEATURES, "extensions");
+  }
+
+This code should be replaced with:
+
+showAddonsMgr: function ()
+{
+    document.documentElement
+            .openWindow("Extension:Manager", 
+                        "chrome://mozapps/content/extensions/extensions.xul",
+                        "chrome,menubar,extra-chrome,toolbar", null);
+}
+
+See: <https://bugzilla.mozilla.org/show_bug.cgi?id=456869#c7>
+and: <http://mxr.mozilla.org/comm-central/search?string=.openWindow(%22&find=preferences>
+
+CVSBlame says Robert Strong in Bug 384956

@@ -1,0 +1,46 @@
+Investigate stack buffer overflow in nsWindowsShellService::GetMailAccountKey
+Fabian Yamaguchi of Recurity Labs on behalf of BSI (German Federal Office for Information Security) reported the following to security@mozilla.org:
+
+Function: GetMailAccountKey
+
+Component: The bug is contained in the nsWindowsShellService Implementation for Windows and in particular in method GetMailAccountKey.
+
+Summary:
+The method nsWindowsShellService::GetMailAccountKey read entry from the Windows registry using the Win32 API function RegEnumKeyExW. This function expects the number of wide­ character that the destination buffer can hold a it last argument. In GetMailAccountKey, this third parameter ha mistakenly been chosen to contain the number of byte the buffer consists of, which is twice a much a the number of wide­characters it can hold. Therefore, it may be possible to trigger a stack­based buffer­overflow.
+
+Actual Results:
+A local stack­buffer can potentially be overflowed.
+
+Expected Results:
+The buffer cannot be overflowed.
+
+Additional Information:
+PRBool nsWindowsShellService::GetMailAccountKey(HKEY* aResult)
+{
+NS_NAMED_LITERAL_STRING(unread,
+"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\UnreadMail\\");
+
+HKEY mailKey;
+DWORD re = ::RegOpenKeyExW(HKEY_CURRENT_USER, unread.get(), 0,
+KEY_ENUMERATE_SUB_KEYS, &mailKey);
+
+PRInt32 i = 0;
+do {
+PRUnichar subkeyName[MAX_BUF];
+DWORD len = sizeof subkeyName;
+re = ::RegEnumKeyExW(mailKey, i++, subkeyName, &len, NULL, NULL,
+NULL, NULL);
+if (REG_SUCCEEDED(res)) {
+HKEY accountKey;
+re = ::RegOpenKeyExW(mailKey, PromiseFlatString(subkeyName).get(),
+0, KEY_READ, &accountKey);
+[..]
+}
+else
+break;
+}
+while (1);
+// Close the key we opened.
+::RegCloseKey(mailKey);
+return PR_FALSE;
+}

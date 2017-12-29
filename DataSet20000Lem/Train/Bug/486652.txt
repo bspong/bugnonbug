@@ -1,0 +1,69 @@
+After refresh (F5) selected attribute of <option> not properly evaluated.
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 6.0; en-GB; rv:1.9.0.8) Gecko/2009032609 Firefox/3.0.8
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 6.0; en-GB; rv:1.9.0.8) Gecko/2009032609 Firefox/3.0.8
+
+After refresh (F5) selected attribute of <option> not properly evaluated.
+Note, proper behaviour after Control-F5, and on initial load of page.
+
+Consider the following, copied from Firebug display:
+
+<select name="ds" onchange="doSet(this,1)">
+<script>
+</script>
+<option value="0">building1</option>
+<option value="1" selected="">building2</option>
+<option value="2">building3</option>
+<option value="3">building4</option>
+<option value="4">building5</option>
+<option value="5">building6</option>
+<option value="6">building7</option>
+<option value="7">building8</option>
+</select>
+
+On initial load display show "building2" --- correct
+On F5 refresh: "building1" --- incorrect
+On Ctrl-F5: "building2" --- correct
+
+Code that writes the select options:
+
+function writeOpts(sel)
+{
+for (i=0;i<datanames.length;i++)
+{
+if (i != sel)
+{
+opt = "<option value='" + i + "'>" + datanames[i] + "</option>" ;
+document.write(opt)
+}
+else
+{
+opt = "<option selected value='" + i + "'>" + datanames[i] + "</option>" ;
+document.write(opt)
+}
+}
+}
+
+Other browser tested:
+Opera -- All good
+Safari -- All good
+Chrome -- All good
+IE -- All Good
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. JS writes select with options, option other than first ha 'selected' attribute
+2. Load page -- see all is good
+3. Use F5 -- see that first option is pre-selected in error
+4. Use Crtl-F5 -- see that correct option is pre-selected
+Actual Results:
+AS above
+
+Expected Results:
+Always show option wirh selected attribute
+
+Checked:
+
+http://www.w3.org/TR/html401/interact/forms.html
+
+which just show the selected attribute present. The fault also occurs when the JS writes selected='true'

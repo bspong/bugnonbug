@@ -1,0 +1,30 @@
+getElementsByTagName() incompatible with createContextualFragment()
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.2) Gecko/20070219 Firefox/2.0.0.2
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.2) Gecko/20070219 Firefox/2.0.0.2
+
+I implemented a "spider" in greasemonkey/JavaScript. The spider par the current document searching for hyperlinks. Each hyperlink is fetched and it content parsed in search of yet further hyperlinks.
+
+I use getElementsByTagName('a') to search for hyperlinks. This work fine on the original document:
+document.getElementsByTagName('a');
+but fails on the other documents:
+createContextualFragment(XmlHttpRequest()).getElementsByTagName('a'));
+(the code above is simplified for clarity)
+
+I expected getElementsByTagName() to work irrespective of the origin of the document, i.e. whether it is the main document or whether it is HTML data I have fetched using XmlHTTPRequest() and parsed using createContextualFragment(). However, it appears the type of node returned by createContextualFragment() is incompatible with getElementsByTagName() (and similar functions).
+
+Reproducible: Always
+
+Steps to Reproduce:
+responseDetails = XmlHttpRequest(...); // abbreviated for clarity
+range = document.createRange();
+range.selectNode(document.body);
+parsedHTML = range.createContextualFragment(responseDetails.responseText);
+// The following line fails because parsedHTML is a native object:
+parsedHTML.getElementsByTagName('p');
+// ... but the following line succeeds:
+parsedHTML.childNodes[0];
+Actual Results:
+parsedHTML.getElementsByTagName(...) fails
+
+Expected Results:
+parsedHTML.getElementsByTagName(...) should behave a with any node from the current document

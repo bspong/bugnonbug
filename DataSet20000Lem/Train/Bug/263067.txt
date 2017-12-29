@@ -1,0 +1,44 @@
+Firefox trunk build fail to produce installers on all platform
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; rv:1.7.3) Gecko/20040913 Firefox/0.10.1
+Build Identifier:
+
+I'm currently tracking down a problem with the Firefox trunk Windows .exe and
+Linux -installer.tar.gz file not being built properly. Tracy point out that
+these installers haven't been available since 2004-10-03. Looking through
+bonsai I see a couple of check-in Ben made to the installer code on Sunday,
+especially
+http://tinderbox.mozilla.org/bonsai/cvsview2.cgi?diff_mode=context&whitespace_mode=show&subdir=mozilla/toolkit/mozapps/installer&command=DIFF_FRAMESET&file=makeall.pl&rev1=1.1&rev2=1.2&root=/cvsroot,
+a change to makeall.pl to include '$versionMain' in the call to 'makecfgini.pl'.
+I think this change is causing the build of the installer to fail. From the
+Linux log file on ocean:
+
+Making config.ini...
+sh: -c: line 1: syntax error near unexpected token `('
+sh: -c: line 1: `perl
+/builds/tinderbox/firefox/Linux_2.4.20-28.8_Clobber/mozilla/toolkit/mozapps/installer/makecfgini.pl
+config.it 1.0PR (trunk)
+/builds/tinderbox/firefox/Linux_2.4.20-28.8_Clobber/mozilla/stage
+/builds/tinderbox/firefox/Linux_2.4.20-28.8_Clobber/mozilla/dist/install/xpi
+ftp://not.supplied.invalid ftp://not.supplied.invalid'
+Died at makeall.pl line 198.
+
+Error: perl
+/builds/tinderbox/firefox/Linux_2.4.20-28.8_Clobber/mozilla/toolkit/mozapps/installer/makecfgini.pl
+config.it 1.0PR (trunk)
+/builds/tinderbox/firefox/Linux_2.4.20-28.8_Clobber/mozilla/stage
+/builds/tinderbox/firefox/Linux_2.4.20-28.8_Clobber/mozilla/dist/install/xpi
+ftp://not.supplied.invalid ftp://not.supplied.invalid
++++ deliver.pl: Completed making .xpis
+
+The version string used here contains a substring "(trunk)" that is surrounded
+by parenthesis which cause a syntax error for the shell subprocess. I think
+the code should escape the parens (and any other shell-sensitive characters)
+before placing the version string in the call to makecfgini.pl. I guess that
+after the version string is correctly shell-escaped the installers will appear
+again with the other build files.
+
+Reproducible: Always
+Steps to Reproduce:
+1.
+2.
+3.

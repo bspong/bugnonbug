@@ -1,0 +1,47 @@
+getAccessibleFor throw NS_ERROR_FAILURE for link node
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.5) Gecko/20041103 Firefox/1.0RC2
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.5) Gecko/20041103 Firefox/1.0RC2
+
+<html>
+<body>
+Some text <a id="myid" href="http://mozilla.org">Motz</a>.
+<script>
+try{
+var acc = Components.classes["@mozilla.org/accessibilityService;1"]
+.createInstance(Components.interfaces.nsIAccessibleRetrieval);
+var node = document.getElementById("myid");
+var box = acc.getAccessibleFor(node);
+var sx = {};
+var sy = {};
+var sh = {};
+var sw = {};
+box.getBounds(sx,sy,sw,sh);
+document.write("x: " + sx.value + " y: " + sy.value);
+} catch(e) {document.write(e);}
+</script>
+</body>
+</html>
+
+
+The above web page (load it a chrome) produce an NS_ERROR_FAILURE in firefox
+1.0RC2 but not with Mozilla 1.7.3
+(http://ftp.mozilla.org/pub/mozilla.org/mozilla/releases/mozilla1.7.3/mozilla-i686-pc-linux-gnu-1.7.3-full-installer.tar.gz).
+
+After this error occurs in firefox focus problem start semi-randomly appearing
+and some widget disappear. I haven't been able to reproduce this part reliably.
+
+
+Reproducible: Always
+Steps to Reproduce:
+1. save the html page I posted in detail into the chrome (I installed it a
+part of an XPI package, conkeror)
+2. view the page: fire chrome://conkeror/content/bad.html
+
+
+
+Actual Results:
+The NS_ERROR_FAILURE error is printed in the document instead of the x,y
+location of the link.
+
+Expected Results:
+The x,y location should be printed. This is what happens in Mozilla 1.7.3

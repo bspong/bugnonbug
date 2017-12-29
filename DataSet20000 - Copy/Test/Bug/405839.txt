@@ -1,0 +1,28 @@
+ajax call fails in mother window if called from popup (opener.call_ajax)
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.10) Gecko/20071115 Firefox/2.0.0.10
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.10) Gecko/20071115 Firefox/2.0.0.10
+
+ajax request will fail if XMLHttpRequest is created and initialized globally, while .send method is called from within the function and that function is called from popup by opener.myfunction, there are 2 workarounds:
+1. create, initialize and call XMLHttpRequest object in one function - this works in my test-case but fails when using mootools Ajax object.
+2. make .send call by setTimeout like: setTimeout(call_ajax,1);
+
+The error message (from firebug) is:
+uncaught exception: [Exception... "Component returned failure code: 0xc1f30001 (NS_ERROR_NOT_INITIALIZED) [nsIXMLHttpRequest.send]" nsresult: "0xc1f30001 (NS_ERROR_NOT_INITIALIZED)" location: "JS frame :: http://mitis.tej.pl/ff_bug/ :: call_ajax :: line 24" data: no]
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. go to address: http://mitis.tej.pl/ff_bug
+2. click on-site link to open popup
+3. click in-popup link to see a bug in action
+
+//please note, this address will not be there forever, please download test-case.
+Actual Results:  
+I got this in firebug:
+uncaught exception: [Exception... "Component returned failure code: 0xc1f30001 (NS_ERROR_NOT_INITIALIZED) [nsIXMLHttpRequest.send]" nsresult: "0xc1f30001 (NS_ERROR_NOT_INITIALIZED)" location: "JS frame :: http://mitis.tej.pl/ff_bug/ :: call_ajax :: line 24" data: no]
+
+Expected Results:  
+execute ajax request.
+
+I've found setTimeout workaround here:
+http://groups.google.com/group/mozilla.dev.mdc/browse_thread/thread/3e8688d24f234aa2

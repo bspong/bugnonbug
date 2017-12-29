@@ -1,0 +1,89 @@
+Firefox using system SSL cert DB instead of user SSL cert DB
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.8.1.14) Gecko/20080404 Firefox/2.0.0.14
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.8.1.14) Gecko/20080404 Firefox/2.0.0.14
+
+I think this is a new bug. I have looked a couple of times and couldn't find anything similar. Sorry if this is an old bug.
+
+This problem has been observed on Solaris 10 using 2.0.0.11, 2.0.0.14, 2.0.0.15 and 3.0.
+
+Summary - user profile is held on an LDAP server, the user profile is supplied over an encrypted (SSL) link, the user connects to a site with a server certifate, the certificate is checked against the system SSL certificate databases rather than the user's local certificates.
+
+Detail
+
+We have an environment where the majority of user account data are served via LDAP over SSL. When these users use Firefox they are not able to save server certificates into their certificate store. There are no problems when Firefox is run by local user accounts.
+
+After investigation it became clear that for LDAP served accounts Firefox uses the global OpenSSL certificate base (/etc/ssl/certs/cert8.db) rather than the user's private certificate store under ${HOME}/.mozilla. The result of this is that all remote users share a single certificate database.
+
+Here is an excerpt from the output of a truss on Firefox showing the reads against the certificates in /etc/ssl/certs/.
+
+$ egrep -n "cert|ldap|ssl" /var/tmp/ff2_min_truss | grep -v ENOENT
+[SNIP]
+6661:3516:      open("/usr/local/ldapcsdk/lib/libprldap50.so", O_RDONLY) = 3
+6752:3516:      open("/etc/ldap.conf", O_RDONLY)                = 3
+6782:3516:      stat("/etc/ssl/certs/secmod.db", 0xFFBFD8D8)    = 0
+6788:3516:      open("/etc/ssl/certs/secmod.db", O_RDONLY)      = 3
+7018:3516:      stat("/etc/ssl/certs/cert8.db", 0xFFBFD5F8)     = 0
+7024:3516:      open("/etc/ssl/certs/cert8.db", O_RDONLY)       = 3
+7031:3516:      stat("/etc/ssl/certs/key3.db", 0xFFBFD6B8)      = 0
+7037:3516:      open("/etc/ssl/certs/key3.db", O_RDONLY)        = 4
+12988:3516:     stat("/usr/sfw/lib/libssl.so.0.9.7", 0xFFBFD878) = 0
+
+You will note the stats and opens on files in /etc/ssl/certs/. We do not see any stats or opens for the certificate files in the user's .mozilla profile.
+
+It appears that Firefox is using libldap (which gets its certificate location from /etc/ldap.conf) determine the location of the certificate store.
+
+We have observed this problem with Firefox 2.0.0.11, 2.0.0.14, 2.0.0.15 and Firefox 3.0 under Solaris 10.
+
+We built 2.0.0.14 from the current source code and used the build options to disable both standard and experimental ldap support from the browser. The problem was still observed.
+
+I don't know if the issue is restricted to Solaris.
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Create user profile on LDAP account server and the home directory etc so the user can log on without error.
+2. Configure LDAP client to connect to LDAP server over SSL.
+3. Log on using the new user profile on the LDAP server
+4. Start Firefox
+5. Connect to server with an SSL server certificate
+
+Actual Results:  
+Firefox attempts to save the server certificate in the system certificate database  in /etc/ssl/certs rather the user's certificate database.
+
+Expected Results:  
+Firefox attempts to use the SSL certificate in the user's home directory.
+
+Here is a fuller version of the truss output. The full truss output is too large to send.
+
+$ egrep -n "cert|ldap|ssl" /var/tmp/ff2_min_truss | grep -v ENOENT
+1394:3496:          ino=181398 off=740  rlen=32  "libssl3.so"
+1893:3496:      lstat64("/opt/sfw/lib/firefox/libssl3.so", 0xFFBFEDA0) = 0
+1899:3496:      pathconf("/opt/sfw/lib/firefox/libssl3.so", 20) = 1
+1900:3496:      acl("/opt/sfw/lib/firefox/libssl3.so", GETACLCNT, 0, 0x00000000) = 4
+1901:3496:      stat64("/opt/sfw/lib/firefox/libssl3.so", 0xFFBFDBA8) = 0
+1907:3496:      acl("/opt/sfw/lib/firefox/libssl3.so", GETACL, 4, 0x00031478) = 4
+4973:3516:      stat("/opt/sfw/lib/firefox/libssl3.so", 0xFFBFE3E0) = 0
+4979:3516:      resolvepath("/opt/sfw/lib/firefox/libssl3.so", "/opt/sfw/lib/firefox/libssl3.so", 1023) = 31
+4980:3516:      open("/opt/sfw/lib/firefox/libssl3.so", O_RDONLY) = 3
+6579:3516:      stat("/usr/lib/nss_ldap.so.1", 0xFFBFE048)      = 0
+6585:3516:      resolvepath("/usr/lib/nss_ldap.so.1", "/usr/lib/nss_ldap.so.1", 1023) = 22
+6586:3516:      open("/usr/lib/nss_ldap.so.1", O_RDONLY)        = 3
+6608:3516:      stat("/usr/local/ldapcsdk/lib/libldap50.so", 0xFFBFDF80) = 0
+6614:3516:      resolvepath("/usr/local/ldapcsdk/lib/libldap50.so", "/usr/local/ldapcsdk5[1].08-SunOS5.8_OPT.OBJ/lib/libldap50.so", 1023) = 60
+6615:3516:      open("/usr/local/ldapcsdk/lib/libldap50.so", O_RDONLY) = 3
+6631:3516:      stat("/usr/local/ldapcsdk/lib/libssldap50.so", 0xFFBFDF80) = 0
+6637:3516:      resolvepath("/usr/local/ldapcsdk/lib/libssldap50.so", "/usr/local/ldapcsdk5[1].08-SunOS5.8_OPT.OBJ/lib/libssldap50.so", 1023) = 62
+6638:3516:      open("/usr/local/ldapcsdk/lib/libssldap50.so", O_RDONLY) = 3
+6654:3516:      stat("/usr/local/ldapcsdk/lib/libprldap50.so", 0xFFBFDF80) = 0
+6660:3516:      resolvepath("/usr/local/ldapcsdk/lib/libprldap50.so", "/usr/local/ldapcsdk5[1].08-SunOS5.8_OPT.OBJ/lib/libprldap50.so", 1023) = 62
+6661:3516:      open("/usr/local/ldapcsdk/lib/libprldap50.so", O_RDONLY) = 3
+6752:3516:      open("/etc/ldap.conf", O_RDONLY)                = 3
+6782:3516:      stat("/etc/ssl/certs/secmod.db", 0xFFBFD8D8)    = 0
+6788:3516:      open("/etc/ssl/certs/secmod.db", O_RDONLY)      = 3
+7018:3516:      stat("/etc/ssl/certs/cert8.db", 0xFFBFD5F8)     = 0
+7024:3516:      open("/etc/ssl/certs/cert8.db", O_RDONLY)       = 3
+7031:3516:      stat("/etc/ssl/certs/key3.db", 0xFFBFD6B8)      = 0
+7037:3516:      open("/etc/ssl/certs/key3.db", O_RDONLY)        = 4
+12988:3516:     stat("/usr/sfw/lib/libssl.so.0.9.7", 0xFFBFD878) = 0

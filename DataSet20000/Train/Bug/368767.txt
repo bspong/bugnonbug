@@ -1,0 +1,57 @@
+Gecko/XUL: radio menu items don't work across submenus
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.1) Gecko/20061205 Iceweasel/2.0.0.1 (Debian-2.0.0.1+dfsg-1)
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.1) Gecko/20061205 Iceweasel/2.0.0.1 (Debian-2.0.0.1+dfsg-1)
+
+Radio buttons contained in submenus (all in the same parent menu) are not exclusive across submenus.   While you are at it, you might consider making
+type="menu" an option on the parent submenu such that if any of the radio boxes with that name are checked in the submenu, the box is checked.   I.E. in the example given, unicode will be checked if UTF-8 is checked, ISO-8859 will be checked if any of ISO-8859-1 is checked, XML will be checked if application/xhtml+xml is checked.   You can't set the checkbox by selecting
+the menu, only the submenu.   Although I haven't looked at the javascript side of things much, i think it might also be helpful to have a value="" tag on radio type menu items that sets a variable specified by the name tag.  It would also simplify making the radio boxes work across submenus and updating the radioboxes to reflect the current setting (just change the variable).
+
+Reproducible: Always
+
+Steps to Reproduce:
+<menupopup id="encoding_menu">
+              <menu id="unicode_menu" label="unicode" accesskey="U">
+                 <menupopup>
+                    <menuitem id="unicode_menu_utf8" label="UTF-8" accesskey="8" type="radio" name="encoding"/>
+                </menupopup>
+              </menu>
+              <menuitem id="encoding_menu_ascii" label="ASCII" accesskey="A" type="radio" name="encoding"/>  
+              
+              <menu id="iso8859_menu" label="ISO-8859" accesskey="I" >
+                <menupopup id="iso8859_popup" type="radio" name="encoding">
+                  <menuitem id="iso8859_menu_iso_8859_1" label="ISO-8859-1 Latin-1 Western European" accesskey="1" type="radio" name="encoding"/>
+                  <menuitem id="iso8859_menu_iso_8859_2" label="ISO-8859-2 Latin-2 Central European" accesskey="2" type="radio" name="encoding"/>
+                  <menuitem id="iso8859_menu_iso_8859_3" label="ISO-8859-3 Latin-3 South European" accesskey="3" type="radio" name="encoding"/>
+                  <menuitem id="iso8859_menu_iso_8859_4" label="ISO-8859-4 Latin-4 North European" accesskey="4" type="radio" name="encoding"/>
+                  <menuitem id="iso8859_menu_iso_8859_5" label="ISO-8859-5 Latin/Cyrillic" accesskey="5" type="radio" name="encoding"/>
+                  <menuitem id="iso8859_menu_iso_8859_6" label="ISO-8859-6 Latin/ARibic" accesskey="6" type="radio" name="encoding"/>                
+                  <menuitem id="iso8859_menu_iso_8859_7" label="ISO-8859-7 Latin/Greek" accesskey="7" type="radio" name="encoding"/>
+                  <menuitem id="iso8859_menu_iso_8859_8" label="ISO-8859-8 Latin/Hebrew" accesskey="8" type="radio" name="encoding"/>
+                  <menuitem id="iso8859_menu_iso_8859_9" label="ISO-8859-9 Latin-5 Turkish" accesskey="9" type="radio" name="encoding"/>
+                  <menuitem id="iso8859_menu_iso_8859_10" label="ISO-8859-10 Latin-6 Nordic" accesskey="A" type="radio" name="encoding"/>
+                  <menuitem id="iso8859_menu_iso_8859_11" label="ISO-8859-11 Latin/Thai" accesskey="B" type="radio" name="encoding"/>
+                  <menuitem id="iso8859_menu_iso_8859_12" label="ISO-8859-12 (abandoned)" accesskey="C" type="radio" name="encoding"/>
+                  <menuitem id="iso8859_menu_iso_8859_13" label="ISO-8859-13 Baltic Rim" accesskey="D" type="radio" name="encoding"/>                
+                  <menuitem id="iso8859_menu_iso_8859_14" label="ISO-8859-14 Latin-8 Celtic" accesskey="E" type="radio" name="encoding"/>
+                  <menuitem id="iso8859_menu_iso_8859_15" label="ISO-8859-15 Latin-9" accesskey="F" type="radio" name="encoding"/>                
+                  <menuitem id="iso8859_menu_iso_8859_16" label="ISO-8859-16 Latin-10 South-Eastern European" accesskey="0" type="radio" name="encoding"/>
+                </menupopup>
+              </menu>
+              <menu id="xml_menu" label="XML" accesskey="X">
+                 <menupopup id="xml_menu_popup">
+                    <menuitem id="xml_menu_xhtml" label="application/xhtml+xml" accesskey="H" type="radio" name="encoding"/>
+                    <menuitem id="xml_menu_svg" label="application/svg+xml" accesskey="S" type="radio" name="encoding"/>
+                    <!-- <menuitem id="xml_menu_docbook" label="application/docbook+xml???" accesskey="D" /> -->
+                 </menupopup>
+              </menu>
+         
+          </menupopup>
+       </menu>
+Actual Results:  
+It is possible, for example, to check UTF-8, ISO-8859-1, ASCII, and application/xhtml+xml all at once.
+
+
+This is pertinent to libgecko, XULrunner, and Firefox Extension applications.  It does not affect the firefox browser GUI at the moment.
+
+Note that IBM's ICU library claims to support over 200 different encodings and
+each of those has half a dozen different names.  http://demo.icu-project.org/icu-bin/convexp

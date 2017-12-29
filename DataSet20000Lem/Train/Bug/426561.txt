@@ -1,0 +1,18 @@
+(JS) Selection object do not provide a way to restore 'upside-down' selection (where the anchor is below the focus)
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9b4) Gecko/2008030318 Firefox/3.0b4
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9b4) Gecko/2008030318 Firefox/3.0b4
+
+The focusNode and anchorNode interface to Selection object (window.getSelection) make it possible to see whether a selection wa selected from top to bottom or from bottom to top. When getting a Range object from the selection, this information is lost (Ranges always go top to bottom), and consequently, when restoring a selection using Selection.addRange, the selection will always be top-to-bottom. This cause problem in system that, for some reason, want to muck with the DOM tree at unpredictable time -- when the mucking happens while the user is selecting something, the restored selection will not match the actual selection, and continuing to drag will not have the effect the user intended. I guess this is a basic problem with the DOM standard, but some work-around (second argument to addRange? writable anchor/focus properties?) would be much appreciated.
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Go to http://marijn.haverbeke.nl/codemirror-moz-bug/htmltest.html
+2. Put your mouse somewhere at the bottom of the code iframe
+3. Slowly drag upwards, watch your selection behave badly
+Actual Results:
+Selection anchor and focus are swapped every time the editor update itself (done by JS timeout).
+
+Expected Results:
+Well, the same, until I can change the code to somehow create upside-down selections.

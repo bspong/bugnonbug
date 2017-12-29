@@ -1,0 +1,25 @@
+Gui needs asynchronous calling of background tasks; GUI degraded by background tasks.
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.11) Gecko/20071127 Firefox/2.0.0.11
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.11) Gecko/20071127 Firefox/2.0.0.11
+
+If I launch a website I haven't access in a while (in no caches), and say the DNS lookup takes several seconds.  It's really bad form to lock up the GUI to the point of MS claiming "Application not responding"...That means a "bug" -- nothing is service the Windows-event loop and that is very bad.  It can be several seconds before it comes back.  Heaven forbid if you open multiple tabs at once, the problem is magnified by the N pages opened.
+
+Why can't the dispatch loop drop messages off to event handling queues that are asynchronous serviced.  That way the "automatic" functions -- like moving the
+window, or resizing, would still work.  I go to launch a website -- and I
+know it's going to take several seconds to come up, and want to move the window
+over to the side to look at something else -- problem is, the window is locked up because someone if preventing the event loop from running.
+Of course, the handlers of the events could come from a generic thread queue that changes size in response to load.  If the graphics & UI are not re-entrant, you'll have to have a "big"-UI- lock -- where multiple display tasks can be enqueued and handled by the 1 display process. 
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.  Open several websites -- going down the new page in google clicking on
+several stories (middle click, open tab in background, don't switch to it).
+2.  Notice performace of UI becomes unresponsive even though the machine has plenty of cpu power available.
+3.
+Actual Results:  
+poor performance
+
+Expected Results:  
+the gui to be "snappy" always ready to serve, queuing potentially time-intensive tasks and getting result asynchronously.

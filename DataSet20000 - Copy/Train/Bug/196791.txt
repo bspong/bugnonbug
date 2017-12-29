@@ -1,0 +1,33 @@
+gtk2 build fails when linking phoenix-bin (NS_CreateNativeAppSupport undefined)
+From a CVS build pulled at 4pm PST, I can't link phoenix-bin:
+
+c++ -o phoenix-bin -I/usr/X11R6/include -fno-rtti -fno-exceptions -Wall
+-Wconversion -Wpointer-arith -Wcast-align -Woverloaded-virtual -Wsynth
+-Wno-ctor-dtor-privacy -pedantic -Wno-long-long -fshort-wchar -pthread -pipe
+-DNDEBUG -DTRIMMED -O2  nsBrowserApp.o    -L../../dist/bin -L../../dist/lib -ldl
+-lm    ../../dist/lib/libxulapp_s.a -L../../dist/bin -lmozjs -L../../dist/bin
+-lxpcom  -L/home/alex/src/mozilla/dist/lib -lplds4 -lplc4 -lnspr4 -lpthread -ldl
+ -Wl,--export-dynamic -lgtk-x11-2.0 -lgdk-x11-2.0 -latk-1.0 -lgdk_pixbuf-2.0 -lm
+-lpangoxft-1.0 -lpangox-1.0 -lpango-1.0 -lgobject-2.0 -lgmodule-2.0 -ldl
+-lglib-2.0      
+../../dist/lib/libxulapp_s.a(nsAppRunner.o)(.text+0x38dc): In function
+`xre_main(int, char**, nsXREAppData const&)':
+: undefined reference to `NS_CreateNativeAppSupport(nsINativeAppSupport**)'
+../../dist/lib/libxulapp_s.a(nsAppRunner.o)(.text+0x3b00): In function
+`xre_main(int, char**, nsXREAppData const&)':
+: undefined reference to `NS_CreateSplashScreen(nsISplashScreen**)'
+../../dist/lib/libxulapp_s.a(nsAppRunner.o)(.text+0x3b08): In function
+`xre_main(int, char**, nsXREAppData const&)':
+: undefined reference to `NS_CanRun()'
+collect2: ld returned 1 exit status
+
+I can work around this failure by using either the GTK1 or generic
+implementation of these functions.
+
+Generic: Take out MOZ_WIDGET_GTK2 from lines 354 and 389.
+
+GTK1: Modify toolkit/xre/Makefile.in to include nsNativeAppSupportGtk.cpp in
+SHAREDSRCS and include MOZ_WIDGET_GTK2 in the test to define splash_xpm on line
+54 of nsBrowserApp.cpp.
+
+The generic option seems to be what happened before version 1.11 of nsAppRunner.cpp.

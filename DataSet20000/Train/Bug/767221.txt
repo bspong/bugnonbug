@@ -1,0 +1,20 @@
+Dig deeper into DataCloneError in FrameWorker.jsm
+Frameworker.jsm has a work-around for what appears to be a platform bug.  We should make an effort to reproduce it and reference a platform bug in the comment, opening the platform bug if one doesn't yet exist.
+
+From bug 762569:
+
+> >+function AbstractPort(portid) {
+> 
+> >+  postMessage: function fw_AbstractPort_postMessage(data) {
+> 
+> >+    // There seems to be an issue with passing objects directly and letting
+> >+    // the structured clone thing work - we sometimes get:
+> >+    // [Exception... "The object could not be cloned."  code: "25" nsresult: "0x80530019 (DataCloneError)"]
+> >+    // The best guess is that this happens when funky things have been added to the prototypes.
+> >+    // It doesn't happen for our "control" messages, only in messages from
+> >+    // content - so we explicitly use JSON on these messages as that avoids
+> >+    // the problem.
+> 
+> Is there a bug filed about this? Would be good to reference the number here.
+
+Sadly I couldn't manage to reproduce it either (although I didn't spend a huge amount of time on that).  It has only been seen when using the real Amigo code, so I don't have full visibility on the underlying cause.  My and Amigo's best guess is that some of their prototype changes which could cause that.  I asked on #developers and there was a vague recollection by someone that property accessors on an object could cause a similar problem, but I never got as far as an actual repro I could add to tests.

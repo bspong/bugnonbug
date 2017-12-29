@@ -1,0 +1,64 @@
+browscap.ini doesn't have any information on firefox
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.8.0.1) Gecko/20060111 Firefox/1.5.0.1
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.8.0.1) Gecko/20060111 Firefox/1.5.0.1
+
+If you want to detect the browser on the server side there's a file called C:\WINDOWS\system32\inetsrv\browscap.ini that tells IIS how to read the HTTP_USER_AGENT string. Unfortunately it hasn't any information on firefox and it assigns most properties to zero or false.
+
+This is more of a request rather than a bug. It would be nice to provide an updated version of browscap.ini somewhere on the mozilla website.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. install/configure IIS on XP
+2. create an ASP called browser.asp and place the following code inside
+(taken from http://www.abiglime.com/webmaster/articles/asp/121798.htm)
+<%
+' create an instance of the Browser Capabilities component
+Set browserdetect = Server.CreateObject("MSWC.BrowserType")
+
+' find some properties of the browser being used to view this page
+browser=browserdetect.Browser
+version=browserdetect.Version
+majorver=browserdetect.Majorver
+minorver=browserdetect.Minorver
+platform=browserdetect.Platform
+frames=browserdetect.Frames
+tables=browserdetect.Tables
+cookies=browserdetect.Cookies
+javascript=browserdetect.JavaScript
+
+' send some output to the web browser
+response.write ("Browser: " & browser & "<BR>")
+response.write ("Version: " & version & "<BR>")
+response.write ("Majorver: " & majorver & "<BR>")
+response.write ("Minorver: " & minorver & "<BR>")
+response.write ("Platform: " & platform & "<BR>")
+response.write ("Supports frames: " & frames & "<BR>")
+response.write ("Supports tables: " & tables & "<BR>")
+response.write ("Supports cookies: " & cookies & "<BR>")
+response.write ("Supports JavaScript: " & javascript & "<BR>")
+%>
+
+3. point your browser to http://localhost/bowser.asp
+
+Actual Results:  
+Version: 0.0
+Majorver: 0
+Minorver: 0
+Platform: unknown
+Supports frames: False
+Supports tables: True
+Supports cookies: False
+Supports JavaScript: False
+
+Expected Results:  
+Version: 1.5
+Majorver: 1
+Minorver: 5
+Platform: WinNT
+Supports frames: True
+Supports tables: True
+Supports cookies: True
+Supports JavaScript: True
+
+This is not a bug but a request. Please provide an updated browscap.ini cause I'm to lazy to do it myself. Of course by doing it you encourage people who host websites and developers to use Firefox :)

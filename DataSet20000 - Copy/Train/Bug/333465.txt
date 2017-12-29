@@ -1,0 +1,28 @@
+bookmarks.html file owner/group gets changed by firefox
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.0.1) Gecko/20060124 Firefox/1.5.0.1
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.0.1) Gecko/20060124 Firefox/1.5.0.1
+
+I'm on Mandriva 2006.0 community. I installed FF 1.5.0.1 from the official binary package (tarred, not rpm) since my distro comes with FF 1.0.7 in the stable branch.
+On my linux box I have the habit to use 2 user accounts, one for web activity (surfing web , mail, watching streaming video, etc.), and one for when using apps (writing my thesis, doing system maintenace, etc.). That is the way I keep my apps less exposed to security risks coming from the web.
+That can be debatable, however I feel the need to have the same bookmarks in these 2 accounts, so to share my bookmarks I've do the following:
+0) Let me call my users 'web' and 'apps', they belongs to the 'myusers' group.
+1) I have made a new folder /home/bookmarks and pasted there my bookmarks.html.
+2) I've assigned read/write user/group permission for /home/bookmarks and /home/bookmarks/bookmarks.html so they are like this:
+/home/bookmarks web.myusers 770
+/home/bookmarks/bookmarks.html web.myusers 660
+3)In both firefox user profile I've setup through about:config the string browser.bookmarks.file pointing at that folder/file
+
+Doing so I can read my bookmarks from both users.
+The problem arises when I add or modify a bookmark: every times firefox writes on bookmarks.html, it changes the owner/group of bookmarks.html to the user writing on it. For example, if I'm logged as 'web' and I add a new bookmark, firefox changes thing so they looks like this:
+/home/bookmarks web.myusers 770
+/home/bookmarks/bookmarks.html web.web 660 (/home/bookmarks/bookmarks.html apps.apps 660 if I'm logged as apps).
+At this point of course user 'apps' (web) is cutted out from bookmarks.
+Trying to manage the problem, as a first (stupid) workaround i've made a script that control and change (if needed) the owner/group of bookmarks.html, runned every hour by cron. But after a bit I found that, under particular circumstances (I think this is related to bugs 251692 and 273088), the bookmarks file can be rewrited by FF with an empty file.
+Actually I've removed the group write permission on the shared bookmarks file to avoid data loss, and I can live with the problem of a partially bookmarks share, however I think FF should let me share my bookmarks if I instructed it to do so. Why keep changing that file owner, since it isn't in the profile folder, it is in a shared folder?
+Now, I eared that FF 2.0 will use sqlite for bookmarks: please don't let FF 2.0 be too egoist on the sqlite bookmarks file as FF 1.5.0.1 is with bookmarks.html.
+I think we also need managing concurrency on sqlite file (using a lockfile?)
+
+Reproducible: Always
+
+Steps to Reproduce:
+see above numbered points

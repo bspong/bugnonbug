@@ -1,0 +1,52 @@
+Downloading from a CGI whose output specifies a Content-Disposition: attachment; filename="foo.txt" header  no longer works
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.1.5) Gecko/20091102 Firefox/3.5.5
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.1.5) Gecko/20091102 Firefox/3.5.5
+
+I've developed an intranet-only CGI application which outputs in a variety of different formats based on user-selection. Specifically, it can output in HTML, plain text, and Excel formats using (mod_perl) code like the following:
+
+	  $m->clear_buffer;
+	  $r->content_type('application/vnd.ms-excel');
+	  $r->header_out("Content-Disposition" => qq{attachment; filename="${filename}.xls"});
+	  $m->flush_buffer;
+	  print $ss->data;
+	  $m->flush_buffer;
+
+This worked just fine in all Firefox and Mozilla versions prior to 3.5, and it works fine in Safari, Chrome, Opera, and Internet Explorer.
+
+In Firefox 3.5.x (and confirmed with latest 3.5.5), when I click on the link to download either plain text or Excel format, I get the usual dialog which says
+
+You have chosen to open
+foo.txt
+which is a: plain text document
+from: http://my.work.server....
+
+What should Firefox do with this file?
+
+( ) Open with ....
+(x) Save File
+
+etc.
+
+When I click the "OK" button, the dialog goes away, but nothing happens. I would expect the downloaded file to appear in my downloads directory and for an entry to appear in the Downloads window logging the details of the download, but the file doesn't appear and nothing is displayed.
+
+Upon further investigation, I noticed that a temporary file is created at /tmp/RANDOMSTRING.types.part which contains the download.
+
+In previous versions of Firefox, the file would appear in my downloads directory and in the Downloads window with the file name specified by the server (foo.txt in the example above).
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Download a non-HTML content type from a CGI with Content-Disposition:attachment; filename="foo.txt" header
+2. Click the radio button next to "Save File" if that's not already selected.
+3. Click the "OK" button.
+Actual Results:  
+File is not downloaded to the downloads directory, and no entry appears in the Downloads window. A temporary file is left at /tmp/RANDOMSTRING.types.part.
+
+Expected Results:  
+The file should download to the configured downloads directory and an entry should appear in the Downloads window logging the details of the download.
+
+This as a regression from all versions of Firefox prior to 3.5.
+
+I tested it on Mac OS X, and the problem did NOT occur there. This is apparently a Linux-only problem. I haven't tested on Windows.
+
+Tested on RHEL 5.3.

@@ -1,0 +1,10 @@
+Add a "PlacesSyncUtils" module and refactor the bookmark engine to use it
+Sync currently us the synchronous method exposed by `nsINavBookmarksService` and friends. In bug 1258127, we're looking to add a "syncChangeCounter" field to Places, and increment it for every tracked change. We don't want for Sync to track it own changes, though, except when we reconcile an incoming bookmark with existing local changes.
+
+I'm thinking we could add a "PlacesSyncUtils" module that provides query specifically for Sync. These could use transaction to update multiple table at once: for example, to set tag or annos. Sync would pas an "info" object (similar to Bookmarks.jsm), and Places would take care of the queries.
+
+There is precedent for this in https://wiki.mozilla.org/index.php?title=Places/AsyncAPIsForSync; in fact, I think that wa one of the reason for creating Bookmarks.jsm! I imagine these would share queries; the only difference are: 1) additional fields, like keywords, tags, and annos, and 2) no change counter increments.
+
+This work can be done independently of bug 1258127. If we do this first, bug 1258127 would change these call to skip the change counter, without changing the public API. That would make the migration a lot easier than trying to do everything in that bug.
+
+I'm definitely open to other, le invasive suggestions, too. :-) Maybe some kind of "cookie" that we can pas to the Places methods, that would tell it to skip the counter? I'm only suggesting this approach because it's come up before, so maybe now's the right time for it.

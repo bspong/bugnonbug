@@ -1,0 +1,26 @@
+deadlock (1.5 and 2) or weird behaviour (3) with simultaneous ajax and image request
+User-Agent: Mozilla/5.0 (X11; U; Linux i686 (x86_64); en-US; rv:1.9a9pre) Gecko/2007093004 Minefield/3.0a9pre
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686 (x86_64); en-US; rv:1.9a9pre) Gecko/2007093004 Minefield/3.0a9pre
+
+When my ajax application loads, it place an <img> tag in the DOM using xmlhttprequest, afterwards it executes another xmlhttprequest, at the moment the image is loaded. Somehow, firefox 1.5 and 2 deadlock. While firefox 3 produce weird things.
+See http://img212.imageshack.us/img212/3077/ff3tg7.png for the firefox 3 behaviour. (It show some kind of screenshot the from the last time user input wa given)
+
+Firefox 2 deadlocks. I have not been able to get more detailed debugging info. This is the strace information on the loop firefox get in:
+clock_gettime(CLOCK_REALTIME, {1191226506, 108156000}) = 0
+futex(0x3e585cc, FUTEX_WAIT, 1, {0, 9989000}) = -1 ETIMEDOUT (Connection timed out)
+futex(0x129f500, FUTEX_WAKE, 1) = 0
+read(44, 0x7fffcfe111b7, 1) = -1 EAGAIN (Resource temporarily unavailable)
+read(15, 0x7fffcfe11177, 1) = -1 EAGAIN (Resource temporarily unavailable)
+and the filedescriptors 44 and 15 are pipes.
+
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+1. My application is unfortunatly copyrighted, it doe some complex ajax calls. I have not yet been able to produce a smaller testcase. The likelyhood of hitting the bug is related to the amount of code and data it transfer over the network.
+2. Open the page. The bug get triggered. When the image are in cache, the possibility of hitting the bug decrease (but still happens sometimes).
+Actual Results:
+A deadlock with firefox 2, and weird things/memmory coruption with firefox 3.
+
+Expected Results:
+Correctly displayed images.

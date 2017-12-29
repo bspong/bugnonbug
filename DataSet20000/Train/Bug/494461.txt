@@ -1,0 +1,44 @@
+Autocomplete urlbar affects execution of bookmarklets thru keyword.
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; cs; rv:1.9.1b4) Gecko/20090423 Firefox/3.5b4 (.NET CLR 3.5.30729)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; cs; rv:1.9.1b4) Gecko/20090423 Firefox/3.5b4 (.NET CLR 3.5.30729)
+
+I made simple bookmarklet that is supposed to open an URL address in new tab via window.open() function. This bookmarklet was saved to my bookmarks and in bookmark properties I set a keyword - say 'go'. In the bookmarklet is also used Firefox's parameter '%s'.
+Now if you type 'go something' the bookmarklet will be and should be executed. The problem is that not always the bookmarklet is executed the same way/the right way. Let's say you typed 'go jfdkafjdas'. It is ofcourse nonsense, but urlbar autocomplete function will start to search in history, bookmarks, tags etc. If you press enter during this searching the bookmarklet will be executed BUT there won't be executed the window.open() function! If you disable urlbar autocomplete feature OR you would wait until urlbar stops searching in history, bookmarks and tags the bookmarklet would be executed correctly and also all window.open() functions (as expected).
+
+In one sentence: If you execute bookmarklet thru keyword while urlbar is autocompleting no window.open() functions in bookmarklet will be executed, although all other functions will work just fine. 
+
+Reproducibility: Happens sometimes, but not always. Sometimes urlbar is autocompleting too short time to reproduce this. So you have to type 'go someLongNonsenseToGetUrlbarBusy' and press enter. However this won't guarantee you to see this bug. You have to try it.
+
+Way to fix this: If you disable urlbar autocompleting I never got this bug - notwithstanding I was trying hard. To do this go to "about:config" -> browser.urlbar.autocomplete.enabled = false.
+
+Reproducible: Sometimes
+
+Steps to Reproduce:
+1.Make new bookmark with this properties: 
+a. title = anything
+b. address = javascript:s="%s";window.open("http://www.google.com");void(0);
+c. keyword = go
+
+2. go to this URL = http://www.bbc.co.uk/ (or any other complex webpage)
+
+3. Click to urlbar OR press "alt+d" and type "go fdjsljfdajfdskajfdksal". Wait for 1 or 2 seconds - you have to see that urlbar has started autocompleting your query - and press ENTER. 
+
+4. If no new window/tab was opened you have just successfully reproduced the bug. If there were opened new window/tab with http://www.google.com you should try this again - don't forget to check:
+a. you have enabled autocompleting for your urlbar
+b. that urlbar started autocompleting - may require some history and bookmarks to get long enough time to reproduce the bug
+Actual Results:  
+Bookmarklet was executed but there wasn't called window.open() function as I would expect. Therefore no new window/tab was opened (with http://www.google.com). 
+
+Note: to test that bookmarklet was really executed you can use alert() function that is not affected by this bug. 
+
+Expected Results:  
+According this javascript code 
+"javascript:s="%s";window.open("http://www.google.com");void(0);"
+I would expect firefox to open new tab at http://www.google.com. 
+
+Explanation: javascript:s="%s";window.open("http://www.google.com");void(0);
+- s="%s" -> does absolutely nothing. The reason for this, is possibility to type something behind keyword - "go somethingLongToGetUrlbarBusy"
+- window.open() -> affected function, that should open new tab at www.google.com
+- void(0); -> this is not crucial, but it prevents actual webpage from disappearing or reloading (in this example it is http://www.bbc.co.uk/
+
+Other info: This bug is also in Firefox 3.0.10 and I expect this in all firefox versions where is this new autocomplete function.

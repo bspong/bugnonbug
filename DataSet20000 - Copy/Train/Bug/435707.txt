@@ -1,0 +1,56 @@
+After creating links in a new window using JavaScript, the links search for target anchors in the parent window
+User-Agent:       Mozilla/5.0 (Macintosh; U; PPC Mac OS X 10_5_2; en-us) AppleWebKit/525.18 (KHTML, like Gecko) Version/3.1.1 Safari/525.18
+Build Identifier: Mozilla/5.0 (Macintosh; U; PPC Mac OS X Mach-O; en-US; rv:1.8.1.14) Gecko/20080404 Firefox/2.0.0.14
+
+I open a new window and press a button to write a text string to it using Javascript. The text string contains links and target anchors which should allow me to jump around in the child window. However, when I try one of the links, the child window contents are replaced with those of the parent. If I was trying to go to target named X in the child window and the parent window happens to have an anchor named X, the link will take me to X in the parent window. If the parent window doesn't have a target named X (i.e. it doesn't have a target with a name that matches the href attribute in the child window's link), the link takes me to the top of the parent window. 
+
+ 
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Run the sample code below. The links in the first window work fine; pressing the button opens a child window which has links that should behave the same (enabling you to move around in the child window) but the links don't work properly; they load the child window with the contents of the parent.
+<html>
+<head>
+<script type="text/javascript">
+function linksInNewWindow()
+{
+var aStr = "<html>\
+      <head>\
+      </head>\
+      <body>\
+         <h2 id=\"top2\">Second Window</h2>\
+         <a href=\"#bottom2\">Go to bottom of -this- window</a>\
+         <br/>.<br/>.<br/>.<br/>.<br/>.<br/>.<br/>.<br/>\
+         <a name=\"bottom2\" href=\"#top2\">Back to top of Second Window</a>\
+     </body>\
+  </html>";
+
+   aWindow = window.open('', 'win', 'width=600,height=100,menubar=1,resizable=1,scrollbars=1');
+   aWindow.document.write( aStr );
+   aWindow.document.close();
+   aWindow.focus();
+}
+</script>
+</head>
+
+<body>
+<h2 id="top">First Window</h2>
+<a href="#bottom">Go to bottom</a>
+<br/>
+<input type="button" value="Try similar links in new window" onClick="linksInNewWindow()" />
+<br/>.<br/>.<br/>.<br/>.<br/>.<br/>.<br/>.<br/>
+<a name = "bottom" href="#top">Back to Top</a>
+</body>
+</html>
+2.
+3.
+Actual Results:  
+Described above.
+
+Expected Results:  
+The links in the child should move you around in the child window; the behaviour is as expected in Internet Explorer.
+
+I put together the sample code to demonstrate the problem I found in my real project, which is to dynamically create a Table of Contents for the results of a database search. In my real project, I've checked the DOM and the ToC link href values match the anchor target names but Firefox just won't match the values when the links are activated. I've spent at least two full days trying every combination of calls and parameters and searching for a solution on the web but I couldn't find anything.  
+
+I consider the bug major because it is preventing me from implementing a large number of features and there's no workaround that I can find.

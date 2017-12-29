@@ -1,0 +1,48 @@
+dblclick event handling problem
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; ru; rv:1.8.1.6) Gecko/20070725 Firefox/2.0.0.6
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; ru; rv:1.8.1.6) Gecko/20070725 Firefox/2.0.0.6
+
+imagine that I have on my page a tree:
+click on treenode will show description on this node
+dblclick on this node will expand it
+but now I get description and expanding all at once. But I do not want this.
+
+I have try to use 'detaild' property and get next picture:
+when 'click' event: click.detail: 1
+when 'dblclick' event: click.detail=1, click.detail=2, dblclick.detail=2
+but any way I can not process 'dblclick' event handler without 'click' event handler fired
+So I try to use this: function onclickhandler(event) { if (event.detail > 1) return; ... }
+
+because of onclickhandler have fired twice code above does not work:
+detail =1 and detail=2
+when 'dblclick' event: click.detail=1, click.detail=2, dblclick.detail=2
+FIRED NOT FIRED FIRED
+But I need:
+when 'dblclick' event: click.detail=1, click.detail=2, dblclick.detail=2
+NOT FIRED NOT FIRED FIRED
+
+
+I have read that if user do double clicking
+push release push release
+FF will dispatch next events
+down->up->click->down->up->click->dblclick
+detail=1 detail=2 detail=2
+
+So I 'setTimeout' to look for second 'click' and try to prevent first click if second click occur
+but finding the right delay time is tricky. it's up to the OS to define how fast or slow a double click can be
+
+therefore FF must look for dellay and do not dispatch 'click' events when 'dblclick' event occur
+
+if you lift to third floor you get event 'thirdfloor' and do not get 'secondfloor'!!
+because you directly goes to third floor and pass over second one
+When I doubleclick I must get 'dblclick' even and do not get 'click' event
+
+When I am doubleclicking I can get mouseup, mousedown events and dblclick event
+And I MUST not get 'click' events at all
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.
+2.
+3.

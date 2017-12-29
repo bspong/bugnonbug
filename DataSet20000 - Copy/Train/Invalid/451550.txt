@@ -1,0 +1,42 @@
+Zotero extension can't access HTMLDocument.location
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.1) Gecko/2008070208 Firefox/3.0.1
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.1) Gecko/2008070208 Firefox/3.0.1
+
+Zotero conflicts with Roboform. 
+I write simple extension code that emulates Roboform work (http://pastebin.mozilla.org/521892).
+My extension code performs access to document object on nsIWebProgressListener::onStateChange.
+That initializes principal for document object with wrong URI.
+see nsPrincipal.cpp nsPrincipal::Init() line 130:
+mCodebase = NS_TryToMakeImmutable(aCodebase);//aCodebase equals "about:blank"
+
+After all when Zotero tries to access document property exception fires:
+>>Error: Permission denied to get property HTMLDocument.location
+>>Source file: chrome://zotero/content/xpcom/translate.js
+>>Line: 624
+
+nsScriptSecurityManager.cpp nsScriptSecurityManager::CheckPropertyAccessImpl() line 766:
+rv = CheckSameOriginDOMProp(subjectPrincipal, objectPrincipal,
+   aAction, aTargetURI != nsnull);
+CheckSameOriginDOMProp fails because objectPrincipal URI is bad.
+
+Reproducible: Always
+
+Steps to Reproduce:
+With Firefox 3.0
+1. Install Zotero (https://addons.mozilla.org/en-US/firefox/addon/3504).
+2. Create and install new Firefox extension (guilty extension) with code from the link below:
+http://pastebin.mozilla.org/521892
+3. In firefox open page below:
+http://www.sciencedirect.com/science?_ob=ArticleURL&_udi=B6V9F-3X23DYK-5&_user=32401&_origUdi=B6T04-4BBMWVH-1&_fmt=high&_coverDate=11%2F30%2F1999&_rdoc=1&_orig=article&_version=1&_urlVersion=0&_userid=32401&md5=eea0158bc56a4636b4e5235d9bfedcaa
+4. Translate page to Zotero's reference.
+After page is loaded, click on a small sheet icon in the address-bar on the right hand side (next to the bookmark star). Zotero will translate this web page into a reference.
+Actual Results:  
+When guilty extension is installed Zotero translation will break:
+Error: Permission denied to get property HTMLDocument.location
+Source file: chrome://zotero/content/xpcom/translate.js
+Line: 624
+
+Expected Results:  
+When guilty extension is not installed Zotero translation will success. New reference will be created.
+
+repeatable on Firefox 3.0, 3.1a1

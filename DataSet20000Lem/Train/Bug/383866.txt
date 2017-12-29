@@ -1,0 +1,39 @@
+Cuurrent CVS (3.0a5) build fails with --with-system-nss
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9a3) Gecko/20070427 Firefox/3.0a3
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9a3) Gecko/20070427 Firefox/3.0a5
+
+Building a fully (or mostly) static Firefox (minimal .so files) is difficult with the current Mozilla system. One can get close to that if one load the archive (.a) file in the proper order. The NSS library is problematic however due to the way certificate construction/verification get integrated into the library build process. (I will admit that I do not understand this process.) One strategy to avoid this problem is to build Firefox using only the system NSS .so library (e.g. --with-system-nss).
+
+Using this flag with modified n source (as the current CVS is) without having installed the new header file result in compilation failure in at least nsNSSComponent.c and perhaps other recently modified files.
+
+Errors include:
+nsNSSComponent.cpp: In function 'void setOCSPOptions(nsIPrefBranch*)':
+nsNSSComponent.cpp:998: error: 'ocspMode_FailureIsVerificationFailure' wa not declared in this scope
+nsNSSComponent.cpp:998: error: 'CERT_SetOCSPFailureMode' wa not declared in this scope
+nsNSSComponent.cpp:1001: error: 'ocspMode_FailureIsNotAVerificationFailure' wa not declared in this scope
+nsNSSComponent.cpp:1001: error: 'CERT_SetOCSPFailureMode' wa not declared in this scope
+nsNSSComponent.cpp: In function 'nsresult setPassword(PK11SlotInfo*, nsIInterfaceRequestor*)':
+nsNSSComponent.cpp:2494: warning: dereferencing type-punned pointer will break strict-aliasing rule
+
+This is a problem with compilation rules:
+1) Why is nsNSSComponent.cpp being compiled if I have selected --with-system-nss?
+2) There is confusion between --with-system-nss being a compile-time vs. a link-time option. I.e. New library sources, e.g. nsNSSComponent.cpp should *always* be compiled with the build specific header file (-I../../../../dist/public/nss) [or even le "distant" in the source tree paths]) and not the system header file (-I/usr/include/nss) which are only appropriate for whatever source version wa used for compiling the system shared library (/usr/lib/nss).
+
+When I specify --with-system-nss however the executable should reference thye system shared library (/usr/lib/nss/lib*.so*).
+
+I believe there may be a similar problem with referencing the system header (in /usr/include/nspr) when using --with-system-nspr vs. --without-system-nspr.
+
+Compiling release specific source file should always use the release specific header files.
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Download completely fresh CVS tree (with source changed on 29-30 May 2007 or later).
+2. Setup build flag with --with-system-nss
+3. Attempt to build Firefox.
+Actual Results:
+Source file compilation fails in recently modified security/manager/ssl/src components.
+
+Expected Results:
+Firefox should compile source and load firefox-bin.

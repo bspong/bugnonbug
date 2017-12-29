@@ -1,0 +1,44 @@
+Firefox window.onbeforeunload after switching tabs causes strange bug
+User Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:39.0) Gecko/20100101 Firefox/39.0
+Build ID: 20150630154324
+
+Steps to reproduce:
+
+I am using Firefox 39.0, and this happens on both Windows and Mac. When using a page with window.onbeforeunload to ask a user to confirm leaving before saving changes if the user does not click either "Stay on Page" or "Leave Page" buttons and instead switches to another tab and then comes back to the original tab then any setTimeout() functions appear to stop working
+
+Try this code in Firefox 39.0:
+
+    <!DOCTYPE html><html><head><title>Firefox Bug??</title></head>
+    <a href="#click" onclick="clicker()">Click Me</a>
+    <body>
+    <script>
+    window.onbeforeunload = function() {return "Are you sure you wish to reload?";}
+    function clicker(){
+    	alert('This is an alert that appears straight away!');
+    	setTimeout(function(){alert('This is an alert that appears after 1 second!');},1000);
+    }
+    </script>
+    </body></html>
+
+By default clicking the link will display two alerts. The first appears after 1 second.
+
+To see the bug do these exact steps:
+
+ 1. Run the page in Firefox 39.0
+ 2. Hit the refresh button and a confirmation box will display asking you to leave
+ 3. DO NOT press either of the buttons "Stay on Page" or "Leave Page" but instead click on another tab
+ 4. Come back to the original tab and notice how the confirmation box has gone.
+ 5. Try clicking on the link and notice the first alert() fires but the second alert() does not - the setTimeout() function no longer fires!
+
+
+
+Actual results:
+
+After the conformation box vanished the setTimeout() function no longer works... this means any jQuery animations etc stop working as well!
+
+
+Expected results:
+
+Well I guess first off the confirmation box should still be there... but even if it's not this should not stop setTimeout() from working.
+
+Here is a page demonstrating it with jQuery: http://www.serverxtesting.com/assets/pages/firefox-bug/

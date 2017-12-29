@@ -1,0 +1,85 @@
+Firefox 0.9 hang on startup
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7) Gecko/20040616 Firefox/0.9
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7) Gecko/20040616 Firefox/0.9
+
+I can't seem to get the "official" Firefox 0.9 for Linux (binary tarball
+downloaded from mozilla.org) to start up on my dual Xeon (hyperthreading)
+system. It churn for while, then get stuck in a futex loop:
+
+[pid 23800] futex(0x8b89ecc, FUTEX_WAIT, 44, {14, 998774000}) = -1 ETIMEDOUT
+(Connection timed out)
+[pid 23800] gettimeofday({1087490393, 732707}, NULL) = 0
+[pid 23800] futex(0x8b89e58, FUTEX_WAKE, 1) = 0
+[pid 23800] write(6, "\372", 1) = 1
+[pid 23788] <... poll resumed> [{fd=3, events=POLLIN}, {fd=4,
+events=POLLIN|POLLPRI}, {fd=9, events=POLLIN|POLLPRI}, {fd=10,
+events=POLLIN|POLLPRI}, {fd=19, events=POLLIN}, {fd=21, events=POLLIN}, {fd=5,
+events=POLLIN, revents=POLLIN}], 7, -1) = 1
+[pid 23800] gettimeofday( <unfinished ...>
+[pid 23788] gettimeofday( <unfinished ...>
+[pid 23800] <... gettimeofday resumed> {1087490393, 733004}, NULL) = 0
+[pid 23788] <... gettimeofday resumed> {1087490393, 733030}, NULL) = 0
+[pid 23800] gettimeofday({1087490393, 733081}, NULL) = 0
+[pid 23788] write(8, "8", 1 <unfinished ...>
+[pid 23800] clock_gettime(0, <unfinished ...>
+[pid 23797] <... poll resumed> [{fd=7, events=POLLIN, revents=POLLIN}], 1, -1) = 1
+[pid 23788] <... write resumed> ) = 1
+[pid 23800] <... clock_gettime resumed> 0xb4e5c9b4) = -1 ENOSYS (Function not
+implemented)
+[pid 23797] read(7, <unfinished ...>
+[pid 23788] gettimeofday( <unfinished ...>
+[pid 23800] gettimeofday( <unfinished ...>
+[pid 23797] <... read resumed> "8", 1024) = 1
+[pid 23788] <... gettimeofday resumed> {1087490393, 733226}, NULL) = 0
+[pid 23800] <... gettimeofday resumed> {1087490393, 733241}, NULL) = 0
+[pid 23797] poll( <unfinished ...>
+[pid 23788] futex(0x8b89ebc, FUTEX_WAIT, 2, NULL <unfinished ...>
+[pid 23800] futex(0x8b89ebc, FUTEX_WAKE, 1 <unfinished ...>
+[pid 23788] <... futex resumed> ) = -1 EAGAIN (Resource temporarily
+unavailable)
+[pid 23800] <... futex resumed> ) = 0
+[pid 23788] futex(0x8b89ecc, FUTEX_WAKE, 1 <unfinished ...>
+[pid 23800] futex(0x8b89ecc, FUTEX_WAIT, 45, {599, 230840000} <unfinished ...>
+[pid 23788] <... futex resumed> ) = 0
+[pid 23800] <... futex resumed> ) = -1 EAGAIN (Resource temporarily
+unavailable)
+[pid 23788] futex(0x8b89ebc, FUTEX_WAKE, 1 <unfinished ...>
+[pid 23800] gettimeofday( <unfinished ...>
+[pid 23788] <... futex resumed> ) = 0
+[pid 23800] <... gettimeofday resumed> {1087490393, 733481}, NULL) = 0
+[pid 23788] read(5, <unfinished ...>
+[pid 23800] gettimeofday( <unfinished ...>
+[pid 23788] <... read resumed> "\372", 1) = 1
+[pid 23800] <... gettimeofday resumed> {1087490393, 733542}, NULL) = 0
+[pid 23788] ioctl(3, FIONREAD <unfinished ...>
+[pid 23800] futex(0x8b89e58, FUTEX_WAKE, 1 <unfinished ...>
+[pid 23788] <... ioctl resumed> , [0]) = 0
+[pid 23800] <... futex resumed> ) = 0
+[pid 23788] poll( <unfinished ...>
+[pid 23800] clock_gettime(0, 0xb4e5c9b4) = -1 ENOSYS (Function not implemented)
+[pid 23800] gettimeofday({1087490393, 733755}, NULL) = 0
+[pid 23800] futex(0x8b89ecc, FUTEX_WAIT, 46, {14, 999787000}
+...
+
+I've "rm -rf"ed ~/.mozilla , ~/.firefox and ~/.phoenix to no avail.
+
+Interestingly, my nightly aviary build from before and after the 0.9
+release start up OK.
+
+Did something go into 0.9 that didn't to on the aviary branch ?
+
+
+
+Reproducible: Always
+Steps to Reproduce:
+1. ./firefox
+2.
+3.
+
+Actual Results:
+*** loading the extension datasource
+*** loading the extension datasource
+[when indefinite nothingness]
+
+Expected Results:
+A browser window

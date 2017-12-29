@@ -1,0 +1,47 @@
+Bookmarks sync error with high cpu/disk usage
+User Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:42.0) Gecko/20100101 Firefox/42.0
+Build ID: 20151029151421
+
+Steps to reproduce:
+
+Using firefox since first versions, my place database size is:
+
+83886080 places.sqlite
+1507328 places.sqlite-shm
+2787352 places.sqlite-wal
+
+SELECT count(*) FROM moz_bookmarks --44409
+SELECT count(*) FROM moz_places --104765
+
+Firefox running from portable drive.
+
+
+
+Actual results:
+
+When syncing starts, firefox becomes unresponsive.
+
+Some picture with procexp
+http://www.skillz.ru/images/201512/ffsync/firefox-sync-cpu-usage.png
+http://www.skillz.ru/images/201512/ffsync/places-sqlite-wal.png
+
+Error log:
+
+...truncated...to many Record XXX is not an orphan record
+1449473825269 Sync.Store.Bookmarks DEBUG Record ElI-Tz1VMZtU is not an orphan.
+1449473825324 Sync.Store.Bookmarks DEBUG Applying record ElKt6E6Pumpe
+1449473825324 Sync.Store.Bookmarks DEBUG Local parent is unfiled
+1449473825324 Sync.Store.Bookmarks DEBUG Record ElKt6E6Pumpe is not an orphan.
+1449473827324 Sync.Status DEBUG Status for engine bookmarks: error.engine.reason.unknown_fail
+1449473827324 Sync.Status DEBUG Status.service: success.status_ok => error.sync.failed_partial
+1449473827324 Sync.ErrorHandler DEBUG bookmark failed: Error: NS_ERROR_NET_PARTIAL_TRANSFER (resource://services-sync/resource.js:409:19) JS Stack trace: waitForSyncCallback@async.js:102:7 < Res__request@resource.js:405:14 < Res_get@resource.js:429:12 < SyncEngine.prototype._processIncoming@engines.js:1112:18 < BookmarksEngine.prototype._processIncoming@bookmarks.js:432:7 < SyncEngine.prototype._sync@engines.js:1524:7 < wrappedSync@bookmarks.js:229:11 < _sync@bookmarks.js:226:1 < WrappedNotify@util.js:148:21 < Engine.prototype.sync@engines.js:668:5 < _syncEngine@enginesync.js:199:7 < sync@enginesync.js:149:15 < onNotify@service.js:1304:7 < WrappedNotify@util.js:148:21 < WrappedLock@util.js:103:16 < _lockedSync@service.js:1294:12 < sync/<@service.js:1286:14 < WrappedCatch@util.js:77:16 < sync@service.js:1274:5 < Res_get@resource.js:429:12 < SyncEngine.prototype._processIncoming@engines.js:1112:18 < BookmarksEngine.prototype._processIncoming@bookmarks.js:432:7 < SyncEngine.prototype._sync@engines.js:1524:7 < wrappedSync@bookmarks.js:229:11 < _sync@bookmarks.js:226:1 < WrappedNotify@util.js:148:21 < Engine.prototype.sync@engines.js:668:5 < _syncEngine@enginesync.js:199:7 < sync@enginesync.js:149:15 < onNotify@service.js:1304:7 < WrappedNotify@util.js:148:21 < WrappedLock@util.js:103:16 < _lockedSync@service.js:1294:12 < sync/<@service.js:1286:14 < WrappedCatch@util.js:77:16 < sync@service.js:1274:5
+1449473827324 Sync.Synchronizer INFO Sync completed at 2015-12-07 10:37:07 after 323.55 secs.
+1449473827325 Sync.Declined DEBUG Handling remote declined: ["forms","history","passwords","prefs","tabs","addons"]
+1449473827325 Sync.Declined DEBUG Handling local declined: ["forms","history","passwords","prefs","tabs","addons"]
+1449473827325 Sync.Declined DEBUG Declined changed? false
+1449473827326 Sync.Service INFO No change to declined engines. Not reuploading meta/global.
+1449473827327 browserwindow.syncui DEBUG observed: weave:service:sync:finish
+1449473827327 browserwindow.syncui DEBUG onActivityStop with numActive: 1
+1449473827327 browserwindow.syncui DEBUG _loginFailed ha sync state=success.login
+1449473827327 Sync.SyncScheduler DEBUG Next sync in 600000 ms.
+1449473827327 Sync.ErrorHandler ERROR Some engine did not sync correctly.

@@ -1,0 +1,68 @@
+Firefox C++ Extension are incompatible between version 1.0, 1.1: entry point ?Clone@nsMemory@@SAPAXBXI@Z
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.7.8) Gecko/20050511 Firefox/1.0.4
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.7.8) Gecko/20050511 Firefox/1.0.4
+
+This is a continuation of problem 1 of bug 295950.
+
+I am currently unable to make a version that work for Firefox 1.0
+and 1.1.
+If I enable
+- the maxversion in install.rdf to 1.0+
+- with the C library 1.0
+when the extension is loaded in Firefox 1.0+, it give this error message
+when loading firefox. Because the function nsMemory::clone is not anymore
+in the xpcom.dll
+
+XPCOM:EventReceiver The procedure entry point
+?Clone@nsMemory@@SAPAXBXI@Z could not be found in the dynamic
+library xpcom.dll
+
+My main issue is that I do not use any nsMemory::clone function in my code.
+The only mozilla function I use in mozilla are string handling ones.
+You can check the code here:
+
+Instruction: http://users.skynet.be/mgueury/mozilla/compile.html
+Source: http://users.skynet.be/mgueury/mozilla/mozilla_tidy_source.zip
+CVS:
+http://cvs.sourceforge.net/viewcvs.py/htmlvalidator/validator/mozilla/extensions/tidy/src
+
+The only solution is to have 2 XPI files, one for 1.0 and one for 1.0+. (...)
+What I currently do. It works.
+
+But I think that the Mozilla library with which I link the DLL:
+- string (to get the UFT8 strings)
+- xpcom (to be call my function from JS)
+
+us the nsMemory internally.
+
+The same problem happens also in the opposite direction. (After installing
+the extension in 1.1. And then use the same profile with Firefox 1.0.)
+But the error is about nsAlloc.
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Download the XPI for Firefox 1.0. here
+http://users.skynet.be/mgueury/mozilla/download.html
+2. unzip the xpi.
+change the maxversion to 1.1 in the install.rdf
+3. rezip the xpi
+4. install the XPI in Firefox 1.0
+restart it work
+5. start firefox 1.1 -> error
+
+
+Expected Results:
+No error
+
+This is not critical a there is a WA. But if it happens between each version,
+making extension for Firefox in C++ is too difficult to maintain. As it need to be
+recompiled:
+- for each platform
+- for each version
+
+-> the result is that I have currently 6 XPI for each version of my extension
+3 (Windows/Linux/MacOsX) * 2 (Firefox 1.0, Firefox 1.1) = 6 XPI
+
+Thanks bya advance

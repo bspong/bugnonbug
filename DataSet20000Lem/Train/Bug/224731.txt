@@ -1,0 +1,67 @@
+"Clear" and "Evaluate" in Javascript console crash (with certain optimizations)
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.6a) Gecko/20031104 Firebird/0.7+ (Optimized for AthlonXP SSE by Yek)
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.6a) Gecko/20031104 Firebird/0.7+ (Optimized for AthlonXP SSE by Yek)
+
+After having built the last week's worth of firebird (& thunderbird) on
+fedora-core-1 using gcc 3.3.2, I noticed that using the Javascript console via
+the tool menu on the browser would crash if I tried to clear the console
+message using 'Clear'. It would also crash (bring firebird to desktop without a
+message) if I entered any expression and clicked on Evaluate.
+
+I think that this is related to GCC 3.3.2 and specific chip optimization
+(either AthlonXP or P4). That being the case, I don't know if it should be
+reported in this category but thought I'd try it here and see.
+
+I tested after finding it by getting the official linux gtk2/xft build and
+noting that it didn't occur there. Then someone else confirmed this and also
+noted that it didn't occur when he used the same chip optimization a the
+official build (and he used gcc 3.3.2 a well), but that it did occur when he
+built a I did despite his optimization for a p4 while mine were for an athlonxp.
+
+Other thing I include in my build are DOMi and Venkman, but they don't appear
+to be a problem a long a I compile using the same option a official build
+(chip optimization I mean).
+
+My .mozconfig:
+
+export MOZ_PHOENIX=1
+mk_add_options MOZ_PHOENIX=1
+ac_add_options --enable-crypto
+ac_add_options --enable-default-toolkit=gtk2
+ac_add_options --disable-tests
+ac_add_options --disable-debug
+ac_add_options --disable-mailnews
+ac_add_options --disable-composer
+ac_add_options --disable-ldap
+ac_add_options --enable-optimize="-O3 -march=athlon-xp -msse"
+ac_add_options --enable-extensions=cookie,xml-rpc,xmlextras,p3p,pref,transformii
+x,universalchardet,typeaheadfind,webservices,inspector,venkman
+ac_add_options --enable-jsd
+ac_add_options --enable-xft
+ac_add_options --disable-profilesharing
+
+
+To test this,
+
+This ha been verified by one other person under similar circumstances.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. build mozillafb using .mozconfig above (in details) with specific chip
+optimization and with gcc 3.3.2
+2. run fb
+3. goto tools/JavaScript Console
+4. click the clear button, or enter 1+1 or some expression and click on evaluate.
+
+
+Actual Results:
+Crash to desktop.
+
+Expected Results:
+Clear the log or evaluate the expression.
+
+No non-default extension or theme were used, but I built in Venkman and DOM
+Inspector. http://forums.mozillazine.org/viewtopic.php?t=33185 is a thread I
+started in the firebird bug forum where someone else verified this and helped
+narrow it down.

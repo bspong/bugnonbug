@@ -1,0 +1,21 @@
+Unexpected JS code termination when iterating over mozIStorageStatement.params in Gecko 1.9.1.2
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.1.2) Gecko/20090729 Firefox/3.5.2
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.1.2) Gecko/20090729 Firefox/3.5.2
+
+Iterating over mozIStorageStatement.params produces an exception that cannot be caught in JS code. Accordingly, no error is printed to the Error Console. Code just terminates.
+
+Reproducible: Always
+
+Steps to Reproduce:
+var sql = "SELECT * FROM foo WHERE name=:name"; // arbitrary SQL statement with bound name parameter
+var st = dbCon.createStatement(sql);
+
+for (var param in st.params) {
+  st.params[param] = "foo";
+}
+
+Actual Results:  
+Code terminates on line "for (var param in st.params)". Exception cannot be caught even if the code is surrounded with try{...}catch(){}finally{}. Neither in catch nor in finally block.
+
+Expected Results:  
+Actually, according to documentation https://developer.mozilla.org/en/mozIStorageStatementParams#Enumeration_of_properties st.params can be iterated starting with Gecko 1.9.2 while I was trying to run this in Firefox 3.5.2 (Gecko 1.9.1.2). But the frustrating thing is that exception cannot be caught in JS code. Code just terminates.

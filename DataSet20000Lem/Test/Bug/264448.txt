@@ -1,0 +1,37 @@
+Firefox force GConf to run in non-GNOME environment
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; rv:1.7.3) Gecko/20041013 Firefox/0.10.1
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; rv:1.7.3) Gecko/20041013 Firefox/0.10.1
+
+I am using Firefox 0.10.1 on Xfce desktop. Although the GNOME is installed on
+the machine, I am not using it and do not have any user GNOME configuration
+files. When run, official gtk2+xft build of Firefox force GConf to run, which
+creates a host of GNOME directory tree (although of course there is nothing
+useful there).
+This (bad) behavior cannot be disabled at runtime, nor with build configuration.
+
+
+
+Reproducible: Always
+Steps to Reproduce:
+1. Login to Xfce session
+2. Remove stale .gconf* crap
+3. Run Firefox
+
+Actual Results:
+.gconf* and .gnome* directory tree (5 altogether) are recreated.
+
+Expected Results:
+Run without sourcing GNOME configuration.
+
+Additional digging around in the source revealed that libgconf-2.so is
+dynamically loaded at runtime if found, regardless of whether gconf is actually
+running or not, and even ignoring MOZ_ENABLE_GCONF build flag. This happens in
+two place - extensions/pref/system-pref/src/gconf/nsSystemPrefService.cpp and
+uriloader/exthandler/unix/nsGNOMERegistry.cpp.
+
+Since I don't care about GNOME that much anyway, I just disabled the offending
+library load in my local build. However, smarter GConf check would be a good
+thing to have, so a to remove unnecessary runtime dependency on GNOME.
+
+Suggested solution: Check if GConf is actually running before trying to load the
+libraries. Do not even try if MOZ_ENABLE_GCONF is disabled.

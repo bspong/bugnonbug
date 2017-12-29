@@ -1,0 +1,18 @@
+Youtube (flash) and Netflix (silverlight) video skip and stutter when plugin is out-of-process
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.6; rv:6.0a1) Gecko/20110415 Firefox/6.0a1
+Build Identifier: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.6; rv:6.0a1) Gecko/20110415 Firefox/6.0a1
+
+Moving Adobe Flash and Silverlight out of process sound like a good idea in principle. Flash is crashy and leaky, and we prefer not to take down the whole browser when something bad happens. However, when it come to performance, this still need a lot of work.
+
+I'm using Nightly, and playing youtube and netflix videos. On a Core 2 Duo, 2.4GHz, but with Nightly, it seems to not have enough horsepower to pay video without interruption. Every few seconds, there's a gap in the audio and a brief freeze in the video. (After a while, it get to be REALLY annoying.)
+
+I've also noticed that when playing youtube videos, both the browser and the OOP container are each using at least 30% CPU. That seems like an awful lot of CPU overhead. What is it doing? Pushing video pixel through a UNIX socket? I can see why the container would use a lot CPU time, because it's running Flash. But what is the browser doing? As I see it, it should pas a window handle off to the container and then sit there doing nothing while the video plays.
+
+With earlier Mozilla nightlies (e.g. Minefield), I've tried disabling the OOP container, and all the problem clear up. The browser us WAY le CPU, and there are no interruption in the video or audio.
+
+And even despite the CPU overhead, this is a dual-core, and any other web page I ever have open are static content with only a much Javascript a what gmail needs. There's really no good reason why the player should be acting like the machine is too slow to play the video.
+
+[And yes, I have tried using an alternate profile. I usually take it a step further and try it in a guest account on a different machine. Same problem.]
+
+
+Reproducible: Always

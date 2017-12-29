@@ -1,0 +1,21 @@
+crash @ nsPlacesImportExportService::WriteSeparator() when backing up bookmarks?
+crash @ nsPlacesImportExportService::WriteSeparator
+crash @ nsPlacesImportExportService::WriteSeparator() when backing up bookmarks?
+
+from crash-reports:
+
+0 nsPlacesImportExportService::WriteSeparator(nsINavHistoryResultNode*, nsACString const&, nsIOutputStream*) mozilla/browser/components/places/src/nsPlacesImportExportService.cpp:2106
+1 nsPlacesImportExportService::WriteContainerContents(nsINavHistoryResultNode*, nsACString const&, nsIOutputStream*) mozilla/browser/components/places/src/nsPlacesImportExportService.cpp:2223
+2 nsPlacesImportExportService::ExportHTMLToFile(nsILocalFile*) mozilla/browser/components/places/src/nsPlacesImportExportService.cpp:2461
+3 nsPlacesImportExportService::BackupBookmarksFile() mozilla/browser/components/places/src/nsPlacesImportExportService.cpp:2518
+4 NS_InvokeByIndex_P mozilla/xpcom/reflect/xptcall/src/md/win32/xptcinvoke.cpp:101
+5 XPCWrappedNative::CallMethod(XPCCallContext&, XPCWrappedNative::CallMode) mozilla/js/src/xpconnect/src/xpcwrappednative.cpp:2346
+6 XPC_WN_OnlyIWrite_PropertyStub mozilla/js/src/xpconnect/src/xpcwrappednativejsops.cpp:511
+
+I'm a little confused, since it look like the crash is here:
+
+rv = mBookmarksService->GetItemTitle(itemId, title);
+
+so is mBookmarksService null?
+
+WriteSeparator() is called by WriteContainerContents(), and if mBookmarksService wa null, WriteContainerContents() should crash.

@@ -1,0 +1,157 @@
+Additional RTCPeerConnection to a webRTC server us wrong ICE Candidates
+UserAgent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:44.0) Gecko/20100101 Firefox/44.0
+
+Steps to Reproduce:
+On a single webpage, connect to two different webRTC server on a network behind a NAT.
+
+Actual Results:
+Firefox render the RTCPeerConnection MediaStream from the first server (192.168.56.105), but render a blank MediaStream(with 0 fps from RTCPeerConnection.getStats()) from second server (192.168.56.106).
+
+Expected Results:
+Firefox render webRTC MediaStreams from both servers.
+
+Additional Details:
+If there is only one webRTC Server FF can connect to multiple RTCPeerConnection MediaStreams just fine. Chrome can connect to multiple webRTC server with multiple MediaStreams just fine. (Ie., this work in Chrome but not in FF.)
+
+
+Local SDP Weirdness:
+
+Compare the first connection's "c=IN IP4 x.x.x.x" where x.x.x.x is my public IP address and includes an "a=end-of-candidates" line. The second connection ha "c=IN IP4 0.0.0.0", no end-of-candidates line and seems to be missing candidates.
+
+In the case of a single webRTC server, both connection's SDP text have "c=IN IP4 0.0.0.0" and no end-of-candidates line.
+
+First connection's local SDP:
+================================
+v=0
+o=mozilla...THIS_IS_SDPARTA-44.0.2 1095625826130563336 0 IN IP4 0.0.0.0
+s=-
+t=0 0
+a=sendrecv
+a=fingerprint:sha-256 EE:30:2D:E3:22:39:12:57:1B:15:22:C2:D8:36:76:3F:01:75:8D:EA:BC:BD:E0:A1:B9:49:83:18:DA:7E:6D:29
+a=group:BUNDLE sdparta_0 sdparta_1
+a=ice-options:trickle
+a=msid-semantic:WMS *
+m=audio 56350 UDP/TLS/RTP/SAVPF 109 9 0 8
+c=IN IP4 x.x.x.x
+a=candidate:0 1 UDP 2122187007 192.168.56.1 56349 typ host
+a=candidate:4 1 UDP 2122121471 192.168.1.4 56350 typ host
+a=candidate:8 1 UDP 2122252543 2001:0:5ef5:79fd:28f0:22c4:51cb:5de4 56351 typ host
+a=candidate:0 2 UDP 2122187006 192.168.56.1 56352 typ host
+a=candidate:4 2 UDP 2122121470 192.168.1.4 56353 typ host
+a=candidate:8 2 UDP 2122252542 2001:0:5ef5:79fd:28f0:22c4:51cb:5de4 56354 typ host
+a=candidate:5 1 UDP 1685921791 x.x.x.x 56350 typ srflx raddr 192.168.1.4 rport 56350
+a=candidate:5 2 UDP 1685921790 x.x.x.x 56353 typ srflx raddr 192.168.1.4 rport 56353
+a=recvonly
+a=end-of-candidates
+a=extmap:1 urn:ietf:params:rtp-hdrext:ssrc-audio-level
+a=ice-pwd:5121285f89723d10894f64b161b18e90
+a=ice-ufrag:95b47f5f
+a=mid:sdparta_0
+a=rtcp-mux
+a=rtpmap:109 opus/48000/2
+a=rtpmap:9 G722/8000/1
+a=rtpmap:0 PCMU/8000
+a=rtpmap:8 PCMA/8000
+a=setup:actpass
+a=ssrc:1355242277 cname:{5f77b9fe-29e4-4e46-9cd4-73720e4c1245}
+m=video 56350 UDP/TLS/RTP/SAVPF 120 126 97
+c=IN IP4 x.x.x.x
+a=candidate:0 1 UDP 2122187007 192.168.56.1 56355 typ host
+a=candidate:4 1 UDP 2122121471 192.168.1.4 56356 typ host
+a=candidate:8 1 UDP 2122252543 2001:0:5ef5:79fd:28f0:22c4:51cb:5de4 56357 typ host
+a=candidate:0 2 UDP 2122187006 192.168.56.1 63387 typ host
+a=candidate:4 2 UDP 2122121470 192.168.1.4 63388 typ host
+a=candidate:8 2 UDP 2122252542 2001:0:5ef5:79fd:28f0:22c4:51cb:5de4 63039 typ host
+a=candidate:5 1 UDP 1685921791 x.x.x.x 56356 typ srflx raddr 192.168.1.4 rport 56356
+a=candidate:5 2 UDP 1685921790 x.x.x.x 63388 typ srflx raddr 192.168.1.4 rport 63388
+a=recvonly
+a=fmtp:120 max-fs=12288;max-fr=60
+a=fmtp:126 profile-level-id=42e01f;level-asymmetry-allowed=1;packetization-mode=1
+a=fmtp:97 profile-level-id=42e01f;level-asymmetry-allowed=1
+a=ice-pwd:5121285f89723d10894f64b161b18e90
+a=ice-ufrag:95b47f5f
+a=mid:sdparta_1
+a=rtcp-fb:120 nack
+a=rtcp-fb:120 nack pli
+a=rtcp-fb:120 ccm fir
+a=rtcp-fb:126 nack
+a=rtcp-fb:126 nack pli
+a=rtcp-fb:126 ccm fir
+a=rtcp-fb:97 nack
+a=rtcp-fb:97 nack pli
+a=rtcp-fb:97 ccm fir
+a=rtcp-mux
+a=rtpmap:120 VP8/90000
+a=rtpmap:126 H264/90000
+a=rtpmap:97 H264/90000
+a=setup:actpass
+a=ssrc:1671449580 cname:{5f77b9fe-29e4-4e46-9cd4-73720e4c1245}
+
+Second connection's local SDP:
+================================
+v=0
+o=mozilla...THIS_IS_SDPARTA-44.0.2 7943098877745498984 0 IN IP4 0.0.0.0
+s=-
+t=0 0
+a=sendrecv
+a=fingerprint:sha-256 C9:2A:82:14:49:DF:34:89:78:7A:03:15:04:69:5C:C4:CB:2B:78:FE:A7:0A:6A:F9:92:6E:48:BA:2D:42:91:86
+a=group:BUNDLE sdparta_0 sdparta_1
+a=ice-options:trickle
+a=msid-semantic:WMS *
+m=audio 9 UDP/TLS/RTP/SAVPF 109 9 0 8
+c=IN IP4 0.0.0.0
+a=candidate:0 1 UDP 2122187007 192.168.56.1 63114 typ host
+a=candidate:4 1 UDP 2122121471 192.168.1.4 63115 typ host
+a=candidate:8 1 UDP 2122252543 2001:0:5ef5:79fd:28f0:22c4:51cb:5de4 63116 typ host
+a=candidate:0 2 UDP 2122187006 192.168.56.1 63117 typ host
+a=candidate:4 2 UDP 2122121470 192.168.1.4 63118 typ host
+a=candidate:8 2 UDP 2122252542 2001:0:5ef5:79fd:28f0:22c4:51cb:5de4 63119 typ host
+a=candidate:5 1 UDP 1685921791 x.x.x.x 63115 typ srflx raddr 192.168.1.4 rport 63115
+a=candidate:5 2 UDP 1685921790 x.x.x.x 63118 typ srflx raddr 192.168.1.4 rport 63118
+a=recvonly
+a=extmap:1 urn:ietf:params:rtp-hdrext:ssrc-audio-level
+a=ice-pwd:e47479c4261ed72c22081c628ad57603
+a=ice-ufrag:f247ae86
+a=mid:sdparta_0
+a=rtcp-mux
+a=rtpmap:109 opus/48000/2
+a=rtpmap:9 G722/8000/1
+a=rtpmap:0 PCMU/8000
+a=rtpmap:8 PCMA/8000
+a=setup:actpass
+a=ssrc:804043990 cname:{8ea1fa53-5a39-454b-b369-b06a7463fdb0}
+m=video 9 UDP/TLS/RTP/SAVPF 120 126 97
+c=IN IP4 0.0.0.0
+a=candidate:0 1 UDP 2122187007 192.168.56.1 63120 typ host
+a=candidate:4 1 UDP 2122121471 192.168.1.4 63121 typ host
+a=candidate:8 1 UDP 2122252543 2001:0:5ef5:79fd:28f0:22c4:51cb:5de4 63122 typ host
+a=candidate:0 2 UDP 2122187006 192.168.56.1 63123 typ host
+a=candidate:4 2 UDP 2122121470 192.168.1.4 63124 typ host
+a=candidate:8 2 UDP 2122252542 2001:0:5ef5:79fd:28f0:22c4:51cb:5de4 63125 typ host
+a=recvonly
+a=fmtp:120 max-fs=12288;max-fr=60
+a=fmtp:126 profile-level-id=42e01f;level-asymmetry-allowed=1;packetization-mode=1
+a=fmtp:97 profile-level-id=42e01f;level-asymmetry-allowed=1
+a=ice-pwd:e47479c4261ed72c22081c628ad57603
+a=ice-ufrag:f247ae86
+a=mid:sdparta_1
+a=rtcp-fb:120 nack
+a=rtcp-fb:120 nack pli
+a=rtcp-fb:120 ccm fir
+a=rtcp-fb:126 nack
+a=rtcp-fb:126 nack pli
+a=rtcp-fb:126 ccm fir
+a=rtcp-fb:97 nack
+a=rtcp-fb:97 nack pli
+a=rtcp-fb:97 ccm fir
+a=rtcp-mux
+a=rtpmap:120 VP8/90000
+a=rtpmap:126 H264/90000
+a=rtpmap:97 H264/90000
+a=setup:actpass
+a=ssrc:1413330595 cname:{8ea1fa53-5a39-454b-b369-b06a7463fdb0}
+
+
+
+aboutWebrtc-double.html: log for connecting to two different webRTC servers.
+aboutWebrtc-single.html: log for connecting to a single webRTC server.

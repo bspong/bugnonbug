@@ -1,0 +1,180 @@
+leak in tree.xml when using the Places star
+I pressed the Places star and then pressed it again to make it go away and Leak Monitor said that tree.xml leaked an object
+
+[+] [leaked object] (36e7088) = [object Object]
+ [+] _self (36e7968) = [object XULElement]
+  [ ] pageUpOrDownMovesSelection = true
+  [ ] _columnsDirty = true
+  [ ] _lastKeyTime = 0
+  [ ] _incrementalString = 
+  [+] history (36cd928) = [xpconnect wrapped nsINavHistoryService]
+   [ ] queryStringToQueries (36cd8e0) = function queryStringToQueries() {
+    [native code]
+}
+   [ ] executeQueries (36cd8b0) = function executeQueries() {
+    [native code]
+}
+   [ ] getNewQuery (36e6a28) = function getNewQuery() {
+    [native code]
+}
+   [-] QueryInterface (2911f70) = function QueryInterface() {
+    [native code]
+}
+   [ ] hasHistoryEntries = true
+   [-] setPageUserTitle (2911f48) = function setPageUserTitle() {
+    [native code]
+}
+   [-] markPageAsFollowedBookmark (2911f38) = function markPageAsFollowedBookmark() {
+    [native code]
+}
+   [-] canAddURI (2911f08) = function canAddURI() {
+    [native code]
+}
+   [-] setPageDetails (2911ef8) = function setPageDetails() {
+    [native code]
+}
+   [-] addVisit (2911ee0) = function addVisit() {
+    [native code]
+}
+   [-] getNewQueryOptions (2911ec8) = function getNewQueryOptions() {
+    [native code]
+}
+   [-] executeQuery (2911eb0) = function executeQuery() {
+    [native code]
+}
+   [-] queriesToQueryString (2911ea0) = function queriesToQueryString() {
+    [native code]
+}
+   [-] addObserver (2911e90) = function addObserver() {
+    [native code]
+}
+   [-] removeObserver (2911e80) = function removeObserver() {
+    [native code]
+}
+   [-] beginUpdateBatch (2911e70) = function beginUpdateBatch() {
+    [native code]
+}
+   [-] endUpdateBatch (2911e50) = function endUpdateBatch() {
+    [native code]
+}
+
+   [ ] TRANSITION_LINK = 1
+   [ ] TRANSITION_TYPED = 2
+   [ ] TRANSITION_BOOKMARK = 3
+   [ ] TRANSITION_EMBED = 4
+   [ ] TRANSITION_REDIRECT_PERMANENT = 5
+   [ ] TRANSITION_REDIRECT_TEMPORARY = 6
+  [ ] peerDropIndex = 0
+  [+] peerDropTypes (36996f8) = text/x-moz-place-container,text/x-moz-place-separator,text/x-moz-place,text/x-moz-url
+   [ ] 0 = text/x-moz-place-container
+   [ ] 1 = text/x-moz-place-separator
+   [ ] 2 = text/x-moz-place
+   [ ] 3 = text/x-moz-url
+  [-] childDropTypes (36996f8) = text/x-moz-place-container,text/x-moz-place-separator,text/x-moz-place,text/x-moz-url
+  [ ] excludeItems = false
+  [ ] excludeQueries = false
+  [ ] expandQueries = false
+  [-] _viewObserver (36e7088) = [object Object]
+  [ ] _nextSelection (36e6fb8) = 
+  [ ] SAVE_SELECTION_RELOAD = 0
+  [ ] SAVE_SELECTION_INSERT = 1
+  [ ] SAVE_SELECTION_REMOVE = 2
+ [+] canDrop (36e7078, chrome://browser/content/places/tree.xml, 792-813) = function VO_canDrop(index, orientation) {
+    var result = this._self.getResult();
+    var resultview = this._self.getResultView();
+    var node = index != -1 ? resultview.nodeForTreeIndex(index) : result.root;
+    if (node.parent == result.root &&
+        PlacesController.getIndexOfNode(node) < this._self.peerDropIndex &&
+        orientation != NHRVO.DROP_ON) {
+        return false;
+    }
+    if (orientation == NHRVO.DROP_ON) {
+        var droppingOnSelf = this._getSourceView() == this._self &&
+            this._self.view.selection.isSelected(index);
+        if (droppingOnSelf || node.containerReadOnly) {
+            return false;
+        }
+    } else {
+        if (node.parent && node.parent.containerReadOnly) {
+            return false;
+        }
+    }
+    return PlacesControllerDragHelper.canDrop(this._self, orientation);
+}
+  [ ] prototype (2785030) = [object Object]
+ [+] _adjustInsertionPoint (36e7068, chrome://browser/content/places/tree.xml, 820-841) = function VO__adjustInsertionPoint(insertionPoint) {
+    var index = this._self._getInsertionIndex(insertionPoint);
+    if (index == Ci.nsINavHistoryResultTreeViewer.INDEX_INVISIBLE) {
+        return;
+    }
+    var selection = this._self.view.selection;
+    var rc = selection.getRangeCount();
+    var selectionAbove = 0;
+    for (var i = 0; i < rc; ++i) {
+        var min = {}, max = {};
+        selection.getRangeAt(i, min, max);
+        if (min.value > index) {
+            break;
+        }
+        if (max.value >= index) {
+            selectionAbove += index - min.value;
+        } else {
+            selectionAbove += max.value - min.value + 1;
+        }
+    }
+    insertionPoint.index -= selectionAbove;
+}
+  [ ] prototype (2785078) = [object Object]
+ [+] _getSourceView (36e7058, chrome://browser/content/places/tree.xml, 847-852) = function VO__getSourceView() {
+    var session = this._getCurrentSession();
+    var sourceView = session.sourceNode;
+    while (sourceView && sourceView.localName != "tree") {
+        sourceView = sourceView.parentNode;
+    }
+    return sourceView;
+}
+  [ ] prototype (2785098) = [object Object]
+ [+] _getCurrentSession (36e7048, chrome://browser/content/places/tree.xml, 858-862) = function VO__getCurrentSession() {
+    var dragService = Cc['@mozilla.org/widget/dragservice;1'].getService(Ci.nsIDragService);
+    return dragService.getCurrentSession();
+}
+  [ ] prototype (2785190) = [object Object]
+ [+] onDrop (36e7038, chrome://browser/content/places/tree.xml, 873-892) = function VO_onDrop(index, orientation) {
+    LOG("VO: onDrop: " + index + ", orientation: " + orientation);
+    if (!this.canDrop(index, orientation)) {
+        return;
+    }
+    var sourceView = this._getSourceView();
+    var ip = this._self._getInsertionPoint(index, orientation);
+    if (!ip) {
+        throw Cr.NS_ERROR_NOT_AVAILABLE;
+    }
+    if (sourceView == this._self) {
+        this._adjustInsertionPoint(ip);
+    }
+    PlacesControllerDragHelper.onDrop(sourceView, this._self, ip);
+}
+  [ ] prototype (2785298) = [object Object]
+ [+] onToggleOpenState (36e7028, chrome://browser/content/places/tree.xml, 895-895) = function VO_onToggleOpenState(index) {
+}
+  [ ] prototype (27852c8) = [object Object]
+ [+] onSelectionChanged (36e7018, chrome://browser/content/places/tree.xml, 896-896) = function VO_onSelectionChanged() {
+}
+  [ ] prototype (2785310) = [object Object]
+ [+] onCycleHeader (36e7008, chrome://browser/content/places/tree.xml, 897-897) = function VO_onCycleHeader(column) {
+}
+  [ ] prototype (2785330) = [object Object]
+ [+] onCycleCell (36e6ff0, chrome://browser/content/places/tree.xml, 898-898) = function VO_onCycleCell(row, column) {
+}
+  [ ] prototype (2785348) = [object Object]
+ [+] onPerformAction (36e6fe0, chrome://browser/content/places/tree.xml, 899-899) = function VO_onPerformAction(action) {
+}
+  [ ] prototype (2785398) = [object Object]
+ [+] onPerformActionOnRow (36e6fd0, chrome://browser/content/places/tree.xml, 900-900) = function VO_onPerformActionOnRow(action, row) {
+}
+  [ ] prototype (2773380) = [object Object]
+ [+] onPerformActionOnCell (36e6fc0, chrome://browser/content/places/tree.xml, 901-901) = function VO_onPerformActionOnCell(action, row, column) {
+}
+  [ ] prototype (2774780) = [object Object]
+
+Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9a1) Gecko/20060615 Minefield/3.0a1 ID:2006061504 [cairo]

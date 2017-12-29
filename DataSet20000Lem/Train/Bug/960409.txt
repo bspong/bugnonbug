@@ -1,0 +1,33 @@
+FInd functionality recursion exceeds javascript stack size limitation for large pdf file
+Created attachment 8360887
+2001SimplePages.pdf
+
+Steps to Reproduce:
+1. Open the attached pdf (2001SimplePages.pdf) using the FF pdf viewer, which is a large number of page text-only pdf file that only ha page number for each page. (Note this bug can be duplicated using many pdfs found in the wild, but they are enormous in size, one is the house affordable health care act at http://housedocs.house.gov/rules/health/111_ahcaa.pdf, and Intel make such large pdf file for various processor manuals. Interestingly, with just page number and only text this is a very large pdf, although much smaller than it would be with content.)
+2. In the find box enter the number string "2000".
+3. Wait until the page number 2000 is found and highlighted (can take awhile).
+4. Press the next button (down caret).
+
+What happens:
+The find functionality hang at step 4 showing the swirling busy gif image continuously.
+
+What should happen:
+The message that the find wrapped around to the beginning of the file should appear and the same page "2000" should be highlighted. The busy indicator should halt almost immediately.
+
+
+Further Information:
+The following console message occurred (using a version of pdf.js used in one of the FF 25 beta builds)
+************************************************************
+* Call to xpconnect wrapped JSObject produced this error: *
+[Exception... "'[JavaScript Error: "too much recursion" {file: "resource://pdf.j
+s/web/viewer.js" line: 871}]' when calling method: [nsIDOMEventListener::handleE
+vent]" nsresult: "0x80570021 (NS_ERROR_XPC_JAVASCRIPT_ERROR_WITH_DETAILS)" loc
+ation: "native frame :: <unknown filename> :: <TOP_LEVEL> :: line 0" data: yes]
+
+************************************************************
+
+This console error output identifies the function nextPageMatch (at line 871 in that version) which reads:
+matchesReady(pageMatches[pageIdx]);
+The matchesReady function is a local function of nextPageMatch, that in some circumstance call it parent function nextPageMatch where it reads:
+this.nextPageMatch();.
+While this two-step recursion can only build a stack with two frame for each page of the document, since pdf document have an unbounded number of page this can result in an unbounded linear (multiple of two j stack frame per page) stack size and the result is that the recursion is halted by the runtime for such a large pdf and unique find string—throwing an exception. This exception cause a j promise for the find functionality to fail silently, and then the find functionality sits indefinitely in a pending state. While the bug are distinct and the fix do not overlap in the code, this bug can appear to be the same or similar to Bug 916876. It is not clear to me whether Bug 916876 ha been fixed already by recent work identified in a pdf.js irc conversation, I will figure that out after this bug ha been processed. For this bug I already have working code (distinct from my possibly unneeded fix for Bug 916876) that unravels the unbounded recursion into an iteration, and I will isolate just that fix into a pull request shortly. BTW, the iterative implementation executes considerably faster.

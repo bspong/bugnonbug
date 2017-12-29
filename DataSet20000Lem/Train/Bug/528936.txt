@@ -1,0 +1,43 @@
+Mozilla Firefox will not start if nscd isn't running
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US) AppleWebKit/531.0 (KHTML, like Gecko) Chrome/3.0.183.1 Safari/531.0
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.1.3) Gecko/20090909 SUSE/3.5.3-3.1 Firefox/3.5.3
+
+We are running NIS.
+We are running nscd.
+We are running OpenSuSE 11.1
+This bug appears to be happening on firefox 3.0.x till firefox 3.5.x, no exception in rusults.
+Firefox tends to stall for sometime (while running nscd) but non-predictable (so it seems)
+If I start firefox while nscd is running and later on stop nscd, firefox keep on running
+(but a bit slower)
+
+stoeidoos:~/Desktop> sudo rcnscd restart
+stoeidoos:~/Desktop> firefox
+*** nss-shared-helper: Using shared location /home/robert/.pki/nssdb
+stoeidoos:~/Desktop> sudo rcnscd stop
+firefox: nss_nis/nis-netgrp.c:75: _nss_nis_setnetgrent: Assertion `malloc_usable_size (netgrp->data) >= len + 1' failed./usr/bin/firefox: line 128: 8596 Aborted $MOZ_PROGRAM "$@"
+stoeidoos:~/Desktop> sudo rcnscd restart
+stoeidoos:~/Desktop> firefox
+*** nss-shared-helper: Using shared location /home/robert/.pki/nssdb
+
+etc.....
+
+It seems to me that firefox ha become depended on nscd while starting up. I don't think this is good.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Stop nscd
+2. Start firefox
+3. crash with:
+firefox: nss_nis/nis-netgrp.c:75: _nss_nis_setnetgrent: Assertion `malloc_usable_size (netgrp->data) >= len + 1' failed./usr/bin/firefox: line 128: 8596 Aborted $MOZ_PROGRAM "$@"
+Actual Results:
+firefox: nss_nis/nis-netgrp.c:75: _nss_nis_setnetgrent: Assertion `malloc_usable_size (netgrp->data) >= len + 1' failed./usr/bin/firefox: line 128: 8596 Aborted $MOZ_PROGRAM "$@"
+
+Expected Results:
+1. Stop nscd
+2. Start firefox
+A running firefox.
+
+Updates via the normal (factory) repository from suse have all been done with no succes.
+I work a a sys-admin at the Leiden University of Advanced Computer Science. All my student and prof are complaining. All suffer from the same bug. Some people maintain their own computer some are maintained by u (sysadm). All have in common, they use NIS. NIS ha been updated to the latest and greatest.
+The error seems to point to NIS although the bug is triggered via nscd.

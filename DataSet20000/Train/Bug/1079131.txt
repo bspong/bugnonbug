@@ -1,0 +1,35 @@
+[highlighter] Highlighter doesn't stop tracking the mouse and JS error in e10s
+STR:
+
+- open an e10s window
+- open the inspector
+- click on the element picker icon
+- hover elements on the page
+- then, with the element picker mode still ON, move your mouse over the inspector panel (this should highlight elements in the page)
+- click on one of the nodes in the inspector (the element picker should still be ON)
+- then move your mouse back over the page and try to select an element by clicking it
+
+=> Expected: the element should be selected in the inspector and the element picker mode should be OFF
+
+=> Actual: the picker mode remains ON
+
+Then clicking on the element picker button to try and turn it off throws an error in the console:
+
+console.error: 
+  Message: TypeError: target.removeEventListener is not a function
+  Stack:
+    exports.HighlighterActor<._stopPickerListeners@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/actors/highlighter.js:237:5
+exports.HighlighterActor<.cancelPick<@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/actors/highlighter.js:255:7
+actorProto/</handler@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/protocol.js:955:19
+DSC_onPacket@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/main.js:1407:15
+ChildDebuggerTransport.prototype.receiveMessage@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/transport/transport.js:708:5
+
+exports.HighlighterActor<._stopPickerListeners@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/actors/highlighter.js:237:5
+exports.HighlighterActor<.cancelPick<@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/actors/highlighter.js:255:7
+actorProto/</handler@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/protocol.js:955:19
+DSC_onPacket@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/main.js:1407:15
+ChildDebuggerTransport.prototype.receiveMessage@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/transport/transport.js:708:5
+console.error: 
+  Protocol error (unknownError): TypeError: target.removeEventListener is not a function
+
+Remy Sharp of jsbin has been testing the devtools recently and stumbled on this issue while recording this video: https://www.youtube.com/watch?v=4muwlibj6zA

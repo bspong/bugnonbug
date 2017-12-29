@@ -1,0 +1,230 @@
+Firefox 31 crash with Flash on FreeBSD
+Hi
+
+Firefox 31 crash on a webpage with Flash content. It can be reproduced by opening for example: http://helpx.adobe.com/flash-player/kb/video-playback-issues.html
+
+My OS is:
+/home/tomek$ uname -srm
+FreeBSD 10.0-STABLE amd64
+
+Packages:
+/home/tomek$ pkg info firefox linux-f10-flashplugin nspluginwrapper libxul
+firefox-31.0,1
+linux-f10-flashplugin-11.2r202.394
+nspluginwrapper-1.4.4_3
+libxul-24.7.0
+
+Firefox 31 wa compiled from port with following options:
+/usr/ports/www/firefox# make showconfig
+===> The following configuration option are available for firefox-31.0,1:
+DBUS=on: D-Bus IPC system support
+DEBUG=on: Build with debugging support
+DTRACE=off: Build with DTrace probe
+GCONF=off: GConf configuration backend support
+GIO=off: GIO for file I/O
+GNOMEUI=off: libgnomeui support module
+GNOMEVFS2=off: GnomeVFS2 (virtual file system) support
+GSTREAMER=on: Multimedia support via GStreamer
+LIBPROXY=off: Proxy support via libproxy
+LOGGING=off: Additional log message
+OPTIMIZED_CFLAGS=off: Use extra compiler optimization
+PGO=off: Use Profile-Guided Optimization
+PROFILE=off: Build with profiling support
+TEST=off: Build and/or run test
+====> Options available for the multi AUDIO: you have to choose at least one of them
+ALSA=on: ALSA audio architecture support
+PULSEAUDIO=off: PulseAudio sound server support
+===> Use 'make config' to modify these setting
+
+Firefox 30 worked well with this version of Flash.
+
+Running firefox from console (I have created a new clean profile) gives:
+/home/tomek$ firefox http://helpx.adobe.com/flash-player/kb/video-playback-issues.html
+
+(process:27853): GLib-CRITICAL **: void g_slice_set_config(GSliceConfig, gint64): assertion `sys_page_size == 0' failed
+System JS : WARNING resource://gre/modules/Preferences.jsm:378 - mutating the [[Prototype]] of an object will cause your code to run very slowly; instead create the object with the correct initial [[Prototype]] value using Object.create
+++DOCSHELL 0x81d231400 == 1 [pid = 27853] [id = 1]
+++DOMWINDOW == 1 (0x81c89b280) [pid = 27853] [serial = 1] [outer = 0x0]
+++DOMWINDOW == 2 (0x81c89b600) [pid = 27853] [serial = 2] [outer = 0x81c89b280]
+++DOCSHELL 0x824699400 == 2 [pid = 27853] [id = 2]
+++DOMWINDOW == 3 (0x8248cad00) [pid = 27853] [serial = 3] [outer = 0x0]
+++DOMWINDOW == 4 (0x8248cb080) [pid = 27853] [serial = 4] [outer = 0x8248cad00]
+++DOMWINDOW == 5 (0x8248cbb00) [pid = 27853] [serial = 5] [outer = 0x81c89b280]
+-*- Webapps.jsm : Saving /home/tomek/.mozilla/firefox/mpc3y7we.do testow 2/webapps/webapps.json
+++DOCSHELL 0x8252d9800 == 3 [pid = 27853] [id = 3]
+++DOMWINDOW == 6 (0x8248cbe80) [pid = 27853] [serial = 6] [outer = 0x0]
+++DOCSHELL 0x8252da000 == 4 [pid = 27853] [id = 4]
+++DOMWINDOW == 7 (0x824bda280) [pid = 27853] [serial = 7] [outer = 0x0]
+[27853] WARNING: NS_ENSURE_SUCCESS(rv, rv) failed with result 0x80040111: file /usr/ports/www/firefox/work/mozilla-release/content/base/src/nsFrameLoader.cpp, line 398
+++DOCSHELL 0x8263dd800 == 5 [pid = 27853] [id = 5]
+++DOMWINDOW == 8 (0x8256d1780) [pid = 27853] [serial = 8] [outer = 0x0]
+[27853] WARNING: NS_ENSURE_SUCCESS(rv, rv) failed with result 0x80040111: file /usr/ports/www/firefox/work/mozilla-release/content/base/src/nsFrameLoader.cpp, line 398
+++DOMWINDOW == 9 (0x826344280) [pid = 27853] [serial = 9] [outer = 0x8256d1780]
+[27853] WARNING: NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && subjPrincipal) failed: file /usr/ports/www/firefox/work/mozilla-release/docshell/base/nsDocShell.cpp, line 8669
+[27853] WARNING: Failed to open external DTD: publicId "-//W3C//DTD SVG 1.1//EN" systemId "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd" base "jar:file:///usr/local/lib/firefox/browser/omni.ja!/chrome/browser/skin/classic/browser/tabbrowser/tab-selected-start.svg" URL "resource://gre/res/dtd/svg11.dtd": file /usr/ports/www/firefox/work/mozilla-release/parser/htmlparser/src/nsExpatDriver.cpp, line 696
+[27853] WARNING: Failed to open external DTD: publicId "-//W3C//DTD SVG 1.1//EN" systemId "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd" base "jar:file:///usr/local/lib/firefox/browser/omni.ja!/chrome/browser/skin/classic/browser/tabbrowser/tab-selected-end.svg" URL "resource://gre/res/dtd/svg11.dtd": file /usr/ports/www/firefox/work/mozilla-release/parser/htmlparser/src/nsExpatDriver.cpp, line 696
+[27853] WARNING: Failed to open external DTD: publicId "-//W3C//DTD SVG 1.1//EN" systemId "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd" base "jar:file:///usr/local/lib/firefox/omni.ja!/chrome/toolkit/skin/classic/global/icons/close.svg" URL "resource://gre/res/dtd/svg11.dtd": file /usr/ports/www/firefox/work/mozilla-release/parser/htmlparser/src/nsExpatDriver.cpp, line 696
+[27853] WARNING: NS_ENSURE_TRUE(globalObject && globalObject->GetGlobalJSObject()) failed: file /usr/ports/www/firefox/work/mozilla-release/content/html/document/src/nsHTMLContentSink.cpp, line 740
+[27853] WARNING: Subdocument container ha no frame: file /usr/ports/www/firefox/work/mozilla-release/layout/base/nsDocumentViewer.cpp, line 2442
+++DOMWINDOW == 10 (0x826513280) [pid = 27853] [serial = 10] [outer = 0x8248cbe80]
+[27853] WARNING: NS_ENSURE_TRUE(globalObject && globalObject->GetGlobalJSObject()) failed: file /usr/ports/www/firefox/work/mozilla-release/content/html/document/src/nsHTMLContentSink.cpp, line 740
+[27853] WARNING: Subdocument container ha no frame: file /usr/ports/www/firefox/work/mozilla-release/layout/base/nsDocumentViewer.cpp, line 2442
+++DOMWINDOW == 11 (0x826513980) [pid = 27853] [serial = 11] [outer = 0x824bda280]
+++DOMWINDOW == 12 (0x826514080) [pid = 27853] [serial = 12] [outer = 0x8256d1780]
+[27853] WARNING: Could not get disk status from nsIDiskSpaceWatcher: file /usr/ports/www/firefox/work/mozilla-release/uriloader/prefetch/nsOfflineCacheUpdateService.cpp, line 327
+++DOMWINDOW == 13 (0x80179cd80) [pid = 27853] [serial = 13] [outer = 0x8256d1780]
+LoadPlugin() /usr/local/lib/IcedTeaPlugin.so returned 828ae3430
+++DOCSHELL 0x8284a3400 == 6 [pid = 27853] [id = 6]
+++DOMWINDOW == 14 (0x8288cdf00) [pid = 27853] [serial = 14] [outer = 0x0]
+[27853] WARNING: NS_ENSURE_TRUE(globalObject && globalObject->GetGlobalJSObject()) failed: file /usr/ports/www/firefox/work/mozilla-release/content/html/document/src/nsHTMLContentSink.cpp, line 740
+++DOMWINDOW == 15 (0x8288cf780) [pid = 27853] [serial = 15] [outer = 0x8288cdf00]
+[27853] WARNING: NS_ENSURE_TRUE(window) failed: file /usr/ports/www/firefox/work/mozilla-release/dom/base/nsLocation.cpp, line 45
+++DOMWINDOW == 16 (0x829379500) [pid = 27853] [serial = 16] [outer = 0x8288cdf00]
+++DOCSHELL 0x8284a9000 == 7 [pid = 27853] [id = 7]
+++DOMWINDOW == 17 (0x826514400) [pid = 27853] [serial = 17] [outer = 0x0]
+++DOMWINDOW == 18 (0x826514b00) [pid = 27853] [serial = 18] [outer = 0x826514400]
+++DOMWINDOW == 19 (0x82937aa00) [pid = 27853] [serial = 19] [outer = 0x826514400]
+pldhash: for the table at address 0x82989fe60, the given entrySize of 168 definitely favor chaining over double hashing.
+[27853] WARNING: NS_ENSURE_SUCCESS(rv, rv) failed with result 0x80520012: file /usr/ports/www/firefox/work/mozilla-release/netwerk/base/src/nsFileStreams.cpp, line 203
+[27853] WARNING: NS_ENSURE_SUCCESS(rv, rv) failed with result 0x80520012: file /usr/ports/www/firefox/work/mozilla-release/netwerk/base/src/nsFileStreams.cpp, line 475
+For application/x-shockwave-flash found plugin npwrapper.libflashplayer.so
+LoadPlugin() /usr/home/tomek/.mozilla/plugins/npwrapper.libflashplayer.so returned 817503ac0
+[27869] ###!!! ABORT: Aborting on channel error.: file /usr/ports/www/firefox/work/mozilla-release/ipc/glue/MessageChannel.cpp, line 1531
+_ZNSt3__13mapINS_12basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEEES6_NS_4lessIS6_EENS4_INS_4pairIKS6_S6_EEEEE25__construct_node_with_keyEOS6_+0x0000CBAB [/usr/local/lib/firefox/libxul.so +0x00FD444B]
+_ZNSt3__13mapINS_12basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEEES6_NS_4lessIS6_EENS4_INS_4pairIKS6_S6_EEEEE25__construct_node_with_keyEOS6_+0x0000E248 [/usr/local/lib/firefox/libxul.so +0x00FD5AE8]
+_ZNSt3__13mapINS_12basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEEES6_NS_4lessIS6_EENS4_INS_4pairIKS6_S6_EEEEE25__construct_node_with_keyEOS6_+0x0000E27C [/usr/local/lib/firefox/libxul.so +0x00FD5B1C]
+std::__1::basic_string<wchar_, std::__1::char_traits<wchar_>, std::__1::allocator<wchar_> >::__init(wchar_ const*, unsigned long)+0x0001111C [/usr/local/lib/firefox/libxul.so +0x00EF5BAC]
+std::__1::__vector_base<char, std::__1::allocator<char> >::~__vector_base(void)+0x0000113E [/usr/local/lib/firefox/libxul.so +0x00EC7AAE]
+long double+0x000007B6 [/usr/local/lib/event2/libevent-2.0.so.6 +0x00010176]
+std::__1::__vector_base<char, std::__1::allocator<char> >::~__vector_base(void)+0x00001746 [/usr/local/lib/firefox/libxul.so +0x00EC80B6]
+std::__1::__tree<std::__1::__value_type<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >>, std::__1::__map_value_compare<std::__1::+0x0001C406 [/usr/local/lib/firefox/libxul.so +0x00F283F6]
+std::__1::__tree<std::__1::__value_type<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >>, std::__1::__map_value_compare<std::__1::+0x0001C335 [/usr/local/lib/firefox/libxul.so +0x00F28325]
+std::__1::__tree<std::__1::__value_type<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >>, std::__1::__map_value_compare<std::__1::+0x0001C30D [/usr/local/lib/firefox/libxul.so +0x00F282FD]
+std::__1::__vector_base<std::__1::basic_string<wchar_, std::__1::char_traits<wchar_>, std::__1::allocator<wchar_> >, std::__1::allocator<std::__1::basic_string<wchar_, std::__1::char_traits<wchar_>, std::__1::allocator<wchar_> >> >::~__vector_base(void)+0x0001302A [/usr/local/lib/firefox/libxul.so +0x00F62D3A]
+std::__1::__vector_base<char, std::__1::allocator<char> >::~__vector_base(void)+0x000029CC [/usr/local/lib/firefox/libxul.so +0x00EC933C]
+operator->+0x00000725 [/lib/libthr.so.3 +0x000094A5]
+UNKNOWN 0x0
+[27869] ###!!! ABORT: Aborting on channel error.: file /usr/ports/www/firefox/work/mozilla-release/ipc/glue/MessageChannel.cpp, line 1531
+Hit MOZ_CRASH() at /usr/ports/www/firefox/work/mozilla-release/memory/mozalloc/mozalloc_abort.cpp:30
+Bus error (core dumped)
+/home/tomek$
+
+
+------------------------------------------------------------------------------------------------
+Running firefox with gdb:
+/home/tomek$ gdb firefox
+GNU gdb 6.1.1 [FreeBSD]
+Copyright 2004 Free Software Foundation, Inc.
+GDB is free software, covered by the GNU General Public License, and you are
+welcome to change it and/or distribute copy of it under certain conditions.
+Type "show copying" to see the conditions.
+There is absolutely no warranty for GDB. Type "show warranty" for details.
+This GDB wa configured a "amd64-marcel-freebsd".../home/tomek/.gdbinit:2: Error in sourced command file:
+Undefined command: "import". Try "help".
+
+(gdb) r http://helpx.adobe.com/flash-player/kb/video-playback-issues.html
+Starting program: /usr/local/bin/firefox http://helpx.adobe.com/flash-player/kb/video-playback-issues.html
+[New LWP 100699]
+[New Thread 801702400 (LWP 100699/firefox)]
+
+(process:27983): GLib-CRITICAL **: void g_slice_set_config(GSliceConfig, gint64): assertion `sys_page_size == 0' failed
+System JS : WARNING resource://gre/modules/Preferences.jsm:378 - mutating the [[Prototype]] of an object will cause your code to run very slowly; instead create the object with the correct initial [[Prototype]] value using Object.create
+++DOCSHELL 0x81d235400 == 1 [pid = 27983] [id = 1]
+++DOMWINDOW == 1 (0x81c89b280) [pid = 27983] [serial = 1] [outer = 0x0]
+++DOMWINDOW == 2 (0x81c89b600) [pid = 27983] [serial = 2] [outer = 0x81c89b280]
+++DOCSHELL 0x824699400 == 2 [pid = 27983] [id = 2]
+++DOMWINDOW == 3 (0x8248cad00) [pid = 27983] [serial = 3] [outer = 0x0]
+++DOMWINDOW == 4 (0x8248cb080) [pid = 27983] [serial = 4] [outer = 0x8248cad00]
+++DOMWINDOW == 5 (0x8248cbb00) [pid = 27983] [serial = 5] [outer = 0x81c89b280]
+-*- Webapps.jsm : Saving /home/tomek/.mozilla/firefox/mpc3y7we.do testow 2/webapps/webapps.json
+[New Thread 81d239c00 (LWP 101380/DOM Worker)]
+[New Thread 824b4fc00 (LWP 101384/DOM Worker)]
+++DOCSHELL 0x82533e800 == 3 [pid = 27983] [id = 3]
+++DOMWINDOW == 6 (0x8248cbe80) [pid = 27983] [serial = 6] [outer = 0x0]
+++DOCSHELL 0x82533f000 == 4 [pid = 27983] [id = 4]
+++DOMWINDOW == 7 (0x824e8b280) [pid = 27983] [serial = 7] [outer = 0x0]
+[27983] WARNING: NS_ENSURE_SUCCESS(rv, rv) failed with result 0x80040111: file /usr/ports/www/firefox/work/mozilla-release/content/base/src/nsFrameLoader.cpp, line 398
+++DOCSHELL 0x8263de400 == 5 [pid = 27983] [id = 5]
+++DOMWINDOW == 8 (0x82616f780) [pid = 27983] [serial = 8] [outer = 0x0]
+[27983] WARNING: NS_ENSURE_SUCCESS(rv, rv) failed with result 0x80040111: file /usr/ports/www/firefox/work/mozilla-release/content/base/src/nsFrameLoader.cpp, line 398
+++DOMWINDOW == 9 (0x82634b280) [pid = 27983] [serial = 9] [outer = 0x82616f780]
+[27983] WARNING: NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && subjPrincipal) failed: file /usr/ports/www/firefox/work/mozilla-release/docshell/base/nsDocShell.cpp, line 8669
+[27983] WARNING: Failed to open external DTD: publicId "-//W3C//DTD SVG 1.1//EN" systemId "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd" base "jar:file:///usr/local/lib/firefox/browser/omni.ja!/chrome/browser/skin/classic/browser/tabbrowser/tab-selected-start.svg" URL "resource://gre/res/dtd/svg11.dtd": file /usr/ports/www/firefox/work/mozilla-release/parser/htmlparser/src/nsExpatDriver.cpp, line 696
+[27983] WARNING: Failed to open external DTD: publicId "-//W3C//DTD SVG 1.1//EN" systemId "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd" base "jar:file:///usr/local/lib/firefox/browser/omni.ja!/chrome/browser/skin/classic/browser/tabbrowser/tab-selected-end.svg" URL "resource://gre/res/dtd/svg11.dtd": file /usr/ports/www/firefox/work/mozilla-release/parser/htmlparser/src/nsExpatDriver.cpp, line 696
+[27983] WARNING: Failed to open external DTD: publicId "-//W3C//DTD SVG 1.1//EN" systemId "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd" base "jar:file:///usr/local/lib/firefox/omni.ja!/chrome/toolkit/skin/classic/global/icons/close.svg" URL "resource://gre/res/dtd/svg11.dtd": file /usr/ports/www/firefox/work/mozilla-release/parser/htmlparser/src/nsExpatDriver.cpp, line 696
+[27983] WARNING: NS_ENSURE_TRUE(globalObject && globalObject->GetGlobalJSObject()) failed: file /usr/ports/www/firefox/work/mozilla-release/content/html/document/src/nsHTMLContentSink.cpp, line 740
+[27983] WARNING: Subdocument container ha no frame: file /usr/ports/www/firefox/work/mozilla-release/layout/base/nsDocumentViewer.cpp, line 2442
+++DOMWINDOW == 10 (0x8265b9280) [pid = 27983] [serial = 10] [outer = 0x8248cbe80]
+[27983] WARNING: NS_ENSURE_TRUE(globalObject && globalObject->GetGlobalJSObject()) failed: file /usr/ports/www/firefox/work/mozilla-release/content/html/document/src/nsHTMLContentSink.cpp, line 740
+[27983] WARNING: Subdocument container ha no frame: file /usr/ports/www/firefox/work/mozilla-release/layout/base/nsDocumentViewer.cpp, line 2442
+++DOMWINDOW == 11 (0x8265b9980) [pid = 27983] [serial = 11] [outer = 0x824e8b280]
+++DOMWINDOW == 12 (0x8265ba080) [pid = 27983] [serial = 12] [outer = 0x82616f780]
+[27983] WARNING: OpenGL-accelerated layer are not supported on this system: file /usr/ports/www/firefox/work/mozilla-release/widget/xpwidgets/nsBaseWidget.cpp, line 834
+[27983] WARNING: Could not get disk status from nsIDiskSpaceWatcher: file /usr/ports/www/firefox/work/mozilla-release/uriloader/prefetch/nsOfflineCacheUpdateService.cpp, line 327
+++DOCSHELL 0x8263df400 == 6 [pid = 27983] [id = 6]
+++DOMWINDOW == 13 (0x826e7e300) [pid = 27983] [serial = 13] [outer = 0x0]
+++DOMWINDOW == 14 (0x826e7ea00) [pid = 27983] [serial = 14] [outer = 0x826e7e300]
+[27983] WARNING: Subdocument container ha no frame: file /usr/ports/www/firefox/work/mozilla-release/layout/base/nsDocumentViewer.cpp, line 2442
+++DOMWINDOW == 15 (0x826e81400) [pid = 27983] [serial = 15] [outer = 0x826e7e300]
+++DOMWINDOW == 16 (0x826e81b00) [pid = 27983] [serial = 16] [outer = 0x82616f780]
+LoadPlugin() /usr/local/lib/IcedTeaPlugin.so returned 8291fce80
+++DOCSHELL 0x82813cc00 == 7 [pid = 27983] [id = 7]
+++DOMWINDOW == 17 (0x8290d7180) [pid = 27983] [serial = 17] [outer = 0x0]
+[27983] WARNING: NS_ENSURE_TRUE(globalObject && globalObject->GetGlobalJSObject()) failed: file /usr/ports/www/firefox/work/mozilla-release/content/html/document/src/nsHTMLContentSink.cpp, line 740
+++DOMWINDOW == 18 (0x8290d8d80) [pid = 27983] [serial = 18] [outer = 0x8290d7180]
+[27983] WARNING: NS_ENSURE_TRUE(window) failed: file /usr/ports/www/firefox/work/mozilla-release/dom/base/nsLocation.cpp, line 45
+[27983] WARNING: Recursively notifying in RasterImage::FinishedSomeDecoding!: file /usr/ports/www/firefox/work/mozilla-release/image/src/RasterImage.cpp, line 3152
+[27983] WARNING: Recursively notifying in RasterImage::FinishedSomeDecoding!: file /usr/ports/www/firefox/work/mozilla-release/image/src/RasterImage.cpp, line 3152
+++DOMWINDOW == 19 (0x829e74400) [pid = 27983] [serial = 19] [outer = 0x8290d7180]
+++DOCSHELL 0x82497e800 == 8 [pid = 27983] [id = 8]
+++DOMWINDOW == 20 (0x8290d8a00) [pid = 27983] [serial = 20] [outer = 0x0]
+++DOMWINDOW == 21 (0x829e75c80) [pid = 27983] [serial = 21] [outer = 0x8290d8a00]
+++DOMWINDOW == 22 (0x829e76380) [pid = 27983] [serial = 22] [outer = 0x8290d8a00]
+pldhash: for the table at address 0x8297d6a60, the given entrySize of 168 definitely favor chaining over double hashing.
+[27983] WARNING: NS_ENSURE_SUCCESS(rv, rv) failed with result 0x80520012: file /usr/ports/www/firefox/work/mozilla-release/netwerk/base/src/nsFileStreams.cpp, line 203
+[27983] WARNING: NS_ENSURE_SUCCESS(rv, rv) failed with result 0x80520012: file /usr/ports/www/firefox/work/mozilla-release/netwerk/base/src/nsFileStreams.cpp, line 475
+For application/x-shockwave-flash found plugin npwrapper.libflashplayer.so
+LoadPlugin() /usr/home/tomek/.mozilla/plugins/npwrapper.libflashplayer.so returned 817503ac0
+[New Thread 81652c800 (LWP 101372/Gecko_IOThread)]
+
+Program received signal SIGBUS, Bus error.
+[Switching to Thread 81652c800 (LWP 101372/Gecko_IOThread)]
+0x00000008026c7a9f in base::MessagePumpLibevent::OnLibeventNotification (fd=71, flags=2, context=0x6f682f3d48544150)
+at /usr/ports/www/firefox/work/mozilla-release/ipc/chromium/src/base/message_pump_libevent.cc:214
+214 /usr/ports/www/firefox/work/mozilla-release/ipc/chromium/src/base/message_pump_libevent.cc: No such file or directory.
+in /usr/ports/www/firefox/work/mozilla-release/ipc/chromium/src/base/message_pump_libevent.cc
+(gdb)
+(gdb)
+(gdb) bt
+#0 0x00000008026c7a9f in base::MessagePumpLibevent::OnLibeventNotification (fd=71, flags=2, context=0x6f682f3d48544150)
+at /usr/ports/www/firefox/work/mozilla-release/ipc/chromium/src/base/message_pump_libevent.cc:214
+#1 0x000000080c999176 in event_base_loop () from /usr/local/lib/event2/libevent-2.0.so.6
+#2 0x00000008026c80b6 in base::MessagePumpLibevent::Run (this=0x816598a00, delegate=0x7fffff9fcd58)
+at /usr/ports/www/firefox/work/mozilla-release/ipc/chromium/src/base/message_pump_libevent.cc:332
+#3 0x00000008027283f6 in MessageLoop::RunInternal (this=0x7fffff9fcd58) at message_loop.cc:229
+#4 0x0000000802728325 in MessageLoop::RunHandler (this=0x7fffff9fcd58) at message_loop.cc:222
+#5 0x00000008027282fd in MessageLoop::Run (this=0x7fffff9fcd58) at message_loop.cc:196
+#6 0x0000000802762d3a in base::Thread::ThreadMain (this=0x816596100) at thread.cc:168
+#7 0x00000008026c933c in ThreadFunc (closure=0x816596100) at /usr/ports/www/firefox/work/mozilla-release/ipc/chromium/src/base/platform_thread_posix.cc:39
+#8 0x0000000800d614a5 in pthread_create () from /lib/libthr.so.3
+#9 0x0000000000000000 in ?? ()
+(gdb) q
+The program is running. Exit anyway? (y or n) y
+[28003] ###!!! ABORT: Aborting on channel error.: file /usr/ports/www/firefox/work/mozilla-release/ipc/glue/MessageChannel.cpp, line 1531
+_ZNSt3__13mapINS_12basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEEES6_NS_4lessIS6_EENS4_INS_4pairIKS6_S6_EEEEE25__construct_node_with_keyEOS6_+0x0000CBAB [/usr/local/lib/firefox/libxul.so +0x00FD444B]
+_ZNSt3__13mapINS_12basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEEES6_NS_4lessIS6_EENS4_INS_4pairIKS6_S6_EEEEE25__construct_node_with_keyEOS6_+0x0000E248 [/usr/local/lib/firefox/libxul.so +0x00FD5AE8]
+_ZNSt3__13mapINS_12basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEEES6_NS_4lessIS6_EENS4_INS_4pairIKS6_S6_EEEEE25__construct_node_with_keyEOS6_+0x0000E27C [/usr/local/lib/firefox/libxul.so +0x00FD5B1C]
+std::__1::basic_string<wchar_, std::__1::char_traits<wchar_>, std::__1::allocator<wchar_> >::__init(wchar_ const*, unsigned long)+0x0001111C [/usr/local/lib/firefox/libxul.so +0x00EF5BAC]
+std::__1::__vector_base<char, std::__1::allocator<char> >::~__vector_base(void)+0x0000113E [/usr/local/lib/firefox/libxul.so +0x00EC7AAE]
+long double+0x000007B6 [/usr/local/lib/event2/libevent-2.0.so.6 +0x00010176]
+std::__1::__vector_base<char, std::__1::allocator<char> >::~__vector_base(void)+0x00001746 [/usr/local/lib/firefox/libxul.so +0x00EC80B6]
+std::__1::__tree<std::__1::__value_type<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >>, std::__1::__map_value_compare<std::__1::+0x0001C406 [/usr/local/lib/firefox/libxul.so +0x00F283F6]
+std::__1::__tree<std::__1::__value_type<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >>, std::__1::__map_value_compare<std::__1::+0x0001C335 [/usr/local/lib/firefox/libxul.so +0x00F28325]
+std::__1::__tree<std::__1::__value_type<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >>, std::__1::__map_value_compare<std::__1::+0x0001C30D [/usr/local/lib/firefox/libxul.so +0x00F282FD]
+std::__1::__vector_base<std::__1::basic_string<wchar_, std::__1::char_traits<wchar_>, std::__1::allocator<wchar_> >, std::__1::allocator<std::__1::basic_string<wchar_, std::__1::char_traits<wchar_>, std::__1::allocator<wchar_> >> >::~__vector_base(void)+0x0001302A [/usr/local/lib/firefox/libxul.so +0x00F62D3A]
+std::__1::__vector_base<char, std::__1::allocator<char> >::~__vector_base(void)+0x000029CC [/usr/local/lib/firefox/libxul.so +0x00EC933C]
+operator->+0x00000725 [/lib/libthr.so.3 +0x000094A5]
+UNKNOWN 0x0
+[28003] ###!!! ABORT: Aborting on channel error.: file /usr/ports/www/firefox/work/mozilla-release/ipc/glue/MessageChannel.cpp, line 1531
+Hit MOZ_CRASH() at /usr/ports/www/firefox/work/mozilla-release/memory/mozalloc/mozalloc_abort.cpp:30
+/home/tomek$

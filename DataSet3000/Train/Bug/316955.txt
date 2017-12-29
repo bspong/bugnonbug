@@ -1,0 +1,33 @@
+'Load Images' toolbar menu desired when 'Load Images' is disabled for a particular site
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.12) Gecko/20050920
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8) Gecko/20051111 Firefox/1.5
+
+For those of us with low bandwidth or paid bandwidth, it would be very nice to be able to browse with image download disabled, and then to be able to simply click on a 'Load Images' toolbar icon (or select 'Load Images' from the View menu) to obtain a complete page with all images loaded.
+
+Intuitively, this should be much easier to cleanly implement than bug #218142 (which is for image-context-menu loading of a SINGLE image) because the latter bugfix would not be truly useful until bug #309554 is fixed.
+
+This enhancement would go very far to help many low-bandwidth users.
+
+--OUTLINE OF POSSIBLE FIX IMPLEMENTATION-------------------
+
+I] The 'Load Images' action would do the following:
+
+a) set a 'load_images_on_page' flag for the active_window
+b) trigger the 'reload page' action for the active_window
+
+II] Opening new browser tab or window, or visiting any new web page would clear the 'load_images_on_page' flag for the active window.  The 'Load Images' toolbar icon or menu could perhaps be greyed out if load_images(url(active_page))==true where 'load_images(string url)' looks in the Preferences->Content->Load Images site database.
+
+III] For each image, the page renderer would evaluate something like:
+
+if(load_images_on_page(active_page) ||
+   load_images(url(active_page)))
+{
+  load_this_image();
+} else {
+  dont_load_this_image();
+}
+
+or load_images(url(active_page)) could be checked only once before loading/not-loading all page images, depending on current Firefox implementation.
+
+
+Reproducible: Always

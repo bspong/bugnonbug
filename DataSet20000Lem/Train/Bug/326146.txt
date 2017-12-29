@@ -1,0 +1,37 @@
+.url shortcut with long querystrings load incorrectly when no Firefox instance open
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.7.12) Gecko/20050919 Firefox/1.0.7
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.7.12) Gecko/20050919 Firefox/1.0.7
+
+If a window .url shortcut's URL, with querystring, exceeds 255 character *and* there are no instance of Firefox already running, then the newly spawned Firefox split up the querystring and open a tab trying to navigate to each bit. Obviously this doesn't work. The result is that the .url doe not load correctly and the user is left with many garbage tabs.
+
+Format of problem URL (the "real" one disguised a bit because I'm reluctant to give out our dodgy beta site) :
+
+http://www.ourcompany.com/some%5Fdirectory%5F/processingScript.asp?base=A_long_name_of_some_description_goes_here&data=NumberOfPies=5|Range1=290.0:1000.0:175,0,0|Range2=1000.0:3248.0:230,0,0|Range3=3248.0:6496.0:255,25,25|Range4=6496.0:9745.0:225,130,130|Range5=9745.0:32380.0:255,200,200|zoomRect=399794.16087088257,9707900.413981698,8040.871404673145,9805.244813975463|themeShowNames=false|themeShowReferences=false|themeShowThemeValues=false|themeLabelFontSize=10|overlayOneShowNames=true|overlayOneShowReferences=true|overlayOneLabelFontSize=6|overlayOneIsVisible=true|overlayTwoShowNames=false|overlayTwoShowReferences=false|overlayTwoLabelFontSize=16|overlayTwoIsVisible=true|overlayThreeShowNames=true|overlayThreeShowReferences=false|overlayThreeLabelFontSize=10|overlayThreeIsVisible=true|overlayFourShowNames=true|overlayFourShowReferences=false|overlayFourLabelFontSize=8|overlayFourIsVisible=true|overlayFiveShowNames=false|overlayFiveShowReferences=true|overlayFiveLabelFontSize=4|overlayFiveIsVisible=true|autoHideGeometries=false
+
+If the long URL is pasted into the location bar or navigated to via a normal HREF link it work fine. Bizarrely, it also work fine if a Firefox instance is already open.
+
+It work in all case in Internet Explorer.
+
+This is the case on at least Firefox 1.0.7 and the current latest release, 1.5.0.1.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Ensure no instance of Firefox are open
+2. Ensure Firefox is the default browser (which make it the .url handler)
+3. Double click .url file pointing to a valid URL longer than 255 characters, due to a long query string
+
+Actual Results:
+URL is not fully loaded, many garbage tab trying to navigate to bit of the rest of the URL are created.
+
+Expected Results:
+URL should load normally, a it doe if a Firefox instance is already open and a it doe in all case in Internet Explorer.
+
+
+Making a window .url shortcut via right-click --> New Shortcut, or right-click --> Create Shortcut in IE limit the length of the URL to 255 characters. (I'm guessing this is just because they reused a file dialog control.)
+
+*However*, my application need long querystrings from .url's to feed it data, i.e. .url's similar to the above (details section) which are longer than 255 characters. These can be constructed, and are accepted by IE a valid. They can be made either :
+- Making a shortcut to www.example.com or whatever then editing the properties. At this point, URLs > 255 character can be entered.
+- Manually outputting a .url file (what my applet does).
+
+No special configuration or themes, tested on multiple XP / win2k system with the same results.

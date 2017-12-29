@@ -1,0 +1,14 @@
+browser/fuel/test/browser_Browser.js leak window when a marionette session is running
+To satisfy addons signing, the mochitest harness will need to use marionette for bootstrapping (instead of relying on xul overlays). But browser/fuel/test/browser_Browser.js leak window when marionette is enabled.
+
+STR:
+1. Apply attached patch
+2. ./mach mochitest browser/fuel/test/browser_Browser.js
+
+Results:
+> 29 INFO TEST-UNEXPECTED-FAIL | browser/fuel/test/browser_Browser.js | leaked until shutdown [nsGlobalWindow #32 inner chrome://mochitests/content/browser/browser/fuel/test/ContentB.html chrome://mochitests/content/browser/browser/fuel/test/ContentB.html] -
+> 30 INFO TEST-UNEXPECTED-FAIL | browser/fuel/test/browser_Browser.js | leaked until shutdown [nsGlobalWindow #27 inner chrome://mochitests/content/browser/browser/fuel/test/ContentWithFrames.html chrome://mochitests/content/browser/browser/fuel/test/ContentWithFrames.html] -
+> 31 INFO TEST-UNEXPECTED-FAIL | browser/fuel/test/browser_Browser.js | leaked until shutdown [nsGlobalWindow #20 outer chrome://mochitests/content/browser/browser/fuel/test/ContentB.html] -
+> 32 INFO TEST-UNEXPECTED-FAIL | browser/fuel/test/browser_Browser.js | leaked until shutdown [nsGlobalWindow #24 outer chrome://mochitests/content/browser/browser/fuel/test/ContentWithFrames.html] -
+
+This is blocking addons signing, so we'll need to either fix or disable this test. Given bug 1090880, maybe disabling this test is easiest?

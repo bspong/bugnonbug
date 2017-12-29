@@ -1,0 +1,10 @@
+Ensure browser.tabs.autoHide preference exists before asking for boolean value
+Created attachment 382601
+patch (check pref type first)
+
+Suppose the browser.tabs.autoHide preference doesn't exist (because a corporate consumer is updating their Firefox base).
+
+In BrowserStartup(), prepareForStartup() didn't catch the exception. delayedStartup() never executes, and gSessionHistoryObserver is never added.
+
+The result is this assertion on shutdown:
+###!!! ASSERTION: Oops! You're asking for a weak reference to an object that doesn't support that.: 'factoryPtr', file c:/svn/ff_1.0_FF3.5/fx-debug/xpcom/build/nsWeakReference.cpp, line 109

@@ -1,0 +1,18 @@
+performance problem with expiration code due to query in FindVisits()
+performance problem with expiration code due to query in FindVisits()
+
+when running with the dreaded "ispiked" profile, I wa noticing that when ever I visited a link, a few second later, the UI would freeze for a noticable amount of time (5 - 10 seconds?)
+
+I did some debugging, and here's what's going on.
+
+upon visiting a page, we'll call nsNavHistoryExpire::OnAddURI()
+
+> places.dll!nsNavHistoryExpire::OnAddURI(__int64 aNow=1196930465625000) Line 161 C++
+places.dll!nsNavHistory::AddURI(nsIURI * aURI=0x08c0a538, int aRedirect=0, int aToplevel=1, nsIURI * aReferrer=0x00000000) Line 3097 C++
+docshell.dll!nsDocShell::AddToGlobalHistory(nsIURI * aURI=0x08c0a538, int aRedirect=0, nsIChannel * aChannel=0x08b41be0) Line 8586 + 0x40 byte C++
+
+that kick of the expire timer, and when that timer fires, we will call DoPartialExpiration(), which will call ExpireItems() which will call FindVisits()
+
+I think the query for find visit need to be tuned:
+
+SELECT v.id, v.place_id, v.visit_date, h.url, h.favicon_id, h.hidden, b.fk FROM moz_places h LEFT OUTER JOIN moz_historyvisits v ON h.id = v.place_id LEFT OUTER JOIN moz_bookmarks b on h.id = b.fk WHERE v.visit_date < ?1 ORDER BY v.visit_date DESC LIMIT ?2

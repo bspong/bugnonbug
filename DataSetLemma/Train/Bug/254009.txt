@@ -1,0 +1,420 @@
+crash when moving caret after inserting text in a textarea
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.0.1) Gecko/20020823 Netscape/7.0
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8a3) Gecko/20040728 Galeon/1.3.16
+
+Got this crash 4 time in a row when trying to add a comment in the bug (see
+above URL). I did:
+1) Mark 3 line of text from comment #2 in that bug
+2) Middle-click paste in the comment entry
+3) Add a ">" character in the last line
+4) Move the caret up and left
+
+I could not reproduce the problem in TestGtkEmbed or Mozilla-the-browser, but
+the trace show no galeon code, only mozilla symbols. I also got the following
+warning on console:
+Pangolite:(null): Error opening config file: Bad address
+
+(galeon:19584): GLib-CRITICAL **: file gstrfuncs.c: line 2152 (g_strsplit):
+assertion `string != NULL' failed
+
+
+Here's the trace:
+Backtrace wa generated from '/opt/gnome-2.8/bin/galeon'
+
+Using host libthread_db library "/lib/tls/libthread_db.so.1".
+[Thread debugging using libthread_db enabled]
+[New Thread -150878720 (LWP 19584)]
+[New Thread 52415408 (LWP 19586)]
+[Thread debugging using libthread_db enabled]
+[New Thread -150878720 (LWP 19584)]
+[New Thread 52415408 (LWP 19586)]
+[Thread debugging using libthread_db enabled]
+[New Thread -150878720 (LWP 19584)]
+[New Thread 52415408 (LWP 19586)]
+[New Thread 27896752 (LWP 19585)]
+0x00b18402 in ?? ()
+#0 0x00b18402 in ?? ()
+#1 0x005f5eab in __waitpid_nocancel () from /lib/tls/libpthread.so.0
+#2 0x05ba9442 in libgnomeui_module_info_get () from /usr/lib/libgnomeui-2.so.0
+#3 0x00543ef2 in nsProfileLock::FatalSignalHandler ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/libgtkembedmoz.so
+#4 <signal handler called>
+#5 0x01d488f1 in pangolite_split_file_list (str=0x0) at pango-utils.c:157
+#6 0x01d482d9 in read_modules () at modules.c:320
+#7 0x01d483e2 in init_modules () at modules.c:360
+#8 0x01d486c7 in build_map (info=0xacdc3a8) at modules.c:446
+#9 0x01d47dd5 in pangolite_find_map (lang=0xba6684 "en_US",
+engine_type_id=1895, render_type_id=1896) at modules.c:133
+#10 0x00ba5122 in nsULE::NeedsCTLFix ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/components/libctl.so
+#11 0x06f4c79b in nsTextFrame::PeekOffset ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/components/libgklayout.so
+#12 0x07058e94 in nsSelection::MoveCaret ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/components/libgklayout.so
+#13 0x0705b0b9 in nsSelection::CharacterMove ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/components/libgklayout.so
+#14 0x06f64a9c in nsTextInputSelectionImpl::CharacterMove ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/components/libgklayout.so
+#15 0x01bddbe0 in nsSelectionMoveCommands::DoCommand ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/components/libeditor.so
+#16 0x004af140 in nsControllerCommandTable::DoCommand ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/components/libembedcomponents.so
+#17 0x004ac276 in nsBaseCommandController::DoCommand ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/components/libembedcomponents.so
+#18 0x0715f924 in nsXBLPrototypeHandler::ExecuteHandler ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/components/libgklayout.so
+#19 0x0715d3de in nsXBLKeyEventHandler::HandleEvent ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/components/libgklayout.so
+#20 0x07087db7 in nsEventListenerManager::HandleEventSubType ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/components/libgklayout.so
+#21 0x07088063 in nsEventListenerManager::HandleEvent ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/components/libgklayout.so
+#22 0x0703e225 in nsGenericElement::HandleDOMEvent ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/components/libgklayout.so
+#23 0x0709d47b in nsGenericHTMLElement::HandleDOMEvent ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/components/libgklayout.so
+#24 0x070edb21 in nsHTMLTextAreaElement::HandleDOMEvent ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/components/libgklayout.so
+#25 0x06f40b00 in PresShell::HandleEventInternal ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/components/libgklayout.so
+#26 0x06f40782 in PresShell::HandleEvent ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/components/libgklayout.so
+#27 0x0718ba21 in nsViewManager::HandleEvent ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/components/libgklayout.so
+#28 0x0718b330 in nsViewManager::DispatchEvent ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/components/libgklayout.so
+#29 0x07184a22 in HandleEvent ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/components/libgklayout.so
+#30 0x056f53e0 in nsCommonWidget::DispatchEvent ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/components/libwidget_gtk2.so
+#31 0x056ee097 in nsWindow::OnKeyPressEvent ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/components/libwidget_gtk2.so
+#32 0x056f1ff6 in key_press_event_cb ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/components/libwidget_gtk2.so
+#33 0x00e01854 in gtk_marshal_VOID__UINT_STRING ()
+from /usr/lib/libgtk-x11-2.0.so.0
+#34 0x0073d5eb in g_closure_invoke () from /usr/lib/libgobject-2.0.so.0
+#35 0x007542cb in g_signal_has_handler_pending ()
+from /usr/lib/libgobject-2.0.so.0
+#36 0x00755ffb in g_signal_emit_valist () from /usr/lib/libgobject-2.0.so.0
+#37 0x00756682 in g_signal_emit () from /usr/lib/libgobject-2.0.so.0
+#38 0x00eff3b5 in gtk_widget_send_expose () from /usr/lib/libgtk-x11-2.0.so.0
+#39 0x00f0d3ff in gtk_window_propagate_key_event ()
+from /usr/lib/libgtk-x11-2.0.so.0
+#40 0x00f0d49c in gtk_window_propagate_key_event ()
+from /usr/lib/libgtk-x11-2.0.so.0
+#41 0x08081471 in galeon_window_key_press_event (window=0xa609258,
+event=0x9ff1248) at galeon-window.c:778
+#42 0x00e01854 in gtk_marshal_VOID__UINT_STRING ()
+from /usr/lib/libgtk-x11-2.0.so.0
+#43 0x0073d9b7 in g_cclosure_new_swap () from /usr/lib/libgobject-2.0.so.0
+#44 0x0073d5eb in g_closure_invoke () from /usr/lib/libgobject-2.0.so.0
+#45 0x00754f11 in g_signal_has_handler_pending ()
+from /usr/lib/libgobject-2.0.so.0
+#46 0x00755ffb in g_signal_emit_valist () from /usr/lib/libgobject-2.0.so.0
+#47 0x00756682 in g_signal_emit () from /usr/lib/libgobject-2.0.so.0
+#48 0x00eff3b5 in gtk_widget_send_expose () from /usr/lib/libgtk-x11-2.0.so.0
+#49 0x00dffe9e in gtk_propagate_event () from /usr/lib/libgtk-x11-2.0.so.0
+#50 0x00dfeb36 in gtk_main_do_event () from /usr/lib/libgtk-x11-2.0.so.0
+#51 0x009108e5 in gdk_x11_register_standard_event_type ()
+from /usr/lib/libgdk-x11-2.0.so.0
+#52 0x05978e9b in g_main_context_dispatch () from /usr/lib/libglib-2.0.so.0
+#53 0x0597aac4 in g_main_context_acquire () from /usr/lib/libglib-2.0.so.0
+#54 0x0597ad8a in g_main_loop_run () from /usr/lib/libglib-2.0.so.0
+#55 0x059f40a8 in bonobo_main () from /usr/lib/libbonobo-2.so.0
+#56 0x08078d95 in main (argc=1, argv=0xfee50dd4) at galeon-main.c:197
+
+Thread 3 (Thread 27896752 (LWP 19585)):
+#0 0x00b18402 in ?? ()
+No symbol table info available.
+#1 0x009f1a27 in poll () from /lib/tls/libc.so.6
+No symbol table info available.
+#2 0x005b138f in _pr_poll_with_poll (pds=0x9bfd874, npds=1,
+timeout=4294967295) at ptio.c:3905
+in_flags_read = 1
+in_flags_write = 0
+out_flags_read = 0
+out_flags_write = 0
+stack_syspoll = {{fd = 21, event = 1, revents = 0}, {fd = 1,
+event = -9704, revents = 2495}, {fd = 27895752, event = 7968,
+revents = 95}, {fd = 27895784, event = 30322, revents = 1163}, {
+fd = 163568152, event = -21584, revents = 425}, {fd = 1, event = -26692,
+revents = 2615}, {fd = 6232935, event = -26784, revents = 2615}, {
+fd = 27895816, event = 11608, revents = 2758}, {fd = 27895800,
+event = 7968, revents = 95}, {fd = 27895832, event = -9769,
+revents = 90}, {fd = 180759896, event = -21584, revents = 425}, {
+fd = 27895848, event = -9844, revents = 90}, {fd = 76483328, event = 0,
+revents = 0}, {fd = 27895896, event = -20071, revents = 1158}, {
+fd = 10097073, event = -13928, revents = 2618}, {fd = 171415392,
+event = -20182, revents = 1158}, {fd = 180759896, event = 1,
+revents = 0}, {fd = 288, event = 8555, revents = 90}, {fd = 180736876,
+event = -30848, revents = 165}, {fd = 180736760, event = 2816,
+revents = 1167}, {fd = 180737080, event = 2816, revents = 1167}, {
+fd = 27895928, event = 8555, revents = 90}, {fd = 180736876, event = 2,
+revents = -32697}, {fd = 97, event = 96, revents = 0}, {fd = 10842108,
+event = -30848, revents = 165}, {fd = 180736664, event = -22376,
+revents = 425}, {fd = 10102587, event = -30848, revents = 165}, {
+fd = 180736664, event = 21068, revents = 134}, {fd = 10097073,
+event = 32608, revents = 2616}, {fd = 27895976, event = 19923,
+revents = 132}, {fd = 6232935, event = 2816, revents = 1167}, {
+fd = 27896024, event = -7232, revents = 2488}, {fd = 10097073,
+event = 7968, revents = 95}, {fd = 27896024, event = -9769,
+revents = 90}, {fd = 10097073, event = -21584, revents = 425}, {
+fd = 171474784, event = -9844, revents = 90}, {fd = 6012832,
+event = -7264, revents = 2488}, {fd = 27896072, event = 8978,
+revents = 90}, {fd = 10097073, event = -30848, revents = 165}, {
+fd = 180760280, event = -22264, revents = 425}, {fd = 10097073,
+event = -30848, revents = 165}, {fd = 180760280, event = 21068,
+revents = 134}, {fd = 10842108, event = -30848, revents = 165}, {
+fd = 181262720, event = -22232, revents = 425}, {fd = 10102587,
+event = -30848, revents = 165}, {fd = 181262720, event = 21068,
+revents = 134}, {fd = 181262720, event = 0, revents = 0}, {fd = 27896120,
+event = 19923, revents = 132}, {fd = 181262720, event = 2816,
+revents = 1167}, {fd = 27896152, event = -30201, revents = 1163}, {
+fd = 181262720, event = 2816, revents = 1167}, {fd = 27896184,
+event = -30265, revents = 1163}, {fd = 171415396, event = 21852,
+revents = 27}, {fd = 27896184, event = 19263, revents = 24}, {
+fd = 181262720, event = -11432, revents = 2757}, {fd = 76252282,
+event = 19202, revents = 24}, {fd = 1791324, event = -9856,
+revents = 2765}, {fd = 27896232, event = 19181, revents = 24}, {
+fd = 181262720, event = 7968, revents = 95}, {fd = 27896232,
+event = 19095, revents = 24}, {fd = 163568152, event = -21584,
+revents = 425}, {fd = 27896264, event = 2816, revents = 1167}, {
+fd = 27896264, event = 1, revents = 0}, {fd = 27896312, event = -4269,
+revents = 1158}}
+syspoll = (struct pollfd *) 0x1a9a7b0
+index = 1
+msec = -1
+ready = -1
+start = 180300192
+elapsed = 4294967292
+remaining = 4294967292
+#3 0x0486eeaf in nsSocketTransportService::Poll ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/components/libnecko.so
+No symbol table info available.
+#4 0x0486f49f in nsSocketTransportService::Run ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/components/libnecko.so
+No symbol table info available.
+#5 0x001877d8 in nsThread::Main ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/libxpcom.so
+No symbol table info available.
+#6 0x005b26dd in _pt_root (arg=0x9bfdbf8) at ptthread.c:217
+detached = 0
+#7 0x005ef98c in start_thread () from /lib/tls/libpthread.so.0
+No symbol table info available.
+#8 0x009fb16a in clone () from /lib/tls/libc.so.6
+No symbol table info available.
+
+Thread 2 (Thread 52415408 (LWP 19586)):
+#0 0x00b18402 in ?? ()
+No symbol table info available.
+#1 0x005f2950 in pthread_cond_timedwait@@GLIBC_2.3.2 ()
+from /lib/tls/libpthread.so.0
+No symbol table info available.
+#2 0x005adaab in pt_TimedWait (cv=0x9b8763c, ml=0x9b875d8, timeout=13875)
+at ptsynch.c:267
+rv = 2416
+now = {tv_sec = 1091453800, tv_usec = 601281}
+tmo = {tv_sec = 1091453814, tv_nsec = 476281000}
+tick = 1091453814
+#3 0x005adc6d in PR_WaitCondVar (cvar=0x9b87638, timeout=13875)
+at ptsynch.c:394
+rv = 1091453800
+thred = (PRThread *) 0xa34e2d8
+#4 0x0018a0de in TimerThread::Run ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/libxpcom.so
+No symbol table info available.
+#5 0x001877d8 in nsThread::Main ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/libxpcom.so
+No symbol table info available.
+#6 0x005b26dd in _pt_root (arg=0xa34e2d8) at ptthread.c:217
+detached = 0
+#7 0x005ef98c in start_thread () from /lib/tls/libpthread.so.0
+No symbol table info available.
+#8 0x009fb16a in clone () from /lib/tls/libc.so.6
+No symbol table info available.
+
+Thread 1 (Thread -150878720 (LWP 19584)):
+#0 0x00b18402 in ?? ()
+No symbol table info available.
+#1 0x005f5eab in __waitpid_nocancel () from /lib/tls/libpthread.so.0
+No symbol table info available.
+#2 0x05ba9442 in libgnomeui_module_info_get () from /usr/lib/libgnomeui-2.so.0
+No symbol table info available.
+#3 0x00543ef2 in nsProfileLock::FatalSignalHandler ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/libgtkembedmoz.so
+No symbol table info available.
+#4 <signal handler called>
+No symbol table info available.
+#5 0x01d488f1 in pangolite_split_file_list (str=0x0) at pango-utils.c:157
+i = 0
+j = -150878720
+file = (char **) 0x0
+#6 0x01d482d9 in read_modules () at modules.c:320
+module_file = (FILE *) 0xba6673
+file_str = 0x0
+file = (char **) 0x3a8840
+n = 12215902
+#7 0x01d483e2 in init_modules () at modules.c:360
+init = 1
+#8 0x01d486c7 in build_map (info=0xacdc3a8) at modules.c:446
+i = -150878720
+map = (PangoliteMap *) 0xffffffff
+engine_type = 0xba665e "PangoliteEngineShape"
+render_type = 0xba6673 "PangoliteRenderX"
+#9 0x01d47dd5 in pangolite_find_map (lang=0xba6684 "en_US",
+engine_type_id=1895, render_type_id=1896) at modules.c:133
+tmp_list = (GList *) 0x0
+map_info = (PangoliteMapInfo *) 0xacdc3a8
+found_earlier = 0
+#10 0x00ba5122 in nsULE::NeedsCTLFix ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/components/libctl.so
+No symbol table info available.
+#11 0x06f4c79b in nsTextFrame::PeekOffset ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/components/libgklayout.so
+No symbol table info available.
+#12 0x07058e94 in nsSelection::MoveCaret ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/components/libgklayout.so
+No symbol table info available.
+#13 0x0705b0b9 in nsSelection::CharacterMove ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/components/libgklayout.so
+No symbol table info available.
+#14 0x06f64a9c in nsTextInputSelectionImpl::CharacterMove ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/components/libgklayout.so
+No symbol table info available.
+#15 0x01bddbe0 in nsSelectionMoveCommands::DoCommand ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/components/libeditor.so
+No symbol table info available.
+#16 0x004af140 in nsControllerCommandTable::DoCommand ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/components/libembedcomponents.so
+No symbol table info available.
+#17 0x004ac276 in nsBaseCommandController::DoCommand ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/components/libembedcomponents.so
+No symbol table info available.
+#18 0x0715f924 in nsXBLPrototypeHandler::ExecuteHandler ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/components/libgklayout.so
+No symbol table info available.
+#19 0x0715d3de in nsXBLKeyEventHandler::HandleEvent ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/components/libgklayout.so
+No symbol table info available.
+#20 0x07087db7 in nsEventListenerManager::HandleEventSubType ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/components/libgklayout.so
+No symbol table info available.
+#21 0x07088063 in nsEventListenerManager::HandleEvent ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/components/libgklayout.so
+No symbol table info available.
+#22 0x0703e225 in nsGenericElement::HandleDOMEvent ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/components/libgklayout.so
+No symbol table info available.
+#23 0x0709d47b in nsGenericHTMLElement::HandleDOMEvent ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/components/libgklayout.so
+No symbol table info available.
+#24 0x070edb21 in nsHTMLTextAreaElement::HandleDOMEvent ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/components/libgklayout.so
+No symbol table info available.
+#25 0x06f40b00 in PresShell::HandleEventInternal ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/components/libgklayout.so
+No symbol table info available.
+#26 0x06f40782 in PresShell::HandleEvent ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/components/libgklayout.so
+No symbol table info available.
+#27 0x0718ba21 in nsViewManager::HandleEvent ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/components/libgklayout.so
+No symbol table info available.
+#28 0x0718b330 in nsViewManager::DispatchEvent ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/components/libgklayout.so
+No symbol table info available.
+#29 0x07184a22 in HandleEvent ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/components/libgklayout.so
+No symbol table info available.
+#30 0x056f53e0 in nsCommonWidget::DispatchEvent ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/components/libwidget_gtk2.so
+No symbol table info available.
+#31 0x056ee097 in nsWindow::OnKeyPressEvent ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/components/libwidget_gtk2.so
+No symbol table info available.
+#32 0x056f1ff6 in key_press_event_cb ()
+from /opt/gnome-2.8/lib/mozilla-1.8a3/components/libwidget_gtk2.so
+No symbol table info available.
+#33 0x00e01854 in gtk_marshal_VOID__UINT_STRING ()
+from /usr/lib/libgtk-x11-2.0.so.0
+No symbol table info available.
+#34 0x0073d5eb in g_closure_invoke () from /usr/lib/libgobject-2.0.so.0
+No symbol table info available.
+#35 0x007542cb in g_signal_has_handler_pending ()
+from /usr/lib/libgobject-2.0.so.0
+No symbol table info available.
+#36 0x00755ffb in g_signal_emit_valist () from /usr/lib/libgobject-2.0.so.0
+No symbol table info available.
+#37 0x00756682 in g_signal_emit () from /usr/lib/libgobject-2.0.so.0
+No symbol table info available.
+#38 0x00eff3b5 in gtk_widget_send_expose () from /usr/lib/libgtk-x11-2.0.so.0
+No symbol table info available.
+#39 0x00f0d3ff in gtk_window_propagate_key_event ()
+from /usr/lib/libgtk-x11-2.0.so.0
+No symbol table info available.
+#40 0x00f0d49c in gtk_window_propagate_key_event ()
+from /usr/lib/libgtk-x11-2.0.so.0
+No symbol table info available.
+#41 0x08081471 in galeon_window_key_press_event (window=0xa609258,
+event=0x9ff1248) at galeon-window.c:778
+priv = (GaleonWindowPrivate *) 0xa609300
+force_chain = 0
+handled = 0
+modifier = 163029744
+i = 4144088576
+#42 0x00e01854 in gtk_marshal_VOID__UINT_STRING ()
+from /usr/lib/libgtk-x11-2.0.so.0
+No symbol table info available.
+#43 0x0073d9b7 in g_cclosure_new_swap () from /usr/lib/libgobject-2.0.so.0
+No symbol table info available.
+#44 0x0073d5eb in g_closure_invoke () from /usr/lib/libgobject-2.0.so.0
+No symbol table info available.
+#45 0x00754f11 in g_signal_has_handler_pending ()
+from /usr/lib/libgobject-2.0.so.0
+No symbol table info available.
+#46 0x00755ffb in g_signal_emit_valist () from /usr/lib/libgobject-2.0.so.0
+No symbol table info available.
+#47 0x00756682 in g_signal_emit () from /usr/lib/libgobject-2.0.so.0
+No symbol table info available.
+#48 0x00eff3b5 in gtk_widget_send_expose () from /usr/lib/libgtk-x11-2.0.so.0
+No symbol table info available.
+#49 0x00dffe9e in gtk_propagate_event () from /usr/lib/libgtk-x11-2.0.so.0
+No symbol table info available.
+#50 0x00dfeb36 in gtk_main_do_event () from /usr/lib/libgtk-x11-2.0.so.0
+No symbol table info available.
+#51 0x009108e5 in gdk_x11_register_standard_event_type ()
+from /usr/lib/libgdk-x11-2.0.so.0
+No symbol table info available.
+#52 0x05978e9b in g_main_context_dispatch () from /usr/lib/libglib-2.0.so.0
+No symbol table info available.
+#53 0x0597aac4 in g_main_context_acquire () from /usr/lib/libglib-2.0.so.0
+No symbol table info available.
+#54 0x0597ad8a in g_main_loop_run () from /usr/lib/libglib-2.0.so.0
+No symbol table info available.
+#55 0x059f40a8 in bonobo_main () from /usr/lib/libbonobo-2.so.0
+No symbol table info available.
+#56 0x08078d95 in main (argc=1, argv=0xfee50dd4) at galeon-main.c:197
+context = 0x0
+context_as_value = {g_type = 0, data = {{v_int = 0, v_uint = 0,
+v_long = 0, v_ulong = 0, v_int64 = 0, v_uint64 = 0, v_float = 0,
+v_double = 0, v_pointer = 0x0}, {v_int = 0, v_uint = 0, v_long = 0,
+v_ulong = 0, v_int64 = 0, v_uint64 = 0, v_float = 0, v_double = 0,
+v_pointer = 0x0}}}
+program = (GnomeProgram *) 0x9ff0c08
+factory = 0x0
+#0 0x00b18402 in ?? ()
+
+The build is a build from cv from 2004-07-28, using the following configuration:
+--disable-svg --enable-ctl --enable-optimize=-O2 --with-system-png
+--with-system-jpeg
+--enable-extensions=cookie,xml-rpc,xmlextras,p3p,pref,universalchardet,typeaheadfind,gnomevfs,pref
+--enable-xprint --without-system-nspr --prefix /opt/gnome-2.8
+--with-default-mozilla-five-home=/opt/gnome-2.8/lib/mozilla-1.8a3
+--disable-gtk-doc --disable-static --enable-default-toolkit=gtk2
+--disable-mailnews --disable-ldap --disable-debug --enable-optimize
+--disable-tests --enable-crypto --enable-xft --with-system-zlib --disable-freetype2
+
+
+Reproducible: Always
+Steps to Reproduce:

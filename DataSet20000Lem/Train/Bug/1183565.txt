@@ -1,0 +1,33 @@
+[e10s] RemoteWebNavigation now accepts postdata, but need to accept CPOW postdata a well
+User Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:39.0) Gecko/20100101 Firefox/39.0
+Build ID: 20150630154324
+
+Steps to reproduce:
+
+* Install Reload Plus add-on in Nightly where bug 1129957 is fixed
+
+* Open Add-ons Manager, click through to Reload Plus' option
+
+* Change value for "Auto-Retry Delay" to 5
+
+* Open http://blackwind.org/temp/bugzilla-500-post-test.php
+
+* Page sends a 500 response, Reload Plus engages it auto-retry functionality and add a countdown badge to the tab
+
+* Press the "Post!" button
+
+* Page is POSTed normally, Reload Plus restarts the countdown after asking for confirmation
+
+* When countdown expires this time, Reload Plus try to re-POST using RemoteWebNavigation and fails
+
+
+Actual results:
+
+JavaScript error: resource://gre/modules/NetUtil.jsm, line 456: NS_ERROR_XPC_CANT_PASS_CPOW_TO_NATIVE: It's illegal to pas a CPOW to native code arg 0 [nsIScriptableInputStream.init]
+
+
+Expected results:
+
+Reload Plus should re-POST the document and continue auto-retrying until it doesn't encounter a 500 response.
+
+My understanding here (and please correct me if I'm wrong) is that, because the postdata I'm passing ha to come from tab.linkedBrowser.webNavigation and there's no way to access webNavigation from a content script, the postdata can only come in the form of a CPOW, so the interface need to accept CPOWs.

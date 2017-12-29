@@ -1,0 +1,71 @@
+PHP5/MySQL5 problem with header function, not redirected with POST method
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.2) Gecko/20100115 Firefox/3.6
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.2) Gecko/20100115 Firefox/3.6
+
+I have some code witch I tested with all newest browsers and only yours has this problem.
+When its running as it is its work just fine, but if you'll force an error by changing something in mysql query or put the comment on checking $_post['word'](may be something else to), run the script, than change it back and refresh the page, the header function just won't execute.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.definition of "index.php" file:
+<?php
+$mysqli = new mysqli('localhost','user','12345','fftest');
+if(session_start()){
+	if(!empty($_SESSION['message'])){$messages .= $_SESSION['message'];unset($_SESSION['message']);}
+}
+if(!empty($_POST['word']))$word = trim($_POST['word']);
+
+if(!$result = $mysqli->query('SELECT word FROM words')){die("$mysqli->error");}
+if($result->num_rows <= 0){$massages .= '<div>Please enter a word</div>';}
+else{
+	$row = $result->fetch_assoc();
+	do{
+		$words .= "<div>$row[word]</div>";
+	}while($row = $result->fetch_assoc());
+}
+
+if(isset($_POST['submit'])){
+	if(!empty($word)){
+		if($mysqli->query("INSERT INTO words (word) VALUES ('$word')")){
+			$_SESSION['message'] .= '<div style="background-color:green">Word added!</div>';
+			header("Location: /");
+			die();
+		}
+		else{die("$mysqli->error");}
+	}
+	else{$messages .= '<div style="background-color:red">Please enter a word!</div>';}
+}
+?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Test Page</title>
+</head>
+
+<body>
+<?php echo $messages.'<br />'; ?>
+<?php echo $words; ?>
+<form action="/" method="post">
+Enter a word: <input name="word" type="text" />
+<input name="submit" type="submit" />
+</form>
+</body>
+</html>
+2.MySQL database:
+CREATE TABLE `words` (
+  `word` varchar(255) NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+3.force an error in the code (changing mysql query or commenting out the $_post['word'] variable worked for me:))
+4.open page and try to enter some word it should give some error
+5.correct the code and try refresh the page(like F5 not just writing down an address) and submit the POST variables.
+Actual Results:  
+its refreshing page and every time that you submit the POST variables it adds another row to database.
+
+Expected Results:  
+it has to add only 1 row and stop. becouse of header function it has refresh the page without the POST variables and not to ask about them.(all other new browsers do. not sure about the older versions)
+
+PHP Version 5.2.4
+MySQL 5.0.45
+Firefox 3.6

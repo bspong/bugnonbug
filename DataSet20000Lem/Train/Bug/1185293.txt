@@ -1,0 +1,30 @@
+"Save All As HAR" fails with TypeError: file.responseHeaders is undefined @ har-builder.js (also file.responseContent)
+In a new profile with the current Nightly:
+1. Open Tools -> Web Developer -> Network (Cmd+Alt+Q)
+2. Go to https://groups.google.com/forum/#!topic/firebug/u3nbmQfiMHk
+3. Wait until the page finish loading (at ~37 requests)
+4. Right click the network pane, select "Save All As HAR"
+5. Reload the page (Cmd+R)
+6. Wait until the page finish loading (at ~37 requests)
+7. Right click the network pane, select "Save All As HAR"
+
+At step 4 the HAR file is generated correctly.
+At step 7 the HAR file is not created, the browser console say
+> TypeError: file.responseHeaders is undefined
+> resource:///modules/devtools/netmonitor/har/har-builder.js:295:5
+>
+> buildResponse: function(file) {
+> [...]
+>
+> response.content = this.buildContent(file);
+> >> response.redirectURL = findValue(file.responseHeaders.headers, "Location");
+
+Also I see a similar problem, which I did not try to reproduce with a clean profile on gmail.com:
+
+> TypeError: file.responseContent is undefined
+> resource:///modules/devtools/netmonitor/har/har-builder.js:313:1
+>
+> buildContent: function(file) {
+> [...]
+> if (!this._options.includeResponseBodies ||
+> >> file.responseContent.contentDiscarded) {

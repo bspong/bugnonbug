@@ -1,0 +1,22 @@
+RemoteAddonsParent/ContentPolicyParent gets nsIContentPolicy implementation the wrong way
+Right now |ContentPolicyParent| caches the |entry|:
+http://hg.mozilla.org/mozilla-central/file/7f0d92595432/toolkit/components/addoncompat/RemoteAddonsParent.jsm#l169
+and later uses the caches |entry| trying to get the service:
+http://hg.mozilla.org/mozilla-central/file/7f0d92595432/toolkit/components/addoncompat/RemoteAddonsParent.jsm#l137
+
+This is wrong. According to the nsContentPolicy implementation, |value| must be used to get the service:
+http://hg.mozilla.org/mozilla-central/file/7f0d92595432/xpcom/glue/nsCategoryCache.cpp#l47
+|entry| is a free-form field and not guaranteed to contain the contract ID.
+
+This causes a couple of add-ons to not work anymore, and spamming the console with "TypeError: Cc[policyCID] is undefined" messages.
+E.g. https://addons.mozilla.org/addon/adblock-plus-pop-up-addon/ is affected.
+
+On a related note, the code will return an error from ContentPolicyParent.shouldLoad upon the first service not being available (anymore). Not sure if this is indented behavior now, but the original nsContentPolicy implementation will just script any services that fail loading and/or where shouldLoad returns an error.
+
+STR:
+- Install https://addons.mozilla.org/addon/adblock-plus-pop-up-addon/
+- See console spammed and add-on not working correctly
+
+Expected:
+- Console should not be spammed
+- Add-on should work correctly if possible (as far as there are no other e10s compat issues) or should at least not hinder other content policies from running.

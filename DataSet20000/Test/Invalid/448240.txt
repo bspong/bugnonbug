@@ -1,0 +1,72 @@
+When .tar.gz file is returned with 200 + Content-Type:application/gzip + Content-Encoding:gzip, unzip by Content-Encodig:gzip is not executed upon file save
+This is issue found during duplication test of Bug 426273.
+Tested with Firefox 3.0.1 on MS Win-XP SP3.
+
+When .tar.gz file is returned with 200 + Content-Type:application/gzip + Content-Encoding:gzip, unzip by Content-Encodig:gzip is not executed upon file save.
+
+Following is HTTP headers by LiveHTTPHeaders with Fx 3.0.1 on MS Win-XP SP3.
+> ----------------------------------------------------------
+> GET /Graphics/SVG/Test/20070907/W3C_SVG_12_TinyTestSuite.tar.gz HTTP/1.1
+> Host: www.w3.org
+> ("Server: Apache/2" is returned)
+> ----------------------------------------------------------
+> Clear cache, "Save Link As", and wait for download completion 
+> (don't cancel at save dialog, to avoid bug 426273)
+> ----------------------------------------------------------
+> Response for HTTP GET without Range:/If-Range: (normal GET)
+> ----------------------------------------------------------
+> HTTP/1.x 200 OK
+> Etag: "17ece0c-439993d6a5180"
+> Accept-Ranges: bytes
+> Content-Length: 25087500
+> Cache-Control: max-age=21600
+> Expires: Sun, 27 Jul 2008 16:30:41 GMT
+> Content-Type: application/gzip; qs=0.001
+> Content-Encoding: gzip
+> ----------------------------------------------------------
+> File is saved as "W3C_SVG_12_TinyTestSuite.tar.gz"
+> ----------------------------------------------------------
+
+> about:cache?device=disk
+> Key: http://www.w3.org/Graphics/SVG/Test/20070907/W3C_SVG_12_TinyTestSuite.tar.gz
+> Data size: 25087500 bytes
+> Fetch count: 1 , Last modified: 2008-07-28 08:42:32 , Expires: 2008-07-28 14:41:03
+
+> File size of W3C_SVG_12_TinyTestSuite.tar.gz = 25,087,500 bytes
+> Copy .tar.gz to .tar.zip, in order to avoid single step decompress of
+> ".tar.gz" file by my utility.
+> Decompress .tar.zip -> File of W3C_SVG_12_TinyTestSuite.tar (37,376,000 bytes)
+> Decompress .tar     -> Direcrory of W3C_SVG_12_TinyTestSuite
+
+I think that "200 + Content-Type:application/gzip + Content-Encoding:gzip" is not invalid, because on-the-fly compression for gzipped file or multiple compression is not prohibited by HTTP 1.1 protocol, and because data of the ".tar.gz" file is really gzip'ed data in this case.
+
+Because 200 with Content-Encoding:gzip, data held in cache is data before decompress due to Content-Encoding:gzip. This data should be saved in decompressed(un-gzip'ed) format upon "Save As". (i.e. data of tar format is to be saved as disk file in this case).
+When 200+Content-Type:text/html+Content-Encoding:gzip, it works as expected. Cached data is gzip'ed version, but file created by "Save Link As" contains ungzip'ed version.
+
+When the URI is saved by IE 7, file size of W3C_SVG_12_TinyTestSuite.tar.gz is 37,376,000 bytes(saved after unzip due to Content-Encoding:gzip).
+This indicates something wrong in Firefox.
+Something special is involved when application/gzip?
+Multiple gzip/deflate issue has relation to the problem?
+
+Note: Impact of this bug for user is very low(can be said no impact when this SVG site because of .tar.gz file), since many utilities can handle many compress format and most of them are not so stupid(don't rely on file extension only.).
+
+(Why Content-Encoding:gzip is sent by the Site?)
+
+Following is required setting for .svgz file.
+> (See Bug 319690 Comment #2)
+> Manually gzip .svg file, and save as .svgz file
+> AddType image/svg+xml .svgz
+> AddEncoding gzip .svgz
+Because the site is for /Graphics/SVG/, this setting for .svgz is surely used.
+I think Content-Encoding:gzip is not by on-the-fly compression, because Apache2 uses mod_deflate instead of mod_gzip.
+So I guess similar setting is used for .gz, which can produce above HTTP headers.
+> AddType application/gzip .gz
+> AddEncoding gzip .gz
+I think proper setting for .tar.gz file is AddType of application/??? for .tar file, if Content-Encoding:gzip is sent at same time.
+> AddType application/???? .tar.gz
+> AddEncoding gzip .tar.gz
+> (with filename recommendation of "....tar", to avoid issues relate to file extension at client side)
+
+And, I guess Content-Encoding:gzip upon 206 response (trigger of Bug 426273) is caused by "AddEncoding gzip .gz" or "AddEncoding gzip .tar.gz".
+I think Apache should return 200 instead of 206 to Range:/If-Range:"etag-data" request for content which was previously sent with Content-Encoding:gzip/deflate.
+But how can Apache know it? Generation of different Etag value is required before send with Content-Encoding:gzip based on "AddEncoding gzip .xxx"?

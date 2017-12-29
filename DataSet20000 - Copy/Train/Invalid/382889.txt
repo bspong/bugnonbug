@@ -1,0 +1,50 @@
+Javascript keyword bookmarks do not work correctly with Tab Mix Plus extension from Firefox version 2.0.0.1 onwards
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.8.1) Gecko/20061010 Firefox/2.0
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.8.1) Gecko/20061010 Firefox/2.0
+
+With Tab Mix Plus extension installed, and set to open tabs from bookmarks, keyword bookmarks which use javascript to handle multiple parameters do not work correctly.
+
+The most recent version of Firefox which did not have this problem was 2.0.
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Install the Tab Mix Plus extension, available from https://addons.mozilla.org/en-US/firefox/addon/1122 - most recent version at time of writing was 0.3.5.2
+
+2. In the Tab Mix Plus options, go to Events > Tab Opening > Open tabs from ... make sure that Open tabs from Bookmarks is checked, then click Apply.
+
+3. Create a javascript bookmark - open the bookmarks manager, go to File > New Bookmark, and in the location field, enter some javascript code. Here's an example of a javascript bookmark I prepared for Google Sets, for which you can use any number of parameters. I have split the code onto several lines to aid readability, however, you'll need to remove line endings and enter it all in the location box as one line.
+
+javascript:l=0;c=1;
+x="http://labs.google.com/sets?q";
+s=decodeURI("%s");
+p=s.indexOf(" ");
+while(p!=-1)
+{x=x+c+"="+encodeURI(s.substring(l,p))+"&q";l=p+1;
+p=s.indexOf(" ",l);c++;
+};
+x=x+c+"="+encodeURI(s.substring(l,s.length));
+location.href=x;
+
+Once you have entered this code into the location field, put a keyword (eg "sets") in the keyword field, and give your bookmark a name (eg "sets"). Then click OK.
+
+4. Call your new Javascript bookmark from the location bar - for example:
+
+sets phoebe monica rachel
+
+Actual Results:  
+A new tab opens, however, instead of loading the URL that has been calculated by the javascript code, it merely displays the URL by itself in the top left hand corner of the tab - for the example given, this will be:
+
+http://labs.google.com/sets?q1=phoebe&q2=monica&q3=rachel
+
+
+Expected Results:  
+I would expect it to actually load the page at http://labs.google.com/sets?q1=phoebe&q2=monica&q3=rachel in the new tab that had just been opened - not merely display the URL.
+
+
+Javascript keyword bookmarks will open correctly in the current tab if Tab Mix Plus is not set to open bookmarks in new tabs, or if the Tab Mix Plus extension is disabled.
+
+Keyword bookmarks that don't use javascript appear to open correctly in a new tab.
+
+The most recent version of Firefox in which it was possible to get javascript keyword bookmarks to open correctly in a new tab with Tab Mix Plus, and where following the above steps will actually get the expected results, was Firefox 2.0. From 2.0.0.1 up to 2.0.0.4, it doesn't appear to work any more. I seem to remember the same problem existing with versions of Tab Mix Plus before 0.3.5.2 but I haven't thoroughly checked this yet.

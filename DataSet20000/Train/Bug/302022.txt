@@ -1,0 +1,41 @@
+"Set as Wallpaper" dialog can load local files as images
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.10) Gecko/20050716 Firefox/1.0.6
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.10) Gecko/20050716 Firefox/1.0.6
+
+The patch for bug #292737 blocked the exploit to execute arbitrary code with a
+javascript URL in the "Set as Wallpaper" dialog. On the one hand it is blocked
+because the context menu option is disabled when the image is not valid, on the
+other hand it is blocked by a check inside setWallpaper.xul (static check for
+javascript scheme).
+
+By changing the src attibute of the image file with a setTimeout function, it is
+possible to get the context menu with active "Set as Wallpaper" option and then
+inject another URL into the dialog. The scheme check inside the dialog is still
+working, but you can get around the usual url checks and access local files for
+example.
+
+This does not lead to any active vulnerability right now (well, beside the
+"evil" ability to make the user set another background image then he sees in the
+page and in the preview *g*). But the ability to access arbitrary files looks
+like a recipe for trouble to me. Am i paranoid? Anyway, I suggest fixing the
+"timing" attack vector if possible. Is a fix like this used in other places?
+
+
+Reproducible: Always
+
+
+
+
+<img src="test.jpg" onmousedown="setTimeout('doit()',1000)" width="300"
+height="200" id="myimg">
+<script>
+function doit(){
+    myimg = document.getElementById("myimg");
+    myimg.src = "file:///C:/WINDOWS/Web/Wallpaper/Tulips.jpg";
+    myimg.width = 300;
+    myimg.height = 200;
+};
+</script>
+
+An interesting side effect is that the old image keeps being displayed when you
+change the src attribute and width/height. I would expect a broken image icon.

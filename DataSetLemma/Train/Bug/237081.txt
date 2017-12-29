@@ -1,0 +1,613 @@
+Crash in [@ js_GetGCThingFlags] gcthing isn't valid
+this seems similar to bug 120629
+
+A developer here hit this three time in a row. our codebase is pre 1.7a branch
+(update is scheduled for 1.7b sometime around this weekend).
+
+> js3250.dll!js_GetGCThingFlags(void * thing=0x00000008) Line 218 + 0xf
+C
+js3250.dll!js_MarkGCThing(JSContext * cx=0x00a16f38, void *
+thing=0x00000008, void * arg=0x00000000) Line 833 + 0x9 C
+js3250.dll!js_MarkAtom(JSContext * cx=0x00a16f38, JSAtom *
+atom=0x0248cdd0, void * arg=0x00000000) Line 812 + 0x12 C
+js3250.dll!js_MarkScript(JSContext * cx=0x00a16f38, JSScript *
+script=0x02444bd0, void * arg=0x00000000) Line 1176 + 0x28 C
+js3250.dll!script_mark(JSContext * cx=0x00a16f38, JSObject *
+obj=0x01dc1d48, void * arg=0x00000000) Line 810 + 0x11 C
+js3250.dll!js_Mark(JSContext * cx=0x00a16f38, JSObject *
+obj=0x01dc1d48, void * arg=0x00000000) Line 3825 + 0x12 C
+js3250.dll!js_MarkGCThing(JSContext * cx=0x00a16f38, void *
+thing=0x01dc1d48, void * arg=0x00000000) Line 865 + 0x25 C
+js3250.dll!gc_root_marker(JSDHashTable * table=0x009aba70,
+JSDHashEntryHdr * hdr=0x0282d514, unsigned long num=149, void *
+arg=0x00a16f38) Line 975 + 0x12 C
+js3250.dll!JS_DHashTableEnumerate(JSDHashTable * table=0x009aba70,
+JSDHashOperator (JSDHashTable *, JSDHashEntryHdr *, unsigned long, void *)*
+etor=0x00acb3a0, void * arg=0x00a16f38) Line 618 + 0x19 C
+js3250.dll!js_GC(JSContext * cx=0x00a16f38, unsigned int gcflags=0)
+Line 1188 + 0x15 C
+js3250.dll!js_ForceGC(JSContext * cx=0x00a16f38, unsigned int
+gcflags=0) Line 1000 + 0xd C
+js3250.dll!JS_GC(JSContext * cx=0x00a16f38) Line 1684 + 0xb C
+js3250.dll!JS_MaybeGC(JSContext * cx=0x00a16f38) Line 1703 + 0x9
+C
+jsdom.dll!nsJSContext::ScriptEvaluated(int aTerminated=0) Line 1686 +
+0xd C++
+jsdom.dll!nsJSContext::ScriptExecuted() Line 1756 C++
+xpc3250.dll!AutoScriptEvaluate::~AutoScriptEvaluate() Line 107 C++
+xpc3250.dll!nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS *
+wrapper=0x024b98f0, unsigned short methodIndex=4, const nsXPTMethodInfo *
+info=0x00a4ee00, nsXPTCMiniVariant * nativeParams=0x00129850) Line 1584 + 0x17
+C++
+xpc3250.dll!nsXPCWrappedJS::CallMethod(unsigned short methodIndex=4,
+const nsXPTMethodInfo * info=0x00a4ee00, nsXPTCMiniVariant *
+params=0x00129850) Line 450 C++
+xpcom.dll!PrepareAndDispatch(nsXPTCStubBase * self=0x024b98f0, unsigned
+int methodIndex=4, unsigned int * args=0x00129918, unsigned int *
+stackBytesToPop=0x00129908) Line 117 + 0x1c C++
+xpcom.dll!SharedStub() Line 147 C++
+gklayout.dll!nsTreeBodyFrame::RowCountChanged(int aIndex=44, int
+aCount=1) Line 1686 C++
+gklayout.dll!nsTreeBoxObject::RowCountChanged(int aIndex=44, int
+aDelta=1) Line 419 + 0x14 C++
+xpcom.dll!XPTC_InvokeByIndex(nsISupports * that=0x025cdca8, unsigned
+int methodIndex=30, unsigned int paramCount=2, nsXPTCVariant *
+params=0x00129ab0) Line 102 C++
+xpc3250.dll!XPCWrappedNative::CallMethod(XPCCallContext & ccx={...},
+XPCWrappedNative::CallMode mode=CALL_METHOD) Line 2022 + 0x1e C++
+xpc3250.dll!XPC_WN_CallMethod(JSContext * cx=0x00a16f38, JSObject *
+obj=0x02140bd8, unsigned int argc=2, long * argv=0x024841d8, long *
+vp=0x00129d5c) Line 1272 + 0xb C++
+js3250.dll!js_Invoke(JSContext * cx=0x00a16f38, unsigned int argc=2,
+unsigned int flags=0) Line 941 + 0x20 C
+js3250.dll!js_Interpret(JSContext * cx=0x00a16f38, long *
+result=0x0012a55c) Line 2962 + 0xf C
+js3250.dll!js_Invoke(JSContext * cx=0x00a16f38, unsigned int argc=3,
+unsigned int flags=0) Line 958 + 0xd C
+js3250.dll!js_Interpret(JSContext * cx=0x00a16f38, long *
+result=0x0012acd8) Line 2962 + 0xf C
+js3250.dll!js_Invoke(JSContext * cx=0x00a16f38, unsigned int argc=2,
+unsigned int flags=0) Line 958 + 0xd C
+js3250.dll!js_Interpret(JSContext * cx=0x00a16f38, long *
+result=0x0012b454) Line 2962 + 0xf C
+js3250.dll!js_Invoke(JSContext * cx=0x00a16f38, unsigned int argc=1,
+unsigned int flags=2) Line 958 + 0xd C
+xpc3250.dll!nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS *
+wrapper=0x020315b0, unsigned short methodIndex=3, const nsXPTMethodInfo *
+info=0x01e6a598, nsXPTCMiniVariant * nativeParams=0x0012b760) Line 1336 + 0x14
+C++
+xpc3250.dll!nsXPCWrappedJS::CallMethod(unsigned short methodIndex=3,
+const nsXPTMethodInfo * info=0x01e6a598, nsXPTCMiniVariant *
+params=0x0012b760) Line 450 C++
+xpcom.dll!PrepareAndDispatch(nsXPTCStubBase * self=0x020315b0, unsigned
+int methodIndex=3, unsigned int * args=0x0012b828, unsigned int *
+stackBytesToPop=0x0012b818) Line 117 + 0x1c C++
+xpcom.dll!SharedStub() Line 147 C++
+jsd3250.dll!jsds_ScriptHookProc(JSDContext * jsdc=0x009e2ac0, JSDScript
+* jsdscript=0x026bfb28, int creating=1, void * callerdata=0x00000000) Line 723
+C++
+jsd3250.dll!jsd_NewScriptHookProc(JSContext * cx=0x00a16f38, const char
+* filename=0x02832445, unsigned int lineno=1, JSScript * script=0x026bfad8,
+JSFunction * fun=0x00000000, void * callerdata=0x009e2ac0) Line 562 + 0x11
+C
+js3250.dll!js_CallNewScriptHook(JSContext * cx=0x00a16f38, JSScript *
+script=0x026bfad8, JSFunction * fun=0x00000000) Line 1141 + 0x27 C
+js3250.dll!js_NewScriptFromCG(JSContext * cx=0x00a16f38,
+JSCodeGenerator * cg=0x0012b988, JSFunction * fun=0x00000000) Line 1108 + 0x11
+C
+js3250.dll!CompileTokenStream(JSContext * cx=0x00a16f38, JSObject *
+obj=0x022e1120, JSTokenStream * ts=0x026bf2b0, void * tempMark=0x00a16f88, int
+* eofp=0x00000000) Line 3009 + 0x12 C
+js3250.dll!JS_CompileUCScriptForPrincipals(JSContext * cx=0x00a16f38,
+JSObject * obj=0x022e1120, JSPrincipals * principals=0x009bd41c, const unsigned
+short * chars=0x02383930, unsigned int length=20, const char *
+filename=0x026bf230, unsigned int lineno=1) Line 3086 + 0x17 C
+js3250.dll!JS_EvaluateUCInStackFrame(JSContext * cx=0x00a16f38,
+JSStackFrame * fp=0x024836c8, const unsigned short * bytes=0x02383930, unsigned
+int length=20, const char * filename=0x026bf230, unsigned int lineno=1, long *
+rval=0x0012bb44) Line 860 + 0x31 C
+jsd3250.dll!jsd_EvaluateUCScriptInStackFrame(JSDContext *
+jsdc=0x009e2ac0, JSDThreadState * jsdthreadstate=0x02464620, JSDStackFrameInfo
+* jsdframe=0x02451020, const unsigned short * bytes=0x02383930, unsigned int
+length=20, const char * filename=0x026bf230, unsigned int lineno=1, int
+eatExceptions=0, long * rval=0x0012bb44) Line 456 + 0x25 C
+jsd3250.dll!JSD_AttemptUCScriptInStackFrame(JSDContext *
+jsdc=0x009e2ac0, JSDThreadState * jsdthreadstate=0x02464620, JSDStackFrameInfo
+* jsdframe=0x02451020, const unsigned short * bytes=0x02383930, unsigned int
+length=20, const char * filename=0x026bf230, unsigned int lineno=1, long *
+rval=0x0012bb44) Line 774 + 0x27 C
+jsd3250.dll!jsdStackFrame::Eval(const nsAString & bytes={...}, const
+char * fileName=0x026bf230, unsigned int line=1, jsdIValue * *
+result=0x0012bce0, int * _rval=0x0012bcf0) Line 1890 + 0x36 C++
+xpcom.dll!XPTC_InvokeByIndex(nsISupports * that=0x024510e0, unsigned
+int methodIndex=20, unsigned int paramCount=5, nsXPTCVariant *
+params=0x0012bcb0) Line 102 C++
+xpc3250.dll!XPCWrappedNative::CallMethod(XPCCallContext & ccx={...},
+XPCWrappedNative::CallMode mode=CALL_METHOD) Line 2022 + 0x1e C++
+xpc3250.dll!XPC_WN_CallMethod(JSContext * cx=0x00a16f38, JSObject *
+obj=0x022e1090, unsigned int argc=4, long * argv=0x02483cd4, long *
+vp=0x0012bf5c) Line 1272 + 0xb C++
+js3250.dll!js_Invoke(JSContext * cx=0x00a16f38, unsigned int argc=4,
+unsigned int flags=0) Line 941 + 0x20 C
+js3250.dll!js_Interpret(JSContext * cx=0x00a16f38, long *
+result=0x0012c75c) Line 2962 + 0xf C
+js3250.dll!js_Invoke(JSContext * cx=0x00a16f38, unsigned int argc=3,
+unsigned int flags=0) Line 958 + 0xd C
+js3250.dll!js_Interpret(JSContext * cx=0x00a16f38, long *
+result=0x0012ced8) Line 2962 + 0xf C
+js3250.dll!js_Invoke(JSContext * cx=0x00a16f38, unsigned int argc=1,
+unsigned int flags=0) Line 958 + 0xd C
+js3250.dll!js_Interpret(JSContext * cx=0x00a16f38, long *
+result=0x0012d654) Line 2962 + 0xf C
+js3250.dll!js_Invoke(JSContext * cx=0x00a16f38, unsigned int argc=0,
+unsigned int flags=2) Line 958 + 0xd C
+xpc3250.dll!nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS *
+wrapper=0x025179e0, unsigned short methodIndex=3, const nsXPTMethodInfo *
+info=0x01e699d8, nsXPTCMiniVariant * nativeParams=0x0012d960) Line 1336 + 0x14
+C++
+xpc3250.dll!nsXPCWrappedJS::CallMethod(unsigned short methodIndex=3,
+const nsXPTMethodInfo * info=0x01e699d8, nsXPTCMiniVariant *
+params=0x0012d960) Line 450 C++
+xpcom.dll!PrepareAndDispatch(nsXPTCStubBase * self=0x025179e0, unsigned
+int methodIndex=3, unsigned int * args=0x0012da28, unsigned int *
+stackBytesToPop=0x0012da18) Line 117 + 0x1c C++
+xpcom.dll!SharedStub() Line 147 C++
+jsd3250.dll!jsdService::EnterNestedEventLoop(jsdINestCallback *
+callback=0x025179e0, unsigned int * _rval=0x0012dc10) Line 2925 + 0xc C++
+xpcom.dll!XPTC_InvokeByIndex(nsISupports * that=0x009e2a70, unsigned
+int methodIndex=49, unsigned int paramCount=2, nsXPTCVariant *
+params=0x0012dc00) Line 102 C++
+xpc3250.dll!XPCWrappedNative::CallMethod(XPCCallContext & ccx={...},
+XPCWrappedNative::CallMode mode=CALL_METHOD) Line 2022 + 0x1e C++
+xpc3250.dll!XPC_WN_CallMethod(JSContext * cx=0x00a16f38, JSObject *
+obj=0x01ddb950, unsigned int argc=1, long * argv=0x02483880, long *
+vp=0x0012deac) Line 1272 + 0xb C++
+js3250.dll!js_Invoke(JSContext * cx=0x00a16f38, unsigned int argc=1,
+unsigned int flags=0) Line 941 + 0x20 C
+js3250.dll!js_Interpret(JSContext * cx=0x00a16f38, long *
+result=0x0012e6ac) Line 2962 + 0xf C
+js3250.dll!js_Invoke(JSContext * cx=0x00a16f38, unsigned int argc=3,
+unsigned int flags=2) Line 958 + 0xd C
+xpc3250.dll!nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS *
+wrapper=0x01f9c1a0, unsigned short methodIndex=3, const nsXPTMethodInfo *
+info=0x01e69ac0, nsXPTCMiniVariant * nativeParams=0x0012e9b8) Line 1336 + 0x14
+C++
+xpc3250.dll!nsXPCWrappedJS::CallMethod(unsigned short methodIndex=3,
+const nsXPTMethodInfo * info=0x01e69ac0, nsXPTCMiniVariant *
+params=0x0012e9b8) Line 450 C++
+xpcom.dll!PrepareAndDispatch(nsXPTCStubBase * self=0x01f9c1a0, unsigned
+int methodIndex=3, unsigned int * args=0x0012ea80, unsigned int *
+stackBytesToPop=0x0012ea70) Line 117 + 0x1c C++
+xpcom.dll!SharedStub() Line 147 C++
+jsd3250.dll!jsds_ExecutionHookProc(JSDContext * jsdc=0x009e2ac0,
+JSDThreadState * jsdthreadstate=0x02464620, unsigned int type=1, void *
+callerdata=0x00000001, long * rval=0x0012f1b8) Line 678 C++
+jsd3250.dll!jsd_CallExecutionHook(JSDContext * jsdc=0x009e2ac0,
+JSContext * cx=0x00a16f38, unsigned int type=1, unsigned int (JSDContext *,
+JSDThreadState *, unsigned int, void *, long *)* hook=0x01439ba0, void *
+hookData=0x00000001, long * rval=0x0012f1b8) Line 177 + 0x17 C
+jsd3250.dll!jsd_TrapHandler(JSContext * cx=0x00a16f38, JSScript *
+script=0x0209fb58, unsigned char * pc=0x0209fc49, long * rval=0x0012f1b8, void
+* closure=0x022b8bf9) Line 708 + 0x1b C
+js3250.dll!JS_HandleTrap(JSContext * cx=0x00a16f38, JSScript *
+script=0x0209fb58, unsigned char * pc=0x0209fc49, long * rval=0x0012f1b8) Line
+212 + 0x1d C
+js3250.dll!js_Interpret(JSContext * cx=0x00a16f38, long *
+result=0x0012f2e0) Line 3466 + 0x18 C
+js3250.dll!js_Invoke(JSContext * cx=0x00a16f38, unsigned int argc=2,
+unsigned int flags=2) Line 958 + 0xd C
+xpc3250.dll!nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS *
+wrapper=0x02411fd0, unsigned short methodIndex=3, const nsXPTMethodInfo *
+info=0x02415038, nsXPTCMiniVariant * nativeParams=0x0012f5ec) Line 1336 + 0x14
+C++
+xpc3250.dll!nsXPCWrappedJS::CallMethod(unsigned short methodIndex=3,
+const nsXPTMethodInfo * info=0x02415038, nsXPTCMiniVariant *
+params=0x0012f5ec) Line 450 C++
+xpcom.dll!PrepareAndDispatch(nsXPTCStubBase * self=0x02411fd0, unsigned
+int methodIndex=3, unsigned int * args=0x0012f6b4, unsigned int *
+stackBytesToPop=0x0012f6a4) Line 117 + 0x1c C++
+xpcom.dll!SharedStub() Line 147 C++
+mozilla.exe!nsNativeAppSupportWin::GetCmdLineArgs(unsigned char *
+request=0x0012fb74, nsICmdLineService * * aResult=0x0012f8a0) Line 2031 + 0x28
+C++
+mozilla.exe!nsNativeAppSupportWin::HandleRequest(unsigned char *
+request=0x0012fb74, int newWindow=1) Line 1738 + 0x24 C++
+mozilla.exe!MessageWindow::WindowProc(HWND__ * msgWindow=0x009f00ba,
+unsigned int msg=74, unsigned int wp=0, long lp=1243996) Line 864 + 0xe
+C++
+user32.dll!77d43a50()
+user32.dll!77d43b1f()
+user32.dll!77d444f5()
+user32.dll!77d4c395()
+ntdll.dll!77f75da3()
+user32.dll!77d43ed1()
+user32.dll!77d43eb4()
+user32.dll!77d43fd4()
+gkwidget.dll!PeekKeyAndIMEMessage(tagMSG * msg=0x0012fce4, HWND__ *
+hwnd=0x00000000) Line 90 + 0x18 C++
+gkwidget.dll!nsAppShell::Run() Line 128 + 0xb C++
+appshell.dll!nsAppShellService::Run() Line 484 C++
+mozilla.exe!main1(int argc=2, char * * argv=0x002a4c80, nsISupports *
+nativeApp=0x0097bf70) Line 1291 + 0x20 C++
+mozilla.exe!main(int argc=2, char * * argv=0x002a4c80) Line 1678 + 0x25
+C++
+mozilla.exe!WinMain(HINSTANCE__ * __formal=0x00400000, HINSTANCE__ *
+__formal=0x00400000, char * args=0x00152318, HINSTANCE__ *
+__formal=0x00400000) Line 1702 + 0x17 C++
+mozilla.exe!WinMainCRTStartup() Line 390 + 0x1b C
+kernel32.dll!77e814c7()
+ntdll.dll!77f944a8()
+
+piece from irc:
+key = 0x8
+
+- script 0x02444bd0 {code=0x02444c00 "" length=460
+main=0x02444c0f "l" ...} JSScript *
++ code 0x02444c00 "" unsigned char *
+length 460 unsigned long
++ main 0x02444c0f "l" unsigned char *
+version JSVERSION_DEFAULT JSVersion
+- atomMap {vector=0x02356658 length=119 } JSAtomMap
++ vector 0x02356658 JSAtom * *
+length 119 unsigned long
++ filename
+0x02013a2d "chrome://communicator/content/bookmarks/bookmarksMenu.js"
+const char *
+lineno 1 unsigned int
+depth 5 unsigned int
++ trynotes 0x00000000 {start=??? length=??? catchStart=??? }
+JSTryNote *
++ principal 0x009bd41c {codebase=0x009bd440 "[System Principal]"
+getPrincipalArray=0x00b237f0 nsGetPrincipalArray(JSContext *, JSPrincipals *)
+globalPrivilegesEnabled=0x00b23800 nsGlobalPrivilegesEnabled(JSContext *,
+JSPrincipals *) ...} JSPrincipals *
++ object 0x01dc1d48 {map=0x0239f788 {nrefs=13 ops=0x00b196c8
+_js_ObjectOps nslots=12 ...} slots=0x01f3b9fc } JSObject *
+
+- script->atomMap.vector,119 0x02356658 JSAtom * *
++ [0] 0x02474fc0 {entry={next=0x00000005 {next=??? keyHash=???
+key=??? ...} keyHash=10561464 key=0x00a128e0 ...} flags=38739044
+number=2147483649 } JSAtom *
++ [1] 0x00963fc8 {entry={next=0x00000000 {next=??? keyHash=???
+key=??? ...} keyHash=76858180 key=0x0096189c ...} flags=7 number=18 } JSAtom *
++ [2] 0x0248cae0 {entry={next=0x00000005 {next=??? keyHash=???
+key=??? ...} keyHash=31418472 key=0x01997b28 ...} flags=34542725
+number=2147483649 } JSAtom *
++ [3] 0x0248cb18 {entry={next=0x00000005 {next=??? keyHash=???
+key=??? ...} keyHash=10561464 key=0x00a128e0 ...} flags=9836796
+number=2147483649 } JSAtom *
++ [4] 0x0248cb60 {entry={next=0x006e006f {next=??? keyHash=???
+key=??? ...} keyHash=6815811 key=0x006e0061 ...} flags=4 number=11710 } JSAtom *
++ [5] 0x0249aa58 {entry={next=0x00000000 {next=??? keyHash=???
+key=??? ...} keyHash=1637000808 key=0x023c81c4 ...} flags=4 number=11291 }
+JSAtom *
++ [6] 0x0248d718 {entry={next=0x00000000 {next=??? keyHash=???
+key=??? ...} keyHash=956727675 key=0x01997d3c ...} flags=4 number=11826 }
+JSAtom *
++ [7] 0x0248d738 {entry={next=0x00000005 {next=??? keyHash=???
+key=??? ...} keyHash=31418432 key=0x01d907f8 ...} flags=34511461
+number=2147483649 } JSAtom *
++ [8] 0x0248f4b8 {entry={next=0x00000000 {next=??? keyHash=???
+key=??? ...} keyHash=9022744 key=0x0226b460 ...} flags=196612 number=524548 }
+JSAtom *
++ [9] 0x0248cd58 {entry={next=0x00030004 {next=??? keyHash=???
+key=??? ...} keyHash=524548 key=0x00000005 ...} flags=10561764 number=11638569 }
+JSAtom *
++ [10] 0x0248c540 {entry={next=0x00000005 {next=??? keyHash=???
+key=??? ...} keyHash=10562296 key=0x00a128e0 ...} flags=2147483653
+number=2147483649 } JSAtom *
++ [11] 0x0248ce28 {entry={next=0x02164950 {next=0x00967918
+{next=0x0000218d keyHash=11638472 key=0x0000000e ...} keyHash=38325764
+key=0x00967918 ...} keyHash=33473736 key=0x000003dd ...} flags=4 number=0 }
+JSAtom *
++ [12] 0x0248fe60 {entry={next=0x00720063 {next=??? keyHash=???
+key=??? ...} keyHash=6357093 key=0x00650074 ...} flags=7143525 number=7209061 }
+JSAtom *
++ [13] 0x0248f750 {entry={next=0x00000005 {next=??? keyHash=???
+key=??? ...} keyHash=31418184 key=0x01997f60 ...} flags=34148317
+number=2147483649 } JSAtom *
++ [14] 0x02490c98 {entry={next=0x00000005 {next=??? keyHash=???
+key=??? ...} keyHash=31418264 key=0x019b4778 ...} flags=34448261
+number=2147483649 } JSAtom *
++ [15] 0x0248f6f0 {entry={next=0x0000000c {next=??? keyHash=???
+key=??? ...} keyHash=26052096 key=0x00a128e0 ...} flags=26836836 number=3161 }
+JSAtom *
++ [16] 0x024914c0 {entry={next=0x03670363 {next=??? keyHash=???
+key=??? ...} keyHash=274925155 key=0x0363b433 ...} flags=10728284
+number=3484506314 } JSAtom *
++ [17] 0x02491508 {entry={next=0x00000005 {next=??? keyHash=???
+key=??? ...} keyHash=10562296 key=0x00a12af8 ...} flags=4 number=2147483649 }
+JSAtom *
++ [18] 0x02491c40 {entry={next=0x6f726863 {next=??? keyHash=???
+key=??? ...} keyHash=792356205 key=0x76616e2f ...} flags=1664053871
+number=1702129263 } JSAtom *
++ [19] 0x0248cdd0 {entry={next=0x02164948 {next=0x0248cdc0
+{next=0x00000001 keyHash=11638472 key=0x0000000c ...} keyHash=37595508
+key=0x00967918 ...} keyHash=1835008 key=0x00000008 ...} flags=37595572
+number=32790176 } JSAtom *
++ [20] 0x02480008 {entry={next=0x00000005 {next=??? keyHash=???
+key=??? ...} keyHash=10562296 key=0x00a12af8 ...} flags=0 number=2147483649 }
+JSAtom *
++ [21] 0x02480050 {entry={next=0x006c0079 {next=??? keyHash=???
+key=??? ...} keyHash=5439589 key=0x00650068 ...} flags=115 number=1 } JSAtom *
++ [22] 0x02488170 {entry={next=0x00720042 {next=??? keyHash=???
+key=??? ...} keyHash=7798895 key=0x00650073 ...} flags=6619248 number=5505134 }
+JSAtom *
++ [23] 0x0243e9e0 {entry={next=0x00000000 {next=??? keyHash=???
+key=??? ...} keyHash=3900947858 key=0x024cb494 ...} flags=4 number=11538 }
+JSAtom *
++ [24] 0x02498b30 {entry={next=0x006f0063 {next=??? keyHash=???
+key=??? ...} keyHash=7077996 key=0x00700061 ...} flags=100 number=11748 }
+JSAtom *
++ [25] 0x02498b78 {entry={next=0x00000000 {next=??? keyHash=???
+key=??? ...} keyHash=946099407 key=0x0199851c ...} flags=0 number=11848 }
+JSAtom *
++ [26] 0x02488780 {entry={next=0x00000000 {next=??? keyHash=???
+key=??? ...} keyHash=2706907660 key=0x01998e34 ...} flags=0 number=11855 }
+JSAtom *
++ [27] 0x0248cf70 {entry={next=0x00720062 {next=??? keyHash=???
+key=??? ...} keyHash=7798895 key=0x00650073 ...} flags=6881399 number=6553710 }
+JSAtom *
++ [28] 0x01ee66d0 {entry={next=0x009cfa08 {next=0x017de5b0
+{next=0x00000000 keyHash=1555601386 key=0x00a1230c ...} keyHash=236602928
+key=0x009625dc ...} keyHash=29155287 key=0x024ae16c ...} flags=6 number=10419 }
+JSAtom *
++ [29] 0x02446020 {entry={next=0x00000000 {next=??? keyHash=???
+key=??? ...} keyHash=1210919394 key=0x024aedcc ...} flags=4 number=11486 }
+JSAtom *
++ [30] 0x0188ec78 {entry={next=0x00000000 {next=??? keyHash=???
+key=??? ...} keyHash=3839816010 key=0x0186524c ...} flags=6 number=1661 }
+JSAtom *
++ [31] 0x02488f68 {entry={next=0x00000005 {next=??? keyHash=???
+key=??? ...} keyHash=10561464 key=0x00a128e0 ...} flags=31197868
+number=2147483649 } JSAtom *
++ [32] 0x018721f8 {entry={next=0x00000000 {next=??? keyHash=???
+key=??? ...} keyHash=3046881254 key=0x018646c4 ...} flags=6 number=1411 }
+JSAtom *
++ [33] 0x0249b840 {entry={next=0x0000000c {next=??? keyHash=???
+key=??? ...} keyHash=26052096 key=0x00a128e0 ...} flags=31000568 number=3179 }
+JSAtom *
++ [34] 0x0248cfb0 {entry={next=0x00090004 {next=??? keyHash=???
+key=??? ...} keyHash=524548 key=0x00000000 ...} flags=34867380 number=0 }
+JSAtom *
++ [35] 0x024a7778 {entry={next=0x00000005 {next=??? keyHash=???
+key=??? ...} keyHash=10562296 key=0x00a12af8 ...} flags=0 number=2147483649 }
+JSAtom *
++ [36] 0x0248d878 {entry={next=0x01deac70 {next=0x00000000 {next=???
+keyHash=??? key=??? ...} keyHash=2571143120 key=0x01ddb94c ...}
+keyHash=2817980106 key=0x024f1d2c ...} flags=0 number=11719 } JSAtom *
++ [37] 0x01920740 {entry={next=0x01e1acd0 {next=0x00000000 {next=???
+keyHash=??? key=??? ...} keyHash=3940659 key=0x01e10998 ...} keyHash=1193562103
+key=0x01917e8c ...} flags=4 number=2275 } JSAtom *
++ [38] 0x024a7328 {entry={next=0x00000001 {next=??? keyHash=???
+key=??? ...} keyHash=11638472 key=0x00000005 ...} flags=36093080
+number=1835008 } JSAtom *
++ [39] 0x0191f358 {entry={next=0x01e47ae0 {next=0x00000000 {next=???
+keyHash=??? key=??? ...} keyHash=334105701 key=0x01e42f54 ...}
+keyHash=879986360 key=0x0191805c ...} flags=6 number=2297 } JSAtom *
++ [40] 0x024a8b70 {entry={next=0x00000005 {next=??? keyHash=???
+key=??? ...} keyHash=10561464 key=0x00a128e0 ...} flags=31197956
+number=2147483649 } JSAtom *
++ [41] 0x019216b8 {entry={next=0x00000000 {next=??? keyHash=???
+key=??? ...} keyHash=1194589057 key=0x01918154 ...} flags=6 number=2315 }
+JSAtom *
++ [42] 0x024a9540 {entry={next=0x006f0064 {next=??? keyHash=???
+key=??? ...} keyHash=7667811 key=0x0065006d ...} flags=0 number=11766 } JSAtom *
++ [43] 0x019213d8 {entry={next=0x00000000 {next=??? keyHash=???
+key=??? ...} keyHash=879962238 key=0x0191812c ...} flags=6 number=2312 }
+JSAtom *
++ [44] 0x024aa580 {entry={next=0x00000005 {next=??? keyHash=???
+key=??? ...} keyHash=10562296 key=0x00a12af8 ...} flags=0 number=2147483649 }
+JSAtom *
++ [45] 0x0191fbb8 {entry={next=0x00000000 {next=??? keyHash=???
+key=??? ...} keyHash=110769280 key=0x019180bc ...} flags=4 number=2306 }
+JSAtom *
++ [46] 0x024a9998 {entry={next=0x00000005 {next=??? keyHash=???
+key=??? ...} keyHash=10562296 key=0x00a12af8 ...} flags=0 number=2147483649 }
+JSAtom *
++ [47] 0x0191fc40 {entry={next=0x00000000 {next=??? keyHash=???
+key=??? ...} keyHash=1702507648 key=0x019180d4 ...} flags=4 number=2307 }
+JSAtom *
++ [48] 0x024b1278 {entry={next=0x00000005 {next=??? keyHash=???
+key=??? ...} keyHash=31418264 key=0x01997b28 ...} flags=34448257
+number=2147483649 } JSAtom *
++ [49] 0x0191fd38 {entry={next=0x00000000 {next=??? keyHash=???
+key=??? ...} keyHash=1179891445 key=0x019180fc ...} flags=4 number=2309 }
+JSAtom *
++ [50] 0x0191f3f8 {entry={next=0x01e1caa0 {next=0x01f59d68
+{next=0x0246a068 keyHash=1686734398 key=0x024ad52c ...} keyHash=3857428746
+key=0x01e10b8c ...} keyHash=755942007 key=0x0191806c ...} flags=4 number=2299 }
+JSAtom *
++ [51] 0x024b1f60 {entry={next=0x00000005 {next=??? keyHash=???
+key=??? ...} keyHash=10562296 key=0x00a12af8 ...} flags=0 number=2147483649 }
+JSAtom *
++ [52] 0x024b1fb8 {entry={next=0x00000000 {next=??? keyHash=???
+key=??? ...} keyHash=777374526 key=0x01998234 ...} flags=0 number=11839 }
+JSAtom *
++ [53] 0x024a7c50 {entry={next=0x00000000 {next=??? keyHash=???
+key=??? ...} keyHash=0 key=0x024fab80 ...} flags=0 number=0 } JSAtom *
++ [54] 0x009fd448 {entry={next=0x00000000 {next=??? keyHash=???
+key=??? ...} keyHash=1626432234 key=0x00a11cec ...} flags=6 number=782 }
+JSAtom *
++ [55] 0x018763d8 {entry={next=0x00000000 {next=??? keyHash=???
+key=??? ...} keyHash=1784809546 key=0x01864734 ...} flags=6 number=1418 }
+JSAtom *
++ [56] 0x009e9478 {entry={next=0x00000000 {next=??? keyHash=???
+key=??? ...} keyHash=1870802070 key=0x00962e1c ...} flags=4 number=427 }
+JSAtom *
++ [57] 0x018763f8 {entry={next=0x00000000 {next=??? keyHash=???
+key=??? ...} keyHash=19315 key=0x0186473c ...} flags=4 number=1419 } JSAtom *
++ [58] 0x009e3538 {entry={next=0x00000000 {next=??? keyHash=???
+key=??? ...} keyHash=4294967295 key=0xffffffff ...} flags=4 number=1014 }
+JSAtom *
++ [59] 0x024a8120 {entry={next=0x020fe890 {next=0x024d94f8
+{next=0x00000001 keyHash=11638472 key=0x00000005 ...} keyHash=38643444
+key=0x00967918 ...} keyHash=11637009 key=0x02090fd9 ...} flags=0 number=11761 }
+JSAtom *
++ [60] 0x024b2088 {entry={next=0x00000005 {next=??? keyHash=???
+key=??? ...} keyHash=10562296 key=0x00a128e0 ...} flags=2147483649
+number=2147483649 } JSAtom *
++ [61] 0x024a8f28 {entry={next=0x00000000 {next=??? keyHash=???
+key=??? ...} keyHash=2978355175 key=0x0249699c ...} flags=0 number=11765 }
+JSAtom *
++ [62] 0x024a8058 {entry={next=0x00000000 {next=??? keyHash=???
+key=??? ...} keyHash=3354531 key=0x01997d18 ...} flags=0 number=11828 } JSAtom *
++ [63] 0x024b2138 {entry={next=0x00740062 {next=??? keyHash=???
+key=??? ...} keyHash=7471189 key=0x0054006c ...} flags=116 number=11781 }
+JSAtom *
++ [64] 0x024b2598 {entry={next=0x00000000 {next=??? keyHash=???
+key=??? ...} keyHash=38870164 key=0x02511ccc ...} flags=0 number=38870136 }
+JSAtom *
++ [65] 0x024b25d8 {entry={next=0x00090006 {next=??? keyHash=???
+key=??? ...} keyHash=655620 key=0x00650064 ...} flags=6619252 number=6881352 }
+JSAtom *
++ [66] 0x024b2618 {entry={next=0x022df8d4 {next=0x024b25e0
+{next=0x00650064 keyHash=6619244 key=0x00650074 ...} keyHash=16
+key=0x024e2d78 ...} keyHash=0 key=0x00000004 ...} flags=262149 number=655620 }
+JSAtom *
++ [67] 0x024b2658 {entry={next=0x00000005 {next=??? keyHash=???
+key=??? ...} keyHash=10562296 key=0x00a12af8 ...} flags=0 number=2147483649 }
+JSAtom *
++ [68] 0x024b2698 {entry={next=0x00000005 {next=??? keyHash=???
+key=??? ...} keyHash=31418432 key=0x01998f98 ...} flags=34511457
+number=2147483649 } JSAtom *
++ [69] 0x024b2a38 {entry={next=0x00000005 {next=??? keyHash=???
+key=??? ...} keyHash=10562296 key=0x00a128e0 ...} flags=2147483649
+number=2147483649 } JSAtom *
++ [70] 0x024b2a58 {entry={next=0x00000005 {next=??? keyHash=???
+key=??? ...} keyHash=31418472 key=0x019b4778 ...} flags=34542721
+number=2147483649 } JSAtom *
++ [71] 0x024d5238 {entry={next=0x006e0061 {next=??? keyHash=???
+key=??? ...} keyHash=7209071 key=0x006d0079 ...} flags=115 number=11789 }
+JSAtom *
++ [72] 0x024d5280 {entry={next=0x00000000 {next=??? keyHash=???
+key=??? ...} keyHash=9023368 key=0x0226be20 ...} flags=196612 number=524548 }
+JSAtom *
++ [73] 0x024d5e48 {entry={next=0x00650072 {next=0x00000000 {next=???
+keyHash=??? key=??? ...} keyHash=0 key=0x00000000 ...} keyHash=6881395
+key=0x0065007a ...} flags=6488174 number=0 } JSAtom *
++ [74] 0x024d5e68 {entry={next=0x00000000 {next=??? keyHash=???
+key=??? ...} keyHash=4083250405 key=0x02496f94 ...} flags=0 number=11792 }
+JSAtom *
++ [75] 0x024d67a0 {entry={next=0x00000005 {next=??? keyHash=???
+key=??? ...} keyHash=31418264 key=0x01998530 ...} flags=34448257
+number=2147483649 } JSAtom *
++ [76] 0x024d67c0 {entry={next=0x00000000 {next=??? keyHash=???
+key=??? ...} keyHash=8717888 key=0x02141900 ...} flags=196612 number=524548 }
+JSAtom *
++ [77] 0x024d9308 {entry={next=0x00000005 {next=??? keyHash=???
+key=??? ...} keyHash=10562296 key=0x00a12af8 ...} flags=0 number=2147483649 }
+JSAtom *
++ [78] 0x024a8178 {entry={next=0x00000005 {next=??? keyHash=???
+key=??? ...} keyHash=31418264 key=0x01d908b0 ...} flags=34448257
+number=2147483649 } JSAtom *
++ [79] 0x024d9b98 {entry={next=0x00000005 {next=??? keyHash=???
+key=??? ...} keyHash=10562296 key=0x00a12af8 ...} flags=0 number=2147483649 }
+JSAtom *
++ [80] 0x024a8ed0 {entry={next=0x00680063 {next=0x00000000 {next=???
+keyHash=??? key=??? ...} keyHash=0 key=0x00000000 ...} keyHash=7077993
+key=0x004e0064 ...} flags=7536741 number=0 } JSAtom *
++ [81] 0x024dafb0 {entry={next=0x0249b1c0 {next=0x0245fb00
+{next=0x024633c0 keyHash=38384064 key=0x02142060 ...} keyHash=38645680
+key=0x02142058 ...} keyHash=38763760 key=0x02141ff8 ...} flags=0 number=0 }
+JSAtom *
++ [82] 0x024a9720 {entry={next=0x00000000 {next=??? keyHash=???
+key=??? ...} keyHash=2603504997 key=0x01998244 ...} flags=0 number=11840 }
+JSAtom *
++ [83] 0x024f7cd0 {entry={next=0x00000005 {next=??? keyHash=???
+key=??? ...} keyHash=10562296 key=0x00a12af8 ...} flags=0 number=2147483649 }
+JSAtom *
++ [84] 0x0249bb80 {entry={next=0x00000000 {next=??? keyHash=???
+key=??? ...} keyHash=3802154982 key=0x01998284 ...} flags=0 number=11841 }
+JSAtom *
++ [85] 0x024f76d8 {entry={next=0x014407a0 const jsdScript::`vftable'
+keyHash=3 key=0x00000001 ...} flags=10365632 number=35860712 } JSAtom *
++ [86] 0x0248d8d0 {entry={next=0x006d0040 {next=??? keyHash=???
+key=??? ...} keyHash=7995503 key=0x006c0069 ...} flags=7274542 number=6750322 }
+JSAtom *
++ [87] 0x02502b70 {entry={next=0x00000005 {next=??? keyHash=???
+key=??? ...} keyHash=10562296 key=0x00a12af8 ...} flags=0 number=2147483649 }
+JSAtom *
++ [88] 0x02502b90 {entry={next=0x00000005 {next=??? keyHash=???
+key=??? ...} keyHash=36662288 key=0x022f6be0 ...} flags=34835233
+number=2147483649 } JSAtom *
++ [89] 0x02503238 {entry={next=0x01de7e90 {next=0x01deb2a0
+{next=0x00000000 keyHash=339212730 key=0x01ddb5cc ...} keyHash=866272450
+key=0x01ddb264 ...} keyHash=805 key=0x01d90e24 ...} flags=0 number=11876 }
+JSAtom *
++ [90] 0x0196e2d8 {entry={next=0x00000000 {next=??? keyHash=???
+key=??? ...} keyHash=2569508439 key=0x019565bc ...} flags=4 number=3380 }
+JSAtom *
++ [91] 0x02503950 {entry={next=0x00000005 {next=??? keyHash=???
+key=??? ...} keyHash=31418432 key=0x019b3e78 ...} flags=34511457
+number=2147483649 } JSAtom *
++ [92] 0x02490108 {entry={next=0x00000005 {next=??? keyHash=???
+key=??? ...} keyHash=31418184 key=0x01d908b0 ...} flags=34148313
+number=2147483649 } JSAtom *
++ [93] 0x025039a8 {entry={next=0x00000005 {next=??? keyHash=???
+key=??? ...} keyHash=10562296 key=0x00a12af8 ...} flags=0 number=2147483649 }
+JSAtom *
++ [94] 0x0284e558 {entry={next=0x00000000 {next=??? keyHash=???
+key=??? ...} keyHash=4796125 key=0x024976e8 ...} flags=0 number=11820 } JSAtom *
++ [95] 0x02412ea8 {entry={next=0x00000000 {next=??? keyHash=???
+key=??? ...} keyHash=1600800910 key=0x019979cc ...} flags=0 number=11821 }
+JSAtom *
++ [96] 0x024523e8 {entry={next=0x00000000 {next=??? keyHash=???
+key=??? ...} keyHash=3354438 key=0x01997a30 ...} flags=0 number=11824 } JSAtom *
++ [97] 0x0240c5e8 {entry={next=0x00000000 {next=??? keyHash=???
+key=??? ...} keyHash=748827799 key=0x01997d04 ...} flags=0 number=11825 }
+JSAtom *
++ [98] 0x024a8058 {entry={next=0x00000000 {next=??? keyHash=???
+key=??? ...} keyHash=3354531 key=0x01997d18 ...} flags=0 number=11828 } JSAtom *
++ [99] 0x02033090 {entry={next=0x021b0ef0 {next=0x00000000 {next=???
+keyHash=??? key=??? ...} keyHash=1967333829 key=0x024aef4c ...}
+keyHash=1589712065 key=0x01998014 ...} flags=4 number=11829 } JSAtom *
++ [100] 0x02130d48 {entry={next=0x00000000 {next=??? keyHash=???
+key=??? ...} keyHash=3354627 key=0x01998018 ...} flags=0 number=11837 } JSAtom *
++ [101] 0x023b2f40 {entry={next=0x00000000 {next=??? keyHash=???
+key=??? ...} keyHash=1919106375 key=0x019981dc ...} flags=0 number=11838 }
+JSAtom *
++ [102] 0x02242160 {entry={next=0x00000000 {next=??? keyHash=???
+key=??? ...} keyHash=3354693 key=0x01998228 ...} flags=0 number=11843 } JSAtom *
++ [103] 0x0224a188 {entry={next=0x00000000 {next=??? keyHash=???
+key=??? ...} keyHash=3564151952 key=0x01998044 ...} flags=4 number=11834 }
+JSAtom *
++ [104] 0x022a8d18 {entry={next=0x00000000 {next=??? keyHash=???
+key=??? ...} keyHash=2590265938 key=0x019983e4 ...} flags=0 number=11844 }
+JSAtom *
++ [105] 0x021a1168 {entry={next=0x00000000 {next=??? keyHash=???
+key=??? ...} keyHash=3354755 key=0x01998418 ...} flags=0 number=11847 } JSAtom *
++ [106] 0x02498b78 {entry={next=0x00000000 {next=??? keyHash=???
+key=??? ...} keyHash=946099407 key=0x0199851c ...} flags=0 number=11848 }
+JSAtom *
++ [107] 0x022f8720 {entry={next=0x00000000 {next=??? keyHash=???
+key=??? ...} keyHash=3354788 key=0x01998520 ...} flags=0 number=11849 } JSAtom *
++ [108] 0x020ca7b8 {entry={next=0x00000000 {next=??? keyHash=???
+key=??? ...} keyHash=2589882387 key=0x01998634 ...} flags=0 number=11850 }
+JSAtom *
++ [109] 0x020e9eb0 {entry={next=0x023e53a8 {next=0x00000000 {next=???
+keyHash=??? key=??? ...} keyHash=1979954993 key=0x02268c7c ...} keyHash=3354823
+key=0x01998638 ...} flags=0 number=11853 } JSAtom *
++ [110] 0x01fd8208 {entry={next=0x00000000 {next=??? keyHash=???
+key=??? ...} keyHash=110802949 key=0x01998d5c ...} flags=0 number=11854 }
+JSAtom *
++ [111] 0x020a32f0 {entry={next=0x00000000 {next=??? keyHash=???
+key=??? ...} keyHash=3355061 key=0x01998da8 ...} flags=0 number=11857 } JSAtom *
++ [112] 0x02186748 {entry={next=0x00000000 {next=??? keyHash=???
+key=??? ...} keyHash=554423968 key=0x019b3dac ...} flags=0 number=11858 }
+JSAtom *
++ [113] 0x023a26a8 {entry={next=0x00000000 {next=??? keyHash=???
+key=??? ...} keyHash=3368900 key=0x019b3e20 ...} flags=0 number=11859 } JSAtom *
++ [114] 0x01f674e0 {entry={next=0x00000000 {next=??? keyHash=???
+key=??? ...} keyHash=4163661884 key=0x019b4464 ...} flags=0 number=11860 }
+JSAtom *
++ [115] 0x02036cf0 {entry={next=0x00000000 {next=??? keyHash=???
+key=??? ...} keyHash=3369127 key=0x019b4538 ...} flags=0 number=11862 } JSAtom *
++ [116] 0x020a70a0 {entry={next=0x019cb4a0 {next=0x00000000 {next=???
+keyHash=??? key=??? ...} keyHash=198375010 key=0x019b5574 ...}
+keyHash=1468725794 key=0x0199804c ...} flags=0 number=11835 } JSAtom *
++ [117] 0x021a6420 {entry={next=0x00a185a8 {next=0x00000000 {next=???
+keyHash=??? key=??? ...} keyHash=774215885 key=0x00a11664 ...}
+keyHash=720994270 key=0x0199844c ...} flags=0 number=11846 } JSAtom *
++ [118] 0x0236af38 {entry={next=0x00000000 {next=??? keyHash=???
+key=??? ...} keyHash=3874945 key=0x01d90408 ...} flags=0 number=11863 } JSAtom *

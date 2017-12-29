@@ -1,0 +1,34 @@
+Reset button in Library search box is broken
+Clicking the search box's reset button only deletes the search text, and manually deleting the text does nothing.  In either case the scope bar should disappear and we should be returned to the folder we were viewing.
+
+Regwindow: http://hg.mozilla.org/mozilla-central/pushloghtml?fromchange=65e8380bf4f9&tochange=ddcb3ca67b5e
+
+These are two consecutive revisions (WFM on the older revision), so it looks like http://hg.mozilla.org/mozilla-central/rev/ddcb3ca67b5e is the cause.  Related bug is bug 475273.  From that bug:
+
+>diff --git a/browser/components/places/content/places.js b/browser/components/places/content/places.js
+>--- a/browser/components/places/content/places.js
+>+++ b/browser/components/places/content/places.js
+>@@ -194,22 +194,29 @@ var PlacesOrganizer = {
+>   },
+> 
+>   /**
+>    * Called when a place folder is selected in the left pane.
+>    * @param   resetSearchBox
+>    *          true if the search box should also be reset, false if it should
+>    *          be left alone.
+>    */
+>+  _cachedLeftPaneSelectedNode: null,
+>   onPlaceSelected: function PO_onPlaceSelected(resetSearchBox) {
+>     // Don't change the right-hand pane contents when there's no selection
+>     if (!this._places.hasSelection)
+>       return;
+> 
+>     var node = this._places.selectedNode;
+>+    // When we invalidate a container we use suppressSelectionEvent, when it is
+>+    // unset a select event is fired, in many cases the selection did not really
+>+    // change, so we should check for it, and return early in such a case.
+>+    if (node == this._cachedLeftPaneSelectedNode)
+>+      return;
+>+    this._cachedLeftPaneSelectedNode = node;
+
+The new return statement is reached, and the logic in the !resetSearchBox conditional below this new code doesn't get called.  That's all I know.

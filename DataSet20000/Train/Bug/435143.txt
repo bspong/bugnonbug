@@ -1,0 +1,38 @@
+"Saved Passwords" of File/Import/"Netscape 6,7 or Mozilla 1.x" tries to import password from xxxxxxxx.s file in wrong directory(higher directory), then fails to import
+Spin off of Problem-2 in Bug 434911 Comment #2.
+
+Build ID: (Win32 ZIP build on MS Win-XP SP2)
+> Vendor=Mozilla, Name=Firefox, Version=3.1a1pre, BuildID=2008052003
+
+(Problem description)
+"Saved Passwords" of File/Import/"Netscape 6,7 or Mozilla 1.x" doesn't import password from correct xxxxxxxx.s file in Semonkey's profile directory.
+
+>Seamonkey's Profile ("Default User")
+> %APPDATA%\Mozilla\registry.dat
+> %APPDATA%\Mozilla\Profiles\Default User\vao2f9nv.slt
+> %APPDATA%\Mozilla\Profiles\Default User\vao2f9nv.slt\prefs.js
+>           user_pref("signon.SignonFileName", "11331489.s");
+> %APPDATA%\Mozilla\Profiles\Default User\\vao2f9nv.slt\11331489.s
+> Note: Master Password is not used
+
+(Phenomenon-1)
+File/Import/"Netscape 6,7 or Mozilla 1.x", Check "Saved Passwords" only. 
+ - No password is imported from Seamonky's profile.
+ - Garbage is created(in upper level directory from profile directory).
+   %APPDATA%\Mozilla\Profiles\Default User\11331489.s
+   Content of this garbage file;
+   > #2e[CRLF]
+   > .[CRLF]
+
+(Phenomenon-2)
+File/Import/"Netscape 6,7 or Mozilla 1.x", Both "Saved Passwords" & "Bookmarks"
+ - No password is imported from Seamonky's profile.
+ - Bug 434911 occurs.
+   - Exception in nsIBrowserProfileMigrator.migrate
+   - Bookmark folder of "From Netscape 6/7/Mozilla" becomes (empty).   
+
+(Phenomenon-3)
+When correct xxxxxxxx.s of (A) is copied to (b), passwords are normally imported.
+> (A) %APPDATA%\Mozilla\Profiles\Default User\vao2f9nv.slt\11331489.s
+> (B) %APPDATA%\Mozilla\Profiles\Default User\11331489.s
+If both "Saved Passwords" & "Bookmarks" are requested at same time, Bug 434911(exception in nsIBrowserProfileMigrator.migrate) also occurs.

@@ -1,0 +1,55 @@
+Individual search engines are no longer remembered for multiple Search Bars
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8) Gecko/20051111 Firefox/1.5
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8) Gecko/20051111 Firefox/1.5
+
+In Firefox 1.0.7 it used to be possible to add multiple search fields to the toolbars just by adding several <searchbar/> elements to the toolbars. Because the <searchbar/> element uses XUL bindings, it was not necessary to write any further plumbing code to get the search field to work.
+
+Also, it was able to remember the individual search engines for each search field because the engine information was saved in a "currentEngine" attribute on the <searchbar/> element. This attribute was then persisted in the XUL localstore.
+
+In Firefox 1.5, the searchbar code was changed and the "currentEngine" attribute no longer works.
+
+From the changes inside "chrome://browser/content/search.xml", I think the changes were accidental.
+
+LOCATION OF PROBLEM:
+In Firefox 1.0.7, the initialize() method (inside "search.xml") first checks to see if an existing "currentEngine" attribute is set, before resorting to the search engine specified in the user preferences.:
+
+     var engine = this.currentEngine;
+     if (!engine)
+        this.currentEngine = this.getDefaultEngine();
+
+In Firefox 1.5, the _initialize() method gets the search engine from the preferences, then assigns it as an attribute on the searchbar element:
+
+     var selectedEngineName = 
+             this.prefService
+                 .getComplexValue("browser.search.selectedEngine",
+                                  this.nsIPrefLocalizedString).data;
+
+    this.currentEngineName = selectedEngineName;
+
+    if (!this.currentEngine)
+       this.currentEngine = this.getDefaultEngine();
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Since Firefox only ships with one search bar, you will need to fake another search bar. Put the following in your "userChrome.css" file.:
+
+#cut-button {
+  -moz-binding: url("chrome://browser/content/search.xml#searchbar");
+  list-style-image: inherit !important;
+  -moz-image-region: auto !important;
+}
+
+What it does is it hijacks the "Cut" button and converts it into a search bar.
+
+2. Go into Firefox customize mode and add the second search bar to the toolbars.
+3. Set both search bars to different search engines (e.g., 1 Yahoo!, 1 Google).
+4. Restart Firefox.
+5. Look at toolbar...
+Actual Results:  
+In Firefox 1.0.7 the separate search engines are preserved.
+In Firefox 1.5 both are set to the same search engine.
+
+Expected Results:  
+The separate search engines should be preserved.

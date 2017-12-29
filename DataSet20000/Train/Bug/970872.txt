@@ -1,0 +1,29 @@
+WorkerAPI: failed to handle message 'social.ambient-notification': Error: unable to set notifications while logged out
+On Talkilla, we (re)set the socialambient-notification after the social.user-profile message so that we can set the icon on the toolbar. Currently we are getting this message when we do this in our logged out state:
+
+WorkerAPI: failed to handle message 'social.ambient-notification': Error: unable to set notifications while logged out
+SocialProvider.prototype.setAmbientNotification@resource://gre/modules/SocialService.jsm:864
+WorkerAPI.prototype.handlers["social.ambient-notification"]@resource://gre/modules/WorkerAPI.jsm:69
+_handleMessage@resource://gre/modules/WorkerAPI.jsm:45
+fw_AbstractPort_onmessage@resource://gre/modules/MessagePortBase.jsm:57
+_Worker.prototype.receiveMessage@resource://gre/modules/FrameWorker.jsm:95
+
+Shane told me a while ago, that this shouldn't be happening, as we don't need to be logging in via user-profile.
+
+Here's the code we're using:
+
+    var userData = {
+      iconURL: iconURL,
+      userName: this._name,
+      displayName: this._name,
+      profileURL: this._rootURL + "/user.html"
+    };
+
+    // This needs to be sent to the browser for Firefox 28 and earlier
+    // (pre bug 935640).
+    browserPort.postEvent('social.user-profile', userData);
+
+    // This is needed for Firefox 29 onwards (post bug 935640).
+    browserPort.postEvent('social.ambient-notification', {
+      iconURL: iconURL
+    });

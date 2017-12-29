@@ -1,0 +1,88 @@
+PDF upload via ASP.Net FileUpload component return MIME "application/unknown"
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.9.1.3) Gecko/20090824 Firefox/3.5.3 (.NET CLR 3.5.30729)
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.9.1.3) Gecko/20090824 Firefox/3.5.3 (.NET CLR 3.5.30729)
+
+I have an ASP.Net FileUpload control on an aspx. Once compiled it turn into an html input type="file" control.
+
+When I browse to a PDF and then click the Upload button I attempt to extract the MIME type based on the PostedFile.ContentType. This extract the correct MIME type for all file type that I have tried (to date: txt, jpg, doc, xls) except for pdf. This return a MIME type of "application/unknown".
+
+This continues to work for IE7 and IE8. It also work for earlier version of FireFox (versions different than reported for this issue).
+
+Reproducible: Always
+
+Steps to Reproduce:
+using VisualStudio 2008 with ASP.Net 3.5.
+
+1. Create new ASPX.
+2. Add FileUpload control.
+3. Add Button control.
+4. Add Click event to Button.
+5. Add break within click event.
+6. Run page.
+7. Browse... to PDF.
+8. Submit. This should bring you to break.
+9. Watch FileUpload.PostedFile.ContentType. It will report "application/unknown".
+10. Repeat with other file types. MIME will be correctly reported.
+
+ASPX code:
+<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="WebForm1.aspx.cs" Inherits="My.Test.WebForm1" %>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head runat="server">
+<title></title>
+</head>
+<body>
+<form id="form1" runat="server">
+<div>
+<asp:FileUpload ID="fuTest" runat="server" />
+<asp:Button ID="btnTest" runat="server" Text="Run" />
+</div>
+</form>
+</body>
+</html>
+
+ASPX.CS code:
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+
+namespace My.Test
+{
+public partial class WebForm1 : System.Web.UI.Page
+{
+protected override void OnInit(EventArgs e)
+{
+base.OnInit(e);
+
+btnTest.Click += new EventHandler(btnTest_Click);
+}
+
+void btnTest_Click(object sender, EventArgs e)
+{
+if (false)
+{
+// test - do nothing
+}
+}
+
+protected void Page_Load(object sender, EventArgs e)
+{
+
+}
+}
+}
+Actual Results:
+"application/unknown" for uploaded PDF.
+
+Expected Results:
+"application/pdf" for uploaded PDF.
+
+Add Ons include:
+* Firebug 1.4.2
+* Microsoft .NET Framework Assistant 1.1
+* Personas for Firefox 1.2.3, with Persona: Mozilla Firefox

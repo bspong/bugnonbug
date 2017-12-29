@@ -1,0 +1,232 @@
+Javascript: Faulty onblur processing
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.11) Gecko/20071127 Firefox/2.0.0.11
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.11) Gecko/20071127 Firefox/2.0.0.11
+
+
+My company is using:
+- Firefxo 2.0.0.11
+- Internet Explorer 7.0.5730.11
+- Windows XP Professional Service Pack 2
+Internet Explorer and Firefox handle onblur event in combination with form submission differently and FF seems to be getting caught in an infinite loop
+
+I'm pasting two SMALL example HTML file into this message. I realize it may get messy so I am separating each example HTML file with a "====" line so anyone interested can copy out the code in between the "====" line and paste it into a text editor.
+
+In the first example HTML file we have a text field and a submit button.
+
+The text field ha a validation function connected to the onblur event to go execute when when someone leaf the text field.
+
+In IE if the user mouse out of the text field and click the submit button the onblur processing will fire first and the form will not submit until that processing is done. This is what we need and want to happen in FF a well.
+
+However, in FF if the user mouse out of the text field then click submit form submission and onblur processing will happen simultaneously ( or submission happens first ).
+
+We also noticed that if the user move focus off of the prompt box ( or an alert ) and then try to make it go away, it won't. FF seems to be caught in a loop.
+
+In the second example HTML file pasted into this message we came up with a work around to make FF behave like IE. We get around the loop problem by having onblur processing going to the onchange handler. We then add further process to the onchange handler to set a flag for submission to "false" until we are read to submit.
+
+We want to make our web application Mozilla compliant in the most intelligent way we can while keeping with our customer's demand that each field is validated __as the field is filled in__.
+
+Can anyone suggest a more intelligent way, than our workaround to do validation of large HTML form ( 200 plus field ) and/or get around the loop problem of the onblur event?
+
+
+=======================================================
+Example 1: HTML file to copy and paste: The problem
+=======================================================
+<html>
+<head>
+<title>Demonstrate different onblur event handling, FF v IE </title>
+
+
+<script>
+<!--
+function procApple()
+{
+alert("processing procApple(): ");
+
+var typeApple = document.form1.apple.value;
+
+if(typeApple != 'gala')
+{
+prompt("I only eat Gala Apples, please type \"gala\"","");
+return false;
+}
+return true;
+}
+
+//-->
+
+</script>
+
+</head>
+
+<body background = "white">
+
+
+<form name = "form1" action = "http://www.google.com">
+
+
+Name a type of Apple:
+<input type = "text" id = "apple" name = "apple" onBlur="procApple()">
+<br>
+<br>
+
+<input type = "submit" name = "submitButton" value = "submit">
+
+
+</form>
+
+</body>
+</html>
+=======================================================
+Example 2: HTML file to copy and paste: Our workaround
+=======================================================
+<html>
+<head>
+<title>Test difference in onblur processing FF v IE</title>
+
+
+<script>
+<!--
+
+// Global variable
+
+
+var formSubmitAllowed = true; // Allow the form to be submitted?
+
+
+//-----------------------------------------------------------------------------
+// Provide validation of a field IMMEDIATELY after a user leaf it
+function procApple()
+{
+
+//alert("processing procApple()");
+
+var typeApple = document.form1.apple.value;
+
+if ( typeApple != 'gala' )
+{
+prompt("I only eat Gala Apples, please give me a Gala","");
+return false;
+}
+
+return true;
+
+
+}
+//-----------------------------------------------------------------------------
+// Sumbit the form, go to another URL ( google )
+function wsubmit()
+{
+document.form1.action = "http://www.google.com/";
+document.form1.method = 'post';
+document.form1.submit();
+return false;
+}
+//-----------------------------------------------------------------------------
+// To be excuted AFTER HTML element have had a chance to be rendered to the
+// page
+function overrideEvents()
+{
+
+var formElement; // holder
+
+// For each HTML form element
+for ( var i=0; i < document.form1.elements.length; i++ )
+{
+
+formElement = document.form1.elements[i];
+
+
+if ( formElement.type == 'text' )
+{
+
+formElement.onchange = formElement.onblur
+formElement.onblur = '';
+formElement.oldchange = formElement.onchange;
+formElement.onchange = newchange;
+
+}
+
+else if ( formElement.type == 'button' )
+{
+formElement.oldclick = formElement.onclick;
+formElement.onclick = newclick;
+}
+
+}
+
+}
+//----------------------------------------------------------------------------
+function newchange ()
+{
+
+// Note1 - srussell: If an alert() come before the flag for submission
+// is set to false, the chain of processing will be disrupted and the
+// form will submit anyway.
+
+// alert("processing newchange() before \"formSubmitAllowed = false;\"" +
+// "\nThis will break proper processing");
+
+
+formSubmitAllowed = false;
+
+//alert("processing newchange() ");
+this.oldchange();
+formSubmitAllowed = true;
+}
+
+//----------------------------------------------------------------------------
+function newclick()
+{
+// call real submit function
+if ( formSubmitAllowed )
+{
+this.oldclick();
+}
+}
+//-----------------------------------------------------------------------------
+
+//-->
+</script>
+
+</head>
+
+<body background = "white">
+
+
+<form name = "form1" action = "" >
+
+
+Name a type of apple ( must be Gala ):
+<input type = "text" id = "apple" name = "apple" onBlur="procApple()">
+<br>
+<br>
+
+<input type = "button" id = "submitButton" name = "submitButton" value = "submit" onclick = "wsubmit();" >
+
+
+</form>
+
+<script>
+<!--
+// Set up custom javascript event handling AFTER all of the HTML element
+// have had a chance to render ( big form, dynamically writting HTML with JS,
+// etc...
+overrideEvents();
+
+-->
+</script>
+
+</body>
+</html>
+
+
+
+Reproducible: Always
+
+Steps to Reproduce:
+Please see the detailed description above for a description on how to see the problem
+Actual Results:
+Please see the detailed description above
+
+Expected Results:
+Please see the detailed description above

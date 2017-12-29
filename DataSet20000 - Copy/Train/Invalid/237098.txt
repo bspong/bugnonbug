@@ -1,0 +1,39 @@
+Using PrivilegeManager.enablePrivilege only halfway works in an included (external) JS file like <script src="somefile.js"></script>
+User-Agent:       Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.6) Gecko/20040206 Firefox/0.8
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.6) Gecko/20040206 Firefox/0.8
+
+When using
+netscape.security.PrivilegeManager.enablePrivilege("UniversalPreferencesWrite");
+in an external JS file, the grant window pops up and allows you to grant the
+request but will not allow security to execute the line following the
+UniversalPreferencesWrite request. I have a window.open (with a modal=1) that
+will not open unless i remove it from the external JS file aand put it in the
+main HTML script block.
+
+Reproducible: Always
+Steps to Reproduce:
+1. Set user_pref("signed.applets.codebase_principal_support", true); in prefs.js
+2. Create a blank html page with a script block in the HEAD.
+<html><head><script src="somefile.js"></script></head><body></body></html>
+3. In "somefile.js" put the following:
+netscape.security.PrivilegeManager.enablePrivilege("UniversalPreferencesWrite");
+window.open("somefile.htm","Test","height=200,width=200,modal=1");
+alert('done');
+4. Put all files in the same dir and open the main html file.
+
+
+
+Actual Results:  
+Open the html file and grant permission and you will see that window.open DOES
+NOT open but you DO see the alert. Since i saw the popup asking for permission,
+I assume my code will work after i grant but it does not.
+
+Expected Results:  
+You should get a popup to grant permission and then see the modal window open
+and once the modal window is closed, then you should see the alert.
+
+The trick is to make sure the codebase_principal_support is set and that you use
+the UniversalPreferencesWrite priveledge trick to get modal windows to open.
+This all works fine IF the javascript is IN the main html file. It just doesnt
+work when you put it in an external JS file even if they are all in the same
+domain and directory.

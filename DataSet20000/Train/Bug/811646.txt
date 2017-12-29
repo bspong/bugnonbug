@@ -1,0 +1,19 @@
+Add better handling for HTTP downloading for the stub installer
+Currently the buffer we use in the NSIS plugin InetBgDL is too small (512), so it leads to slower download speeds.
+Also we only do a single big request/response.  Some proxys may buffer a resource completely.
+The problem with that is we use the default WinINet timeout of 1 min.
+So the stub will hang on downloading.
+
+Fiddler is one example that produces this behavior (unless you change the setting)
+It buffers the response until the whole response is there and then it releases it.
+Which leads to a timeout loop.  A good proxy streams the content as it receives it.
+But I'm sure not all proxies are good.
+
+This may (or may not) be hurting stub installer conversions, so is worth fixing.
+We should split the requests into multiple parts and use a larger buffer size.
+
+When a timeout happens for this reason the user would see an indeterminate progress bar forever.
+It keeps looping between these states:
+1. HTTP GET with response of 302 for http://download.mozilla.org/?product=firefox-nightly-latest&os=win&lang=en-US
+2. No response for: http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/latest-mozilla-central/firefox-19.0a1.en-US.win32.installer.exe
+3. Wait a minute or so

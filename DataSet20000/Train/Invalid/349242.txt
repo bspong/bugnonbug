@@ -1,0 +1,20 @@
+Interpret U+0080-U+009f as windows-1252
+User-Agent:       Mozilla/5.0 (Macintosh; U; PPC Mac OS X; en) AppleWebKit/418.8 (KHTML, like Gecko) Safari/419.3
+Build Identifier: Mozilla/5.0 (Macintosh; U; PPC Mac OS X Mach-O; en-US; rv:1.8.0.6) Gecko/20060728 Firefox/1.5.0.6
+
+I ran across a page encoded as UTF-8 (according to both the Content-Type header and the charset in the meta tag) that contained U+0092 (0xC292). The code points U+0080-U+009f are reserved, and it's my assumption that there isn't a legitimate reason for them to appear in a web page. 0x92 is a right single quote in windows-1252, and it was clear from the context that the author's intent was a single quote. Instead of a single quote, Firefox 1.5.0.6 renders the U+0092 differently depending on the platform:
+
+OS X 10.4.7: Box containing a capital 'A'
+Windows XP Pro SP 2: nothing (not a space, just no character)
+Fedora Core 3: Space
+Fedora Core 4/5: Box containing 4 numbers (the unicode code point). 
+
+If I change the character encoding of the page to ISO-8859-1 or windows-1252 using the view->character encoding menu, Firefox renders 2 characters: a capital 'A' with circumflex (0xC2) and a right single quote (0x92). This is what I expected, based on my understanding that the bytes 0x80-0x9f are interpreted as windows-1252 even if the character encoding is ISO-8859-1.
+
+It seems to me that Firefox should interpret U+0080-U+009f in a similar fashion, converting them to the "real" unicode equivalent when possible. For example, U+0092 would be converted to U+2019, RIGHT SINGLE QUOTATION MARK.
+
+The page where I saw this was a headline on Google's personalized home page, so unfortunately the content is transient. I'll attach a cut-down test case.
+
+FWIW Safari renders U+0092 as a right single quote; IE6 on WinXP draws a narrow box.
+
+Reproducible: Always

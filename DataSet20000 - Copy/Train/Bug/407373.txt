@@ -1,0 +1,32 @@
+if ExpireItems() fails, don't fire the timer again.
+if ExpireItems() fails, don't keep going
+
+after running over night, in my console, I was seeing:
+
+WARNING: NS_ENSURE_SUCCESS(rv, rv) failed with result 0x8000FFFF: file c:/builds
+/trunk/mozilla/toolkit/components/places/src/nsNavHistoryExpire.cpp, line 483
+WARNING: NS_ENSURE_SUCCESS(rv, rv) failed with result 0x8000FFFF: file c:/builds
+/trunk/mozilla/toolkit/components/places/src/nsNavHistoryExpire.cpp, line 335
+WARNING: ExpireItems failed.: file c:/builds/trunk/mozilla/toolkit/components/pl
+aces/src/nsNavHistoryExpire.cpp, line 292
+
+even when no longer idle, every 3.5 seconds, I'd get those messages.
+
+Dietrich's fix for bug #407018 should fix the error, as the problem is caused by using selectStatement instead of selectMinStatement.
+
+But I think we should consider either changing the logic in ExpireItems (which sets keepGoing), or fix DoPartialExpiration.
+
+Dietrich, what do you think about this:
+
+nsresult
+nsNavHistoryExpire::DoPartialExpiration()
+{
+  // expire history items
+  PRBool keepGoing;
+  nsresult rv = ExpireItems(EXPIRATION_COUNT_PER_RUN, &keepGoing);
+  if (NS_FAILED(rv))
+    NS_WARNING("ExpireItems failed.");
+  else if (keepGoing)
+    StartTimer(SUBSEQUENT_EXPIRATION_TIMEOUT);
+  return NS_OK;
+}

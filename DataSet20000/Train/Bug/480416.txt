@@ -1,0 +1,38 @@
+Flash objects and their callbacks are not being instantiated in time
+User-Agent:       Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_5_6; en-us) AppleWebKit/528.16 (KHTML, like Gecko) Version/4.0 Safari/528.16
+Build Identifier: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.6) Gecko/2009011913 Firefox/3.0.6 (.NET CLR 3.5.30729)
+
+This bug only occurs in the windows XP build of firefox 3. The OS X and Ubuntu versions I tried did not have this problem.
+
+The flash movie is hidden in a 1px by 1px div as to allow the flash to load properly in time for the user interaction. However when the 1px by 1px div is expanded revealing the modal and flash movie the bound callback does not exist. 
+
+To get a callback on the object we are getting the element by ID but also checking for the first object within that movie in the case of IE and those who don't support object properly.
+
+I've experienced this problem with both Flash 9 and Flash 10.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1. Click vote on any of the contestents
+2. When the second page loads click on the blue <> icon above the contest photos
+3. If you have firebug you'll see the error: flashElement.loadClearSpring%20is%20not%20a%20function
+4. Depending on connection it could take a few moments to load the clearspring menu.
+5. Now close the modal by clicking anywhere or the x in the top right corner
+6. Now click the blue < > icon again 
+7. The movie and modal will now load properly because the callback is defined.
+
+Actual Results:  
+Flash movie callback is not bound
+
+Expected Results:  
+Flash movie callback is bound
+
+This bug works fine in other versions of the browser on other operating systems. I don't know if this is a flash plugin problem or a firefox issue binding the callbacks. I will watch this bug closely for more insight on the issue.
+
+I was able to work around this problem infrequently by using
+while (!flashElement.callback) { }
+flashElement.callback();
+
+This would throw a script taking too long error and on occasion would allow the movie to run properly. However, this is not a realistic workaround and is ugly to the user.
+
+I am unclear as to why this issue does not exist on OS X and Linux but does exist on windows XP and windows Vista.

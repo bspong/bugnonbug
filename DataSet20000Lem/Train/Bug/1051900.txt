@@ -1,0 +1,39 @@
+cs source editor's getInfoAt method sometimes fail
+In bug 971702 the 'getInfoAt' method wa added to the source editor. It's not used yet anywhere in the devtools and my plan is that start using it for bug 971662.
+The goal of this bug is to highlighter node that match a given selector when the pointer hovers over selector in the style-editor panel.
+
+I've found that this function sometimes fail. Take these STR for instance:
+
+- Open the style-editor on this page
+- Open the scratchpad
+- Switch it to "browser" environment
+- Enter and execute the following code:
+
+let editor = [...gDevTools._toolboxes][0][1].getPanel("styleeditor").UI.editors[0].sourceEditor;
+editor.getInfoAt({line: 0, ch: 2});
+
+The following exception is fired:
+
+Exception: str is undefined
+tokenize@resource://gre/modules/commonjs/toolkit/loader.js -> resource:///modules/devtools/sourceeditor/css-tokenizer.js:129:1
+CSSCompleter.prototype.getInfoAt/traverseBackwards@resource://gre/modules/commonjs/toolkit/loader.js -> resource:///modules/devtools/sourceeditor/css-autocompleter.js:1035:22
+CSSCompleter.prototype.getInfoAt@resource://gre/modules/commonjs/toolkit/loader.js -> resource:///modules/devtools/sourceeditor/css-autocompleter.js:1079:19
+getInfoAt@resource://gre/modules/commonjs/toolkit/loader.js -> resource:///modules/devtools/sourceeditor/autocomplete.js:335:1
+@Scratchpad/1:2:1
+WCA_evalWithDebugger@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/actors/webconsole.js:1085:16
+WCA_onEvaluateJS@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/actors/webconsole.js:731:20
+DSC_onPacket@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/server/main.js:1225:15
+LocalDebuggerTransport.prototype.send/<@resource://gre/modules/devtools/dbg-client.jsm -> resource://gre/modules/devtools/transport/transport.js:545:11
+makeInfallible/<@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/DevToolsUtils.js:83:14
+makeInfallible/<@resource://gre/modules/commonjs/toolkit/loader.js -> resource://gre/modules/devtools/DevToolsUtils.js:83:14
+
+And the following log is outputted to the console:
+
+console.log: Parse error at index 2, processing codepoint 0xNaN in state comment.
+
+Note that the {line: 0, ch: 2} position trigger the error because the stylesheet text content is the following:
+
+/* skins/standard/global.css */
+body {font-family: sans-serif;color: ....
+
+I don't know if the cs parser state machine is able to detect comments, but in any case, I think the getInfoAt function should never fail and should at least return null when no info is found.

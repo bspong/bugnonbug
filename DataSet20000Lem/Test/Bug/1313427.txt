@@ -1,0 +1,104 @@
+Code for browser.showMenubar preference option appears to be set wrong value
+I've previously followed Mike Kaply's guide[1] to setup a default profile directory for new user accounts. In that default profile I created a INSTALL_DIR\defaults\profile\xulstore.json file that display the Menubar, the Personal Bookmarks folder and maximizes the browser window. I followed another guide[2] to create a INSTALL_DIR\distribution\distribution.ini file to configure all other setting that Firefox allowed me to set within that file. My goal is to eventually move all supported setting out of the xulstore.json file to the distribution.ini file.
+
+On the Mozilla Enterprise mailing list Mike mentioned[3] two new preference that were introduced in Mozilla Firefox 47:
+
+* browser.showPersonalToolbar
+* browser.showMenubar
+
+I've added both to my INSTALL_DIR\distribution\distribution.ini file. The first work great and I no longer need to set the "PersonalToolbar" option within xulstore.json for new users.
+
+Here is what I had in the xulstore.json file before:
+
+{
+"chrome://browser/content/browser.xul":
+{
+"main-window":
+{
+"sizemode":"maximized"
+},
+"toolbar-menubar":
+{
+"autohide":"false"
+},
+"PersonalToolbar":
+{
+"collapsed":"false",
+"currentset":"personal-bookmarks"
+}
+}
+}
+
+Now that the browser.showPersonalToolbar option is available, I've trimmed the file down to this:
+
+{
+"chrome://browser/content/browser.xul":
+{
+"main-window":
+{
+"sizemode":"maximized"
+},
+"toolbar-menubar":
+{
+"autohide":"false"
+}
+}
+}
+
+
+The remaining item in the xulstore.json is present because setting "browser.showMenubar=true" (no quotes) doesn't appear to work.
+
+
+In this code block[2]:
+
+_checkCustomizationComplete: function DIST__checkCustomizationComplete() {
+const BROWSER_DOCURL = "chrome://browser/content/browser.xul";
+
+if (this._newProfile) {
+let xulStore = Cc["@mozilla.org/xul/xulstore;1"].getService(Ci.nsIXULStore);
+
+try {
+var showPersonalToolbar = Services.prefs.getBoolPref("browser.showPersonalToolbar");
+if (showPersonalToolbar) {
+xulStore.setValue(BROWSER_DOCURL, "PersonalToolbar", "collapsed", "false");
+}
+} catch (e) {}
+try {
+var showMenubar = Services.prefs.getBoolPref("browser.showMenubar");
+if (showMenubar) {
+xulStore.setValue(BROWSER_DOCURL, "toolbar-menubar", "collapsed", "false");
+}
+} catch (e) {}
+}
+
+let prefDefaultsApplied = this._prefDefaultsApplied || !this._ini;
+if (this._customizationsApplied && this._bookmarksApplied &&
+prefDefaultsApplied) {
+let o = Cc["@mozilla.org/observer-service;1"].
+getService(Ci.nsIObserverService);
+os.notifyObservers(null, DISTRIBUTION_CUSTOMIZATION_COMPLETE_TOPIC, null);
+}
+}
+
+the value is being set like so:
+
+xulStore.setValue(BROWSER_DOCURL, "toolbar-menubar", "collapsed", "false");
+
+but perhaps it should be set like this instead to match the same syntax used in xulstore.json:
+
+xulStore.setValue(BROWSER_DOCURL, "toolbar-menubar", "autohide", "false");
+
+I'm not familiar enough with Firefox to determine what value _is_ changed based on my setting 'browser.showMenubar=true' (no quotes) within distribution.ini, but I will gladly provide conf files/settings to help replicate the problem if needed.
+
+Thanks in advance for looking into this.
+
+
+[1] https://mike.kaply.com/2016/05/24/default-profile-directory-doesnt-work-in-firefox-46/
+
+[2] https://mike.kaply.com/2012/03/26/customizing-firefox-distribution-ini/
+
+[3] https://mail.mozilla.org/private/enterprise/2016-July/006837.html
+
+[4] https://mail.mozilla.org/private/enterprise/2016-June/006791.html
+
+[5] https://dxr.mozilla.org/mozilla-central/source/browser/components/distribution.js?q=browser.showpersonaltoolbar&redirect_type=single#457

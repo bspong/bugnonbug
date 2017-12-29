@@ -1,0 +1,43 @@
+If the homepage is changed to show a blank page on startup - firefox still tries to fetch the previously set homepage without error-message if unsuccessful
+User-Agent:       Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9) Gecko/2008061810 (Gentoo) Minefield/3.0
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9) Gecko/2008061810 (Gentoo) Minefield/3.0
+
+If a homepage is set under: edit --> preferences --> main --> startup
+which is default in many distributions - 
+and the user later decides to not want it anymore - 
+and changes the selection to show a blank page on every startup instead, the entry does not get deleted.
+
+The effect is:
+- on startup a blank page is shown - which is wanted
+- on startup the address is still queried and loaded every time - though not not shown
+
+The address of the unwanted homepage is still visible in the preferences menu and in about:config and the browser still tries to load it on every startup.
+
+This behaviour is not what is to be expected - if a user does not want to see a start-page, none should be loaded
+(as opposed to:loaded anyway - but not shown).
+
+If the field is cleared manually the browser behaves as expected.
+
+I find this to be a bug because when (like me) having bad connectivity at times - the browser does not get usable until the (unwanted) page is fetched - or the connection to it timed out which can delay browser startup time considerably.
+Even worse and the main reason for calling this a bug is:
+no error or exlanatory page is shown as to what caused the timeout - as would be the case normally.
+
+Reproducible: Always
+
+Steps to Reproduce:
+1.set a home page with: edit --> preferences --> main --> startup
+2.set: edit --> preferences --> main --> startup to display a blank page only
+3.restart the browser
+Actual Results:  
+The browser still wants to get the page - I used tcpdump to watch the traffic.
+If connectivity is bad (high delay or no connection at all due to provider-issues), the browser is not usable until eigther the connection times out - in which case no error message to that effect is shown - or until the browser fetched the page, even though not showing it (because a blank page is wanted).
+about:config also still holds the value for the unwanted homepage
+
+Expected Results:  
+If edit --> preferences --> main --> startup is set to display a blank page - nothing at all should be loaded on startup.
+
+No need for a error-message due to failure to get a page which is not even wanted.
+(what I mean is: displaying an error to fetch... would be even more confusing since no page is wanted)
+
+I have seen this behaviour on version 2 and 3 and spent some time finding out why the browser sometimes would start but then hang a long time until it gets usable/responds to input.
+I used tcpdump and saw queries for a page I did not set to be my homepage - but which was the default that I changed a long time ago to be not displayed by setting the browser to show a blank page.

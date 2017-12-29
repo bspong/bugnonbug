@@ -1,0 +1,6 @@
+UX: Intermittent mochitest-bc orange: TEST-UNEXPECTED-FAIL | chrome://mochitests/content/browser/browser/components/customizableui/test/browser_913972_currentset_overflow.js | Number of nodes should match - Got 10, expected 9
+TEST-UNEXPECTED-FAIL | chrome://mochitests/content/browser/browser/components/customizableui/test/browser_913972_currentset_overflow.js | Number of nodes should match - Got 10, expected 9
+
+I could see something similar locally when running with --run-until-failure (which runs the test 30 times or until it fails, whichever comes first), although the numbers were 9 and 8. I'm not sure if that matters; the placement'd values are all matching the actual items, so it's the skipintoolbarset item that's throwing off the count - which is the search splitter.
+
+AFAICT this is caused by the fact that UpdateUrlbarSearchSplitter doesn't account for the possibility that the splitter might already be present inbetween the two, and then removes itself (because ibefore gets set to neither the urlbar nor the searchbar). In certain race conditions with the overflow and resize handler, I suspect we might now call this function twice in succession with the same items present, so we should fix that. So I did, and this fixed the problem for me locally. Patch in a second, I'll do a try run too.

@@ -1,0 +1,43 @@
+Firefox enters futex loop after crash
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.1.8) Gecko/20100216 Fedora/3.5.8-1.fc12 Firefox/3.5.8
+Build Identifier: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.1.8) Gecko/20100216 Fedora/3.5.8-1.fc12 Firefox/3.5.8
+
+Firefox frequently loop on futex system call after a crash. I let it run awhile but it never seems to recover. This is with the latest debug version of firefox.
+
+F S UID PID PPID LWP NLWP CLS PRI ADDR SZ WCHAN STIME TTY TIME CMD
+0 S root 14482 1 14482 1 TS 19 - 1228 wait 00:24 pts/12 00:00:00 /bin/sh /opt/firefox.verss/firefox -sync
+0 S root 14489 14482 14489 1 TS 19 - 1228 wait 00:24 pts/12 00:00:00 /bin/sh /opt/firefox.verss/run-mozilla.sh /opt/firefox.verss/firefox-bin -sync
+4 R root 14493 14489 14493 20 TS 19 - 212462 - 00:24 pts/12 00:30:54 /opt/firefox.verss/firefox-bin -sync
+5 S root 14493 14489 14494 20 TS 19 - 212462 poll_s 00:24 pts/12 00:00:13 /opt/firefox.verss/firefox-bin -sync
+5 S root 14493 14489 14497 20 TS 19 - 212462 futex_ 00:24 pts/12 00:00:00 /opt/firefox.verss/firefox-bin -sync
+5 S root 14493 14489 14498 20 TS 19 - 212462 futex_ 00:24 pts/12 00:00:00 /opt/firefox.verss/firefox-bin -sync
+5 S root 14493 14489 14501 20 TS 19 - 212462 futex_ 00:24 pts/12 00:00:14 /opt/firefox.verss/firefox-bin -sync
+5 S root 14493 14489 14527 20 TS 19 - 212462 futex_ 00:24 pts/12 00:00:00 /opt/firefox.verss/firefox-bin -sync
+5 S root 14493 14489 14537 20 TS 19 - 212462 futex_ 00:24 pts/12 00:00:00 /opt/firefox.verss/firefox-bin -sync
+5 S root 14493 14489 14538 20 TS 19 - 212462 futex_ 00:24 pts/12 00:00:00 /opt/firefox.verss/firefox-bin -sync
+5 S root 14493 14489 14539 20 TS 19 - 212462 futex_ 00:24 pts/12 00:00:00 /opt/firefox.verss/firefox-bin -sync
+1 S root 14493 14489 14589 20 TS 19 - 212462 futex_ 00:24 pts/12 00:08:28 /opt/firefox.verss/firefox-bin -sync
+1 S root 14493 14489 14590 20 TS 19 - 212462 futex_ 00:24 pts/12 00:00:00 /opt/firefox.verss/firefox-bin -sync
+1 S root 14493 14489 14742 20 TS 19 - 212462 poll_s 00:25 pts/12 00:00:15 /opt/firefox.verss/firefox-bin -sync
+1 S root 14493 14489 14743 20 TS 19 - 212462 poll_s 00:25 pts/12 00:00:47 /opt/firefox.verss/firefox-bin -sync
+1 S root 14493 14489 17608 20 TS 19 - 212462 futex_ 00:40 pts/12 00:00:06 /opt/firefox.verss/firefox-bin -sync
+1 S root 14493 14489 17700 20 TS 19 - 212462 futex_ 00:41 pts/12 00:00:21 /opt/firefox.verss/firefox-bin -sync
+1 S root 14493 14489 18794 20 TS 19 - 212462 poll_s 00:45 pts/12 00:00:00 /opt/firefox.verss/firefox-bin -sync
+1 S root 14493 14489 24084 20 TS 19 - 212462 futex_ 01:18 pts/12 00:00:00 /opt/firefox.verss/firefox-bin -sync
+1 S root 14493 14489 24088 20 TS 19 - 212462 futex_ 01:18 pts/12 00:00:00 /opt/firefox.verss/firefox-bin -sync
+1 S root 14493 14489 24089 20 TS 19 - 212462 futex_ 01:18 pts/12 00:00:00 /opt/firefox.verss/firefox-bin -sync
+1 S root 14493 14489 24100 20 TS 19 - 212462 futex_ 01:18 pts/12 00:00:00 /opt/firefox.verss/firefox-bin -sync
+0 S root 24113 1 24113 1 TS 19 - 1228 wait 01:18 pts/12 00:00:00 /bin/sh /opt/firefox.verss/firefox -sync
+0 S root 24118 24113 24118 1 TS 19 - 1228 wait 01:18 pts/12 00:00:00 /bin/sh /opt/firefox.verss/run-mozilla.sh /opt/firefox.verss/firefox-bin -sync
+4 S root 24122 24118 24122 1 TS 19 - 9916 poll_s 01:18 pts/12 00:00:00 /opt/firefox.verss/firefox-bin -sync
+
+
+Reproducible: Always
+
+Actual Results:
+loop after crash which never ends. see included strace after crash.
+
+Expected Results:
+successful restart
+
+It look like another version of firefox is trying to start but the first instance appears to be looping.
